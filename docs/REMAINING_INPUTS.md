@@ -3,6 +3,14 @@
 For the latest 19-profile expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a native owned unlearned positive DW7 XL seal-meter pair remain missing; their new controls have source/procedural/Tk evidence. Actual edited game-load/re-save remains a separate check.
 
 
+## New Switch profile expansion inputs
+
+| Profile | Exact useful next input |
+| --- | --- |
+| Atelier Ryza 2, original Nintendo Switch | Clean same-revision `data.dat` synthesis/equip pair with displayed quality and SP. The acquired modified starter proves SP reductions, but all existing quality records have nonzero adjacent values. Higher-cap progression, learned-node and trait/effect dependencies need separate pairs. [Details](RYZA2_SWITCH_FORMAT.md). |
+| Dragon Quest Builders 2, original Nintendo Switch | Complete matching CMNDAT/STGDAT/SYSDAT slot copies with one labelled inventory, level/EXP, equipment or island action and unchanged control. Current native copies qualify existing medicine/seed reductions; they do not prove world or cross-file ownership changes. [Details](DQB2_SWITCH_FORMAT.md). |
+| Dead or Alive 5 Plus, PS Vita (unregistered) | Complete decrypted original US `PCSE00235` or JP `PCSG00167` export, unchanged `sce_sys/param.sfo`, and locked-to-earned costume or one-setting pair with exact fighter/outfit and build. Cipher/checksums are qualified; Vita-specific persistent writable mappings are missing. [Details](DOA5_PLUS_VITA_RESEARCH.md). |
+
 ## Latest additional-editor profiles
 
 | Registered profile | Exact next input for deeper editing |

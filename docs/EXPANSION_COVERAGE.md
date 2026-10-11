@@ -6,17 +6,29 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
-The published v1.6 has 22 registered game/platform profiles. The unreleased
-source adds further adapters and richer existing editors described in
-[the prepared update](PREPARED_UPDATE.md). The registry-derived
-[inventory](SUPPORTED_GAMES.md) is authoritative;
-research-only formats below remain separate from those editors.
+The latest published v1.71 contains **51 registered game/platform profiles**.
+The development source adds separately qualified Switch profiles described below;
+the registry-derived [inventory](SUPPORTED_GAMES.md) is authoritative.
+Research-only formats remain outside the library.
 
-The current source has **44 profiles**. The latest
-[existing-editor expansion](RICH_EDITOR_EXPANSION.md) reviews every supported
+The [existing-editor expansion](RICH_EDITOR_EXPANSION.md) reviews every supported
 profile except DW3 Remastered and adds content to 19 existing profiles. Its
-per-lane checklists supersede earlier read-only claims for the specific new
-controls; unproved progression, acquisition and reward transitions remain blocked.
+per-lane checklists supersede earlier read-only claims for those controls;
+unproved progression, acquisition and reward transitions remain blocked.
+
+## Next Switch additions
+
+- [Ryza 2 original Switch](RYZA2_SWITCH_FORMAT.md): unspent skill-tree SP
+  deductions and existing inventory/equipment inspection. Learned nodes and
+  nonzero-adjacent quality remain untouched. The acquired modified starter proves
+  the SP write; conditional zero-adjacent quality has procedural/source evidence.
+- [Dragon Quest Builders 2 original Switch](DQB2_SWITCH_FORMAT.md): named existing
+  medicine/seed deductions and searchable pockets/bag/player/equipment records.
+  Two distinct complete native slots qualify the padded framing. World, island,
+  equipment ownership and story dependencies remain separate.
+- [DOA5 Plus Vita](DOA5_PLUS_VITA_RESEARCH.md): both block checksums and unchanged
+  re-encryption qualify two distinct public native states, but no Plus-specific
+  persistent writable field is proved. This remains unregistered.
 
 Attached executables were investigated as static data. They were never run.
 Private static analysis copies, freely shared player saves, owner identifiers,

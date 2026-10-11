@@ -99,7 +99,7 @@ and [result rewards](https://www.koeitecmoamerica.com/manual/wo4/4900.html).
 | --- | --- | --- |
 | Spendable Gems | `0x274`, u32 LE | 9,999,999; setter `0x1C5D80` clamps global `+0xCC`. Positive grants optionally update separate history `+0xD0`. |
 | Spendable Crystals | `0x27C`, u16 LE | 999; setter `0x1C5F90` clamps global `+0xD4`. Positive grants optionally update separate history `+0xD6`. |
-| Shared Growth Points | `0x280`, u32 LE | **999,999**, independently recovered at original `0x1C5F30`, global `+0xD8`. Ultimate's native limit 99,999,999 belongs to its separate native setter, not this profile. |
+| Shared Growth Points | `0x280`, u32 LE | **999,999**, independently recovered at original `0x1C5F30`, global `+0xD8`. Ultimate's separately recovered `0x213310` setter caps this resource at 99,999,999; that limit does not apply to original WO4. |
 | Existing ordinary element quantities | `0x28E + ID*2`, u16 LE, IDs 0–63 | 999; original `0x1C5E60` caps global `+0xE6 + ID*2` and positive acquisition also touches discovery bits at `+0x541C`. The original official manual independently gives the 999 inventory limit. |
 
 The three resources support Max with their separately recovered natural caps;

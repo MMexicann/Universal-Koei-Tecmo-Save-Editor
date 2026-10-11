@@ -119,7 +119,7 @@ class RebornPS3Tests(unittest.TestCase):
 
     def test_safe_storage_identity_backup_restore_and_source_guards(self):
         backup = parser.backup(self.document)
-        self.assertEqual(backup.with_suffix('.sfo').read_bytes(), parser.identity_metadata('NPEB02060-00'))
+        self.assertTrue(backup.with_name(backup.name + '.context.json').exists())
         edited = parser.save_as(self.document, {'money': 456}, self.folder / 'edited.bin')
         self.assertEqual(parser.field_map(edited)['money'].value(edited.raw), 456)
         restored = parser.restore(backup, self.folder / 'restored.bin')
@@ -157,21 +157,42 @@ class RebornPS3Tests(unittest.TestCase):
         from koei_editor.shared.verified_self_test import _run
         metadata = parser.identity_metadata('NPEB02060-00')
         (self.folder / 'PARAM.SFO').write_bytes(metadata + b'PRIVATE-CONTEXT-SENTINEL')
+        self.document = parser.read_save(self.source)
         report = _run(self.adapter, parser.GAME_ID, self.source, self.folder / 'selftest')
         self.assertTrue(report['success'])
         self.assertTrue(report['native_integrity_verified'])
         self.assertFalse(report['in_game_load_tested'])
-        self.assertEqual((self.folder / 'selftest' / 'PARAM.SFO').read_bytes(), metadata)
+        self.assertEqual((self.folder / 'selftest' / 'PARAM.SFO').read_bytes(), metadata + b'PRIVATE-CONTEXT-SENTINEL')
         backup = parser.backup(self.document)
         from koei_editor.shared.copy_storage import snapshot_backup
         malformed = snapshot_backup(self.raw[:-1], self.source, parser.GAME_ID, self.folder / 'malformed')
-        malformed.with_suffix('.sfo').write_bytes(metadata)
+        malformed.with_name(malformed.name + '.context.json').write_bytes(backup.with_name(backup.name + '.context.json').read_bytes())
         with self.assertRaises(SaveError):
             parser.restore(malformed, self.folder / 'damaged.bin')
         self.assertFalse((self.folder / 'damaged.bin').exists())
-        backup.with_suffix('.sfo').write_bytes(parser.identity_metadata('NPJB00533-00'))
+        backup.with_name(backup.name + '.context.json').write_bytes(b'{}')
         with self.assertRaises(SaveError):
             parser.restore(backup, self.folder / 'foreign.bin')
+
+    def test_same_title_context_replacement_and_paired_backup_hash_rejected(self):
+        backup = parser.backup(self.document)
+        metadata = (self.folder / 'PARAM.SFO').read_bytes()
+        (self.folder / 'PARAM.SFO').write_bytes(metadata + b'same-title-replacement')
+        for action in (lambda: parser.backup(self.document),
+                       lambda: parser.save_as(self.document, {}, self.folder / 'replacement.bin'),
+                       lambda: parser.restore(backup, self.folder / 'replacement-restore.bin')):
+            with self.assertRaises(SaveError):
+                action()
+        (self.folder / 'PARAM.SFO').write_bytes(metadata)
+        from koei_editor.shared.copy_storage import snapshot_backup
+        different = parser.serialize(self.document, {'money': 1})
+        other = snapshot_backup(different, self.source, parser.GAME_ID, self.folder / 'other-backup')
+        other.with_name(other.name + '.context.json').write_bytes(backup.with_name(backup.name + '.context.json').read_bytes())
+        with self.assertRaises(SaveError):
+            parser.restore(other, self.folder / 'mismatch.bin')
+        for invalid in (None, [], 'unknown'):
+            with self.assertRaises(SaveError):
+                parser.field_hint(self.document, invalid)
 
     def test_optional_genuine_exports_each_control_surgery(self):
         corpus = os.environ.get('GUNDAM_REBORN_PS3_COPIES')

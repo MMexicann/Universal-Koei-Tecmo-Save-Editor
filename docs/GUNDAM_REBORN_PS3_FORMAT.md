@@ -69,8 +69,8 @@ natural gameplay maxima.
 - [x] Searchable pilot/EXP/raw-stat and ten material-region word inspection.
 - [x] Surgical edits on every available control in all three genuine files.
 - [x] Procedural boundaries/corruption/forged snapshots, stage/unstage, no-Max behavior.
-- [x] Changed-source and changed-identity guards before backups and final atomic writes.
-- [x] Original-copy preservation, automatic backups, identity-bound restore and actual Tk workflow.
+- [x] Changed-source and full bounded original-SFO digest guards before backups and final atomic writes.
+- [x] Original-copy preservation, automatic backups, save-hash/context-digest-bound restore and actual Tk workflow.
 - [ ] Material quantity writes: source broad patch claims ten words, but genuine perfect
       JP exports contain eight 999 values followed by unrelated-looking 51 and 5659;
       EU has eight 999 values followed by 51 and 0. Repetition is insufficient to

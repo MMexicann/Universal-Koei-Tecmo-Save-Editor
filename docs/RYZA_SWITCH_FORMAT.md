@@ -52,7 +52,10 @@ writes are performed.
 
 Edits retain original seed/header/footer/trailer, recompute the qualified Gust
 integrity and reparse the result. Safe reads and atomic Save As use the existing
-copied-save guards, changed-source rejection, backups and exact restore. Party
+copied-save guards, changed-source rejection, backups and exact restore. Direct
+backups verify the source still matches the opened snapshot. Save As checks
+again after encoding and after backup creation, immediately before atomic
+publication of the new destination. Party
 stats, synthesis-derived equipment data, traits, effects and progression remain
 unchanged.
 
@@ -91,6 +94,10 @@ roundtrips, all-quality-field byte-preservation edits and copied-file
 Save As/backup/restore. With a display, the GUI test uses a selected native copy
 and exercises open, inspector, edit, Undo, Review Changes, themes, Save As and
 backup restore. Otherwise its fixture is generated and is labelled as such.
+
+`tests/test_ryza_source_safety.py` additionally exercises source changes during
+encoding and after backup creation, changed/missing direct-backup sources and
+unchanged safe writes/restores for both Ryza 2 PC and Ryza 1 Switch.
 
 These checks establish file/GUI behavior, not edited-save loading or re-saving
 inside a Switch game. No game-load validation was performed. Registration,

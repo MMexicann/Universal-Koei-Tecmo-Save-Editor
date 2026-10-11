@@ -438,9 +438,21 @@ def review(document, changes):
             for field in fields_for(document) if field.id in changes]
 
 
+def _validate_source(document):
+    source = _copy_path(document.source)
+    try:
+        with source.open('rb') as stream:
+            current = stream.read(MAX_FILE_SIZE + 1)
+    except OSError as error:
+        raise SaveError('The opened copy is unavailable; reopen before saving or backing up.') from error
+    if current != document.raw:
+        raise SaveError('The opened copy changed on disk; reopen before saving or backing up.')
+    return source
+
+
 def backup(document):
     validate_document(document)
-    source = _copy_path(document.source)
+    source = _validate_source(document)
     return snapshot_backup(document.raw, source, document.format.id,
                            _copy_path(source.parent / 'WarriorsEditorBackups'))
 
@@ -452,11 +464,12 @@ def save_as(document, changes, destination):
         raise SaveError('Choose a new .dat destination.')
     if destination.exists():
         raise FileExistsError('Choose a new destination; existing files are never replaced.')
-    with _copy_path(document.source).open('rb') as stream:
-        if stream.read(MAX_FILE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk; reopen before saving.')
+    _validate_source(document)
     raw = serialize(document, changes)
     backup(document)
+    # Encoding and backup creation can take time: reject a source changed
+    # during either operation immediately before publishing the new copy.
+    _validate_source(document)
     atomic_new(raw, destination)
     return decode(raw, document.format.id, destination)
 

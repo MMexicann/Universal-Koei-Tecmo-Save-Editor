@@ -215,6 +215,9 @@ Optional copied real saves are selected locally:
 | `NIOH3_ENCRYPTED_COPY` / `NIOH3_DECRYPTED_COPY` | Matching reviewed Nioh 3 native USER reference pair |
 | `NIOH3_SAVE_COPY` / `NGII_SAVE_COPY` | Native copies for real Tk editor save/backup/restore workflows |
 | `NGII_NATIVE_DIR` | Extracted original Xbox 360/Xenia Ninja Gaiden II revision-6 story copies |
+| `BERSERK_VITA_NATIVE_DIR` | Reviewed decrypted EU PCSB01085 Berserk Vita gameplay copies with original `sce_sys/param.sfo` |
+| `DOA5_PS3_NATIVE_DIR` | Reviewed original US/EU PSN DOA5 native exports with original `PARAM.SFO`; PS3 PFD extraction/signing stays external |
+| `POKEMON_CONQUEST_NATIVE_DIR` | Reviewed vanilla US Nintendo DS raw Pokémon Conquest `.sav` copies; emulator/container wrappers excluded |
 | `SIGMA_PC_NATIVE_DIR` / `SIGMA2_PC_NATIVE_DIR` | Separate Master Collection PC research-inspection copies |
 | `NG2_BLACK_STEAM_NATIVE_DIR` | Black Steam native GVAS copies for research inspection |
 | `SOPFFO_NATIVE_DIR` / `SOPFFO_STEAM_NATIVE_DIR` | Separate Epic launch / Steam native USER and SYSTEM research copies |

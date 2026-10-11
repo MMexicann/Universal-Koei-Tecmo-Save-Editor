@@ -109,3 +109,20 @@ is not established; its implementation, binary, resources and catalog are not
 copied or redistributed. Only format facts and factual character labels inform
 the original parser, validation and surgical writer. Evidence and edition
 boundaries are recorded in [MERURU_PLUS_VITA_FORMAT.md](MERURU_PLUS_VITA_FORMAT.md).
+
+The Berserk EU PS Vita profile independently implements field facts from
+EvilGoku's publicly posted editor. Its licence is not established; no binary,
+implementation or resources are redistributed. Native edition evidence and
+source links are in [BERSERK_VITA_FORMAT.md](BERSERK_VITA_FORMAT.md).
+
+Original DOA5 PS3 native cipher/checksum facts and narrow costume flag positions
+are independently implemented from bucanero's GPL-3.0 save-decrypters and
+Apollo patches. No GPL implementation is copied or linked into this project.
+See [DOA5_FORMAT.md](DOA5_FORMAT.md) for pinned references and exact scope.
+
+Pokémon Conquest's independent writer uses factual observations from the
+unlicensed conquestsavefiletools research, Deijin27's MIT conquest-hexpat and
+GPL-3.0 RanseiLink references. The independently written species-name map
+contains bare ID/name facts corroborated by public Ransei Gallery order;
+no foreign enum implementation, article prose, sprites or assets are included.
+See [POKEMON_CONQUEST_DS_FORMAT.md](POKEMON_CONQUEST_DS_FORMAT.md).

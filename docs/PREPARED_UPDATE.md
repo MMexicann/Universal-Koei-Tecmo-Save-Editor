@@ -1,15 +1,33 @@
-# Prepared update — unreleased
+# Version 1.7 integration record
 
-The combined development source prepares the next update without a version
-bump, tag or GitHub release. The latest published download remains **v1.6**.
-The registry-derived [supported inventory](SUPPORTED_GAMES.md) reflects source
-support. A Windows preview build is provided as a workflow artifact after the
-combined checks; it does not replace the published release.
+This contributor record describes the work integrated for **v1.7**, with
+**48 registered game/platform profiles**. The [supported inventory](SUPPORTED_GAMES.md)
+and README describe the release scope. The historical preparation sections below
+retain their original context; version 1.7 now includes these additions.
+
+
+The latest additional-editor round brings development support to **48 game/platform
+profiles**. Its new profiles are:
+
+| Game / edition | Platform | Added controls |
+| --- | --- | --- |
+| Berserk and the Band of the Hawk, EU PCSB01085 | PlayStation Vita | Gold deductions; eighteen named existing enhancement materials; searchable character status. |
+| Dead or Alive 5, original US/EU PSN | PlayStation 3 | Sixty-three individual costume-unlock flags and searchable costume records. |
+| Pokémon Conquest, North American VPYT | Nintendo DS | Four gallery IV components per existing Pokémon, selected/bulk Max and searchable names for all 200 species; banks remain separate. |
+
+Native-file checks, surgical edits, corruption rejection, safe saving and real Tk
+workflows are covered by the new focused tests. DOA5 costume transitions use
+explicitly constructed derivatives because the genuine samples already have
+all mapped costumes unlocked. Edited game-load/re-save remains unperformed.
+See [Berserk Vita](BERSERK_VITA_FORMAT.md), [DOA5](DOA5_FORMAT.md) and
+[Pokémon Conquest](POKEMON_CONQUEST_DS_FORMAT.md) for precise format gates,
+mechanic checklists and source/licence boundaries. These console/handheld
+profiles do not qualify other editions or the Berserk Windows candidate.
 
 The subsequent [existing-editor expansion](RICH_EDITOR_EXPANSION.md) adds editing
 content to 19 of the 44 registered profiles, with shared relative adjustment and
 selective revert controls. Its table is the current feature delta; the tables
-below describe the preceding integration. Version and publication stay unchanged.
+below describe the preceding integration. These controls are included in version 1.7.
 
 The newest follow-up adds the separate **Atelier Meruru Plus US PS Vita**
 decrypted-export editor, bringing the source inventory to **45 profiles**. It

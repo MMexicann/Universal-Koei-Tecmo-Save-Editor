@@ -243,6 +243,18 @@ GAMES = (
          '', '', '#657b43', 'koei_editor.games.three_houses.editor', 'koei_editor.games.three_houses.parser',
          True, 'THREE HOUSES', True, 'Nintendo Switch', scalar_backend='koei_editor.games.three_houses.parser'),
 
+    Game('berserk_vita', 'BERSERK AND THE BAND OF THE HAWK', 'EU PS Vita · decrypted PCSB01085',
+         'Gold deductions, eighteen named existing enhancement materials and searchable character status.',
+         '', '.dat', '#805043', 'koei_editor.games.berserk_vita.editor', 'koei_editor.games.berserk_vita.parser',
+         True, 'B&H', True, platform='PlayStation Vita', scalar_backend='koei_editor.games.berserk_vita.parser'),
+    Game('doa5_ps3', 'DEAD OR ALIVE 5', 'Original US/EU PS3 PSN · SAVE_SYS.DAT + PARAM.SFO',
+         'Sixty-three individual costume unlock controls and searchable costume records.',
+         '', '.dat', '#796070', 'koei_editor.games.doa5_ps3.editor', 'koei_editor.games.doa5_ps3.parser',
+         False, 'DOA5', True, platform='PlayStation 3', scalar_backend='koei_editor.games.doa5_ps3.parser'),
+    Game('pokemon_conquest_ds', 'POKÉMON CONQUEST', 'US Nintendo DS · raw native save',
+         'Existing gallery Pokémon IV components and Speed IV; searchable gallery Pokémon records.',
+         '', '.sav', '#99752b', 'koei_editor.games.pokemon_conquest_ds.editor', 'koei_editor.games.pokemon_conquest_ds.parser',
+         True, 'PCQ', True, platform='Nintendo DS', scalar_backend='koei_editor.games.pokemon_conquest_ds.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

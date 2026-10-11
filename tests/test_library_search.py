@@ -33,6 +33,14 @@ class CatalogSearchTests(unittest.TestCase):
                          ['meruru_plus_vita'])
 
 
+    def test_new_native_profiles_are_exact_and_searchable(self):
+        self.assertEqual([g.id for g in matching_games(GAMES, 'berserk vita')], ['berserk_vita'])
+        self.assertFalse(matching_games(GAMES, 'berserk', 'Windows PC'))
+        self.assertEqual([g.id for g in matching_games(GAMES, 'dead or alive', 'PlayStation 3')], ['doa5_ps3'])
+        self.assertFalse(matching_games(GAMES, 'dead or alive ultimate'))
+        self.assertEqual([g.id for g in matching_games(GAMES, 'pokemon', 'Nintendo DS')], ['pokemon_conquest_ds'])
+
+
 class LibrarySearchGuiTests(unittest.TestCase):
     def setUp(self):
         try:
@@ -101,6 +109,23 @@ class LibrarySearchGuiTests(unittest.TestCase):
         self.root.update()
         self.app.open_library_match()
         self.assertIs(self.app.sessions['meruru_plus_vita'][1], editor)
+
+
+    def test_ds_platform_opens_bound_editor_and_resumes_session(self):
+        self.app.platform_choice.set('Nintendo DS')
+        self.app.library_search.set('pokemon')
+        self.root.update()
+        self.assertEqual([g.id for g in self.app.library_matches], ['pokemon_conquest_ds'])
+        self.app.open_library_match()
+        self.root.update()
+        editor = self.app.sessions['pokemon_conquest_ds'][1]
+        self.assertEqual(self.app.active_game, 'pokemon_conquest_ds')
+        self.assertEqual(editor.save_extension, '.sav')
+        self.assertEqual(editor.adapter.game_id, 'pokemon_conquest_ds')
+        self.app.show_library()
+        self.root.update()
+        self.app.open_library_match()
+        self.assertIs(self.app.sessions['pokemon_conquest_ds'][1], editor)
 
 
 if __name__ == '__main__':

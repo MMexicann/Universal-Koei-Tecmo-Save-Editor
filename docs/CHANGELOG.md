@@ -1,15 +1,16 @@
 # Changelog
 
-## Unreleased
+## v1.7
 
-- Expanded existing equipment, mount, horse appearance, officer stats and
-  upgrade-stone controls across Dynasty, Samurai, Orochi and Gundam editors.
-- Added P5 Strikers incenses, remedies and selected skill cards; Ryza 2 SP
-  reductions; eleven more Nioh 3 consumables; existing Wo Long battle-set names.
-- Added Three Houses motivation and existing ability loadouts, and Legends
-  fairy trust reductions.
-- Added validated relative adjustments and selective Revert to scalar editors.
-- Kept application version 1.6; no new release or additional supported profile.
+- Added 26 game/platform profiles, bringing the library to 48 across nine platforms.
+- Added PC editors for Atelier Sophie, Atelier Ryza 2, Fatal Frame II: Crimson Butterfly REMAKE, Warriors Orochi, Samurai Warriors 2 and 4-II, Dynasty Warriors 5 Special and 8 Empires, Wo Long, Persona 5 Strikers, Nioh 3 and Romance of the Three Kingdoms XIII.
+- Added PS3 editors for Atelier Ayesha, Dynasty Warriors 8 Empires, Warriors Orochi 3 Ultimate, Dynasty Warriors: Gundam, Ken's Rage 1/2 and original Dead or Alive 5.
+- Added Switch editors for Fire Emblem Warriors: Three Hopes and Fire Emblem: Three Houses; Hyrule Warriors Legends on 3DS; Atelier Meruru Plus and Berserk on Vita; original Ninja Gaiden II on Xbox 360/Xenia; and Pokémon Conquest on DS.
+- Expanded Dynasty, Samurai and Orochi equipment, mount, horse appearance, officer stats, weapon bonuses, upgrade stones and Hero Card controls.
+- Added P5 Strikers incenses, remedies and selected skill cards; Ryza 2 SP reductions; eighteen named Nioh 3 consumables; Wo Long battle-set names; Three Houses motivation/ability loadouts; and Legends fairy trust reductions.
+- Added global library search, series/platform filters, compact cards and visible session resume controls.
+- Added sortable field/inspector/review tables, inspector row copying, validated Adjust Selected and selective Revert actions.
+- Preserved Light/Dark themes, backups, Undo, Review Changes and safe Save As workflows; synchronized the code and README supported-game inventories.
 
 ## v1.6
 

@@ -24,7 +24,13 @@
     "https://github.com/imouto1994/fe3h-editor/tree/5e4a73b71f28feb271ccdbc614ea934517c235b5",
     "https://github.com/hashcade/feth-save-editor/tree/b9f53f0e01a3dd2cd24c96f97f1a829e51a1f00d",
     "https://gbatemp.net/threads/release-remumu-atelier-meruru-save-editor.443645/",
-    "https://github.com/bucanero/apollo-saves/issues/385"
+    "https://github.com/bucanero/apollo-saves/issues/385",
+    "https://gbatemp.net/threads/release-berserk-and-band-of-the-hawk-save-editor.503586/",
+    "https://github.com/bucanero/save-decrypters/tree/master/doa5-decrypter",
+    "https://www.freestepdodge.com/threads/unlockables-thread-questions-answers.1316/",
+    "https://github.com/MathyFurret/conquestsavefiletools",
+    "https://github.com/Deijin27/conquest-hexpat",
+    "https://github.com/Deijin27/RanseiLink"
   ],
   "games": [
     {
@@ -917,6 +923,33 @@
       "editing_verified": true,
       "evidence": "Genuine public PCSE00296 gameplay export qualifies the distinct full 24-chunk Vita fingerprint and thirteen character IDs. Independently implemented factual word mappings from the published working Vita Remumu writer: manual Cole and base attack/defense/speed; base HP/MP/LP only increase and current HP/MP/LP only decrease from their opened values. All fields exclude Max. Exact unchanged and surgical native edits preserve all other bytes, progression, equipment and inventory. Vita save-manager authentication/reimport is external. This does not qualify Meruru DX PC.",
       "needed": "Actual edited Vita game-load/re-save; exact installed build and independently authored additional native controls, effective-stat/growth and inventory/trait/equipment dependency pairs. Calendar changes remain blocked by event/timer dependencies."
+    },
+    {
+      "id": "berserk_vita",
+      "title": "Berserk and the Band of the Hawk",
+      "platform": "PlayStation Vita",
+      "status": "EU decrypted PCSB01085 revision-2 editor",
+      "evidence": "Two complete native EU exports, their original title metadata and the existing Vita editor’s complete static writer qualify Gold reductions and eighteen named existing ordinary enhancement materials. Unchanged roundtrips, surgical edits, context-bound backup/restore and real Tk workflows pass. Character status is inspected separately; Windows offsets are not inferred.",
+      "needed": "Edited game-load validation, natural resource limits, zero-material acquisition, status/level dependencies, accessory/equipment, horse, story and Eclipse reward records; genuine US metadata/native exports for US support.",
+      "editing_verified": true
+    },
+    {
+      "id": "doa5_ps3",
+      "title": "Dead or Alive 5",
+      "platform": "PlayStation 3",
+      "status": "Original US/EU PSN source-backed costume editor",
+      "evidence": "Complete native US/EU PSN exports and reference vectors qualify the two-block cipher/checksums and original revision. Sixty-three explicit positive costume flags are independently implemented from published patches; targeted unlock tests use clearly labelled native-derived constructions because the genuine corpus is already unlocked. Exact original PARAM.SFO is required; unknown bytes, native seeds, zero-write and suspicious nonbinary patch targets, story and other systems remain intact.",
+      "needed": "Independent genuine locked-costume action pairs and edited game-load/re-save checks, exact character/costume identities, ownership/progression dependency mappings and separately qualified other editions/platforms.",
+      "editing_verified": false
+    },
+    {
+      "id": "pokemon_conquest_ds",
+      "title": "Pokémon Conquest",
+      "platform": "Nintendo DS",
+      "status": "US vanilla raw-save gallery IV editor",
+      "evidence": "Three distinct native raw-save references qualify US VPYT headers, both gallery-bank layout variations and all twenty-six section checksums. Existing gallery Pokémon’s four five-bit IV components are surgically editable with 0–31 natural bounds. Three unnamed HP/attack/defense components retain explicit numbered labels; Speed is independently identified and Forretress Speed is excluded from bulk Max. Searchable gallery Pokémon inspection, atomic saving, backups, Undo and Review Changes are tested.",
+      "needed": "Edited game-load/re-save validation, individual HP/attack/defense bit ordering, remaining species names and active-scenario link/ability/ownership/evolution dependencies; separate European/Japanese or expanded-ROM layouts and emulator container export support.",
+      "editing_verified": true
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

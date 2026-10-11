@@ -1,7 +1,7 @@
 # Berserk and the Band of the Hawk: Windows qualification
 
-The Windows game remains **research-only**. A complete public native file
-qualifies its observed outer cipher and checksum, but the native gameplay
+The Windows game remains **research-only**. Three complete public native files
+qualify their observed outer cipher, checksum and common title header, but the native gameplay
 records, save revision and any further integrity have not been established.
 No writable fields or library card are registered. The identified existing
 save editor targets PS Vita and cannot supply Windows field mappings.
@@ -9,8 +9,14 @@ save editor targets PS Vita and cannot supply Windows field mappings.
 ## Native file evidence
 
 The [SaveGame.Pro contribution](https://savegame.pro/pc-berserk-and-the-band-of-the-hawk-savegame/)
-contains `BKSAVEDATA0000.dat`, 1,268,512 bytes (`0x135B20`). It was reacquired
-privately for this investigation. The contributor's “100% completed” label
+contains `BKSAVEDATA0000.dat`, 1,268,512 bytes (`0x135B20`). Two additional
+complete native saves were downloaded from freely shared
+[GTrainers contribution 3202](https://gtrainers.com/load/categories/savegames/berserk_and_the_band_of_hawk_save_game_the_game_done_100/30-1-0-3202)
+and [contribution 3203](https://gtrainers.com/load/categories/savegames/berserk_and_the_band_of_hawk_save_game_the_game_done_100_pc/30-1-0-3203).
+All three files have distinct plaintext and ciphertext, the same complete size,
+the documented title/slot header and a valid three-advance outer checksum.
+Each was reviewed privately; only native data files were extracted.
+The contributors' “100% completed” labels
 does not establish ordinary field values, the installed DLC, region, executable
 build, save revision or a successful edited game load. The archive's shortcuts
 and link files were not run; only the native data file was extracted.
@@ -33,7 +39,7 @@ Observed complete-file facts:
   candidates fail this native checksum. Single-bit changes at the first and
   last ciphertext payload bytes fail the matching outer checksum.
 
-These facts qualify one observed envelope. They do not prove a semantic record
+These facts qualify the shared observed envelope across three native copies. They do not prove a semantic record
 layout or the absence of internal integrity. A recomputed outer sum alone
 cannot authorize a gameplay write. Complete-byte identity, payload identity
 and native checksum validation are file tests; no edited output was imported,
@@ -45,6 +51,7 @@ loaded or re-saved in the game.
 | --- | --- | --- |
 | [EvilGoku's GBAtemp release](https://gbatemp.net/threads/release-berserk-and-band-of-the-hawk-save-editor.503586/), May 11, 2018 | The thread is in Sony PS Vita. Its attachment contains one .NET GUI executable and no source or licence. Static metadata explicitly titles it “Berserk and Band of the Hawk (U) Save Editor Psvita”. Its controls cover character status, gold and materials. | Static inspection found direct byte reads/writes without the Windows cipher, native checksum, title/revision or complete-layout qualification. No Windows field equivalence was proved. The executable was never run, and its implementation and private analysis are not distributed. |
 | [iccugs/BERSERK_trainer](https://github.com/iccugs/BERSERK_trainer/tree/afec9a6c7685b3b6c9bb7092762a686af9b99937), `afec9a6c7685b3b6c9bb7092762a686af9b99937` | Live process trainer; no implementation licence located. Its gold control is commented out. | Live gauges, pointers and large cheat targets do not qualify disk offsets, persistent growth or natural limits. No code was copied or run. |
+| [predprey's Fearless PC table](https://fearlessrevolution.com/viewtopic.php?t=5), V1003 | Downloadable XML Cheat Engine table, reviewed only as text. No implementation licence established. Gold, enhancement materials, 32-byte accessory records and `0x180`-stride character getters are shown alongside captured native instruction excerpts. | The excerpts supply concrete getter and mechanic leads for later executable analysis, but neither a Windows file serializer nor a memory-to-disk correspondence. No scripts, catalogs or implementations were copied or executed. |
 | [Lyall/BerserkFix](https://github.com/Lyall/BerserkFix/tree/c64747519f6967df6264a1efbd7bf369f7b3aea5), `c64747519f6967df6264a1efbd7bf369f7b3aea5` | MIT display, frame-rate and runtime fixes. | The reviewed source contains no native save serializer or inventory/progression schema. No source was incorporated. |
 | [ayozetr's PC tutorial translation](https://github.com/ayozetr/berserk-band-of-the-hawk-es/tree/a10d3affa706dc9d4650f5f54e82bb90c251986c), `a10d3affa706dc9d4650f5f54e82bb90c251986c` | The licence grants MIT terms to the original software/docs and explicitly excludes `translation/`, which derives from Koei's game text. | Mechanic facts are summarized with attribution; translated text, catalogs and game assets are not bundled. LINKDATA/text layouts are asset layouts, not player-save records. |
 
@@ -53,6 +60,22 @@ save/checksum terms, and Berserk save-editor projects found no qualifying public
 Windows save serializer. PS Vita save exports and PS4 cheats remain separate
 platform evidence. The source survey supplies leads and mechanics, not a licence
 to transplant unverified console or runtime offsets.
+
+The additional [Nexus story-clear contribution](https://www.nexusmods.com/berserkandthebandofthehawk/mods/17)
+and its [Ayaka listing](https://ayakamods.com/mods/game-clear-save.4594/) describe
+different progression and include screenshots. Both require login to download;
+their save contents were not acquired and are not counted as native fixtures.
+The Japanese [Vita save-modification board](https://web.save-editor.com/bbs/cfw/psvita/bbs.cgi?list=pickup&num=12497)
+was also checked; the reviewed thread contains no field or integrity mapping.
+The separate Japanese [PC modification thread](https://web.save-editor.com/bbs/community/pc/bbs.cgi?list=pickup&num=3589)
+and [PC save thread](https://web.save-editor.com/bbs/savedata/pc/bbs.cgi?list=pickup&num=2487)
+contain title/index links, but no save attachments, currency values, field maps
+or checksum calculation in their reviewed posts. English, Japanese and Chinese
+offline save/hex-editor searches supplied live trainers and save-location guides,
+without a qualifying Windows file writer. A
+[Manga Council contribution](https://mangacouncil.blogspot.com/2017/02/berserk-and-band-of-hawk-save-game.html)
+describes completed collections and links a Google Drive copy; the reviewed
+download redirects to Google sign-in and was not acquired.
 
 ## Persistent mechanics and dependencies
 
@@ -72,6 +95,51 @@ The tutorial reference supplies additional rules absent from the short manual.
 | Story, gallery and unlocks | Story clears add battles/events (pp23–24); tutorial `e2575.u11.s82`, `s85` connects behelits to gallery panels and scenarios to events. | Separate completion/ranks, reward claims, ownership, entitlement and resource edits. No blanket story-completion or unlock operation is qualified. |
 
 ## Exact enabling inputs
+
+### What the renewed investigation established
+
+The new unregistered
+[title inspector](../src/koei_editor/research/berserk_pc/inspection.py) requires
+the exact observed NUL-padded title at payload `0x00..0x3F` and slot-one display
+label at `0x80..0x8F`, after the existing envelope validates. It exposes only
+read-only qualification flags and unchanged re-encoding. It accepts no
+replacement plaintext and has no field, staging, saving or library API.
+The display label is deliberately not treated as a native revision, and another
+slot label remains outside the observed inspection profile.
+
+[Inspection tests](../tests/test_berserk_pc_inspection.py) exercise immutable
+snapshots, malformed input, ciphertext corruption, forged snapshots and foreign
+headers with deliberately recomputed valid outer sums. The native corpus check
+uses the optional `BERSERK_PC_NATIVE_DIR` variable without embedding saves.
+The focused run passed **21 tests with no skips**, including all three genuine
+complete copies, existing shared envelope regressions and the single-file native
+checksum test. This is unchanged-file validation, not gameplay-edit acceptance.
+
+Static reinspection of the Vita editor recovered a currency write at file
+`0x3774`, byte material writes at `0x3690 + index` and a character EXP read/write
+at `0xF0 + 0x180 * index`. The PC table's shop and enhancement excerpts instead
+access currency at **live object + `0x37B4`**. Plausible integers at related
+positions in the decrypted PC copies do not prove that these objects are
+serialized unchanged, or that the Vita offsets apply to Windows. These addresses
+are research leads only; no Windows gameplay field is implemented from them.
+In particular, the Vita EXP/level offsets produce zero for all eight candidate
+character records in all three Windows copies, including the contribution
+advertised as level 99. That contradicts directly adopting this console record
+map. No acquired contribution provides a displayed currency balance to resolve
+the competing plausible integer locations. A constant `0x40` relocation between
+live pointers and a console file is therefore not established for the PC save.
+
+The remaining field checklist is explicit:
+
+| System | Current Windows editor status | Specific proof still needed |
+| --- | --- | --- |
+| Spendable currency and ordinary materials | No writes | Native disk getter/serializer linkage or controlled quantity action pairs, and full integrity |
+| Existing accessories, four skills and reinforcement | No writes | Occupancy/ownership, native record array, IDs/ranks, reinforcement/class dependencies and equipped references |
+| Character EXP, level and permanent stats | No writes | Native per-character identity, disk fields, EXP curve and derived-stat/action dependencies |
+| Three equipped accessories, items and horses | No writes | Existing owned record pools and native equipment selectors; horse unlock conditions |
+| Endless Eclipse depths, desires and checkpoints | No writes | Permanent versus active-run records, per-character versus shared rewards and claim dependencies |
+| Behelits, gallery, costumes, scenarios and story | No writes | Separate ownership/completion/claim/entitlement flags and prerequisite graph |
+| Native title/revision and integrity | Outer envelope/title inspection only | Matching executable build/serializer or controlled native action pairs establishing revision and all inner integrity |
 
 The shortest path to an editor is a matched Windows serializer/getter or
 controlled native action pairs with the corresponding displayed values and

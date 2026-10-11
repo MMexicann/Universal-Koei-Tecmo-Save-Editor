@@ -22,7 +22,9 @@
     "https://github.com/BtEtta/save-editors",
     "https://github.com/bucanero/apollo-lib",
     "https://github.com/imouto1994/fe3h-editor/tree/5e4a73b71f28feb271ccdbc614ea934517c235b5",
-    "https://github.com/hashcade/feth-save-editor/tree/b9f53f0e01a3dd2cd24c96f97f1a829e51a1f00d"
+    "https://github.com/hashcade/feth-save-editor/tree/b9f53f0e01a3dd2cd24c96f97f1a829e51a1f00d",
+    "https://gbatemp.net/threads/release-remumu-atelier-meruru-save-editor.443645/",
+    "https://github.com/bucanero/apollo-saves/issues/385"
   ],
   "games": [
     {
@@ -66,7 +68,7 @@
       "title": "Berserk and the Band of the Hawk",
       "platform": "Windows PC",
       "status": "Native PC ciphertext qualified; gameplay map missing",
-      "evidence": "Reproducible read-only diagnostics qualify the genuine public BKSAVEDATA0000.dat outer three-advance cipher/u16 sum and exact unchanged reconstruction. Literal title text is observed; gameplay revision, records and full integrity remain unqualified. Official manual distinguishes persistent growth, accessory enhancement/amalgamation and Eclipse checkpoints/rewards. No gameplay adapter.",
+      "evidence": "Three independently acquired genuine PC copies pass the outer three-advance cipher/u16 sum, exact unchanged reconstruction and bounded observed-title inspection. Gameplay revision, records and full integrity remain unqualified. Native PC fields contradict direct Vita EXP/level offsets; PC trainer getters are not disk mappings. Official manual distinguishes persistent growth, accessory enhancement/amalgamation and Eclipse checkpoints/rewards. No gameplay adapter.",
       "needed": "Matching Windows serializer/getters or source-backed Windows save editor and labelled unchanged/action pairs for funds, materials, existing accessories, growth and separate Eclipse rewards; exact revision/build and additional integrity proof. Vita editors/runtime trainers do not qualify Windows offsets.",
       "editing_verified": false
     },
@@ -490,7 +492,7 @@
       "platform": "PlayStation 3",
       "status": "Unregistered checksum and record research",
       "editing_verified": false,
-      "evidence": "Published Japanese money and duplicated first-section additive checksum facts; separately reported growth and weapon anchors are read-only candidates, not a complete native profile. No matching genuine complete export acquired.",
+      "evidence": "Published Japanese money and duplicated first-section additive checksum facts; separately reported growth and weapon anchors are read-only candidates, not a complete native profile. Companion-title diagnostics reject genuine NPJB00464 Empires data. No matching genuine complete XL export acquired; documented money corruption reports show why partial checksums alone are insufficient.",
       "needed": "Complete decrypted NPJB00439 DATA.BIN with exact title, edition, revision and full integrity coverage; controlled growth/skills/weapon/guard/horse/Survival and reward pairs."
     },
     {
@@ -615,7 +617,7 @@
       "title": "Atelier Totori DX",
       "platform": "Windows PC / PlayStation 4",
       "status": "Title-qualified PS4 lead; no writer",
-      "evidence": "PS4 CUSA14014 native title preview corroborates Cole 189067 at LE32 offset 0xB3FC in a distinct 22-chunk layout. Advertised PC archives contain only system data; app936160 Rorona is excluded.",
+      "evidence": "PS4 CUSA14014 native title preview corroborates Cole 189067 at LE32 offset 0xB3FC in a distinct 22-chunk layout. A strict identity-qualified read-only inspector retains ten character and 1099 item-record leads, with PS4-specific published EXP, stat-bonus, alchemy and adventurer-point correlations. Standalone inner integrity remains unproved. Advertised PC archives contain only system data; app936160 Rorona is excluded.",
       "needed": "Native PS4 internal integrity/loader evidence and a controlled currency pair; actual app936180 PC gameplay plus companion system/build control. See ARLAND_DX_RESEARCH.md.",
       "editing_verified": false
     },
@@ -624,8 +626,8 @@
       "title": "Atelier Rorona DX",
       "platform": "Windows PC",
       "status": "Read-only native chunk candidate",
-      "evidence": "27 gameplay snapshots qualify exact unchanged chunk/trailer inspection. Published Rorona PLUS early fields partially match, but late fields differ.",
-      "needed": "Native PC integrity/loader evidence and controlled currency, item, synthesis, growth and event pairs. See ARLAND_DX_RESEARCH.md.",
+      "evidence": "27 reacquired gameplay snapshots qualify exact unchanged chunk/trailer inspection and bounded read-only Cole, twelve character EXP and 2100 item-quality record leads. Published Rorona PLUS early fields partially match, but late fields differ. Increased-resource files lack offline-edit provenance; native PC integrity remains unresolved.",
+      "needed": "Matching A11R_x64_Release_en.exe or A11R_x64_Release.exe for static native integrity/loader analysis, or reproducible exact-profile offline edit/load/re-save evidence; controlled currency, item, synthesis, growth and event pairs. See RORONA_DX_FORMAT.md.",
       "editing_verified": false
     },
     {
@@ -633,8 +635,8 @@
       "title": "Atelier Meruru DX",
       "platform": "Windows PC",
       "status": "Read-only native chunk candidate",
-      "evidence": "17 gameplay copies from two public sources qualify exact unchanged chunk/trailer inspection. Calendar-transfer source reports broken timer/event dependencies.",
-      "needed": "Native internal integrity and named resource/item records; controlled growth/synthesis pairs and complete timer dependencies before calendar changes. See ARLAND_DX_RESEARCH.md.",
+      "evidence": "17 gameplay copies from two public sources qualify exact unchanged chunk/trailer inspection and a source-correlated read-only Cole lead. The calendar-transfer author reports successful native use of one changed byte but broken timer/event dependencies. Meruru Plus Vita has matching early locations and different later chunks; its writer cannot establish DX PC integrity.",
+      "needed": "Matching A13V_x64_Release_EN.exe or A13V_x64_Release.exe for static native integrity analysis, or reproducible money/item offline edit/load/re-save evidence; named resource/item records, controlled growth/synthesis pairs and complete timer dependencies before calendar changes. See MERURU_DX_FORMAT.md.",
       "editing_verified": false
     },
     {
@@ -906,6 +908,15 @@
       "editing_verified": true,
       "evidence": "Independent implementation of public format facts, checked against eight genuine publicly shared extracted gameplay candidates. Exact separate v13/v23 lengths and native payload byte-sum integrity; surgical gold reductions, twelve identified ordinary weapon types’ existing convoy quantity and durability reductions. Held equipment requires an original unique living/available/joined base owner ID0–34; DLC/unknown owners and items stay read-only. Progression, mastery, proficiency, abilities, combat arts, battalions and supports are inspected separately. No guessed Max or ownership grants. Development expansion: Unique living joined base units have motivation choices; original equipped-and-learned abilities can be moved or unequipped on undeployed qualified loadouts, with no duplicates or ownership grants.",
       "needed": "Edited Switch load/re-save; exact-build/region/DLC-labelled clean controls and action pairs for progression/rewards, item repair/transfer, battalion assignment and supports. Precise patch/DLC entitlement is not encoded by the accepted save-format version. v12, padded exports, system/suspend and Cindered Shadows side-story saves need separate qualification; structurally matching side-story payloads cannot yet be distinguished. See docs/THREE_HOUSES_FORMAT.md for exact inputs."
+    },
+    {
+      "id": "meruru_plus_vita",
+      "title": "Atelier Meruru Plus: The Apprentice of Arland",
+      "platform": "PlayStation Vita",
+      "status": "US decrypted-export resource and character editor",
+      "editing_verified": true,
+      "evidence": "Genuine public PCSE00296 gameplay export qualifies the distinct full 24-chunk Vita fingerprint and thirteen character IDs. Independently implemented factual word mappings from the published working Vita Remumu writer: manual Cole and base attack/defense/speed; base HP/MP/LP only increase and current HP/MP/LP only decrease from their opened values. All fields exclude Max. Exact unchanged and surgical native edits preserve all other bytes, progression, equipment and inventory. Vita save-manager authentication/reimport is external. This does not qualify Meruru DX PC.",
+      "needed": "Actual edited Vita game-load/re-save; exact installed build and independently authored additional native controls, effective-stat/growth and inventory/trait/equipment dependency pairs. Calendar changes remain blocked by event/timer dependencies."
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

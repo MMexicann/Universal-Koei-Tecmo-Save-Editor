@@ -1,5 +1,6 @@
 """Synthetic diagnostic tests; not genuine-file or gameplay qualification."""
 from dataclasses import FrozenInstanceError
+import struct
 import unittest
 
 from koei_editor.games.dw3.models import SaveError
@@ -7,6 +8,41 @@ from koei_editor.research.sw2hd_ps3 import inspection
 
 
 class SW2HDSourceCandidateTests(unittest.TestCase):
+    @staticmethod
+    def metadata(directory):
+        key = b'SAVEDATA_DIRECTORY\0'
+        value = directory.encode('ascii') + b'\0'
+        return (struct.pack('<5I', 0x46535000, 0x101, 36, 36 + len(key), 1)
+                + struct.pack('<HH3I', 0, 0x204, len(value), len(value), 0)
+                + key + value)
+
+    def test_matching_companion_never_qualifies_synthetic_gameplay(self):
+        raw = bytes(inspection.MIN_CANDIDATE_SIZE)
+        for directory in ('NPJB00439', 'NPJB00439-SAVEDATA'):
+            result = inspection.inspect_export(raw, self.metadata(directory))
+            self.assertEqual(result.candidate_title_id, 'NPJB00439')
+            self.assertTrue(result.title_context_matches)
+            self.assertTrue(result.payload_probe.checksums_match)
+            self.assertFalse(result.editable)
+            self.assertFalse(result.qualified_game_profile)
+            self.assertFalse(hasattr(result, 'metadata'))
+            self.assertFalse(hasattr(result, 'directory'))
+            with self.assertRaises(FrozenInstanceError):
+                result.editable = True
+
+    def test_export_probe_rejects_empires_compilation_foreign_and_bad_metadata(self):
+        raw = bytes(inspection.MIN_CANDIDATE_SIZE)
+        for directory in ('NPJB00464-00', 'BLJM61092-SAVEDATA', 'NPJB004390',
+                          'NPUB31564-SAVEDATA'):
+            with self.assertRaises(SaveError):
+                inspection.inspect_export(raw, self.metadata(directory))
+        for metadata in (b'', b'\0' * 100, bytearray(self.metadata('NPJB00439')),
+                         self.metadata('NPJB00439')[:-1]):
+            with self.assertRaises(SaveError):
+                inspection.inspect_export(raw, metadata)
+        with self.assertRaises(SaveError):
+            inspection.inspect_export(raw[:-1], self.metadata('NPJB00439'))
+
     def test_checksum_fact_big_endian_money_and_no_edit_support(self):
         raw = bytearray(inspection.MIN_CANDIDATE_SIZE + 20)
         raw[inspection.MONEY_OFFSET:inspection.MONEY_OFFSET + 4] = (123456).to_bytes(4, 'big')

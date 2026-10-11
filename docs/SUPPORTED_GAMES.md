@@ -65,5 +65,9 @@ Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_su
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |
 | TECMO SUPER BOWL — NES · compatible original 28-team battery SRAM | NES | Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records. |
+| WARRIORS OROCHI 4 — Original Windows PC · revision 20180720 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points, existing weapon elements and Skill Orb reductions; searchable records. |
+| WARRIORS OROCHI 4 ULTIMATE — Windows PC · revision 20200101 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons. |
+| SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts. |
+| WARRIORS: ABYSS — Windows PC · revision A4 gameplay slots | Windows PC | Karma Embers and searchable persistent recruitment records; preserves original Steam owner context. |
 
 Scope is specific to each edition and supported save revision. File-level qualification and actual game loading are separate; see [coverage and blockers](EXPANSION_COVERAGE.md) and [validation](VALIDATION.md). Research-only codecs are excluded.

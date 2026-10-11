@@ -307,6 +307,22 @@ GAMES = (
          'Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records.',
          '', '.sav', '#475f8d', 'koei_editor.games.tecmo_super_bowl_nes.editor', 'koei_editor.games.tecmo_super_bowl_nes.parser',
          True, 'TSB', True, 'NES', scalar_backend='koei_editor.games.tecmo_super_bowl_nes.parser'),
+    Game('wo4_pc', 'WARRIORS OROCHI 4', 'Original Windows PC · revision 20180720',
+         'Gems, Crystals, Growth Points, officer Skill Points, existing weapon elements and Skill Orb reductions; searchable records.',
+         '', '.bin', '#775c82', 'koei_editor.games.wo4.editor', 'koei_editor.games.wo4.parser',
+         True, 'WO4', scalar_backend='koei_editor.games.wo4.parser'),
+    Game('wo4_ultimate', 'WARRIORS OROCHI 4 ULTIMATE', 'Windows PC · revision 20200101',
+         'Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons.',
+         '', '.bin', '#775c82', 'koei_editor.games.wo4_ultimate.editor', 'koei_editor.games.wo4_ultimate.parser',
+         True, 'WO4 U', scalar_backend='koei_editor.games.wo4_ultimate.parser'),
+    Game('samurai5_pc', 'SAMURAI WARRIORS 5', 'Windows PC · revision 39 castle/menu slot zero',
+         'Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts.',
+         '', '.bin', '#91613d', 'koei_editor.games.samurai5_pc.editor', 'koei_editor.games.samurai5_pc.parser',
+         True, 'SW5', scalar_backend='koei_editor.games.samurai5_pc.parser'),
+    Game('abyss_pc', 'WARRIORS: ABYSS', 'Windows PC · revision A4 gameplay slots',
+         'Karma Embers and searchable persistent recruitment records; preserves original Steam owner context.',
+         '', '.bin', '#92353b', 'koei_editor.games.abyss_pc.editor', 'koei_editor.games.abyss_pc.parser',
+         True, 'ABYSS', scalar_backend='koei_editor.games.abyss_pc.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

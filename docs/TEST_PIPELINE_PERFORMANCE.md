@@ -11,7 +11,10 @@ Desktop modules use one slot per job so Tk clipboard/focus operations remain
 serialized. The dispatcher fills other available slots with CPU modules instead
 of assigning a second desktop module that blocks while holding a worker.
 Shard balancing accounts for both total worker load and serial desktop load.
-The timing hints now come from the complete official v1.72 Windows run.
+The existing timing hints come from the complete official v1.72 Windows run.
+New modules have separately labeled local timing estimates to avoid treating
+long tests as short unknown work; these are scheduling hints, not additional
+Windows benchmark measurements.
 
 Packaging already validates the complete executable, metadata, archive and
 privacy boundaries. The Windows build no longer performs an immediately

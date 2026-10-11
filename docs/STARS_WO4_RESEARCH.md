@@ -197,49 +197,37 @@ Mechanics sources actually read:
 Guide observations are community mechanics evidence, not serialization offsets
 or independently established gameplay bounds.
 
-## Warriors Orochi 4 / Ultimate: launcher-only input
+## Warriors Orochi 4 / Ultimate — qualified PC editors
 
-The supplied `WO4.exe` is a roughly 520 KB AMD64 launcher, with a 2021-08-02 PE
-build timestamp. Its static strings name `WO4.dll`, `WO4U.dll` and a
-`GaiaLauncher_JP` project; imports include `LoadLibraryW`, `GetProcAddress` and
-Steam initialization. These findings identify the missing native gameplay code.
-No save key, serializer or checksum implementation was recovered from this
-launcher. The matching **`WO4.dll` for base WO4, or `WO4U.dll` for Ultimate**, from
-the exact installed build is the next essential binary input. Supplying either
-one alone does not replace the need for a complete native PC save.
+The originally supplied `WO4.exe` was a launcher. The subsequently supplied
+matching `WO4.dll`, `WO4U.dll` and native saves resolved that missing input.
+Both modules were inspected statically, never executed. Complete native
+serializers and the independent two-block AES implementation now qualify
+separate original and Ultimate gameplay adapters. The encrypted fingerprint
+is an end marker, not a body checksum; the complete writers emit no additional
+native body checksum.
 
-The [public WO4U mod loader](https://github.com/Fragonite/zmod) is a process/asset
-modification lead, not proof of a disk-save codec. PS4 cheat patches are also
-platform-specific; no PS4 offsets were promoted to PC mappings.
+- [Original PC format](WO4_PC_FORMAT.md): revision 20180720 and its qualified
+  header/layout. Gems, Crystals, Growth Points, progressed officers’ byte Skill
+  Points (cap 99), existing weapon-element quantities and Skill Orb reductions.
+- [Ultimate PC format](WO4_ULTIMATE_PC_FORMAT.md): revision 20200101 and its
+  qualified header/layout. Gems, Crystals, Growth Points, progressed officers’
+  word Skill Points (cap 999), promoted officers’ unspent Upgrade Stones,
+  existing attribute inventory and Skill Orb reductions.
+- Both have searchable native officer, weapon, inventory and history records;
+  unchanged full reconstruction, surgical native edits, protected storage and
+  actual Tk workflow checks passed. Edited game loading remains unperformed.
 
-### WO4/Ultimate coverage checklist
+The per-edition format checklists are authoritative. Older Ultimate revision
+20191201 needs its own version-sensitive serializer qualification. Remaining
+work concerns named native catalogs and field/dependency maps for weapons,
+fusion, equipment, officer growth, learned skills, camp/bonds, story rewards,
+Infinity progression and collections. Neither Steam-owner metadata nor another
+launcher is required for the recovered WO4 envelopes.
 
-All writable rows require the matching gameplay DLL, a same-build native PC
-save and controlled mappings. Public player-save archives have now been acquired,
-but their encrypted contents and revision have not been qualified. The supplied
-launcher cannot establish the codec or gameplay mappings.
-
-| Mechanic | Distinctions and exact remaining proof |
-| --- | --- |
-| Officers, level/EXP and skill points/tree | Verify stored EXP, allocated/spendable points, skills and derived stats per officer. |
-| Ultimate promotions and stat stones | Promotion resets level and unlocks skills; community reports up to nine promotions. Map reset dependencies, allocated stones and reward grants separately; do not use a flat Max Level operation. |
-| Gold, growth points and crystals | Verify separate balances and lifetime/spendable values, purchase/grant paths and legitimate caps. |
-| Weapons/fusion/attributes | Verify existing inventory records, star/rarity, base attack versus compatibility bonus, attribute IDs/ranks/slots and fusion consumption. Ultimate camp upgrades reportedly raise some attributes to 20 and slots to ten; base WO4 constraints differ. |
-| Unique and Infinity-crafted weapons | Story/objective unlocks and Infinity material crafting are separate acquisition routes. Require ownership and prerequisites, not merely a weapon ID swap. |
-| Camp upgrades and unlocks | Camp affects bonuses, attribute capacity and character access; verify unlock/reward chains. |
-| Bonds/support/party combinations | Verify per-pair progression, party references and team bonuses without treating temporary battle bonuses as stored stats. |
-| Sacred treasures/deification | Verify eligible characters, ownership/equipped references and DLC distinctions before creating controls. |
-| Mounts | Story/character unlocks provide regular horses, Red Hare and Matsukaze; DLC/early bonuses differ. No entitlement changes are implemented. |
-| Story/side-story/ranks/objectives | Map chapter access, difficulty records, rank/S thresholds and challenge rewards separately; story completion remains an explicit independent operation. |
-| Ultimate Infinity mode and fragments | Map towers/progression/materials and Perseus fragments independently of base story completion. |
-| Gallery/music/costumes/collections | Verify stored unlock and viewing flags; preserve unavailable content and DLC requirements. |
-
-Mechanics sources read:
-
-- [WO4U characters and horses](https://steamcommunity.com/sharedfiles/filedetails/?id=1548552332): story, side-story, camp and mount dependencies.
-- [Ultimate progression discussion](https://steamcommunity.com/app/831560/discussions/0/1742268227707773517/): promotion/stat stones/camp and attribute expansion distinctions.
-- [Unique/crafted weapon guide](https://steamcommunity.com/sharedfiles/filedetails/?id=2862301500): unique challenges and Infinity crafting.
-- [S rank requirements](https://steamcommunity.com/sharedfiles/filedetails/?id=1552511935) and [team combinations](https://steamcommunity.com/sharedfiles/filedetails/?id=1577872429).
+See the [official mechanics and source gates](WO4_SW5_ABYSS_MECHANICS_GATES.md).
+The [public WO4U mod loader](https://github.com/Fragonite/zmod) supplies runtime
+corroboration only; no runtime or PS4 offsets were promoted as PC disk offsets.
 
 ## Sample acquisition and validation limits
 
@@ -278,8 +266,8 @@ unchanged encrypted blocks, original seeds/nonzero padding, malformed input and
 unsupported revisions, empty campaign/material exclusion, higher values, safe
 backups/restore, changed-source rejection, live-folder aliases, search, Undo,
 Review Changes, themes and safe saving. The original procedural GUI fixture is synthetic; the new card-selector GUI workflow opens a separate copy of the genuine public native export.
-**No edited All-Stars save was loaded in the game.** WO4 has no qualified
-native fixture or editor. Follow-up native fixtures remain private and should be
+**No edited All-Stars save was loaded in the game.** WO4 now has separately
+qualified native PC editors described above. Follow-up native fixtures remain private and should be
 selected by environment variable; never add them to the source manifest.
 
 For deeper All-Stars qualification, provide complete native PC `SAVEDATA.BIN`
@@ -303,7 +291,8 @@ A renewed GitHub repository search for `Warriors Orochi save editor`,
 `Warriors Orochi 4 save`, `WO4U.dll` and `Warriors Orochi 3 save editor` found no
 repository match. Earlier code search found only mod-loader references to the
 DLL. Search absence does not establish that a sample or editor does not exist;
-no matching native WO4 gameplay DLL has yet been acquired; new public encrypted player-save archives still require codec/revision qualification.
+the initial launcher-only investigation preceded the matching DLL inputs. Current
+WO4 qualification and remaining revision-specific blockers are described above.
 
 ### Renewed WO4 public player-export acquisition
 
@@ -316,9 +305,9 @@ executing any binaries or included shortcuts. The base-labelled page contains
 135-byte input maps. The filenames and page descriptions do not prove their
 revision, edition or loadability. Neither the common word/byte stream cipher
 hypotheses nor unencrypted parsing qualified their headers; no speculative
-codec or gameplay adapter was added. The missing matching `WO4.dll`/`WO4U.dll`
-remains the exact executable-code input for integrity/serialization recovery,
-with a user save from that same installed build for definitive corroboration.
+codec or gameplay adapter was added during that initial investigation. The later
+matching DLLs and supplied same-build saves now qualify the two PC editors;
+public exports with older Ultimate revisions remain outside their supported scope.
 
 Legacy console/source leads were rechecked. `PythWare/Warriors-Orochi-2-Editors`
 is an asset-editing lead without an explicit source licence, not a qualified

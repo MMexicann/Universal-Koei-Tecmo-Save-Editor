@@ -150,7 +150,11 @@ class LibrarySearchGuiTests(unittest.TestCase):
                 ('uncharted_waters2_dos', 'new horizons', 'DOS PC'),
                 ('atelier_ryza3_dx_pc', 'ryza 3 dx', 'Windows PC'),
                 ('monster_rancher_ds', 'monster rancher', 'Nintendo DS'),
-                ('tecmo_super_bowl_nes', 'tecmo bowl', 'NES')):
+                ('tecmo_super_bowl_nes', 'tecmo bowl', 'NES'),
+                ('wo4_pc', 'orochi 4 original', 'Windows PC'),
+                ('wo4_ultimate', 'orochi 4 ultimate', 'Windows PC'),
+                ('samurai5_pc', 'samurai warriors 5', 'Windows PC'),
+                ('abyss_pc', 'abyss', 'Windows PC')):
             with self.subTest(game=game_id):
                 self.app.show_library()
                 self.app.platform_choice.set(platform)

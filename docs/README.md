@@ -14,7 +14,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Windows build and packaging](BUILDING.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)
 - [Validation and evidence boundaries](VALIDATION.md)
-- [Current release notes](RELEASE_NOTES.md), [v1.71 release notes](releases/v1.71.md),
+- [Current release notes](RELEASE_NOTES.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
   [v1.5 release notes](releases/v1.5.md)
   and [changelog](CHANGELOG.md)
 - [Repository identity](REPOSITORY_METADATA.md)
@@ -78,6 +78,11 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Original Samurai Warriors 2 Windows PC](SW2_PC_FORMAT.md)
 - [Pirate Warriors 4 and Abyss coverage](PIRATE_ABYSS_RESEARCH.md)
 - [All-Stars and WO4/Ultimate research](STARS_WO4_RESEARCH.md)
+- [Original WO4 PC resources and officers](WO4_PC_FORMAT.md)
+- [WO4 Ultimate PC resources and officer pools](WO4_ULTIMATE_PC_FORMAT.md)
+- [Samurai Warriors 5 PC castle/menu saves](SAMURAI5_PC_FORMAT.md)
+- [Warriors: Abyss PC Karma and owner context](ABYSS_PC_FORMAT.md)
+- [WO4/SW5/Abyss official mechanics and source gates](WO4_SW5_ABYSS_MECHANICS_GATES.md)
 - [Totori DX PC research and remaining inputs](TOTORI_PC_RESEARCH.md)
 - [Sophie 2 tagged format](ATELIER_SOPHIE2_FORMAT.md) and
   [inventory coverage](SOPHIE2_COVERAGE.md)

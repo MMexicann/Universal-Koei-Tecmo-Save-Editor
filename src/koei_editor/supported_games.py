@@ -72,6 +72,10 @@ from .game_registry import GAMES
 # atelier_ryza3_dx_pc: ATELIER RYZA 3 DX / Alchemist of the End & the Secret Key · Steam PC revision 4 [Windows PC]
 # monster_rancher_ds: MONSTER RANCHER DS / US Nintendo DS · raw 32/64 KiB export [Nintendo DS]
 # tecmo_super_bowl_nes: TECMO SUPER BOWL / NES · compatible original 28-team battery SRAM [NES]
+# wo4_pc: WARRIORS OROCHI 4 / Original Windows PC · revision 20180720 [Windows PC]
+# wo4_ultimate: WARRIORS OROCHI 4 ULTIMATE / Windows PC · revision 20200101 [Windows PC]
+# samurai5_pc: SAMURAI WARRIORS 5 / Windows PC · revision 39 castle/menu slot zero [Windows PC]
+# abyss_pc: WARRIORS: ABYSS / Windows PC · revision A4 gameplay slots [Windows PC]
 # END GENERATED SUPPORTED GAME INDEX
 
 

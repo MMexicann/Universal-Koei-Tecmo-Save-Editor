@@ -150,9 +150,9 @@
       "id": "sw5",
       "title": "Samurai Warriors 5",
       "platform": "Windows PC",
-      "status": "Static PC cipher candidate; native qualification blocked",
-      "evidence": "Attached executable statically establishes owner-context AES/key and fingerprint candidates. No genuine native container/integrity qualification or gameplay writer.",
-      "needed": "Native PC saves with matching owner context, qualified framing/checksums and controlled growth/proficiency/weapon/content pairs.",
+      "status": "Native PC profiles available under explicit edition IDs",
+      "evidence": "The supplied replacement inputs resolve the earlier decryption/input blocker. Use the separately qualified profiles: samurai5_pc. This historical research alias does not create a library entry.",
+      "needed": "See the registered profiles for exact supported revisions and remaining mechanic-specific dependencies.",
       "editing_verified": false
     },
     {
@@ -204,9 +204,9 @@
       "id": "wo4",
       "title": "Warriors Orochi 4 / Ultimate",
       "platform": "Windows PC",
-      "status": "Launcher only; gameplay DLL missing",
-      "evidence": "Attached WO4.exe is a launcher loading WO4.dll or WO4U.dll. It does not contain the gameplay save implementation.",
-      "needed": "Matching WO4.dll or WO4U.dll, genuine native PC saves and controlled value/dependency pairs.",
+      "status": "Native PC profiles available under explicit edition IDs",
+      "evidence": "The supplied replacement inputs resolve the earlier decryption/input blocker. Use the separately qualified profiles: wo4_pc / wo4_ultimate. This historical research alias does not create a library entry.",
+      "needed": "See the registered profiles for exact supported revisions and remaining mechanic-specific dependencies.",
       "editing_verified": false
     },
     {
@@ -357,9 +357,9 @@
       "id": "abyss",
       "title": "Warriors: Abyss",
       "platform": "Windows PC",
-      "status": "Static owner-bound PC cipher candidate; sample missing",
-      "evidence": "Attached executable establishes AES-256-CBC owner-key derivation, plaintext magic and encrypted check word. Read-only source candidate has procedural tests; no native fixture, gameplay checksums or writer.",
-      "needed": "Genuine GAMEDATA files with matching owner context, full framing/integrity and controlled progression/resource/unlock pairs.",
+      "status": "Native PC profiles available under explicit edition IDs",
+      "evidence": "The supplied replacement inputs resolve the earlier decryption/input blocker. Use the separately qualified profiles: abyss_pc. This historical research alias does not create a library entry.",
+      "needed": "See the registered profiles for exact supported revisions and remaining mechanic-specific dependencies.",
       "editing_verified": false
     },
     {
@@ -1072,6 +1072,42 @@
       "editing_verified": true,
       "evidence": "Two genuine extracted battery SRAM snapshots match the native marker and complete two-region additive checksum; published PRG-CRC metadata independently identifies one original US reference. Source-backed team-control, healthy condition and per-slot playbook fields preserve injuries, unused slots and unusual selectors. Twelve focused native/Tk tests, shared regressions and 2184 independently checked native field surgeries pass. ROM data/assets are not included.",
       "needed": "Edited emulator battery reimport/game load/re-save; controlled lineup/injury recovery, season/results/reward consistency and any alternate ROM geometry need separate proof. Raw SRAM cannot authenticate a roster or ROM."
+    },
+    {
+      "id": "wo4_pc",
+      "title": "Warriors Orochi 4 (original PC)",
+      "platform": "Windows PC",
+      "status": "Native PC revision-20180720 editor",
+      "evidence": "Matching static DLL and supplied native save qualify complete two-block AES writer, exact header/layout, native absence of a body checksum, three resources, progressed officers’ byte Skill Points (cap 99), existing element quantities and Skill Orb reductions. Unknown bytes, histories, seeds/padding, learned skills, EXP, ownership and story are preserved. Native surgical, storage, shared self-test and actual Tk checks passed.",
+      "needed": "Edited game-load/re-save validation; named ID catalogs and controlled weapon/equipment/fusion, learned skill, EXP/level, bonds, camp and story/reward pairs.",
+      "editing_verified": true
+    },
+    {
+      "id": "wo4_ultimate",
+      "title": "Warriors Orochi 4 Ultimate (PC)",
+      "platform": "Windows PC",
+      "status": "Native PC revision-20200101 editor",
+      "evidence": "Matching static Ultimate DLL and supplied native save qualify exact 0/0 header, complete two-block AES writer, body-checksum absence, three resources, existing attributes, progressed officers’ word Skill Points, promoted officers’ unspent Upgrade Stones and Skill Orb reductions. Exact native surgical, unknown-byte, prerequisite/allocated-stat, storage and Tk checks passed.",
+      "needed": "Older Ultimate revision 20191201 writer qualification; edited game loads; native names and controlled EXP/promotion/allocated-stat, weapon/equipment/fusion, camp, story/Infinity and reward pairs.",
+      "editing_verified": true
+    },
+    {
+      "id": "samurai5_pc",
+      "title": "Samurai Warriors 5 (PC)",
+      "platform": "Windows PC",
+      "status": "Native revision-39 My Castle resource editor",
+      "evidence": "Supplied original save and private original Steam sidecar qualify the owner-dependent AES writer. Complete static 17-class serializer and current-copy selection identify Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and three building materials. Castle/menu saves only; independent checkpoints, officer allocations, equipment, building levels and story remain intact.",
+      "needed": "Edited game-load/re-save checks; battle/resume variants, other slots/revisions, native catalogs and controlled officer growth/mastery, learned skills, weapon/mount ownership/fusion/equipment, buildings, friendship and story/reward pairs.",
+      "editing_verified": true
+    },
+    {
+      "id": "abyss_pc",
+      "title": "Warriors: Abyss (PC)",
+      "platform": "Windows PC",
+      "status": "Native revision-A4 gameplay Karma editor",
+      "evidence": "Supplied native gameplay and original Steam metadata qualify owner-dependent AES, exact complete category geometry, no native body checksum, Karma Embers offset/cap and owner-preserving safe saving. Native surgical, malformed-input, source/context race, backup/restore, shared self-test and actual Tk checks passed. Recruitment flags are searchable read only; system revision77 is separate research.",
+      "needed": "Edited game-load/re-save checks and display-correlated recruitment, cumulative-level purchase, Records-of-Sin conversion and customization pairs with matching original VDF/build/DLC details; native ID/name catalog and linked-record/reward dependencies.",
+      "editing_verified": true
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

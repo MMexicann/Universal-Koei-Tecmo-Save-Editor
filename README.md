@@ -5,8 +5,8 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-The development source currently contains 61 game/platform profiles. The latest
-published Windows app is **v1.72**; no Python installation is needed.
+**Version 1.8** supports **65 game/platform profiles across 12 platforms**.
+No Python installation is needed for the Windows app.
 
 ## Supported games
 
@@ -24,6 +24,9 @@ Nintendo DS `.sav` exports.
 
 Persona 5 Strikers PS4 opens a decrypted English `APP.BIN` export with its
 original `sce_sys/param.sfo`; reimport using your PS4 save manager.
+
+Samurai Warriors 5 and Warriors: Abyss need the original `steam_autocloud.vdf`
+beside the copied save and edited output. Copy the complete save folder first.
 
 Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
@@ -93,6 +96,10 @@ Ninja Gaiden 2 Black use different formats.
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |
 | TECMO SUPER BOWL — NES · compatible original 28-team battery SRAM | NES | Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records. |
+| WARRIORS OROCHI 4 — Original Windows PC · revision 20180720 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points, existing weapon elements and Skill Orb reductions; searchable records. |
+| WARRIORS OROCHI 4 ULTIMATE — Windows PC · revision 20200101 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons. |
+| SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts. |
+| WARRIORS: ABYSS — Windows PC · revision A4 gameplay slots | Windows PC | Karma Embers and searchable persistent recruitment records; preserves original Steam owner context. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

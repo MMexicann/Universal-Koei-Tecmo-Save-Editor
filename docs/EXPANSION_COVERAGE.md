@@ -6,7 +6,7 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
-The v1.72 source contains **55 registered game/platform profiles**.
+The v1.8 source contains **65 registered game/platform profiles**.
 The new separately qualified profiles are described below;
 the registry-derived [inventory](SUPPORTED_GAMES.md) is authoritative.
 Research-only formats remain outside the library.
@@ -16,7 +16,11 @@ profile except DW3 Remastered and adds content to 19 existing profiles. Its
 per-lane checklists supersede earlier read-only claims for those controls;
 unproved progression, acquisition and reward transitions remain blocked.
 
-## v1.72 new platform additions
+## v1.8 additions
+
+See the individual new format documents in the [documentation index](README.md) for exact native qualification, supported revisions, mechanics and remaining dependencies.
+
+## Earlier v1.72 additions
 
 - [Persona 5 Strikers English Switch](P5STRIKERS_SWITCH_FORMAT.md): money, Persona
   points, unspent BOND points and 94 reviewed existing stack identities. Two
@@ -66,9 +70,9 @@ remaining inputs. No edited game load or native Windows EXE validation is claime
 | `OPPW4.exe` / One Piece: Pirate Warriors 4 | Native revision-15 resource editor: spendable Beli and quantities of already obtained qualified coin records; current/lifetime counters and coin history are kept separate | Genuine slot, ordered object layout, outer checksum and object checksums qualified. Only one-step WW/JP/EA region family and revision 15 qualify; attached writer revision 22 needs separate migration evidence. [Full checklist](PIRATE_ABYSS_RESEARCH.md#pirate-warriors-4) |
 | `OROCHI_Z.exe` / Musou / Warriors Orochi Z | Native revision2 PC editor: Stock EXP, base attack for 96 officers, existing weapon attack bonus, attribute capacity, owned ranked effects, own-pool equipped references and guarded within-level EXP; searchable officer/weapon inspection | Genuine native save qualifies plaintext size/revision/marker, byte-sum integrity, unchanged roundtrip and surgical writes. Other stats, growth/reward coupling, exact names, new attributes/weapons, alchemy and story unlocks need native catalogs and controlled pairs. [Full checklist](OROCHI_RESEARCH.md#musou--warriors-orochi-z) |
 | `Star_US.exe` / Warriors All-Stars | Native current-revision PC editor: available gold and existing positive material quantities in campaign slots, with separate lifetime earnings and slot inspection | Complete genuine save, native packed serializer and grant/spend paths qualify revision `0x170302F4`, ten-block AES framing and scalar semantics. Native active serializers perform no extra payload checksum; original seeds/padding and untouched blocks preserved. Fingerprint is not a payload checksum. Hero/card growth, material names/acquisition, regard and story rewards need record/dependency maps. [Full checklist](STARS_WO4_RESEARCH.md#all-stars-coverage-checklist) |
-| `WO4.exe` / Warriors Orochi 4 / Ultimate | No gameplay adapter; supplied binary identified as a launcher | Matching **`WO4.dll` or `WO4U.dll` from the exact installed build**, plus a genuine PC save, is essential. Launcher imports/strings do not contain a recovered save codec. [Full checklist](STARS_WO4_RESEARCH.md#wo4ultimate-coverage-checklist) |
-| `SW5.exe` / Samurai Warriors 5 | Research only: owner-dependent AES/key generation and distinct native save classes identified | Genuine native save with its correct original-owner context, confirmed framing/integrity and supported revision are missing. Trial/legacy variants require separate qualification. [Full checklist](SAMURAI_RESEARCH.md#samurai-warriors-5-research-only-no-editable-library-adapter) |
-| `WARRIORSAbyss.exe` / Warriors: Abyss | Unregistered source-only owner-context AES envelope candidate and unchanged re-encryption | Original-owner context and a matching genuine system/game copy are missing. Native inner integrity and gameplay serialization remain unqualified; known markers do not authorize writes. [Full checklist](PIRATE_ABYSS_RESEARCH.md#warriors-abyss) |
+| `WO4.exe` / Warriors Orochi 4 / Ultimate | Separate native PC editors: Gems, Crystals, Growth Points, officer Skill Points, existing element stock and Skill Orb reductions; Ultimate also exposes promoted officers’ unspent Upgrade Stones. Searchable officers, weapons and histories | Matching DLLs and supplied native saves resolve encryption/layout proof. Exact original 20180720 and Ultimate 20200101 profiles; older Ultimate 20191201, names, growth/equipment/fusion/story/Infinity dependencies and edited game loads remain separate. [Original](WO4_PC_FORMAT.md), [Ultimate](WO4_ULTIMATE_PC_FORMAT.md) |
+| `SW5.exe` / Samurai Warriors 5 | Native revision39 slot-zero castle/menu editor: Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery, Lumber, Mineral and Fabric; searchable officer, weapon and mount records | Original supplied save/VDF resolve owner-dependent decryption. Full serializer/current-copy selection and seven resource bounds are proved; checkpoints, allocations, facilities and story preserved. Battle/resume states, other slots/revisions, growth, equipment, friendship and reward dependencies need separate proof. [Checklist](SAMURAI5_PC_FORMAT.md) |
+| `WARRIORSAbyss.exe` / Warriors: Abyss | Native revisionA4 PC gameplay Karma Embers editor and searchable read-only persistent recruitment records | Supplied gameplay/system/VDF resolve owner decryption; complete category geometry and no native body checksum independently proved. System revision77 remains separate research. Recruitment, permanent levels, Records-of-Sin conversion, customization and reward dependencies need controlled pairs/catalogs. [Checklist](ABYSS_PC_FORMAT.md) |
 | `DW9Emp.exe` / Dynasty Warriors 9 Empires | Source-backed current PC SYSTEMDATA editor: manual existing ordinary inventory quantities; searchable 800 native item IDs and 900 read-only custom-officer records | Exact native plaintext serializer/revision/size recovered; no save checksum/cipher/owner key in this path. A genuine current PC SYSTEMDATA file, active catalog/ownership evidence and controlled pairs remain missing. Campaign saves and older layouts are unqualified. [Full checklist](DYNASTY_RESEARCH.md#dynasty-warriors-9-empires) |
 
 The native editors above retain existing branding/themes and

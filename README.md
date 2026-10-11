@@ -2,10 +2,10 @@
 
 A free Windows save editor by **Mexican**, with a game library, shared Light/Dark
 themes, searchable records, backups, Undo and Review Changes. Switch between
-games while keeping each editing session open.
+games while keeping each editing session open. Full-size illustrated cards show by
+default; the larger **Compact cards** toggle switches to a denser list.
 
-**Development source** includes 53 game/platform profiles. The latest release is
-**v1.71** with 51 profiles. Download the standalone
+**Version 1.72** supports 55 game/platform profiles. Download the standalone
 Windows app below; no Python installation is needed.
 
 ## Supported games
@@ -83,6 +83,7 @@ Ninja Gaiden 2 Black use different formats.
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
 | DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 | PERSONA 5 STRIKERS — English Nintendo Switch · savedata export | Nintendo Switch | Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks. |
+| ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

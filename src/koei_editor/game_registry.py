@@ -279,6 +279,10 @@ GAMES = (
          'Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks.',
          '', '', '#92353b', 'koei_editor.games.p5strikers_switch.editor', 'koei_editor.games.p5strikers_switch.parser',
          True, 'P5S', True, 'Nintendo Switch', scalar_backend='koei_editor.games.p5strikers_switch.parser'),
+    Game('rotk2_dos', 'ROMANCE OF THE THREE KINGDOMS II', 'Original Chinese DOS · raw save copies',
+         'Owned-province gold and rice reductions; searchable province ownership, population and resource records.',
+         '', '', '#806126', 'koei_editor.games.rotk2_dos.editor', 'koei_editor.games.rotk2_dos.parser',
+         False, 'II', True, 'DOS PC', scalar_backend='koei_editor.games.rotk2_dos.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

@@ -58,5 +58,6 @@ Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_su
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
 | DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 | PERSONA 5 STRIKERS — English Nintendo Switch · savedata export | Nintendo Switch | Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks. |
+| ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
 
 Scope is specific to each edition and supported save revision. File-level qualification and actual game loading are separate; see [coverage and blockers](EXPANSION_COVERAGE.md) and [validation](VALIDATION.md). Research-only codecs are excluded.

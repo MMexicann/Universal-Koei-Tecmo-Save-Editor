@@ -6,8 +6,8 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
-The latest published v1.71 contains **51 registered game/platform profiles**.
-The development source adds separately qualified Switch profiles described below;
+The v1.72 source contains **55 registered game/platform profiles**.
+The new separately qualified profiles are described below;
 the registry-derived [inventory](SUPPORTED_GAMES.md) is authoritative.
 Research-only formats remain outside the library.
 
@@ -16,8 +16,12 @@ profile except DW3 Remastered and adds content to 19 existing profiles. Its
 per-lane checklists supersede earlier read-only claims for those controls;
 unproved progression, acquisition and reward transitions remain blocked.
 
-## Next Switch additions
+## v1.72 new platform additions
 
+- [Persona 5 Strikers English Switch](P5STRIKERS_SWITCH_FORMAT.md): money, Persona
+  points, unspent BOND points and 94 reviewed existing stack identities. Two
+  distinct native files qualify full direct-buffer writing and exact framing;
+  character/Persona growth, skills and story/reward transitions remain separate.
 - [Ryza 2 original Switch](RYZA2_SWITCH_FORMAT.md): unspent skill-tree SP
   deductions and existing inventory/equipment inspection. Learned nodes and
   nonzero-adjacent quality remain untouched. The acquired modified starter proves
@@ -26,6 +30,10 @@ unproved progression, acquisition and reward transitions remain blocked.
   medicine/seed deductions and searchable pockets/bag/player/equipment records.
   Two distinct complete native slots qualify the padded framing. World, island,
   equipment ownership and story dependencies remain separate.
+- [Original Chinese DOS ROTK II](ROTK2_DOS_FORMAT.md): owned-province gold/rice
+  deductions and province inspection. The complete native raw writer and original
+  scenario-reference layouts are qualified; independent player-save and edited
+  game-load validation remain separate and unperformed.
 - [DOA5 Plus Vita](DOA5_PLUS_VITA_RESEARCH.md): both block checksums and unchanged
   re-encryption qualify two distinct public native states, but no Plus-specific
   persistent writable field is proved. This remains unregistered.

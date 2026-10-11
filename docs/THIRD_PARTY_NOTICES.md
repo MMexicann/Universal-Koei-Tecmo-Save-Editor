@@ -146,3 +146,9 @@ platform descriptors. Only the project's already reviewed small factual stack
 catalog and inspectors are reused after explicit Switch-position checks. No
 foreign implementation, bulk catalog, converter, save or asset is bundled.
 [Pinned sources and mechanics](P5STRIKERS_SWITCH_FORMAT.md).
+
+The original Chinese DOS Romance of the Three Kingdoms II adapter independently
+expresses raw-save geometry and province resource facts from JuQiang's original
+standalone editor. That repository has no explicit reuse licence; no source,
+province/name catalog, artwork, original game asset or reference snapshot is
+copied or redistributed. [Writer proof and scope](ROTK2_DOS_FORMAT.md).

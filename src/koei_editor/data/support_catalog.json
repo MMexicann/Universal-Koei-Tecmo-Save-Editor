@@ -1004,6 +1004,15 @@
       "editing_verified": true,
       "evidence": "Two distinct complete 6 MiB native savedata exports match the published Switch-tested full direct-buffer writer, all ten English layout markers and exact padding. Every exposed resource and curated stack field has surgical native byte preservation. Three resources, 94 reviewed existing stack identities, read-only character/held-Persona inspectors and native Tk/copy/backup/restore/CLI workflows pass. The complete native Switch writer has no checksum/cipher step; the encrypted PC codec is not applied. Higher/unusual balances and unknown, zero or nonzero-adjacent records stay intact.",
       "needed": "Actual edited Switch reimport/load/re-save, natural caps and controlled BOND/Persona/growth/equipment/reward dependency pairs. Japanese Switch/PS4 require separately qualified title-labelled native layouts and import contracts."
+    },
+    {
+      "id": "rotk2_dos",
+      "title": "Romance of the Three Kingdoms II",
+      "platform": "DOS PC",
+      "status": "Original Chinese DOS published-format province editor",
+      "editing_verified": false,
+      "evidence": "The original standalone editor completely reads and writes the 30,752-byte Chinese DOS buffer without cipher/checksum/reconstruction. Independently authored header, 255-officer and 41-province layout, pointer/coordinate/ownership checks qualify existing owned-province gold/rice reductions and full byte/tail preservation. Seven source-reference snapshots match the profile but scenario-like/uncertain provenance is not independent player-save qualification. Procedural and actual Tk safe-save/backup/restore checks pass; no foreign implementation, catalogs or assets are bundled.",
+      "needed": "Independent original Chinese DOS player-authored campaign with exact build and unchanged control; controlled resource/officer/development/ownership pairs, legitimate natural caps and actual edited DOS game load/re-save. Korean officer layout, recreated output and scenario assets remain rejected."
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

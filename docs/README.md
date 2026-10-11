@@ -13,7 +13,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Validation and evidence boundaries](VALIDATION.md)
-- [Current release notes](RELEASE_NOTES.md), [v1.5 release notes](releases/v1.5.md)
+- [Current release notes](RELEASE_NOTES.md), [v1.71 release notes](releases/v1.71.md),
+  [v1.5 release notes](releases/v1.5.md)
   and [changelog](CHANGELOG.md)
 - [Repository identity](REPOSITORY_METADATA.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md) and [licence texts](../licenses/README.md)
@@ -120,6 +121,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Atelier and other Gust follow-up](ATELIER_NEXT_RESEARCH.md)
 
 - [Romance of the Three Kingdoms XIII original PC format](ROTK13_FORMAT.md)
+- [Original Chinese DOS Romance of the Three Kingdoms II](ROTK2_DOS_FORMAT.md)
 - [Strategy-game candidates and remaining inputs](STRATEGY_EXPANSION.md)
 
 ## Mechanics and source research

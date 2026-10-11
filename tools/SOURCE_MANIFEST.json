@@ -2228,8 +2228,8 @@
     },
     {
       "path": "tests/test_doa5_ps3.py",
-      "bytes": 17373,
-      "sha256": "5d5673c69e273220291db8e60d472a027ffffd1c588eeb9913e5fed6a69184ad"
+      "bytes": 17494,
+      "sha256": "0f4d0e2f8e02256aa48ad4ae1056e14172dfd5636027c271ee2e295668e142e1"
     },
     {
       "path": "tests/test_dw4hyper_format.py",

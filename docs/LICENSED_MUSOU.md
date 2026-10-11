@@ -3,17 +3,20 @@
 This expansion covers the assigned Gundam and Ken's Rage games only. The
 registered console editors accept copied **decrypted gameplay files**, never
 signed console containers. Keep `DATA.BIN` and edited `.bin` copies beside the
-original `PARAM.SFO`. Only its bounded `SAVEDATA_DIRECTORY` identity is read;
-account fields are neither interpreted nor copied. Missing, malformed or foreign
+original `PARAM.SFO`. Its bounded `SAVEDATA_DIRECTORY` identifies the selected title and slot.
+Gundam 1 uses an identity-only companion; the v1.9 Gundam profiles bind the
+complete original companion digest. Account fields are never interpreted or
+edited. Missing, malformed or foreign
 identity companions are rejected. Apollo remains responsible for decrypting,
 reimporting, encrypting and resigning the original console save. This application
 does not write `PARAM.PFD`, change ownership or produce signed-console exports.
 
 All controls use the existing scalar workspace, immutable staging, Undo,
 Review Changes, automatic snapshot backups and atomic Save As to a new file.
-The copied-save CLI generates a minimal identity-only companion in its private
-output directory so the same qualified reader can verify working copies.
-It does not copy account or signing metadata.
+The copied-save CLI uses the profile-specific context hook: older profiles
+generate an identity-only companion; the v1.9 profiles preserve the exact opaque
+original companion in the private output directory. Neither signs a save or
+changes ownership; player metadata is never included in public artifacts.
 
 ## Dynasty Warriors: Gundam: US/EU PS3
 
@@ -185,18 +188,13 @@ and mission-clear/reward pairs; scroll identities and dependency rules. US,
 Japanese, Xbox 360 and Wii U editions require independent complete native
 profiles and genuine files. No offsets are transferred between platforms.
 
-## Gundam 2, Gundam 3 and Reborn: exact blockers
+## Gundam 2, Gundam 3 and Reborn: current scope
 
-These titles remain unregistered. Public PS3 patch facts are useful leads;
-matching genuine revision-qualified gameplay files, complete native framing
-and integrity proof were not obtained. Related layouts never fall back to the
-Gundam 1 parser after rejection.
-
-| Title | Expected PS3 gameplay input and source | Missing inputs |
+| Title | v1.9 status | Remaining systems and inputs |
 | --- | --- | --- |
-| Gundam 2 | Decrypted `DATA.BIN`, `BLUS30288` / `BLES00528`; [US patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/BLUS30288.savepatch) | Complete genuine file plus region/build/revision provenance; native length/header/full checksum coverage; controlled EXP/level/stat, skill acquisition, part acquire/equip/lab submission, license and friendship/mission pairs. |
-| Gundam 3 | Decrypted `DATA.BIN`, `BLUS30703` / `BLES01301`; [US patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/BLUS30703.savepatch) | Complete genuine file, native title/revision/length/integrity; purchase pair for spendable money, lab EXP/tech-level rules, license rights versus owned parts, equipment/upgrade and friendship/skill/mission dependencies. No patch checksum action does not prove no gameplay checksum. |
-| Gundam Reborn / Shin Gundam Musou | Decrypted `DATA.BIN`; patches for `NPUB31531`, `BLES02057`, `NPEB02060`, `BLJM61140`, `NPJB00533`, `BLAS50671`; [US digital patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/NPUB31531.savepatch) | Genuine complete file for each intended region/revision and all framing/integrity rules; controlled money/material/Team Point actions, per-pilot skill availability/purchase/equip, existing plan/component/acquisition/combine/equipment records and mission/reward pairs. The regional patches are not interchangeable profiles. |
+| Gundam 2, US/EU PS3 | Unregistered; four genuine native exports have now been acquired and three byte-add integrity domains corroborated. [Retry](GUNDAM2_PS3_RETRY.md). | Pilot Points are EXP. Controlled growth/level/stat, skill acquisition, parts/lab submission and equipment pairs are needed to establish safe writable dependencies. Missing-save claims from the earlier survey are superseded. |
+| Gundam 3, US PS3 BLUS30703 | Registered money reductions, lab EXP and license inspection. The complete published money writer and one genuine original US export qualify this scoped profile. [Format](GUNDAM3_PS3_FORMAT.md). | Lab-level thresholds, license versus owned-part records, growth, friendship, skill and mission dependencies need controlled pairs. Other regions require independent writer/layout qualification. |
+| Gundam Reborn, EU NPEB02060 / JP NPJB00533 PS3 | Registered money and existing Amuro/Kamille Team Point reductions, named resource inspection; two genuine complete exports qualify native additive integrity. [Format](GUNDAM_REBORN_PS3_FORMAT.md). | Individually mapped materials, other pilot records, skills, plans/component fusion, equipment and mission/reward dependencies need controlled pairs and native schemas. Regional patches are not interchangeable profiles. |
 
 The [Gundam 2 publisher manual](https://archive.org/details/ps2_Dynasty_Warriors-_Gundam_2_USA)
 proves maximum pilot level **50**, despite the Apollo patch's “Level 30” target.
@@ -242,6 +240,8 @@ downloaded binaries were not executed.
 
 ## Validation distinctions
 
+Earlier expansion validation (historical counts):
+
 Final focused run: **41 passed, zero skipped/failed**. Full regression run:
 **1,189 discovered, 854 passed, 335 skipped, zero failures/errors**. All eight
 genuine copies were explicitly selected. Startup, inventory consistency,
@@ -259,18 +259,10 @@ Windows executable/native CNG validation also remains separate from Linux tests.
 
 ## Additional console source retry
 
-Public source and save trees were checked for matching further profiles. The
-[Gundam 2 US patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/BLUS30288.savepatch)
-provides an explicit byte-add checksum from `0x20` to the native file end,
-stored big endian at `0x10`. A complete genuine decrypted US `BLUS30288`
-`DATA.BIN` with original `PARAM.SFO` remains essential to verify the exact
-framing and every native integrity word. Its published “pilot points” are
-progression EXP, not a proved spendable currency; a level-plus-EXP cheat does
-not establish synchronized stat growth or reward dependencies. The current
-Apollo save tree has no matching `BLUS30288` or `BLES00528` input.
-
-Gundam 3's US `BLUS30703` patch identifies money and mobile-suit lab EXP but
-provides no complete native integrity writer. The current public Apollo tree
-has no matching gameplay export. A genuine original `DATA.BIN`/`PARAM.SFO`
-pair and complete integrity/load evidence remain necessary before a library
-entry; related Gundam 1 checksums and officer ordering are not transplanted.
+The earlier missing-export blockers for Gundam 2, Gundam 3 and Reborn are
+superseded by the v1.9 documents linked above. Gundam 2 remains research-only
+because safe progression/equipment dependencies are unresolved. Gundam 3's
+published complete money-write path retains external console integrity; it does
+not claim a verified game-internal checksum. Reborn independently validates its
+native additive checksum. No related game's checksum or record ordering is
+transplanted into another profile.

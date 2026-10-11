@@ -14,7 +14,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Windows build and packaging](BUILDING.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)
 - [Validation and evidence boundaries](VALIDATION.md)
-- [Current release notes](RELEASE_NOTES.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
+- [Current release notes](RELEASE_NOTES.md), [v1.8 release notes](releases/v1.8.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
   [v1.5 release notes](releases/v1.5.md)
   and [changelog](CHANGELOG.md)
 - [Repository identity](REPOSITORY_METADATA.md)
@@ -86,9 +86,14 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Totori DX PC research and remaining inputs](TOTORI_PC_RESEARCH.md)
 - [Sophie 2 tagged format](ATELIER_SOPHIE2_FORMAT.md) and
   [inventory coverage](SOPHIE2_COVERAGE.md)
+- [Sophie 2 PS4 native inventory and equipment format](SOPHIE2_PS4_FORMAT.md)
+- [Original Totori PS3 Cole and progression records](TOTORI_PS3_FORMAT.md)
+- [Original Meruru PS3 Cole and progression records](MERURU_PS3_FORMAT.md)
+- [Original Rorona PS3 Cole and named raw records](RORONA_PS3_FORMAT.md)
 - [Nioh 3 native integrity research](NIOH3_RESEARCH.md)
 - [Nioh / Nioh 2 active integrity investigation](NIOH_INTEGRITY_RESEARCH.md)
 - [Ninja Gaiden editions, formats and mechanic coverage](NINJA_GAIDEN_RESEARCH.md)
+- [Original Xbox Ninja Gaiden Black system load-list editor](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md)
 - [Stranger of Paradise native framing and remaining proof](SOPFFO_RESEARCH.md)
 - [Nioh, Wo Long and other Team Ninja formats](TEAM_NINJA_RESEARCH.md)
 - [Persona 5 Strikers native PC format](P5STRIKERS_PC_FORMAT.md)
@@ -135,6 +140,14 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Bladestorm: Nightmare PC candidate and evidence gate](BLADESTORM_PC_RESEARCH.md)
 
 - [Licensed Musou: Gundam and Ken's Rage](LICENSED_MUSOU.md)
+- [Gundam Reborn PS3 native resources and integrity](GUNDAM_REBORN_PS3_FORMAT.md)
+- [Gundam 3 US PS3 exported resources](GUNDAM3_PS3_FORMAT.md)
+- [Gundam 2 PS3 genuine-file follow-up and remaining mappings](GUNDAM2_PS3_RETRY.md)
+- [TRINITY: Souls of Zill O'll US PS3 resource format](TRINITY_PS3_FORMAT.md)
+- [Classic strategy follow-up source findings](CLASSIC_STRATEGY_V19_RESEARCH.md)
+- [Original Uncharted Waters DOS writer investigation](UNCHARTED_WATERS_DOS_RESEARCH.md)
+- [Monster Rancher 1/2 PS1 native checksums and mapping blockers](PS1_MONSTER_RANCHER_RESEARCH.md)
+- [Ninja Gaiden 2 Black PC compiled-writer investigation](NG2B_PC_WRITER_RESEARCH.md)
 
 - [Toukiden Kiwami Windows qualification](TOUKIDEN_KIWAMI_RESEARCH.md)
 - [Toukiden 2 Windows qualification](TOUKIDEN2_RESEARCH.md)

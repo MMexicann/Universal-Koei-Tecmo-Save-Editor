@@ -1,5 +1,7 @@
 # Strategy-game expansion
 
+The v1.9 expansion adds a separately qualified original Japanese Windows 95 [Tenshouki PK](NOBU6_PK_PC_FORMAT.md) district-resource editor. It does not qualify later Nobunaga campaign formats.
+
 Investigated 2026-10-10 (UTC). The implemented profile is **original Romance of the
 Three Kingdoms XIII, Windows PC, save revision 14, Traditional Chinese sample
 qualification**. It edits existing city money, supplies, civilian population

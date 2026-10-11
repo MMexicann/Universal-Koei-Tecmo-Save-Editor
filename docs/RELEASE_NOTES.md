@@ -1,20 +1,18 @@
-# Universal Koei Tecmo Save Editor v1.8
+# Universal Koei Tecmo Save Editor v1.9
 
-**10 additional game/platform editors**, bringing the library to **65 profiles across 12 platforms**.
+**11 additional game/platform editors**, bringing the library to **76 profiles across 13 platforms**.
 
-- **Persona 5 Strikers — English PS4:** money, Persona points, unspent BOND points and named existing item stacks; character and Persona inspection.
-- **Project Zero — European PS2:** reduce Photo Points and existing camera upgrades; search camera and inventory records.
-- **Uncharted Waters II: New Horizons — English DOS:** gold and eight protagonist attributes in occupied campaign slots; searchable campaign records.
-- **Atelier Ryza 3 DX — Steam PC:** reduce unspent SP and Gems; search inventory, Secret Keys and party records.
-- **Monster Rancher DS — US DS:** supported existing monsters’ six stats and remaining lifespan, ranch/breeder/monster names and gold reductions; searchable monster and inventory records.
-- **Tecmo Super Bowl — original US NES:** team controls, healthy-player conditions and existing playbook choices; searchable player and season records.
-- **Warriors Orochi 4 — PC:** Gems, Crystals, Growth Points, officer Skill Points, existing Skill Orb reductions and weapon-element quantities; searchable officer, weapon and resource records.
-- **Warriors Orochi 4 Ultimate — PC:** resources, existing element stock, progressed officers’ unspent Skill Points, promoted officers’ Upgrade Stones and Skill Orb reductions; searchable officer and weapon records.
-- **Samurai Warriors 5 — PC:** Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery, Lumber, Mineral and Fabric in slot-zero castle/menu saves; searchable officer, weapon and mount records.
-- **Warriors: Abyss — PC:** Karma Embers with owner-preserving saving; searchable recruitment records.
-- **Faster tests and builds:** improved parallel scheduling and shard balancing, with duplicate executable scanning removed. All validation gates remain.
+- **Atelier Rorona, Totori and Meruru — original PS3:** reduce Cole and browse named character and progression records.
+- **Atelier Sophie 2 — PS4:** reduce existing named material quality and adjust named battle-item uses within their capacity; searchable inventory, equipment and Party records.
+- **Dynasty Warriors: Gundam Reborn — PS3:** reduce spendable money and Amuro/Kamille Team Points; inspect pilot progression, earnings and material storage.
+- **Dynasty Warriors: Gundam 3 — PS3:** reduce spendable money; inspect Mobile Suit Laboratory EXP and license storage.
+- **TRINITY: Souls of Zill O’ll — PS3:** reduce spendable money; inspect SP and named character stat words.
+- **Romance of the Three Kingdoms: Legend of Liu Bei — DOS:** reduce existing allied troops and edit within-level EXP; searchable character and carried-item records.
+- **Romance of the Three Kingdoms III — Traditional Chinese DOS:** edit six officer abilities and reduce existing owned-city resources and commerce; searchable slot, city and officer records.
+- **Nobunaga’s Ambition: Tenshouki with Power-Up Kit — Windows:** reduce district Gold, Rice, Horses and Firearms; search generals, castles, clans, treasures and slots.
+- **Ninja Gaiden Black — Original Xbox:** restore numeric save-slot order in SYSTEM.dat and browse thirty stored slot times.
+- **Game library:** shared strategy-series filters make editions easier to find. Existing themes, Undo, Review Changes, backups and safe Save As remain available.
 
-Light/Dark themes, backups, Undo, Review Changes and safe Save As remain available.
-Download **UniversalKoeiTecmoSaveEditor-v1.8.exe** for the standalone Windows app,
-or the **Windows ZIP** with the same app and documentation. No Python installation is needed.
+Download **UniversalKoeiTecmoSaveEditor-v1.9.exe** for the standalone Windows app,
+or the **Windows ZIP** with the same executable and user documentation. No Python installation is needed.
 From source, install with `python -m pip install -e .` and run `python -m koei_editor`.

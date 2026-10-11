@@ -1,5 +1,7 @@
 # Classic Koei candidates after the English DOS New Horizons adapter
 
+ROTK III Traditional Chinese DOS and original Japanese Windows 95 Tenshouki PK now have scoped v1.9 editors: [ROTK III](ROTK3_DOS_FORMAT.md), [Tenshouki PK](NOBU6_PK_PC_FORMAT.md). Their current documents supersede the historical missing-reference claims below; other editions remain separate.
+
 These are research leads, not supported game/platform registrations. Exact
 edition, complete native writer/integrity and original record evidence must
 agree before a new editor is exposed. No game executable has been run, and no

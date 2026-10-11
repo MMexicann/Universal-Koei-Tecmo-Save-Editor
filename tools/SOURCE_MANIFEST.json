@@ -1,5 +1,5 @@
 {
-  "version": "1.8",
+  "version": "1.9",
   "files": [
     {
       "path": ".gitattributes",
@@ -23,8 +23,8 @@
     },
     {
       "path": "CONTRIBUTING.md",
-      "bytes": 17587,
-      "sha256": "dcb8e1f772f62e52c15a1729648e15ca8356aad4f4f07d743c99b6c1eeca24ee"
+      "bytes": 17787,
+      "sha256": "f5735f3c145e7413f6eddb77054beb3a0f7402a8b0dd95b4a20757a31fba428f"
     },
     {
       "path": "LICENSE",
@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 15366,
-      "sha256": "75e6cfd019f892edd872ce906422e67b3339c519c9ee8604d0be5e5a29fef102"
+      "bytes": 17618,
+      "sha256": "36a8562cbf75e3148fa047f8301f73f7ea99f895741f37d712cd0627431c17fe"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -134,17 +134,22 @@
     {
       "path": "docs/BUILDING.md",
       "bytes": 5502,
-      "sha256": "d327d7a640abca291293fe541a0fffd08ba48a268cb300752915df5e25fb4621"
+      "sha256": "795598b9eace22de2354930647fedc9cdc7b779c46f13e99b8bd84c87d010540"
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 12049,
-      "sha256": "a265d72c449d3abbd10668a66c500db794b06230d7c01f489b4811d9274901ee"
+      "bytes": 13578,
+      "sha256": "bf078283582bc9cff6c84d5cf993f7bff05417429e44a26a105b920a217558cd"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
-      "bytes": 4777,
-      "sha256": "0e5547266e48f1e3b7a65ac4c6dae94dd50d4c900bb177afa3c21d9381c5403b"
+      "bytes": 5072,
+      "sha256": "212f39d86c0cbbb5775d07100314ed1964445584176ed1f866f4e1af03991115"
+    },
+    {
+      "path": "docs/CLASSIC_STRATEGY_V19_RESEARCH.md",
+      "bytes": 7530,
+      "sha256": "b7a15d7d3594fbce8b30d5ce6f710ffd404d3e78fbcf56d1de65deb42de9f5c4"
     },
     {
       "path": "docs/COMPATIBILITY_FIX.md",
@@ -155,6 +160,11 @@
       "path": "docs/CONSOLE_PIRATE_STRATEGY_DEPTH.md",
       "bytes": 17073,
       "sha256": "74ad058ab8f456eeff21b5cfa43f1c0645958513ed7d03e886ea5a714b8398ea"
+    },
+    {
+      "path": "docs/DOA5LR_PC_RESEARCH.md",
+      "bytes": 4860,
+      "sha256": "e6de0426fc5371c77a9d7bc5b64529c03047414836e9bb7d4c9ab136d320e5de"
     },
     {
       "path": "docs/DOA5_FORMAT.md",
@@ -248,8 +258,8 @@
     },
     {
       "path": "docs/EXPANSION_COVERAGE.md",
-      "bytes": 51203,
-      "sha256": "5ce9ca27a191cdcecd177d64f2b3b860e4ba379597febe0c7290a4f7e530eadf"
+      "bytes": 54075,
+      "sha256": "206e41b033d1e64a3e245bbece093ba3c5324970051981b480d3144b568184d5"
     },
     {
       "path": "docs/FAIRY_TAIL_SWITCH_RESEARCH.md",
@@ -275,6 +285,21 @@
       "path": "docs/GAME_MECHANICS.md",
       "bytes": 26436,
       "sha256": "9e3cdaed1ee5e58e98255e8fa9e62cbb54f9b75e300771131062cc1767d950da"
+    },
+    {
+      "path": "docs/GUNDAM2_PS3_RETRY.md",
+      "bytes": 3834,
+      "sha256": "c42b7c6172208556ede0c7cc0435a6be1ceef932fe64c59cf2f6f9c9442aefb7"
+    },
+    {
+      "path": "docs/GUNDAM3_PS3_FORMAT.md",
+      "bytes": 7602,
+      "sha256": "2353e1b404af20bb5a13dabdf191d6f0b0239f7b24d0fd6d4c5863ab5f0d42cd"
+    },
+    {
+      "path": "docs/GUNDAM_REBORN_PS3_FORMAT.md",
+      "bytes": 7238,
+      "sha256": "962d726e543b0ce81564832a6bab2428456dbf484145eff8126b5e262e6a4e53"
     },
     {
       "path": "docs/HYRULE_FIRE_EMBLEM_DEPTH.md",
@@ -308,8 +333,8 @@
     },
     {
       "path": "docs/LICENSED_MUSOU.md",
-      "bytes": 18181,
-      "sha256": "0176b5b2b229dbb35d3b4eaddb8e5b3d59561cc575eaf3459eafeabb9c85c9c5"
+      "bytes": 17509,
+      "sha256": "f6410a08adb8d5222021b2393ef5b69b9f4ec100dcfe35ca507fca53a174deff"
     },
     {
       "path": "docs/LULUA_NELKE_SWITCH_RESEARCH.md",
@@ -327,6 +352,11 @@
       "sha256": "7f3c89b48b2b48532f4946d48111e53804952207207f89022b96dc56ec65c512"
     },
     {
+      "path": "docs/MERURU_PS3_FORMAT.md",
+      "bytes": 4831,
+      "sha256": "cd057f3696183b506e40cac226002ff49356e9ef9201e4f82ef1c7bf4a0f4f7b"
+    },
+    {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
       "bytes": 10366,
       "sha256": "158ce3091d6e270bb30fc1f9884800cf92b3a3ac75b445e0c68b074fa7d2e61e"
@@ -337,9 +367,19 @@
       "sha256": "824953165a818b7cec99afe6811f91a19c7f24c53fccef0bf8caf13acc655a03"
     },
     {
+      "path": "docs/NG2B_PC_WRITER_RESEARCH.md",
+      "bytes": 3461,
+      "sha256": "b3b5921a25c546b13ba5ad441fdce31044aa96fc7c4db0e5ce208c60ede0a884"
+    },
+    {
+      "path": "docs/NINJA_GAIDEN_BLACK_XBOX_FORMAT.md",
+      "bytes": 8625,
+      "sha256": "c2f15238e7b229666f178b3fbb0d6d61b7d258ec8d14425200061007cea03507"
+    },
+    {
       "path": "docs/NINJA_GAIDEN_RESEARCH.md",
-      "bytes": 24154,
-      "sha256": "9e94201917c519c7a92df7e2c56159586666c1407ce3334a16579651fcf12a4c"
+      "bytes": 24430,
+      "sha256": "c348afaff7550b1a83bc7a91b95a6d2eb4853772f223f2267a46a88f50b9d393"
     },
     {
       "path": "docs/NINTENDO_NEW_PLATFORM_RESEARCH.md",
@@ -355,6 +395,11 @@
       "path": "docs/NIOH_INTEGRITY_RESEARCH.md",
       "bytes": 13809,
       "sha256": "9a35c9112466921a472973657f6b183c92f92e0f033dff11002e8f0e074ee049"
+    },
+    {
+      "path": "docs/NOBU6_PK_PC_FORMAT.md",
+      "bytes": 6601,
+      "sha256": "cb1903ffeb12d5727c428cae499c94279805f29d2ec5522a9874f3b46248dfeb"
     },
     {
       "path": "docs/ORIGINS_FORMAT.md",
@@ -427,6 +472,11 @@
       "sha256": "72ab51e69c7db413c7223dc170e4890f54b85b1b4bfb477138617824e35af9d2"
     },
     {
+      "path": "docs/PS1_MONSTER_RANCHER_RESEARCH.md",
+      "bytes": 5698,
+      "sha256": "0e570abc4daa22a8b20b916ca0303e901d80a9821c225722a509e9798ef04294"
+    },
+    {
       "path": "docs/PS3_EXPANSION.md",
       "bytes": 18386,
       "sha256": "80b9b4fcf91e5d25a2eb78477df12fb25de583ee0914dd22871bafd3b90ce47e"
@@ -443,8 +493,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 9351,
-      "sha256": "588799ff15fbca3e824f1efc69e08ed9d6112617ddc2aecd93c680ea4578a0f1"
+      "bytes": 10776,
+      "sha256": "ec4d01e5f0e4a3332b183230ceee12275187227803cf3f686523a55ddd68e132"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -452,19 +502,24 @@
       "sha256": "2664a4c136380d3329146796c8a2bdce0de214af45cc63e1d297be324f8f2382"
     },
     {
+      "path": "docs/REKO3_DOS_FORMAT.md",
+      "bytes": 4283,
+      "sha256": "c45fb650764ca725db0038a5f50bdce4b3726cc60724a39ffd0fc88af4e714a2"
+    },
+    {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 2256,
-      "sha256": "39477fe60b02970b2a0a18bf85caabda27c083f9333089b985121a0fb382ceb7"
+      "bytes": 1941,
+      "sha256": "324e420dfb8572d3681373b29a05ec3cb255234fecbec9d7898d7099b395649f"
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
-      "bytes": 45422,
-      "sha256": "b21c693d0c455c992afbd6eea87ccd0bef5a5d7990aac50ea0af4c62120a7e15"
+      "bytes": 48398,
+      "sha256": "a65cd8b6e80663710257ec40aa1513977f27cfb38c9a6724fb208664ef0f43ca"
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
       "bytes": 1597,
-      "sha256": "6576d09ab64f765b4571e60d9451406cee9693c702e449f2641838080a265624"
+      "sha256": "d8db0aa924a56727f915d229feaee991c6fb3d07808d338ab8861d7ad25475d5"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -477,6 +532,11 @@
       "sha256": "9e1ec40c9ee7fdabc696e53bdb52935a8f7a91d4ce6246eac8e3abfde3347fe8"
     },
     {
+      "path": "docs/RORONA_PS3_FORMAT.md",
+      "bytes": 5824,
+      "sha256": "477821e398d40fbfb524c6a656ce29b880a226705d5e89e59527b49892bc0dce"
+    },
+    {
       "path": "docs/ROTK13_FORMAT.md",
       "bytes": 8545,
       "sha256": "e18e3c59991174495ab56c1a46aa188a680aed5ae537f8df62e23a45dc25ef2f"
@@ -485,6 +545,11 @@
       "path": "docs/ROTK2_DOS_FORMAT.md",
       "bytes": 6947,
       "sha256": "cb504ad45daae6f1157ecd94ad77aa6164e705976c06a171b0c2c64567e6744b"
+    },
+    {
+      "path": "docs/ROTK3_DOS_FORMAT.md",
+      "bytes": 8506,
+      "sha256": "52413c688fce1e634cc6039b94359fae5b0af556d2cd1a9383939406ff3e2b8f"
     },
     {
       "path": "docs/RYZA2_SWITCH_FORMAT.md",
@@ -547,6 +612,11 @@
       "sha256": "9fdca37ee77b7d5ff0b32e087a4c75c7039cf3f797146b85dbf0003b6fc92b1e"
     },
     {
+      "path": "docs/SOPHIE2_PS4_FORMAT.md",
+      "bytes": 6825,
+      "sha256": "9cb5a0d302248ada243905f8fe5cec71537daa0fd34dfc8875b13924f2aff999"
+    },
+    {
       "path": "docs/SOPHIE_PC_FORMAT.md",
       "bytes": 7403,
       "sha256": "73107e25cd8a216cb010bfb53003d2182e8cb93b2c25b66ab5b589aeba645ff7"
@@ -558,8 +628,8 @@
     },
     {
       "path": "docs/STRATEGY_EXPANSION.md",
-      "bytes": 7012,
-      "sha256": "b1e99ce0d51c99058e11650c022559f781a3b21a223acd59795af56ec4de7867"
+      "bytes": 7206,
+      "sha256": "91b99380e52fcec5df8046a59ed66cf2102393e2a2526697afaa844df813bfaa"
     },
     {
       "path": "docs/STRIKEFORCE_PS3.md",
@@ -568,8 +638,8 @@
     },
     {
       "path": "docs/SUPPORTED_GAMES.md",
-      "bytes": 12405,
-      "sha256": "c3fbcc09e042c4a4d254c954d113b593e1c1153c2fda3a0b3d11f6e32c78477e"
+      "bytes": 14657,
+      "sha256": "576ecf829281a7d4be1b1481e4d2a1c6425f925c630d04e3b99c3b431b0990f8"
     },
     {
       "path": "docs/SW2HD_PS3.md",
@@ -613,8 +683,8 @@
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
-      "bytes": 13151,
-      "sha256": "bed11e5384b1d29478ccb0759b49b6108135ead61353894db20b440fb19bfa65"
+      "bytes": 14526,
+      "sha256": "4c37ae5e5be6a4d744f084ba796e76591decb8fb318129d83993af22efc347b2"
     },
     {
       "path": "docs/THREE_HOPES_FORMAT.md",
@@ -642,6 +712,11 @@
       "sha256": "1f5d52dbd5b5b55dd0e0ad2d33893ffe6b26053231d4d3d5ab342a0aa4ec518f"
     },
     {
+      "path": "docs/TOTORI_PS3_FORMAT.md",
+      "bytes": 5341,
+      "sha256": "3f156b53015c857a7c9ad63741815776c5d2b587d6268551e61fbbeff661580f"
+    },
+    {
       "path": "docs/TOUKIDEN2_RESEARCH.md",
       "bytes": 9795,
       "sha256": "38009f148afa339b6ddd466515d96615b6dd028f3e76626722802c33b9c0c3f4"
@@ -652,9 +727,19 @@
       "sha256": "01c7e32ffac893e826d9f5376b4b5e0f261b341ad07dfa38a10056ffaab361b7"
     },
     {
+      "path": "docs/TRINITY_PS3_FORMAT.md",
+      "bytes": 7683,
+      "sha256": "8518c9dc43d5430502e054d5c593476795181c67d54a965f5430d49e77d569ca"
+    },
+    {
       "path": "docs/UNCHARTED_WATERS2_DOS_FORMAT.md",
       "bytes": 8365,
       "sha256": "213ca78216b46839cc6b6f8c1ea4d5dff8beeb0daf089582b92bc6bfb7242656"
+    },
+    {
+      "path": "docs/UNCHARTED_WATERS_DOS_RESEARCH.md",
+      "bytes": 2542,
+      "sha256": "3527d3bfcd8cfd1985b5055bfd44f7b3e5e87334d06d2e7f99067ea46c7735bb"
     },
     {
       "path": "docs/VALIDATION.md",
@@ -717,6 +802,11 @@
       "sha256": "89268c934c64c35a14e60deb101ae4709c32c73a25a306df921ebb3bbc9e9e6f"
     },
     {
+      "path": "docs/releases/v1.8.md",
+      "bytes": 2256,
+      "sha256": "39477fe60b02970b2a0a18bf85caabda27c083f9333089b985121a0fb382ceb7"
+    },
+    {
       "path": "launch.pyw",
       "bytes": 49,
       "sha256": "444a19c6b889796340300f6746fb6842e55999a94fe7bb581c3824b6e310e6c0"
@@ -759,7 +849,7 @@
     {
       "path": "pyproject.toml",
       "bytes": 605,
-      "sha256": "06d91cb1101921ec2cd78ce519294def7ad6aa810b6c1a6f277415203f4a9eb3"
+      "sha256": "4263d55286c8042f3baefa597d62ce71f3f8a3caa17440a243bfa260f3ce7523"
     },
     {
       "path": "src/koei_editor/AGENTS.md",
@@ -784,7 +874,7 @@
     {
       "path": "src/koei_editor/application.py",
       "bytes": 23763,
-      "sha256": "8511a8e46154c0b6796a34b2f656c57d83fa8f152e487ed623c56df138b0b34e"
+      "sha256": "581e77dcfc37c84e7aa7114e751c2921d1c33aaf7b6a5c8e08962ca3d9756e03"
     },
     {
       "path": "src/koei_editor/data/AGENTS.md",
@@ -843,8 +933,8 @@
     },
     {
       "path": "src/koei_editor/data/support_catalog.json",
-      "bytes": 94638,
-      "sha256": "f8d6dc9bdb854064a574e718e1be98f8ff9e01d51aabe825c98e2bb43149af95"
+      "bytes": 104834,
+      "sha256": "6fd0a8907d0d5a067102fff231a7293cb8db791f106ab906882eb1a884ab80ea"
     },
     {
       "path": "src/koei_editor/data/unique_weapons.json",
@@ -863,8 +953,8 @@
     },
     {
       "path": "src/koei_editor/game_registry.py",
-      "bytes": 29528,
-      "sha256": "a13ef29e02a81d4a440c173ebccb59cf3fc1a12a81b4dd2ec8cb26cc59a40ec3"
+      "bytes": 34455,
+      "sha256": "073fa2e31869a55e78348c2e24b7382cdce18d222a23e27ade3c9439e07b517c"
     },
     {
       "path": "src/koei_editor/games/AGENTS.md",
@@ -915,6 +1005,16 @@
       "path": "src/koei_editor/games/age_of_calamity/parser.py",
       "bytes": 13221,
       "sha256": "ea369c4b17de490a1f20593e9e340cf52231ea13804d6c502266461821d886fc"
+    },
+    {
+      "path": "src/koei_editor/games/arland_ps3/__init__.py",
+      "bytes": 76,
+      "sha256": "2a63c56331246417f41a6a94b83314484ff792a5f54369245761c04b720ad155"
+    },
+    {
+      "path": "src/koei_editor/games/arland_ps3/backend.py",
+      "bytes": 17178,
+      "sha256": "c8a41044c16bba0bac839fdc7e811d4d4a1a93ee759b3f7968894f39d1d48469"
     },
     {
       "path": "src/koei_editor/games/ayesha_ps3/__init__.py",
@@ -1377,6 +1477,36 @@
       "sha256": "0b60e3b1bdd0fe3075b56104cc18d93e71ed4672c99824c1f6d9dbe9b19af640"
     },
     {
+      "path": "src/koei_editor/games/gundam3_ps3/__init__.py",
+      "bytes": 65,
+      "sha256": "b301ccf454d76de03ac068fc1c3e79078251337c45db20612a6932e7881ff618"
+    },
+    {
+      "path": "src/koei_editor/games/gundam3_ps3/editor.py",
+      "bytes": 817,
+      "sha256": "ffdc863b12829f17b417478229005d24e4b9650263783d3376c0832e32af2560"
+    },
+    {
+      "path": "src/koei_editor/games/gundam3_ps3/parser.py",
+      "bytes": 13535,
+      "sha256": "a1c740ddb384d5ba485242f900dfed934572a659c442f6460f5aca7ff859a9b5"
+    },
+    {
+      "path": "src/koei_editor/games/gundam_reborn_ps3/__init__.py",
+      "bytes": 69,
+      "sha256": "00fab37080e6e7c8316a1076d28b95959c0ea6f350c51e50d7330d244baae309"
+    },
+    {
+      "path": "src/koei_editor/games/gundam_reborn_ps3/editor.py",
+      "bytes": 919,
+      "sha256": "dceab0f1eaaa5ee6d8ab57870a3ad71c9c7f468217aae3b1d39466f43402ccdc"
+    },
+    {
+      "path": "src/koei_editor/games/gundam_reborn_ps3/parser.py",
+      "bytes": 15329,
+      "sha256": "3f83ef7551c9e0b87f143721d362d677d710e0b70d477c84b9f46be4b7c1e757"
+    },
+    {
       "path": "src/koei_editor/games/hyrule_definitive/__init__.py",
       "bytes": 57,
       "sha256": "0191b82c7a826d3b1bc5b4d952a6d43d36aca815d5f286843577a922c583b4bc"
@@ -1487,6 +1617,21 @@
       "sha256": "2c385c3690902651e41205d9ef13700ad36ff3a7839a6735670074f5db540b41"
     },
     {
+      "path": "src/koei_editor/games/meruru_ps3/__init__.py",
+      "bytes": 56,
+      "sha256": "590b892010de58228e9017411350dac39928cb28ced43c5f6a28e77f2bde9f22"
+    },
+    {
+      "path": "src/koei_editor/games/meruru_ps3/editor.py",
+      "bytes": 1389,
+      "sha256": "8336becd892f9b7ea06146e77196df9176e11a199678000eaeecd7d3801390f4"
+    },
+    {
+      "path": "src/koei_editor/games/meruru_ps3/parser.py",
+      "bytes": 1554,
+      "sha256": "176fb2364f1a897c987fea476e8844e05cd4ce29e510204507b99638f5321c95"
+    },
+    {
       "path": "src/koei_editor/games/monster_rancher_ds/__init__.py",
       "bytes": 57,
       "sha256": "8a3ef5dcde45d980966b1ceb014dfd325edb59f6fa741b4757d6e44151c853f0"
@@ -1505,6 +1650,41 @@
       "path": "src/koei_editor/games/monster_rancher_ds/presentation.py",
       "bytes": 1441,
       "sha256": "a2a4dbfb974da55c45792f0d0a8a45a66ccfa01b07cf23bcc1a0c2f62df5f19b"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/__init__.py",
+      "bytes": 77,
+      "sha256": "8e5dc7eae1061e87cea4f30f6cf571bfcd1406d459ded4e3cedf8c694a6971f3"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/_pi.py",
+      "bytes": 9183,
+      "sha256": "489ec05ae99405ad6dc402dd5bbbea55e23800c9a42c143b799995e1a1fa571a"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/codec.py",
+      "bytes": 9001,
+      "sha256": "75a7e943b67570cdca55206d99db99af1741d7b14d3ed443bce668a0bf9a60be"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/editor.py",
+      "bytes": 658,
+      "sha256": "b5c3df66f2baa64831e50046781b0c9df520985a1cd8d10b74cdce42be75d744"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/owner.py",
+      "bytes": 9538,
+      "sha256": "c00637df9fe843c25f61c2bc63860fe326582bebf2a7da2ca0b18b9ffaa1c9f1"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/parser.py",
+      "bytes": 12062,
+      "sha256": "f30bf3e6aa4359bd13ce410279aff172cbf6a0cf021253c51d4575f6b91b2e08"
+    },
+    {
+      "path": "src/koei_editor/games/ninja_gaiden_black_xbox/presentation.py",
+      "bytes": 737,
+      "sha256": "dd3e8c49055853341a2304f1526128da151e22204257af51253f12b69a5dd4cb"
     },
     {
       "path": "src/koei_editor/games/ninja_gaiden_ii/__init__.py",
@@ -1555,6 +1735,21 @@
       "path": "src/koei_editor/games/nioh3/parser.py",
       "bytes": 10776,
       "sha256": "79c738e4e68a71810b8f23fa5aebfd5a11bcdb2031de0fe9f7724d29dac31d52"
+    },
+    {
+      "path": "src/koei_editor/games/nobu6_pk_pc/__init__.py",
+      "bytes": 74,
+      "sha256": "0784a12cb1af7e1fc3ab5295c8cac1a0f4354b92c795b5a07ae7e1b846cd0a19"
+    },
+    {
+      "path": "src/koei_editor/games/nobu6_pk_pc/editor.py",
+      "bytes": 2098,
+      "sha256": "9bb7c82c74f407c4129e6b2b95b926c0396dc8878a35803ee1f467cde5e2d505"
+    },
+    {
+      "path": "src/koei_editor/games/nobu6_pk_pc/parser.py",
+      "bytes": 14893,
+      "sha256": "bef4de429ceb2882662edc9b4bf98d56a6aa466bc7feda419fd4efc644ee094e"
     },
     {
       "path": "src/koei_editor/games/origins/__init__.py",
@@ -1767,6 +1962,36 @@
       "sha256": "fd777602f3b0881e9ff67076492960faab9152db38150b69f6bf93ccd3dd7040"
     },
     {
+      "path": "src/koei_editor/games/reko3_dos/__init__.py",
+      "bytes": 64,
+      "sha256": "2e06953fd4b94f0fdc1ba71196d36cfd704bee34a42b4db07c679388a784696b"
+    },
+    {
+      "path": "src/koei_editor/games/reko3_dos/editor.py",
+      "bytes": 1106,
+      "sha256": "b5019a85283bec7287785ae5ccbe138b4466a2d6a013353ee22b660ba5cb353b"
+    },
+    {
+      "path": "src/koei_editor/games/reko3_dos/parser.py",
+      "bytes": 10442,
+      "sha256": "8298c44544e16b7ddc1a9c93cd34e635803d040cb3c84eb736e2acbfc7d79cb4"
+    },
+    {
+      "path": "src/koei_editor/games/rorona_ps3/__init__.py",
+      "bytes": 57,
+      "sha256": "73524bc34cfcd924fd467710ce9690c20bc9a917a22a51869493674c42c51411"
+    },
+    {
+      "path": "src/koei_editor/games/rorona_ps3/editor.py",
+      "bytes": 1456,
+      "sha256": "993c96bcb2c232a3ee4a7eca55bab00c138f3e44b19fc38b11b3d59413986fd7"
+    },
+    {
+      "path": "src/koei_editor/games/rorona_ps3/parser.py",
+      "bytes": 1469,
+      "sha256": "756766336d80a43f65c2b1337188bf9bc4d0a32ba81bd527cd1bb3082d5734c1"
+    },
+    {
       "path": "src/koei_editor/games/rotk13/__init__.py",
       "bytes": 72,
       "sha256": "92578dde9b4fe2a80f4060c32438595aac5bded37498f173d3e75b196b96db82"
@@ -1800,6 +2025,21 @@
       "path": "src/koei_editor/games/rotk2_dos/parser.py",
       "bytes": 12124,
       "sha256": "02dc90637def9f4d7f2eced1c70ca7bb334aad13516842e63b477dbacbc14019"
+    },
+    {
+      "path": "src/koei_editor/games/rotk3_dos/__init__.py",
+      "bytes": 74,
+      "sha256": "a19b51643f216e79cedef5ffa4a473bbefa016d7203a34a29a0767b471f51ebc"
+    },
+    {
+      "path": "src/koei_editor/games/rotk3_dos/editor.py",
+      "bytes": 2123,
+      "sha256": "3d0217987875a0ab4cf7f0633fc7022dff432971f98af63e4cedd51529035dcc"
+    },
+    {
+      "path": "src/koei_editor/games/rotk3_dos/parser.py",
+      "bytes": 14992,
+      "sha256": "e1b07b7562fba0649901dd78a79cfce4f9950c1a457c30ed0ab04355ed3fb348"
     },
     {
       "path": "src/koei_editor/games/ryza/__init__.py",
@@ -1920,6 +2160,26 @@
       "path": "src/koei_editor/games/sophie2/atelier_sophie2_presentation.py",
       "bytes": 1315,
       "sha256": "ed6b6c9029724eacc0560e7190cd17ff626ed9ec8972e72cf52a2f26484b011c"
+    },
+    {
+      "path": "src/koei_editor/games/sophie2_ps4/__init__.py",
+      "bytes": 63,
+      "sha256": "323884bcb51eba716f85acfd0c45f3532d26957b981be7e95e52bc188439c777"
+    },
+    {
+      "path": "src/koei_editor/games/sophie2_ps4/context.py",
+      "bytes": 2909,
+      "sha256": "eac877b1ce9732142acc599d35308dcfd9253517a611a5f6d0f01a4f68b53202"
+    },
+    {
+      "path": "src/koei_editor/games/sophie2_ps4/editor.py",
+      "bytes": 2119,
+      "sha256": "9f2682d727e071aa58aa6134a6afc6b13dca4e37a8f62e2e988688a028d312bc"
+    },
+    {
+      "path": "src/koei_editor/games/sophie2_ps4/parser.py",
+      "bytes": 25633,
+      "sha256": "a9bd9d5267dbe77cd7e84ab85d00c84ab1fe8d7e3ee64fc0f4eec167c4c38839"
     },
     {
       "path": "src/koei_editor/games/stars/__init__.py",
@@ -2070,6 +2330,36 @@
       "path": "src/koei_editor/games/three_houses/parser.py",
       "bytes": 16721,
       "sha256": "df9d7d6e331cab9f24b5d0d9d6c831520a9d9b000c7e5000b2a406e95d13b4f4"
+    },
+    {
+      "path": "src/koei_editor/games/totori_ps3/__init__.py",
+      "bytes": 56,
+      "sha256": "590b892010de58228e9017411350dac39928cb28ced43c5f6a28e77f2bde9f22"
+    },
+    {
+      "path": "src/koei_editor/games/totori_ps3/editor.py",
+      "bytes": 1389,
+      "sha256": "589d3d30036ab348fd922e3cd2f52deb4d4adee6afdb8e63f7cd6010c72b9bb9"
+    },
+    {
+      "path": "src/koei_editor/games/totori_ps3/parser.py",
+      "bytes": 1492,
+      "sha256": "2ed69c6d21ac582a9111b38ce164a23dc7737308d4e6197ca56ce0a255cdf607"
+    },
+    {
+      "path": "src/koei_editor/games/trinity_ps3/__init__.py",
+      "bytes": 56,
+      "sha256": "876740fca9cad1f720face64cf9eb4e3a2219c725647db6eceb71e046d72a88a"
+    },
+    {
+      "path": "src/koei_editor/games/trinity_ps3/editor.py",
+      "bytes": 825,
+      "sha256": "8119410a63e51814c7cf4fc119e0f8223776aae2c083ea8ddf12c4baadc28b98"
+    },
+    {
+      "path": "src/koei_editor/games/trinity_ps3/parser.py",
+      "bytes": 13791,
+      "sha256": "ba55cb15710207020b674028ec9f977ba61d7b365a5811ed71c3c5815209822f"
     },
     {
       "path": "src/koei_editor/games/uncharted_waters2_dos/__init__.py",
@@ -2322,6 +2612,16 @@
       "sha256": "90b32d5903e8be78ec93251d788961f654dc6e3aae614f9a64056d2aa4b42477"
     },
     {
+      "path": "src/koei_editor/research/ninja_gaiden_black_xbox/__init__.py",
+      "bytes": 84,
+      "sha256": "9e33035cd32022ae4ef731de260870252637561f1d235ccaeff3ae354b1d43ab"
+    },
+    {
+      "path": "src/koei_editor/research/ninja_gaiden_black_xbox/parser.py",
+      "bytes": 1538,
+      "sha256": "c0620ecbf8ce61a2c92bd9b60e5bf2878e669702bebe881e9465fb4c546c2ac3"
+    },
+    {
       "path": "src/koei_editor/research/ninja_gaiden_sigma2_pc/__init__.py",
       "bytes": 80,
       "sha256": "9f634a6e65c9ad39e0eb2170b2db5668f72b501f4da5f1219cbc8020e465ccba"
@@ -2523,8 +2823,8 @@
     },
     {
       "path": "src/koei_editor/shared/library_catalog.py",
-      "bytes": 2003,
-      "sha256": "b022ad8945ff2e65256d19bf44070552c0b7bc8ef3c753672f7d516835e92d02"
+      "bytes": 2127,
+      "sha256": "1fa9c0a6d3ac133485fbdb7237f7031e39b67c8c9e55d3a9387f1578289ffdb4"
     },
     {
       "path": "src/koei_editor/shared/musou_presentations.py",
@@ -2583,8 +2883,8 @@
     },
     {
       "path": "src/koei_editor/supported_games.py",
-      "bytes": 7169,
-      "sha256": "0e271e30ad474dfe6c09d8d2732d7fc7516b9393f0666aa747a6ac8127292c3a"
+      "bytes": 8365,
+      "sha256": "83696d37616775a9e94b01b4817f8484a6c03b5422f7862f27508577efb86ce0"
     },
     {
       "path": "tests/README.md",
@@ -2605,6 +2905,11 @@
       "path": "tests/test_adapter_contract.py",
       "bytes": 8424,
       "sha256": "06e9036231e4328cb0995763ba017fd91f129d698a6f915d61487f2f6882bd5e"
+    },
+    {
+      "path": "tests/test_arland_ps3.py",
+      "bytes": 18992,
+      "sha256": "e374cc0d197f20f6513b163f03529382fb6b68cce69409d1448e16dcc306e9ee"
     },
     {
       "path": "tests/test_atelier_sophie2_format.py",
@@ -2907,6 +3212,16 @@
       "sha256": "4882f0a5f4229da8e24ab690724a0720dca18f9864a1a3c11c5fffa3c50939aa"
     },
     {
+      "path": "tests/test_gundam3_ps3.py",
+      "bytes": 13267,
+      "sha256": "f79ace2c787442aeca39873b8278857163e701b700fb38e68e67e8ad0b5864e2"
+    },
+    {
+      "path": "tests/test_gundam_reborn_ps3.py",
+      "bytes": 13788,
+      "sha256": "e26aad1595c179a8ac06e6fafe2c22160a3ecb55e44494a6cb59acd95a37f720"
+    },
+    {
       "path": "tests/test_gust_gui.py",
       "bytes": 5964,
       "sha256": "eff12bac8254d730a6b9bec07bb3b9fbe500528296db1acdb5ba204ed0fd37b6"
@@ -2998,8 +3313,8 @@
     },
     {
       "path": "tests/test_library_search.py",
-      "bytes": 10578,
-      "sha256": "5e0e3bce9c89d660cb81220b10e21b24aff97c5d7d2718ce609218ca07f74d43"
+      "bytes": 11659,
+      "sha256": "857e8475bc87aa67701f2e338758e5db174662f56f27af625e07cce329170780"
     },
     {
       "path": "tests/test_licensed_musou_context_regressions.py",
@@ -3062,6 +3377,11 @@
       "sha256": "96bdcec5d1e99be815e06e4e83d5ff6040c3e87612026805c53582464948d600"
     },
     {
+      "path": "tests/test_ninja_gaiden_black_xbox.py",
+      "bytes": 14826,
+      "sha256": "85887daba2023fcad4854abe091a8e34276a821424e10a56475c52535fdf4ce7"
+    },
+    {
       "path": "tests/test_ninja_gaiden_ii.py",
       "bytes": 10405,
       "sha256": "9c4ab188b7fb145aa8eb33c34fe2fbc20f6bbbebe940a60a75aa1c72e2a74af7"
@@ -3100,6 +3420,11 @@
       "path": "tests/test_nioh_native.py",
       "bytes": 6707,
       "sha256": "05ee43b24918e3790df86917cf8ab81f53d4a9827e2c20e01f191c8c52cfedfd"
+    },
+    {
+      "path": "tests/test_nobu6_pk_pc.py",
+      "bytes": 14682,
+      "sha256": "756d8880707764c01235ba23e91ad204c4768d53c9848d00bdff63efe77e743b"
     },
     {
       "path": "tests/test_origins_codec.py",
@@ -3292,6 +3617,11 @@
       "sha256": "d52a373ee36edae3d96efda7c259af2412ce428273fa95bdab990eaa39d37a7c"
     },
     {
+      "path": "tests/test_reko3_dos.py",
+      "bytes": 11148,
+      "sha256": "5f3db99cf8ee484cd83c1f94cde8adbfb0d79bab64ef05b5af7281673fc88c8f"
+    },
+    {
       "path": "tests/test_release_preparation.py",
       "bytes": 8427,
       "sha256": "883ea51557edeace03b8a8073e2415ed30ec95a6c3821633a9bc0ec606b36077"
@@ -3330,6 +3660,11 @@
       "path": "tests/test_rotk2_dos.py",
       "bytes": 12186,
       "sha256": "72c4272334a2e048c7bb37542d3fa1c13951d772b9fb1cb930882534d7a715f1"
+    },
+    {
+      "path": "tests/test_rotk3_dos.py",
+      "bytes": 14772,
+      "sha256": "a2fe2835f0e92434ecd1f58aa93fd81a98e5e4f8e94b312e80380d6f0fd14517"
     },
     {
       "path": "tests/test_ryza2_switch.py",
@@ -3430,6 +3765,11 @@
       "path": "tests/test_sophie2_inventory.py",
       "bytes": 7585,
       "sha256": "6f6850f423fbf7ac4aab4a85266a21decbb6b4084c6081b9b2953531f620f4a7"
+    },
+    {
+      "path": "tests/test_sophie2_ps4.py",
+      "bytes": 19667,
+      "sha256": "cb12d60ce23360e8709be6c5f951418618511b7374867874890fbbcd39109f6b"
     },
     {
       "path": "tests/test_sophie_audit.py",
@@ -3580,6 +3920,11 @@
       "path": "tests/test_totori_dx_ps4_candidate.py",
       "bytes": 10480,
       "sha256": "daf9e1746cf5f43b45f36e7d6d98786ffd7ea7f5d7d4676553d53cd9193da01d"
+    },
+    {
+      "path": "tests/test_trinity_ps3.py",
+      "bytes": 13247,
+      "sha256": "7ced943f1e22dfdd4aaa5997430738f699a8e30b32ebfdec331ba574b400f9f5"
     },
     {
       "path": "tests/test_uncharted_waters2_dos.py",
@@ -3754,7 +4099,7 @@
     {
       "path": "tools/build_windows.py",
       "bytes": 2071,
-      "sha256": "22cb524df539f6c18680ea4867b912063a9525cf30678f5861cfc37ee030c2ce"
+      "sha256": "699b7f87b891babd4a166bb54873e4fa46ad1dbc2236f03ee1145bcd0ebd14ec"
     },
     {
       "path": "tools/package_release.py",

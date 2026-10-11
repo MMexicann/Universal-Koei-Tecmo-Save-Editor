@@ -1,6 +1,6 @@
 # Persona 5 Strikers: observed encrypted PC English profile
 
-This unreleased adapter handles complete PC `SAVEDATA.BIN` copies with decrypted version `0x20012000`, size `0x55DEA0`, ten serialized blocks and the observed zero trailer suffix. It does not convert Switch/PS4 saves or transfer account ownership. Two freely shared PC player saves qualify the framing, checksum and unchanged roundtrips. Neither the original authors' game-load claims nor a successful editor roundtrip constitutes our own game-load validation.
+The PC adapter handles complete PC `SAVEDATA.BIN` copies with decrypted version `0x20012000`, size `0x55DEA0`, ten serialized blocks and the observed zero trailer suffix. It does not convert Switch/PS4 saves or transfer account ownership. Two freely shared PC player saves qualify the framing, checksum and unchanged roundtrips. Neither the original authors' game-load claims nor a successful editor roundtrip constitutes our own game-load validation.
 
 ## Implemented controls
 
@@ -40,7 +40,7 @@ An additive byte checksum detects ordinary accidental damage but permits arithme
 - [Published item/offset worksheet](https://docs.google.com/spreadsheets/d/1CeCiLDemo1cmc34Mg6WTs4Y4f-5yQsjWq2bGksaPktQ/edit): individually transcribed position/name facts for selected ordinary stacks, including the expansion's incenses, remedies and skill cards; its complete dataset is not bundled. Unknown IDs are excluded.
 - [Amuyea-gbatemp/Persona-5-Strikers-Scramble-Save-Editor](https://github.com/Amuyea-gbatemp/Persona-5-Strikers-Scramble-Save-Editor/tree/7466afbb3c1bbcf550d4ff5c18e293103969e678): GPL-3.0 source at the expansion's checked commit, read as a corroborating factual reference only. No GPL code or cheat actions were copied. Its low-byte inventory reads and four-byte generic writer differ; our bounded writer preserves neighboring bytes.
 - [Public PC player archives](https://savegame.pro/pc-persona-5-strikers-savegame/), attributed on the page to Zeal and Akahika: two complete encrypted PC saves downloaded separately. One advertises level 99 and the other completed compendium/BOND content; intentional modifications are possible. These are player-derived files, not unmodified gameplay cap evidence. All downloaded archives, player bytes and decoded copies stay outside source and release packaging.
-- [Switch 100% Yuzu thread](https://gbatemp.net/threads/persona-5-strikers-100-yuzu-save-data.683968/) supplies a shortener link, not a qualified directly acquired Switch export. The Switch editor's existence does not register Switch support here.
+- The later [English Switch qualification](P5STRIKERS_SWITCH_FORMAT.md) independently acquired two complete native exports from the public NX_Saves catalog and matched its own platform framing and Switch writer facts. It uses a separate plaintext Switch adapter; this PC adapter does not convert or open those exports. The older [Switch Yuzu thread](https://gbatemp.net/threads/persona-5-strikers-100-yuzu-save-data.683968/) remains a shortener-only source, separate from those acquired files.
 
 ## Coverage and remaining inputs
 
@@ -54,7 +54,8 @@ An additive byte checksum detects ordinary accidental damage but permits arithme
 | Weapons, armor, accessories and equipment | Preserved. Public inventory maps alone do not prove equipped references, required characters or special-item acquisition dependencies. |
 | Recipes, requests, valuables, Jail/story completion, collections and NG+ | Preserved. Recipe ownership and story rewards must be qualified separately from ingredient/resource quantities. |
 | Native PC revisions / language variants | Only the observed English marker/name layout and zero trailer suffix qualify. Need genuine copies and matching version/layout evidence for others. |
-| Switch/PS4 support | Not implemented. Need independent complete exports with exact title/version/language, framing/integrity qualification and safe console import contract. |
+| English Nintendo Switch | Implemented separately in [its native Switch adapter](P5STRIKERS_SWITCH_FORMAT.md); this PC adapter still requires the encrypted PC format. |
+| Japanese Switch / PS4 | Not implemented. Need independent complete exports with exact title/version/language, framing/integrity qualification and safe console import contract. |
 | Actual game loading | Not performed. Need an owner-operated PC load of an edited copy and before/after in-game observation; do not treat automated codec/GUI checks as that test. |
 
 Focused checks use optional private `P5S_PC_SAVE_COPIES` containing paths separated by the platform path separator. Public tests generate their own native-size procedural data. [Expansion tests](../tests/test_persona_gust_depth.py) cover the new stack selections, unusual/adjacent-byte rejection, surgical changes, growth/held-Persona preservation, native copies and actual Tk controls. No paths, names, account IDs or player data belong in published fixtures.

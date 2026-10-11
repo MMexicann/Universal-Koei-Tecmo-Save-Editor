@@ -90,7 +90,7 @@ GAMES = (
          '', '.dat', '#827050', 'koei_editor.games.ryza.editor2', 'koei_editor.games.ryza.parser',
          True, 'RYZA 2', True, scalar_backend='koei_editor.games.ryza.parser'),
     Game('meruru_plus_vita', 'ATELIER MERURU PLUS', 'The Apprentice of Arland · US decrypted PCSE00296',
-         'Cole; 13 named characters’ base attack/defense/speed, base HP/MP/LP increases and current-gauge reductions; searchable records.',
+         'Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records.',
          '', '', '#827050', 'koei_editor.games.meruru_plus_vita.editor', 'koei_editor.games.meruru_plus_vita.parser',
          True, 'MERURU PLUS', True, 'PlayStation Vita', scalar_backend='koei_editor.games.meruru_plus_vita.parser'),
     Game('fatal_frame2_remake', 'FATAL FRAME II', 'Crimson Butterfly REMAKE · Steam PC',

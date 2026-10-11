@@ -13,7 +13,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Validation and evidence boundaries](VALIDATION.md)
-- [Current release notes](RELEASE_NOTES.md), [v1.5 release notes](releases/v1.5.md)
+- [Current release notes](RELEASE_NOTES.md), [v1.71 release notes](releases/v1.71.md),
+  [v1.5 release notes](releases/v1.5.md)
   and [changelog](CHANGELOG.md)
 - [Repository identity](REPOSITORY_METADATA.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md) and [licence texts](../licenses/README.md)
@@ -42,6 +43,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [DW8 Xtreme Legends original US PS3 PSN format](DW8XL_PS3_FORMAT.md)
 - [Original Atelier Ryza Switch format and mechanics](RYZA_SWITCH_FORMAT.md)
 - [Dragon Quest Builders 2 Steam CMNDAT format and mechanics](DQB2_PC_FORMAT.md)
+- [Dragon Quest Builders 2 original Switch format and mechanics](DQB2_SWITCH_FORMAT.md)
+- [Original Atelier Ryza 2 Switch SP and inventory format](RYZA2_SWITCH_FORMAT.md)
 - [Original DW9 PC evidence and remaining inputs](DW9_ORIGINAL_PC_RESEARCH.md)
 - [DW6 original PC coverage](DW6_RESEARCH.md)
 - [DW5 Special native Windows format](DW5_SPECIAL.md)
@@ -83,6 +86,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Stranger of Paradise native framing and remaining proof](SOPFFO_RESEARCH.md)
 - [Nioh, Wo Long and other Team Ninja formats](TEAM_NINJA_RESEARCH.md)
 - [Persona 5 Strikers native PC format](P5STRIKERS_PC_FORMAT.md)
+- [Persona 5 Strikers English Switch resources and inventories](P5STRIKERS_SWITCH_FORMAT.md)
 - [Atelier Ayesha PS3 exports](AYESHA_PS3_FORMAT.md)
 - [Original Sophie PC format and DX/Firis blockers](SOPHIE_PC_FORMAT.md)
 - [Ryza 2 PC format and Ryza 1/3 blockers](RYZA_FORMATS.md)
@@ -93,8 +97,10 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Meruru Plus US PS Vita format and character controls](MERURU_PLUS_VITA_FORMAT.md)
 - [Berserk EU PS Vita resources and material controls](BERSERK_VITA_FORMAT.md)
 - [Original Dead or Alive 5 PS3 costume flags](DOA5_FORMAT.md)
+- [Dead or Alive 5 Plus Vita native codec and writable-field blocker](DOA5_PLUS_VITA_RESEARCH.md)
 - [Pokémon Conquest US Nintendo DS gallery IVs](POKEMON_CONQUEST_DS_FORMAT.md)
 - [Dusk DX and Nelke qualification](DUSK_DX_RESEARCH.md)
+- [Lulua and Nelke Switch native codec and mechanics blockers](LULUA_NELKE_SWITCH_RESEARCH.md)
 - [Fatal Frame II Remake native format](FATAL_FRAME2_REMAKE_FORMAT.md)
 - [Blue Reflection and other Fatal Frame research](BLUE_REFLECTION_RESEARCH.md)
 - [Hyrule, Fire Emblem and Pirate follow-up](FAMILY_NEXT_RESEARCH.md)
@@ -115,6 +121,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Atelier and other Gust follow-up](ATELIER_NEXT_RESEARCH.md)
 
 - [Romance of the Three Kingdoms XIII original PC format](ROTK13_FORMAT.md)
+- [Original Chinese DOS Romance of the Three Kingdoms II](ROTK2_DOS_FORMAT.md)
 - [Strategy-game candidates and remaining inputs](STRATEGY_EXPANSION.md)
 
 ## Mechanics and source research

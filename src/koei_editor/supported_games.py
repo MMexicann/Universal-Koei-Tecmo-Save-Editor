@@ -62,6 +62,10 @@ from .game_registry import GAMES
 # atelier_ryza_switch: ATELIER RYZA / Ever Darkness & the Secret Hideout · original Switch main game [Nintendo Switch]
 # dw8xl_ps3: DYNASTY WARRIORS 8 / Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO [PlayStation 3]
 # dqb2_pc: DRAGON QUEST BUILDERS 2 / Original Steam PC · CMNDAT.BIN [Windows PC]
+# atelier_ryza2_switch: ATELIER RYZA 2 / Lost Legends & the Secret Fairy · original Switch [Nintendo Switch]
+# dqb2_switch: DRAGON QUEST BUILDERS 2 / Original Nintendo Switch · CMNDAT.BIN [Nintendo Switch]
+# p5strikers_switch: PERSONA 5 STRIKERS / English Nintendo Switch · savedata export [Nintendo Switch]
+# rotk2_dos: ROMANCE OF THE THREE KINGDOMS II / Original Chinese DOS · raw save copies [DOS PC]
 # END GENERATED SUPPORTED GAME INDEX
 
 

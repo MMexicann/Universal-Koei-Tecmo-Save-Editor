@@ -46,7 +46,7 @@ class Editor(Appearance):
             button.pack(side='left', padx=(8, 0))
             self.save_buttons.append(button)
         ttk.Button(bar, text='Restore Backup...', command=self.restore).pack(side='left', padx=8)
-        self.filename = tk.StringVar(root, value=f'Open a separate {self.save_extension} copy to begin.')
+        self.filename = tk.StringVar(root, value=f'Open a separate {self.save_extension or "save"} copy to begin.')
         ttk.Label(host, textvariable=self.filename, padding=(22, 12)).pack(anchor='w')
         filter_bar = ttk.Frame(host, padding=(22, 0))
         filter_bar.pack(fill='x')

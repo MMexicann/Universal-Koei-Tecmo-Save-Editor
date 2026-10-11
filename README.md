@@ -2,9 +2,10 @@
 
 A free Windows save editor by **Mexican**, with a game library, shared Light/Dark
 themes, searchable records, backups, Undo and Review Changes. Switch between
-games while keeping each editing session open.
+games while keeping each editing session open. Full-size illustrated cards show by
+default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 1.71** supports 51 game/platform profiles. Download the standalone
+**Version 1.72** supports 55 game/platform profiles. Download the standalone
 Windows app below; no Python installation is needed.
 
 ## Supported games
@@ -79,6 +80,10 @@ Ninja Gaiden 2 Black use different formats.
 | ATELIER RYZA — Ever Darkness & the Secret Hideout · original Switch main game | Nintendo Switch | Existing ordinary item/equipment quality 1–100; searchable inventory, equipment and read-only trait slots. |
 | DYNASTY WARRIORS 8 — Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO | PlayStation 3 | Gold, gems, facility/weapon materials, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
 | DRAGON QUEST BUILDERS 2 — Original Steam PC · CMNDAT.BIN | Windows PC | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
+| ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
+| DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
+| PERSONA 5 STRIKERS — English Nintendo Switch · savedata export | Nintendo Switch | Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks. |
+| ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

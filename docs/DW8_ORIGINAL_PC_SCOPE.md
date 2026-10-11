@@ -66,3 +66,25 @@ edition, another region/build or a game-load/re-save test.
 No source-copy saving, backup, Undo, Review Changes, themes or shared GUI behavior
 changed during this scope check. Player files, downloaded external content and
 private qualification records remain outside Git and release assets.
+
+## Separate original US PS3 retry
+
+The [original PS3 PSN NPUB31234 player export](https://bucanero.github.io/apollo-saves/PS3/NPUB31234/)
+was acquired separately and its console PFD wrapper decoded privately. The
+native `APP.BIN` is **665,767 bytes (`0xA28A7`)**, begins `13 01 13 00`, and
+uses a different big-endian layout from XL. Its original metadata identifies
+`NPUB31234-SAVEDATA`. The
+[published original PS3 patches](https://github.com/bucanero/apollo-patches/blob/main/PS3/NPUB31234.savepatch)
+identify gold at `0xBD`, resource candidates and officer/weapon record groups.
+They perform direct writes without an explicit native integrity update.
+
+This is useful native-input qualification, not a completed editor. Console
+PFD signing alone does not establish that all game-internal integrity is
+absent or updated. A matching complete native reader/writer, or a credible
+controlled edited-load/re-save workflow covering those writes, is still needed.
+The published XL byte cipher/checksum has fixed XL framing and must not be
+applied to the original game's plaintext data. The broad original patch's
+100 officer slots also exceed the original game's 77 playable officers; those
+extra entries are not evidence of additional playable characters or safely
+editable progression. No original-PC product, console writer or supported
+library card is inferred from this separate console export.

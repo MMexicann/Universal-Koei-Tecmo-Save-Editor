@@ -87,7 +87,9 @@ class UniversalGuiTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         sessions = {}
         expected = {'atelier_ryza_switch': 'Nintendo Switch',
-                    'dw8xl_ps3': 'PlayStation 3', 'dqb2_pc': 'Windows PC'}
+                    'dw8xl_ps3': 'PlayStation 3', 'dqb2_pc': 'Windows PC',
+                    'atelier_ryza2_switch': 'Nintendo Switch', 'dqb2_switch': 'Nintendo Switch',
+                    'p5strikers_switch': 'Nintendo Switch', 'rotk2_dos': 'DOS PC'}
         for game_id, platform in expected.items():
             with self.subTest(game=game_id):
                 game = get_game(game_id)

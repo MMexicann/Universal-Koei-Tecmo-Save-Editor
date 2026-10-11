@@ -93,3 +93,22 @@ genuine qualification uses `STRIKEFORCE_PS3_US_COPY` and
 edits, GUI saving/backups/restore and actual game loading are deliberately not
 claimed as tested. Metadata/structural rejection does not authenticate arbitrary
 unknown-byte corruption while native integrity remains unresolved.
+
+## EU editor-source retry
+
+The complete public EU `BLES00825` writer and its
+[verification record](https://github.com/alsharfa/Dynasty-Warriors-Strikeforce-ps3-save-editor/blob/a92709c2b8aedb6bbd23a36afad4bb0228d376ff/FORMAT_VERIFICATION.txt)
+were reviewed again. The record describes three 295,012-byte gameplay inputs
+and reversible field writes, but explicitly says those inputs are not bundled.
+The repository's sole `reference/00006.bin` is a weapon database, not a save.
+Its verification text does not supply an independently reproducible edited
+save-load/re-save check or a native integrity update routine.
+
+The current Apollo save tree has no `BLES00825` export. The reviewed GameFAQs
+save list offers PS3 US exports; its European entries belong to PSP, which is
+not a substitute. Therefore an EU adapter needs a genuine complete decrypted
+`BLES00825-SAVEDATA/APP.BIN` with its original `PARAM.SFO`, plus native
+loader/writer integrity evidence or a controlled edited-load/re-save pair
+showing the complete external reimport/resign workflow. The existing US files
+and an EU executable's title string do not qualify EU save editing. No
+unsupported library entry or copied upstream weapon database is added.

@@ -116,3 +116,31 @@ individual genuine native fields and searchable stars/seals with visible Max,
 Review, Undo, theme, inspection, backup/new-copy saving and restore. Two optional
 native checks skip if the private fixture is absent. This remains native-file and
 real-Tk qualification, not actual edited Switch game-load/re-save validation.
+
+
+# Additional Switch Warriors native-format investigation
+
+This round acquired complete title-labelled public Switch exports from the
+[NX_Saves catalog](https://github.com/Viren070/NX_Saves/tree/main/nintendo/switch/savegames).
+Archive contents were examined as data only; no binaries were executed. Unlike
+the PC envelopes, the observed files are plaintext. Plaintext alone does not
+qualify a gameplay writer, and none of these candidates is registered as a
+supported editor.
+
+| Exact title/platform | Native material acquired | Precise remaining requirement |
+| --- | --- | --- |
+| Dynasty Warriors 8: Xtreme Legends Definitive Edition — Switch `0100E9A00CB30000` | Complete `SVDT`, 2,424,832 bytes; native header includes a revision-38 word. | A full Switch writer/loader or an accepted controlled edit/load/re-save pair establishing native integrity and named field records. Existing PC encryption, PS3 patch offsets and repeated-looking records are not used as Switch mappings. |
+| One Piece: Pirate Warriors 4 — Switch `01008FE00E2F6000` | Complete `SlotData0`, 2,560,028 bytes, and `UserData`, 10,240 bytes. Serialized header order is checksum/revision/length, with observed revision14. | A complete Switch serializer/writer or targeted gameplay pairs proving all nested checksum coverage plus Beli/coin/growth meanings. The PC revision15 serializer uses different framing/header order; no offset subtraction or revision substitution is advertised. |
+| Warriors Orochi 4 / Ultimate — Switch `010016A00AEC0000` | Two distinct exports with `SVDT`, 5,210,112 bytes, and `SVDTU`, 927,523 bytes. Their leading version/date words are 20180720 and 20200101. | Complete Switch integrity/serialization and field evidence, plus partner-file dependencies. Matching filenames and public progress labels do not establish resource offsets, active edition or absence of checksums. The missing PC gameplay DLL is not a Switch format input. |
+
+The public EdiZon save-script/config corpus and Switch editor collection were
+checked for title-specific full writers; their available Koei adapters concern
+other games. Published live-process cheats and commercial save-modifying services
+supply feature labels without a reusable native disk writer. No foreign code,
+patch catalog, player bytes, game assets or binaries are incorporated.
+
+Switch-specific source or controlled native comparisons are the enabling inputs;
+these candidates no longer need speculative decryption research merely to inspect
+their acquired plaintext exports. A separate source-backed English Switch
+[Persona 5 Strikers adapter](P5STRIKERS_SWITCH_FORMAT.md) was qualified in this
+round instead of registering these unresolved formats.

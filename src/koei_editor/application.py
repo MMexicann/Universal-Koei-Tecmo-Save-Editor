@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '1.71'
+VERSION = '1.72'
 
 
 class Application(Appearance):
@@ -72,9 +72,11 @@ class Application(Appearance):
         self.library_search_entry.bind('<Return>', self.open_library_match)
         self.library_search_entry.bind('<Escape>', self.clear_library_filters)
         ttk.Button(search_bar, text='Clear filters', command=self.clear_library_filters).pack(side='left', padx=10)
-        self.compact_library = tk.BooleanVar(root, value=True)
-        ttk.Checkbutton(search_bar, text='Compact cards', variable=self.compact_library,
-                        command=self.update_library_density).pack(side='left')
+        self.compact_library = tk.BooleanVar(root, value=False)
+        self.compact_toggle = ttk.Checkbutton(
+            search_bar, text='Compact cards', style='LibraryDensity.TCheckbutton',
+            variable=self.compact_library, command=self.update_library_density)
+        self.compact_toggle.pack(side='right', padx=(8, 0))
         self.library_hint = tk.StringVar(root)
         ttk.Label(self.library, textvariable=self.library_hint,
                   style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=(0, 18))
@@ -162,7 +164,7 @@ class Application(Appearance):
             if scope != ALL_PLATFORMS:
                 self.game_buttons[game.id] = button
             button.bind('<FocusIn>', lambda _event, game_id=game.id, name=scope: self.reveal_game_button(game_id, name))
-            banner = tk.Canvas(card, width=240, height=100 if compact else 140, background='#202a37', highlightthickness=0)
+            banner = tk.Canvas(card, width=240, height=140, background='#202a37', highlightthickness=0)
             banner._decorative = True
             self.library_banners[scope][game.id] = banner
             if not self.compact_library.get():
@@ -195,6 +197,13 @@ class Application(Appearance):
 
     def apply_theme(self, name):
         super().apply_theme(name)
+        palette = THEMES[name]
+        self.style.configure('LibraryDensity.TCheckbutton',
+                             font=(self.font_family, 12, 'bold'), padding=(12, 8),
+                             indicatormargin=(0, 0, 8, 0), background=palette['surface'],
+                             foreground=palette['text'])
+        self.style.map('LibraryDensity.TCheckbutton',
+                       background=[('active', palette['hover'])])
         for _frame, editor in self.sessions.values():
             editor.theme_name.set(name)
 

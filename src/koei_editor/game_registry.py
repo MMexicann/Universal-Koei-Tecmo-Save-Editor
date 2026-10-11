@@ -267,6 +267,22 @@ GAMES = (
          'Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status.',
          '', '.bin', '#657b43', 'koei_editor.games.dqb2_pc.editor', 'koei_editor.games.dqb2_pc.parser',
          True, 'DQB2', True, scalar_backend='koei_editor.games.dqb2_pc.parser'),
+    Game('atelier_ryza2_switch', 'ATELIER RYZA 2', 'Lost Legends & the Secret Fairy · original Switch',
+         'Unspent skill-tree SP reductions; searchable existing inventory and equipment records.',
+         '', '.dat', '#827050', 'koei_editor.games.ryza.editor2switch', 'koei_editor.games.ryza.parser',
+         True, 'RYZA 2', True, 'Nintendo Switch', scalar_backend='koei_editor.games.ryza.parser'),
+    Game('dqb2_switch', 'DRAGON QUEST BUILDERS 2', 'Original Nintendo Switch · CMNDAT.BIN',
+         'Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status.',
+         '', '.bin', '#657b43', 'koei_editor.games.dqb2_switch.editor', 'koei_editor.games.dqb2_switch.parser',
+         True, 'DQB2', True, 'Nintendo Switch', scalar_backend='koei_editor.games.dqb2_switch.parser'),
+    Game('p5strikers_switch', 'PERSONA 5 STRIKERS', 'English Nintendo Switch · savedata export',
+         'Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks.',
+         '', '', '#92353b', 'koei_editor.games.p5strikers_switch.editor', 'koei_editor.games.p5strikers_switch.parser',
+         True, 'P5S', True, 'Nintendo Switch', scalar_backend='koei_editor.games.p5strikers_switch.parser'),
+    Game('rotk2_dos', 'ROMANCE OF THE THREE KINGDOMS II', 'Original Chinese DOS · raw save copies',
+         'Owned-province gold and rice reductions; searchable province ownership, population and resource records.',
+         '', '', '#806126', 'koei_editor.games.rotk2_dos.editor', 'koei_editor.games.rotk2_dos.parser',
+         False, 'II', True, 'DOS PC', scalar_backend='koei_editor.games.rotk2_dos.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

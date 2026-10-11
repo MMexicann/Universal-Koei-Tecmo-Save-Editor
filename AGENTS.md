@@ -93,7 +93,7 @@ Install and run from the repository root:
 
 ```text
 python -m pip install -e .
-python -m unittest discover -s tests -v
+python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
 ```
 
@@ -103,6 +103,15 @@ GUI/privacy/build checks. Cover corruption/foreign formats, boundaries and
 dependencies, surgical byte preservation, unchanged roundtrips, backups/restore
 and source safety. Report failures and skips honestly. Keep procedural evidence,
 genuine-file qualification and actual game-load/re-save validation separate.
+
+The parallel runner isolates each test module in a subprocess; do not use threads
+to share Tk roots or mutable test globals. New `tests/test*.py` modules are
+discovered automatically. CI distributes the entire suite over four Windows
+shards and verifies their combined coverage before building. Keep full coverage
+and failure propagation intact; timing estimates affect scheduling only. The
+serial `python -m unittest discover -s tests -v` remains useful for debugging.
+Desktop-dependent Tk modules/test helpers are coordinated within each job to
+protect clipboard and focus; preserve that grouping when extending the runner.
 
 ## Build and release
 

@@ -141,6 +141,17 @@ def _fields(payload):
             fields[key] = Field(key, f'Element ID {element}: existing quantity', offset, 2, 999,
                                 minimum=1, group='Existing weapon elements', slot=element,
                                 maxable=False)
+    orbs = int.from_bytes(payload[SYSTEM_GLOBAL + 0x166:SYSTEM_GLOBAL + 0x168], 'little')
+    if 1 <= orbs <= 999:
+        fields['skill_orbs'] = Field('skill_orbs', 'Skill Orbs (reduce only)',
+                                    SYSTEM_GLOBAL + 0x166, 2, orbs, maxable=False)
+    for officer in range(OFFICER_COUNT):
+        start = codec.SYSTEM_PAYLOAD_SIZE + officer * OFFICER_STRIDE
+        exp = int.from_bytes(payload[start:start + 4], 'little')
+        if 1 <= exp <= 999_999:
+            key = f'officer_{officer:03d}_skill_points'
+            fields[key] = Field(key, f'Officer ID {officer}: Skill Points', start + 20, 1, 99,
+                                group='Officer Skill Points', slot=officer)
     return MappingProxyType(fields)
 
 
@@ -202,6 +213,7 @@ def serialize(document, changes):
 def limit_values(document, changes, keys):
     changed_payload(document, changes)
     fields = field_map(document)
+    keys = tuple(keys)
     if any(type(key) is not str or key not in fields for key in keys):
         raise SaveError('Unmapped WO4 field.')
     result = {}
@@ -291,7 +303,11 @@ def restore(backup_path, destination, game_id=GAME_ID):
 
 
 def record_label(slot, group):
-    return f'Element ID {slot}' if group == 'Existing weapon elements' else group
+    if group == 'Existing weapon elements':
+        return f'Element ID {slot}'
+    if group == 'Officer Skill Points':
+        return f'Officer ID {slot}'
+    return group
 
 
 def field_hint(document, key):
@@ -301,6 +317,12 @@ def field_hint(document, key):
     if fields[key].group == 'Existing weapon elements':
         return ('Edit an existing ordinary element quantity from 1 to 999. Acquisition/discovery flags, '
                 'fusion, equipped attributes and weapon ownership remain intact. Element quantities are excluded from Max.')
+    if fields[key].group == 'Officer Skill Points':
+        return ('Existing progressed officer Skill Points: 0–99. Learned skills, prerequisites, '
+                'derived stats, Skill Orbs and EXP remain intact. Max preserves higher opened values.')
+    if key == 'skill_orbs':
+        return ('Reduce an existing ordinary Skill Orb balance. Officer Skill Points, acquired skills '
+                'and reward histories remain intact; Skill Orbs are excluded from Max.')
     return ('Spendable resources only. Earned histories, purchases, camp prerequisites, officer progression '
             'and story rewards remain intact. Max preserves higher opened balances.')
 

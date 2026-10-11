@@ -21,9 +21,17 @@ def generated_raw():
     for element in range(64):
         struct.pack_into('<H', system, p.SYSTEM_GLOBAL + 0xE6 + element * 2,
                          (0, 8, 999, 1001)[element % 4])
-    play = bytes((i * 13 + 23) & 255 for i in range(codec.PLAY_PAYLOAD_SIZE))
+    struct.pack_into('<H', system, p.SYSTEM_GLOBAL + 0x166, 7)
+    play = bytearray((i * 13 + 23) & 255 for i in range(codec.PLAY_PAYLOAD_SIZE))
+    for index in range(p.OFFICER_COUNT):
+        struct.pack_into('<I', play, index * p.OFFICER_STRIDE, 0)
+    for index, value in enumerate((14, 99, 255)):
+        struct.pack_into('<I', play, index * p.OFFICER_STRIDE, 1000 + index)
+        play[index * p.OFFICER_STRIDE + 20] = value
+    struct.pack_into('<I', play, 4 * p.OFFICER_STRIDE, 1_000_000)
+    play[4 * p.OFFICER_STRIDE + 20] = 99
     blocks = (codec.Block(1, 0, 0x12345678, bytes(system), bytes(range(12))),
-              codec.Block(0, codec.SYSTEM_BLOCK_SIZE, 0x87654321, play, b'\xa7'))
+              codec.Block(0, codec.SYSTEM_BLOCK_SIZE, 0x87654321, bytes(play), b'\xa7'))
     return codec.encode(blocks)
 
 
@@ -104,9 +112,9 @@ class WO4PCFormatTests(unittest.TestCase):
         for raw in (b'', generated_raw()[:-1], generated_raw() + b'\0', memoryview(generated_raw() * 2).cast('H')):
             with self.assertRaises(SaveError):p.decode(raw)
 
-    def test_all_qualified_fields_surgical_and_no_history_or_gameplay_edit(self):
+    def test_all_qualified_fields_surgical_and_resource_only_gameplay_unchanged(self):
         fields = p.field_map(self.doc)
-        self.assertEqual(len(fields), 35)
+        self.assertEqual(len(fields), 39)
         self.assertIn('element_01', fields)
         self.assertNotIn('element_00', fields)
         self.assertNotIn('element_03', fields)
@@ -115,8 +123,9 @@ class WO4PCFormatTests(unittest.TestCase):
         allowed = {i for f in fields.values() for i in range(f.offset, f.offset + f.size)}
         touched = {i for i, (a, b) in enumerate(zip(self.doc.payload, changed.payload)) if a != b}
         self.assertTrue(touched);self.assertLessEqual(touched, allowed)
-        self.assertEqual(changed.payload[codec.SYSTEM_PAYLOAD_SIZE:], self.doc.payload[codec.SYSTEM_PAYLOAD_SIZE:])
-        self.assertEqual(changed.raw[codec.SYSTEM_BLOCK_SIZE:], generated_raw()[codec.SYSTEM_BLOCK_SIZE:])
+        resource_changes = {f.id:f.minimum for f in fields.values() if f.group != 'Officer Skill Points'}
+        resource_only = p.serialize(self.doc, resource_changes)
+        self.assertEqual(resource_only[codec.SYSTEM_BLOCK_SIZE:], generated_raw()[codec.SYSTEM_BLOCK_SIZE:])
         self.assertEqual(p.inspection_rows(changed)[0], p.inspection_rows(self.doc)[0])
         self.assertEqual(tuple((b.iv_seed,b.padding) for b in changed.blocks),
                          tuple((b.iv_seed,b.padding) for b in self.doc.blocks))
@@ -134,7 +143,8 @@ class WO4PCFormatTests(unittest.TestCase):
         for key in ('element_00','element_03','story','officer_exp','weapon_attack'):
             with self.assertRaises(SaveError):self.adapter.stage(self.doc, {}, key, 1)
         maximum = self.adapter.maximums(self.doc, {})
-        self.assertEqual(set(maximum), {'gems','crystals','growth_points'})
+        self.assertEqual(set(maximum), {'gems','crystals','growth_points','officer_000_skill_points'})
+        self.assertEqual(self.adapter.limit_values(self.doc, {}, iter(['crystals'])), {'crystals':999})
         self.assertEqual(self.adapter.limit_values(self.doc, {}, ['element_01']), {})
         payload = bytearray(self.doc.payload)
         struct.pack_into('<I',payload,p.SYSTEM_GLOBAL + 0xCC,123456789)
@@ -144,6 +154,14 @@ class WO4PCFormatTests(unittest.TestCase):
         self.assertNotIn('gems',self.adapter.maximums(unusual,lowered))
         self.assertEqual(self.adapter.limit_values(unusual,lowered,['gems']), {'gems':123456789})
         self.assertEqual(p.serialize(unusual,{}),unusual.raw)
+        skill = 'officer_002_skill_points'
+        lowered = self.adapter.stage(self.doc, {}, skill, 10)
+        self.assertNotIn(skill, self.adapter.maximums(self.doc, lowered))
+        self.assertEqual(self.adapter.limit_values(self.doc, lowered, iter([skill])), {skill:255})
+        self.assertEqual(self.adapter.stage(self.doc, lowered, skill, 255), {})
+        self.assertNotIn('officer_003_skill_points', fields)
+        self.assertNotIn('officer_004_skill_points', fields)
+        self.assertEqual(self.adapter.limit_values(self.doc, {}, ['skill_orbs']), {})
 
     def test_immutable_snapshots_invalid_pending_and_searchable_inspection(self):
         for attribute, value in (('payload',self.doc.payload[:-1]), ('raw',bytearray(self.doc.raw)),
@@ -195,7 +213,8 @@ class WO4PCFormatTests(unittest.TestCase):
         edited = p.decode(p.serialize(doc,{f.id:f.minimum for f in fields.values()}))
         allowed = {i for f in fields.values() for i in range(f.offset,f.offset + f.size)}
         self.assertLessEqual({i for i,(a,b) in enumerate(zip(doc.payload,edited.payload)) if a!=b},allowed)
-        self.assertEqual(edited.raw[codec.SYSTEM_BLOCK_SIZE:],raw[codec.SYSTEM_BLOCK_SIZE:])
+        resources = {f.id:f.minimum for f in fields.values() if f.group != 'Officer Skill Points'}
+        self.assertEqual(p.serialize(doc,resources)[codec.SYSTEM_BLOCK_SIZE:],raw[codec.SYSTEM_BLOCK_SIZE:])
         self.assertEqual(p.inspection_rows(edited)[0],p.inspection_rows(doc)[0])
         self.assertEqual(tuple((b.iv_seed,b.padding) for b in doc.blocks),
                          tuple((b.iv_seed,b.padding) for b in edited.blocks))
@@ -217,8 +236,16 @@ class WO4PCGuiTests(unittest.TestCase):
                      patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
                     editor.open();errors.assert_not_called()
                 editor.show_inspector();root.update()
+                officer_table = editor.presentation.inspection_tables(editor.document)[2]
+                self.assertIn('Skill Points', officer_table.columns)
                 for window in root.winfo_children():
                     if isinstance(window,tk.Toplevel):window.destroy()
+                editor.search.set('Officer ID 0: Skill Points');root.update()
+                self.assertIn('officer_000_skill_points', editor.fields.get_children())
+                self.assertTrue(all(key.endswith('_skill_points') for key in editor.fields.get_children()))
+                editor.fields.selection_set('officer_000_skill_points');editor.value.set('0');editor.apply_selected()
+                self.assertEqual(editor.changes,{'officer_000_skill_points':0})
+                editor.undo();self.assertEqual(editor.changes,{})
                 editor.search.set('Gems');root.update()
                 self.assertEqual(editor.fields.get_children(),('gems',))
                 editor.fields.selection_set('gems');editor.value.set('42');editor.apply_selected()

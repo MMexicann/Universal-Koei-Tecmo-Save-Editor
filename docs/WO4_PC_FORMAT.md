@@ -2,7 +2,8 @@
 
 The `wo4_pc` adapter opens separate `.bin` copies of the original Windows game's
 927,576-byte combined save. It edits Gems, Crystals, Growth Points and existing
-ordinary weapon-element quantities. Searchable views show resource histories,
+ordinary weapon-element quantities and progressed officers' Skill Points;
+existing ordinary Skill Orbs support reductions. Searchable views show resource histories,
 all 64 element quantity words, 200 officer records and 8,032 weapon records.
 Ultimate has a different system revision and a separate adapter.
 
@@ -101,6 +102,8 @@ and [result rewards](https://www.koeitecmoamerica.com/manual/wo4/4900.html).
 | Spendable Crystals | `0x27C`, u16 LE | 999; setter `0x1C5F90` clamps global `+0xD4`. Positive grants optionally update separate history `+0xD6`. |
 | Shared Growth Points | `0x280`, u32 LE | **999,999**, independently recovered at original `0x1C5F30`, global `+0xD8`. Ultimate's separately recovered `0x213310` setter caps this resource at 99,999,999; that limit does not apply to original WO4. |
 | Existing ordinary element quantities | `0x28E + ID*2`, u16 LE, IDs 0–63 | 999; original `0x1C5E60` caps global `+0xE6 + ID*2` and positive acquisition also touches discovery bits at `+0x541C`. The original official manual independently gives the 999 inventory limit. |
+| Officer Skill Points | Gameplay start plus `ID*0x30C + 20`, u8, IDs 0–199 | 99; original setter `0x1C2F70` writes live officer byte `+0x74`. The live object embeds its save record at `+0x60` (`0x1DD1A0`), and `0x1DCCF0` emits relative `+0x14` as packed byte `+20`. |
+| Existing Skill Orbs | `0x30E`, u16 LE | Reductions 0–opened only, for an existing opened ordinary balance of 1–999; no Max. Original `0x1C37F0` checks global `+0x166`, converts an orb through the officer point setter and decrements this separate word. `0x1D93B5` serializes that word immediately after the 64 element words. |
 
 The three resources support Max with their separately recovered natural caps;
 Max preserves higher opened balances and unusual originals. Elements are
@@ -109,6 +112,19 @@ are excluded from Max. Empty/unusual quantities stay intact. Editing a quantity
 does not acquire an element, change discovery flags, equip it, perform fusion
 or mark a camp prerequisite/reward complete. Numeric element IDs are retained
 until an independently verified native name order is available.
+
+Officer point controls are limited to existing records with stored EXP 1–999,999.
+The original EXP path at `0x1C2885` correlates the first save DWORD with the
+live record `+0x60` and clamps it to 999,999. This provides a deliberately narrow
+progressed-record gate; it does not unlock a character or infer the full
+roster/unlock status. Zero or unusual EXP records remain inspection only.
+Point fields support 0–99 and Max, preserving unusual higher opened byte values,
+including when a smaller edit was pending. The original skill-purchase path
+`0x1C3210` checks the pool, debits a skill-specific cost through `0x1C2F70`, then
+sets separate learned bits at `+0x64` and applies derived consequences through
+`0x1C4390`. Those bits/consequences are not part of a pool edit. Skill Orbs and
+Skill Points are distinct fields; adjusting one does not consume or grant the
+other, learn skills or change reward histories.
 
 Earned Gem/Crystal histories at `0x278`/`0x27E` are inspected separately and
 never written. The genuine file demonstrates that available resources cannot
@@ -125,8 +141,8 @@ These mechanics are not transplanted from Ultimate's additional systems.
 | Native encryption/revision | Implemented complete two-block reader/writer and exact original revision gate; matching DLL and owner context are no longer missing. Other header variants need native qualification. |
 | Gems, Crystals and Growth Points | Implemented bounded individual and bulk actions; histories/prerequisites remain separate. |
 | Weapon-element inventory | Existing ordinary quantities editable; all 64 stored words searchable. Discovery and unknown/higher words preserved. Native ID/name order still needs verified game-data correlation. |
-| Officer EXP/levels | Searchable 200 native records: serialized EXP and stored level. Safe writes need native level/EXP reconciliation and controlled gameplay pairs; levels must not be guessed from EXP. |
-| Skill Points, Skill Orbs and learned skills | Raw per-officer DWORD inspected without a semantic label. Original Skill Orb conversion, per-officer point debit, learned bits and derived skill consequences still need original DLL setter/call-site correlation and controlled pairs. Ultimate's proof does not establish original offsets or limits. |
+| Officer EXP/levels | Searchable 200 native records: serialized EXP; level is not inferred from EXP or another stored field. Safe writes need native level/EXP reconciliation and controlled gameplay pairs. |
+| Skill Points, Skill Orbs and learned skills | Implemented progressed-record Skill Point controls 0–99 and existing ordinary Skill Orb reductions; original setter/serializer and independent cost/conversion paths proved. Learned skills, prerequisites, derived consequences and reward grants remain unchanged. Their safe write dependencies require controlled skill/unlock pairs. The adjacent packed DWORD `+21` remains unlabeled. Ultimate's different width/cap do not apply. |
 | Weapons, compatibility, attack, attributes and fusion | All 8,032 raw records searchable. Native packed geometry is proved; record ownership, empty markers, equipped references, human names and compatibility/derived-attack dependencies need verified mappings before writes. |
 | Camp upgrades, rewards, unlocks and stages | Resource controls do not complete these actions. Native flags and prerequisite/reward dependencies require matched progression comparisons and setter evidence. |
 | Bonds and support officers | Separate pair records, bond rewards and support-derived effects need native ownership/threshold maps. No blanket unlock or bond writer. |
@@ -145,8 +161,11 @@ fingerprint corruption. It explicitly tests the marker's inability to detect
 unrelated CBC corruption rather than claiming a checksum exists.
 
 The genuine supplied original file passes a true byte-exact codec roundtrip,
-58 qualified individual resource/element edits, surgical plaintext comparisons,
-unchanged gameplay ciphertext and unchanged histories, seeds and padding.
+229 qualified fields (three balances, 55 existing elements, 170 progressed
+officer Skill Point pools and one existing Skill Orb pool), surgical plaintext
+comparisons, unchanged histories, seeds and padding. Resource-only edits also
+preserve the complete original gameplay ciphertext; Skill Point edits touch
+only their mapped individual gameplay bytes and no learned flags/EXP/equipment.
 Synthetic and genuine records are distinguished in tests. Actual Tk checks
 exercise native opening, searches, inspectors, staging, Undo, Review Changes,
 theme switching, Save As, automatic backup and restore. Storage checks cover

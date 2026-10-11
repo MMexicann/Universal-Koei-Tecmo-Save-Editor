@@ -98,6 +98,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Dead or Alive 5 Plus Vita native codec and writable-field blocker](DOA5_PLUS_VITA_RESEARCH.md)
 - [Pokémon Conquest US Nintendo DS gallery IVs](POKEMON_CONQUEST_DS_FORMAT.md)
 - [Dusk DX and Nelke qualification](DUSK_DX_RESEARCH.md)
+- [Lulua and Nelke Switch native codec and mechanics blockers](LULUA_NELKE_SWITCH_RESEARCH.md)
 - [Fatal Frame II Remake native format](FATAL_FRAME2_REMAKE_FORMAT.md)
 - [Blue Reflection and other Fatal Frame research](BLUE_REFLECTION_RESEARCH.md)
 - [Hyrule, Fire Emblem and Pirate follow-up](FAMILY_NEXT_RESEARCH.md)

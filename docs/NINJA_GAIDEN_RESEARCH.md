@@ -259,3 +259,56 @@ female-character profiles need separate equipped/quantity validation; chapter,
 difficulty, Tag Mission, reward and completion state require system/progression
 pairs. Nioh EXP, proficiency, forging, familiarity or spirit schemas are never
 substituted for these games' mechanics.
+
+### Razor's Edge: original US PS3 PSN story retry
+
+The [NPUB31184 public catalogue](https://bucanero.github.io/apollo-saves/PS3/NPUB31184/)
+provides an author-edited beginning-of-game export and a separate progressed
+archive. Three distinct complete story/checkpoint exports were acquired,
+including their original `PARAM.SFO` and console `PARAM.PFD`. Console decryption
+was performed privately; neither downloads, player files nor account context
+enter source or releases. The system file is a different profile and excluded.
+
+Every acquired decrypted story is **35,184 bytes (`0x8970`)**, has big-endian
+native size/revision `(0x8970, 6)`, and retains the observed constant framing.
+All three independently verify **CRC32/BZIP2 over `[0x10,0x1C)`**, stored
+big-endian at `0x0C`. This metadata CRC covers the separate word at `0x14`.
+That word's gameplay coverage/algorithm remains unresolved. A valid metadata
+CRC therefore cannot establish complete integrity or authorize a gameplay edit.
+Published nearby PC and Xbox profiles are different; their checksums and item
+records are not transferred here.
+
+The [title-specific Apollo patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/NPUB31184.savepatch)
+explicitly identifies Ryu/Ayane Karma at `0x11E8`/`0x11F0` as big-endian words
+and labels those edits working. The author-edited native export agrees with
+its published targets. Karma is a spendable skill/upgrade resource in Razor's
+Edge, unlike the score use in other Ninja Gaiden editions; the cheat target is
+not a legitimate natural maximum. The same patch combines story/checkpoint
+and system annotations, extreme health/Ninpo values, costumes and chapter/trial
+completion. Those unrelated fields and dependencies remain unqualified.
+
+The new [bounded read-only inspector](../src/koei_editor/research/ninja_gaiden_3_razors_edge_ps3/inspection.py)
+checks this native geometry and metadata CRC, reads only the two source-backed
+Karma words and reports `integrity_verified=False`, `writable=False`.
+File inspection additionally requires the original NPUB31184 story/checkpoint
+`PARAM.SFO`, parsed selectively with bounded reads. It never promotes a system
+export or another region into the story profile and never repairs a checksum.
+Only the exact immutable original can pass its no-edit encoding operation.
+
+[Regression tests](../tests/test_ng3_razors_edge_ps3_inspection.py) cover framing,
+CRC corruption, malformed context, mutated inspection snapshots, unchanged
+copies and the distinction between metadata and gameplay integrity. All three
+private native stories were checked with
+`NG3_RAZORS_EDGE_PS3_EXPORT_COPIES`; procedural files are separate boundary
+fixtures. No edited game-load/resave was performed and no library card was added.
+
+| Mechanic | Result / exact remaining requirement |
+| --- | --- |
+| Native story metadata | Size/revision/framing and metadata CRC verified on three distinct genuine stories |
+| Gameplay integrity | Need the exact `0x14` payload checksum algorithm and coverage, or matching native serializer/loader evidence; a repaired metadata CRC does not resolve it |
+| Ryu/Ayane unspent Karma | Source-backed read-only inspection; writes additionally need complete gameplay integrity and upgrade/reward dependencies |
+| Skills, weapons and enhancements | Need qualified owned/acquired/upgraded records, costs and prerequisites; no level or ownership grants |
+| Health, Ninpo and Life Bar upgrades | Need legitimate current/max/upgrade record dependencies; extreme published cheat targets are excluded |
+| Costumes and system settings | Need a separate system-format integrity writer and exact named ownership/selected records |
+| Chapter Challenge, trials, difficulty and completion | Need separate progression/result/reward records; story completion must remain separate from resource edits |
+| Other platforms/regions/revisions | Need their own complete native exports and loader/writer qualification |

@@ -1,4 +1,4 @@
-"""Native Windows Special revision 3, plaintext with a byte-sum trailer.
+"""Qualified native Windows Special headers, plaintext with a byte-sum trailer.
 
 Format facts independently corroborated by a contemporary native-save guide,
 static inspection of its separate editor's I/O, and a genuine shared PC save.
@@ -11,6 +11,10 @@ from koei_editor.games.dw3.models import SaveError
 SAVE_SIZE = 0xB3B0
 CHECKSUM_OFFSET = 0xB390
 REVISION = b'\x03\0\0\0'
+# Both exact markers have independently checksum-valid native copies with the
+# same officer, item and weapon layout. The upper word's meaning is unproved;
+# preserve it, rather than interpreting it as a region or normalizing it.
+SUPPORTED_REVISION_MARKERS = (REVISION, b'\x03\0\x01\0')
 
 
 def freeze(raw):
@@ -26,7 +30,7 @@ def freeze(raw):
 
 @lru_cache(maxsize=4)
 def _decode(raw):
-    if raw[4:8] != REVISION:
+    if raw[4:8] not in SUPPORTED_REVISION_MARKERS:
         raise SaveError('Unsupported Windows DW5 Special revision.')
     if sum(raw[:CHECKSUM_OFFSET]) != int.from_bytes(raw[CHECKSUM_OFFSET:CHECKSUM_OFFSET + 4], 'little'):
         raise SaveError('DW5 Special byte checksum does not match.')
@@ -39,7 +43,8 @@ def decode(raw):
 
 def encode(payload, original_raw):
     original = decode(original_raw)
-    if type(payload) is not bytes or len(payload) != SAVE_SIZE or payload[4:8] != REVISION:
+    if (type(payload) is not bytes or len(payload) != SAVE_SIZE
+            or payload[4:8] != original[4:8]):
         raise SaveError('A frozen native DW5 Special payload is required.')
     if payload == original:
         return original

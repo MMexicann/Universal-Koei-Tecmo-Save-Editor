@@ -4,14 +4,14 @@ A free Windows save editor by **Mexican**, with a game library, shared Light/Dar
 themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open.
 
-**Version 1.7** supports 48 game/platform profiles. Download the standalone
+**Version 1.71** supports 51 game/platform profiles. Download the standalone
 Windows app below; no Python installation is needed.
 
 ## Supported games
 
 Select the game and platform that match your save. Console editors open
 extracted or decrypted save exports: `.psu` for
-PlayStation 2, `APP.BIN` for Wii U and DW7 PS3, `DATA.BIN` for SW4 PS3, and `svdt`
+PlayStation 2, `APP.BIN` for Wii U and DW7/DW8 XL PS3, `DATA.BIN` for SW4 PS3, and `svdt`
 for Age of Calamity. Some PS3 profiles require the original `PARAM.SFO` beside
 the copied gameplay file and edited output. Export and reimport/resign PS3 saves
 with Apollo Save Tool; this editor does not rebuild `PARAM.PFD` or sign exports.
@@ -76,6 +76,9 @@ Ninja Gaiden 2 Black use different formats.
 | BERSERK AND THE BAND OF THE HAWK — EU PS Vita · decrypted PCSB01085 | PlayStation Vita | Gold deductions, eighteen named existing enhancement materials and searchable character status. |
 | DEAD OR ALIVE 5 — Original US/EU PS3 PSN · SAVE_SYS.DAT + PARAM.SFO | PlayStation 3 | Sixty-three individual costume unlock controls and searchable costume records. |
 | POKÉMON CONQUEST — US Nintendo DS · raw native save | Nintendo DS | Existing gallery Pokémon IV components and Speed IV; searchable gallery Pokémon records. |
+| ATELIER RYZA — Ever Darkness & the Secret Hideout · original Switch main game | Nintendo Switch | Existing ordinary item/equipment quality 1–100; searchable inventory, equipment and read-only trait slots. |
+| DYNASTY WARRIORS 8 — Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO | PlayStation 3 | Gold, gems, facility/weapon materials, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
+| DRAGON QUEST BUILDERS 2 — Original Steam PC · CMNDAT.BIN | Windows PC | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

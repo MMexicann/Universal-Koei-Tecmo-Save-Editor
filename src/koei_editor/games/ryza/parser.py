@@ -1,11 +1,12 @@
-"""Surgical quality editing for independently inspected original Ryza PC saves.
+"""Surgical quality editing for qualified original Ryza PC/Switch profiles.
 
-See docs/RYZA_FORMATS.md for the native profiles, public factual leads, mechanics
+See docs/RYZA_FORMATS.md and docs/RYZA_SWITCH_FORMAT.md for factual profiles, mechanics
 and limits. Tagged node lengths are little endian; array sizes are big endian;
 item quality is little-endian u16. PS4 DWORD quality cheats are not copied.
 """
 from dataclasses import dataclass
 from functools import lru_cache
+from collections import Counter
 from collections.abc import Mapping
 import hashlib
 from pathlib import Path
@@ -18,10 +19,12 @@ from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapsh
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'atelier_ryza'
+SWITCH_GAME_ID = 'atelier_ryza_switch'
 MAX_FILE_SIZE = codec.MAX_FILE_SIZE
 INTEGRITY_KIND = 'checksum'
 CHARACTERS = {
     GAME_ID: ('Ryza', 'Klaudia', 'Lent', 'Tao', 'Empel', 'Lila'),
+    SWITCH_GAME_ID: ('Ryza', 'Klaudia', 'Lent', 'Tao', 'Empel', 'Lila'),
     'atelier_ryza2': ('Ryza', 'Character ID 1', 'Character ID 2', 'Character ID 3',
                       'Character ID 4', 'Character ID 5', 'Character ID 6'),
 }
@@ -71,6 +74,10 @@ FORMATS = {
     GAME_ID: Format(GAME_ID, 'Atelier Ryza: Ever Darkness & the Secret Hideout (Steam PC)',
                     'Unregistered complete-layout candidate. Available native copies have an '
                     'incomplete final plant array and are rejected before writes.', sample_verified=False),
+    SWITCH_GAME_ID: Format(SWITCH_GAME_ID, 'Atelier Ryza: Ever Darkness & the Secret Hideout (Switch)',
+                          'Original complete revision-4 main-game export. Existing ordinary item/equipment '
+                          'quality 1–100; higher cap unlocks remain unmapped and Max is disabled. '
+                          'Two native main-game slots checked; edited game loading is untested.'),
     'atelier_ryza2': Format('atelier_ryza2', 'Atelier Ryza 2: Lost Legends & the Secret Fairy (Steam PC)',
                            'Original native 100-byte-item layout. Existing ordinary item/equipment '
                            'quality 1–100; excluded from Max until higher skill caps are mapped. '
@@ -105,7 +112,7 @@ class Node:
 
 def get_format(game_id=GAME_ID):
     if game_id not in FORMATS:
-        raise SaveError('Select the original Steam PC Ryza 1 or Ryza 2 adapter; DX is not supported.')
+        raise SaveError('Select a qualified original Ryza game/platform adapter; DX is not supported.')
     return FORMATS[game_id]
 
 
@@ -144,12 +151,12 @@ def _structure(payload, game_id):
         raise SaveError('Duplicate Ryza root node.')
     info = _unique(root, b'info')
     app = _unique(_nodes(payload, info.body, info.end), b'app_ver')
-    expected_app = bytes.fromhex('0000000100000000' if game_id == GAME_ID else '0000000100000001')
+    expected_app = struct.pack('>II', 1, {GAME_ID: 0, SWITCH_GAME_ID: 4, 'atelier_ryza2': 1}[game_id])
     if payload[app.body:app.end] != expected_app:
         raise SaveError('Unqualified original Ryza app_ver profile; do not use a DX save.')
     fieldmap = _unique(root, b'fieldmap')
     names = {node.name for node in root}
-    if game_id == GAME_ID:
+    if game_id in (GAME_ID, SWITCH_GAME_ID):
         if b'FieldMix' not in names or b'AlchemyTree' in names or b'ruin' in names:
             raise SaveError('This is not the qualified original Ryza 1 gameplay layout.')
         markers = (b'_I_HOUSE_KLAUDIA_01\0', b'_T_BODEN\0')
@@ -166,7 +173,8 @@ def _structure(payload, game_id):
     item = _unique(root, b'item')
     children = _nodes(payload, item.body, item.end)
     item_version = _unique(children, b'version')
-    if payload[item_version.body:item_version.end] != b'\0\2':
+    expected_item_version = b'\0\1' if game_id == SWITCH_GAME_ID else b'\0\2'
+    if payload[item_version.body:item_version.end] != expected_item_version:
         raise SaveError('Unqualified Ryza item layout version.')
     regions = []
     for (key, tag, label), capacity in zip(POOLS, capacities):
@@ -212,7 +220,7 @@ def _structure(payload, game_id):
         regions.append((f'character_{identity}', CHARACTERS[game_id][identity] + ' equipment', start, 8, identity))
     if not identities or 0 not in identities:
         raise SaveError('The Ryza gameplay save lacks its protagonist record.')
-    seen = set()
+    seen = {}
     records = []
     for key, label, start, capacity, identity in regions:
         for slot in range(capacity):
@@ -221,9 +229,19 @@ def _structure(payload, game_id):
             item_id = struct.unpack_from('<h', payload, offset + item_id_offset)[0]
             if item_id == -1 and (serial == 0xFFFF or (identity is not None and serial == identity * 8 + slot)):
                 continue
-            if item_id < 0 or serial == 0xFFFF or serial in seen:
-                raise SaveError('Ryza item ownership is malformed or duplicated; no writes are allowed.')
-            seen.add(serial)
+            if item_id < 0 or serial == 0xFFFF:
+                raise SaveError('Ryza item ownership is malformed; no writes are allowed.')
+            if serial in seen:
+                previous_offset, previous_identity = seen[serial]
+                # Two native Switch slots contain byte-identical equipment aliases.
+                # Keep all alias occurrences read only until transfer/equip pairs
+                # establish how the game updates their shared instance.
+                if (game_id != SWITCH_GAME_ID
+                        or (identity is None and previous_identity is None)
+                        or payload[offset:offset + stride] != payload[previous_offset:previous_offset + stride]):
+                    raise SaveError('Ryza item ownership is malformed or ambiguously duplicated.')
+            else:
+                seen[serial] = (offset, identity)
             records.append((key, label, slot + 1, offset, item_id, serial, identity))
     return tuple(records), quality_offset
 
@@ -235,10 +253,10 @@ def _snapshot(raw, game_id):
     except (codec.SaveFormatError, struct.error, IndexError) as error:
         raise SaveError(f'Ryza native integrity/codec check failed: {error}.') from error
     # Header is native framing, not a title discriminator.
-    revision = 0 if game_id == GAME_ID else 1
+    revision = {GAME_ID: 0, SWITCH_GAME_ID: 4, 'atelier_ryza2': 1}[game_id]
     if (header[:40] != b'\x01' + bytes(39)
             or header[40:48] != struct.pack('<II', 1, revision)):
-        raise SaveError('Unqualified Ryza PC native header.')
+        raise SaveError('Unqualified Ryza game/platform native header.')
     _structure(payload, game_id)
     return header, payload, details, raw[codec.HEADER_SIZE + details.padded_size:]
 
@@ -278,7 +296,7 @@ def read_save(path, game_id=GAME_ID):
     get_format(game_id)
     path = _copy_path(path)
     if path.suffix.casefold() != '.dat':
-        raise SaveError('Open a separate native Steam PC .dat gameplay copy.')
+        raise SaveError('Open a separate native .dat gameplay copy for the selected game/platform.')
     with path.open('rb') as stream:
         raw = stream.read(MAX_FILE_SIZE + 1)
     return decode(raw, game_id, path)
@@ -288,10 +306,14 @@ def read_save(path, game_id=GAME_ID):
 def _fields(payload, game_id):
     records, quality_offset = _structure(payload, game_id)
     result = {}
+    occurrences = Counter(record[5] for record in records)
     for key, label, slot, offset, item_id, _serial, identity in records:
         quality = struct.unpack_from('<H', payload, offset + quality_offset)[0]
-        if key.startswith('important') or quality in (0, 0xFFFF):
+        if key.startswith('important') or quality in (0, 0xFFFF) or occurrences[_serial] > 1:
             continue  # Important/no-quality records do not inherit ordinary item rules.
+        if (game_id == SWITCH_GAME_ID
+                and struct.unpack_from('<H', payload, offset + quality_offset + 2)[0] != 0):
+            continue  # Unproved coupled equipment/synthesis value; no DWORD normalization.
         maximum = 999 if game_id == GAME_ID else 100
         title = SLOTS[slot - 1] if identity is not None else f'Item ID {item_id}'
         field = Field(f'{key}_{slot - 1}_quality', title + ': Quality', offset + quality_offset,
@@ -416,9 +438,21 @@ def review(document, changes):
             for field in fields_for(document) if field.id in changes]
 
 
+def _validate_source(document):
+    source = _copy_path(document.source)
+    try:
+        with source.open('rb') as stream:
+            current = stream.read(MAX_FILE_SIZE + 1)
+    except OSError as error:
+        raise SaveError('The opened copy is unavailable; reopen before saving or backing up.') from error
+    if current != document.raw:
+        raise SaveError('The opened copy changed on disk; reopen before saving or backing up.')
+    return source
+
+
 def backup(document):
     validate_document(document)
-    source = _copy_path(document.source)
+    source = _validate_source(document)
     return snapshot_backup(document.raw, source, document.format.id,
                            _copy_path(source.parent / 'WarriorsEditorBackups'))
 
@@ -430,11 +464,12 @@ def save_as(document, changes, destination):
         raise SaveError('Choose a new .dat destination.')
     if destination.exists():
         raise FileExistsError('Choose a new destination; existing files are never replaced.')
-    with _copy_path(document.source).open('rb') as stream:
-        if stream.read(MAX_FILE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk; reopen before saving.')
+    _validate_source(document)
     raw = serialize(document, changes)
     backup(document)
+    # Encoding and backup creation can take time: reject a source changed
+    # during either operation immediately before publishing the new copy.
+    _validate_source(document)
     atomic_new(raw, destination)
     return decode(raw, document.format.id, destination)
 
@@ -455,7 +490,10 @@ def item_records(document):
     return tuple({'group': label, 'slot': slot, 'item_id': item_id, 'instance_id': serial,
                   'quality': struct.unpack_from('<H', document.payload, offset + quality_offset)[0],
                   'neighbor': struct.unpack_from('<H', document.payload, offset + quality_offset + 2)[0],
-                  'label': SLOTS[slot - 1] if identity is not None else f'Slot {slot}'}
+                  'label': SLOTS[slot - 1] if identity is not None else f'Slot {slot}',
+                  'traits': tuple((struct.unpack_from('<H', document.payload, offset + 22 + index * 2)[0],
+                                   document.payload[offset + 28 + index]) for index in range(3))
+                            if document.format.id == SWITCH_GAME_ID else ()}
                  for _, label, slot, offset, item_id, serial, identity in records)
 
 
@@ -467,5 +505,7 @@ def field_hint(document, key):
                 'Learned recipes/skills, prerequisite nodes, quality caps and quest rewards remain unchanged.')
     note = 'Existing item quality only; adjacent synthesis data, traits, effects, ownership and equipment remain intact.'
     if document.format.id != GAME_ID:
-        note += ' Ryza 2 edits stop at its initial cap of 100; higher skill caps are unmapped. Excluded from Max.'
+        note += ' Quality edits stop at 100; higher progression caps are unmapped. Excluded from Max.'
+    if document.format.id == SWITCH_GAME_ID:
+        note += ' Only records with zero adjacent synthesis word and no shared instance gain a control.'
     return note

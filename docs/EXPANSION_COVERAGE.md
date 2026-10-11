@@ -210,7 +210,8 @@ No authenticated plaintext, gameplay roundtrip or safe writer is qualified.
 [Additional regional scope](REGIONAL_EDITION_SCOPE.md) tracks which apparent
 differences are product branding, text encoding or demonstrably distinct native
 profiles. DW5 Special's existing equipment editor remains one revision-3
-Windows profile; regional product evidence does not imply interchangeable saves.
+Windows profile; its qualified header markers are now 0x00000003 and 0x00010003.
+Regional product evidence does not imply interchangeable saves.
 
 Genuine privately held copies qualify unchanged roundtrips and targeted file
 edits for DW7 XL, WO3 Ultimate, SW4 DX and PW4. Existing DW8 XL/PW3 genuine-file
@@ -275,3 +276,11 @@ complete native Monster Rancher DX files remain missing. Their separate notes
 record mechanics, source/licence evidence, unsuccessful qualification attempts
 and controlled captures needed for each system. No new adapter, game card or
 runtime metadata was added for an unqualified candidate.
+
+## v1.71 additional native profiles
+
+- [Original Ryza Switch](RYZA_SWITCH_FORMAT.md): existing ordinary quality 1–100, searchable inventory/equipment and read-only traits. Exact main-game revision, adjacent-value and ownership gates preserve synthesis/equipment dependencies. Original Ryza PC remains a separate blocked format.
+- [DW8 XL US PS3 PSN](DW8XL_PS3_FORMAT.md): resources, stored officer stats, weapon-action aptitudes and existing weapon ranks; original PARAM.SFO binding and external Apollo reimport/signing. Other regions/disc editions remain separate.
+- [DQB2 Steam PC](DQB2_PC_FORMAT.md): existing named medicine/seed reductions, searchable pockets/bag and read-only player/equipment. Complete CMNDAT framing and opaque native padding are preserved; world/STGDAT and growth dependencies remain read only.
+
+Each linked checklist records implemented mechanics and specific blockers. Genuine-file and actual Tk tests establish file/GUI behavior; edited in-game loading has not been performed. No player saves, account context or downloaded binaries are public source or assets.

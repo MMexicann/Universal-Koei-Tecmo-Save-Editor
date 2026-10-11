@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.71
+
+- Fixed DW5 Special opening for the compatible native header variant while preserving the original revision marker.
+- Added original Atelier Ryza Switch existing quality editing and searchable inventory/equipment/trait inspection.
+- Added original US PS3 PSN Dynasty Warriors 8 XL resources, officer stats, weapon-action aptitudes and existing weapon attribute ranks.
+- Added Steam Dragon Quest Builders 2 existing named medicine/seed stack reductions and searchable pockets/bag/player inspection.
+- The library now contains 51 game/platform profiles across nine platforms.
+- Parallelized complete Windows regression checks across four jobs with verified combined coverage; optimized equivalent checksum/fixture work.
+- Strengthened source/context checks around new adapters’ backups, restore and safe saving.
+
 ## v1.7
 
 - Added 26 game/platform profiles, bringing the library to 48 across nine platforms.

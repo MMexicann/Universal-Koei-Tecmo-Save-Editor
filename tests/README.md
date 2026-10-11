@@ -174,3 +174,10 @@ eligibility, ordinary-item restrictions, unlimited-durability protection,
 unusual values, immutable staged changes, surgical edits, guarded backups and
 restore. Live Tk workflows skip when no existing display is available. These
 checks do not establish exact software build, DLC entitlement or Switch loading.
+
+New native-profile checks optionally use `RYZA1_SWITCH_NATIVE_DIR`,
+`DW8XL_PS3_SAVE_COPY` (with original `PARAM.SFO`),
+`DW8XL_PS3_REFERENCE_COPY`, and `DQB2_PC_SAVE_COPIES` (local path-separated
+files/directories). Keep these files and variables private; missing fixture cases
+skip explicitly. Public procedural checks are distinct from native-file and
+edited in-game validation.

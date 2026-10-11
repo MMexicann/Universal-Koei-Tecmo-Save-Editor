@@ -317,7 +317,7 @@
       "title": "Dynasty Warriors 5 Special / Shin Sangokumusou 4 Special",
       "platform": "Windows PC",
       "status": "Native-file editor implemented",
-      "evidence": "Independent static native save-guide/editor I/O facts and a prior genuine revision3 player file qualify plaintext byte-sum integrity. The public sample listing labels Traditional Chinese; its executable locale/build and native locale discriminator remain unqualified. Manual existing item ranks and own-family weapon attack adjustment, weight and attributes preserve acquisition, growth, story and Shura dependencies. Development expansion: Stored Attack/Defense bytes on originally playable officers are manually editable; merit, title, equipment, bodyguards and rewards remain unchanged.",
+      "evidence": "Independent static native save-guide/editor I/O facts and a prior genuine revision3 player file qualify plaintext byte-sum integrity. The public sample listing labels Traditional Chinese; its executable locale/build and native locale discriminator remain unqualified. Manual existing item ranks and own-family weapon attack adjustment, weight and attributes preserve acquisition, growth, story and Shura dependencies. Development expansion: Stored Attack/Defense bytes on originally playable officers are manually editable; merit, title, equipment, bodyguards and rewards remain unchanged. The checksum-valid supplied native header variant 0x00010003 is supported alongside 0x00000003; unchanged roundtrip, all 234 qualified fields and copied-file/Tk workflows pass. Original markers are preserved; marker conversion and unobserved revisions reject.",
       "needed": "Unmodified Japanese/Traditional-Chinese/Simplified-Chinese region/build-labelled native controls and action pairs before regional interchange or name encoding claims; catalogs and item/weapon/equip/growth/bodyguard/Shura pairs; edited game loading.",
       "editing_verified": true
     },
@@ -615,7 +615,7 @@
       "platform": "Windows PC",
       "status": "Original native PC bounded quality editor",
       "evidence": "A distinct independently shared native original Ryza 2 gameplay autosave passes XOR/additive integrity, complete title-specific tagged framing, 100-byte item records and owned Party equipment. Existing ordinary quality is edited surgically from 1–100; important/empty records, adjacent words, identities, original seeds and unknown state are preserved. Several other files in the advertised Ryza 2 archive are byte-identical Ryza 1 files and excluded. Development expansion: Exact qualified AlchemyTree/SkillPoint framing permits unspent SP reductions only; big-endian scalar storage and separate SkillState ownership are preserved.",
-      "needed": "Edited game load/re-save, further build-labelled saves, higher quality-cap skill dependencies, currency and growth limits, item names/applicability, synthesis/traits/effects, recipes, exploration/collections and controlled acquisition/equip pairs. Original Ryza 1 and Ryza 3 are not registered.",
+      "needed": "Edited game load/re-save, further build-labelled saves, higher quality-cap skill dependencies, currency and growth limits, item names/applicability, synthesis/traits/effects, recipes, exploration/collections and controlled acquisition/equip pairs. Original Ryza 1 PC and Ryza 3 are not registered.",
       "editing_verified": true
     },
     {
@@ -949,6 +949,33 @@
       "status": "US vanilla raw-save gallery IV editor",
       "evidence": "Three distinct native raw-save references qualify US VPYT headers, both gallery-bank layout variations and all twenty-six section checksums. Existing gallery Pokémon’s four five-bit IV components are surgically editable with 0–31 natural bounds. Three unnamed HP/attack/defense components retain explicit numbered labels; Speed is independently identified and Forretress Speed is excluded from bulk Max. Searchable gallery Pokémon inspection, atomic saving, backups, Undo and Review Changes are tested.",
       "needed": "Edited game-load/re-save validation, individual HP/attack/defense bit ordering, remaining species names and active-scenario link/ability/ownership/evolution dependencies; separate European/Japanese or expanded-ROM layouts and emulator container export support.",
+      "editing_verified": true
+    },
+    {
+      "id": "atelier_ryza_switch",
+      "title": "Atelier Ryza: Ever Darkness & the Secret Hideout",
+      "platform": "Nintendo Switch",
+      "status": "Native-file editor implemented",
+      "evidence": "Two complete original main-game revision-4 native slots qualify envelope integrity, byte-exact unchanged roundtrips and thousands of surgical quality edits. Existing ordinary quality 1–100 is writable only with zero adjacent synthesis word and unique ownership; aliases/nonzero adjacent values remain read only. Searchable inventory/equipment and trait inspection, copied-save protections and actual Tk workflows pass.",
+      "needed": "Higher quality-cap progression, item-name/applicability maps, synthesis/trait/effect dependencies and controlled resource/growth/unlock pairs; other platforms/DX/DLC episodes need independent qualification; edited game loading.",
+      "editing_verified": true
+    },
+    {
+      "id": "dw8xl_ps3",
+      "title": "Dynasty Warriors 8: Xtreme Legends",
+      "platform": "PlayStation 3",
+      "status": "Native-file editor implemented",
+      "evidence": "Original US PSN NPUB31449 APP.BIN requires matching unchanged PARAM.SFO. Independent native byte cipher, full plaintext checksum and trailer qualification pass genuine no-op and surgical resource/officer-stat/weapon-action-aptitude edits. A separate public converter reference qualifies existing weapon attribute ranks. Native and real Tk workflows pass; no natural Max ceilings inferred.",
+      "needed": "Other regions/disc editions require independent native qualification; original PARAM.SFO and external Apollo PFD reimport/signing are required. Progression/rewards/ownership dependencies and actual edited console loading remain unqualified.",
+      "editing_verified": true
+    },
+    {
+      "id": "dqb2_pc",
+      "title": "Dragon Quest Builders 2",
+      "platform": "Windows PC",
+      "status": "Native-file editor implemented",
+      "evidence": "Four original Steam CMNDAT copies qualify complete bounded zlib/Adler framing, exact unchanged compact/padded roundtrips and existing named medicine/seed stack reductions. Only 20 reviewed ordinary IDs, 15 pockets and 420 bag records; opened ownership and at least one item preserved. Opaque unused native padding and all unknown/world/equipment bytes stay intact. Native surgical edits, copied-save protections and actual Tk workflows pass.",
+      "needed": "Additional item applicability, player growth dependencies and matched CMNDAT/STGDAT world/progression action pairs; no creation, equipment swaps or world transplantation. Other platforms/builds and actual game loading require independent qualification.",
       "editing_verified": true
     }
   ],

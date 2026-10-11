@@ -249,3 +249,13 @@ verified product/format distinctions and assignment boundaries. No player data,
 owner context, assets or title keys should be posted on the PR; keep those
 inputs local. Actual edited game-load/re-save follows qualified file tests and
 remains separately required.
+
+## v1.71 profile expansion inputs
+
+| Game/platform | Implemented | Needed for deeper coverage |
+| --- | --- | --- |
+| Original Atelier Ryza, Switch | Existing ordinary quality 1–100; searchable inventory/equipment/traits. | Controlled quality-cap, synthesis/rebuild/trait, earn/spend, growth and equip/transfer pairs; independently qualified item identities. PC/DX/DLC episode files need separate complete native qualification. [Checklist](RYZA_SWITCH_FORMAT.md) |
+| DW8 XL, original US PS3 PSN | Resources, officer stats, weapon-action aptitudes and existing weapon ranks. | Exact NPUB31449 APP.BIN with original PARAM.SFO, controlled progression/reward/weapon acquisition pairs, and edited console load/re-save. Other editions/regions require independent native exports. [Checklist](DW8XL_PS3_FORMAT.md) |
+| DQB2, original Steam PC | Existing named medicine/seed reductions and searchable inventory/player status. | Controlled additional item applicability, player growth, and matched CMNDAT/STGDAT world/progression pairs; original same-slot companion files for game-load validation. Other platforms require independent native qualification. [Checklist](DQB2_PC_FORMAT.md) |
+
+DW5 Special's reported compatible header variant is fixed; its marker is retained without inferring locale/build or allowing conversion. Regional action-pair/catalog dependencies above remain unchanged.

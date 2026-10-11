@@ -83,6 +83,27 @@ class UniversalGuiTests(unittest.TestCase):
                                          'Collections', 'Musou Saves'})
         self.assertFalse(origins.fields.get_children())
 
+    def test_additional_native_profiles_use_their_registered_backend_and_retain_sessions(self):
+        from koei_editor.game_registry import get_game
+        sessions = {}
+        expected = {'atelier_ryza_switch': 'Nintendo Switch',
+                    'dw8xl_ps3': 'PlayStation 3', 'dqb2_pc': 'Windows PC'}
+        for game_id, platform in expected.items():
+            with self.subTest(game=game_id):
+                game = get_game(game_id)
+                self.assertEqual(game.platform, platform)
+                editor = self.app.select_game(game_id)
+                self.assertEqual(editor.game_id, game_id)
+                self.assertEqual(game.get_scalar_adapter().get_format().id, game_id)
+                self.assertIsNone(editor.document)
+                self.assertFalse(editor.changes)
+                sessions[game_id] = editor
+        self.app.apply_theme('Dark')
+        self.app.show_library()
+        for game_id, editor in sessions.items():
+            self.assertIs(self.app.select_game(game_id), editor)
+            self.assertEqual(editor.theme_name.get(), 'Dark')
+
     def test_switching_and_theme_changes_retain_pending_edits_and_form_values(self):
         dw3 = self.app.select_game('dw3')
         change = Change('officer', 0, 'SPoint', 999)

@@ -20,11 +20,14 @@ from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'atelier_ryza'
 SWITCH_GAME_ID = 'atelier_ryza_switch'
+RYZA2_SWITCH_GAME_ID = 'atelier_ryza2_switch'
 MAX_FILE_SIZE = codec.MAX_FILE_SIZE
 INTEGRITY_KIND = 'checksum'
 CHARACTERS = {
     GAME_ID: ('Ryza', 'Klaudia', 'Lent', 'Tao', 'Empel', 'Lila'),
     SWITCH_GAME_ID: ('Ryza', 'Klaudia', 'Lent', 'Tao', 'Empel', 'Lila'),
+    RYZA2_SWITCH_GAME_ID: ('Ryza', 'Character ID 1', 'Character ID 2', 'Character ID 3',
+                         'Character ID 4', 'Character ID 5', 'Character ID 6'),
     'atelier_ryza2': ('Ryza', 'Character ID 1', 'Character ID 2', 'Character ID 3',
                       'Character ID 4', 'Character ID 5', 'Character ID 6'),
 }
@@ -78,6 +81,12 @@ FORMATS = {
                           'Original complete revision-4 main-game export. Existing ordinary item/equipment '
                           'quality 1–100; higher cap unlocks remain unmapped and Max is disabled. '
                           'Two native main-game slots checked; edited game loading is untested.'),
+    RYZA2_SWITCH_GAME_ID: Format(RYZA2_SWITCH_GAME_ID,
+                             'Atelier Ryza 2: Lost Legends & the Secret Fairy (Switch)',
+                             'Original complete revision-0 Switch main-game export. Existing quality '
+                             '1–100 on zero-adjacent records; unspent skill-tree SP reductions only. '
+                             'Modified public starter reference checked; game loading is untested.',
+                             sample_verified=True),
     'atelier_ryza2': Format('atelier_ryza2', 'Atelier Ryza 2: Lost Legends & the Secret Fairy (Steam PC)',
                            'Original native 100-byte-item layout. Existing ordinary item/equipment '
                            'quality 1–100; excluded from Max until higher skill caps are mapped. '
@@ -151,7 +160,7 @@ def _structure(payload, game_id):
         raise SaveError('Duplicate Ryza root node.')
     info = _unique(root, b'info')
     app = _unique(_nodes(payload, info.body, info.end), b'app_ver')
-    expected_app = struct.pack('>II', 1, {GAME_ID: 0, SWITCH_GAME_ID: 4, 'atelier_ryza2': 1}[game_id])
+    expected_app = struct.pack('>II', 1, {GAME_ID: 0, SWITCH_GAME_ID: 4, 'atelier_ryza2': 1, RYZA2_SWITCH_GAME_ID: 0}[game_id])
     if payload[app.body:app.end] != expected_app:
         raise SaveError('Unqualified original Ryza app_ver profile; do not use a DX save.')
     fieldmap = _unique(root, b'fieldmap')
@@ -253,7 +262,7 @@ def _snapshot(raw, game_id):
     except (codec.SaveFormatError, struct.error, IndexError) as error:
         raise SaveError(f'Ryza native integrity/codec check failed: {error}.') from error
     # Header is native framing, not a title discriminator.
-    revision = {GAME_ID: 0, SWITCH_GAME_ID: 4, 'atelier_ryza2': 1}[game_id]
+    revision = {GAME_ID: 0, SWITCH_GAME_ID: 4, 'atelier_ryza2': 1, RYZA2_SWITCH_GAME_ID: 0}[game_id]
     if (header[:40] != b'\x01' + bytes(39)
             or header[40:48] != struct.pack('<II', 1, revision)):
         raise SaveError('Unqualified Ryza game/platform native header.')
@@ -311,7 +320,7 @@ def _fields(payload, game_id):
         quality = struct.unpack_from('<H', payload, offset + quality_offset)[0]
         if key.startswith('important') or quality in (0, 0xFFFF) or occurrences[_serial] > 1:
             continue  # Important/no-quality records do not inherit ordinary item rules.
-        if (game_id == SWITCH_GAME_ID
+        if (game_id in (SWITCH_GAME_ID, RYZA2_SWITCH_GAME_ID)
                 and struct.unpack_from('<H', payload, offset + quality_offset + 2)[0] != 0):
             continue  # Unproved coupled equipment/synthesis value; no DWORD normalization.
         maximum = 999 if game_id == GAME_ID else 100
@@ -319,7 +328,7 @@ def _fields(payload, game_id):
         field = Field(f'{key}_{slot - 1}_quality', title + ': Quality', offset + quality_offset,
                       maximum, label, slot, game_id == GAME_ID)
         result[field.id] = field
-    if game_id == 'atelier_ryza2':
+    if game_id in ('atelier_ryza2', RYZA2_SWITCH_GAME_ID):
         field = _skill_point_field(payload)
         if field is not None:
             result[field.id] = field
@@ -506,6 +515,6 @@ def field_hint(document, key):
     note = 'Existing item quality only; adjacent synthesis data, traits, effects, ownership and equipment remain intact.'
     if document.format.id != GAME_ID:
         note += ' Quality edits stop at 100; higher progression caps are unmapped. Excluded from Max.'
-    if document.format.id == SWITCH_GAME_ID:
+    if document.format.id in (SWITCH_GAME_ID, RYZA2_SWITCH_GAME_ID):
         note += ' Only records with zero adjacent synthesis word and no shared instance gain a control.'
     return note

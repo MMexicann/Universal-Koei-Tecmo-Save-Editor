@@ -9,6 +9,10 @@ Ryza 2 DX, Ryza 3 or console files. The separate
 [original Ryza 1 Switch adapter](RYZA_SWITCH_FORMAT.md) qualifies complete
 revision-4 main-game exports for conservative existing-item quality edits
 and searchable equipment/trait inspection; it does not qualify Ryza 1 PC.
+The [original Ryza 2 Switch profile](RYZA2_SWITCH_FORMAT.md) separately qualifies
+revision-0 main-game SP reductions and inventory/equipment inspection, with
+conditional zero-adjacent quality controls. Its modified starter reference is
+not evidence of clean progression or natural resource caps.
 
 ## Native evidence and framing
 

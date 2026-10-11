@@ -112,7 +112,8 @@ class RebornPS3Tests(unittest.TestCase):
                 parser.serialize(self.document, changes)
         for document in (replace(self.document, payload=bytearray(self.raw)),
                          replace(self.document, format=replace(parser.FORMAT, id='foreign')),
-                         replace(self.document, native_directory='foreign')):
+                         replace(self.document, native_directory='foreign'),
+                         replace(self.document, source=None), replace(self.document, source=[])):
             with self.assertRaises(SaveError):
                 parser.backup(document)
 

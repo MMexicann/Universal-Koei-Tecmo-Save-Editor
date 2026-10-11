@@ -144,6 +144,7 @@ def read_save(path, game_id=GAME_ID):
 
 def validate_document(document):
     if (type(document) is not Document or document.format is not FORMAT
+            or not isinstance(document.source, Path)
             or type(document.raw) is not bytes or type(document.payload) is not bytes
             or document.raw != document.payload
             or (document.native_directory is not None and not valid_directory(document.native_directory))):

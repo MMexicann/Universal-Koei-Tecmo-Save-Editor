@@ -14,7 +14,7 @@ The freely shared [Viren070/NX_Saves collection](https://github.com/Viren070/NX_
 contains a `Super Starter` original Switch export for title `01009A9012022000`.
 Its gameplay and autosave are byte identical, so they count as **one reference
 state**, not independent earned-state observations. A companion system file is
-not gameplay and is rejected. The starter is explicitly modified: its unspent
+not gameplay and is rejected. The starter is treated as a modified reference: its unspent
 SP is 117,431,850 and its 249 existing item records have nonzero adjacent quality
 words. That is not evidence of a legitimate SP cap, natural quality limits,
 clean progression or edited-save game acceptance.

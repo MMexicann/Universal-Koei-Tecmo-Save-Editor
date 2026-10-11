@@ -117,6 +117,16 @@ class UniversalPackagingTests(fixture.PackagingTests):
                 release.package(self.root)
         self.assertFalse((self.root / 'release').exists())
 
+    def test_packaging_verifies_bundle_once_before_creating_downloads(self):
+        def inspect(root):
+            self.assertEqual(root, self.root.resolve())
+            self.assertFalse((root / 'release').exists())
+            return 1
+        with patch.object(release, 'verify_executable', side_effect=inspect) as verifier:
+            assets = release.package(self.root)
+        verifier.assert_called_once_with(self.root.resolve())
+        self.assertTrue(all(asset.exists() for asset in assets))
+
     def test_katana_dependency_requires_its_exact_embedded_license(self):
         codec = BASE + 'research/katana/katana_codec.py'
         notice = 'licenses/katana-save-data-resigner-MIT.txt'
@@ -184,13 +194,16 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
         workflow = (PROJECT / '.github/workflows/windows-release.yml').read_text()
         for required in ("github.ref_type == 'tag'", "github.ref_name == 'main' && contains(github.event.head_commit.message, '[release]')",
                          '"ref=refs/tags/$release_tag" -f "sha=$GITHUB_SHA"', 'needs: build',
-                         'Release tag must match the application version.', 'python -m tools.package_release --verify-executable',
+                         'Release tag must match the application version.', 'python -m tools.package_release\n',
                          'sha256sum --check SHA256SUMS.txt', 'gh release create', '--verify-tag',
                          'python -m pip install -e .', 'python -m tools.build_windows', 'python -m koei_editor --smoke-test',
                          'tools/requirements/build.txt', '--notes-file docs/RELEASE_NOTES.md', "github.event_name == 'pull_request'"):
             self.assertIn(required, workflow)
         for forbidden in ('gh release edit', 'gh release upload', 'git push'):
             self.assertNotIn(forbidden, workflow)
+        self.assertEqual(workflow.count('python -m tools.package_release\n'), 1)
+        self.assertNotIn('python -m tools.package_release --verify-executable', workflow)
+        self.assertIn("throw 'Bundle validation or local packaging failed.'", workflow)
 
 
 if __name__ == '__main__':

@@ -56,6 +56,9 @@ from .game_registry import GAMES
 # kens_rage2_ps3: FIST OF THE NORTH STAR: KEN'S RAGE 2 / EU · decrypted DATA.BIN + PARAM.SFO [PlayStation 3]
 # rotk13_pc: ROMANCE OF THE THREE KINGDOMS XIII / Original PC · revision 14 · TC [Windows PC]
 # three_houses: FIRE EMBLEM: THREE HOUSES / Switch · gameplay save-format v13/v23 [Nintendo Switch]
+# berserk_vita: BERSERK AND THE BAND OF THE HAWK / EU PS Vita · decrypted PCSB01085 [PlayStation Vita]
+# doa5_ps3: DEAD OR ALIVE 5 / Original US/EU PS3 PSN · SAVE_SYS.DAT + PARAM.SFO [PlayStation 3]
+# pokemon_conquest_ds: POKÉMON CONQUEST / US Nintendo DS · raw native save [Nintendo DS]
 # END GENERATED SUPPORTED GAME INDEX
 
 

@@ -2,6 +2,18 @@
 
 For the latest 19-profile expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a native owned unlearned positive DW7 XL seal-meter pair remain missing; their new controls have source/procedural/Tk evidence. Actual edited game-load/re-save remains a separate check.
 
+
+## Latest additional-editor profiles
+
+| Registered profile | Exact next input for deeper editing |
+| --- | --- |
+| Berserk, EU PS Vita PCSB01085 | Decrypted `app0000.dat` / actual slot plus original `sce_sys/param.sfo`; one material purchase/use, gold gain/spend, level-up, accessory enhancement/equip or Eclipse reward pair with displayed values. Native US PCSE01034 exports are needed separately. Vita evidence does not resolve the Windows serializer. [Checklist](BERSERK_VITA_FORMAT.md). |
+| Dead or Alive 5, original US/EU PS3 PSN | Native `SAVE_SYS.DAT` with unchanged original `PARAM.SFO`; a genuinely locked-to-earned costume pair identifying fighter and outfit, plus unchanged control. Current shared originals already have all mapped flags set, so targeted unlock tests use constructed derivatives. Other editions/title IDs need their own framing and mappings. [Checklist](DOA5_FORMAT.md). |
+| Pokémon Conquest, North American Nintendo DS VPYT | Clean raw 256/512 KiB `.sav` copies with one labelled gallery stat observation or gallery/active-party, link, EXP, ability, evolution, currency, equipment or warrior action pair. HP/Attack/Defense IV component ordering is still unnamed; only Speed is independently identified. Other regions/ROM modifications need separate qualification. [Checklist](POKEMON_CONQUEST_DS_FORMAT.md). |
+
+External Vita/PS3 reimport and signing remain the export tool's responsibility.
+Actual edited game loading and re-saving are still needed for all three profiles.
+
 ## Five follow-up candidates
 
 These are development investigations, not additional supported-game entries.

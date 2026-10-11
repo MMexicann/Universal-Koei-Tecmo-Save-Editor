@@ -23,8 +23,8 @@
     },
     {
       "path": "CONTRIBUTING.md",
-      "bytes": 16784,
-      "sha256": "1014e9777640b9e02fd38baa8e3f453c92f17172527fb6b5acd1466493932d15"
+      "bytes": 17198,
+      "sha256": "bac52856193053a9635e6f7e3bb3beb27ee5949f4e244ce5063a7daf943e4c31"
     },
     {
       "path": "LICENSE",
@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 10808,
-      "sha256": "8d7f245a6336da93bfb90d182e7064a2495879726f0d7820a9334cf581af7abf"
+      "bytes": 11343,
+      "sha256": "b68c37cfcccaafc4639882fc4aa269b2cfea36dd0547e406a3d3dfb139a14b2d"
     },
     {
       "path": "docs/ADDITIONAL_EDITOR_SURVEY.md",
@@ -87,6 +87,11 @@
       "sha256": "87fa3970dfc1ec07f459e9c8e47c7e2806136d215ef72396d18c3a1cd8f8ee5e"
     },
     {
+      "path": "docs/BERSERK_VITA_FORMAT.md",
+      "bytes": 7763,
+      "sha256": "ea7c07f72f0624ffc10e938e2350afae75f3b16d286990ce4cec6e52b8b5905e"
+    },
+    {
       "path": "docs/BLADESTORM_PC_RESEARCH.md",
       "bytes": 5627,
       "sha256": "ee766d621b59504f032efbf3e01facd8d038f6128b0ecb2f265d01a75d0ec59e"
@@ -130,6 +135,11 @@
       "path": "docs/CONSOLE_PIRATE_STRATEGY_DEPTH.md",
       "bytes": 17073,
       "sha256": "74ad058ab8f456eeff21b5cfa43f1c0645958513ed7d03e886ea5a714b8398ea"
+    },
+    {
+      "path": "docs/DOA5_FORMAT.md",
+      "bytes": 9193,
+      "sha256": "a07c8b2c24fef5f0ebbd1cafe5ca8d538ff557d0e4011a7e7fa6975b9a82a115"
     },
     {
       "path": "docs/DUSK_DX_RESEARCH.md",
@@ -193,8 +203,8 @@
     },
     {
       "path": "docs/EXISTING_EDITORS.md",
-      "bytes": 9330,
-      "sha256": "6237edd414612bfb2882a50dec6454ef4c282b994e57b715c1a475fbf8b1d566"
+      "bytes": 10046,
+      "sha256": "76cafd8e30ca3f229ebb1094abc2bcd76bac5daf284248f035f1913e91357f17"
     },
     {
       "path": "docs/EXPANSION_COVERAGE.md",
@@ -332,9 +342,14 @@
       "sha256": "f41a66cab0dffb38015d5cc08c7ac087dcec9c57a466fbcd044ebd3e5f008000"
     },
     {
+      "path": "docs/POKEMON_CONQUEST_DS_FORMAT.md",
+      "bytes": 8242,
+      "sha256": "cdbe110c5e7c9711561935c6bcb30ab92c621fe62703a9964b6953adacd69eca"
+    },
+    {
       "path": "docs/PREPARED_UPDATE.md",
-      "bytes": 11811,
-      "sha256": "3af9d9aeb59923a6411bc5a4d529dbe72ff74f87825623d4a602159d2850ceba"
+      "bytes": 13149,
+      "sha256": "10ac1de1e221f95b3053815accd6079adc8c7276f34542357ca1564dedc9204e"
     },
     {
       "path": "docs/PS3_EXPANSION.md",
@@ -353,8 +368,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 6993,
-      "sha256": "94a58455c4bb7ce5efb7f7b9a38530a107088a944454e50e53721c27a4b7efcd"
+      "bytes": 7215,
+      "sha256": "591599b882408b2f4051cd003ff66b3cca5f81cad311564c24bf0859b8967671"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -368,8 +383,8 @@
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
-      "bytes": 40033,
-      "sha256": "e0ff06195a47333e892d1660ff34f691426f1734dd3977232feea03a62fdaaeb"
+      "bytes": 41538,
+      "sha256": "3f1b517531fc19f2ce3900683fbe3e3b391c78d6c3f55b2833609e65384f3b4b"
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
@@ -453,8 +468,8 @@
     },
     {
       "path": "docs/SUPPORTED_GAMES.md",
-      "bytes": 8403,
-      "sha256": "c84b4d503f9ff5f9ba06a1e0aac9064c5b9b1f69f77ef0213e10460681bc0217"
+      "bytes": 8938,
+      "sha256": "ed7d3c0bebe94f3fde8b1e26fa23f992daa7be1b457ee1292e6afd512a7184fa"
     },
     {
       "path": "docs/SW2HD_PS3.md",
@@ -488,8 +503,8 @@
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
-      "bytes": 7523,
-      "sha256": "ba045ea733544a0329cfc1b9e7928e3f103654c545ef48a099e0d18b5722adef"
+      "bytes": 8576,
+      "sha256": "18232b3d8f082916257d4e44a6cb01ff51b32cf0953fda1918ece6a2acb28c41"
     },
     {
       "path": "docs/THREE_HOPES_FORMAT.md",
@@ -688,8 +703,8 @@
     },
     {
       "path": "src/koei_editor/data/support_catalog.json",
-      "bytes": 74806,
-      "sha256": "0c85422f27f2d96e38f793a3784f4e2c67eddfecf25d94f98c20dfc7057cbd07"
+      "bytes": 78043,
+      "sha256": "bae710c424a04434c1dc35ed20b1c9bf8b000671bc6fdac38a26115780628563"
     },
     {
       "path": "src/koei_editor/data/unique_weapons.json",
@@ -708,8 +723,8 @@
     },
     {
       "path": "src/koei_editor/game_registry.py",
-      "bytes": 20881,
-      "sha256": "f5a3e682c2cf1013612a131db51ade68fcac364ccc737175cbe7e9301ab7b092"
+      "bytes": 22156,
+      "sha256": "79b2d0a9a01d67c7b66b3a0e97e3317194033ba758861deee427279bbe36c92a"
     },
     {
       "path": "src/koei_editor/games/AGENTS.md",
@@ -760,6 +775,51 @@
       "path": "src/koei_editor/games/ayesha_ps3/presentation.py",
       "bytes": 1059,
       "sha256": "97553342bcfdee3b32b4fe49f1f28c6a675a42494034373fae6aef9162829387"
+    },
+    {
+      "path": "src/koei_editor/games/berserk_vita/__init__.py",
+      "bytes": 43,
+      "sha256": "0220304374a6086d1a14e37a60f8c68f1702882faf4841770826f2754dad90a8"
+    },
+    {
+      "path": "src/koei_editor/games/berserk_vita/editor.py",
+      "bytes": 682,
+      "sha256": "120526f77ec538b194e892165d7aa932ba1724d35e35fb753e551beab5a58c5c"
+    },
+    {
+      "path": "src/koei_editor/games/berserk_vita/parser.py",
+      "bytes": 14959,
+      "sha256": "ff9bdfa114df6734f399e38d4e186d047d495ba3d4722a966ccf45aff85f3ab9"
+    },
+    {
+      "path": "src/koei_editor/games/berserk_vita/presentation.py",
+      "bytes": 927,
+      "sha256": "c353e1db0d3a2f0d1edafc698302f3748916272f133d7daa1cce21ce1bd702af"
+    },
+    {
+      "path": "src/koei_editor/games/doa5_ps3/__init__.py",
+      "bytes": 82,
+      "sha256": "022b8557315f7b6e0da98587d01e3b8005d085887585f90588bb0d4a31eac309"
+    },
+    {
+      "path": "src/koei_editor/games/doa5_ps3/codec.py",
+      "bytes": 2714,
+      "sha256": "20d06882edb0c97f55f758822cd64d57749c73b281f57d572f175cf6d26af6eb"
+    },
+    {
+      "path": "src/koei_editor/games/doa5_ps3/editor.py",
+      "bytes": 802,
+      "sha256": "0b24cd495e1b0301c8885eae75219c83b8a284dcdfb9cc1d73aae92ed200e2af"
+    },
+    {
+      "path": "src/koei_editor/games/doa5_ps3/parser.py",
+      "bytes": 13214,
+      "sha256": "9abeba7e02ad0da4f5a0dc3ba7f42da4ece583b329f808e4c55ee13dd58f348c"
+    },
+    {
+      "path": "src/koei_editor/games/doa5_ps3/presentation.py",
+      "bytes": 688,
+      "sha256": "e3d88d77d6e2fdd07f003538fda9851774a827fb486a193d77c0ceb313b17fe9"
     },
     {
       "path": "src/koei_editor/games/dw3/__init__.py",
@@ -1365,6 +1425,26 @@
       "path": "src/koei_editor/games/p5strikers_pc/presentation.py",
       "bytes": 1803,
       "sha256": "c5b154ed9a1b91818431cfc0da7aa17bc8984c81b750c42831de263d272486d3"
+    },
+    {
+      "path": "src/koei_editor/games/pokemon_conquest_ds/__init__.py",
+      "bytes": 69,
+      "sha256": "cc0a661242e1f180af8edf71b2b319cb7713c5615f3294ecd3b6d5197c99fdee"
+    },
+    {
+      "path": "src/koei_editor/games/pokemon_conquest_ds/editor.py",
+      "bytes": 671,
+      "sha256": "06b22c9a8d60f0af07a00766a35fab23c2bf859fbe18e13b3188848b8b673e82"
+    },
+    {
+      "path": "src/koei_editor/games/pokemon_conquest_ds/parser.py",
+      "bytes": 15011,
+      "sha256": "367242b401d523d3e846af558f26616a1f0e79e8b18ebe9ad751914118315803"
+    },
+    {
+      "path": "src/koei_editor/games/pokemon_conquest_ds/presentation.py",
+      "bytes": 798,
+      "sha256": "8ebd12ffdd229c86c3074af1903009fb43827a29b213a8489f5837903c66bf81"
     },
     {
       "path": "src/koei_editor/games/pw3/__init__.py",
@@ -2048,8 +2128,8 @@
     },
     {
       "path": "src/koei_editor/supported_games.py",
-      "bytes": 5158,
-      "sha256": "f60c3d5cdeb0fd32ce487a9d262187c8e39690df8fd9415d9879402f0b0706f1"
+      "bytes": 5450,
+      "sha256": "c4268e2737e37d0cc0e4420e20888f4d3efab69149384de9dc939b0b198eb405"
     },
     {
       "path": "tests/README.md",
@@ -2090,6 +2170,11 @@
       "path": "tests/test_berserk_pc_inspection.py",
       "bytes": 5415,
       "sha256": "27690e7f6b7fc4c08134b1501eb3e99e64d834c161258bb02a846cc76a3e0a1e"
+    },
+    {
+      "path": "tests/test_berserk_vita.py",
+      "bytes": 14105,
+      "sha256": "e3c15b68b3a3f691404eec29e6e5af85378ed24dcb31e104ec0a6d1f082967bd"
     },
     {
       "path": "tests/test_bodyguard_rules.py",
@@ -2140,6 +2225,11 @@
       "path": "tests/test_console_pirate_strategy_depth.py",
       "bytes": 13967,
       "sha256": "9ba66c736e7a238dbf7a3b3e51008a7743538a219e12ca1764ffbf6083a4421d"
+    },
+    {
+      "path": "tests/test_doa5_ps3.py",
+      "bytes": 17373,
+      "sha256": "5d5673c69e273220291db8e60d472a027ffffd1c588eeb9913e5fed6a69184ad"
     },
     {
       "path": "tests/test_dw4hyper_format.py",
@@ -2428,8 +2518,8 @@
     },
     {
       "path": "tests/test_library_search.py",
-      "bytes": 5240,
-      "sha256": "0de678a942449f602f6026dfb1971f364d19dd18314a089b2737bedb6f44aa51"
+      "bytes": 6566,
+      "sha256": "901a80ef03f45210d8dd3e71173fc8e67c3472ad7b58dd010d8f065a2744e655"
     },
     {
       "path": "tests/test_licensed_musou_context_regressions.py",
@@ -2645,6 +2735,11 @@
       "path": "tests/test_pirate_abyss_candidates.py",
       "bytes": 7837,
       "sha256": "17df1f7f186ac54ace5394fb71d3850f61defed65d2b3fe6b161adf941c6be85"
+    },
+    {
+      "path": "tests/test_pokemon_conquest_ds.py",
+      "bytes": 14608,
+      "sha256": "1f61f3efae2afb770948defd19cbda1a5e964f00cd8a3433dbe2b8646a182c61"
     },
     {
       "path": "tests/test_preferences.py",
@@ -2953,8 +3048,8 @@
     },
     {
       "path": "tests/test_verified_editors.py",
-      "bytes": 20943,
-      "sha256": "196a94a42ae4f2d103cfcea3e34e2997ae699bf383f0dd3a926f4d45317b4d50"
+      "bytes": 20958,
+      "sha256": "4a413130ba14f7669fe9d23f9fe4ff461697e5655718772fcb5615baed1c6892"
     },
     {
       "path": "tests/test_verified_pending_safety.py",

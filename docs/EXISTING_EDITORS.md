@@ -8,6 +8,19 @@ see [current coverage](EXPANSION_COVERAGE.md) and the linked game documents.
 Finding an existing editor is useful, but an asset unpacker, process trainer or
 console editor does not establish a compatible native PC disk-save writer.
 
+## Latest additional-editor round
+
+- A statically inspected Berserk Vita editor and two genuine exports qualify
+  conservative EU Vita gold/material controls, independently implemented.
+- DOA5's original PS3 cipher/checksum reference and narrow Apollo costume patch
+  qualify an exact US/EU PSN adapter; broader Everything/Ultimate patches are excluded.
+- Pokémon Conquest public native-save research qualifies a North American DS
+  gallery-IV writer with complete searchable species names. ROM-editor facts
+  alone do not qualify other save-backed systems.
+
+These add three profiles. Native validation, constructed transition cases,
+licences and remaining mechanics are documented separately in each format note.
+
 ## Later expansion findings
 
 - The licensed Musou expansion independently implements qualified Gundam and

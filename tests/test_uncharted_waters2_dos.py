@@ -112,6 +112,22 @@ class NewHorizonsDosTests(unittest.TestCase):
         with self.assertRaises(SaveError):
             parser.decode(self.doc.raw, 'uncharted_waters2_snes')
 
+    def test_real_directory_calendar_dates_and_body_dates(self):
+        for label in (b'Jan/99/1522\0', b'Jan/00/1501\0', b'Jan/01/9999\0',
+                      b'Feb/29/1501\0', b'Apr/31/1522\0'):
+            raw = bytearray(self.doc.raw)
+            raw[1:13] = label
+            with self.assertRaises(SaveError):
+                parser.decode(raw)
+        raw = bytearray(self.doc.raw)
+        raw[1:13] = b'Feb/29/1504\0'
+        # Header/body equality is deliberately not inferred from clock writes.
+        self.assertEqual(parser.decode(raw).raw, bytes(raw))
+        base = parser.HEADER_SIZE
+        raw[base + 6:base + 9] = bytes((0, 1, 28))
+        with self.assertRaises(SaveError):
+            parser.decode(raw)
+
     def test_save_as_backups_restoration_existing_destinations_and_changed_sources(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)

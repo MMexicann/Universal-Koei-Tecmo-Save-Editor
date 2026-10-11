@@ -5,6 +5,7 @@ See docs/UNCHARTED_WATERS2_DOS_FORMAT.md. No external code/assets/catalog copied
 """
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from functools import lru_cache
 import hashlib
 import re
@@ -128,10 +129,22 @@ def _validate_raw(raw):
         label = raw[header:header + 12].split(b'\0', 1)[0]
         if not re.fullmatch(rb'(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/[ 0-9][0-9]/[0-9]{4}', label):
             raise SaveError('Invalid occupied English DOS slot label.')
+        month_text, day_text, year_text = label.decode('ascii').split('/')
+        year = int(year_text)
+        try:
+            if not 1501 <= year <= 1756:
+                raise ValueError('Unsupported year')
+            date(year, MONTHS.index(month_text) + 1, int(day_text))
+        except ValueError as error:
+            raise SaveError('Invalid occupied directory calendar date.') from error
         if raw[header + 13] >= 6:
             raise SaveError('Invalid occupied slot protagonist ID.')
         if raw[base + 7] >= 12 or raw[base + 8] >= 31 or raw[base + 9] >= 72:
             raise SaveError('Invalid occupied slot calendar framing.')
+        try:
+            date(1501 + raw[base + 6], 1 + raw[base + 7], 1 + raw[base + 8])
+        except ValueError as error:
+            raise SaveError('Invalid occupied slot calendar date.') from error
         if raw[base + 10] >= PORT_COUNT and raw[base + 10] != 255:
             raise SaveError('Invalid occupied slot port identity.')
     return True

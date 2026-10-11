@@ -252,7 +252,7 @@ GAMES = (
          '', '.dat', '#796070', 'koei_editor.games.doa5_ps3.editor', 'koei_editor.games.doa5_ps3.parser',
          False, 'DOA5', True, platform='PlayStation 3', scalar_backend='koei_editor.games.doa5_ps3.parser'),
     Game('pokemon_conquest_ds', 'POKÉMON CONQUEST', 'US Nintendo DS · raw native save',
-         'Existing gallery Pokémon IV components and Speed IV; searchable Pokémon and warrior records.',
+         'Existing gallery Pokémon IV components and Speed IV; searchable gallery Pokémon records.',
          '', '.sav', '#99752b', 'koei_editor.games.pokemon_conquest_ds.editor', 'koei_editor.games.pokemon_conquest_ds.parser',
          True, 'PCQ', True, platform='Nintendo DS', scalar_backend='koei_editor.games.pokemon_conquest_ds.parser'),
 )

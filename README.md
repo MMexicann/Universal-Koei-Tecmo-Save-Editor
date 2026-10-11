@@ -73,7 +73,7 @@ Ninja Gaiden 2 Black use different formats.
 | FIRE EMBLEM: THREE HOUSES — Switch · gameplay save-format v13/v23 | Nintendo Switch | Instruction motivation, existing learned ability loadouts, gold and ordinary convoy quantity/durability reductions. |
 | BERSERK AND THE BAND OF THE HAWK — EU PS Vita · decrypted PCSB01085 | PlayStation Vita | Gold deductions, eighteen named existing enhancement materials and searchable character status. |
 | DEAD OR ALIVE 5 — Original US/EU PS3 PSN · SAVE_SYS.DAT + PARAM.SFO | PlayStation 3 | Sixty-three individual costume unlock controls and searchable costume records. |
-| POKÉMON CONQUEST — US Nintendo DS · raw native save | Nintendo DS | Existing gallery Pokémon IV components and Speed IV; searchable Pokémon and warrior records. |
+| POKÉMON CONQUEST — US Nintendo DS · raw native save | Nintendo DS | Existing gallery Pokémon IV components and Speed IV; searchable gallery Pokémon records. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

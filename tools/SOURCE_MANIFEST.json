@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 11343,
-      "sha256": "b68c37cfcccaafc4639882fc4aa269b2cfea36dd0547e406a3d3dfb139a14b2d"
+      "bytes": 11339,
+      "sha256": "e0e32d4d23eae88203655b7714f817f30258d400f44a2b5cdf1f560bed1abe5f"
     },
     {
       "path": "docs/ADDITIONAL_EDITOR_SURVEY.md",
@@ -468,8 +468,8 @@
     },
     {
       "path": "docs/SUPPORTED_GAMES.md",
-      "bytes": 8938,
-      "sha256": "ed7d3c0bebe94f3fde8b1e26fa23f992daa7be1b457ee1292e6afd512a7184fa"
+      "bytes": 8934,
+      "sha256": "aa1147a0d3e8e133a39c6c12281045010e2ab1e19f2e40b9b4efa022439f9942"
     },
     {
       "path": "docs/SW2HD_PS3.md",
@@ -704,7 +704,7 @@
     {
       "path": "src/koei_editor/data/support_catalog.json",
       "bytes": 78043,
-      "sha256": "bae710c424a04434c1dc35ed20b1c9bf8b000671bc6fdac38a26115780628563"
+      "sha256": "e10a000ac18334ec59441bf626e03fbe46ea938abd7b8b95bf7a62c999982557"
     },
     {
       "path": "src/koei_editor/data/unique_weapons.json",
@@ -723,8 +723,8 @@
     },
     {
       "path": "src/koei_editor/game_registry.py",
-      "bytes": 22156,
-      "sha256": "79b2d0a9a01d67c7b66b3a0e97e3317194033ba758861deee427279bbe36c92a"
+      "bytes": 22152,
+      "sha256": "eee4359168f50932cdfcd64fd77b68d622c31e5b580a348acad74035a4fced16"
     },
     {
       "path": "src/koei_editor/games/AGENTS.md",

@@ -947,7 +947,7 @@
       "title": "Pokémon Conquest",
       "platform": "Nintendo DS",
       "status": "US vanilla raw-save gallery IV editor",
-      "evidence": "Three distinct native raw-save references qualify US VPYT headers, both gallery-bank layout variations and all twenty-six section checksums. Existing gallery Pokémon’s four five-bit IV components are surgically editable with 0–31 natural bounds. Three unnamed HP/attack/defense components retain explicit numbered labels; Speed is independently identified and Forretress Speed is excluded from bulk Max. Searchable creature/warrior inspection, atomic saving, backups, Undo and Review Changes are tested.",
+      "evidence": "Three distinct native raw-save references qualify US VPYT headers, both gallery-bank layout variations and all twenty-six section checksums. Existing gallery Pokémon’s four five-bit IV components are surgically editable with 0–31 natural bounds. Three unnamed HP/attack/defense components retain explicit numbered labels; Speed is independently identified and Forretress Speed is excluded from bulk Max. Searchable gallery Pokémon inspection, atomic saving, backups, Undo and Review Changes are tested.",
       "needed": "Edited game-load/re-save validation, individual HP/attack/defense bit ordering, remaining species names and active-scenario link/ability/ownership/evolution dependencies; separate European/Japanese or expanded-ROM layouts and emulator container export support.",
       "editing_verified": true
     }

@@ -40,6 +40,22 @@ class Inspection:
     integrity_qualified: bool = False
 
 
+@dataclass(frozen=True)
+class ColeLead:
+    """Observed currency candidate; this is not an editable scalar field.
+
+    The two independently authored clear copies correlate this standalone
+    tag-three word with their resource descriptions. Native loader integrity
+    and a controlled purchase/sale pair are still missing.
+    """
+    offset: int
+    value: int
+    byteorder: str = 'little'
+    width: int = 4
+    editable: bool = False
+    maxable: bool = False
+
+
 def inspect(raw: bytes) -> Inspection:
     """Require the complete observed tag/length fingerprint; preserve all payloads."""
     if type(raw) is not bytes or len(raw) != SAVE_SIZE:
@@ -69,3 +85,15 @@ def unchanged(inspection: Inspection) -> bytes:
     if type(inspection) is not Inspection or inspect(inspection.raw) != inspection:
         raise SaveError('Meruru DX candidate inspection was changed or forged.')
     return inspection.raw
+
+
+def cole_lead(inspection: Inspection) -> ColeLead:
+    """Read tag three only after validating the complete immutable snapshot.
+
+    In particular, this does not accept a lone magic/offset, assume that the
+    zero trailer proves absent checksums, clamp large balances, or provide a
+    writer. Returning an observation does not qualify a game-library card.
+    """
+    raw = unchanged(inspection)
+    chunk = inspection.chunks[2]
+    return ColeLead(chunk.payload_offset, struct.unpack_from('<I', raw, chunk.payload_offset)[0])

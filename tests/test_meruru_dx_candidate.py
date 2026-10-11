@@ -72,6 +72,27 @@ class MeruruCandidateTests(unittest.TestCase):
             with self.subTest(kind=type(bad)), self.assertRaises(SaveError):
                 candidate.unchanged(bad)
 
+    def test_currency_observation_is_bounded_and_does_not_promote_writes(self):
+        raw = procedural_candidate()
+        initial = candidate.inspect(raw)
+        offset = initial.chunks[2].payload_offset
+        for value in (0, 1000, 364433, 9999999, 0xFFFFFFFF):
+            altered = bytearray(raw)
+            struct.pack_into('<I', altered, offset, value)
+            observed = candidate.inspect(bytes(altered))
+            lead = candidate.cole_lead(observed)
+            self.assertEqual(lead.value, value)
+            self.assertEqual(lead.offset, offset)
+            self.assertFalse(lead.editable)
+            self.assertFalse(lead.maxable)
+            self.assertFalse(observed.integrity_qualified)
+            self.assertEqual(candidate.unchanged(observed), bytes(altered))
+        for forged in (None, replace(initial, chunks=initial.chunks[:-1]),
+                       replace(initial, integrity_qualified=True),
+                       replace(initial, raw=bytearray(raw))):
+            with self.assertRaises(SaveError):
+                candidate.cole_lead(forged)
+
     def test_optional_genuine_copied_layout(self):
         selected = os.environ.get('MERURU_DX_CANDIDATE_DIR')
         if not selected:
@@ -87,6 +108,9 @@ class MeruruCandidateTests(unittest.TestCase):
                 doc = candidate.inspect(raw)
                 self.assertEqual(candidate.unchanged(doc), raw)
                 self.assertFalse(doc.integrity_qualified)
+                lead = candidate.cole_lead(doc)
+                self.assertEqual(lead.value, int.from_bytes(raw[lead.offset:lead.offset + 4], 'little'))
+                self.assertFalse(lead.editable)
 
 
 if __name__ == '__main__':

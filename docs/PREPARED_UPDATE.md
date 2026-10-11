@@ -11,6 +11,17 @@ content to 19 of the 44 registered profiles, with shared relative adjustment and
 selective revert controls. Its table is the current feature delta; the tables
 below describe the preceding integration. Version and publication stay unchanged.
 
+The newest follow-up adds the separate **Atelier Meruru Plus US PS Vita**
+decrypted-export editor, bringing the source inventory to **45 profiles**. It
+offers manual Cole, base attack/defense/speed, base HP/MP/LP increases and
+current HP/MP/LP reductions for thirteen named characters, with searchable
+character and inventory records.
+See [its format and mechanics checklist](MERURU_PLUS_VITA_FORMAT.md).
+Meruru DX PC, Rorona DX PC, Totori DX PS4, Japanese SW2 with XL HD and Berserk PC
+remain unregistered; [the exact input checklist](REMAINING_INPUTS.md) and linked
+per-game notes record the new native files, bounded inspectors and remaining
+writer qualification. Vita evidence does not qualify the PC port.
+
 ## Added game/platform profiles
 
 | Game / edition | Platform | Implemented controls |

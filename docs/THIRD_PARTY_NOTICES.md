@@ -101,3 +101,11 @@ privately retained public extracted-save candidates. Evidence is pinned in
 has no licence; hashcade's MIT additions explicitly exclude unlicensed upstream
 code and assets. Neither implementation nor bulk catalog is reused. No editor
 binary, game asset, player data or third-party website prose is bundled.
+
+The Meruru Plus US PS Vita adapter is independently written from factual word
+locations recovered by static inspection of cearp's publicly posted Remumu 0.8
+editor and verified against a separately shared native export. Remumu's licence
+is not established; its implementation, binary, resources and catalog are not
+copied or redistributed. Only format facts and factual character labels inform
+the original parser, validation and surgical writer. Evidence and edition
+boundaries are recorded in [MERURU_PLUS_VITA_FORMAT.md](MERURU_PLUS_VITA_FORMAT.md).

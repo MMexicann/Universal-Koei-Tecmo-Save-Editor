@@ -43,6 +43,12 @@ System files of 36,864 bytes fail both gameplay fingerprints.
 Implemented inspectors:
 [Rorona](../src/koei_editor/research/rorona_dx/inspection.py) and
 [Meruru](../src/koei_editor/research/meruru_dx/inspection.py).
+The bounded [Rorona gameplay observations](../src/koei_editor/research/rorona_dx/observations.py)
+also retain twelve early character EXP leads and 2,100 item-quality records.
+The [Meruru inspector](../src/koei_editor/research/meruru_dx/inspection.py)
+exposes its source-correlated Cole lead without authorizing a write. Full
+mechanic and prerequisite checklists are maintained separately for
+[Rorona](RORONA_DX_FORMAT.md) and [Meruru](MERURU_DX_FORMAT.md).
 
 ### Totori DX decrypted PS4 lead
 
@@ -69,6 +75,12 @@ main slot in15,904bytes; these are **not** a controlled Cole-only pair. Another
 336,112-byte `USR-DATAb.dat` has a different unidentified layout and is excluded.
 The separate system export's native metadata explicitly names Atelier Totori.
 No account identifiers, signing files or player bytes are imported into source.
+The [title-qualified PS4 inspector](../src/koei_editor/research/totori_dx_ps4/inspection.py)
+requires the original export's CUSA14014/GAMEDATA00 identity and retains ten
+character records and 1,099 item-record leads. Its
+[mechanic checklist](TOTORI_DX_PS4_FORMAT.md) distinguishes observed disk geometry
+from equipment, synthesis, capacity and progression dependencies that remain
+unqualified. It provides no staging or edited-save writer.
 
 ## Public format leads and limits
 
@@ -98,6 +110,9 @@ payload. That observation qualifies its location, not a complete date encoding.
 The author reports year rollover failure, repeated investment income and
 unadjusted quest/Hom timers after rewinds. Calendar edits remain deliberately
 blocked pending all dependent timers and event transitions.
+The author's explicit report of beating the game with this tool is useful
+offline-edit evidence for this one calendar byte on the author's PC revision.
+It does not establish the integrity rules for other chunks, money or items.
 
 Totori app **936180** remains separate from Rorona app **936160**. The misleading
 Totori archive discussed in [Totori's research checklist](TOTORI_PC_RESEARCH.md)

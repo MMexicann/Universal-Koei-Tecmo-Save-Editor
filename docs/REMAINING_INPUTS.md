@@ -2,6 +2,26 @@
 
 For the latest 19-profile expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a native owned unlearned positive DW7 XL seal-meter pair remain missing; their new controls have source/procedural/Tk evidence. Actual edited game-load/re-save remains a separate check.
 
+## Five follow-up candidates
+
+These are development investigations, not additional supported-game entries.
+The existing public gameplay copies have been reacquired where available;
+sending more unidentified complete saves alone will not resolve an unknown
+native writer or checksum. Keep game binaries and original export metadata
+private.
+
+| Game and exact platform | Specific useful input | What it would resolve |
+| --- | --- | --- |
+| Samurai Warriors 2 with Xtreme Legends HD, Japanese PS3 | Complete decrypted **NPJB00439 `DATA.BIN` and its original `PARAM.SFO`**; exact edition/build, displayed money/level values, and a purchase or EXP before/after pair. | The matching XL gameplay layout, identity, complete section integrity and progression/equipment mappings. NPJB00464 Empires is a different game. [Checklist](SW2HD_PS3.md) |
+| Atelier Rorona DX, Windows PC | Matching **`A11R_x64_Release_en.exe`** or **`A11R_x64_Release.exe`**, language/build label; alternatively a reproducible Cole-only or occupied-item offline edit followed by successful game load and re-save. | Native reader/writer and integrity handling. Twenty-seven genuine gameplay copies already establish the observed framing and early character/item leads. [Checklist](RORONA_DX_FORMAT.md) |
+| Atelier Meruru DX, Windows PC | Matching **`A13V_x64_Release_EN.exe`** or **`A13V_x64_Release.exe`**, language/build label; alternatively a reproducible money/item offline edit followed by successful game load and re-save. Controlled purchase, synthesis and equip pairs help map dependencies. | Integrity of currency, character and item writes, separately from the author's successful but dependency-unsafe calendar tool. Seventeen genuine gameplay copies are already available. [Checklist](MERURU_DX_FORMAT.md) |
+| Atelier Totori DX, decrypted PS4 CUSA14014 | Exact-profile game-internal save reader/writer evidence, or a reproducible Cole/item offline edit with successful reimport, game load and re-save; preserve original `PARAM.SFO` privately. | Native integrity and edit acceptance. The existing CUSA14014/GAMEDATA00 export already corroborates Cole, character and item-record geometry. PC tools and PS4 signing do not establish the inner checks. [Checklist](TOTORI_DX_PS4_FORMAT.md) |
+| Berserk and the Band of the Hawk, Windows PC | Matching **`BERSERK.exe`**, build/language label, unchanged native control; before/after saves for a gold purchase, material use, accessory equip/upgrade or character EXP gain, with displayed values. | Disk linkage of gameplay records, native revision and any additional inner integrity. Three independent PC saves already pass the outer cipher/checksum and exact unchanged roundtrip. [Checklist](BERSERK_PC_RESEARCH.md) |
+
+No executable is run during investigation. A controlled pair should perform
+one ordinary in-game action between captures; trainer-modified resources and
+complete story saves cannot isolate that action's stored values or dependencies.
+
 ## Additional Musou PC inputs
 
 | Game | Exact remaining input |

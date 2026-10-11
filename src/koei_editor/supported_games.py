@@ -20,6 +20,7 @@ from .game_registry import GAMES
 # atelier_sophie2: ATELIER SOPHIE 2 / The Alchemist of the Mysterious Dream · PC [Windows PC]
 # atelier_sophie: ATELIER SOPHIE / Original Steam PC · GAMEDATA slots [Windows PC]
 # atelier_ryza2: ATELIER RYZA 2 / Lost Legends & the Secret Fairy · original Steam PC [Windows PC]
+# meruru_plus_vita: ATELIER MERURU PLUS / The Apprentice of Arland · US decrypted PCSE00296 [PlayStation Vita]
 # fatal_frame2_remake: FATAL FRAME II / Crimson Butterfly REMAKE · Steam PC [Windows PC]
 # dw4xl_ps2: DYNASTY WARRIORS 4 / Xtreme Legends · SLUS-20812 [PlayStation 2]
 # origins: DYNASTY WARRIORS: ORIGINS / Steam PC · slot saves [Windows PC]

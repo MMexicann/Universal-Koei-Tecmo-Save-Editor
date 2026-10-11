@@ -24,6 +24,14 @@ class CatalogSearchTests(unittest.TestCase):
                          {'hyrule_warriors', 'hyrule_definitive', 'hyrule_legends', 'age_of_calamity'})
         self.assertFalse(matching_games(GAMES, 'game that does not exist'))
 
+    def test_meruru_plus_vita_does_not_advertise_unqualified_dx_pc(self):
+        self.assertEqual([game.id for game in matching_games(GAMES, 'meruru vita')],
+                         ['meruru_plus_vita'])
+        self.assertFalse(matching_games(GAMES, 'meruru', 'Windows PC'))
+        self.assertEqual([game.id for game in matching_games(GAMES, 'base stats',
+                                                             'PlayStation Vita', 'Atelier')],
+                         ['meruru_plus_vita'])
+
 
 class LibrarySearchGuiTests(unittest.TestCase):
     def setUp(self):
@@ -76,6 +84,23 @@ class LibrarySearchGuiTests(unittest.TestCase):
         self.root.update()
         self.assertEqual(self.app.library_banners[ALL_PLATFORMS]['dw7xl'].winfo_manager(), 'pack')
         self.assertTrue(self.app.contact_button.winfo_ismapped())
+
+    def test_vita_platform_filter_opens_bound_editor_and_resumes_session(self):
+        self.app.platform_choice.set('PlayStation Vita')
+        self.app.series_choice.set('Atelier')
+        self.app.library_search.set('meruru')
+        self.root.update()
+        self.assertEqual([game.id for game in self.app.library_matches], ['meruru_plus_vita'])
+        self.app.open_library_match()
+        self.root.update()
+        self.assertEqual(self.app.active_game, 'meruru_plus_vita')
+        editor = self.app.sessions['meruru_plus_vita'][1]
+        self.assertEqual(editor.save_extension, '')
+        self.assertEqual(editor.adapter.game_id, 'meruru_plus_vita')
+        self.app.show_library()
+        self.root.update()
+        self.app.open_library_match()
+        self.assertIs(self.app.sessions['meruru_plus_vita'][1], editor)
 
 
 if __name__ == '__main__':

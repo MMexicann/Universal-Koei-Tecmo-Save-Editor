@@ -84,6 +84,10 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Original Sophie PC format and DX/Firis blockers](SOPHIE_PC_FORMAT.md)
 - [Ryza 2 PC format and Ryza 1/3 blockers](RYZA_FORMATS.md)
 - [Arland DX native qualification and remaining integrity](ARLAND_DX_RESEARCH.md)
+- Individual Arland checklists: [Rorona DX PC](RORONA_DX_FORMAT.md),
+  [Meruru DX PC](MERURU_DX_FORMAT.md) and
+  [Totori DX decrypted PS4](TOTORI_DX_PS4_FORMAT.md).
+- [Meruru Plus US PS Vita format and character controls](MERURU_PLUS_VITA_FORMAT.md)
 - [Dusk DX and Nelke qualification](DUSK_DX_RESEARCH.md)
 - [Fatal Frame II Remake native format](FATAL_FRAME2_REMAKE_FORMAT.md)
 - [Blue Reflection and other Fatal Frame research](BLUE_REFLECTION_RESEARCH.md)

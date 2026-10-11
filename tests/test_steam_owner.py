@@ -2,6 +2,7 @@
 from dataclasses import FrozenInstanceError, replace
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -188,6 +189,43 @@ class SteamOwnerTests(unittest.TestCase):
             return original(fd)
 
         with patch.object(owner.os, 'fstat', side_effect=changed_after_read), self.assertRaises(SaveError):
+            owner.read_owner(self.save)
+
+    def test_same_size_rewrite_with_unchanged_timestamps_rejects(self):
+        original = owner.os.fstat
+        before = self.sidecar.stat()
+        calls = 0
+
+        def stable_stat(info):
+            return SimpleNamespace(st_dev=info.st_dev, st_ino=info.st_ino,
+                                   st_size=info.st_size, st_mtime_ns=before.st_mtime_ns,
+                                   st_mode=info.st_mode, st_nlink=info.st_nlink)
+
+        def changed_after_read(fd):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                self.sidecar.write_bytes(invented_vdf(b'4343'))
+            return stable_stat(original(fd))
+
+        lstat = Path.lstat
+        def observed_lstat(path):
+            info = lstat(path)
+            return stable_stat(info) if path == self.sidecar else info
+
+        with patch.object(owner.os, 'fstat', side_effect=changed_after_read), \
+             patch.object(Path, 'lstat', side_effect=observed_lstat, autospec=True), \
+             self.assertRaisesRegex(SaveError, 'changed while being read'):
+            owner.read_owner(self.save)
+        with patch.object(owner.os, 'fstat', side_effect=lambda fd: stable_stat(original(fd))), \
+             patch.object(Path, 'lstat', side_effect=observed_lstat, autospec=True):
+            self.assertEqual(owner.read_owner(self.save).raw, invented_vdf(b'4343'))
+
+    def test_identical_short_reads_cannot_admit_valid_prefix(self):
+        prefix = invented_vdf()
+        self.sidecar.write_bytes(prefix + b'foreign trailing bytes')
+        with patch.object(owner.os, 'read', return_value=prefix), \
+             self.assertRaisesRegex(SaveError, 'changed while being read'):
             owner.read_owner(self.save)
 
     def test_source_context_change_after_destination_check_rejected_on_recheck(self):

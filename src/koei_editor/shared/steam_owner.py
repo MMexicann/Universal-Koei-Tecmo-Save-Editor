@@ -108,15 +108,24 @@ def _read(companion):
         before = os.fstat(descriptor)
         if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
             raise SaveError('Steam owner metadata must be an ordinary separate copy.')
-        with os.fdopen(descriptor, 'rb') as stream:
-            descriptor = None
-            raw = stream.read(MAX_OWNER_SIZE + 1)
-            after = os.fstat(stream.fileno())
+        if not 1 <= before.st_size <= MAX_OWNER_SIZE:
+            raise SaveError('Steam owner metadata has an invalid bounded size.')
+        raw = os.read(descriptor, MAX_OWNER_SIZE + 1)
+        after = os.fstat(descriptor)
+        # Same-size rewrites can retain the same timestamp on Windows. Read
+        # fresh bytes directly from the descriptor, without a buffered-reader
+        # cache, and require both bounded reads to agree before accepting it.
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        checked = os.read(descriptor, MAX_OWNER_SIZE + 1)
+        final = os.fstat(descriptor)
         current = companion.lstat()
-        if (stat.S_ISLNK(current.st_mode) or current.st_nlink != 1
+        if (len(raw) != before.st_size or checked != raw
+                or stat.S_ISLNK(current.st_mode) or current.st_nlink != 1
                 or (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
                 != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
                 or (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+                != (final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns)
+                or (final.st_dev, final.st_ino, final.st_size, final.st_mtime_ns)
                 != (current.st_dev, current.st_ino, current.st_size, current.st_mtime_ns)):
             raise SaveError('Steam owner metadata changed while being read; reopen the copy.')
         _account(raw)

@@ -29,6 +29,9 @@ MONSTER_BASE = 456
 MONSTER_SIZE = 420
 STATS = ('Power', 'Intelligence', 'Skill', 'Speed', 'Defense', 'Life')
 STAT_BUDGET = 5994
+# Occupied identities independently present in genuine native fixtures. A full
+# species-ID domain/catalog is not yet established; other IDs remain opaque.
+QUALIFIED_SPECIES_IDS = frozenset((3, 56, 156))
 # Individually cross-checked factual ordinary IDs, not an upstream catalog.
 ITEM_NAMES = MappingProxyType({0: 'Banana Ring', 1: 'Medicinal Herb', 2: 'Honey Shroom',
     3: 'Monster Candy', 4: 'Elixir', 5: 'Sea Angel', 6: 'Soda Lozenge', 7: 'Worm Fungus',
@@ -184,7 +187,7 @@ def _fields(raw):
                             'Resources', record='Ranch funds'))
     for slot in range(31):
         offset, species, name, _age, lifespan, stats = _monster(raw, 0, slot)
-        if (species == 0xFFFF or name is None or not _matched(raw, MONSTER_BASE + slot * MONSTER_SIZE, MONSTER_SIZE)
+        if (species not in QUALIFIED_SPECIES_IDS or name is None or not _matched(raw, MONSTER_BASE + slot * MONSTER_SIZE, MONSTER_SIZE)
                 or any(value > 1500 for value in stats)):
             continue
         record = f'{"Current" if slot == 0 else "Frozen " + str(slot)} · {name}'

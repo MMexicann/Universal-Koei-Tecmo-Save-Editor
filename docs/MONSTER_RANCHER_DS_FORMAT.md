@@ -11,6 +11,9 @@ edit that copy and reimport through the same save manager. No ROM is required.
 
 - Six stored monster stats: Power, Intelligence, Skill, Speed, Defense and Life
   for occupied current/frozen records that match across both native replicas.
+  Species IDs 3, 56 and 156 are individually qualified by genuine occupied
+  references. Other species remain searchable and read-only until their native
+  ID domain is independently established; numeric IDs are not guessed breeds.
   Manual edits use the ordinary 0–999 range. The six-stat budget is 5994;
   existing unusual totals may be preserved or reduced. Existing Overdrive
   stats above 999 remain unchanged by Max; their other stats also skip Max
@@ -79,7 +82,8 @@ winner or copies a complete entry over another. Ranch/breeder names must match
 and be canonical before any edits are offered. Gold is eligible only when its
 two original balances match. Each occupied monster is eligible only when its
 entire original 420-byte record matches in both replicas, its name is canonical
-and its stat words fall in the known ordinary/Overdrive domain. Unmatched
+and its species ID is individually qualified and stat words fall in the known
+ordinary/Overdrive domain. Unmatched
 records and unusual values are preserved. Authorized edits update only the
 corresponding spans in both replicas plus their required CRCs, then reparse.
 
@@ -102,7 +106,7 @@ corresponding spans in both replicas plus their required CRCs, then reparse.
 
 | System | Status / precise remaining proof |
 |---|---|
-| Current/frozen six stored stats | Implemented ordinary bounded edits, budget checks and preservation of Overdrive/higher values |
+| Current/frozen six stored stats | Implemented for native-qualified species IDs 3/56/156, ordinary bounded edits, budget checks and preservation of Overdrive/higher values; other IDs need independent catalog/domain proof |
 | Remaining lifespan | Implemented positive extension, independently documented ceiling; age/growth unchanged |
 | Ranch/breeder/monster names | Implemented canonical ASCII; other native encodings need a verified writer/encoding before rename support |
 | Spendable gold | Implemented reductions; increases/Max need independently established wallet range and overflow behavior |

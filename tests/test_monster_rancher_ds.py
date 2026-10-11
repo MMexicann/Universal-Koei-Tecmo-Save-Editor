@@ -146,6 +146,14 @@ class MonsterRancherDsTests(unittest.TestCase):
         unusual_life = modified_monster(raw, lifespan=65535)
         self.assertNotIn('monster_0_lifespan', p.field_map(p.decode(unusual_life)))
         self.surgical(unusual_life, {'monster_0_stat_0': 999})
+        unknown = bytearray(raw)
+        for base in p.ENTRY_BASES:
+            struct.pack_into('<H', unknown, base + p.MONSTER_BASE + 18, 0xFFFE)
+        unknown = reseal(unknown)
+        doc = p.decode(unknown)
+        self.assertNotIn('monster_0_name', p.field_map(doc))
+        self.assertNotIn('monster_0_stat_0', p.field_map(doc))
+        self.surgical(unknown, {'gold': 5000})
 
     def test_stats_caps_budget_and_max_preserve_overdrive_and_unusual_totals(self):
         raw = fixture()
@@ -270,7 +278,7 @@ class MonsterRancherDsTests(unittest.TestCase):
         paths = native_paths()
         if not paths:
             self.skipTest('Private freely shared native MRDS .sav copies not provided.')
-        unique, edits, physical_sizes = set(), 0, set()
+        unique, edits, physical_sizes, full_name_width = set(), 0, set(), False
         for original in paths:
             raw = original.read_bytes()
             digest = hashlib.sha256(raw).digest()
@@ -282,6 +290,10 @@ class MonsterRancherDsTests(unittest.TestCase):
                 doc = p.decode(raw)
                 self.assertEqual(p.serialize(doc, {}), raw)
                 mapping = p.field_map(doc)
+                if 'monster_0_name' in mapping:
+                    field = mapping['monster_0_name']
+                    if len(field.value(raw)) == 12 and b'\0' not in raw[field.offset:field.offset + 12]:
+                        full_name_width = True
                 if not mapping:
                     continue  # Genuine initialized empty ranch: no fabricated ownership.
                 changes = {'gold': max(0, mapping['gold'].value(raw) - 100),
@@ -304,6 +316,7 @@ class MonsterRancherDsTests(unittest.TestCase):
         self.assertGreaterEqual(len(unique), 5)
         self.assertEqual(physical_sizes, {32768,65536})
         self.assertGreaterEqual(edits, 4)
+        self.assertTrue(full_name_width, 'Native occupied monster names prove all twelve bytes can be used without NUL.')
 
     def test_actual_tk_native_when_available_find_names_bulk_undo_review_inspect_save_restore(self):
         try:

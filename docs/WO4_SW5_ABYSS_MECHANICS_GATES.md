@@ -39,13 +39,21 @@ Official chapters: [original Party](https://www.koeitecmoamerica.com/manual/wo4/
 | Spendable Crystals | 999 | 999 | Lifetime earned Crystals |
 | Shared Growth Points | 999,999 | 99,999,999 | Officer EXP/level/rewards |
 | Element inventory per entry | 999 | 9,999 | Discovery and unusual entries |
-| Per-officer Skill Points | Requires original native qualification | 999 | Learned skills and effects |
+| Per-officer Skill Points | 99 | 999 | Learned skills and effects |
 | Unspent Upgrade Stones | Ultimate-only mechanic | 9,999 | Allocated upgrades/promotion |
 
 Wallet and Growth bounds above come from edition-specific native clamp routines;
 element limits additionally match each edition's official Weapons chapter. These
 limits must not be transplanted between formats. An existing higher/unusual value
 remains preserved and excluded from a Max action.
+
+Original WO4 independently uses a different representation: `1C2F70` adjusts
+the officer runtime **byte** at `+74`, bounded 99. The skill-purchase routine
+`1C3210` checks this byte against the archetype's skill cost, debits it through
+`1C2F70`, sets learned bits at `+64` and applies a consequence through `1C4390`.
+The runtime save struct begins at `+60`, making this a struct-relative `+14`
+byte; the original disk serializer must establish its packed position before
+editing. Ultimate's `+78` word mapping cannot be reused for this original pool.
 
 Ultimate static source evidence (RVA addresses identify the supplied matching
 module, not a universal offset for every build):

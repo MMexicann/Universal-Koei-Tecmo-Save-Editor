@@ -74,6 +74,47 @@ class SpecialFormatTests(unittest.TestCase):
         rows = backend.inspection_records(self.document)
         self.assertEqual(tuple(len(rows[key]) for key in ('officers', 'weapons', 'items', 'bodyguards')), (48, 192, 39, 8))
 
+    def test_compatible_header_variant_preserves_mapping_and_surgical_writes(self):
+        # Procedural regression for the exact marker found in an independently
+        # checksum-valid native report; no player bytes are included here.
+        payload = bytearray(self.document.raw)
+        payload[4:8] = b'\x03\0\x01\0'
+        document = backend.decode(procedural_envelope(payload))
+        self.assertEqual(backend.serialize(document, {}), document.raw)
+        self.assertEqual(backend.fields_for(document), backend.fields_for(self.document))
+        self.assertEqual(backend.inspection_records(document),
+                         backend.inspection_records(self.document))
+        for field in backend.fields_for(document):
+            value = (field.value(document.payload) + 1) % (field.maximum + 1)
+            changes = backend.stage(document, {}, field.id, value)
+            expected = bytearray(document.raw)
+            expected[field.offset] = value
+            actual = backend.serialize(document, changes)
+            self.assertEqual(actual, procedural_envelope(expected))
+            self.assertEqual(actual[4:8], document.raw[4:8])
+            self.assertEqual(field.value(backend.decode(actual).payload), value)
+            self.assertEqual(backend.stage(document, changes, field.id,
+                                          field.value(document.payload)), {})
+
+    def test_unqualified_header_variants_still_rejected_with_valid_checksum(self):
+        for marker in (b'\x02\0\0\0', b'\x04\0\0\0', b'\x03\0\x02\0',
+                       b'\x03\0\0\x01', b'\x03\x01\0\0'):
+            payload = bytearray(self.document.raw)
+            payload[4:8] = marker
+            with self.subTest(marker=marker.hex()), self.assertRaises(SaveError):
+                backend.decode(procedural_envelope(payload))
+
+    def test_encoder_cannot_convert_between_supported_header_variants(self):
+        for original_marker, edited_marker in ((b'\x03\0\0\0', b'\x03\0\x01\0'),
+                                               (b'\x03\0\x01\0', b'\x03\0\0\0')):
+            original = bytearray(self.document.raw)
+            original[4:8] = original_marker
+            original = procedural_envelope(original)
+            payload = bytearray(original)
+            payload[4:8] = edited_marker
+            with self.subTest(original=original_marker.hex()), self.assertRaises(SaveError):
+                codec.encode(procedural_envelope(payload), original)
+
     def test_each_field_surgical_only_selected_byte_and_checksum(self):
         raw = self.document.raw
         for field in backend.fields_for(self.document):

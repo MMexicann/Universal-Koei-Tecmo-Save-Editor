@@ -8,7 +8,8 @@ It is distinct from DW5/XL on PS2, DW5 Empires, and Shin Sangokumusou 5 Special
 
 Open a separate copy of the native `save.dat`, originally stored under
 `Documents/KOEI/Shin Sangokumusou 4 Special/Savedata/`. This adapter supports the
-46,000-byte revision-3 profile. It does not convert memory-card containers or
+46,000-byte profile with either qualified header marker `0x00000003` or
+`0x00010003` at byte offset 4. It does not convert memory-card containers or
 support console formats.
 
 ## Regional qualification
@@ -23,7 +24,7 @@ Product existence and native-format qualification are separate:
 
 The existing `dw5special` adapter is retained. No regional clone, conversion or
 extra supported-game entry is justified by these product names or retail bundles.
-The byte-count, revision word and checksum identify the supported profile; **no
+The byte-count, exact qualified header marker and checksum identify the supported profile; **no
 native region discriminator has been proved**. A successfully parsed file is
 not evidence that Japanese, Traditional Chinese and Simplified Chinese editions
 share an interchangeable format. Bodyguard name bytes remain opaque, and no
@@ -35,6 +36,24 @@ Verify profile, record addressing, encoding and integrity independently, then
 exercise surgical edits through this adapter. An edited load and subsequent
 native re-save are needed to establish game acceptance; a product page or
 unchanged file roundtrip cannot establish that result.
+
+## Compatible header variant
+
+A separately supplied native bug-report copy exposed the exact `03 00 01 00`
+marker at byte offset 4, which the previous `03 00 00 00`-only check rejected.
+Its size, checksum position/coverage, item table, all 48 officer records and all
+192 physical weapon slots match the published Windows Special geometry. Its
+54 occupied weapon IDs belong to their officer families; the remaining 138
+use the known empty sentinel. Existing ordinary ranks, weight/attack bytes and
+attribute records obey the same qualified storage rules.
+
+Both exact markers are now accepted. The upper word's meaning and the supplied
+copy's executable region/build remain unproved: this is a compatible observed
+header variant, not a region discriminator or conversion. No other marker is
+accepted, even with a recomputed checksum. Every save preserves its original
+marker, and the encoder rejects conversions between the two supported markers.
+Existing empty, unusual, unknown and dependency-sensitive records retain the
+same eligibility guards; no field scope or natural cap was expanded.
 
 ## Implemented controls
 
@@ -162,3 +181,16 @@ native copy to verify all 96 new stored Attack/Defense fields, totaling 824
 qualified fields in that opened state; it adds no
 Japanese/Simplified Chinese compatibility claim or edited game-load result.
 See the linked depth report for current checks.
+
+The header-variant fix was additionally checked against the supplied native
+copy: byte-exact unchanged roundtrip, individual surgical edits/reparse of all
+234 eligible fields (10 item ranks, 96 officer base-stat bytes, 54 weights,
+54 attack adjustments and 20 attribute ranks), and the registered copied-save
+self-test including immutable input, backups and restore. The focused format,
+independent safety/GUI and regional-scope suites passed all 24 tests with this
+private input and a real Tk/Xvfb display, with no skips. The existing GUI case
+exercised named weight choices, Apply, Review, Undo, manual-only Max, searchable
+inspection, copied Save As and restore. The original native copy was preserved;
+no game executable or external editor was executed. These checks establish
+file-level editing and GUI behavior, not edited game loading or a new regional
+compatibility claim.

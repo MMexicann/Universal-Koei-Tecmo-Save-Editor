@@ -19,6 +19,8 @@ def validate_payload(payload):
         raise SaveError('The complete native Ultimate system and gameplay payloads are required.')
     if struct.unpack_from('<I', payload)[0] != REVISION:
         raise SaveError('This is not the supported Ultimate PC system revision 20200101.')
+    if struct.unpack_from('<II', payload, 4) != (0, 0):
+        raise SaveError('The supported Ultimate PC profile requires the qualified native 0/0 header layout.')
     system = payload[:SYSTEM_PAYLOAD_SIZE]
     gameplay = payload[SYSTEM_PAYLOAD_SIZE:]
     # Native serializers23CE24/23CAC5 explicitly emit these reserved regions as

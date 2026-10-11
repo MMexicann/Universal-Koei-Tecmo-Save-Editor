@@ -23,7 +23,7 @@ def fixture():
     for index, offset, size, payload_size in envelope.SPECS:
         payload = bytearray((i * 11 + 29) % 256 for i in range(payload_size))
         if index == 1:
-            struct.pack_into('<I', payload, 0, codec.REVISION)
+            struct.pack_into('<III', payload, 0, codec.REVISION, 0, 0)
             payload[-codec.SYSTEM_RESERVED_SIZE:] = bytes(codec.SYSTEM_RESERVED_SIZE)
             for _, _, at, width, _ in parser.RESOURCE_MAP:
                 payload[at:at + width] = (37).to_bytes(width, 'little')
@@ -119,6 +119,7 @@ class UltimateFormatTests(unittest.TestCase):
             with self.assertRaises(SaveError):
                 parser.decode(bytes(damaged))
         for offset, data in ((0, struct.pack('<I', 20180720)),
+                             (4, struct.pack('<I', 1)), (8, struct.pack('<I', 1)),
                              (codec.SYSTEM_PAYLOAD_SIZE - 1, b'\1'),
                              (codec.PAYLOAD_SIZE - 1, b'\1')):
             with self.assertRaises(SaveError):

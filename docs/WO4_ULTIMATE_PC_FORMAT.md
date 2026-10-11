@@ -28,7 +28,9 @@ No Steam account input is required by this recovered envelope.
 
 Native header serializer `207AF0` emits three DWORDs and four bytes. The
 Ultimate initializer `207BA0` supplies revision 20200101; the parser requires
-that exact revision, rather than trusting a filename. Writer `209310` and
+that exact revision and the verified native 0/0 values in the next two header
+DWORDs, rather than trusting a filename. Alternate nonzero header semantics are
+not qualified; the final four opaque header bytes remain unchanged. Writer `209310` and
 reader `209470` dispatch the header, actual system vtable `D18BD0` and gameplay
 vtable `D18C08`; their serializers `23CD60` and `23C9B0` emit the complete
 payload tree. The separate `naga` classes handle the original-game layout and

@@ -178,7 +178,9 @@ class TecmoSuperBowlTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), doc.raw)
             snapshot = parser.backup(doc)
             restored = parser.restore(snapshot, root / 'restored.sav')
-            self.assertEqual(restored, root / 'restored.sav')
+            # Windows temporary paths may use an 8.3 alias; restore returns the
+            # resolved destination, so compare canonical paths on every host.
+            self.assertEqual(restored, (root / 'restored.sav').resolve())
             self.assertEqual(restored.read_bytes(), doc.raw)
             for destination in (source, root / 'edited.sav'):
                 with self.assertRaises(FileExistsError):

@@ -5,7 +5,10 @@ original Steam PC** edits quality on existing ordinary inventory and equipped
 item records, and reduces qualified unspent skill-tree SP. It uses the shared
 staged Undo, Review Changes, copied-save, backup, restore and atomic Save As
 workflow. It does not support Ryza DX,
-Ryza 2 DX, Ryza 3 or console files.
+Ryza 2 DX, Ryza 3 or console files. The separate
+[original Ryza 1 Switch adapter](RYZA_SWITCH_FORMAT.md) qualifies complete
+revision-4 main-game exports for conservative existing-item quality edits
+and searchable equipment/trait inspection; it does not qualify Ryza 1 PC.
 
 ## Native evidence and framing
 
@@ -124,7 +127,9 @@ pass the same envelope checks and have complete root framing (491,876-byte
 decoded main-game profiles, native header revision value 4). DLC episodes have
 different revision profiles. These console files corroborate envelope reuse
 but neither qualify the PC revision-0 omission nor establish PC compatibility;
-the PC parser rejects them. A separate
+the PC parser rejects them. The [separate Switch qualification](RYZA_SWITCH_FORMAT.md)
+now proves complete main-game quality writes without accepting the incomplete
+PC tail. DLC episode profiles remain excluded. A separate
 [PC save-sharing discussion](https://www.reddit.com/r/Atelier/comments/18eupuq/)
 links an independent collection, but its filetransfer.io download host returned
 403 during research; no file from that lead has been inspected.

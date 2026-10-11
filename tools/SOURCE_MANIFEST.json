@@ -3478,8 +3478,8 @@
     },
     {
       "path": "tests/test_steam_owner.py",
-      "bytes": 11269,
-      "sha256": "67487f706554ed060caa7af8e2e62abe114d673a940846e9076d8f1e72c243e0"
+      "bytes": 11325,
+      "sha256": "1e3aedfda760a6820163b86d6910f6b3749f821ef5fbe120ddb0b3656c979b5b"
     },
     {
       "path": "tests/test_strikeforce_ps3.py",

@@ -194,6 +194,7 @@ class SteamOwnerTests(unittest.TestCase):
     def test_same_size_rewrite_with_unchanged_timestamps_rejects(self):
         original = owner.os.fstat
         before = self.sidecar.stat()
+        canonical_sidecar = self.sidecar.resolve()
         calls = 0
 
         def stable_stat(info):
@@ -211,7 +212,7 @@ class SteamOwnerTests(unittest.TestCase):
         lstat = Path.lstat
         def observed_lstat(path):
             info = lstat(path)
-            return stable_stat(info) if path == self.sidecar else info
+            return stable_stat(info) if path == canonical_sidecar else info
 
         with patch.object(owner.os, 'fstat', side_effect=changed_after_read), \
              patch.object(Path, 'lstat', side_effect=observed_lstat, autospec=True), \

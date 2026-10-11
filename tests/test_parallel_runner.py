@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import subprocess
 import sys
 import tempfile
@@ -272,6 +272,57 @@ class ParallelRunnerTests(unittest.TestCase):
                 runner.read_timings(path)
         runner.write_json(path, {"durations": {"test_pass.py": 2.5}, "provenance": "measured"})
         self.assertEqual(runner.read_timings(path), {"test_pass.py": 2.5})
+
+    def test_source_fingerprint_is_identical_for_windows_and_posix_path_ordering(self):
+        files = {
+            'src': {'Zed.py': b'upper-case module', 'alpha.py': b'lower-case module',
+                    'nested/middle.py': b'nested module'},
+            'tools': {'SOURCE_MANIFEST.json': b'{}', 'build.py': b'build helper'},
+            'tests': {'test_example.py': b'test case'},
+        }
+
+        class MemoryFile:
+            def __init__(self, path, raw):
+                self.path, self.raw = path, raw
+
+            def __lt__(self, other):
+                return self.path < other.path
+
+            def __getattr__(self, name):
+                return getattr(self.path, name)
+
+            def relative_to(self, directory):
+                return self.path.relative_to(directory.path)
+
+            def is_file(self):
+                return True
+
+            def read_bytes(self):
+                return self.raw
+
+        class MemoryDirectory:
+            def __init__(self, path):
+                self.path = path
+
+            def __truediv__(self, name):
+                if name == 'pyproject.toml':
+                    return MemoryFile(self.path / name, b'project configuration')
+                return MemoryDirectory(self.path / name)
+
+            def rglob(self, _pattern):
+                return [MemoryFile(self.path / name, raw)
+                        for name, raw in reversed(list(files[self.path.name].items()))]
+
+        fingerprints = []
+        for flavor in (PurePosixPath, PureWindowsPath):
+            root = MemoryDirectory(flavor('/repo'))
+            with patch.object(runner, 'ROOT', root):
+                fingerprints.append(runner.source_fingerprint(root / 'tests'))
+        self.assertEqual(fingerprints[0], fingerprints[1])
+        files['src']['alpha.py'] += b' changed source'
+        root = MemoryDirectory(PureWindowsPath('/repo'))
+        with patch.object(runner, 'ROOT', root):
+            self.assertNotEqual(runner.source_fingerprint(root / 'tests'), fingerprints[0])
 
     def test_package_load_tests_hook_fails_closed(self):
         self.passing("nested/test_pass.py")

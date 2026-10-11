@@ -190,7 +190,11 @@ def source_fingerprint(tests_dir: Path) -> str:
     digest = hashlib.sha256()
     roots = [("src", ROOT / "src"), ("tools", ROOT / "tools"), ("tests", tests_dir)]
     for label, directory in roots:
-        for path in sorted(directory.rglob("*")):
+        # Path objects sort case-insensitively on Windows and case-sensitively
+        # on POSIX. Hash the same source bytes in one canonical order so reports
+        # can be verified from either host without relaxing source validation.
+        for path in sorted(directory.rglob("*"),
+                           key=lambda path: path.relative_to(directory).as_posix()):
             if not path.is_file() or "__pycache__" in path.parts or path.suffix not in {".py", ".json"}:
                 continue
             digest.update(f"{label}/{path.relative_to(directory).as_posix()}\0".encode())

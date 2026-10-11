@@ -143,7 +143,7 @@ class TrinityPS3Tests(unittest.TestCase):
             parser.save_as(self.document, {}, self.folder / 'identity-race.dat')
         self.assertFalse((self.folder / 'identity-race.dat').exists())
 
-    def test_shared_bound_selftest_identity_only_and_damaged_restore(self):
+    def test_shared_bound_selftest_original_context_and_damaged_restore(self):
         from koei_editor.shared.verified_self_test import _run
         metadata = parser.identity_metadata('BLUS30503-PLAY02')
         (self.folder / 'PARAM.SFO').write_bytes(metadata + b'PRIVATE-CONTEXT-SENTINEL')

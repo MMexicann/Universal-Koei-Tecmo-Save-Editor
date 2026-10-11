@@ -37,7 +37,7 @@ class Field:
     maxable: bool = False
     kind: str = 'int'
     encoding: str = 'unsigned big-endian integer'
-    evidence: str = 'Individual published PS3 save maps; three native exports'
+    evidence: str = 'Published title-specific PS3 maps; genuine native exports'
 
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'big')

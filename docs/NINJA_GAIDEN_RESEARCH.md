@@ -1,5 +1,7 @@
 # Ninja Gaiden: separate editions and native save profiles
 
+v1.9 also registers a narrow original Xbox [Ninja Gaiden Black SYSTEM editor](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md) for numeric save-list order. This is separate from story-slot editing and requires the original EEPROM. No PC Sigma, Sigma 2 or Black gameplay writer is implied.
+
 The implemented original **Ninja Gaiden II Xbox 360/Xenia editor** accepts only
 the independently qualified revision-6 **extracted story `.dat`** profile.
 Ninja Gaiden Sigma, Sigma 2, Ninja Gaiden 2 Black and their individual platforms

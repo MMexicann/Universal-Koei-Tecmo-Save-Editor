@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 1.8** supports **65 game/platform profiles across 12 platforms**.
+**Version 1.9** supports **76 game/platform profiles across 13 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Supported games
@@ -42,6 +42,10 @@ Ninja Gaiden 2 Black use different formats.
 | ONE PIECE: PIRATE WARRIORS 4 — Windows PC · WW/JP/EA revision 15 | Windows PC | Beli, existing obtained coin quantities and searchable resource history. |
 | DYNASTY WARRIORS 4 HYPER — Native Windows PC edition | Windows PC | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, bodyguards and customization. |
 | ATELIER SOPHIE 2 — The Alchemist of the Mysterious Dream · PC | Windows PC | Item quality, battle-item refills, inventory inspection and alchemy EXP. |
+| ATELIER SOPHIE 2 — The Alchemist of the Mysterious Dream · PS4 CUSA28451 app 1.0 | PlayStation 4 | Named existing material-quality reductions and battle-item uses within capacity; searchable inventory, equipment, Party and alchemy records. |
+| ATELIER TOTORI — The Adventurer of Arland · original PS3 US/EU | PlayStation 3 | Cole reductions; searchable named character levels, EXP and serialized progression sections. |
+| ATELIER MERURU — The Apprentice of Arland · original US PS3 | PlayStation 3 | Cole reductions; searchable named character levels, EXP and serialized progression sections. |
+| ATELIER RORONA — The Alchemist of Arland · original US PS3 | PlayStation 3 | Cole reductions; searchable seven named character raw records and serialized systems. |
 | ATELIER SOPHIE — Original Steam PC · GAMEDATA slots | Windows PC | Cole, Tess tickets and existing basket/container quality; searchable inventory and alchemy progression. |
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Steam PC | Windows PC | Ordinary item/equipment quality from 1–100 and qualified unspent skill-tree SP reductions; inventory inspection. |
 | ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
@@ -76,6 +80,10 @@ Ninja Gaiden 2 Black use different formats.
 | NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, eighteen named ordinary consumable reductions; separate equipment inspection. |
 | NINJA GAIDEN II — Original Xbox 360 / Xenia · extracted revision-6 story | Xbox 360 / Xenia | Yellow Essence, existing consumable and ammunition reductions; searchable inventory and separate Karma inspection. |
 | DYNASTY WARRIORS: GUNDAM — US/EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Learn skill flags and choose already learned equipped skills on six qualified level-30 pilots; progression inspection. |
+| DYNASTY WARRIORS: GUNDAM REBORN — EU/Japan · decrypted DATA.BIN + original PARAM.SFO | PlayStation 3 | Spendable money and existing Amuro/Kamille Team Point reductions; searchable pilot progression, earnings and material storage. |
+| DYNASTY WARRIORS: GUNDAM 3 — US · decrypted DATA.BIN + original PARAM.SFO | PlayStation 3 | Spendable money reductions; searchable Mobile Suit Laboratory EXP and license-bit storage. |
+| TRINITY: SOULS OF ZILL O'LL — US · decrypted PLAY.DAT + original PARAM.SFO | PlayStation 3 | Spendable money reductions; searchable SP storage and named Areus, Dagda and Selene stat words. |
+| NINJA GAIDEN BLACK — Original Xbox · SYSTEM.dat + original console EEPROM | Original Xbox | Restore numeric save-slot order; searchable thirty-slot time and list-position records. |
 | FIST OF THE NORTH STAR: KEN'S RAGE — US/EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Manual existing skill-point balances for eight base fighters; inspect progression resources. |
 | FIST OF THE NORTH STAR: KEN'S RAGE 2 — EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Unlock locked music, movie and event gallery entries; preserve existing collection states. |
 | ROMANCE OF THE THREE KINGDOMS XIII — Original PC · revision 14 · TC | Windows PC | City gold, supplies, population, wounded troops, fealty, commerce, farming, culture and troop proficiencies. |
@@ -92,6 +100,9 @@ Ninja Gaiden 2 Black use different formats.
 | ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
 | PERSONA 5 STRIKERS — English PS4 · decrypted APP.BIN + original sce_sys/param.sfo | PlayStation 4 | Money, Persona/BOND points and existing named consumables, ingredients, incenses, remedies and skill-card stacks. |
 | UNCHARTED WATERS: NEW HORIZONS — Original English DOS · KOUKAI2.DAT | DOS PC | Existing-slot gold and eight protagonist attributes; searchable campaign and sailor records. |
+| ROMANCE OF THE THREE KINGDOMS: LEGEND OF LIU BEI — Original Traditional Chinese DOS · MSAVE0–4.R3S | DOS PC | Existing allied troop reductions and within-level EXP; searchable character and carried-item records. |
+| ROMANCE OF THE THREE KINGDOMS III — Original Traditional Chinese DOS · SANGOKU3.SAV | DOS PC | Six existing officer abilities and owned-city resource/commerce reductions; searchable slots, cities and officers. |
+| NOBUNAGA'S AMBITION: TENSHOUKI — Original Japanese Windows Power-Up Kit · SAVEDAT.n6p | Windows PC | Existing district Gold, Rice, Horses and Firearms reductions; searchable generals, castles, clans, treasures and slots. |
 | PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point and base-upgrade tier reductions; searchable slots, camera functions and inventory. |
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |

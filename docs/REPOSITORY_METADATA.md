@@ -19,9 +19,9 @@ reporting a release complete, verify the public version, description, release
 notes, standalone Windows EXE and Windows ZIP downloads. Record checks actually
 performed rather than treating prepared text or a successful push as publication.
 
-## Version 1.8 description
+## Version 1.9 description
 
-Recommended About description: Windows save editor by Mexican for 65 Koei Tecmo
+Recommended About description: Windows save editor by Mexican for 76 Koei Tecmo
 game/platform profiles, with searchable records, backups, Undo and Review Changes.
 The README and release notes list exact games, editions, platforms and controls.
 Changing the About field requires repository administration permission; the

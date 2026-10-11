@@ -15,6 +15,8 @@ _SERIES = (
     ('ATELIER', 'Atelier'),
     ('NIOH', 'Nioh'),
     ('NINJA GAIDEN', 'Ninja Gaiden'),
+    ('ROMANCE OF THE THREE KINGDOMS', 'Romance of the Three Kingdoms'),
+    ("NOBUNAGA'S AMBITION", "Nobunaga's Ambition"),
 )
 
 

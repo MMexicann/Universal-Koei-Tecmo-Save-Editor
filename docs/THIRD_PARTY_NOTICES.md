@@ -2,6 +2,28 @@
 
 The Windows executable includes Python, the Tcl/Tk runtime, and the PyInstaller bootloader. Their supplied license texts are retained in the `licenses` folder. PyInstaller's bootloader has an exception for distributed bundled applications; see its full notice.
 
+The v1.9 DOS Legend of Liu Bei, ROTK III and Windows Tenshouki adapters
+independently implement native layout and complete-writer facts from the
+published appendixisu, BeckYang and tenshoukijp editors. No upstream code,
+restricted name catalog, initialized game file or player save is redistributed.
+Their format documents pin provenance and distinguish source qualification from
+genuine-file and game-load checks.
+
+The original PS3 Arland, Gundam Reborn/Gundam 3 and TRINITY adapters use
+independently authored title-specific field maps and complete external-writer
+facts from Apollo. No GPL interpreter or external player/export metadata is
+bundled. Sophie 2 PS4 reuses this project's already attributed MIT Gust codec;
+its exact existing licence notice remains embedded. The PS4 record parser,
+guarded writer and small individually checked factual item labels are original.
+
+Ninja Gaiden Black original Xbox SYSTEM.dat independently implements factual
+crypto, compression, console signing and load-list geometry documented by the
+MIT NinjaGaidenBlack-Save-Manager, Unlicense NinjaCrypt and GPL Xbox EEPROM
+research. No foreign implementation or owner data is incorporated. Blowfish
+constants are independently generated mathematical digits of pi. Complete
+source and qualification boundaries are in
+[NINJA_GAIDEN_BLACK_XBOX_FORMAT.md](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md).
+
 The editor uses Windows CNG from the operating system; no separate crypto library is redistributed. Original editor code is covered by the MIT `LICENSE` file.
 
 The original Windows Samurai Warriors 2 and Warriors Orochi adapters are

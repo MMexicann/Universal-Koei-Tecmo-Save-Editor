@@ -85,10 +85,12 @@ preserve higher existing values and use validated original records to select fie
 
 When native title identity requires a companion file, qualify that context on
 file reads and safe saves. The optional backend hook
-`prepare_self_test_copy(document, destination)` can create only the minimal
-identity companion required for the copied-save CLI. Use bounded selective
-metadata parsing and atomic new-file storage; never copy account or signing
-fields into that generated context. In-memory `decode` remains a profile parser.
+`prepare_self_test_copy(document, destination)` supplies the qualified companion
+for private copied-save CLI outputs. Prefer minimal identity-only context.
+Profiles that explicitly bind the complete original companion must preserve
+those exact opaque bytes, check their bounded digest again before writing, and
+use atomic new-file storage. Never synthesize or edit account/signing fields,
+interpret ownership, or include companion/player bytes in public outputs. In-memory `decode` remains a profile parser.
 
 Optional backend `record_label`, `field_hint` and `inspection_rows` hooks supply
 data for the standard inspector. Richer read-only views subclass

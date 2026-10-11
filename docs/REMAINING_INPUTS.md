@@ -1,7 +1,26 @@
 # Remaining inputs by game and platform
 
-For the latest 19-profile expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a native owned unlearned positive DW7 XL seal-meter pair remain missing; their new controls have source/procedural/Tk evidence. Actual edited game-load/re-save remains a separate check.
+For the earlier 19-profile depth expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a native owned unlearned positive DW7 XL seal-meter pair remain missing; their new controls have source/procedural/Tk evidence. Actual edited game-load/re-save remains a separate check.
 
+
+## v1.9 additions: next inputs
+
+| New profile | Implemented controls | Specific next evidence for deeper editing |
+| --- | --- | --- |
+| [Legend of Liu Bei, original Traditional Chinese DOS](REKO3_DOS_FORMAT.md) | Existing allied troop reductions and within-level EXP; 384-record inspection. | One controlled troop/EXP/level-up pair and successful edited game load; class, equipment and derived growth rules. |
+| [ROTK III, original Traditional Chinese DOS](ROTK3_DOS_FORMAT.md) | Ordinary-officer abilities and owned-city gold/rice/commerce/military-supply reductions. | Complete occupied player campaign and displayed-value action pairs; rank, loyalty, armies and diplomacy dependencies. Initialized native reference is distinct from an occupied player save. |
+| [Tenshouki PK, original Japanese Windows 95](NOBU6_PK_PC_FORMAT.md) | Existing district gold/rice/horse/firearm reductions and six inspectors. | Complete occupied native player campaign, build label and one district purchase/reward pair; officer/army/ownership relationships. |
+| [Gundam Reborn, EU/JP PS3](GUNDAM_REBORN_PS3_FORMAT.md) | Money and existing Amuro/Kamille Team Point reductions; resource inspection. | Named material-use, pilot-skill, plan-fusion/equip and reward pairs with original PARAM.SFO. |
+| [Gundam 3, US PS3](GUNDAM3_PS3_FORMAT.md) | Money reductions; lab EXP/license inspection. | Purchase and lab progression/equipment pairs; console load/re-save confirmation and other-region writer proof. |
+| [TRINITY, US PS3](TRINITY_PS3_FORMAT.md) | Money reductions; SP and named stat-word inspection. | Money purchase/load check plus stat-level/skill purchase pairs proving stored-versus-derived values. |
+| [Original Totori](TOTORI_PS3_FORMAT.md), [Meruru](MERURU_PS3_FORMAT.md), [Rorona](RORONA_PS3_FORMAT.md), PS3 | Cole reductions; named character and system inspection. | Original-edition purchase/synthesis/equip/level pairs and edited load/re-save; PS3 evidence does not qualify DX or Plus. |
+| [Sophie 2, PS4 CUSA28451 app 1.0](SOPHIE2_PS4_FORMAT.md) | Quality reductions for nine named ordinary material identities; use refills for nineteen named battle-item identities within existing capacity; party/inventory/equipment inspection. | Synthesis/equip and wallet pairs; other item identities, trait/effect dependencies and edited game-load proof. |
+| [Ninja Gaiden Black SYSTEM, original Xbox](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md) | Restore numeric save-list order; inspect thirty slot timestamps. | Genuine SYSTEM.dat plus original EEPROM and successful load-order check. Story-slot inner integrity still needs separate evidence; story editing remains unregistered. |
+
+Keep complete gameplay files and their original identity companions together in
+private copies. Label the exact edition/build and make one ordinary in-game
+action between before/after captures, with displayed values and unchanged control.
+No account or player data belongs in a public contribution or release.
 
 ## v1.72 profile expansion inputs
 

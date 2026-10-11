@@ -59,5 +59,11 @@ Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_su
 | DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 | PERSONA 5 STRIKERS — English Nintendo Switch · savedata export | Nintendo Switch | Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks. |
 | ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
+| PERSONA 5 STRIKERS — English PS4 · decrypted APP.BIN + original sce_sys/param.sfo | PlayStation 4 | Money, Persona/BOND points and existing named consumables, ingredients, incenses, remedies and skill-card stacks. |
+| UNCHARTED WATERS: NEW HORIZONS — Original English DOS · KOUKAI2.DAT | DOS PC | Existing-slot gold and eight protagonist attributes; searchable campaign and sailor records. |
+| PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point and base-upgrade tier reductions; searchable slots, camera functions and inventory. |
+| ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
+| MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |
+| TECMO SUPER BOWL — NES · compatible original 28-team battery SRAM | NES | Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records. |
 
 Scope is specific to each edition and supported save revision. File-level qualification and actual game loading are separate; see [coverage and blockers](EXPANSION_COVERAGE.md) and [validation](VALIDATION.md). Research-only codecs are excluded.

@@ -152,3 +152,40 @@ expresses raw-save geometry and province resource facts from JuQiang's original
 standalone editor. That repository has no explicit reuse licence; no source,
 province/name catalog, artwork, original game asset or reference snapshot is
 copied or redistributed. [Writer proof and scope](ROTK2_DOS_FORMAT.md).
+
+Persona 5 Strikers PS4 independently implements the English native PS4 layout
+and preserves complete field buffers, with original console metadata bound to
+each copied-save operation. Public platform-converter facts inform framing;
+no converter implementation, external catalog or player data is bundled.
+[Sources and console contract](P5STRIKERS_PS4_FORMAT.md).
+
+The original English DOS New Horizons adapter derives factual raw-save geometry
+and scalar limits from JohanLi's MIT-licensed research and full-buffer writer.
+No external implementation, initialized game file or game assets are distributed.
+[Published-format scope](UNCHARTED_WATERS2_DOS_FORMAT.md).
+
+Original European Project Zero PS2 independently implements structure/checksum
+facts corroborated by karas84's MIT-licensed ProjectZeroSaveEditor parser and
+Himuro research. No upstream code, assets, icons or player export is distributed.
+[Format and validation](PROJECT_ZERO_PS2_FORMAT.md).
+
+Ryza 3 DX PC reuses the existing MIT-attributed Gust envelope primitive after
+independent native checks, and implements its distinct tagged layout and
+resource writer independently. Public DXVK reproduction evidence corroborates
+the exact original native file's loader acceptance, including its opaque ending.
+No external gameplay implementation, catalog, attachment or asset is bundled.
+[Scope and mechanics](RYZA3_DX_PC_FORMAT.md).
+
+Monster Rancher DS independently implements layout, CRC and scalar facts from
+ExcaliburZero's MIT-licensed mrds_extract research, corroborated against its
+five private native references and title-specific mechanics sources. Individually
+reviewed ordinary item ID/name facts are inspection labels. No external parser,
+catalog, ROM, reference save or game asset is distributed.
+[Scope and sources](MONSTER_RANCHER_DS_FORMAT.md).
+
+Tecmo Super Bowl independently implements battery-memory layout, checksum and
+packed fields from factual observations of bruddog's native disassembly.
+Public snapshot/CRC metadata corroborates the original US and compatible
+28-team save geometry. Upstream licence is not established; no implementation,
+ROM, disassembly, player snapshot, roster catalog or assets are bundled.
+[Native routines, source pins and scope](TECMO_SUPER_BOWL_NES_FORMAT.md).

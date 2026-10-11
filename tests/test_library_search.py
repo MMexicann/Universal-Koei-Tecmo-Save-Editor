@@ -143,6 +143,32 @@ class LibrarySearchGuiTests(unittest.TestCase):
         self.app.open_library_match()
         self.assertIs(self.app.sessions['meruru_plus_vita'][1], editor)
 
+    def test_new_platform_profiles_open_exact_backends_and_resume(self):
+        for game_id, query, platform in (
+                ('p5strikers_ps4', 'persona strikers', 'PlayStation 4'),
+                ('project_zero_ps2', 'project zero', 'PlayStation 2'),
+                ('uncharted_waters2_dos', 'new horizons', 'DOS PC'),
+                ('atelier_ryza3_dx_pc', 'ryza 3 dx', 'Windows PC'),
+                ('monster_rancher_ds', 'monster rancher', 'Nintendo DS'),
+                ('tecmo_super_bowl_nes', 'tecmo bowl', 'NES')):
+            with self.subTest(game=game_id):
+                self.app.show_library()
+                self.app.platform_choice.set(platform)
+                self.app.series_choice.set(ALL_SERIES)
+                self.app.library_search.set(query)
+                self.root.update()
+                self.assertEqual([game.id for game in self.app.library_matches], [game_id])
+                self.app.open_library_match()
+                self.root.update()
+                self.assertEqual(self.app.active_game, game_id)
+                editor = self.app.sessions[game_id][1]
+                game = next(game for game in GAMES if game.id == game_id)
+                self.assertEqual(editor.adapter.game_id, game_id)
+                self.assertEqual(editor.save_extension, game.extension)
+                self.app.show_library()
+                self.app.open_library_match()
+                self.assertIs(self.app.sessions[game_id][1], editor)
+
 
     def test_ds_platform_opens_bound_editor_and_resumes_session(self):
         self.app.platform_choice.set('Nintendo DS')

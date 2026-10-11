@@ -35,7 +35,11 @@
     "https://github.com/karas84/ProjectZeroSaveEditor",
     "https://github.com/karas84/Himuro",
     "https://github.com/ExcaliburZero/mrds_extract/tree/90a3c526199a68b07e57ecf7a73d81700440bfd1",
-    "https://github.com/bruddog/Tecmo_Super_Bowl_NES_Disassembly/tree/f3bae0e1913ba532a5ace158d86d905ecf787008"
+    "https://github.com/bruddog/Tecmo_Super_Bowl_NES_Disassembly/tree/f3bae0e1913ba532a5ace158d86d905ecf787008",
+    "https://github.com/appendixisu/reko3-save-editor",
+    "https://www.1man.info/2020/04/blog-post.html",
+    "https://github.com/BeckYang/San3Mender/tree/c0e6b4ac8facb774ef88403d1011935a3789c8b8",
+    "https://github.com/tenshoukijp/nobu6_tool_savedataeditor/tree/69455e9f566874d8440a572041a61cc0c52e72fa"
   ],
   "games": [
     {
@@ -1108,6 +1112,33 @@
       "evidence": "Supplied native gameplay and original Steam metadata qualify owner-dependent AES, exact complete category geometry, no native body checksum, Karma Embers offset/cap and owner-preserving safe saving. Native surgical, malformed-input, source/context race, backup/restore, shared self-test and actual Tk checks passed. Recruitment flags are searchable read only; system revision77 is separate research.",
       "needed": "Edited game-load/re-save checks and display-correlated recruitment, cumulative-level purchase, Records-of-Sin conversion and customization pairs with matching original VDF/build/DLC details; native ID/name catalog and linked-record/reward dependencies.",
       "editing_verified": true
+    },
+    {
+      "id": "reko3_dos",
+      "title": "Romance of the Three Kingdoms: Legend of Liu Bei",
+      "platform": "DOS PC",
+      "status": "Original Traditional Chinese native-file editor",
+      "evidence": "Complete original 8789-byte upstream prologue reference and complete published raw writer qualify 384 character records, six surgical allied troop/within-level EXP controls, byte-exact unchanged output and actual Tk copied saving/backups/restore. Independent record/faction/class guide corroborates the three named protagonists. No source implementation, catalog or sample incorporated.",
+      "needed": "Edited game-load/re-save, further build-labelled native campaigns and controlled troop-capacity/morale, growth, class/promotion, item/equipment, money and battle/reward pairs.",
+      "editing_verified": true
+    },
+    {
+      "id": "rotk3_dos",
+      "title": "Romance of the Three Kingdoms III — original Traditional Chinese DOS",
+      "platform": "DOS PC",
+      "status": "Published native editor implemented",
+      "evidence": "Complete published in-place city/officer writer independently reviewed. Exact 662,640-byte initialized TC native file opens and roundtrips unchanged. Six existing ordinary officer abilities and owned-city resource/commerce reductions pass procedural surgical, safety and actual Tk checks; full unknown tail preserved.",
+      "needed": "Occupied original Traditional Chinese SANGOKU3.SAV for genuine campaign editing qualification and controlled edited game-load/re-save checks; other editions are rejected.",
+      "editing_verified": false
+    },
+    {
+      "id": "nobu6_pk_pc",
+      "title": "Nobunaga’s Ambition: Tenshouki with Power-Up Kit — original Japanese Windows",
+      "platform": "Windows PC",
+      "status": "Published native editor implemented",
+      "evidence": "Complete published whole-buffer writer and packed eight-slot layout independently reviewed. Existing district Gold, Rice, Horses and Firearms reductions with searchable generals, castles, clans, treasures and slots pass procedural surgical, safety and actual Tk checks.",
+      "needed": "Genuine occupied original Japanese Windows PK SAVEDAT.n6p and controlled edited game-load/re-save qualification. DOS, console and HD remakes are separate formats.",
+      "editing_verified": false
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

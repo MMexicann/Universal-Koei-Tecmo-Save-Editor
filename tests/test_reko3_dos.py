@@ -98,6 +98,8 @@ class LegendLiuBeiTests(unittest.TestCase):
         for forged in (replace(opened, payload=bytearray(opened.raw)),
                        replace(opened, raw=bytearray(opened.raw)),
                        replace(opened, format=replace(opened.format)),
+                       replace(opened, source=None),
+                       replace(opened, source=[]),
                        replace(opened, payload=opened.raw[:-1])):
             with self.assertRaises(SaveError):
                 parser.serialize(forged, {})

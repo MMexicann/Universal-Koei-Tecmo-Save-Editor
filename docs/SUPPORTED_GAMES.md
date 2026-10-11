@@ -61,6 +61,9 @@ Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_su
 | ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
 | PERSONA 5 STRIKERS — English PS4 · decrypted APP.BIN + original sce_sys/param.sfo | PlayStation 4 | Money, Persona/BOND points and existing named consumables, ingredients, incenses, remedies and skill-card stacks. |
 | UNCHARTED WATERS: NEW HORIZONS — Original English DOS · KOUKAI2.DAT | DOS PC | Existing-slot gold and eight protagonist attributes; searchable campaign and sailor records. |
+| ROMANCE OF THE THREE KINGDOMS: LEGEND OF LIU BEI — Original Traditional Chinese DOS · MSAVE0–4.R3S | DOS PC | Existing allied troop reductions and within-level EXP; searchable character and carried-item records. |
+| ROMANCE OF THE THREE KINGDOMS III — Original Traditional Chinese DOS · SANGOKU3.SAV | DOS PC | Six existing officer abilities and owned-city resource/commerce reductions; searchable slots, cities and officers. |
+| NOBUNAGA'S AMBITION: TENSHOUKI — Original Japanese Windows Power-Up Kit · SAVEDAT.n6p | Windows PC | Existing district Gold, Rice, Horses and Firearms reductions; searchable generals, castles, clans, treasures and slots. |
 | PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point and base-upgrade tier reductions; searchable slots, camera functions and inventory. |
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |

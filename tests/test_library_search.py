@@ -23,6 +23,9 @@ class CatalogSearchTests(unittest.TestCase):
         self.assertEqual({game.id for game in matching_games(GAMES, 'hyrule')},
                          {'hyrule_warriors', 'hyrule_definitive', 'hyrule_legends', 'age_of_calamity'})
         self.assertFalse(matching_games(GAMES, 'game that does not exist'))
+        self.assertEqual({game.id for game in matching_games(
+            GAMES, platform='DOS PC', series='Romance of the Three Kingdoms')},
+            {'rotk2_dos', 'rotk3_dos', 'reko3_dos'})
 
     def test_meruru_plus_vita_does_not_advertise_unqualified_dx_pc(self):
         self.assertEqual([game.id for game in matching_games(GAMES, 'meruru vita')],
@@ -148,6 +151,9 @@ class LibrarySearchGuiTests(unittest.TestCase):
                 ('p5strikers_ps4', 'persona strikers', 'PlayStation 4'),
                 ('project_zero_ps2', 'project zero', 'PlayStation 2'),
                 ('uncharted_waters2_dos', 'new horizons', 'DOS PC'),
+                ('reko3_dos', 'legend liu bei', 'DOS PC'),
+                ('rotk3_dos', 'kingdoms iii', 'DOS PC'),
+                ('nobu6_pk_pc', 'tenshouki', 'Windows PC'),
                 ('atelier_ryza3_dx_pc', 'ryza 3 dx', 'Windows PC'),
                 ('monster_rancher_ds', 'monster rancher', 'Nintendo DS'),
                 ('tecmo_super_bowl_nes', 'tecmo bowl', 'NES'),

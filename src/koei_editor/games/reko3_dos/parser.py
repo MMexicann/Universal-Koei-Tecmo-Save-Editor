@@ -116,6 +116,7 @@ def decode(raw, game_id=GAME_ID, source=Path('copy.r3s')):
 def validate_document(document):
     if (type(document) is not Document or document.format is not FORMAT
             or type(document.raw) is not bytes or type(document.payload) is not bytes
+            or not isinstance(document.source, Path)
             or document.raw != document.payload):
         raise SaveError('The opened Legend of Liu Bei snapshot was changed outside staged editing.')
     _validate_raw(document.raw)

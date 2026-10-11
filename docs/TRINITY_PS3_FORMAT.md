@@ -11,20 +11,20 @@ resigning are an external Apollo workflow.
 ## Original source and genuine export
 
 TRINITY is an Omega Force action RPG published by Koei Tecmo. The complete
-[US Apollo/Game Genie title patch](https://github.com/bucanero/apollo-patches/blob/master/PS3/BLUS30503.savepatch)
-and [EU](https://github.com/bucanero/apollo-patches/blob/master/PS3/BLES01184.savepatch)/
-[Japanese](https://github.com/bucanero/apollo-patches/blob/master/PS3/BLJM60212.savepatch)
+[US Apollo/Game Genie title patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLUS30503.savepatch)
+and [EU](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLES01184.savepatch)/
+[Japanese](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLJM60212.savepatch)
 source explicitly target `PLAY.DAT`. The original author identifies all three
 regional titles and the published disk money mapping is a big-endian DWORD at
 `0x58`. These are factual maps, independently implemented without copying the
 GPL patch interpreter, external assets or catalogs.
 
-The complete actual [Apollo PS3 disk workflow](https://github.com/bucanero/apollo-ps3/blob/master/source/exec_cmd.c)
+The complete actual [Apollo PS3 disk workflow](https://github.com/bucanero/apollo-ps3/blob/d7e4d6ee69464db7958acb771c8ecf5de4502358/source/exec_cmd.c)
 was inspected, not only these offsets: `apply_cheat_patches` decrypts the title
 protected file, applies the active Game Genie operation through
 `apollo_apply_code`, then re-encrypts the modified file. `resignSave` updates
 external `PARAM.PFD` authentication. The full
-[interpreter](https://github.com/bucanero/apollo-lib/blob/master/source/patches.c)
+[interpreter](https://github.com/bucanero/apollo-lib/blob/864dfd86c34acaf7e9a01eb3c55302b301e5cea3/source/patches.c)
 reads the entire file, applies its bounded writes and emits the full buffer via
 `write_buffer`. The complete TRINITY patch contains no internal-checksum
 repair. This confirms an actual published title-specific money writer, but

@@ -9,20 +9,20 @@ console use. It does not edit laboratory EXP, licenses, pilot growth or missions
 
 ## Complete source workflow and native observations
 
-The complete [BLUS30703 Game Genie/Apollo title patch](https://github.com/bucanero/apollo-patches/blob/master/PS3/BLUS30703.savepatch)
+The complete [BLUS30703 Game Genie/Apollo title patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLUS30703.savepatch)
 explicitly writes the big-endian spendable-money DWORD at `0x5353C`. Its two
 other independent operations target laboratory EXP at `0x44154` and five
 license-bit bytes starting at `0x53547`. The
-[EU title patch](https://github.com/bucanero/apollo-patches/blob/master/PS3/BLES01301.savepatch)
+[EU title patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLES01301.savepatch)
 independently publishes the same offsets, but no EU native file was qualified
 in this round and EU identity is not admitted.
 
-The actual full [Apollo PS3 source workflow](https://github.com/bucanero/apollo-ps3/blob/master/source/exec_cmd.c)
+The actual full [Apollo PS3 source workflow](https://github.com/bucanero/apollo-ps3/blob/d7e4d6ee69464db7958acb771c8ecf5de4502358/source/exec_cmd.c)
 was read, including `apply_cheat_patches` and `resignSave`: it decrypts the
 selected title's protected file using its secure-file key, applies each active
 Game Genie/BSD patch, re-encrypts the modified file, then performs
 `pfd_util_process(PFD_CMD_UPDATE, 0)`. The complete
-[Apollo interpreter](https://github.com/bucanero/apollo-lib/blob/master/source/patches.c)
+[Apollo interpreter](https://github.com/bucanero/apollo-lib/blob/864dfd86c34acaf7e9a01eb3c55302b301e5cea3/source/patches.c)
 loads the full file, applies the title operation to its bounded buffer and
 writes that full buffer back via `write_buffer`. This confirms an existing
 actual disk writer for the title's money field, rather than a runtime trainer
@@ -53,7 +53,7 @@ account context, original icons or assets are included in source or releases.
 
 ## Editing and mechanics
 
-[Gundam 3's public title source](https://github.com/bucanero/apollo-patches/blob/master/PS3/BLUS30703.savepatch)
+[Gundam 3's public title source](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLUS30703.savepatch)
 distinguishes money from Mobile Suit Lab EXP. Money is a spendable balance;
 laboratory EXP, facility upgrades and licenses have their own dependencies.
 The [skill guide](https://gamefaqs.gamespot.com/xbox360/605801-dynasty-warriors-gundam-3/faqs/63831) distinguishes Pilot Points from G earned from missions; several skills require level-5 pilot friendship or memorial-mission prerequisites. The [moves guide](https://gamefaqs.gamespot.com/xbox360/605801-dynasty-warriors-gundam-3/faqs/62736) also documents suit-specific friendship/history/online unlock prerequisites. None of those consequences is inferred from wallet storage. The published money cheat's 99,999,999 target is not treated as a natural cap.

@@ -11,9 +11,9 @@ this adapter neither consumes owner identifiers nor rebuilds `PARAM.PFD`.
 ## Source and native qualification
 
 Field/checksum facts were independently implemented from the public Apollo
-patches for [NPUB31531](https://github.com/bucanero/apollo-patches/blob/master/PS3/NPUB31531.savepatch),
-[NPEB02060](https://github.com/bucanero/apollo-patches/blob/master/PS3/NPEB02060.savepatch)
-and [NPJB00533](https://github.com/bucanero/apollo-patches/blob/master/PS3/NPJB00533.savepatch).
+patches for [NPUB31531](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/NPUB31531.savepatch),
+[NPEB02060](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/NPEB02060.savepatch)
+and [NPJB00533](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/NPJB00533.savepatch).
 These source files are GPL-licensed; no patch interpreter, restricted code,
 assets or catalogs are included in this implementation.
 

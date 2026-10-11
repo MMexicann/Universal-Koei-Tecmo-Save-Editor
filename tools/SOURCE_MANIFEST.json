@@ -2553,8 +2553,8 @@
     },
     {
       "path": "src/koei_editor/shared/steam_owner.py",
-      "bytes": 6737,
-      "sha256": "289e7340bbe6a2c6bb6669a47e09617fe9f7511fd0848902e2593bad9d53ea9a"
+      "bytes": 7385,
+      "sha256": "d03c0e8b4c4a70104a6547111c22d417df6b610d0bedcba92b1d1d4295ba5d4a"
     },
     {
       "path": "src/koei_editor/shared/support_catalog.py",
@@ -3478,8 +3478,8 @@
     },
     {
       "path": "tests/test_steam_owner.py",
-      "bytes": 9503,
-      "sha256": "78a88c96d644853927aee47a9e00d8b1cade1210e21fc13f54a06ff077b2101e"
+      "bytes": 11325,
+      "sha256": "1e3aedfda760a6820163b86d6910f6b3749f821ef5fbe120ddb0b3656c979b5b"
     },
     {
       "path": "tests/test_strikeforce_ps3.py",

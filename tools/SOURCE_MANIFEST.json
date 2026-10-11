@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 10003,
-      "sha256": "6176e6d162c29a8116000038de8973c251cb21c2b2782a84443754316c52b9fe"
+      "bytes": 10024,
+      "sha256": "14eb8b0b4f7fd6e89eadcdcba29adc5f1253c50c390074744daf3a92fa1b0d56"
     },
     {
       "path": ".gitignore",
@@ -2888,8 +2888,8 @@
     },
     {
       "path": "tests/test_parallel_runner.py",
-      "bytes": 11419,
-      "sha256": "710b302bea5b7d25c56550e6c599860d088b321e1889bee92b016ff8b5b3d9b4"
+      "bytes": 15530,
+      "sha256": "1dbc3654a4e416d59aa2c248ca499132ad022f1b6b47d6ca8f2ac4a46df742db"
     },
     {
       "path": "tests/test_pc_content_mapping.py",
@@ -2953,8 +2953,8 @@
     },
     {
       "path": "tests/test_release_preparation.py",
-      "bytes": 8360,
-      "sha256": "e8a14a33aca858636e49c035ff15b1bdab1a9d4d87a0eb3c7304b14d283dcdba"
+      "bytes": 8427,
+      "sha256": "883ea51557edeace03b8a8073e2415ed30ec95a6c3821633a9bc0ec606b36077"
     },
     {
       "path": "tests/test_review_regressions.py",
@@ -3233,8 +3233,8 @@
     },
     {
       "path": "tests/test_universal_packaging.py",
-      "bytes": 11411,
-      "sha256": "cc93446a5945efa99c663dc2fd5b4b6e9c4d9b29d6ee56a3c0692b6e48ec4fbd"
+      "bytes": 12157,
+      "sha256": "fe3d4221213c188357fdd7e71b4347c2c1497a5582c0764d74d95cd786266413"
     },
     {
       "path": "tests/test_verified_editors.py",
@@ -3403,13 +3403,13 @@
     },
     {
       "path": "tools/run_tests.py",
-      "bytes": 21610,
-      "sha256": "961136dba3aebabe41a312de932e4c373f5ae7bb30e89e6839408c94977beef7"
+      "bytes": 23796,
+      "sha256": "b042689e426a535ee06ff3db461b383d3f8e87b6680216e49c8eb47904aa15ef"
     },
     {
       "path": "tools/test_timings.json",
-      "bytes": 7208,
-      "sha256": "e150bb49945e9ae96374966972dc7020b798e96a0ca10f39e89e76bda642de34"
+      "bytes": 8762,
+      "sha256": "4621c9fa62eeec3757e2d3256818d27753ad157a705912d292c16136f3ea58b8"
     },
     {
       "path": "tools/update_supported_games.py",

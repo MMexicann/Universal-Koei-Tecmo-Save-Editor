@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 import ast
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import fnmatch
 import hashlib
 import json
@@ -97,19 +97,33 @@ def read_timings(path: Path | None) -> dict[str, float]:
     return result
 
 
-def partition(modules: list[str], shards: int, timings: dict[str, float]) -> list[list[str]]:
-    """Deterministic longest-first balancing; new modules are never filtered out."""
-    if shards < 1 or len(modules) != len(set(modules)):
+def partition(modules: list[str], shards: int, timings: dict[str, float], *,
+              desktop: set[str] | None = None, workers: int = 1) -> list[list[str]]:
+    """Balance CPU work and serial desktop work; never filter new modules.
+
+    Each shard has ``workers`` isolated processes but only one shared desktop.
+    Its estimated lower bound is the larger of total work / workers and desktop
+    work. Timing hints affect placement only, never test discovery or results.
+    """
+    if shards < 1 or workers < 1 or len(modules) != len(set(modules)):
         raise ValueError("Invalid shard count or duplicate inventory")
     known = sorted(timings[name] for name in modules if name in timings)
     fallback = known[len(known) // 2] if known else 1.0
     fallback = max(fallback, 0.001)
     groups: list[list[str]] = [[] for _ in range(shards)]
     loads = [0.0] * shards
+    desktop_loads = [0.0] * shards
+    desktop = desktop or set()
     for module in sorted(modules, key=lambda name: (-timings.get(name, fallback), name)):
-        target = min(range(shards), key=lambda index: (loads[index], len(groups[index]), index))
+        duration = timings.get(module, fallback)
+        desktop_duration = duration if module in desktop else 0.0
+        target = min(range(shards), key=lambda index: (
+            max((loads[index] + duration) / workers,
+                desktop_loads[index] + desktop_duration),
+            loads[index], len(groups[index]), index))
         groups[target].append(module)
-        loads[target] += timings.get(module, fallback)
+        loads[target] += duration
+        desktop_loads[target] += desktop_duration
     return groups
 
 
@@ -176,7 +190,11 @@ def source_fingerprint(tests_dir: Path) -> str:
     digest = hashlib.sha256()
     roots = [("src", ROOT / "src"), ("tools", ROOT / "tools"), ("tests", tests_dir)]
     for label, directory in roots:
-        for path in sorted(directory.rglob("*")):
+        # Path objects sort case-insensitively on Windows and case-sensitively
+        # on POSIX. Hash the same source bytes in one canonical order so reports
+        # can be verified from either host without relaxing source validation.
+        for path in sorted(directory.rglob("*"),
+                           key=lambda path: path.relative_to(directory).as_posix()):
             if not path.is_file() or "__pycache__" in path.parts or path.suffix not in {".py", ".json"}:
                 continue
             digest.update(f"{label}/{path.relative_to(directory).as_posix()}\0".encode())
@@ -278,6 +296,42 @@ def execute_module(tests_dir: Path, module: str, logs_dir: Path, timeout: float,
         return _execute_module(tests_dir, module, logs_dir, timeout)
 
 
+def execute_modules(tests_dir: Path, modules: list[str], logs_dir: Path,
+                    timeout: float, workers: int, desktop: set[str]):
+    """Dispatch one desktop module at a time, keeping CPU workers available.
+
+    Submitting every module up front lets two Tk tasks occupy both threads while
+    one merely waits for the desktop lock. Select only eligible work instead;
+    each module still runs once in its own subprocess with the same timeout,
+    report validation and failure handling.
+    """
+    if workers < 1 or len(modules) != len(set(modules)):
+        raise ValueError("Invalid worker count or duplicate inventory")
+    pending = list(modules)
+    desktop_lock = threading.Lock()
+    desktop_active = False
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        running = {}
+        while pending or running:
+            while len(running) < workers:
+                eligible = next((index for index, name in enumerate(pending)
+                                 if name not in desktop or not desktop_active), None)
+                if eligible is None:
+                    break
+                name = pending.pop(eligible)
+                is_desktop = name in desktop
+                desktop_active |= is_desktop
+                future = pool.submit(execute_module, tests_dir, name, logs_dir,
+                                     timeout, desktop_lock if is_desktop else None)
+                running[future] = name
+            completed, _ = wait(running, return_when=FIRST_COMPLETED)
+            for future in sorted(completed, key=lambda item: running[item]):
+                name = running.pop(future)
+                if name in desktop:
+                    desktop_active = False
+                yield future.result()
+
+
 def total_counts(records: list[dict]) -> dict[str, int]:
     return {key: sum(record[key] for record in records) for key in COUNTS}
 
@@ -364,10 +418,10 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("Invalid workers, shard index/count or timeout")
         modules = inventory(tests_dir, args.pattern)
         timings = read_timings(args.timings)
-        assignments = partition(modules, args.shards, timings)
-        selected = assignments[args.shard_index]
         desktop = desktop_modules(tests_dir, modules)
-        desktop_lock = threading.Lock()
+        assignments = partition(modules, args.shards, timings,
+                                desktop=desktop, workers=args.workers)
+        selected = assignments[args.shard_index]
         report_path = args.report or Path(tempfile.mkdtemp(prefix="koei-tests-")) / "report.json"
         logs_dir = report_path.parent / f"logs-shard-{args.shard_index}"
         logs_dir.mkdir(parents=True, exist_ok=True)
@@ -377,20 +431,16 @@ def main(argv: list[str] | None = None) -> int:
               f"{len(set(selected) & desktop)} desktop modules coordinated", flush=True)
         started = time.perf_counter()
         records = []
-        with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = {pool.submit(execute_module, tests_dir, name, logs_dir, args.timeout,
-                                   desktop_lock if name in desktop else None): name
-                       for name in selected}
-            for future in as_completed(futures):
-                record = future.result()
-                records.append(record)
-                status = "PASS" if record["success"] else "FAIL"
-                print(f"{status} {record['module']}: {record['tests']} tests, "
-                      f"{record['skipped']} skipped ({record['duration_seconds']:.2f}s)", flush=True)
-                if not record["success"]:
-                    print(f"  Log: {logs_dir / record['log']}", flush=True)
-                    if record.get("infrastructure_error"):
-                        print(f"  {record['infrastructure_error']}", flush=True)
+        for record in execute_modules(tests_dir, selected, logs_dir, args.timeout,
+                                      args.workers, desktop):
+            records.append(record)
+            status = "PASS" if record["success"] else "FAIL"
+            print(f"{status} {record['module']}: {record['tests']} tests, "
+                  f"{record['skipped']} skipped ({record['duration_seconds']:.2f}s)", flush=True)
+            if not record["success"]:
+                print(f"  Log: {logs_dir / record['log']}", flush=True)
+                if record.get("infrastructure_error"):
+                    print(f"  {record['infrastructure_error']}", flush=True)
         records.sort(key=lambda record: record["module"])
         source_changed = source_fingerprint(tests_dir) != fingerprint
         success = not source_changed and all(record["success"] for record in records)

@@ -117,7 +117,20 @@ It does not establish the integrity rules for other chunks, money or items.
 Totori app **936180** remains separate from Rorona app **936160**. The misleading
 Totori archive discussed in [Totori's research checklist](TOTORI_PC_RESEARCH.md)
 contains Rorona system data, not Totori gameplay. The three-byte `0xB3FC` Cole
-tool does not qualify title, width, framing, natural bounds or integrity. No
+tool has a newly recovered source-author gameplay account on Steam app936180.
+The [author's announcement](https://steamcommunity.com/app/936180/discussions/0/2865909887924677355/)
+links their GitHub tool and describes its 400,000/600,000 targets. In their
+[later gameplay post](https://steamcommunity.com/app/936180/discussions/0/2865909982608566012/),
+they discuss their Cole tool while investigating a missed
+Rorona appearance, then establish that the problem was a synthesis/flashback
+prerequisite: "I wondered if I screwed up the wrong 1s and 0s. Turns out I
+didn't." This supplies author testimony connecting the narrow offline money
+tool to continued gameplay, rather than an assertion that no edit-use
+testimony exists.
+It does not provide controlled before/after files, a displayed edited balance,
+an executable revision or independent edit/load/re-save validation. The
+three-byte writer still does not establish full storage width, natural bounds,
+complete framing or integrity for arbitrary fields/revisions. No
 genuine Totori DX **PC** gameplay slot was acquired in this investigation; the
 decrypted PS4 lead above must not be advertised as Steam support. A second independently downloaded
 [Manga Council PC archive](https://mangacouncil.blogspot.com/2018/12/atelier-totori-adventurer-of-arland-dx.html)

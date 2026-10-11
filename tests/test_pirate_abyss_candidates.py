@@ -25,9 +25,9 @@ def pw4_procedural(size=0x2804, *, region='WW', seed=0x1234):
     return struct.pack('<HH', checksum, seed) + bytes(output), payload
 
 
-def abyss_procedural(size=0x2800, *, owner=0):
+def abyss_procedural(size=0x2800, *, owner=0, revision=0xA4):
     payload = bytearray((index * 53 + 71) & 255 for index in range(size - 32))
-    struct.pack_into('<I', payload, 0, 0xA4)
+    struct.pack_into('<I', payload, 0, revision)
     # A procedural fake owner, not an account identifier or a native fixture.
     key = str(owner ^ 0xFABE9C015F6E379A).encode('ascii').ljust(32, b'\0')
     with CNG_AES('CBC') as provider:
@@ -100,6 +100,17 @@ class PW4CandidateTests(unittest.TestCase):
 
 
 class AbyssCandidateTests(unittest.TestCase):
+    def test_system_revision_is_bound_to_its_capacity(self):
+        raw, payload = abyss_procedural(0x2800, revision=0x77)
+        document = abyss.decode_candidate(raw, owner_context=0)
+        self.assertEqual(document.payload, payload)
+        self.assertEqual(document.unchanged_roundtrip(owner_context=0), raw)
+        self.assertFalse(document.writable)
+        for size, revision in [(0x30000, 0x77), (0x2800, 0x76), (0x30000, 0xA5)]:
+            malformed, _ = abyss_procedural(size, revision=revision)
+            with self.assertRaises(ValueError):
+                abyss.decode_candidate(malformed, owner_context=0)
+
     def test_owner_key_derivation_without_account_retention(self):
         self.assertEqual(abyss._owner_key(0), b'18068050284766967706'.ljust(32, b'\0'))
         self.assertEqual(abyss._owner_key(abyss.OWNER_MASK), b'0'.ljust(32, b'\0'))
@@ -159,3 +170,22 @@ class AbyssCandidateTests(unittest.TestCase):
         owner = int(os.environ['ABYSS_SAVE_OWNER_CONTEXT'])
         doc = abyss.decode_candidate(raw, owner_context=owner)
         self.assertEqual(doc.unchanged_roundtrip(owner_context=owner), raw)
+
+    @unittest.skipUnless(os.environ.get('ABYSS_NATIVE_COPY_DIRECTORY'),
+                         'No private native Abyss slot/system copies and original VDF supplied.')
+    def test_optional_native_sidecar_both_categories(self):
+        from koei_editor.shared.steam_owner import read_owner
+        directory = Path(os.environ['ABYSS_NATIVE_COPY_DIRECTORY'])
+        for name, expected_revision in [('GAMEDATA00.BIN', 0xA4), ('SYSTEMDATA.BIN', 0x77)]:
+            with self.subTest(category='game' if name.startswith('GAME') else 'system'):
+                path = directory / name
+                raw = path.read_bytes()
+                context = read_owner(path)
+                document = abyss.read_candidate_copy(path)
+                self.assertEqual(struct.unpack_from('<I', document.payload)[0], expected_revision)
+                self.assertEqual(document.unchanged_roundtrip(owner_context=context.steam_id64), raw)
+                self.assertFalse(document.writable)
+                self.assertFalse(document.integrity_verified)
+                self.assertEqual(set(vars(document)), {'raw', 'payload'})
+                with self.assertRaises(ValueError):
+                    abyss.decode_candidate(raw, owner_context=context.account_id)

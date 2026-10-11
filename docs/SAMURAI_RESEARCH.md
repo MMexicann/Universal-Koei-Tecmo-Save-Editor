@@ -196,64 +196,28 @@ them; Max cannot hide an invalid staged change. No game-load check is claimed.
 | Older PC revisions / other regions | Native migration revision list recovered; no genuine older-revision samples and verified per-revision field layouts. Current revision only |
 | Actual game-load validation | Requires the game and deliberate loading of an edited copy; static inspection and reparse tests do not establish this |
 
-## Samurai Warriors 5: research only, no editable library adapter
+## Samurai Warriors 5 — native PC castle saves
 
-The executable was inspected statically after private SteamStub code decoding.
-Native filenames are `SAVEDATA%02d.BIN` and `SAVEDATATRIAL.BIN`, in the game's
-Savedata folder. This title uses a different container from SW4 DX.
+The new `samurai5_pc` adapter supports owner-dependent native `SAVEDATA00.BIN`
+revision 39 saved at My Castle. It edits gold, stock EXP, shared spendable skill
+points, stock weapon mastery, lumber, mineral and fabric. Native source proves
+field widths, resource limits and current-checkpoint selection; historical
+copies, spending counters, officer skill allocations, story/facilities and
+both battle buffers remain intact. Searchable native-record inspection covers
+weapons, officers, mounts, skill-gem quantities and progression classes.
 
-Native CNG calls implement AES-128-CBC. Key-byte generation at `0x140007DE0`
-uses the 32-bit LCG `state * 0x343FD + 0x269EC3` and the high output byte.
-Native key derivation at `0x140008160` transforms a stored seed through a
-floating-point iterative routine and XORs the resulting low DWORD with the
-save owner's Steam user ID DWORD. An older fallback at `0x140008F70` tries a
-non-owner-derived variant. IV bytes use another LCG; the IV seed is stored at
-the native ciphertext tail. Decrypted trailer text `01Finger2Print34` is a
-codec marker, not a gameplay identity/integrity schema.
+Keep the original `steam_autocloud.vdf` beside source and destination copies.
+The new complete genuine slot and its original owner context resolve the
+previous key blocker. Earlier public saves without their own owner context
+remain unusable; the adapter does not try another owner's key or legacy
+fallbacks. Active battle/resume, trial and other slot/revision variants are
+not accepted. The game executable was inspected statically and never run.
 
-Native RTTI exposes distinct common, scenario, Citadel/submode, playable
-officer, weapon, skill-gem, horse, residence, stable, shop-weapon and reward
-save classes. It confirms multiple systems rather than a single money block.
-A [Steam report of profile-locked saves](https://steamcommunity.com/app/1591530/discussions/0/592900638661202756/)
-corroborates the owner-dependent native key path.
-
-Two independently described public saves were subsequently acquired from
-[SaveGame.Pro](https://savegame.pro/pc-samurai-warriors-5-savegame/): a completed
-state and a rare-weapon state. Each archive contains an actual 4,493,236-byte
-`SAVEDATA00.BIN`; their ciphertext differs. They contain no matching owner
-context or configuration. Acquisition removes the missing-file blocker but
-does not establish the correct owner key, plaintext gameplay schema or safe
-editing. The native CBC framing, tail IV seed, key/IV byte generators and
-16-byte fingerprint were independently checked. All five native legacy
-selector keys were tested against both ciphertexts; none matched the native
-fingerprint. Their normal owner-derived keys remain unavailable. The game
-executables remain unexecuted.
-
-| Important SW5 mechanic | Specific blocker |
-| --- | --- |
-| Native decode/encode and integrity | Two genuine encrypted native slots and native CBC framing are qualified, but all five legacy fallback keys fail both samples. Matching numeric save-owner context is needed for the normal key path; decrypted title/revision identity and gameplay integrity must then be independently proved before writes |
-| Money and castle materials / facility upgrades | Common/residence/stable/shop classes found; persistent field maps, caps and facility cost/reward dependencies not qualified in a decoded genuine save |
-| Officers, levels/EXP/stats, unlocks | Officer save class found; serialized record count/layout and derived level/stat/reward dependencies remain unqualified |
-| Weapon-type mastery / proficiency | Distinct from weapon levels and officer levels; stored-vs-derived values and thresholds unqualified |
-| Officer skills / skill gems | Skill-gem class found; ID names, inventory limits, skill-tree prerequisites and consumed-point dependencies unqualified |
-| Weapons / attributes / reinforcement / crafting | Weapon class found; occupied record layout, legitimate bounds, attribute combinations, resource costs and ownership references unqualified |
-| Mounts / stable | Horse/stable classes found; inventory IDs, upgrade bounds and equip references unqualified |
-| Musou campaigns / stages / objectives / rewards | Scenario/reward classes found; completion masks and reward dependencies unqualified; no marking story complete as a resource action |
-| Citadel mode / bonds / companions | Separate submode class found; paired-character dependencies, ranks, unlocks and companion availability need genuine decoded records |
-| Collections / movies / music / biographies / customization | No qualified content flag dictionary or appearance serialization; unknown bytes would be unsafe to bulk unlock |
-| Save revisions / trial migration / owner variation | Native trial/legacy paths found; matching genuine samples and owner context required for each supported variant |
-
-These blockers do not affect the independently qualified SW4 DX implementation.
-
-Practical private inputs for SW5 are an untouched native
-`Savedata/SAVEDATA00.BIN` (or the actual `SAVEDATA%02d.BIN` slot filename),
-the save creator's numeric Steam user ID/SteamID64 to qualify the owner DWORD,
-and the matching game executable revision. A trial export must be labelled
-`SAVEDATATRIAL.BIN` and qualified separately. A second save from that same
-owner after one recorded resource purchase/reward would help prove fields
-and dependencies. No password, login token or account credentials are needed.
-The inspected native AES calls use Windows CNG; no matching game DLL has
-been identified as essential to this codec path.
+See [SW5 format and mechanics coverage](SAMURAI5_PC_FORMAT.md) for the complete
+native stream/current-copy evidence, tests and exact remaining progression
+blockers. Direct unchanged ciphertext reconstruction, surgical native edits,
+backups, same-owner restore, malformed-input checks and Tk workflows are
+covered. Edited game loading remains unperformed.
 
 ## Public research references and reuse
 

@@ -55,7 +55,8 @@ An additive byte checksum detects ordinary accidental damage but permits arithme
 | Recipes, requests, valuables, Jail/story completion, collections and NG+ | Preserved. Recipe ownership and story rewards must be qualified separately from ingredient/resource quantities. |
 | Native PC revisions / language variants | Only the observed English marker/name layout and zero trailer suffix qualify. Need genuine copies and matching version/layout evidence for others. |
 | English Nintendo Switch | Implemented separately in [its native Switch adapter](P5STRIKERS_SWITCH_FORMAT.md); this PC adapter still requires the encrypted PC format. |
-| Japanese Switch / PS4 | Not implemented. Need independent complete exports with exact title/version/language, framing/integrity qualification and safe console import contract. |
+| English PlayStation 4 | Implemented separately for CUSA19640 in [its PS4 export adapter](P5STRIKERS_PS4_FORMAT.md); mandatory original `sce_sys/param.sfo` and external PS4 import. |
+| Japanese Switch / Japanese or other-region PS4 | Not implemented. Need independent complete exports with exact title/version/language, framing/integrity qualification and safe console import contract. |
 | Actual game loading | Not performed. Need an owner-operated PC load of an edited copy and before/after in-game observation; do not treat automated codec/GUI checks as that test. |
 
 Focused checks use optional private `P5S_PC_SAVE_COPIES` containing paths separated by the platform path separator. Public tests generate their own native-size procedural data. [Expansion tests](../tests/test_persona_gust_depth.py) cover the new stack selections, unusual/adjacent-byte rejection, surgical changes, growth/held-Persona preservation, native copies and actual Tk controls. No paths, names, account IDs or player data belong in published fixtures.

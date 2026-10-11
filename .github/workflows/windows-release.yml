@@ -142,10 +142,10 @@ jobs:
           $version = python -m tools.package_release --version
           $smoke = Start-Process -FilePath "dist/UniversalKoeiTecmoSaveEditor-v$version.exe" -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
           if ($smoke.ExitCode -ne 0) { throw 'Packaged GUI startup failed.' }
-          python -m tools.package_release --verify-executable
-          if ($LASTEXITCODE -ne 0) { throw 'Bundle privacy or metadata validation failed.' }
+          # Packaging performs the complete executable privacy/metadata scan
+          # before creating any downloads. Do not scan the same bundle twice.
           python -m tools.package_release
-          if ($LASTEXITCODE -ne 0) { throw 'Local packaging failed.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Bundle validation or local packaging failed.' }
       - uses: actions/upload-artifact@v4
         with:
           name: universal-koei-tecmo-windows

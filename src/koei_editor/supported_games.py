@@ -66,6 +66,16 @@ from .game_registry import GAMES
 # dqb2_switch: DRAGON QUEST BUILDERS 2 / Original Nintendo Switch · CMNDAT.BIN [Nintendo Switch]
 # p5strikers_switch: PERSONA 5 STRIKERS / English Nintendo Switch · savedata export [Nintendo Switch]
 # rotk2_dos: ROMANCE OF THE THREE KINGDOMS II / Original Chinese DOS · raw save copies [DOS PC]
+# p5strikers_ps4: PERSONA 5 STRIKERS / English PS4 · decrypted APP.BIN + original sce_sys/param.sfo [PlayStation 4]
+# uncharted_waters2_dos: UNCHARTED WATERS: NEW HORIZONS / Original English DOS · KOUKAI2.DAT [DOS PC]
+# project_zero_ps2: PROJECT ZERO / FATAL FRAME / Original European PS2 · SLES-50821 PSU export [PlayStation 2]
+# atelier_ryza3_dx_pc: ATELIER RYZA 3 DX / Alchemist of the End & the Secret Key · Steam PC revision 4 [Windows PC]
+# monster_rancher_ds: MONSTER RANCHER DS / US Nintendo DS · raw 32/64 KiB export [Nintendo DS]
+# tecmo_super_bowl_nes: TECMO SUPER BOWL / NES · compatible original 28-team battery SRAM [NES]
+# wo4_pc: WARRIORS OROCHI 4 / Original Windows PC · revision 20180720 [Windows PC]
+# wo4_ultimate: WARRIORS OROCHI 4 ULTIMATE / Windows PC · revision 20200101 [Windows PC]
+# samurai5_pc: SAMURAI WARRIORS 5 / Windows PC · revision 39 castle/menu slot zero [Windows PC]
+# abyss_pc: WARRIORS: ABYSS / Windows PC · revision A4 gameplay slots [Windows PC]
 # END GENERATED SUPPORTED GAME INDEX
 
 

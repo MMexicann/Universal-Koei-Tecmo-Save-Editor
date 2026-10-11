@@ -1,8 +1,8 @@
 # Pirate Warriors 4 and Warriors: Abyss PC evidence
 
 PW4 has a qualified native PC revision-15 editor for spendable Beli and quantities
-of already obtained coins. Abyss remains an unregistered, read-only research
-candidate. No attached executable was executed. No player save, binary, unpacked
+of already obtained coins. Abyss now has a native A4 Karma Embers editor, with
+its original copied Steam sidecar; the separate system category remains read-only research. No attached executable was executed. No player save, binary, unpacked
 code, account identifier or private fixture is included in the distribution.
 
 ## Pirate Warriors 4
@@ -119,66 +119,25 @@ checked against the attached executable; several older RVAs do not describe it.
 
 ## Warriors: Abyss
 
-The attached x64 executable's code section is SteamStub-wrapped. It was inspected
-using static header decoding and AES transforms on a private copy, never run.
-The save service identifies `SYSTEMDATA.BIN`, `GAMEDATA%02d.BIN`, `SAVEDATA` and
-the Warriors Abyss title folder. Steam application ID 3178350 is corroborated
-by the wrapper metadata and public game pages.
+The previously missing original-owner context has now been supplied with genuine
+`GAMEDATA00.BIN` and `SYSTEMDATA.BIN` copies. Both decrypt and roundtrip byte
+exactly. The game slot is revision`0xA4`; the system category is revision`0x77`,
+which is distinct and cannot be opened by the game editor. The original standard
+`steam_autocloud.vdf` supplies the private individual Steam account context.
 
-At `0x14041AEB0`, system/game allocations are `0x2800`/`0x30000` bytes, both
-aligned. The first 16 bytes are plaintext ASCII `470558d4d8015d9f`.
-The remaining bytes use AES-256-CBC with IV
-`e1c1c49f9a3019341ea820f99fd09a83`. Decrypted bytes first contain the second
-16-byte marker `a1423bc7d48e148b`, followed by serialization beginning with
-little-endian revision `0xA4`. The native AES tables match standard AES; they
-are not evidence of a custom cipher. CBC decryption is at `0x14041A330`;
-encryption/decryption primitives are at `0x140418010`/`0x1404191B0`.
+Complete static inspection identified the seven-controller registry, bounded
+A4 disk extent`0x26FE0`, owner-dependent AES-CBC framing, absence of a native
+body checksum/MAC, and the Karma Embers balance at payloadoffset6. Native reward,
+purchase and UI code independently agree with the official9,999,999 cap. The
+editor keeps all other original plaintext, opaque native capacity and original
+owner context unchanged. Its recruitment inspector reads the native flag records
+without admitting linked-record ownership writes or guessing catalog names.
 
-Key setup at `0x14041A952` obtains an unsigned 64-bit platform save-owner value,
-XORs `0xFABE9C015F6E379A`, formats unsigned decimal ASCII and pads with NULs to
-32 bytes. The original owner's context is essential, not a universal hardcoded
-title key. The candidate API requires it explicitly on every operation and
-does not retain or return it. It does not guess accounts or reassign ownership.
-
-No genuine freely shared Abyss save with its necessary original-owner context
-was located. GitHub queries located mechanics/build planners, not a qualifying
-PC save editor or native fixture. Public Steam guides were reviewed. Nexus
-initially denied requests; the later follow-up accessed its public game/mod
-listing successfully but located no qualifying native save or save codec.
-The earlier Reddit access failure is not treated as evidence that saves do not exist.
-Gameplay serialization subroutines and inner integrity coverage remain
-unqualified. CBC and known markers do not authenticate arbitrary body changes;
-the tests demonstrate that limitation and keep `integrity_verified` and
-`writable` false. Native revision-conversion hooks were observed, but only
-the statically emitted `0xA4` is admitted for candidate research.
-
-### Coverage checklist
-
-| System | Required distinction/dependency | Current status and precise blocker |
-| --- | --- | --- |
-| Karma Embers and hero recruitment | Persistent recruitment currency versus in-run resources | Genuine system/game copies with original-owner context and one recruitment/spend pair missing. |
-| Permanent hero growth/transcendence | Permanent enhancement versus levels gained during a run | Hero records, growth thresholds and unlock dependencies not correlated with native bytes. |
-| Unique weapons and limit breaks | Obtained rewards versus trait/stat effects | Mechanics established in public planners; native ownership/reward flags and requirements unmapped. |
-| Emblems/traits | Player traits versus support traits; derived team totals | Planner data shows totals are computed from chosen heroes; no guessed editable aggregate fields. |
-| Summon skills and Unique Tactics | Specific emblem counts/hero dependencies versus actual unlocks | Dependencies documented in planners; save-backed prerequisites and equipped hero IDs unmapped. |
-| Party/companions and formations | Recruited persistent roster versus run-specific support selection | No native record boundaries, valid references or controlled party-change pair. |
-| Treasure/equipment and consumables | Run pickups versus permanent collection/unlocks | Persistence and item ID/quantity layouts need native paired saves. |
-| Traversal level and clear history | Difficulty unlocks, clear rewards and story separation | No corresponding native progression pair; no completion action added. |
-| Stage/run progress and bosses | Temporary run state versus historical completion | Resume serialization and reward-claim dependencies unmapped. |
-| DLC heroes/costumes | Installed content versus save ownership and hero revisions | Requires matching DLC/revision copies; no entitlement assumptions. |
-| Collections, records and presentation unlocks | Discovered/unlocked entries versus derived counters | Presence and byte layout require native evidence; no invented gallery controls. |
-| Weapon fusion/mount systems | Only implement mechanics actually present | Not established for this title; no transplanted controls. |
-
-Mechanics sources: [YeanGO/musou-abyss-guideWeb](https://github.com/YeanGO/musou-abyss-guideWeb)
-and [Wynathan/wynathan-abyss](https://github.com/Wynathan/wynathan-abyss), whose
-README identifies Update 8/v1.8.0 and distinguishes Transcended heroes and Unique
-Weapons. Steam guides reviewed include “Starter guide for beginners” (3444300118),
-“Easy Clears Farming Build” (3432580338), “Warriors Abyss: Origins Ultimate F.A.Q”
-(3665782940), “Beat Level 5 With Any Hero” (3449663060), and “Text Fixes for
-Companion Traits in patch 1.8.0” (3784084267). No planner source/data was copied.
-[Steamless](https://github.com/atom0s/Steamless) was consulted for private static
-wrapper inspection; its restricted license is not treated as permission to
-distribute a derivative unpacker, and none is included.
+See [ABYSS_PC_FORMAT.md](ABYSS_PC_FORMAT.md) for the exact source geometry,
+wallet proof, safe-storage/owner guards, tested features and full mechanics
+checklist. Remaining inputs are controlled mechanic-specific copies and matching
+catalogs; the owner/cipher prerequisite is resolved. Attached executables were
+never run, and no player files or identifiers are distributed.
 
 ## Verification
 
@@ -200,43 +159,11 @@ data. The combined native-format, GUI and independent review run under Xvfb pass
 validates format roundtrips and targeted in-memory edits. GUI validation is
 separate from game-load validation.
 
-The candidate codec suite has13 tests. With the reviewed PW4 copy12 pass and1
-skips (native Abyss copy/context absent); without private fixtures11 pass and2
-skip. It exercises independent arithmetic vectors, both capacities, wrong
-regions/owners, checksum/marker failures, immutable snapshots and forged/edited
-snapshot rejection. Abyss body changes are deliberately not accepted as
-integrity-verified. Optional `ABYSS_SAVE_COPY`/`ABYSS_SAVE_OWNER_CONTEXT` remain
-local and are never published. Neither title has actual game-load validation.
-
-## Unreleased follow-up research (2026-10-10)
-
-The attached Abyss image was decoded again entirely as static analysis: adjacent
-DWORD SteamStub header XOR, AES-ECB IV decoding, and CBC transformation of the
-explicit code section into a private analysis image. No binary was executed and
-no unpacked image or unpacker is distributed. Native save service confirms system
-versus game capacities and chooses registered save objects through callbacks.
-`0x1403F96E0` reads/writes the four-byte revision and rejects unsupported newer
-low-byte revisions; `0x1403F9620` serializes selected registered objects using
-their virtual `+0x10` handlers and category bytes. These functions are not a
-field map or checksum proof: the category-selected object list, each object's
-serialization, and gameplay integrity coverage still require qualification.
-There is no justified scalar-writing fallback around the owner-dependent key.
-
-Fresh GitHub title queries find mechanical planners, translations and purported
-trainers rather than a source-backed disk-save editor. The additional
-[Suyukn/warriors-abyss-tool](https://github.com/Suyukn/warriors-abyss-tool) describes
-v1.8 data, 141 heroes, 54 emblems, transcendence costs and 18 Origins DLC heroes.
-Its localStorage/exported JSON stores **planner teams**, not `SYSTEMDATA.BIN` or
-`GAMEDATA##.BIN`. Steam save-crash/modding discussions and save-guide searches,
-Nexus's game listing, and public save-site title searches did not supply a genuine
-PC save plus its original unsigned owner context. No planner/translation/trainer
-was executed or packaged.
-
-The concrete prerequisite remains a complete genuine PC `SYSTEMDATA.BIN` and/or
-`GAMEDATA00.BIN` (or another exact two-digit game slot) from the same original
-export context, with that save's original unsigned platform owner value. The
-owner value is supplied privately through the opt-in candidate interface, never
-guessed from an unrelated profile. Controlled recruitment/spend/growth/run pairs
-would then separate persistent progression, run resume data and reward claims.
-Decryption alone cannot qualify body edits; until inner integrity and the chosen
-object schema are proven the candidate stays read-only and unregistered.
+The candidate codec suite now also checks capacity-bound systemrevision77,
+strict originalVDF context, and both supplied native Abyss categories. Body
+changes are not authenticated by CBC and remain outside the read-only candidate
+API. The production editor's current native serialization has no body checksum;
+its declared integrity kind is`none`, with size/owner/marker/revision/geometry
+checks and surgical wallet preservation. Its dedicated native/GUI/storage
+coverage is described in [ABYSS_PC_FORMAT.md](ABYSS_PC_FORMAT.md). Neither title
+has actual edited-game-load validation.

@@ -103,7 +103,8 @@ our one-byte writer preserves those surrounding bytes.
 | Persona growth, fusion, compendium and skill sets | Preserved. Need occupied-record structure, legal IDs, reference validity, EXP/stat derivation and compatible skill maps. |
 | BOND levels and allocated skills | Preserved separately from unspent points. Need thresholds, allocated flags, natural limits and reward relationships. |
 | Recipes, requests, Jails, story, collections and NG+ | Preserved separately from resource edits. Need controlled unlock/completion/reward pairs and prerequisite mapping. |
-| Japanese Switch and PS4 | Separate format/profile qualification, title-labelled native exports and safe import contract required. No platform fallback. |
+| English PS4 CUSA19640 | Implemented separately in [its PS4 export adapter](P5STRIKERS_PS4_FORMAT.md); not opened or converted by this Switch adapter. |
+| Japanese Switch, Japanese/other-region PS4 | Separate format/profile qualification, title-labelled native exports and safe import contract required. No platform fallback. |
 | Edited in-game loading | Not performed by this project; actual export/edit/reimport/load/re-save validation remains separate. |
 
 ## Testing and storage

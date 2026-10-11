@@ -34,3 +34,32 @@ Source-only discoveries stay under research, never as advertised game cards.
 The [supplier checklist](REMAINING_INPUTS.md) gives precise files for unresolved
 current candidates. Actual edited game-load/re-save validation remains separate
 from automated native-file and GUI verification.
+
+## Next minor-release research
+
+Six separately reviewed profiles have been implemented in development source:
+[Persona 5 Strikers PS4](P5STRIKERS_PS4_FORMAT.md),
+[original Project Zero PS2](PROJECT_ZERO_PS2_FORMAT.md),
+[New Horizons DOS](UNCHARTED_WATERS2_DOS_FORMAT.md),
+[Ryza 3 DX PC](RYZA3_DX_PC_FORMAT.md),
+[Monster Rancher DS](MONSTER_RANCHER_DS_FORMAT.md) and
+[Tecmo Super Bowl NES](TECMO_SUPER_BOWL_NES_FORMAT.md).
+New Horizons remains published-format support without an occupied player-save
+fixture; the other native-file qualifications and all game-load distinctions
+are recorded in their individual documents. The canonical supported inventory
+is authoritative for current registrations.
+
+[Fairy Tail Switch](FAIRY_TAIL_SWITCH_RESEARCH.md) now has complete verified
+native block checksums, but wallet/item meanings still need controlled gameplay
+pairs. It remains unregistered.
+
+**Marvel Ultimate Alliance 3 — Switch** was also revisited as a Team Ninja
+candidate. Genuine exported slots and public costume-edit/load reports were
+located in the [save-editing discussion](https://gbatemp.net/threads/marvel-ultimate-alliance-3-save-editing.543823/page-15).
+The Deadpool costume states mix Expansion Pass, Infinity and other reward
+prerequisites. Changing an already-owned outfit's viewed flag is distinct from
+granting ownership. Complete native integrity, character-record ownership and
+useful prerequisite-safe field mappings remain unqualified, so no supported
+entry or bulk costume unlock was added. Useful next inputs are exact-title
+same-build native locked/earned/viewed action pairs with displayed outfit names,
+original companions and unchanged controls, or a complete native writer.

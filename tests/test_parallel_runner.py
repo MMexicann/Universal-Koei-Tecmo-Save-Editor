@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import subprocess
 import sys
 import tempfile
@@ -69,6 +69,80 @@ class ParallelRunnerTests(unittest.TestCase):
             result = runner.execute_module(self.tests, "test_gui.py", self.results, 1, lock)
         self.assertTrue(result["success"])
         self.assertFalse(lock.locked())
+
+    def test_desktop_partition_balances_serial_work_without_losing_modules(self):
+        timings = {"cpu_long": 100, "gui_long": 80, "gui_medium": 70,
+                   "cpu_medium": 60, "gui_small": 50, "cpu_small": 40}
+        modules = list(timings)
+        desktop = {name for name in modules if name.startswith("gui")}
+        groups = runner.partition(modules, 2, timings, workers=2, desktop=desktop)
+        self.assertEqual(groups, runner.partition(list(reversed(modules)), 2, timings,
+                                                 workers=2, desktop=desktop))
+        self.assertEqual(sorted(name for group in groups for name in group), sorted(modules))
+        serial_loads = [sum(timings[name] for name in group if name in desktop)
+                        for group in groups]
+        old_groups = runner.partition(modules, 2, timings)
+        old_serial_loads = [sum(timings[name] for name in group if name in desktop)
+                            for group in old_groups]
+        self.assertLess(max(serial_loads), max(old_serial_loads))
+        with self.assertRaises(ValueError):
+            runner.partition(modules, 2, timings, workers=0)
+
+    def test_dispatch_keeps_cpu_worker_free_and_serializes_desktop_failures(self):
+        cpu_started = threading.Event()
+        gui_finished = threading.Event()
+        state_lock = threading.Lock()
+        active_desktop = 0
+        executed = []
+
+        def execute(_tests, name, _logs, _timeout, desktop_lock):
+            nonlocal active_desktop
+            if name.startswith("gui"):
+                self.assertIsNotNone(desktop_lock)
+                with desktop_lock:
+                    with state_lock:
+                        active_desktop += 1
+                        self.assertEqual(active_desktop, 1)
+                    if name == "gui_first":
+                        self.assertTrue(cpu_started.wait(2), "CPU work was starved by a queued Tk test")
+                        gui_finished.set()
+                    else:
+                        self.assertTrue(gui_finished.is_set())
+                    with state_lock:
+                        active_desktop -= 1
+            else:
+                self.assertIsNone(desktop_lock)
+                cpu_started.set()
+            with state_lock:
+                executed.append(name)
+            return {"module": name, "success": name != "gui_first"}
+
+        modules = ["gui_first", "gui_second", "cpu", "cpu_last"]
+        with patch.object(runner, "execute_module", side_effect=execute):
+            results = list(runner.execute_modules(self.tests, modules, self.results, 10, 2,
+                                                 {"gui_first", "gui_second"}))
+        self.assertEqual(sorted(executed), sorted(modules))
+        self.assertEqual(sorted(record["module"] for record in results), sorted(modules))
+        self.assertEqual([record["module"] for record in results if not record["success"]],
+                         ["gui_first"])
+
+    def test_dispatch_single_worker_empty_inventory_and_unexpected_worker_error(self):
+        executed = []
+        def execute(_tests, name, *_args):
+            executed.append(name)
+            return {"module": name, "success": True}
+        with patch.object(runner, "execute_module", side_effect=execute):
+            results = list(runner.execute_modules(self.tests, ["gui", "cpu"], self.results,
+                                                 1, 1, {"gui"}))
+            self.assertEqual(list(runner.execute_modules(self.tests, [], self.results, 1, 1, set())), [])
+        self.assertEqual(executed, ["gui", "cpu"])
+        self.assertEqual(len(results), 2)
+        with patch.object(runner, "execute_module", side_effect=ValueError("worker failed")):
+            with self.assertRaisesRegex(ValueError, "worker failed"):
+                list(runner.execute_modules(self.tests, ["gui"], self.results, 1, 2, {"gui"}))
+        for modules, workers in ((["a", "a"], 1), (["a"], 0)):
+            with self.assertRaises(ValueError):
+                list(runner.execute_modules(self.tests, modules, self.results, 1, workers, set()))
 
     def test_nested_same_filename_inventory_and_isolated_execution(self):
         self.passing("test_same.py")
@@ -198,6 +272,57 @@ class ParallelRunnerTests(unittest.TestCase):
                 runner.read_timings(path)
         runner.write_json(path, {"durations": {"test_pass.py": 2.5}, "provenance": "measured"})
         self.assertEqual(runner.read_timings(path), {"test_pass.py": 2.5})
+
+    def test_source_fingerprint_is_identical_for_windows_and_posix_path_ordering(self):
+        files = {
+            'src': {'Zed.py': b'upper-case module', 'alpha.py': b'lower-case module',
+                    'nested/middle.py': b'nested module'},
+            'tools': {'SOURCE_MANIFEST.json': b'{}', 'build.py': b'build helper'},
+            'tests': {'test_example.py': b'test case'},
+        }
+
+        class MemoryFile:
+            def __init__(self, path, raw):
+                self.path, self.raw = path, raw
+
+            def __lt__(self, other):
+                return self.path < other.path
+
+            def __getattr__(self, name):
+                return getattr(self.path, name)
+
+            def relative_to(self, directory):
+                return self.path.relative_to(directory.path)
+
+            def is_file(self):
+                return True
+
+            def read_bytes(self):
+                return self.raw
+
+        class MemoryDirectory:
+            def __init__(self, path):
+                self.path = path
+
+            def __truediv__(self, name):
+                if name == 'pyproject.toml':
+                    return MemoryFile(self.path / name, b'project configuration')
+                return MemoryDirectory(self.path / name)
+
+            def rglob(self, _pattern):
+                return [MemoryFile(self.path / name, raw)
+                        for name, raw in reversed(list(files[self.path.name].items()))]
+
+        fingerprints = []
+        for flavor in (PurePosixPath, PureWindowsPath):
+            root = MemoryDirectory(flavor('/repo'))
+            with patch.object(runner, 'ROOT', root):
+                fingerprints.append(runner.source_fingerprint(root / 'tests'))
+        self.assertEqual(fingerprints[0], fingerprints[1])
+        files['src']['alpha.py'] += b' changed source'
+        root = MemoryDirectory(PureWindowsPath('/repo'))
+        with patch.object(runner, 'ROOT', root):
+            self.assertNotEqual(runner.source_fingerprint(root / 'tests'), fingerprints[0])
 
     def test_package_load_tests_hook_fails_closed(self):
         self.passing("nested/test_pass.py")

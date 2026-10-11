@@ -74,6 +74,8 @@ class LibrarySearchGuiTests(unittest.TestCase):
         self.assertEqual(self.app.active_game, 'dw7xl')
 
     def test_no_match_clear_filters_and_compact_toggle(self):
+        self.assertFalse(self.app.compact_library.get())
+        self.assertTrue(self.app.library_banners['Windows PC']['dw7xl'].winfo_ismapped())
         self.app.series_choice.set('Hyrule Warriors')
         self.app.platform_choice.set(ALL_PLATFORMS)
         self.app.library_search.set('no matching title')
@@ -86,12 +88,43 @@ class LibrarySearchGuiTests(unittest.TestCase):
         self.assertEqual(self.app.series_choice.get(), ALL_SERIES)
         self.assertEqual(len(self.app.library_matches), len(GAMES))
         self.assertFalse(self.app.library_empty[ALL_PLATFORMS].winfo_ismapped())
-        self.assertFalse(self.app.library_banners[ALL_PLATFORMS]['dw7xl'].winfo_manager())
-        self.app.compact_library.set(False)
-        self.app.update_library_density()
-        self.root.update()
-        self.assertEqual(self.app.library_banners[ALL_PLATFORMS]['dw7xl'].winfo_manager(), 'pack')
-        self.assertTrue(self.app.contact_button.winfo_ismapped())
+        self.assertTrue(self.app.library_banners[ALL_PLATFORMS]['dw7xl'].winfo_ismapped())
+        editor = self.app.select_game('dw7xl')
+        self.app.show_library()
+        self.app.platform_choice.set(ALL_PLATFORMS)
+        self.app.show_platform()
+        for theme in ('Light', 'Dark'):
+            with self.subTest(theme=theme):
+                self.app.apply_theme(theme)
+                for compact in (True, False):
+                    self.app.compact_toggle.invoke()
+                    self.root.update()
+                    self.assertEqual(self.app.compact_library.get(), compact)
+                    self.assertEqual(len(self.app.library_matches), len(GAMES))
+                    self.assertIs(self.app.sessions['dw7xl'][1], editor)
+                    self.assertEqual(self.app.library_buttons[ALL_PLATFORMS]['dw7xl'].cget('text'),
+                                     'Resume Editor')
+                    self.assertTrue(self.app.compact_toggle.winfo_ismapped())
+                    self.assertGreaterEqual(self.app.compact_toggle.winfo_rootx(), self.root.winfo_rootx())
+                    self.assertLessEqual(self.app.compact_toggle.winfo_rootx() + self.app.compact_toggle.winfo_width(),
+                                         self.root.winfo_rootx() + self.root.winfo_width())
+                    self.assertGreaterEqual(self.app.compact_toggle.winfo_rooty(), self.root.winfo_rooty())
+                    self.assertLessEqual(self.app.compact_toggle.winfo_rooty() + self.app.compact_toggle.winfo_height(),
+                                         self.root.winfo_rooty() + self.root.winfo_height())
+                    self.assertTrue(self.app.contact_button.winfo_ismapped())
+                    for scope in ('Windows PC', ALL_PLATFORMS):
+                        banner = self.app.library_banners[scope]['dw7xl']
+                        self.assertEqual(banner.winfo_manager(), '' if compact else 'pack')
+                self.app.library_search.set('dw7 pc')
+                self.root.update()
+                self.app.compact_toggle.invoke()
+                self.root.update()
+                self.assertEqual(self.app.library_search.get(), 'dw7 pc')
+                self.assertEqual([game.id for game in self.app.library_matches], ['dw7xl'])
+                self.assertTrue(self.app.library_buttons[ALL_PLATFORMS]['dw7xl'].winfo_ismapped())
+                self.app.compact_toggle.invoke()
+                self.app.clear_library_filters()
+                self.root.update()
 
     def test_vita_platform_filter_opens_bound_editor_and_resumes_session(self):
         self.app.platform_choice.set('PlayStation Vita')

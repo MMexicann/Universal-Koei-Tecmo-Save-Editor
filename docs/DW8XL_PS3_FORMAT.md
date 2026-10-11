@@ -66,11 +66,12 @@ higher/unusual values are preserved, and assigning the opened value unstages.
 `tests.test_dw8xl_ps3` covers exact no-op, foreign revision/length and checksum
 corruption rejection, immutable snapshots, surgical scalar/rank byte ranges,
 unusual values, compatibility choices, unknown/empty weapon exclusions, mandatory
-exact metadata identity and digest binding, source changes, new-destination atomic
+exact metadata identity and digest binding, source changes before backup or saving,
+backup context manifests bound to the native snapshot and original metadata, new-destination atomic
 saving, backups/restore and real Tk Search/Apply/Review/Undo/Save workflows.
 
 With the private genuine export and independent public converter reference
-provided, **8/8 tests pass**. The genuine player export exposes 578 base fields;
+provided, **10/10 tests pass**. The genuine player export exposes 578 base fields;
 every field's targeted payload write was independently confined to its declared
 span, with complete encoded/reparsed edits for representative resource/officer
 controls. That already edited export has no qualifying positive weapon ranks.

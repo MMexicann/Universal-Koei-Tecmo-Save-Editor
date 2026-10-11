@@ -331,3 +331,52 @@ class DW8XLPS3Tests(unittest.TestCase):
             payload[start] = state
             closed = p.decode(encode(payload))
             self.assertNotIn(ranks[0].id, p.field_map(closed))
+
+    def test_backup_source_and_context_changes_rejected_restore_context_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            source = folder / "APP.BIN"
+            source.write_bytes(self.raw)
+            context(folder)
+            document = p.read_save(source)
+            snapshot = p.backup(document)
+            manifest = snapshot.with_name(snapshot.name + ".context.json")
+            original_manifest = manifest.read_bytes()
+            source.write_bytes(p.serialize(document, {"gold": 42}))
+            with self.assertRaises(SaveError):
+                p.backup(document)
+            source.write_bytes(self.raw)
+            companion = folder / "PARAM.SFO"
+            original_context = companion.read_bytes()
+            companion.write_bytes(original_context + b"\0")
+            with self.assertRaises(SaveError):
+                p.backup(document)
+            with self.assertRaises(SaveError):
+                p.restore(snapshot, folder / "wrong-context.bin")
+            self.assertFalse((folder / "wrong-context.bin").exists())
+            companion.write_bytes(original_context)
+            for metadata in (b"", b"[]", b"{}", b"x" * 1025):
+                manifest.write_bytes(metadata)
+                with self.assertRaises(SaveError):
+                    p.restore(snapshot, folder / "damaged-context.bin")
+                self.assertFalse((folder / "damaged-context.bin").exists())
+            manifest.unlink()
+            with self.assertRaises(SaveError):
+                p.restore(snapshot, folder / "missing-context.bin")
+            manifest.write_bytes(original_manifest)
+            self.assertEqual(
+                p.restore(snapshot, folder / "same-context.bin").read_bytes(), self.raw
+            )
+
+    def test_unhashable_and_nonstring_field_ids_are_save_errors(self):
+        doc = p.decode(self.raw)
+        for key in ([], {}, set(), None, True, 42):
+            with self.subTest(key=key):
+                with self.assertRaises(SaveError):
+                    p.stage(doc, {}, key, 1)
+                with self.assertRaises(SaveError):
+                    p.field_options(doc, key)
+                with self.assertRaises(SaveError):
+                    p.limit_values(doc, {}, [key])
+        with self.assertRaises(SaveError):
+            p.limit_values(doc, {}, None)

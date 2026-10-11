@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from functools import lru_cache
 import hashlib
+import json
 from pathlib import Path
 from types import MappingProxyType
 
@@ -221,6 +222,8 @@ def field_map(document):
 
 
 def field_options(document, key):
+    if type(key) is not str:
+        raise SaveError("A qualified string field ID is required.")
     field = field_map(document).get(key)
     if field is None:
         raise SaveError("This field is not qualified in the opened PS3 copy.")
@@ -235,7 +238,7 @@ def changed_payload(document, changes):
     mapping = field_map(document)
     result = bytearray(document.payload)
     for key, value in changes.items():
-        if key not in mapping:
+        if type(key) is not str or key not in mapping:
             raise SaveError(
                 "Only qualified original US PS3 DW8 XL fields are writable."
             )
@@ -262,7 +265,7 @@ def serialize(document, changes):
 def stage(document, changes, key, value):
     changed_payload(document, changes)
     mapping = field_map(document)
-    if key not in mapping:
+    if type(key) is not str or key not in mapping:
         raise SaveError("This field is not qualified in the opened PS3 copy.")
     field = mapping[key]
     result = dict(changes)
@@ -277,7 +280,13 @@ def stage(document, changes, key, value):
 def limit_values(document, changes, keys):
     mapping = field_map(document)
     changed_payload(document, changes)
-    if any(key not in mapping for key in keys):
+    try:
+        requested = tuple(keys)
+    except TypeError as error:
+        raise SaveError(
+            "A sequence of qualified string field IDs is required."
+        ) from error
+    if any(type(key) is not str or key not in mapping for key in requested):
         raise SaveError("This field is not qualified in the opened PS3 copy.")
     return {}
 
@@ -296,14 +305,39 @@ def review(document, changes):
     ]
 
 
-def backup(document):
+def _validate_source(document):
     validate_document(document)
-    return snapshot_backup(
-        document.raw,
-        document.source,
-        GAME_ID,
-        document.source.parent / "UniversalEditorBackups",
+    _require_opened_context(document)
+    source = safe_path(document.source)
+    with source.open("rb") as stream:
+        if stream.read(SAVE_SIZE + 1) != document.raw:
+            raise SaveError(
+                "The opened copy changed on disk. Reopen before backing up or saving."
+            )
+    return source
+
+
+def backup(document):
+    source = _validate_source(document)
+    snapshot = snapshot_backup(
+        document.raw, source, GAME_ID, source.parent / "UniversalEditorBackups"
     )
+    metadata = {
+        "game_id": GAME_ID,
+        "kind": "dw8xl-ps3-export-context",
+        "context_sha256": document.context_digest,
+        "save_sha256": document.sha256,
+    }
+    try:
+        atomic_new(
+            json.dumps(metadata).encode("utf-8"),
+            snapshot.with_name(snapshot.name + ".context.json"),
+        )
+    except Exception:
+        snapshot.unlink(missing_ok=True)
+        snapshot.with_suffix(".json").unlink(missing_ok=True)
+        raise
+    return snapshot
 
 
 def save_as(document, changes, destination):
@@ -333,11 +367,35 @@ def save_as(document, changes, destination):
 
 def restore(backup_path, destination, game_id=GAME_ID):
     get_format(game_id)
-    destination = safe_path(destination)
+    destination, backup_path = safe_path(destination), safe_path(backup_path)
     digest = _context(destination, required=True)
+    try:
+        companion = safe_path(backup_path.with_name(backup_path.name + ".context.json"))
+        with companion.open("rb") as stream:
+            raw_metadata = stream.read(1025)
+        if len(raw_metadata) > 1024:
+            raise SaveError("DW8 XL backup context metadata is too large.")
+        metadata = json.loads(raw_metadata)
+    except (OSError, ValueError, UnicodeError) as error:
+        raise SaveError(
+            "DW8 XL backup context metadata is missing or damaged."
+        ) from error
+    if (
+        type(metadata) is not dict
+        or metadata.get("game_id") != GAME_ID
+        or metadata.get("kind") != "dw8xl-ps3-export-context"
+        or metadata.get("context_sha256") != digest
+        or type(metadata.get("save_sha256")) is not str
+        or len(metadata["save_sha256"]) != 64
+    ):
+        raise SaveError("Restore requires the same original PARAM.SFO as the backup.")
 
     def validate_restore(raw):
         decode(raw, GAME_ID)
+        if hashlib.sha256(raw).hexdigest() != metadata["save_sha256"]:
+            raise SaveError(
+                "The backup context belongs to another native save snapshot."
+            )
         if _context(destination, required=True) != digest:
             raise SaveError("The export context changed during restore.")
 

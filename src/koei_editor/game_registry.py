@@ -255,6 +255,18 @@ GAMES = (
          'Existing gallery Pokémon IV components and Speed IV; searchable gallery Pokémon records.',
          '', '.sav', '#99752b', 'koei_editor.games.pokemon_conquest_ds.editor', 'koei_editor.games.pokemon_conquest_ds.parser',
          True, 'PCQ', True, platform='Nintendo DS', scalar_backend='koei_editor.games.pokemon_conquest_ds.parser'),
+    Game('atelier_ryza_switch', 'ATELIER RYZA', 'Ever Darkness & the Secret Hideout · original Switch main game',
+         'Existing ordinary item/equipment quality 1–100; searchable inventory, equipment and read-only trait slots.',
+         '', '.dat', '#827050', 'koei_editor.games.ryza.editor1switch', 'koei_editor.games.ryza.parser',
+         True, 'RYZA', True, 'Nintendo Switch', scalar_backend='koei_editor.games.ryza.parser'),
+    Game('dw8xl_ps3', 'DYNASTY WARRIORS 8', 'Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO',
+         'Gold, gems, facility/weapon materials, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks.',
+         '', '.bin', '#a54b48', 'koei_editor.games.dw8xl_ps3.editor', 'koei_editor.games.dw8xl_ps3.parser',
+         True, 'DW8 XL', True, 'PlayStation 3', scalar_backend='koei_editor.games.dw8xl_ps3.parser'),
+    Game('dqb2_pc', 'DRAGON QUEST BUILDERS 2', 'Original Steam PC · CMNDAT.BIN',
+         'Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status.',
+         '', '.bin', '#657b43', 'koei_editor.games.dqb2_pc.editor', 'koei_editor.games.dqb2_pc.parser',
+         True, 'DQB2', True, scalar_backend='koei_editor.games.dqb2_pc.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

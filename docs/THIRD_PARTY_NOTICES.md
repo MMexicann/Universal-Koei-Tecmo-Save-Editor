@@ -126,3 +126,9 @@ GPL-3.0 RanseiLink references. The independently written species-name map
 contains bare ID/name facts corroborated by public Ransei Gallery order;
 no foreign enum implementation, article prose, sprites or assets are included.
 See [POKEMON_CONQUEST_DS_FORMAT.md](POKEMON_CONQUEST_DS_FORMAT.md).
+
+The original Ryza Switch adapter reuses the existing MIT-attributed Gust envelope primitive and independently implements title-specific serialization and two-byte quality facts. Public SaveWizard field research informs offsets, not imported patch code/catalogs. [Scope and provenance](RYZA_SWITCH_FORMAT.md).
+
+The original US PS3 PSN DW8 XL adapter independently implements native byte-cipher/checksum and gameplay record facts corroborated against complete native copies and a public converter reference. No external converter implementation, editor, bulk catalog or player data is incorporated. [Scope and provenance](DW8XL_PS3_FORMAT.md).
+
+The DQB2 Steam adapter independently implements factual CMNDAT framing and a small individually reviewed medicine/seed identity set. The GPL-3.0 turtle-insect/DQB2 editor and Hermit's Heresy native examples inform verification; no GPL implementation, bulk catalog, binary, asset or player file is redistributed. [Pinned sources and scope](DQB2_PC_FORMAT.md).

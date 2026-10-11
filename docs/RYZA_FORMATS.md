@@ -111,7 +111,7 @@ are title-specific mechanics leads and are not transplanted to a Ryza 2 schema.
 
 ## Other Ryza titles
 
-**Original Ryza 1 is blocked and unregistered.** Both public gameplay copies
+**Original Ryza 1 PC is blocked and unregistered.** Both public gameplay copies
 pass the envelope checks and have coherent earlier 66-byte inventory records,
 but their final `secret_base` node declares 3,532 bytes with only 112 remaining.
 The nested plant-array size declares 3,420 bytes which are absent. This could

@@ -59,6 +59,9 @@ from .game_registry import GAMES
 # berserk_vita: BERSERK AND THE BAND OF THE HAWK / EU PS Vita · decrypted PCSB01085 [PlayStation Vita]
 # doa5_ps3: DEAD OR ALIVE 5 / Original US/EU PS3 PSN · SAVE_SYS.DAT + PARAM.SFO [PlayStation 3]
 # pokemon_conquest_ds: POKÉMON CONQUEST / US Nintendo DS · raw native save [Nintendo DS]
+# atelier_ryza_switch: ATELIER RYZA / Ever Darkness & the Secret Hideout · original Switch main game [Nintendo Switch]
+# dw8xl_ps3: DYNASTY WARRIORS 8 / Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO [PlayStation 3]
+# dqb2_pc: DRAGON QUEST BUILDERS 2 / Original Steam PC · CMNDAT.BIN [Windows PC]
 # END GENERATED SUPPORTED GAME INDEX
 
 

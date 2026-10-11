@@ -95,6 +95,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Meruru Plus US PS Vita format and character controls](MERURU_PLUS_VITA_FORMAT.md)
 - [Berserk EU PS Vita resources and material controls](BERSERK_VITA_FORMAT.md)
 - [Original Dead or Alive 5 PS3 costume flags](DOA5_FORMAT.md)
+- [Dead or Alive 5 Plus Vita native codec and writable-field blocker](DOA5_PLUS_VITA_RESEARCH.md)
 - [Pokémon Conquest US Nintendo DS gallery IVs](POKEMON_CONQUEST_DS_FORMAT.md)
 - [Dusk DX and Nelke qualification](DUSK_DX_RESEARCH.md)
 - [Fatal Frame II Remake native format](FATAL_FRAME2_REMAKE_FORMAT.md)

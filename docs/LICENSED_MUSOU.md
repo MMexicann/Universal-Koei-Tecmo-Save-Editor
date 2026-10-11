@@ -256,3 +256,21 @@ the platform's path separator); they skip when copies are absent. Real Tk
 workflows run with a display. File qualification does not establish console
 acceptance: **no edited save was loaded or re-saved in an actual game**.
 Windows executable/native CNG validation also remains separate from Linux tests.
+
+## Additional console source retry
+
+Public source and save trees were checked for matching further profiles. The
+[Gundam 2 US patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/BLUS30288.savepatch)
+provides an explicit byte-add checksum from `0x20` to the native file end,
+stored big endian at `0x10`. A complete genuine decrypted US `BLUS30288`
+`DATA.BIN` with original `PARAM.SFO` remains essential to verify the exact
+framing and every native integrity word. Its published “pilot points” are
+progression EXP, not a proved spendable currency; a level-plus-EXP cheat does
+not establish synchronized stat growth or reward dependencies. The current
+Apollo save tree has no matching `BLUS30288` or `BLES00528` input.
+
+Gundam 3's US `BLUS30703` patch identifies money and mobile-suit lab EXP but
+provides no complete native integrity writer. The current public Apollo tree
+has no matching gameplay export. A genuine original `DATA.BIN`/`PARAM.SFO`
+pair and complete integrity/load evidence remain necessary before a library
+entry; related Gundam 1 checksums and officer ordering are not transplanted.

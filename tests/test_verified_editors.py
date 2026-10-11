@@ -312,7 +312,7 @@ class SupportGateTests(unittest.TestCase):
     def test_catalog_cannot_add_an_unverified_editor(self):
         entries = load_catalog()
         self.assertGreater(len(entries), 30)
-        self.assertTrue(all(entry['platform'].startswith('Windows PC') or entry['platform'] in {'DOS PC', 'NES', 'PlayStation 2', 'PlayStation 3', 'PlayStation Vita', 'Xbox 360', 'PlayStation 4', 'PlayStation Portable', 'Xbox 360 / Xenia', 'Wii U', 'Nintendo Switch', 'Nintendo DS', 'Nintendo 3DS'} for entry in entries))
+        self.assertTrue(all(entry['platform'].startswith('Windows PC') or entry['platform'] in {'DOS PC', 'NES', 'PlayStation 2', 'PlayStation 3', 'PlayStation Vita', 'Xbox 360', 'PlayStation 4', 'PlayStation Portable', 'Xbox 360 / Xenia', 'Wii U', 'Nintendo Switch', 'Nintendo DS', 'Nintendo 3DS', 'Original Xbox'} for entry in entries))
         self.assertTrue(all(not entry['editing_verified'] for entry in entries if entry['platform'] == 'Xbox 360'))
         self.assertEqual({entry['id'] for entry in entries if entry['editing_verified']}, {game.id for game in GAMES if game.editing_verified})
         catalog = {entry['id']:entry for entry in entries}

@@ -548,8 +548,8 @@
     },
     {
       "path": "docs/ROTK3_DOS_FORMAT.md",
-      "bytes": 8506,
-      "sha256": "52413c688fce1e634cc6039b94359fae5b0af556d2cd1a9383939406ff3e2b8f"
+      "bytes": 8509,
+      "sha256": "e13feb391fe5fe7adc66e3181e1ca7d0371afe44f3a74a8eb6c33c701dce876c"
     },
     {
       "path": "docs/RYZA2_SWITCH_FORMAT.md",
@@ -3948,8 +3948,8 @@
     },
     {
       "path": "tests/test_verified_editors.py",
-      "bytes": 21419,
-      "sha256": "b80b131afa31143b65daa3596080058caf92632cfb778783c3b165f67ca5e51a"
+      "bytes": 21436,
+      "sha256": "da248c75fea88875b800623f1ceb44a35f4eb886d646ad4585932cded814fb5f"
     },
     {
       "path": "tests/test_verified_pending_safety.py",

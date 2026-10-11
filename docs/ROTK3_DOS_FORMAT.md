@@ -4,7 +4,7 @@
 
 An independently implemented parser, staged native writer and shared GUI exist
 for the **662,640-byte original Traditional Chinese `SANGOKU3.SAV` profile**.
-Registration is subject to independent review. The acquired original native file
+The scoped profile is registered after independent review. The acquired native file
 is an initialized installation file with ten empty slots; it is **not an occupied
 player campaign**. Native unchanged roundtrip and empty-slot GUI opening were
 checked. Occupied-record edits, preservation and GUI workflows were checked with

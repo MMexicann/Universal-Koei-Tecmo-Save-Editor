@@ -13,10 +13,11 @@ from unittest.mock import patch
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.totori_ps3 import parser as totori
 from koei_editor.games.meruru_ps3 import parser as meruru
+from koei_editor.games.rorona_ps3 import parser as rorona
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared.verified_self_test import _run
 
-PROFILES = (totori, meruru)
+PROFILES = (totori, meruru, rorona)
 
 
 def sfo(title):
@@ -36,7 +37,7 @@ def generated(p):
     """A framed procedural case, not a genuine or playable save."""
     b = p.BACKEND
     raw = bytearray(b.SAVE_SIZE)
-    raw[:4] = bytes.fromhex("0132b533")
+    raw[:32] = b.header
     start = 32
     chunks = []
     for index, size in enumerate(b.sizes, 1):
@@ -49,7 +50,9 @@ def generated(p):
     raw[start + 8 : start + 24] = b"PreservedOpaque!"
     struct.pack_into(">I", raw, b.cole_offset, 123456)
     for i in range(len(b.names)):
-        struct.pack_into(">III", raw, chunks[3] + i * b.stride, i, 12 + i, 900 + i)
+        struct.pack_into(
+            ">III", raw, chunks[b.character_tag - 1] + i * b.stride, i, 12 + i, 900 + i
+        )
     return bytes(raw)
 
 
@@ -120,7 +123,7 @@ class ArlandPS3Tests(unittest.TestCase):
                 raw + b"\0",
                 bytes(len(raw)),
                 bytearray(raw),
-                generated(PROFILES[1 - PROFILES.index(p)]),
+                generated(PROFILES[(PROFILES.index(p) + 1) % len(PROFILES)]),
             ):
                 with self.assertRaises(SaveError):
                     p.decode(bad)
@@ -133,7 +136,7 @@ class ArlandPS3Tests(unittest.TestCase):
                 with self.assertRaises(SaveError):
                     p.decode(bytes(bad))
             tail = chunks[-1][1] + chunks[-1][2]
-            for off in (tail, tail + 4, chunks[3][1] + b.stride):
+            for off in (tail, tail + 4, chunks[b.character_tag - 1][1] + b.stride):
                 bad = bytearray(raw)
                 bad[off] ^= 1
                 with self.assertRaises(SaveError):
@@ -215,7 +218,7 @@ class ArlandPS3Tests(unittest.TestCase):
                 self.assertFalse((folder / "oversized.bin").exists())
                 # An attacker replacing the ordinary backup manifest cannot turn
                 # a foreign framed file into a valid restore for this profile.
-                forged = generated(PROFILES[1 - PROFILES.index(p)])
+                forged = generated(PROFILES[(PROFILES.index(p) + 1) % len(PROFILES)])
                 snapshot.write_bytes(forged)
                 manifest = json.loads(snapshot.with_suffix(".json").read_text())
                 manifest["sha256"] = hashlib.sha256(forged).hexdigest()
@@ -269,6 +272,10 @@ class ArlandPS3Tests(unittest.TestCase):
         for p, folders in (
             (totori, ("totori-22454", "totori-22468", "totori-22816", "totori-eu")),
             (meruru, ("meruru-22467", "meruru-22479", "meruru-22480")),
+            (
+                rorona,
+                ("rorona-21486", "rorona-23745-1", "rorona-23745-2", "rorona-23745-3"),
+            ),
         ):
             for name in folders:
                 native = (root / name / "USR-DATA.decrypted").read_bytes()
@@ -301,19 +308,24 @@ class ArlandPS3Tests(unittest.TestCase):
     os.name == "nt" or os.environ.get("DISPLAY"), "Graphical display required"
 )
 class ArlandPS3GUI(unittest.TestCase):
-    def test_both_profile_open_search_edit_undo_review_inspector_save_restore(self):
+    def test_all_profile_open_search_edit_undo_review_inspector_save_restore(self):
         import tkinter as tk
         from koei_editor.games.totori_ps3.editor import Editor as T
         from koei_editor.games.meruru_ps3.editor import Editor as M
+        from koei_editor.games.rorona_ps3.editor import Editor as R
 
-        for p, Editor in ((totori, T), (meruru, M)):
+        for p, Editor in ((totori, T), (meruru, M), (rorona, R)):
             root = tk.Tk()
             root.withdraw()
             try:
                 with tempfile.TemporaryDirectory() as tmp:
                     folder = Path(tmp)
                     native_root = os.environ.get("ARLAND_PS3_NATIVE_DIRECTORY")
-                    name = "totori-22454" if p is totori else "meruru-22479"
+                    name = {
+                        totori: "totori-22454",
+                        meruru: "meruru-22479",
+                        rorona: "rorona-21486",
+                    }[p]
                     native_folder = Path(native_root) / name if native_root else None
                     source = copied(
                         folder,

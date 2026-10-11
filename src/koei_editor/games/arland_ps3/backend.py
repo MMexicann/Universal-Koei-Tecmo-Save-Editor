@@ -77,12 +77,31 @@ class Document:
 
 class Backend:
     def __init__(
-        self, game_id, title, size, sizes, title_ids, cole_offset, names, stride
+        self,
+        game_id,
+        title,
+        size,
+        sizes,
+        title_ids,
+        cole_offset,
+        names,
+        stride,
+        *,
+        header=bytes.fromhex("0132b533"),
+        money_tag=3,
+        character_tag=4,
+        calendar_tag=11,
     ):
         self.GAME_ID, self.SAVE_SIZE = game_id, size
         self.FORMAT = Format(game_id, title, size)
         self.sizes, self.title_ids = tuple(sizes), tuple(title_ids)
         self.cole_offset, self.names, self.stride = cole_offset, tuple(names), stride
+        self.header = header + bytes(28)
+        self.money_tag, self.character_tag, self.calendar_tag = (
+            money_tag,
+            character_tag,
+            calendar_tag,
+        )
         self._qualify = lru_cache(maxsize=2)(self._qualify_uncached)
 
     def get_format(self, game_id=None):
@@ -96,7 +115,7 @@ class Backend:
         if (
             type(raw) is not bytes
             or len(raw) != self.SAVE_SIZE
-            or raw[:32] != bytes.fromhex("0132b533") + bytes(28)
+            or raw[:32] != self.header
         ):
             raise SaveError(
                 "Requires the complete qualified original decrypted PS3 gameplay profile."
@@ -114,16 +133,16 @@ class Backend:
         if (
             start + 8 > len(raw)
             or struct.unpack_from(">II", raw, start) != (1024, len(raw) - start)
-            or chunks[2][1] != self.cole_offset
-            or chunks[2][2] != 4
+            or chunks[self.money_tag - 1][1] != self.cole_offset
+            or chunks[self.money_tag - 1][2] != 4
         ):
             raise SaveError(
                 "Original PS3 Atelier terminal frame or unique Cole tag does not match."
             )
-        # The actual ten/thirteen framed records, including NPC/DLC records,
+        # The observed framed records, including any stored NPC/DLC records,
         # qualify this profile. Their level/stat bytes remain inspection only.
-        base = chunks[3][1]
-        if chunks[3][2] != len(self.names) * self.stride + 12:
+        base = chunks[self.character_tag - 1][1]
+        if chunks[self.character_tag - 1][2] != len(self.names) * self.stride + 12:
             raise SaveError("Unsupported PS3 character array extent.")
         if tuple(
             struct.unpack_from(">i", raw, base + i * self.stride)[0]
@@ -389,7 +408,7 @@ class Backend:
     def inspection_rows(self, document):
         self.validate_document(document)
         chunks = self._qualify(document.payload)
-        base = chunks[3][1]
+        base = chunks[self.character_tag - 1][1]
         # Only observed/publicly named level and EXP are labelled. Stats have
         # several derived copies and inconsistent third-party patch addresses.
         characters = tuple(
@@ -412,11 +431,12 @@ class Backend:
             for index, name in enumerate(self.names)
         )
         labels = {
-            3: "Cole",
-            4: "Character records",
+            self.money_tag: "Cole",
+            self.character_tag: "Character records",
             7: "Item records",
-            11: "Calendar words",
         }
+        if self.calendar_tag is not None:
+            labels[self.calendar_tag] = "Calendar words"
         sections = tuple(
             (tag, labels.get(tag, "Opaque serialized system"), length)
             for tag, _, length in chunks

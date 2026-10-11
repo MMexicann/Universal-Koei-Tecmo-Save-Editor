@@ -69,7 +69,8 @@ class Format:
     title: str = 'Dead or Alive 5 (original PS3, US/EU PSN export)'
     size: int = SAVE_SIZE
     fields: tuple = FIELDS
-    sample_verified: bool = True
+    # Genuine exports validate; unlock-transition fixtures are constructed.
+    sample_verified: bool = False
     game_load_verified: bool = False
     note: str = ('Open copied PS3-decrypted SAVE_SYS.DAT beside its original PARAM.SFO. '
                  'Unlock source-backed original costumes; preserve other character, title '

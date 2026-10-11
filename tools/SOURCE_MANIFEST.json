@@ -1,5 +1,5 @@
 {
-  "version": "1.6",
+  "version": "1.7",
   "files": [
     {
       "path": ".gitattributes",
@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 11339,
-      "sha256": "e0e32d4d23eae88203655b7714f817f30258d400f44a2b5cdf1f560bed1abe5f"
+      "bytes": 11454,
+      "sha256": "be135a3252151096371b67098540c29c8efe8a156216fcaa245f3ebef05177ee"
     },
     {
       "path": "docs/ADDITIONAL_EDITOR_SURVEY.md",
@@ -119,12 +119,12 @@
     {
       "path": "docs/BUILDING.md",
       "bytes": 4654,
-      "sha256": "39245e4d14cc56a7b050cd7095ac7c2ac8c189df693e7063e59add5714dd7895"
+      "sha256": "9beea2652e5afed98b1e514810a1fc92d20fea8eed75273bd9b7487283c43839"
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 7730,
-      "sha256": "32f024ed77ab47e3a5a7efa0a9332b86840078cd79baaf28bb1e896acff338ce"
+      "bytes": 8663,
+      "sha256": "df31909e88f49a351f59d01f9d99469721046e73de0606b3e4ab1f2bf0a6389f"
     },
     {
       "path": "docs/COMPATIBILITY_FIX.md",
@@ -138,8 +138,8 @@
     },
     {
       "path": "docs/DOA5_FORMAT.md",
-      "bytes": 9193,
-      "sha256": "a07c8b2c24fef5f0ebbd1cafe5ca8d538ff557d0e4011a7e7fa6975b9a82a115"
+      "bytes": 9411,
+      "sha256": "ed43ed1c858359ab4d9bff75273c7b83a1fa138705d0bb327543d6b98680ad64"
     },
     {
       "path": "docs/DUSK_DX_RESEARCH.md",
@@ -348,8 +348,8 @@
     },
     {
       "path": "docs/PREPARED_UPDATE.md",
-      "bytes": 13149,
-      "sha256": "10ac1de1e221f95b3053815accd6079adc8c7276f34542357ca1564dedc9204e"
+      "bytes": 13047,
+      "sha256": "9a60ed49f9a5aaf9018212f02969e6782e49afbf6ca5b88de378fabff9745898"
     },
     {
       "path": "docs/PS3_EXPANSION.md",
@@ -378,8 +378,8 @@
     },
     {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 2442,
-      "sha256": "01a9a54ed24a0105935650148548c3ab04c4ada371ce1b4a1d281212f8319f08"
+      "bytes": 5573,
+      "sha256": "7c1c23d103ebb41c8d6e0196ceb98bc2d10e0ec1b0089ba01242f024476881de"
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
@@ -388,8 +388,8 @@
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
-      "bytes": 1206,
-      "sha256": "b6b5eec46eb1f97361720f62730ab670b1ae961b78817c9607fb06681a77c1e3"
+      "bytes": 1597,
+      "sha256": "6a96d6cca8dcc3d722ad9c74eef8f34fe93f465b5fa36326639ae0ec5cd37494"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -618,8 +618,8 @@
     },
     {
       "path": "pyproject.toml",
-      "bytes": 564,
-      "sha256": "00f094881daf12f28dc5f55ecc1058674470d235ec6a5e31720a3d8cd58c30ef"
+      "bytes": 605,
+      "sha256": "11279a923d1f850ab18a727e62916cd3995a60a5b306cd8349a276b814c4c87b"
     },
     {
       "path": "src/koei_editor/AGENTS.md",
@@ -644,7 +644,7 @@
     {
       "path": "src/koei_editor/application.py",
       "bytes": 23239,
-      "sha256": "17c2d8603dea6566c5cd83e8a272405f67f95f74bfe172334efc103abc05ed2a"
+      "sha256": "050ab0d6850d3982a5b713325096669b6ba42e4191227b07cd47466393465b8d"
     },
     {
       "path": "src/koei_editor/data/AGENTS.md",
@@ -813,8 +813,8 @@
     },
     {
       "path": "src/koei_editor/games/doa5_ps3/parser.py",
-      "bytes": 13214,
-      "sha256": "9abeba7e02ad0da4f5a0dc3ba7f42da4ece583b329f808e4c55ee13dd58f348c"
+      "bytes": 13291,
+      "sha256": "d77d1a09db86cd23d58bbd552eb14949b4c4cbfe69a37157b54270a750e0c9ec"
     },
     {
       "path": "src/koei_editor/games/doa5_ps3/presentation.py",
@@ -3184,7 +3184,7 @@
     {
       "path": "tools/build_windows.py",
       "bytes": 2071,
-      "sha256": "25866d4e837ae9b035db06417b0fddf4446c99b9da5b3e531f78a68e7035dab2"
+      "sha256": "71fa76174ee009e93915c560d85c152183a14505523285696e1e38bbffca0243"
     },
     {
       "path": "tools/package_release.py",

@@ -4,8 +4,8 @@ A free Windows save editor by **Mexican**, with a game library, shared Light/Dar
 themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open.
 
-**Development source:** additions below are available in source. The latest
-Windows download remains v1.6 until the next release.
+**Version 1.7** supports 48 game/platform profiles. Download the standalone
+Windows app below; no Python installation is needed.
 
 ## Supported games
 
@@ -16,8 +16,10 @@ for Age of Calamity. Some PS3 profiles require the original `PARAM.SFO` beside
 the copied gameplay file and edited output. Export and reimport/resign PS3 saves
 with Apollo Save Tool; this editor does not rebuild `PARAM.PFD` or sign exports.
 
-Meruru Plus for PS Vita opens a copied, decrypted `USR-DATA0000` with its original
-`sce_sys/param.sfo`. Export and reimport it with a Vita save manager.
+PS Vita editors open decrypted exports with their original `sce_sys/param.sfo`.
+Meruru Plus uses `USR-DATA0000`; Berserk uses `app0000.dat` or another supported
+slot. Export and reimport with a Vita save manager. Pokémon Conquest opens raw
+Nintendo DS `.sav` exports.
 
 Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and

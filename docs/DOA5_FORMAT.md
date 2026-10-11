@@ -126,3 +126,7 @@ restoring one locked byte reproduces the exact original native output. Such
 constructed derivatives and procedural fixtures are not claimed as game-made
 locked samples or edited in-game validation. Optional private native checks use
 `DOA5_PS3_NATIVE_DIR`; no native player bytes appear in public tests.
+
+The scalar self-test qualification flag remains false to distinguish constructed
+unlock transitions from genuine game-made locked-to-unlocked pairs; native
+format/no-edit qualification is documented separately above.

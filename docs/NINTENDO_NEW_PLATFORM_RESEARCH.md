@@ -18,3 +18,29 @@ complete platform converter, native export and original title metadata qualified
 [a dedicated useful editor](P5STRIKERS_PS4_FORMAT.md) with resources, named
 existing item stacks, searchable inspectors and safe contextual storage.
 No player saves, owner fields, binaries, foreign code or private paths are shipped.
+
+## Further platform fallbacks checked
+
+- **Dragon Quest Builders 2 — PS4:** the freshly inspected
+  [Hermit's Heresy source](https://github.com/default-kramer/HermitsHeresy)
+  has no PS4-specific serializer/profile and its labelled captured examples are
+  Steam files. The complete turtle-insect writer explicitly supports Switch and
+  Steam. The checked current Apollo PS4 catalog has no Builders entry or
+  acquired decrypted PS4 CMNDAT. A complete genuine **decrypted PS4 `CMNDAT.BIN`
+  with original `sce_sys/param.sfo`**, exact title/revision and matching original
+  slot companions is needed, plus an explicit complete PS4 native writer or
+  controlled accepted edit/load/re-save pairs before reusing inventory geometry.
+  Similar-looking `aerC` headers alone do not register PS4 support.
+- **Metroid: Other M — Wii:** title-specific public repository searches found
+  [Other M Redux](https://github.com/ShadowOne333/Metroid-Other-M-Redux), gameplay
+  patches and HD/controller setup. Its documented Hard/Theater/Gallery action
+  is a live-memory Gecko patch, not a disk-save writer; its note says the
+  Gallery remains empty. No complete game-native save serializer/checksum or
+  named disk-record mapping was acquired. A genuine extracted title/region-
+  labelled Wii gameplay save plus complete native integrity and field evidence
+  is required. Generic Wii export/decryption and runtime flag addresses do not
+  establish the game's inner format or collection dependencies.
+
+Some new public web searches returned bot challenges; inaccessible pages are not
+reported as inspected. No console saves, game/editor binaries, private paths or
+foreign code are published by this investigation.

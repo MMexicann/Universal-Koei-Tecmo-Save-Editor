@@ -11,10 +11,11 @@ Desktop modules use one slot per job so Tk clipboard/focus operations remain
 serialized. The dispatcher fills other available slots with CPU modules instead
 of assigning a second desktop module that blocks while holding a worker.
 Shard balancing accounts for both total worker load and serial desktop load.
-The existing timing hints come from the complete official v1.72 Windows run.
-New modules have separately labeled local timing estimates to avoid treating
-long tests as short unknown work; these are scheduling hints, not additional
-Windows benchmark measurements.
+Timing hints now cover every module using the complete 225-module
+[v1.8 Windows validation run](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/38159065310).
+They replace the prior official v1.72 measurements and supplemental local
+estimates. Timing hints affect scheduling only; they do not authorize skipped
+or omitted checks.
 
 Packaging already validates the complete executable, metadata, archive and
 privacy boundaries. The Windows build no longer performs an immediately
@@ -36,7 +37,7 @@ tests, including 424 explicit skips, with no failures or errors.
 | Comparable measurement | v1.72 | Optimization benchmark |
 | --- | ---: | ---: |
 | Slowest test shard | 160.79 seconds | 130.08 seconds |
-| Checkout through tests/build completion | 284 seconds | 258 seconds |
+| Workflow start through build-job completion | 284 seconds | 258 seconds |
 | Executable build, startup and packaging step | 50 seconds | 44 seconds |
 
 The slowest shard improved by about **19%**, and the comparable pipeline portion
@@ -50,3 +51,16 @@ Meaningful regression checks cover CPU/desktop concurrency, serial desktop
 exclusion, failure propagation, shard balancing, exactly-once package validation
 and cross-platform fingerprint consistency. No test, integrity gate or public
 fixture privacy protection was removed to obtain the improvement.
+
+## Expanded-inventory scheduling refresh
+
+The first complete v1.8 validation executed all 225 modules: 1,959 tests,
+including 441 explicit skips, with no failures or errors. Its slowest shard
+took 189.69 seconds; the other three took 155.20, 88.11 and 143.85 seconds.
+The previous hints had become uneven as the suite expanded. Refreshing all
+module timings from that run produces predicted shard loads of approximately
+140 seconds each instead of an approximately 186-second maximum. This is a
+scheduling prediction, not a measured saving; subsequent complete Windows
+runs establish the actual result. The first expanded-inventory run took
+287 seconds from workflow start through build-job completion and did not
+publish. It is separate from the same-inventory benchmark above.

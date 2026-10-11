@@ -608,8 +608,8 @@
     },
     {
       "path": "docs/TEST_PIPELINE_PERFORMANCE.md",
-      "bytes": 2883,
-      "sha256": "08fa4feb814928de38f4ed1ff38c4ba0024e3be0f82019e18bb8a2390e0eb857"
+      "bytes": 3760,
+      "sha256": "c4963ea4810d6e7552b5a3d9e44f4cfb63e298120b0731efac6c7e8846ce7283"
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
@@ -3783,8 +3783,8 @@
     },
     {
       "path": "tools/test_timings.json",
-      "bytes": 9974,
-      "sha256": "656bdb272b847fa705930dd8e3a125f21bf878fc808200974232c390338755ae"
+      "bytes": 9743,
+      "sha256": "b962a7841d129e90537f34d4e0ca8035857ff5735dd7e391733356b7783aecb9"
     },
     {
       "path": "tools/update_supported_games.py",

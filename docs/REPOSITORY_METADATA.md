@@ -19,7 +19,7 @@ reporting a release complete, verify the public version, description, release
 notes, standalone Windows EXE and Windows ZIP downloads. Record checks actually
 performed rather than treating prepared text or a successful push as publication.
 
-## Version 1.71 description
+## Version 1.72 description
 
 Recommended About description: Windows save editor by Mexican for 51 Koei Tecmo
 game/platform profiles, with searchable records, backups, Undo and Review Changes.

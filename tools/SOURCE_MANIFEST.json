@@ -2953,8 +2953,8 @@
     },
     {
       "path": "tests/test_verified_editors.py",
-      "bytes": 20923,
-      "sha256": "59a001c60458cd101316edd25fa44efa07f49e690e05b55a108dc73f76e73465"
+      "bytes": 20943,
+      "sha256": "196a94a42ae4f2d103cfcea3e34e2997ae699bf383f0dd3a926f4d45317b4d50"
     },
     {
       "path": "tests/test_verified_pending_safety.py",

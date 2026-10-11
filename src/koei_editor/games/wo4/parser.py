@@ -20,7 +20,7 @@ from koei_editor.shared.save_safety import safe_path
 GAME_ID = 'wo4_pc'
 REVISION = 20180720
 FILE_SIZE = codec.FILE_SIZE
-INTEGRITY_KIND = None
+INTEGRITY_KIND = 'none'
 SYSTEM_GLOBAL = 0x1A8
 OFFICER_COUNT = 200
 OFFICER_STRIDE = 0x30C

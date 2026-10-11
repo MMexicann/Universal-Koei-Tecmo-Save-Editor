@@ -64,7 +64,7 @@ Neither owner IDs nor the Steam sidecar are inputs to this original cipher.
 The fingerprint checks the native end marker, not general data integrity.
 Changing a CBC block away from the marker can pass it; changing the IV seed
 also changes the first plaintext block without changing the marker. Accordingly
-the adapter reports `INTEGRITY_KIND = None`, and never describes this marker as
+the adapter reports `INTEGRITY_KIND = 'none'`, and never describes this marker as
 a payload checksum or silently repairs a damaged file.
 
 Native vtable serializers are system `0x1E48B0` and play `0x1E4510`.
@@ -171,6 +171,9 @@ exercise native opening, searches, inspectors, staging, Undo, Review Changes,
 theme switching, Save As, automatic backup and restore. Storage checks cover
 changed sources, forged snapshots, corrupted backup manifests/content, live
 folder aliases and atomic writes to new destinations.
+The shared copied-save self-test also opens a temporary native copy, applies
+Max, saves/reopens, restores a backup and checks the generated report, including
+its explicit absence of checksum and in-game load claims.
 
 `WO4_PC_SAVE_COPY` optionally supplies the genuine private native file to
 `python -m unittest tests.test_wo4_pc -v`. Genuine-file qualification is true;

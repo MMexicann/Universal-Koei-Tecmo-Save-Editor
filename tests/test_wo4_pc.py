@@ -90,7 +90,7 @@ class WO4CodecTests(unittest.TestCase):
         changed = codec.decode(raw)
         self.assertNotEqual(changed[1].payload, codec.decode(generated_raw())[1].payload)
         self.assertEqual(codec.encode(changed), bytes(raw))
-        self.assertIsNone(p.INTEGRITY_KIND)
+        self.assertEqual(p.INTEGRITY_KIND, 'none')
         changed_seed = bytearray(generated_raw());changed_seed[-4] ^= 1
         seeded = codec.decode(changed_seed)
         self.assertNotEqual(seeded[1].payload[:16], codec.decode(generated_raw())[1].payload[:16])
@@ -202,6 +202,26 @@ class WO4PCFormatTests(unittest.TestCase):
             self.assertFalse((root / 'raced.bin').exists())
             with self.assertRaises(SaveError):p.backup(doc)
             with self.assertRaises(SaveError):p.save_as(doc,{},root / 'changed.bin')
+
+    def test_shared_copied_save_self_test_open_max_save_restore_report(self):
+        from koei_editor.shared.verified_self_test import _run
+        import json
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            source = folder / 'copy.bin'
+            native = os.environ.get('WO4_PC_SAVE_COPY')
+            raw = Path(native).read_bytes() if native else generated_raw()
+            source.write_bytes(raw)
+            report = _run(self.adapter, p.GAME_ID, source, folder / 'workflow')
+            self.assertEqual(source.read_bytes(), raw)
+            self.assertTrue(report['success'])
+            self.assertEqual(report['fields_checked'], len(p.fields_for(p.decode(raw))))
+            self.assertEqual(report['integrity_kind'], 'none')
+            self.assertFalse(report['checksum_verified'])
+            self.assertFalse(report['native_integrity_verified'])
+            self.assertFalse(report['in_game_load_tested'])
+            self.assertTrue(report['format_sample_verified'])
+            self.assertEqual(json.loads((folder / 'workflow' / 'self-test-report.json').read_text()), report)
 
     @unittest.skipUnless(os.environ.get('WO4_PC_SAVE_COPY'),'Private native original WO4 PC copy not selected')
     def test_native_complete_reconstruction_and_all_qualified_edits(self):

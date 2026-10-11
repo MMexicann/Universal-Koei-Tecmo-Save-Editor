@@ -56,6 +56,8 @@ def decode(raw):
     if not isinstance(raw, (bytes, bytearray, memoryview)) or len(raw) != FILE_SIZE:
         raise ValueError('Native WO4 PC container must contain exactly 927,576 bytes.')
     raw = bytes(raw)
+    if len(raw) != FILE_SIZE:
+        raise ValueError('Native WO4 PC container has a different byte length.')
     blocks = []
     with CNG_AES('CBC') as aes:
         for index, offset, size, payload_size in SPECS:

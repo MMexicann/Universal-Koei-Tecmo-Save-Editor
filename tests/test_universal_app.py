@@ -88,7 +88,8 @@ class UniversalGuiTests(unittest.TestCase):
         sessions = {}
         expected = {'atelier_ryza_switch': 'Nintendo Switch',
                     'dw8xl_ps3': 'PlayStation 3', 'dqb2_pc': 'Windows PC',
-                    'atelier_ryza2_switch': 'Nintendo Switch', 'dqb2_switch': 'Nintendo Switch'}
+                    'atelier_ryza2_switch': 'Nintendo Switch', 'dqb2_switch': 'Nintendo Switch',
+                    'p5strikers_switch': 'Nintendo Switch'}
         for game_id, platform in expected.items():
             with self.subTest(game=game_id):
                 game = get_game(game_id)

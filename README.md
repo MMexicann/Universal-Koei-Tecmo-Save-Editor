@@ -82,6 +82,7 @@ Ninja Gaiden 2 Black use different formats.
 | DRAGON QUEST BUILDERS 2 — Original Steam PC · CMNDAT.BIN | Windows PC | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
 | DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
+| PERSONA 5 STRIKERS — English Nintendo Switch · savedata export | Nintendo Switch | Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

@@ -139,3 +139,10 @@ exports are private validation inputs, not bundled files. Only factual framing,
 field geometry and individually reviewed labels are implemented; no upstream
 editor code, catalogs, game assets or player data are redistributed. See
 [DQB2 Switch](DQB2_SWITCH_FORMAT.md) and [Ryza 2 Switch](RYZA2_SWITCH_FORMAT.md).
+
+Persona 5 Strikers Switch independently implements factual native geometry and
+field positions from Amuyea's GPL-3.0 Switch-tested editor and zarroboogs'
+platform descriptors. Only the project's already reviewed small factual stack
+catalog and inspectors are reused after explicit Switch-position checks. No
+foreign implementation, bulk catalog, converter, save or asset is bundled.
+[Pinned sources and mechanics](P5STRIKERS_SWITCH_FORMAT.md).

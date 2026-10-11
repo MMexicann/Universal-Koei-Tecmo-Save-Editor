@@ -275,6 +275,10 @@ GAMES = (
          'Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status.',
          '', '.bin', '#657b43', 'koei_editor.games.dqb2_switch.editor', 'koei_editor.games.dqb2_switch.parser',
          True, 'DQB2', True, 'Nintendo Switch', scalar_backend='koei_editor.games.dqb2_switch.parser'),
+    Game('p5strikers_switch', 'PERSONA 5 STRIKERS', 'English Nintendo Switch · savedata export',
+         'Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks.',
+         '', '', '#92353b', 'koei_editor.games.p5strikers_switch.editor', 'koei_editor.games.p5strikers_switch.parser',
+         True, 'P5S', True, 'Nintendo Switch', scalar_backend='koei_editor.games.p5strikers_switch.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

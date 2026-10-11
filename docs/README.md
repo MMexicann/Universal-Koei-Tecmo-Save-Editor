@@ -85,6 +85,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Stranger of Paradise native framing and remaining proof](SOPFFO_RESEARCH.md)
 - [Nioh, Wo Long and other Team Ninja formats](TEAM_NINJA_RESEARCH.md)
 - [Persona 5 Strikers native PC format](P5STRIKERS_PC_FORMAT.md)
+- [Persona 5 Strikers English Switch resources and inventories](P5STRIKERS_SWITCH_FORMAT.md)
 - [Atelier Ayesha PS3 exports](AYESHA_PS3_FORMAT.md)
 - [Original Sophie PC format and DX/Firis blockers](SOPHIE_PC_FORMAT.md)
 - [Ryza 2 PC format and Ryza 1/3 blockers](RYZA_FORMATS.md)

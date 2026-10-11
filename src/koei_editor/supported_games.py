@@ -64,6 +64,7 @@ from .game_registry import GAMES
 # dqb2_pc: DRAGON QUEST BUILDERS 2 / Original Steam PC · CMNDAT.BIN [Windows PC]
 # atelier_ryza2_switch: ATELIER RYZA 2 / Lost Legends & the Secret Fairy · original Switch [Nintendo Switch]
 # dqb2_switch: DRAGON QUEST BUILDERS 2 / Original Nintendo Switch · CMNDAT.BIN [Nintendo Switch]
+# p5strikers_switch: PERSONA 5 STRIKERS / English Nintendo Switch · savedata export [Nintendo Switch]
 # END GENERATED SUPPORTED GAME INDEX
 
 

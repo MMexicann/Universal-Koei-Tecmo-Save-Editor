@@ -267,6 +267,14 @@ GAMES = (
          'Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status.',
          '', '.bin', '#657b43', 'koei_editor.games.dqb2_pc.editor', 'koei_editor.games.dqb2_pc.parser',
          True, 'DQB2', True, scalar_backend='koei_editor.games.dqb2_pc.parser'),
+    Game('atelier_ryza2_switch', 'ATELIER RYZA 2', 'Lost Legends & the Secret Fairy · original Switch',
+         'Unspent skill-tree SP reductions; searchable existing inventory and equipment records.',
+         '', '.dat', '#827050', 'koei_editor.games.ryza.editor2switch', 'koei_editor.games.ryza.parser',
+         True, 'RYZA 2', True, 'Nintendo Switch', scalar_backend='koei_editor.games.ryza.parser'),
+    Game('dqb2_switch', 'DRAGON QUEST BUILDERS 2', 'Original Nintendo Switch · CMNDAT.BIN',
+         'Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status.',
+         '', '.bin', '#657b43', 'koei_editor.games.dqb2_switch.editor', 'koei_editor.games.dqb2_switch.parser',
+         True, 'DQB2', True, 'Nintendo Switch', scalar_backend='koei_editor.games.dqb2_switch.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

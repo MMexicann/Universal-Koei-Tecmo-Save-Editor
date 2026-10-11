@@ -4,7 +4,8 @@ A free Windows save editor by **Mexican**, with a game library, shared Light/Dar
 themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open.
 
-**Version 1.71** supports 51 game/platform profiles. Download the standalone
+**Development source** includes 53 game/platform profiles. The latest release is
+**v1.71** with 51 profiles. Download the standalone
 Windows app below; no Python installation is needed.
 
 ## Supported games
@@ -79,6 +80,8 @@ Ninja Gaiden 2 Black use different formats.
 | ATELIER RYZA — Ever Darkness & the Secret Hideout · original Switch main game | Nintendo Switch | Existing ordinary item/equipment quality 1–100; searchable inventory, equipment and read-only trait slots. |
 | DYNASTY WARRIORS 8 — Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO | PlayStation 3 | Gold, gems, facility/weapon materials, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
 | DRAGON QUEST BUILDERS 2 — Original Steam PC · CMNDAT.BIN | Windows PC | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
+| ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
+| DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

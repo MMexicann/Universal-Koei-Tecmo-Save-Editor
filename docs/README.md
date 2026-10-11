@@ -42,6 +42,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [DW8 Xtreme Legends original US PS3 PSN format](DW8XL_PS3_FORMAT.md)
 - [Original Atelier Ryza Switch format and mechanics](RYZA_SWITCH_FORMAT.md)
 - [Dragon Quest Builders 2 Steam CMNDAT format and mechanics](DQB2_PC_FORMAT.md)
+- [Dragon Quest Builders 2 original Switch format and mechanics](DQB2_SWITCH_FORMAT.md)
+- [Original Atelier Ryza 2 Switch SP and inventory format](RYZA2_SWITCH_FORMAT.md)
 - [Original DW9 PC evidence and remaining inputs](DW9_ORIGINAL_PC_RESEARCH.md)
 - [DW6 original PC coverage](DW6_RESEARCH.md)
 - [DW5 Special native Windows format](DW5_SPECIAL.md)

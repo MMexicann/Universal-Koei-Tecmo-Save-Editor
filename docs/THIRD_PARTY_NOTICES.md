@@ -132,3 +132,10 @@ The original Ryza Switch adapter reuses the existing MIT-attributed Gust envelop
 The original US PS3 PSN DW8 XL adapter independently implements native byte-cipher/checksum and gameplay record facts corroborated against complete native copies and a public converter reference. No external converter implementation, editor, bulk catalog or player data is incorporated. [Scope and provenance](DW8XL_PS3_FORMAT.md).
 
 The DQB2 Steam adapter independently implements factual CMNDAT framing and a small individually reviewed medicine/seed identity set. The GPL-3.0 turtle-insect/DQB2 editor and Hermit's Heresy native examples inform verification; no GPL implementation, bulk catalog, binary, asset or player file is redistributed. [Pinned sources and scope](DQB2_PC_FORMAT.md).
+
+The separately qualified original Switch DQB2 and Ryza 2 profiles reuse reviewed
+family primitives after independent native layout checks. Public NX_Saves
+exports are private validation inputs, not bundled files. Only factual framing,
+field geometry and individually reviewed labels are implemented; no upstream
+editor code, catalogs, game assets or player data are redistributed. See
+[DQB2 Switch](DQB2_SWITCH_FORMAT.md) and [Ryza 2 Switch](RYZA2_SWITCH_FORMAT.md).

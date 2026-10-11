@@ -977,6 +977,24 @@
       "evidence": "Four original Steam CMNDAT copies qualify complete bounded zlib/Adler framing, exact unchanged compact/padded roundtrips and existing named medicine/seed stack reductions. Only 20 reviewed ordinary IDs, 15 pockets and 420 bag records; opened ownership and at least one item preserved. Opaque unused native padding and all unknown/world/equipment bytes stay intact. Native surgical edits, copied-save protections and actual Tk workflows pass.",
       "needed": "Additional item applicability, player growth dependencies and matched CMNDAT/STGDAT world/progression action pairs; no creation, equipment swaps or world transplantation. Other platforms/builds and actual game loading require independent qualification.",
       "editing_verified": true
+    },
+    {
+      "id": "atelier_ryza2_switch",
+      "title": "Atelier Ryza 2: Lost Legends & the Secret Fairy",
+      "platform": "Nintendo Switch",
+      "status": "Original revision-0 native-file SP editor",
+      "evidence": "One complete original Switch modified starter reference validates both native envelope checks and exact tagged title/revision framing. Unspent big-endian skill-tree SP deductions preserve the separate learned-node state. Searchable existing inventory/equipment records, copied-file safeguards, surgical edits and native Tk workflows pass. All 249 reference quality records are read only because their adjacent synthesis words are nonzero; conditional zero-adjacent quality writes have procedural/source evidence only.",
+      "needed": "Clean same-profile synthesis/quality action pair, natural SP/quality limits and resource/growth/unlock dependency mappings; other revisions/DX require separate qualification; actual edited Switch game load and re-save.",
+      "editing_verified": true
+    },
+    {
+      "id": "dqb2_switch",
+      "title": "Dragon Quest Builders 2",
+      "platform": "Nintendo Switch",
+      "status": "Original padded revision-0x40004 native-file editor",
+      "evidence": "Two distinct complete title-labelled native Switch CMNDAT slots validate bounded zlib/Adler framing and byte-exact unchanged roundtrips. The progressed slot proves surgical reductions in existing named medicine/seed stacks; the empty starter remains untouched. Twenty individually reviewed IDs, fifteen pocket and 420 bag records; separately bound Switch documents/backups preserve original padding, ownership and companion files. Native safe-save and actual Tk workflows pass. Raw native geometry is shared with PC and does not itself identify a console.",
+      "needed": "Further item applicability, controlled player-growth and matched CMNDAT/STGDAT world/progression action pairs; other revisions/platforms need separate qualification; actual edited Switch game loading.",
+      "editing_verified": true
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

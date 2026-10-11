@@ -3,6 +3,7 @@
 Generated buffers are deliberately non-playable; never count them as saves.
 """
 from dataclasses import replace
+from functools import lru_cache
 import os
 from pathlib import Path
 import struct
@@ -19,6 +20,7 @@ def node(name, body):
     return struct.pack('<I', 4 + len(name) + len(body)) + name + body
 
 
+@lru_cache(maxsize=1)
 def procedural_payload():
     stride = 100
     empty = bytearray((index * 19 + 7) & 255 for index in range(stride))
@@ -57,10 +59,22 @@ def procedural_payload():
 
 
 def procedural_raw(payload=None):
+    if payload is None:
+        return _default_procedural_raw()
+    return _encode_procedural_raw(payload)
+
+
+@lru_cache(maxsize=1)
+def _default_procedural_raw():
+    # Only immutable fixture bytes are reused. Every test still decodes its
+    # input and exercises the native integrity and gameplay validation paths.
+    return _encode_procedural_raw(procedural_payload())
+
+
+def _encode_procedural_raw(payload):
     header = bytearray((index * 23 + 5) & 255 for index in range(256))
     header[:48] = b'\1' + bytes(39) + struct.pack('<II', 1, 1)
-    return codec.encode_file(bytes(header), procedural_payload() if payload is None else payload,
-                             0x12345678, b'\x13\x57\x9b')
+    return codec.encode_file(bytes(header), payload, 0x12345678, b'\x13\x57\x9b')
 
 
 class Ryza2Contract(ScalarContractTests, unittest.TestCase):

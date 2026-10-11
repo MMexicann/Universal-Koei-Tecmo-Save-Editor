@@ -4,10 +4,32 @@ From the repository root with Python/Tkinter, install the source package and run
 
 ```text
 python -m pip install -e .
-python -m unittest discover -s tests -v
+python -m tools.run_tests --workers 4
 ```
 
 Public rule and boundary tests run without a save. Private-fixture integration tests are skipped when the research copy is absent; no player save is distributed. See ../docs/VALIDATION.md for the completed checks.
+
+The runner schedules whole test modules in isolated Python subprocesses and
+prints module results, test totals, skips and failures.
+Choose fewer workers on machines with limited memory. GUI tests still need a
+display; on headless Linux use `xvfb-run -a python -m tools.run_tests --workers 4`.
+Private-fixture environment variables are inherited by every worker.
+Modules using Tk or Tk test helpers are coordinated within each job because
+clipboard and focus belong to the desktop, even when Python processes differ.
+
+CI uses four Windows shards with two processes per shard. Each shard uploads
+its report and logs, including on failure. The build verifies all four reports
+cover the complete current module inventory exactly once before building the
+EXE. New modules join automatically; scheduling estimates in
+`tools/test_timings.json` are not a list of allowed tests. No tests are omitted
+to meet a time target, and failures, missing reports and import errors fail CI.
+
+For a serial run or a focused module, the usual commands remain available:
+
+```text
+python -m unittest discover -s tests -v
+python -m unittest discover -s tests -p 'test_your_game.py' -v
+```
 
 
 The universal application adds `test_universal_app.py`, `test_origins_tools.py`,

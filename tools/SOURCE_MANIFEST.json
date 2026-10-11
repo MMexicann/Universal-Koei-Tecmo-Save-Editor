@@ -8,23 +8,23 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 8224,
-      "sha256": "acd22cd5be2496f85d80a695f9a97c09ac7d9388938f422611c92c37911a586f"
+      "bytes": 10003,
+      "sha256": "6176e6d162c29a8116000038de8973c251cb21c2b2782a84443754316c52b9fe"
     },
     {
       "path": ".gitignore",
-      "bytes": 211,
-      "sha256": "7efdab31ffa3788fdcc6e9bcfa914f9ce9f5ad37f1475e0f1d3fe1ef27983688"
+      "bytes": 225,
+      "sha256": "b57aefc068f794d9e6b9c0ad6c69f26ef7ef13d1d9a6b5274637d8d2f7aab469"
     },
     {
       "path": "AGENTS.md",
-      "bytes": 6811,
-      "sha256": "8e11ae43290fe7b48eaae35dc46858537c5fd95db6ff5e80b5b962a2a45884ac"
+      "bytes": 7436,
+      "sha256": "95403a683215f58acf9cd45c5c6a1acc761f5230f3ebe45924cff68d21584315"
     },
     {
       "path": "CONTRIBUTING.md",
-      "bytes": 17198,
-      "sha256": "bac52856193053a9635e6f7e3bb3beb27ee5949f4e244ce5063a7daf943e4c31"
+      "bytes": 17587,
+      "sha256": "dcb8e1f772f62e52c15a1729648e15ca8356aad4f4f07d743c99b6c1eeca24ee"
     },
     {
       "path": "LICENSE",
@@ -118,8 +118,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 4654,
-      "sha256": "9beea2652e5afed98b1e514810a1fc92d20fea8eed75273bd9b7487283c43839"
+      "bytes": 5502,
+      "sha256": "8b59cc7b2d3057e1c63c229075cfecddc022f02c53a2946841664630f67e640b"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -1848,8 +1848,8 @@
     },
     {
       "path": "src/koei_editor/research/katana/katana_codec.py",
-      "bytes": 15733,
-      "sha256": "d08db3a60f7e3525f7eb0b653950fa777f944c4c1d34ab4b24fac58e6a13c014"
+      "bytes": 16006,
+      "sha256": "c1cfdadae6a45e545070a1f0e4e256668067d42fdf1e1e5ba1e9bc15ba24a379"
     },
     {
       "path": "src/koei_editor/research/meruru_dx/__init__.py",
@@ -2133,8 +2133,8 @@
     },
     {
       "path": "tests/README.md",
-      "bytes": 9589,
-      "sha256": "0df7a652d02e744414a3ed697c6233ece65e7e05b186048ce0b409b602a3f08e"
+      "bytes": 10751,
+      "sha256": "398ccff5247d4c0d20730b9d05cfcee00037cf37ad79c2036d31ae5a4c16ad25"
     },
     {
       "path": "tests/scalar_contract.py",
@@ -2722,6 +2722,11 @@
       "sha256": "26b1323eeb155d95edfad1d3df4cbe191415a203c4bd5b363d6da5cd7d255738"
     },
     {
+      "path": "tests/test_parallel_runner.py",
+      "bytes": 11419,
+      "sha256": "710b302bea5b7d25c56550e6c599860d088b321e1889bee92b016ff8b5b3d9b4"
+    },
+    {
       "path": "tests/test_pc_content_mapping.py",
       "bytes": 5133,
       "sha256": "6b38715e9971e0477cc0eb3f040ca4b32f7896161f8d401418da84d592e59207"
@@ -2783,8 +2788,8 @@
     },
     {
       "path": "tests/test_release_preparation.py",
-      "bytes": 7457,
-      "sha256": "02d810dce888beebf3e8b479c8f86a515477c44693c8ce29545b2f2cc462177e"
+      "bytes": 8360,
+      "sha256": "e8a14a33aca858636e49c035ff15b1bdab1a9d4d87a0eb3c7304b14d283dcdba"
     },
     {
       "path": "tests/test_review_regressions.py",
@@ -2823,8 +2828,8 @@
     },
     {
       "path": "tests/test_ryza_format.py",
-      "bytes": 8029,
-      "sha256": "ce59b1bf6605ffb05765baf75eecf22c370a1926b2d87994cc0e4034006e3810"
+      "bytes": 8421,
+      "sha256": "a0314f36309b65e3885653ce922984db6e9459d4473b08b94d0cec0996c7940c"
     },
     {
       "path": "tests/test_samurai4dx_format.py",
@@ -3137,6 +3142,11 @@
       "sha256": "46ecb6ff2afe4cb4d05a36e633160b1fe19fb51d70c6745018c722da614ded19"
     },
     {
+      "path": "tests/test_wolong_checksum_performance.py",
+      "bytes": 2141,
+      "sha256": "04a8e1d71e02b62a716070263f5841f35ef7b7936bd402e3eddafec84c69016a"
+    },
+    {
       "path": "tests/test_wolong_expansion.py",
       "bytes": 10491,
       "sha256": "f3e324c140760b2f5441ec27e68c8ff716d2f51311cad9af780e7a11d3505b05"
@@ -3188,8 +3198,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 19197,
-      "sha256": "068474e549cdc1d69052f252fa221d201b5d56744afec39dd4c9077e787f0a9e"
+      "bytes": 19260,
+      "sha256": "ced1fe0443e41113423d37bfbc6f779cdd3f3d16bb8d4cf525417a49d8f75373"
     },
     {
       "path": "tools/refresh_manifest.py",
@@ -3205,6 +3215,16 @@
       "path": "tools/requirements/dev.txt",
       "bytes": 103,
       "sha256": "b2dec3866fb4dfa3559e18717a6c6a4971d237c349fa57f473a420f57a763506"
+    },
+    {
+      "path": "tools/run_tests.py",
+      "bytes": 21610,
+      "sha256": "961136dba3aebabe41a312de932e4c373f5ae7bb30e89e6839408c94977beef7"
+    },
+    {
+      "path": "tools/test_timings.json",
+      "bytes": 7208,
+      "sha256": "e150bb49945e9ae96374966972dc7020b798e96a0ca10f39e89e76bda642de34"
     },
     {
       "path": "tools/update_supported_games.py",

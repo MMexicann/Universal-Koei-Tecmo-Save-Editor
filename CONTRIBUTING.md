@@ -12,13 +12,18 @@ From the repository root with Python 3.10 or newer and Tkinter:
 ```powershell
 python -m pip install -e .
 python -m koei_editor
-python -m unittest discover -s tests -v
+python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
 ```
 
 Windows uses native CNG for DW3 encryption and needs no third-party runtime
 package. Non-Windows development may install `tools/requirements/dev.txt`; GUI work
 requires a display. Read the parser and tests for the format you change.
+The parallel runner uses isolated processes, so Tk roots and mutable fixtures
+are never shared between modules. Reduce `--workers` on machines with limited
+memory. On Linux, run it under `xvfb-run -a` when no display is available.
+Use ordinary `unittest discover -s tests -p 'test_your_game.py' -v` for focused
+checks or serial discovery for debugging; run the full suite before submission.
 The [documentation index](docs/README.md) groups architecture, format and coverage
 notes. Application code belongs in `src/koei_editor`, game adapters in
 `src/koei_editor/games/<game>`, shared behavior in `src/koei_editor/shared`,

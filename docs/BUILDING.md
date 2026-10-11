@@ -28,7 +28,7 @@ python -m tools.build_windows --print-config
 ## Build checks
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
 $smoke = Start-Process -FilePath .\dist\UniversalKoeiTecmoSaveEditor-v1.7.exe -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
 $smoke.ExitCode
@@ -38,6 +38,19 @@ python -m tools.package_release --verify-executable
 The smoke test initializes the library and registered editors, switches games and
 appearance, then exits. Require exit code 0. Save-format and game-load validation
 are separate; see [VALIDATION.md](VALIDATION.md) for coverage and limitations.
+
+The Windows workflow runs the complete suite across four independent test jobs,
+each using two isolated Python processes. Runtime estimates balance modules;
+unknown/new modules are always included. The build checks combined shard
+reports against the current sources and complete test inventory before its
+source GUI smoke test, native EXE build, packaged smoke test and archive/privacy
+validation. Failed, missing or overlapping shards cannot authorize a build or
+publication. Reports and individual module logs are downloadable CI artifacts.
+Pip caching avoids repeatedly downloading unchanged build dependencies.
+
+Local parallel checks need no extra test dependency. Use fewer workers on small
+machines and an existing display or `xvfb-run -a` for Tk on Linux. The serial
+`python -m unittest discover -s tests -v` remains available for debugging.
 
 Direct startup accepts a registered game ID, for example `--game dw3`,
 `--game dw9emp` or `--game orochiz`. Use `--list-games` for the complete current

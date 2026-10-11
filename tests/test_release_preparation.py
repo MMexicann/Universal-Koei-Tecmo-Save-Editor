@@ -50,7 +50,8 @@ class ReleasePreparationContracts(unittest.TestCase):
         build = job_block('build')
         self.assertIn("$env:RELEASE_REF_NAME -ne 'main'", build)
         self.assertIn('$env:RELEASE_EXPECTED_SHA -ne $env:RELEASE_COMMIT_SHA', build)
-        self.assertIn('python -m unittest discover -s tests -v', build)
+        self.assertIn('needs: tests', build)
+        self.assertIn('python -m tools.run_tests --verify-reports test-results', build)
         self.assertIn('python -m tools.package_release --verify-executable', build)
         release = job_block('release')
         self.assertIn("github.event_name == 'workflow_dispatch'", release)
@@ -60,6 +61,21 @@ class ReleasePreparationContracts(unittest.TestCase):
         self.assertIn('-f "sha=$GITHUB_SHA"', release)
         self.assertIn('--verify-tag', release)
         self.assertNotIn('gh release edit', release)
+
+    def test_full_suite_is_partitioned_and_failure_cannot_be_hidden_by_a_matrix(self):
+        tests = job_block('tests')
+        self.assertIn('fail-fast: false', tests)
+        self.assertIn('shard: [0, 1, 2, 3]', tests)
+        self.assertIn('--workers 2 --shards 4 --shard-index ${{ matrix.shard }}', tests)
+        self.assertIn('--timings tools/test_timings.json', tests)
+        self.assertIn('if: always()', tests)
+        self.assertIn('if-no-files-found: error', tests)
+        self.assertNotIn('continue-on-error', tests)
+        build = job_block('build')
+        self.assertIn('pattern: test-results-*', build)
+        self.assertIn('merge-multiple: true', build)
+        self.assertIn('Full test coverage or shard integrity validation failed.', build)
+        self.assertNotIn('python -m unittest discover -s tests -v', build)
 
 
 @unittest.skipIf(os.name == 'nt' or not shutil.which('bash'), 'Mocked Ubuntu preparation job requires POSIX bash.')

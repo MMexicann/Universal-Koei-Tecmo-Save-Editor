@@ -201,13 +201,15 @@ def _cbc(data: bytes, key: bytes, iv: bytes, direction: str) -> bytes:
 
 
 def _checksum(data: bytes) -> bytes:
-    # Accumulate the seven 16-bit lanes before applying the upstream chaining
-    # and substitution steps. Deferring modulo is equivalent to ushort wrap.
-    lanes = [0] * 7
-    for index, value in enumerate(data):
-        lanes[0] += value
-        lanes[1 + ((index >> 2) & 1)] += value
-        lanes[3 + (index & 3)] += value
+    # Each input byte contributes to the total, its alternating four-byte
+    # block lane and its position modulo four. Strided sums perform the same
+    # accumulation in C instead of updating three Python integers per byte.
+    # Subtracting the first alternating lane gives the second even for a
+    # partial final block; defer ushort wrap until all seven sums are complete.
+    quarters = [sum(data[offset::4]) for offset in range(4)]
+    total = sum(quarters)
+    first_blocks = sum(sum(data[offset::8]) for offset in range(4))
+    lanes = [total, first_blocks, total - first_blocks, *quarters]
     result = bytearray(32)
     struct.pack_into('<7H', result, 0, *(value & 0xffff for value in lanes))
     for index in range(31):

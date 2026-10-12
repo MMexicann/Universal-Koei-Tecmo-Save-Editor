@@ -19,6 +19,9 @@ from koei_editor.shared.verified_editor import Field
 
 GAME_ID, SAVE_SIZE, JSON_OFFSET = 'wolong', 5_120_272, 0x108
 INTEGRITY_KIND = 'checksum'
+# The authenticated PC serializer recalculates the body and header checksums.
+# decode verifies both, and no other payload bytes are permitted to differ.
+SERIALIZED_INTEGRITY_RANGES = ((0x3C, 0x7C),)
 MANUAL_CURRENCY_LIMIT = 2_147_483_647
 CURRENCY_NAMES = {'senki': 'Available Genuine Qi', 'sen': 'Copper', 'bukun': 'Accolades'}
 
@@ -225,6 +228,37 @@ def fields_for(document):
 
 def field_map(document):
     return MappingProxyType({field.id: field for field in fields_for(document)})
+
+
+def read_back_value(document, key):
+    """Read a requested field after serialization, even if it left the editor map.
+
+    Text token lengths can move subsequent JSON fields, and reducing an ordinary
+    stack to one makes it intentionally ineligible for further editing. Resolve
+    the stable JSON path for verification instead of reusing stale byte offsets.
+    """
+    validate_document(document)
+    root, _, _ = _json(document.payload)
+    if key in CURRENCY_NAMES:
+        return root['PlayerData'][key]
+    for group in ('possession_items', 'storage_items'):
+        prefix = group + '_'
+        if key.startswith(prefix) and key.endswith('_num'):
+            raw_index = key[len(prefix):-4]
+            if raw_index.isdecimal():
+                index = int(raw_index)
+                records = root['PossessionItemData'][group]
+                if 0 <= index < len(records):
+                    return records[index]['ItemObjectData']['num']
+    prefix = 'battle_set_'
+    if key.startswith(prefix) and key.endswith('_name'):
+        raw_index = key[len(prefix):-5]
+        if raw_index.isdecimal():
+            index = int(raw_index)
+            names = root['UIData'].get('ui_battleset_slot_data_info')
+            if type(names) is list and 0 <= index < len(names):
+                return names[index]['UiBattleSetSlotInfo']['str']
+    raise SaveError('The requested Wo Long field has no verified saved-copy path.')
 
 
 def changed_payload(document, changes):

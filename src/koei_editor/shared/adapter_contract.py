@@ -219,12 +219,14 @@ class BoundScalarAdapter:
             if (type(expected_payload) is not bytes or type(result.payload) is not bytes
                     or not self._payload_matches_expected(expected_payload, result.payload)):
                 raise SaveError(f'{self.game_id}: edited save did not preserve every requested value.')
+            result_fields = self.backend.field_map(result)
             for key, value in changes.items():
-                field = original_fields.get(key)
-                expected = field.value(expected_payload) if field is not None else None
-                applied = field.value(result.payload) if field is not None else None
-                if (field is None or type(expected) is not type(value) or expected != value
-                        or type(applied) is not type(value) or applied != value):
+                original_field = original_fields.get(key)
+                field = result_fields.get(key) or original_field
+                reader = getattr(self.backend, 'read_back_value', None)
+                applied = (reader(result, key) if callable(reader) else
+                           field.value(result.payload) if field is not None else None)
+                if (original_field is None or type(applied) is not type(value) or applied != value):
                     raise SaveError(f'{self.game_id}: edited field {key} did not apply in the saved copy.')
         except SaveError:
             raise
@@ -328,16 +330,25 @@ class BoundScalarAdapter:
             raise SaveError(f'{self.game_id}: the saved file could not be reopened for verification.') from error
         if saved.raw != result.raw:
             raise SaveError(f'{self.game_id}: the saved file differs from the backend result.')
-        if saved.payload != expected_payload:
+        if not self._payload_matches_expected(expected_payload, saved.payload):
             raise SaveError(f'{self.game_id}: the saved copy differs from the verified edit.')
         if not pending and saved.raw != expected_raw:
             raise SaveError(f'{self.game_id}: an unchanged saved copy must remain byte-identical.')
         if pending:
-            fields = self.backend.field_map(saved)
+            # Prefer descriptors from the reopened output because serializers
+            # may move later fields when an earlier text token changes length.
+            # Fall back to an opened descriptor when a valid reduction makes a
+            # record ineligible for rediscovery (for example a stack of one).
+            original_fields = self.backend.field_map(document)
+            saved_fields = self.backend.field_map(saved)
+            reader = getattr(self.backend, 'read_back_value', None)
             for key, value in pending.items():
-                field = fields.get(key)
-                applied = field.value(saved.payload) if field is not None else None
-                if field is None or type(applied) is not type(value) or applied != value:
+                original_field = original_fields.get(key)
+                field = saved_fields.get(key) or original_field
+                applied = (reader(saved, key) if callable(reader) else
+                           field.value(saved.payload) if field is not None else None)
+                if (original_field is None or type(applied) is not type(value)
+                        or applied != value):
                     raise SaveError(f'{self.game_id}: edited field {key} did not apply in the saved copy.')
         return saved
 

@@ -2283,8 +2283,8 @@
     },
     {
       "path": "src/koei_editor/games/tecmo_super_bowl_nes/parser.py",
-      "bytes": 12528,
-      "sha256": "f6fc19887cdb3aa7eeaf53b4835abcc26a45862e1a766ab399869752b151b5c0"
+      "bytes": 12776,
+      "sha256": "398a8001b9fd2724c5e3030e11a858ddfa12a545a62b9aaace70ec75860bb6c7"
     },
     {
       "path": "src/koei_editor/games/three_hopes/__init__.py",
@@ -2493,8 +2493,8 @@
     },
     {
       "path": "src/koei_editor/games/wolong/wolong_parser.py",
-      "bytes": 18242,
-      "sha256": "f885f6497b913d3b91a84dc874dc0c186bf993fcb196c1a3e03af6de5db1521d"
+      "bytes": 19872,
+      "sha256": "a1d70eff8501127ce4c348969f7cd21e6e80463e470032ec9532a1622e7f0d2c"
     },
     {
       "path": "src/koei_editor/research/AGENTS.md",
@@ -2803,8 +2803,8 @@
     },
     {
       "path": "src/koei_editor/shared/adapter_contract.py",
-      "bytes": 15595,
-      "sha256": "90641c254e908b6a98380217dd842c51e7dd452f7b7af935fd2070dc43a636f1"
+      "bytes": 16388,
+      "sha256": "78fb580a8f077923f6b76fa0a525ec0b293ab90569394a2200283ffcd66ee4b6"
     },
     {
       "path": "src/koei_editor/shared/appearance.py",
@@ -2903,8 +2903,8 @@
     },
     {
       "path": "tests/test_adapter_contract.py",
-      "bytes": 13667,
-      "sha256": "406fb62ed268aa900762f591ed2f5227b961231a9d5a906fe7a5af919bb44551"
+      "bytes": 16282,
+      "sha256": "90003d588460b872fafc2e6a29adc082d2ff62c7910a396968962ee47146d725"
     },
     {
       "path": "tests/test_arland_ps3.py",

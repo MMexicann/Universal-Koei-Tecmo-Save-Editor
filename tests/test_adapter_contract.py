@@ -77,6 +77,48 @@ class AdapterDispatchTests(unittest.TestCase):
             with self.assertRaisesRegex(SaveError, 'invalid serialized-integrity range'):
                 adapter._payload_matches_expected(b'abc', b'aXc')
 
+    def test_save_as_reopens_checksums_and_fields_that_leave_the_editor_map(self):
+        # These serializers recalculate native checksums or stop rediscovering
+        # a field after a valid reduction. Exercise the shared on-disk contract
+        # directly so it is covered on hosts without a Tk display.
+        from tests.test_ayesha_ps3 import procedural_save
+        from tests.test_nobu6_pk_pc import generated_raw
+        from tests.test_samurai4dx_format import procedural_raw
+        from tests.test_tecmo_super_bowl_nes import generated_raw as tecmo_raw
+        from tests.test_wolong_format import procedural_payload
+
+        cases = (
+            ('tecmo_super_bowl_nes', tecmo_raw(), {'team_9_play_0': 3}),
+            ('samurai4dx', procedural_raw(),
+             {'weapon_0_0_skill_0_rank': 5, 'weapon_0_0_skill_0_active': 1}),
+            ('nobu6_pk_pc', generated_raw(), {'slot_0_district_0_gold': 0}),
+            ('ayesha_ps3', procedural_save(), {'container_1_quantity': 1}),
+            ('wolong', procedural_payload(), {'sen': 123, 'storage_items_8_num': 1}),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for game_id, raw, changes in cases:
+                with self.subTest(game_id=game_id):
+                    adapter = get_game(game_id).get_scalar_adapter()
+                    source = root / (game_id + adapter.extension)
+                    destination = root / ('edited-' + game_id + adapter.extension)
+                    source.write_bytes(raw)
+                    document = adapter.read_save(source)
+                    original_fields = adapter.field_map(document)
+                    saved = adapter.save_as(document, changes, destination)
+                    self.assertEqual(saved.raw, destination.read_bytes())
+                    saved_fields = adapter.field_map(saved)
+                    reader = getattr(adapter.backend, 'read_back_value', None)
+                    for key, value in changes.items():
+                        field = saved_fields.get(key) or original_fields[key]
+                        applied = reader(saved, key) if callable(reader) else field.value(saved.payload)
+                        self.assertIs(type(applied), type(value))
+                        self.assertEqual(applied, value)
+                    if game_id in ('nobu6_pk_pc', 'ayesha_ps3', 'wolong'):
+                        removed_key = ('storage_items_8_num' if game_id == 'wolong'
+                                       else next(iter(changes)))
+                        self.assertNotIn(removed_key, saved_fields)
+
     def test_bound_adapter_keeps_noop_exact_and_rejects_serializer_that_drops_edit(self):
         class Format:
             id = 'contract_stub'

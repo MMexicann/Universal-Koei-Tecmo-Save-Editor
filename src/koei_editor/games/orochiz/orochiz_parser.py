@@ -10,6 +10,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.games.orochiz import orochiz_codec as codec
 from koei_editor.games.orochiz.orochiz_limits import (
     BASE_ATTACK_MINIMUMS, BASE_ATTACK_MAXIMUMS, LEVEL_EXP_THRESHOLDS)
@@ -244,6 +245,7 @@ def serialize(document, changes):
 
 
 def stage(document, changes, key, value):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapping = field_map(document)
     if key not in mapping:
         raise SaveError('The requested Warriors Orochi Z field is not editable.')
@@ -260,6 +262,7 @@ def stage(document, changes, key, value):
 
 
 def limit_values(document, changes, keys):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapping = field_map(document)
     changed_payload(document, changes)
     result = {}
@@ -274,6 +277,7 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
+    changes = normalize_pending_values(document, changes, field_map(document))
     result = dict(changes)
     keys = [field.id for field in fields_for(document) if group is None or field.group == group]
     for key, value in limit_values(document, changes, keys).items():

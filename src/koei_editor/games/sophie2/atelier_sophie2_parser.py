@@ -15,6 +15,7 @@ from types import MappingProxyType
 import koei_editor.games.sophie2.atelier_sophie2_codec as codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.save_safety import safe_path
 
 
@@ -349,6 +350,7 @@ def serialize(document, changes):
 
 
 def stage(document, changes, key, value):
+    changes = normalize_pending_values(document, changes, field_map(document))
     fields = field_map(document)
     if key not in fields:
         raise SaveError('The requested Sophie 2 field is not mapped or the item slot is empty.')
@@ -362,6 +364,7 @@ def stage(document, changes, key, value):
 
 
 def limit_values(document, changes, keys):
+    changes = normalize_pending_values(document, changes, field_map(document))
     fields = field_map(document)
     result = {}
     for key in keys:
@@ -375,6 +378,7 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
+    changes = normalize_pending_values(document, changes, field_map(document))
     result = dict(changes)
     keys = [field.id for field in fields_for(document) if group is None or field.group == group]
     for key, value in limit_values(document, changes, keys).items():

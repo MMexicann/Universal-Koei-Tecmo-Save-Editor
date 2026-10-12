@@ -14,6 +14,7 @@ from types import MappingProxyType
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.games.dw9emp import dw9emp_codec as codec
 
 
@@ -153,6 +154,7 @@ def serialize(document, changes):
 
 
 def stage(document, changes, key, value):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapping = field_map(document)
     if key not in mapping:
         raise SaveError('Only existing ordinary DW9 Empires item quantities are writable.')
@@ -167,6 +169,7 @@ def stage(document, changes, key, value):
 
 
 def limit_values(document, changes, keys):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapping = field_map(document)
     changed_payload(document, changes)
     result = {}
@@ -181,6 +184,7 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
+    changes = normalize_pending_values(document, changes, field_map(document))
     keys = [field.id for field in fields_for(document) if group is None or field.group == group]
     result = dict(changes)
     for key, value in limit_values(document, changes, keys).items():

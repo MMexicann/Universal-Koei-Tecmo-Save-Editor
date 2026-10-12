@@ -8,6 +8,7 @@ import hashlib
 from pathlib import Path
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore_snapshot
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.ps3_export import validate_optional_context
@@ -145,6 +146,7 @@ def serialize(document, changes):
 
 
 def stage(document, changes, key, value):
+    changes = normalize_pending_values(document, changes, field_map(document))
     fields = field_map(document)
     if key not in fields:
         raise SaveError('This field is not qualified for the opened PS3 profile.')
@@ -158,6 +160,7 @@ def stage(document, changes, key, value):
 
 
 def limit_values(document, changes, keys):
+    changes = normalize_pending_values(document, changes, field_map(document))
     fields = field_map(document)
     changed_payload(document, changes)
     for key in keys:
@@ -169,6 +172,7 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
+    changes = normalize_pending_values(document, changes, field_map(document))
     limit_values(document, changes, [f.id for f in fields_for(document)
                                    if group is None or f.group == group])
     return dict(changes)

@@ -13,6 +13,7 @@ from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.nioh3 import balances, codec, inventory
+from koei_editor.shared.adapter_contract import is_opened_value, normalize_pending_values
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 
@@ -111,32 +112,34 @@ def _validated_changes(document, changes):
     mapping = field_map(document)
     if type(changes) is not dict:
         raise SaveError('Nioh 3 pending edits require an ordinary field/value mapping.')
-    for key, value in changes.items():
-        if type(key) is not str or key not in mapping:
-            raise SaveError('Only qualified Nioh 3 balances and existing common-stack quantities are writable.')
-        mapping[key].validate(value)
-    return mapping
+    if any(type(key) is not str or key not in mapping for key in changes):
+        raise SaveError('Only qualified Nioh 3 balances and existing common-stack quantities are writable.')
+    normalized = normalize_pending_values(document, changes, mapping)
+    return mapping, normalized
 
 
 def stage(document, changes, key, value):
-    mapping = _validated_changes(document, changes)
+    mapping, changes = _validated_changes(document, changes)
     if type(key) is not str or key not in mapping:
         raise SaveError('Only qualified Nioh 3 balances and existing common-stack quantities are writable.')
     field = mapping[key]
-    field.validate(value)
     result = dict(changes)
-    if value == field.value(document.payload):
+    if is_opened_value(document, field, value):
         result.pop(key, None)
     else:
+        field.validate(value)
         result[key] = value
     return result
 
 
 def changed_payload(document, changes):
-    mapping = _validated_changes(document, changes)
+    mapping, changes = _validated_changes(document, changes)
     result = bytearray(document.payload)
     for key, value in changes.items():
         field = mapping[key]
+        opened = field.value(document.payload)
+        if type(value) is type(opened) and value == opened:
+            continue
         result[field.offset:field.offset + field.size] = value.to_bytes(field.size, 'little')
     if result != document.payload:
         struct.pack_into('<I', result, codec.CHECKSUM_OFFSET, codec.body_checksum(result))
@@ -145,11 +148,18 @@ def changed_payload(document, changes):
 
 def serialize(document, changes):
     validate_document(document)
-    return codec.encode(document.raw, changed_payload(document, changes))
+    payload = changed_payload(document, changes)
+    if payload == document.payload:
+        return document.raw
+    raw = codec.encode(document.raw, payload)
+    verified = decode(raw, GAME_ID, document.source)
+    if verified.payload != payload:
+        raise SaveError('Nioh 3 edited USER failed native read-back verification.')
+    return raw
 
 
 def limit_values(document, changes, keys):
-    mapping = _validated_changes(document, changes)
+    mapping, changes = _validated_changes(document, changes)
     if isinstance(keys, (str, bytes)):
         raise SaveError('Nioh 3 Max keys require an iterable of mapped field IDs.')
     try:
@@ -163,12 +173,12 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
-    _validated_changes(document, changes)
-    return dict(changes)
+    _mapping, normalized = _validated_changes(document, changes)
+    return normalized
 
 
 def review(document, changes):
-    _validated_changes(document, changes)
+    _mapping, changes = _validated_changes(document, changes)
     return [(field, field.value(document.payload), changes[field.id])
             for field in fields_for(document) if field.id in changes]
 

@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 1.9** supports **76 game/platform profiles across 13 platforms**.
+**Version 1.91** supports **76 game/platform profiles across 13 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Supported games

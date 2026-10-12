@@ -75,6 +75,14 @@ Recompute integrity only during a qualified edit and reparse the output; do not
 silently repair damaged input or normalize unknown data. PSU offsets come from
 container entries, not an example's absolute position.
 
+Every registered scalar editor must use `BoundScalarAdapter`: it validates the
+complete pending map, preserves exact typed opened values as no-ops, and reparses
+edited output to confirm every requested value before a copy is accepted. Keep
+these guarantees in new scalar backends and the adapter template. Any future
+bespoke editor must provide equivalent native read-back and value verification
+in its save path. DW3 retains its separate tagged-document and audited patch
+workflow.
+
 Use shared safety/storage helpers for file operations. Open separate save copies
 outside live game/Steam Cloud directories, reject resolved aliases, detect
 changed sources and write atomically to new destinations. Restore must validate

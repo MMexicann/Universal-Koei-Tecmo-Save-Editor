@@ -12,11 +12,14 @@ from types import MappingProxyType
 
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.save_safety import safe_path
 import koei_editor.games.sw4dx.samurai4dx_codec as codec
 
 GAME_ID = 'samurai4dx'
 SAVE_SIZE = codec.SAVE_SIZE
+SERIALIZED_INTEGRITY_RANGES = tuple((offset, offset + 4)
+                                    for offset in codec.CHECKSUM_OFFSETS)
 OFFICER_BASE, OFFICER_STRIDE, OFFICER_COUNT = 0xC7E, 0x44, 55
 WEAPON_BASE, WEAPON_STRIDE, WEAPON_OWNERS, WEAPON_SLOTS = 0x3DE6, 0x22, 60, 8
 GOLD_OFFSET, GEM_BASE = 0x7DA6, 0x7E20
@@ -226,6 +229,7 @@ def serialize(document, changes):
 
 
 def stage(document, changes, key, value):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested field is not mapped for this existing save record.')
@@ -242,6 +246,7 @@ def stage(document, changes, key, value):
 
 
 def limit_values(document, changes, keys):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapped = field_map(document)
     changed_payload(document, changes)
     result = {}
@@ -257,6 +262,7 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
+    changes = normalize_pending_values(document, changes, field_map(document))
     mapped = field_map(document)
     result = dict(changes)
     keys = [f.id for f in mapped.values() if group is None or f.group == group]

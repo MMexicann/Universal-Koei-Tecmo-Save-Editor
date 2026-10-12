@@ -1,5 +1,33 @@
 # Universal development validation
 
+## v1.91 universal save contract — 2026-10-12
+
+Registered scalar game/platform profiles all pass through `BoundScalarAdapter`.
+The adapter validates the complete pending edit map, treats only an exact
+same-type opened value as a no-op, requires byte-identical output for an
+unchanged save, and decodes every edited serialization again to confirm native
+validity and the requested field values. Save As reopens the actual destination
+on disk, checks the backend-returned document against that read-back, validates
+the saved payload and requested field values, then returns the freshly read
+document. DW3 is the only bespoke editor; its existing immutable snapshot,
+integrity, patch and read-back audit remains in place.
+
+Direct `stage`, `limit_values` and `maximums` calls in the 16 older scalar
+backends identified below now validate and normalize the complete pending map
+too. The new-game parser template uses the shared validator, and the contributor
+guide requires the bound adapter or equivalent save-path checks for future
+profiles. The full Linux suite ran **2,050 tests: 599 skipped, zero assertion
+failures, and one environment error**. The only error is the existing RotK3 Tk
+GUI test, which cannot create a window because this runner has no `$DISPLAY`;
+the other tests completed. Focused adapter-contract/pending-safety/WO4 checks
+passed **42 tests** with two unavailable-fixture/display skips. Inventory and
+release-package verification also passed. The native Windows suite and EXE
+build remain pending in the v1.91 release workflow.
+
+The [public source catalog](EDITOR_SOURCE_CATALOG.md) records more than twenty
+additional online game/edition leads and why none yet meets native-writer
+qualification. They are research-only; no unverified parser was registered.
+
 ## Existing-editor expansion — 2026-10-11
 
 The [current expansion checklist](RICH_EDITOR_EXPANSION.md) extends 19 existing
@@ -172,15 +200,15 @@ generated-inventory check passed.
 The version remains 1.6. Linux checks do not validate Windows CNG or an EXE;
 native build status belongs to the explicitly non-publishing workflow run.
 
-Direct calls bypassing the bound adapter remain a legacy API limitation:
-16 older backends can retain unknown prior keys during `stage`; PW4 and Sophie 2
-can also normalize malformed pending values in direct `maximums` calls. For
-example, direct PW4 Max with pending `{'beli': -1}` becomes a maximum, and
-`{'beli': '1'}` raises `TypeError`. Their review/writers reject unknown keys.
-Registered/GUI Stage, limits and Max are guarded and have adversarial regressions;
-no corrupt output from the unknown-key case was established. The affected direct
-modules are DW7 XL, PW4, DW4 Hyper/PS2 XL, Sophie 2, WO3U, SW4 DX, DW9E, Orochi Z,
-Wii U Hyrule, AoC, Hyrule Definitive, FE Warriors, DW7E PS3, DW7 PS3 and SW4 PS3.
+Historical limitation in this v1.6 / 29-adapter snapshot: 16 older backends
+could retain unknown prior keys during direct `stage`; PW4 and Sophie 2 could
+also normalize malformed pending values in direct `maximums` calls. For
+example, direct PW4 Max with pending `{'beli': -1}` became a maximum, and
+`{'beli': '1'}` raised `TypeError`. The v1.91 source changes above close these
+direct-call gaps and add read-back value confirmation to the shared registered
+scalar save path. The affected direct modules were DW7 XL, PW4, DW4 Hyper/PS2 XL,
+Sophie 2, WO3U, SW4 DX, DW9E, Orochi Z, Wii U Hyrule, AoC, Hyrule Definitive,
+FE Warriors, DW7E PS3, DW7 PS3 and SW4 PS3.
 
 Coordination: the validation changes affect shared contracts/GUI, Origins and
 narrow DW5/DW8E/Legends/Wo Long edge cases. No registrations or game mechanics

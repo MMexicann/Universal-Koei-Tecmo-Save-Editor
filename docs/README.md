@@ -10,6 +10,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
+- [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)

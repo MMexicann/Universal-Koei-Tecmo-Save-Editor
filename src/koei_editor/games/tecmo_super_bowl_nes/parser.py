@@ -17,6 +17,10 @@ from koei_editor.shared.save_safety import safe_path
 GAME_ID = 'tecmo_super_bowl_nes'
 SIZE = MAX_FILE_SIZE = 8192
 INTEGRITY_KIND = 'checksum'
+# The native season checksum is updated when a valid play/condition/control
+# field changes. It is verified during decode and is the only permitted
+# serializer difference beyond the requested bytes.
+SERIALIZED_INTEGRITY_RANGES = ((0x6BE, 0x6C0),)
 POSITIONS = ('QB1', 'QB2', 'RB1', 'RB2', 'RB3', 'RB4', 'WR1', 'WR2', 'WR3',
              'WR4', 'TE1', 'TE2', 'C', 'LG', 'RG', 'LT', 'RT', 'RE', 'NT', 'LE',
              'ROLB', 'RILB', 'LILB', 'LOLB', 'RCB', 'LCB', 'FS', 'SS', 'K', 'P')

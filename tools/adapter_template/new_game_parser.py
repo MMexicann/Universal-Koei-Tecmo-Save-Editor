@@ -8,6 +8,7 @@ import hashlib
 from pathlib import Path
 
 from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore_snapshot
+from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import safe_path
 
@@ -98,10 +99,12 @@ def field_map(document):
 
 def stage(document, changes, key, value):
     fields = field_map(document)
-    if key not in fields:
+    changes = normalize_pending_values(document, changes, fields)
+    if type(key) is not str or key not in fields:
         raise SaveError('This field is not mapped for the opened save.')
     result = dict(changes)
-    if type(value) is int and value == fields[key].value(document.payload):
+    opened = fields[key].value(document.payload)
+    if type(value) is type(opened) and value == opened:
         result.pop(key, None)
     else:
         fields[key].validate(value)
@@ -111,8 +114,9 @@ def stage(document, changes, key, value):
 
 def limit_values(document, changes, keys):
     fields, result = field_map(document), {}
+    changes = normalize_pending_values(document, changes, fields)
     for key in keys:
-        if key not in fields:
+        if type(key) is not str or key not in fields:
             raise SaveError('This field is not mapped for the opened save.')
         field = fields[key]
         if getattr(field, 'maxable', True) and changes.get(key, field.value(document.payload)) <= field.maximum:
@@ -121,6 +125,7 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
+    changes = normalize_pending_values(document, changes, field_map(document))
     result = dict(changes)
     keys = [field.id for field in fields_for(document) if group is None or field.group == group]
     for key, value in limit_values(document, changes, keys).items():
@@ -130,6 +135,7 @@ def maximums(document, changes, group=None):
 
 def changed_payload(document, changes):
     fields = field_map(document)
+    changes = normalize_pending_values(document, changes, fields)
     output = bytearray(document.payload)
     for key, value in changes.items():
         if key not in fields:

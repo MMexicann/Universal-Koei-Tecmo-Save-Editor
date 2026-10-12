@@ -6,10 +6,62 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
-The v1.9 source contains **76 registered game/platform profiles across 13 platforms**.
+The v1.91 source contains **76 registered game/platform profiles across 13 platforms**.
 The new separately qualified profiles are described below;
 the registry-derived [inventory](SUPPORTED_GAMES.md) is authoritative.
 Research-only formats remain outside the library.
+
+## v1.91 additional-game survey
+
+The survey reviewed 22 additional game/platform candidates. These remain
+research-only because their complete native integrity, writable field maps,
+record ownership or controlled gameplay pairs are not yet qualified. Do not
+interpret a title below as supported by the application.
+
+| Candidate | Main qualification blocker |
+| --- | --- |
+| [Fairy Tail](FAIRY_TAIL_SWITCH_RESEARCH.md), Nintendo Switch | Container framing and checksums are known, but no writable gameplay field is mapped. |
+| [Dead or Alive 5 Last Round](DOA5LR_PC_RESEARCH.md), Windows PC | Title-specific semantic map and complete integrity coverage are missing. |
+| [Blue Reflection: Second Light](BLUE_REFLECTION_RESEARCH.md), Windows PC | The guide-node length is unresolved and fields are unmapped. |
+| [Ninja Gaiden 2 Black](NINJA_GAIDEN_RESEARCH.md), Windows PC | Native story payload integrity is unresolved. |
+| [Ninja Gaiden Sigma 2 Master Collection](NINJA_GAIDEN_RESEARCH.md), Windows PC | Payload integrity and occupied inventory boundaries are unresolved. |
+| [Nioh Complete Edition](NIOH_INTEGRITY_RESEARCH.md), Windows PC | Active native integrity checks are unresolved. |
+| [Nioh 2 Complete Edition](NIOH_INTEGRITY_RESEARCH.md), Windows PC | Active native integrity checks are unresolved. |
+| [Berserk and the Band of the Hawk](BERSERK_PC_RESEARCH.md), Windows PC | Title/revision identity, inner integrity and controlled field pairs remain incomplete. |
+| [Attack on Titan: Wings of Freedom](AOT1_PC_RESEARCH.md), Windows PC | Title/revision identity, complete integrity and controlled field pairs remain incomplete. |
+| [Attack on Titan 2: Final Battle](AOT2_PC_RESEARCH.md), Windows PC | Exact build identity, complete integrity and controlled field pairs remain incomplete. |
+| [Samurai Warriors: Spirit of Sanada](SANADA_PC_RESEARCH.md), Windows PC | Inner integrity, serializer and writable action pairs are still needed. |
+| [Atelier Rorona DX](RORONA_DX_FORMAT.md), Steam PC | Native integrity, catalog mapping and ownership rules remain unresolved. |
+| [Atelier Meruru DX](ARLAND_DX_RESEARCH.md), Steam PC | Native integrity and field mapping remain incomplete. |
+| [Atelier Totori DX](TOTORI_DX_PS4_FORMAT.md), PS4 CUSA14014 | Native integrity and controlled action pairs remain incomplete. |
+| [Dynasty Warriors: Strikeforce](STRIKEFORCE_PS3.md), US PS3 | Exact revision, native integrity and progression rules need qualification. |
+| [Samurai Warriors 2 HD with Xtreme Legends](SW2HD_PS3.md), JP PS3 | Full export identity, revision and native integrity remain unqualified. |
+| [Atelier Lulua](LULUA_NELKE_SWITCH_RESEARCH.md), Nintendo Switch | A qualified decoder, exact roundtrip and controlled writable actions are needed. |
+| [Nelke & the Legendary Alchemists](LULUA_NELKE_SWITCH_RESEARCH.md), Nintendo Switch | Switch-specific codec, integrity and writable actions remain unqualified. |
+| [Dynasty Warriors 9](DW9_ORIGINAL_PC_RESEARCH.md), original Windows PC | Native integrity and record ownership remain unqualified. |
+| [Dragon Quest Heroes: Slime Edition](LICENSED_ACTION_RPG_STATUS.md), Windows PC | Title identity, integrity and semantic field mapping remain incomplete. |
+| [Dragon Quest Heroes II](LICENSED_ACTION_RPG_STATUS.md), Windows PC | Header, slot boundaries, integrity and gameplay semantics remain unresolved. |
+| [Ninja Gaiden Sigma](NINJA_GAIDEN_RESEARCH.md), Windows PC | Title/revision identity and native serializer/integrity need qualification. |
+
+These titles are useful research targets. Registration requires the complete
+native evidence and gameplay qualification described in the contributor guide;
+the current library remains at 76 profiles until then.
+
+A follow-up checked a newly published MIT DW3 Remastered editor for the existing
+Windows Steam profile and a DW8 XL PC/PS3/PS4/Vita container converter. The DW3
+source exposes Challenge Mode board edits, but its own limits are not game caps
+and board scores can cross item-reward thresholds; controlled reward and
+achievement pairs are still needed. The converter does not qualify new
+platform writers. Neither lead changes the supported profile count.
+
+A broader online sweep also catalogued more than twenty additional edition or
+platform leads, including PS4 Save Wizard recipes, older Japanese PC/PC-98
+editors, and community tools for ROTK X/XI/XII, DW5 PC, DW7 Empires PC, and
+Musou Orochi Z PC. Those sources establish that editors exist, but not safe
+native write behavior: revision scopes, checksums, field dependencies, reuse
+terms and representative saves are incomplete. The [public source catalog](EDITOR_SOURCE_CATALOG.md)
+lists the research and its blockers. These leads are not counted as registered
+games or implemented support.
 
 The [existing-editor expansion](RICH_EDITOR_EXPANSION.md) reviews every supported
 profile except DW3 Remastered and adds content to 19 existing profiles. Its

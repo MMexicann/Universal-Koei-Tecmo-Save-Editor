@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.91
+
+- Added a shared scalar save contract: validate the complete pending edit map,
+  preserve exact typed opened values as no-ops, and decode edited output to
+  confirm native integrity and every requested field before accepting a copy.
+  Save As reopens the actual destination and checks it against that verified
+  result before the editor accepts it.
+- Hardened direct Stage, limit and Max calls in 16 older game backends. Invalid
+  prior keys and malformed values are rejected consistently, including PW4 and
+  Atelier Sophie 2 Max actions.
+- Extended the adapter template and contributor rules so future scalar profiles
+  inherit the same validation and read-back requirements. DW3 keeps its native
+  audited patch workflow.
+- Catalogued 30+ public game/edition/platform leads alongside the 22-title
+  format survey. They remain research-only until native integrity and writable
+  gameplay fields are qualified; the supported library stays at 76 profiles
+  across 13 platforms.
+
 ## v1.9
 
 - **Atelier Rorona, Totori and Meruru — original PS3:** reduce Cole and browse named character and progression records.

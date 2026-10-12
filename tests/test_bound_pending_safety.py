@@ -58,5 +58,5 @@ class BoundPendingSafetyTests(unittest.TestCase):
         limits = adapter.limit_values(document, {field.id: original}, [field.id])
         self.assertNotIn(field.id, limits)
         maximums = adapter.maximums(document, {field.id: original}, 'Owned coins')
-        self.assertEqual(maximums[field.id], original)
+        self.assertNotIn(field.id, maximums)
         self.assertEqual(field.value(adapter.decode(adapter.serialize(document, maximums)).payload), original)

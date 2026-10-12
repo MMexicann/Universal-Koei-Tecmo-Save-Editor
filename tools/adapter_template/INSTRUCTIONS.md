@@ -12,7 +12,15 @@ claim. Read [CONTRIBUTING.md](../../CONTRIBUTING.md) and the
    and occupied records. Implement the codec seams and a frozen field type
    satisfying `koei_editor.shared.adapter_contract.ScalarField`, with evidenced
    bounds and storage encoding. `maxable=False` must exclude dependency-sensitive
-   choices and unproved natural caps from bulk actions.
+   choices and unproved natural caps from bulk actions. The bound adapter decodes
+   every edited save and compares its payload to the requested payload; a backend
+   that recomputes payload integrity words may declare exact byte ranges in
+   `SERIALIZED_INTEGRITY_RANGES = ((start, end), ...)`. Ranges are half-open
+   offsets into the decoded payload and may cover only verified integrity bytes
+   that the serializer deterministically recalculates. All mapped edits must
+   still read back as their requested values, and changes outside those ranges
+   must still fail verification. Never use this declaration to hide unknown or
+   unexpected serializer differences.
 3. Register the implemented game in `koei_editor.game_registry.GAMES` with
    qualified editor/parser/backend module paths, extension, platform and honest
    provenance. Update reviewed runtime metadata, the supported-game inventory,

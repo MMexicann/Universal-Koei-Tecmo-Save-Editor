@@ -41,7 +41,7 @@ class Gundam1PS3ContractTests(ScalarContractTests, unittest.TestCase):
         from koei_editor.game_registry import get_game
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.folder = Path(self.temporary.name)
+        self.folder = Path(self.temporary.name).resolve()
         (self.folder / 'PARAM.SFO').write_bytes(metadata())
         self.game = get_game(self.game_id)
         self.adapter = self.game.get_scalar_adapter()
@@ -55,7 +55,9 @@ class Gundam1PS3Tests(unittest.TestCase):
     def setUp(self):
         folder = tempfile.TemporaryDirectory()
         self.addCleanup(folder.cleanup)
-        self.folder = Path(folder.name)
+        # The backend resolves Windows 8.3 aliases before its atomic write hooks.
+        # Derive every test path from that same canonical folder so faults fire.
+        self.folder = Path(folder.name).resolve()
         self.source = self.folder / 'DATA.BIN'
         self.source.write_bytes(fixture())
         (self.folder / 'PARAM.SFO').write_bytes(metadata())
@@ -268,9 +270,11 @@ class Gundam1PS3Tests(unittest.TestCase):
                 other.mkdir()
                 (other / 'PARAM.SFO').write_bytes(metadata())
                 destination = other / 'edited.bin'
+                injected = []
                 def mutate(data, path):
                     result = original_write(data, path)
                     if Path(path) == destination:
+                        injected.append(destination)
                         if target == 'source':
                             self.source.write_bytes(self.document.raw[:-1] + bytes([self.document.raw[-1] ^ 1]))
                         else:
@@ -279,6 +283,7 @@ class Gundam1PS3Tests(unittest.TestCase):
                     return result
                 with patch.object(parser, 'atomic_new', side_effect=mutate), self.assertRaises(SaveError):
                     parser.save_as(self.document, {'amuro_skill_1': 1}, destination)
+                self.assertEqual(injected, [destination])
                 self.assertTrue(destination.exists())  # Preserve the raced path for review.
 
     def test_restore_postwrite_validation_preserves_raced_destination(self):
@@ -289,9 +294,11 @@ class Gundam1PS3Tests(unittest.TestCase):
                 (self.folder / 'PARAM.SFO').write_bytes(metadata())
                 backup.with_suffix('.sfo').write_bytes(metadata())
                 destination = self.folder / f'after-restore-{target}.bin'
+                injected = []
                 def mutate(data, path):
                     result = original_write(data, path)
                     if Path(path) == destination:
+                        injected.append(destination)
                         if target == 'destination':
                             changed = bytearray(data)
                             changed[-1] ^= 1
@@ -303,21 +310,25 @@ class Gundam1PS3Tests(unittest.TestCase):
                 # Shared restore uses its own atomic helper; patch its write boundary.
                 with patch('koei_editor.shared.copy_storage.atomic_new', side_effect=mutate), self.assertRaises(SaveError):
                     parser.restore(backup, destination)
+                self.assertEqual(injected, [destination])
                 self.assertTrue(destination.exists())
         self.assertEqual(self.source.read_bytes(), self.document.raw)
 
     def test_actual_destination_readback_rejects_changed_output(self):
         destination = self.folder / 'readback.bin'
         original_write = parser.atomic_new
+        injected = []
         def corrupt(data, path):
             result = original_write(data, path)
             if Path(path) == destination:
+                injected.append(destination)
                 changed = bytearray(data)
                 changed[-1] ^= 1
                 destination.write_bytes(bytes(changed))
             return result
         with patch.object(parser, 'atomic_new', side_effect=corrupt), self.assertRaises(SaveError):
             parser.save_as(self.document, {'amuro_skill_1': 1}, destination)
+        self.assertEqual(injected, [destination])
         self.assertEqual(self.source.read_bytes(), self.document.raw)
 
     def test_restore_rechecks_opaque_destination_and_backup_companion(self):

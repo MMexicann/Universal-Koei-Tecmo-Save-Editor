@@ -74,6 +74,9 @@ jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || github.ref_type == 'tag' || contains(github.event.head_commit.message, '[release]')
     needs: tests
+    permissions:
+      contents: read
+      actions: read
     runs-on: windows-latest
     timeout-minutes: 30
     defaults:
@@ -146,6 +149,11 @@ jobs:
           New-Item -ItemType Directory -Force $baselineFolder | Out-Null
           gh release download v2.0 --repo "$env:GITHUB_REPOSITORY" --pattern 'UniversalKoeiTecmoSaveEditor-v2.0.exe' --dir "$baselineFolder" 2>&1 | Out-File defender-reports/baseline-download.log
           $baseline = Join-Path $baselineFolder 'UniversalKoeiTecmoSaveEditor-v2.0.exe'
+          if (-not (Test-Path $baseline)) {
+            # Read-only tokens cannot see draft release assets. Retrieve the
+            # same original bytes from the successful 2.0 build instead.
+            gh run download 38447925848 --repo "$env:GITHUB_REPOSITORY" --name universal-koei-tecmo-windows --dir "$baselineFolder" 2>&1 | Out-File defender-reports/baseline-download.log -Append
+          }
           if (Test-Path $baseline) {
             $hash = (Get-FileHash -Algorithm SHA256 $baseline).Hash.ToLowerInvariant()
             if ($hash -ne '2be5de88e333a3d7e839ae6cd4183d866cf063c8ae6542000b7a472d53cccc0c') {

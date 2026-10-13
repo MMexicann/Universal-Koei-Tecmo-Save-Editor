@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 16865,
-      "sha256": "309fa8ac487e1172b148170191412cbd103c701ce8a7c5c273222213e27a9222"
+      "bytes": 17324,
+      "sha256": "23a571d831630252a15e401e1cba74c5821b67a18e4a8bf4a838bb36ae78367e"
     },
     {
       "path": ".gitignore",
@@ -3313,8 +3313,8 @@
     },
     {
       "path": "tests/test_defender_release_gate.py",
-      "bytes": 14852,
-      "sha256": "a0eb41a419d1bbc8c24d2b97bab976b5f0c7def98cf59130f2d68049d513d1f7"
+      "bytes": 18691,
+      "sha256": "f1272e71fe992d36c6e40fae08eb17cf18bc43476b3f0424ebdc426a7527e7df"
     },
     {
       "path": "tests/test_doa5_ps3.py",
@@ -4518,8 +4518,8 @@
     },
     {
       "path": "tools/scan_release.ps1",
-      "bytes": 13721,
-      "sha256": "1cd8466ff4e2244ef47d0b73857d6848236fd4f2e8ce39e6d37b2e8847f32827"
+      "bytes": 18141,
+      "sha256": "95ca7e2108bc231e15eab71023862882e549ce323ed359aa6f1ca61aa143167a"
     },
     {
       "path": "tools/test_timings.json",

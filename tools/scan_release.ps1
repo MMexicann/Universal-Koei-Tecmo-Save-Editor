@@ -30,6 +30,10 @@ $report = [ordered]@{
     defender_before = $null
     defender_after = $null
     engine_ready = $false
+    readiness_attempts = 0
+    readiness_wait_seconds = 0
+    readiness_observations = @()
+    protection_diagnostics = $null
     maps_exit_code = $null
     scan_exit_code = $null
     scan_arguments = @()
@@ -87,6 +91,52 @@ function Get-DefenderState {
     }
 }
 
+function Get-ProtectionDiagnostics {
+    # Selected local Defender service/driver and policy fields only. Do not
+    # export the registry, process environment or machine/account identifiers.
+    $details = [ordered]@{ services = @(); drivers = @(); policies = @(); errors = @() }
+    foreach ($name in @('WinDefend', 'WdFilter', 'WdNisDrv', 'WdNisSvc')) {
+        try {
+            $service = Get-Service -Name $name -ErrorAction Stop
+            $details.services += [ordered]@{
+                name = $service.Name
+                status = $service.Status.ToString()
+                start_type = $service.StartType.ToString()
+            }
+        } catch { $details.errors += ($name + ': ' + $_.Exception.Message) }
+    }
+    try {
+        # Some platforms expose kernel drivers through CIM, not Get-Service.
+        $details.drivers = @(Get-CimInstance -ClassName Win32_SystemDriver `
+            -Filter "Name='WdFilter' OR Name='WdNisDrv'" -ErrorAction Stop |
+            Select-Object Name, State, Started, StartMode)
+    } catch { $details.errors += ('Defender drivers: ' + $_.Exception.Message) }
+    $queries = @(
+        @{path='HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender'; names=@('DisableAntiSpyware','DisableAntiVirus')},
+        @{path='HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection'; names=@('DisableRealtimeMonitoring','DisableBehaviorMonitoring','DisableIOAVProtection')},
+        @{path='HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet'; names=@('SpynetReporting','SubmitSamplesConsent','DisableBlockAtFirstSeen')},
+        @{path='HKLM:\SOFTWARE\Policies\Microsoft\Windows Advanced Threat Protection'; names=@('ForceDefenderPassiveMode')},
+        @{path='HKLM:\SYSTEM\CurrentControlSet\Services\WdFilter'; names=@('Start')},
+        @{path='HKLM:\SYSTEM\CurrentControlSet\Services\WdNisDrv'; names=@('Start')},
+        @{path='HKLM:\SYSTEM\CurrentControlSet\Services\WdNisSvc'; names=@('Start')}
+    )
+    foreach ($query in $queries) {
+        try {
+            if (Test-Path -LiteralPath $query.path) {
+                $values = Get-ItemProperty -LiteralPath $query.path -Name $query.names -ErrorAction SilentlyContinue
+                $selected = [ordered]@{}
+                foreach ($name in $query.names) {
+                    if ($null -ne $values -and $null -ne $values.PSObject.Properties[$name]) {
+                        $selected[$name] = $values.PSObject.Properties[$name].Value
+                    }
+                }
+                $details.policies += [ordered]@{ path=$query.path; values=$selected }
+            }
+        } catch { $details.errors += ('Defender policy: ' + $_.Exception.Message) }
+    }
+    return $details
+}
+
 function Assert-DefenderReady($State) {
     $status = $State.status
     $preferences = $State.preferences
@@ -111,6 +161,41 @@ function Assert-DefenderReady($State) {
     if ($updated -gt [DateTime]::UtcNow.AddMinutes(5) -or
         $updated -lt [DateTime]::UtcNow.AddDays(-2)) {
         throw 'Defender security intelligence is missing, future-dated or stale.'
+    }
+}
+
+function Wait-DefenderReady(
+    [ValidateRange(1, 300)][int]$TimeoutSeconds = 120,
+    [ValidateRange(1, 10)][int]$PollSeconds = 2
+) {
+    # Preference writes can finish before the actual protection state changes.
+    # Poll the same strict predicate; expiry is an error, never qualification.
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    while ($true) {
+        $observation = [ordered]@{
+            observed_utc = [DateTime]::UtcNow.ToString('o')
+            state = $null
+            ready = $false
+            error = $null
+        }
+        try {
+            $state = Get-DefenderState
+            $report.defender_after = $state
+            $observation.state = $state
+            Assert-DefenderReady $state
+            $observation.ready = $true
+        } catch { $observation.error = $_.Exception.Message }
+        $report.readiness_attempts += 1
+        $report.readiness_wait_seconds = [Math]::Round($timer.Elapsed.TotalSeconds, 3)
+        $report.readiness_observations += $observation
+        Write-ScanReport
+        if ($observation.ready) { return $state }
+        if ($timer.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
+            throw ('Defender readiness did not become active within ' + $TimeoutSeconds +
+                   ' seconds: ' + $observation.error)
+        }
+        $remaining = $TimeoutSeconds - $timer.Elapsed.TotalSeconds
+        Start-Sleep -Milliseconds ([int]([Math]::Min($PollSeconds, $remaining) * 1000))
     }
 }
 
@@ -190,8 +275,7 @@ try {
     catch { $report.diagnostics_errors += ('Initial Defender state: ' + $_.Exception.Message) }
     Write-ScanReport
     Enable-DefenderProtection
-    $report.defender_after = Get-DefenderState
-    Assert-DefenderReady $report.defender_after
+    $report.defender_after = Wait-DefenderReady
     $report.defender_scan_start = $report.defender_after
     $command = Get-DefenderCommand
     $report.scanner_version = (Get-Item -LiteralPath $command).VersionInfo.FileVersion
@@ -244,6 +328,8 @@ try {
 } finally {
     $report.phase = 'completed'
     $report.completed_utc = [DateTime]::UtcNow.ToString('o')
+    try { $report.protection_diagnostics = Get-ProtectionDiagnostics }
+    catch { $report.diagnostics_errors += ('Protection diagnostics: ' + $_.Exception.Message) }
     # DisableRemediation does not write detection events; the native stdout log
     # is the primary evidence. These supplement real-time/quarantine diagnostics.
     try {

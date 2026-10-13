@@ -27,6 +27,22 @@ def executable_source():
                      if not line.lstrip().startswith('#'))
 
 
+def procedural_ready_state():
+    now = datetime.now(timezone.utc)
+    return {'service_status': 'Running', 'exclusion_count': 0,
+             'status': {'AMRunningMode': 'Normal', 'AMServiceEnabled': True,
+                        'AntivirusEnabled': True, 'RealTimeProtectionEnabled': True,
+                        'BehaviorMonitorEnabled': True, 'IoavProtectionEnabled': True,
+                        'AMEngineVersion': 'procedural-engine', 'AMProductVersion': 'procedural-platform',
+                        'AntivirusSignatureVersion': 'procedural-signature',
+                        'AntivirusSignatureLastUpdated': now.isoformat()},
+             'preferences': {'MAPSReporting': 2, 'SubmitSamplesConsent': 1,
+                             'DisableBlockAtFirstSeen': False, 'DisableRealtimeMonitoring': False,
+                             'DisableBehaviorMonitoring': False, 'DisableIOAVProtection': False,
+                             'DisableScriptScanning': False, 'DisableArchiveScanning': False,
+                             'PUAProtection': 1}}
+
+
 class DefenderReleaseGateContracts(unittest.TestCase):
     def test_input_is_only_scanned_never_executed_and_scanner_is_authenticated(self):
         source = executable_source()
@@ -160,18 +176,7 @@ class DefenderReleaseGateContracts(unittest.TestCase):
         # Synthetic policy inputs exercise the real predicate; accepting the
         # good vector does not imply an installed/scanning antivirus engine.
         now = datetime.now(timezone.utc)
-        ready = {'service_status': 'Running', 'exclusion_count': 0,
-                 'status': {'AMRunningMode': 'Normal', 'AMServiceEnabled': True,
-                            'AntivirusEnabled': True, 'RealTimeProtectionEnabled': True,
-                            'BehaviorMonitorEnabled': True, 'IoavProtectionEnabled': True,
-                            'AMEngineVersion': 'procedural-engine', 'AMProductVersion': 'procedural-platform',
-                            'AntivirusSignatureVersion': 'procedural-signature',
-                            'AntivirusSignatureLastUpdated': now.isoformat()},
-                 'preferences': {'MAPSReporting': 2, 'SubmitSamplesConsent': 1,
-                                 'DisableBlockAtFirstSeen': False, 'DisableRealtimeMonitoring': False,
-                                 'DisableBehaviorMonitoring': False, 'DisableIOAVProtection': False,
-                                 'DisableScriptScanning': False, 'DisableArchiveScanning': False,
-                                 'PUAProtection': 1}}
+        ready = procedural_ready_state()
         vectors = [{'name': 'procedural-ready', 'state': ready, 'reject': False}]
         mutations = [('', 'service_status', 'Stopped'), ('', 'exclusion_count', 2),
                      ('status', 'AMRunningMode', 'Passive'), ('status', 'AMServiceEnabled', False),
@@ -230,6 +235,71 @@ class DefenderReleaseGateContracts(unittest.TestCase):
                     self.assertEqual(state['verdict'], 'scanner_unavailable_or_failed')
                     self.assertEqual(state['inputs'], [{'path': source.name, 'size': source.stat().st_size,
                                                        'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}])
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
+    def test_readiness_wait_accepts_observed_activation_and_rejects_expiry(self):
+        # The real waiting function and predicate consume procedural live
+        # observations. Configuration being enabled is deliberately insufficient.
+        command = r'''
+            $ErrorActionPreference='Stop'
+            $tokens=$null; $errors=$null
+            $ast=[System.Management.Automation.Language.Parser]::ParseFile(
+                $env:DEFENDER_SCRIPT_TEST_PATH,[ref]$tokens,[ref]$errors)
+            foreach($name in @('Assert-DefenderReady','Wait-DefenderReady')) {
+                $definition=$ast.Find({param($node)
+                    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+                    $node.Name -eq $name},$true)
+                . ([ScriptBlock]::Create($definition.Extent.Text))
+            }
+            function Write-ScanReport {}
+            function Get-DefenderState {
+                $script:attempt += 1
+                if($script:mode -eq 'query-error' -and $script:attempt -eq 1) {
+                    throw 'Procedural CIM state temporarily unavailable'
+                }
+                $state=Get-Content -LiteralPath $env:DEFENDER_TEST_READY_STATE -Raw | ConvertFrom-Json
+                if($script:mode -eq 'persistent' -or
+                    ($script:mode -eq 'delayed' -and $script:attempt -eq 1)) {
+                    $state.status.RealTimeProtectionEnabled=$false
+                    $state.status.BehaviorMonitorEnabled=$false
+                    $state.status.IoavProtectionEnabled=$false
+                }
+                return $state
+            }
+            foreach($mode in @('delayed','query-error','persistent')) {
+                $script:mode=$mode; $script:attempt=0
+                $report=[ordered]@{defender_after=$null; readiness_attempts=0;
+                    readiness_wait_seconds=0; readiness_observations=@(); engine_ready=$false}
+                $expired=$false
+                try {$result=Wait-DefenderReady -TimeoutSeconds 1 -PollSeconds 1}
+                catch {$expired=$true}
+                if($mode -eq 'persistent') {
+                    if(-not $expired -or $report.engine_ready -or
+                        @($report.readiness_observations | Where-Object ready).Count -ne 0) {
+                        throw 'Expired, disabled protection was accepted.'
+                    }
+                } else {
+                    if($expired -or $report.readiness_attempts -ne 2 -or
+                        $report.readiness_observations[0].ready -or
+                        -not $report.readiness_observations[1].ready -or
+                        -not $result.status.RealTimeProtectionEnabled) {
+                        throw ('Activation did not require actual live readiness: ' + $mode)
+                    }
+                }
+                if($report.readiness_attempts -ne $report.readiness_observations.Count) {
+                    throw 'Readiness observations were lost.'
+                }
+            }
+            exit 0
+        '''
+        with tempfile.TemporaryDirectory() as folder:
+            ready = Path(folder).resolve() / 'ready-state.json'
+            ready.write_text(json.dumps(procedural_ready_state()), encoding='utf-8')
+            result = subprocess.run([POWERSHELL, '-NoProfile', '-NonInteractive', '-Command', command],
+                                    env=dict(os.environ, DEFENDER_SCRIPT_TEST_PATH=str(SCANNER),
+                                             DEFENDER_TEST_READY_STATE=str(ready)),
+                                    capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == '__main__':

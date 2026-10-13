@@ -136,7 +136,7 @@ no console schema is transplanted into a PC writer.
 ## Nioh 3: implemented native USER editor
 
 The [registered PC adapter](../src/koei_editor/games/nioh3/parser.py) implements
-Amrita/Gold deductions and existing positive quantity reductions for eighteen
+Amrita/Gold deductions and existing positive quantity reductions for thirty-two
 known common item IDs in the item box and storehouse. The two genuine USER revisions `0x01030001` and
 `0x01040000` qualify the native cipher/body checksum and actual tagged arrays:
 2,500 equipment records, 1,500 item-box records and 400 storehouse records.
@@ -153,7 +153,7 @@ separate. Original keys, seeds, header, tail and unknown bytes are preserved;
 integrity is rebuilt and the output reparsed. No integrity flags are cleared.
 
 See [native format, validation and exact mechanic blockers](NIOH3_RESEARCH.md).
-The [expansion note](TEAM_NINJA_DEPTH.md) records the eleven additional ordinary
+The [expansion note](TEAM_NINJA_DEPTH.md) records the twenty-five additional ordinary
 item identities, independent native corroboration and unchanged reduction rules.
 Genuine encrypted/decoded edits and actual Tk Save As/backup/restore workflows
 are distinct from edited game-load/re-save validation, which is unperformed.

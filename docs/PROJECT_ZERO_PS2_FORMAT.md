@@ -54,14 +54,15 @@ remain byte-identical. Unchanged serialization returns the original bytes.
 | --- | --- |
 | Camera points | Reduce a positive existing balance; preserve high opened values. No invented natural cap or Max. |
 | Range, maximum charge and charge speed | Reduce existing stored tiers 1–3. Initial/unusual tiers stay read-only. Upgrade purchase/reward interactions are not granted. |
+| Film stocks | Reduce existing ordinary film stocks at native IDs 1–4, retaining at least one sheet. Only opened quantities 1–99 qualify; zero and unusual quantities stay untouched. Selection, experience/acquisition flags and pickup history remain unchanged. |
 | Camera sub/special functions | Searchable stored function and equipped-selector inspection. Ownership, unlock prerequisites and equip dependencies need controlled gameplay pairs before writes. |
-| Film, healing and key items | All 200 stored inventory positions per occupied slot are searchable. Names, stack limits and critical-item dependencies need independently corroborated item mappings. |
+| Healing and key items | All 200 stored inventory positions per occupied slot are searchable. Film IDs are labelled separately; other names, stack limits and critical-item dependencies need independently corroborated item mappings. |
 | Story, missions and rooms | Slot mission/room/play-time inspection. No completion, difficulty or clear-reward edits. |
 | Photographs, ghost album and collections | Preserved; album and reward dependencies require controlled snapshots. |
 | Health and battle state | Preserved; derived/temporary versus persistent state needs further proof. |
 | Empty slots and other editions | Empty slots preserved. New-game initialization and US/Japanese layouts are unsupported. |
 
-Camera controls intentionally do not grant skills, complete stories or manufacture
+Camera and film controls intentionally do not grant skills, complete stories or manufacture
 resources. Assigning the opened value removes the staged change; Undo, Review
 Changes, searchable inspectors, automatic backups and safe Save As use the shared
 interface. Source copies are checked again after backup, aliases are rejected,
@@ -77,3 +78,28 @@ copied-file self-tests. A real Tk workflow covers opening, searching, staging,
 Undo, Review Changes and saving. All seven passed with the native fixtures and a
 display. These are file/GUI checks; **edited game loading and memory-card reimport
 have not been performed**.
+
+## Film-stock refinement
+
+The current primary [Himuro native decompilation](https://github.com/Mikompilation/Himuro/tree/adcc35fb4602726ca9a692f2289bec816ce112db)
+supplies stronger inventory evidence than the earlier parser-only source.
+[`ig_camra.c`](https://github.com/Mikompilation/Himuro/blob/adcc35fb4602726ca9a692f2289bec816ce112db/src/ingame/menu/ig_camra.c)
+selects film from `poss_item[1..4]` only when nonzero and separately consults
+film experience flags.
+[`item_ctl.c`](https://github.com/Mikompilation/Himuro/blob/adcc35fb4602726ca9a692f2289bec816ce112db/src/ingame/map/item_ctl.c)
+adds twelve sheets to these pickup quantities and clamps them to 99.
+These are native scalar stock values, rather than acquisition flags. The
+existing packed save map places `poss_item[200]` at `0x197c`.
+
+The independently implemented controls reduce each opened qualified stock to
+1–its opened quantity, with bulk Max disabled. Keeping one sheet avoids changing
+the existing film selection or acquisition/experience relationship. No ordinary
+film type name is assigned to a numeric stock without independent name-to-ID
+evidence. All other items, story and rewards remain untouched.
+
+Five distinct complete native PSU exports qualify twelve occupied slots and
+45 positive film stocks. Focused validation exercises each new native field,
+surgical preservation, checksum read-back, full copied-file backup/restore and
+the existing real Tk workflow. Procedural checks separately cover zero and
+unusual stock exclusion, minimum-one enforcement, bounds, unstage and immutable
+selection/other-item records. Edited game loading remains unperformed.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased development on main — 2026-10-13
+## v2.0 — 2026-10-13
 
 - Added 14 explicit game/platform profiles, bringing the source library to 90
   profiles across 15 platforms, including new Macintosh and SNES support.
@@ -11,8 +11,13 @@
   loadouts after unstaging, and detected backend staging that drops requested values.
 - Corrected Gemfire SNES ownership/calendar offsets and accepted Nobunaga’s
   source-native rebel fief state as read-only.
-- Application version and released v1.91 downloads remain unchanged; no release
-  is published by this development update.
+- Added fourteen Nioh 3 consumable identities and fourteen Sophie 2 PS4
+  ordinary-material identities, existing Three Hopes material-stock reductions
+  and Project Zero PS2 film-stock reductions.
+- Firis quality controls respect active inventory capacities; related regional
+  titles and editions share library series filters.
+- Fixed DW8 PS3 inspection and higher-opened-value Max restoration, and
+  hardened original Gundam PS3 copied-save context and source checks.
 
 ## v1.91
 

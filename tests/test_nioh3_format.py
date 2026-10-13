@@ -65,7 +65,7 @@ class Nioh3FormatTests(unittest.TestCase):
     def test_exact_noop_stage_unstage_review_and_surgical_payload(self):
         self.assertEqual(self.adapter.serialize(self.document, {}), self.raw)
         fields = self.adapter.fields_for(self.document)
-        self.assertEqual(len(fields), 38)
+        self.assertEqual(len(fields), 66)
         field = fields[0]
         original = field.value(self.document.payload)
         pending = {}
@@ -141,7 +141,7 @@ class Nioh3FormatTests(unittest.TestCase):
         for revision in codec.SUPPORTED_REVISIONS:
             doc = parser.decode(procedural_raw(revision))
             self.assertEqual(doc.revision, revision)
-            self.assertEqual(len(parser.fields_for(doc)), 38)
+            self.assertEqual(len(parser.fields_for(doc)), 66)
         for pool in inventory.POOLS:
             for relative in (0, 4, 8):
                 payload = bytearray(self.raw)

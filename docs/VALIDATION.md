@@ -1,5 +1,26 @@
 # Universal development validation
 
+## v2.0 expansion and refinements — 2026-10-13
+
+The release combines the 14 previously prepared profiles with existing-editor
+improvements for Nioh 3, Sophie 2 PS4, Three Hopes, Project Zero PS2, Firis PC,
+original Gundam PS3 and DW8 PS3. The library contains 90 profiles across 15
+platforms. Independent reviews checked item identities, active inventory
+capacities, source/companion races, field eligibility and integrity preservation.
+Shared Max targets can restore only an exact typed opened numeric value after
+a pending reduction; nonmaxable fields remain excluded.
+
+Focused genuine-file and actual Tk workflows passed for the expanded inventory
+controls, preserving original sources and unrelated bytes. The respective format
+documents record corpus and test details. Private inputs remain outside the
+checkout. Full local regression and native Windows release verification are
+recorded separately below and in the repository workflow. The complete local
+Python 3.12/Tk run passed 2,227 tests across all 252 modules: 461 optional
+fixture/platform skips, no failures or errors. This run preceded the final
+version-label change to 2.0; inventory, packaging and GUI startup were checked
+again afterward. The release workflow runs the complete final source on Windows
+before publishing. Edited in-game loading/re-saving is untested in this update.
+
 ## Sol development expansion — 2026-10-13
 
 The source library now has 90 registered profiles across 15 platforms. The

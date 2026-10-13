@@ -22,6 +22,10 @@ SIZE = 585596
 MAX_FILE_SIZE = 8 * 1024 * 1024
 CAMERA = 0x42E0
 ITEMS = 0x197C
+# Native FilmPossChk/menu selection reads poss_item[1..4]; ItemGetCtrl adds
+# twelve and clamps these stacks to 99. Keep one sheet to preserve selection
+# and experience/ownership relationships without changing their other records.
+FILM_IDS = (1, 2, 3, 4)
 EMPTY = bytes(48) + b'\xff' * (SIZE - 48)
 
 
@@ -31,8 +35,9 @@ class Format:
     title: str = 'Project Zero / Fatal Frame (European PS2)'
     size: int = MAX_FILE_SIZE
     fields: tuple = ()
-    note: str = ('European SLES-50821 PSU exports. Existing camera points and '
-                 'base-upgrade tier reductions; all other records and metadata preserved.')
+    note: str = ('European SLES-50821 PSU exports. Existing camera points, '
+                 'base-upgrade tiers and film-stock reductions; film stocks retain one sheet. '
+                 'All other records and metadata preserved.')
     sample_verified: bool = True
     published_format: bool = True
     game_load_verified: bool = False
@@ -81,7 +86,7 @@ class Field:
 
     def validate(self, value):
         if type(value) is not int or not self.minimum <= value <= self.maximum:
-            raise SaveError(f'{self.label} requires a whole number from 0 to '
+            raise SaveError(f'{self.label} requires a whole number from {self.minimum} to '
                             f'the opened value ({self.maximum:,}).')
 
 
@@ -205,6 +210,17 @@ def _fields(raw):
                 continue
             field = Field(f'slot_{entry.slot}_{key}', label, offset, size, value,
                           f'Save slot {entry.slot + 1} · Camera', entry.slot + 1)
+            result[field.id] = field
+        for native_id in FILM_IDS:
+            offset = entry.offset + ITEMS + native_id
+            value = raw[offset]
+            if not 1 <= value <= 99:
+                continue  # Empty or unusual stock must not be acquired/normalized.
+            field = Field(f'slot_{entry.slot}_film_{native_id}',
+                          f'Film stock {native_id} (reduce only; retain one)',
+                          offset, 1, value,
+                          f'Save slot {entry.slot + 1} · Film', entry.slot + 1,
+                          minimum=1)
             result[field.id] = field
     return MappingProxyType(result)
 
@@ -346,6 +362,14 @@ def item_records(document):
                  for entry in document.entries if entry.occupied for index in range(200))
 
 
+def inventory_records(document):
+    """Label independently mapped film stocks without guessing other item IDs."""
+    return tuple((slot, position - 1,
+                  f'Film stock {position - 1}' if position - 1 in FILM_IDS
+                  else 'Unmapped item/status', value)
+                 for slot, position, value in item_records(document))
+
+
 def camera_records(document):
     validate_document(document)
     labels = ('Range tier', 'Maximum charge tier', 'Charge speed tier',
@@ -363,5 +387,9 @@ def record_label(slot, group):
 def field_hint(document, key):
     if type(key) is not str or key not in field_map(document):
         raise SaveError('Unknown Project Zero field.')
+    if '_film_' in key:
+        return ('Reduce an existing ordinary film stack from 1 to its opened quantity. '
+                'Retain one sheet; Max is disabled. Film selection, acquisition/experience '
+                'flags, pickup history and every other item remain unchanged.')
     return ('Reduce an existing camera value only. Max is disabled. Special abilities, equipped '
-            'functions, films/items, story, photos and reward records are preserved.')
+            'functions, other items, story, photos and reward records are preserved.')

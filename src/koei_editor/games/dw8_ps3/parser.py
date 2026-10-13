@@ -418,7 +418,10 @@ def field_hint(document, field):
 
 def inspection_rows(document):
     validate_document(document)
-    return (('Original US PSN export', TITLE_DIRECTORY),
-            ('Native revision', '0x13011300'),
-            ('Game data bytes', len(document.raw)),
-            ('Ambition fame (read only)', int.from_bytes(document.payload[0x221D5:0x221D7], 'big')))
+    return tuple({'group': group, 'label': label, 'value': value}
+                 for group, label, value in (
+                     ('Export identity', 'Original US PSN export', TITLE_DIRECTORY),
+                     ('Export identity', 'Native revision', '0x13011300'),
+                     ('Export identity', 'Game data bytes', len(document.raw)),
+                     ('Progression', 'Ambition fame (read only)',
+                      int.from_bytes(document.payload[0x221D5:0x221D7], 'big'))))

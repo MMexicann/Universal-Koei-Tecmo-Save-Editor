@@ -63,8 +63,8 @@ standard save error. These changes preserve the shared safety workflow.
 
 ## Nioh 3: eleven more ordinary consumables
 
-Existing reduction controls now cover eighteen factual ordinary-item IDs in
-the qualified item-box/storehouse arrays. The eleven additions are:
+The first expansion added eleven factual ordinary-item IDs to the original seven
+in the qualified item-box/storehouse arrays. Those eleven additions are:
 
 | Native little-endian u16 ID | Name |
 | --- | --- |
@@ -103,9 +103,51 @@ Generated tests edit every new item in both pools and revisions, reject
 nonordinary shapes and wrong values, verify mixed changes/Undo, and compare
 all changed bytes against selected quantity/checksum ranges. Genuine tests edit
 eligible additions in both native revisions and verify original-file
-preservation; actual Tk tests search Antidote, stage/review/undo and save a copy
+preservation; actual Tk tests search Sacred Brush, stage/review/undo and save a copy
 with an automatic backup. These are native parser/write and GUI qualifications,
 not actual game-load evidence.
+
+## Nioh 3: fourteen further ordinary consumables
+
+The next refinement expands the supported ordinary consumables to thirty-two:
+
+| Native little-endian u16 ID | Name |
+| --- | --- |
+| `0x2296` | Yokai Water Pot |
+| `0x683B` | Scampuss Furball |
+| `0x3F5A` | Summoner's Candle |
+| `0x140F` | Righteous Jasper |
+| `0xCC42` | Power Pill |
+| `0x059A` | Lantern Plant Fruit |
+| `0x3299` | Steel Pill |
+| `0xE4AA` | Luckbringer Amulet |
+| `0x3A1B` | Uchiko Powder |
+| `0x9509` | Fragrant Wood |
+| `0x65B4` | Healing Pill |
+| `0x5EDB` | Tiger-Running Amulet |
+| `0x7EA2` | Sacred Brush |
+| `0xF681` | Herbal Remedy |
+
+Each name and byte identity was rechecked online against the same pinned
+Apache-2.0 [public item reference](https://github.com/alfizari/Nioh-3-Save-Editor/blob/b5d0789791fe31d06ad325d4012aa0333c60cd8f/items_little_endian.json).
+Independently parsing the two genuine native USER copies finds every added
+identity with matching appearance, positive quantity greater than one, a
+nonzero instance and zero equipment level/pre-forge/reinforcement. Each identity
+qualifies in at least one revision; this does not claim that every identity
+appears in every native pool or revision. The catalog alone grants no fields,
+and unknown materials, equipment, skill items and reward records remain intact.
+No external catalog or implementation is shipped.
+
+The existing deduction-only policy remains unchanged: `1..opened quantity`, no
+increases, no removal and no Max. A deduction does not activate an item's
+effect, recover a grave, place a Benevolent Grave, replenish abilities or update
+use/history/reward state. Native tests actually reduce eligible added stacks,
+reparse the result and verify that only selected quantity bytes and the body
+checksum change, while the original copy stays unchanged. They require every
+new identity to occur in a native positive reduction across the reviewed corpus.
+Generated tests additionally cover all fourteen in both pools/revisions,
+nonordinary records, duplicate identities, invalid inputs and reversible edits.
+Actual edited game-load/re-save validation remains unperformed.
 
 ## Original Ninja Gaiden II: audit outcome
 
@@ -125,8 +167,9 @@ format/native and Tk workflows are regression-tested alongside the additions;
   enabled-set qualification, limits, original Unicode/high-value Undo, mixed
   numeric/text changes, actual Tk save/backup workflow and source-change races.
 - `tests.test_nioh3_expansion`: both revisions/pools, all eleven additions,
-  nonordinary/unknown preservation, high originals, actual Tk workflow and
-  optional genuine-file surgical edits.
+  the fourteen further consumables, nonordinary/duplicate/unknown preservation,
+  high originals, actual Tk workflow and optional genuine-file surgical edits
+  covering every newly refined identity.
 - Existing Wo Long/Nioh 3/NGII native and format suites, plus
   `tests.test_team_ninja_gui`, retain independent regression coverage.
 

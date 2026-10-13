@@ -46,12 +46,37 @@ checksum corruption and incomplete arrays are rejected.
 The official [Synthesis Basics manual](https://www.koeitecmoamerica.com/manual/sophie2/en/5100.html)
 distinguishes ingredients' components, final quality, effects, recipe prerequisites
 and links/assist skills. Quality changes do not invent recipes or effects.
-Only nine separately checked ordinary-material identities are writable: Drinking
-Water, Crackling Water, Blessed Sap, Red/Blue/Green/Yellow/White Flower and Tall
-Taun. Their numerical identity facts are independently transcribed from the
+Twenty-three separately checked ordinary-material identities are writable. The
+original nine are Drinking Water, Crackling Water, Blessed Sap,
+Red/Blue/Green/Yellow/White Flower and Tall Taun. Their numerical identity facts
+are independently transcribed from the
 [public same-game item mapping](https://fearlessrevolution.com/viewtopic.php?t=19323).
-No external catalogue or CT file is bundled. All other IDs remain searchable
-numeric inspection records until separately qualified.
+The additional fourteen were checked individually against that same mapping
+and Barrel Wisdom's title-specific pages, which identify each as `material`:
+
+| Native item ID | Independently checked material |
+| --- | --- |
+| 3 | [Zapping Water](https://barrelwisdom.com/sophie2/items/zapping-water/en) |
+| 4 | [Salt Water](https://barrelwisdom.com/sophie2/items/salt-water/en) |
+| 9 | [Koinós Grass](https://barrelwisdom.com/sophie2/items/koinos-grass/en) |
+| 11 | [Princess Grass](https://barrelwisdom.com/sophie2/items/princess-grass/en) |
+| 14 | [Tail Fern](https://barrelwisdom.com/sophie2/items/tail-fern/en) |
+| 21 | [Uni](https://barrelwisdom.com/sophie2/items/uni/en) |
+| 22 | [Grass Uni](https://barrelwisdom.com/sophie2/items/grass-uni/en) |
+| 36 | [Taun](https://barrelwisdom.com/sophie2/items/taun/en) |
+| 45 | [Blackberry](https://barrelwisdom.com/sophie2/items/blackberry/en) |
+| 59 | [Broken Rock](https://barrelwisdom.com/sophie2/items/broken-rock/en) |
+| 69 | [Eisen Ore](https://barrelwisdom.com/sophie2/items/eisen-ore/en) |
+| 70 | [Leiden Ore](https://barrelwisdom.com/sophie2/items/leiden-ore/en) |
+| 71 | [Kupfer Ore](https://barrelwisdom.com/sophie2/items/kupfer-ore/en) |
+| 89 | [Woodchips](https://barrelwisdom.com/sophie2/items/woodchips/en) |
+
+Every additional identity occurs in the complete independently downloaded
+CUSA28451 clear-data export. The runtime XML supplies identity facts only;
+record offsets, identity gates, checksums and writes use the independently
+qualified disk profile described here. No external catalogue, runtime script,
+CT file or save contents are bundled. Other IDs remain searchable numeric
+inspection records until separately qualified.
 
 The actual native standard container has 9,999 44-byte records. A writable named
 material must already exist, have quality 1–999, zero saved stat bonus bytes,
@@ -65,14 +90,16 @@ checked named identities can change its byte
 `+0x24` only between zero and its unchanged saved capacity at `+0x25`, if that
 capacity is positive and current uses are consistent. Equipment quality, item
 identity, instance IDs, traits, effects, stat bytes and capacity remain untouched.
-The genuine clear-data export yields 464 named material fields and 21 qualified
+The genuine clear-data export yields 1,204 named material fields and 21 qualified
 battle-item-use fields; field counts legitimately depend on existing records.
+The fourteen additional identities expose 740 additional safe quality controls
+in that copy, after the unchanged ownership/stat/uses/equipment gates.
 
 ## Coverage and remaining dependencies
 
 | System | Implemented or precise blocker |
 | --- | --- |
-| Ordinary materials | Named quality reductions for the nine qualified identities; remaining IDs need independent item-kind/semantic mapping. |
+| Ordinary materials | Named quality reductions for twenty-three qualified identities; remaining IDs need independent item-kind/semantic mapping. |
 | Existing battle items | Remaining uses within native stored capacity; no item creation, capacity increase or skill/effect change. |
 | Equipment / gathering / adventure tools | Searchable existing quality/traits/effects/uses; equipment stat derivation and tool/story uniqueness remain read-only. |
 | Cole | Inspect only: native BE wallet and LE outer header preview are coupled; an exact full writer for both is required before a wallet action. |

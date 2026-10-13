@@ -54,8 +54,37 @@ class ProjectZeroTests(unittest.TestCase):
         self.assertEqual(reopened.payload, parser.changed_payload(document, changes))
         for key, value in changes.items():
             self.assertEqual(fields[key].value(reopened.payload), value)
-        self.assertEqual(parser.item_records(document), parser.item_records(reopened))
+        changed_items = {(fields[key].slot, int(key.rsplit('_', 1)[1]) + 1)
+                         for key in changes if '_film_' in key}
+        self.assertEqual(tuple(row for row in parser.item_records(document)
+                               if row[:2] not in changed_items),
+                         tuple(row for row in parser.item_records(reopened)
+                               if row[:2] not in changed_items))
         return reopened
+
+    def test_film_reductions_preserve_selection_ownership_and_other_items(self):
+        document = parser.decode(fixture())
+        raw = bytearray(document.raw)
+        for entry in document.entries:
+            if entry.occupied:
+                raw[entry.offset + parser.ITEMS + 1:entry.offset + parser.ITEMS + 5] = bytes((30, 0, 99, 255))
+                struct.pack_into('<I', raw, entry.offset, sum(raw[entry.offset + 16:entry.offset + parser.SIZE]))
+        document = parser.decode(bytes(raw))
+        fields = parser.field_map(document)
+        self.assertIn('slot_0_film_1', fields)
+        self.assertIn('slot_0_film_3', fields)
+        self.assertNotIn('slot_0_film_2', fields)
+        self.assertNotIn('slot_0_film_4', fields)
+        self.assertFalse(fields['slot_0_film_1'].maxable)
+        for bad in (0, -1, 31, True, 1.0):
+            with self.assertRaises(SaveError):
+                parser.stage(document, {}, 'slot_0_film_1', bad)
+        changes = {'slot_0_film_1': 1, 'slot_1_film_3': 2}
+        reopened = self.assert_surgical(document, changes)
+        self.assertEqual(parser.camera_records(document), parser.camera_records(reopened))
+        self.assertEqual(parser.stage(document, changes, 'slot_0_film_1', 30), {'slot_1_film_3': 2})
+        self.assertEqual(parser.limit_values(document, changes, changes), {})
+        self.assertEqual(parser.inventory_records(document)[1][2], 'Film stock 1')
 
     def test_variable_export_order_noop_and_each_field_surgery(self):
         for order in ((0, 1, 2), (2, 0, 1)):
@@ -159,12 +188,13 @@ class ProjectZeroTests(unittest.TestCase):
             original = parser.read_save(path); hashes.add(original.sha256)
             self.assertEqual(parser.serialize(original, {}), original.raw)
             for field in parser.fields_for(original):
-                self.assert_surgical(original, {field.id: 0})
+                self.assert_surgical(original, {field.id: field.minimum})
             with tempfile.TemporaryDirectory() as temporary:
                 folder = Path(temporary); source = folder / 'native-copy.psu'; source.write_bytes(original.raw)
                 document = parser.read_save(source)
-                saved = parser.save_as(document, {f.id: 0 for f in parser.fields_for(document)}, folder / 'edited.psu')
-                self.assertEqual(parser.item_records(saved), parser.item_records(document))
+                pending = {f.id: f.minimum for f in parser.fields_for(document)}
+                saved = parser.save_as(document, pending, folder / 'edited.psu')
+                self.assertEqual(saved.raw, self.assert_surgical(document, pending).raw)
                 self.assertEqual(parser.restore(parser.backup(document), folder / 'restored.psu').read_bytes(), original.raw)
                 report = _run(BoundScalarAdapter(parser.GAME_ID, '.psu', parser), parser.GAME_ID,
                               source, folder / 'self-test')
@@ -190,6 +220,15 @@ class ProjectZeroTests(unittest.TestCase):
                 editor.open()
             root.update()
             self.assertIsNotNone(editor.document)
+            film = next((f for f in parser.fields_for(editor.document)
+                         if '_film_' in f.id and f.maximum > 1), None)
+            if film is not None:
+                editor.search.set('film stock'); root.update()
+                self.assertGreater(len(editor.fields.get_children()), 0)
+                editor.stage_values({film.id: 1})
+                self.assertEqual(len(editor.adapter.review(editor.document, editor.changes)), 1)
+                editor.undo(); self.assertEqual(editor.changes, {})
+                editor.search.set(''); root.update()
             field = parser.fields_for(editor.document)[0]
             editor.stage_values({field.id: 0})
             self.assertEqual(len(editor.adapter.review(editor.document, editor.changes)), 1)

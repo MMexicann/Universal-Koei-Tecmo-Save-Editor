@@ -9,6 +9,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)
+- [Current release notes](RELEASE_NOTES.md)
+- [Romance of the Three Kingdoms XIII Switch disk-editor research](ROTK13_SWITCH_RESEARCH.md)
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)

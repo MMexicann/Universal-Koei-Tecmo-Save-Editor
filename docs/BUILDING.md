@@ -13,7 +13,7 @@ python -m tools.package_release --verify-only
 python -m tools.build_windows
 ```
 
-The output is **`dist/UniversalKoeiTecmoSaveEditor-v1.91.exe`**, a single standalone
+The output is **`dist/UniversalKoeiTecmoSaveEditor-v2.0.exe`**, a single standalone
 executable containing the game library, all registered game editors, Tk runtime and
 public application metadata. Native Windows CNG handles DW3 encryption. Save
 samples, installed game files and private reports are excluded.
@@ -30,7 +30,7 @@ python -m tools.build_windows --print-config
 ```powershell
 python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
-$smoke = Start-Process -FilePath .\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
+$smoke = Start-Process -FilePath .\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
 $smoke.ExitCode
 python -m tools.package_release --verify-executable
 ```
@@ -61,18 +61,18 @@ inventory of IDs, editions and platforms.
 The executable retains the DW3 copied-save self-test:
 
 ```powershell
-$selfTest = Start-Process -FilePath .\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe -ArgumentList '--self-test "D:\SaveCopies\GameStatusData.sav" "D:\SaveCopies\DW3Test"' -WindowStyle Hidden -Wait -PassThru
+$selfTest = Start-Process -FilePath .\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe -ArgumentList '--self-test "D:\SaveCopies\GameStatusData.sav" "D:\SaveCopies\DW3Test"' -WindowStyle Hidden -Wait -PassThru
 $selfTest.ExitCode
 ```
 
 Other editors use an explicit game ID:
 
 ```powershell
-.\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe --game dw4hyper --self-test "D:\SaveCopies\save.dat" "D:\SaveCopies\DW4Test"
-.\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe --game dw8xl --self-test "D:\SaveCopies\save.dat" "D:\SaveCopies\DW8Test"
-.\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe --game pw3 --self-test "D:\SaveCopies\OP3WIN0000.dat" "D:\SaveCopies\PW3Test"
-.\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe --game dw4xl_ps2 --self-test "D:\SaveCopies\DW4XL.psu" "D:\SaveCopies\DW4XLTest"
-.\dist\UniversalKoeiTecmoSaveEditor-v1.91.exe --game atelier_sophie2 --self-test "D:\SaveCopies\data.dat" "D:\SaveCopies\Sophie2Test"
+.\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe --game dw4hyper --self-test "D:\SaveCopies\save.dat" "D:\SaveCopies\DW4Test"
+.\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe --game dw8xl --self-test "D:\SaveCopies\save.dat" "D:\SaveCopies\DW8Test"
+.\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe --game pw3 --self-test "D:\SaveCopies\OP3WIN0000.dat" "D:\SaveCopies\PW3Test"
+.\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe --game dw4xl_ps2 --self-test "D:\SaveCopies\DW4XL.psu" "D:\SaveCopies\DW4XLTest"
+.\dist\UniversalKoeiTecmoSaveEditor-v2.0.exe --game atelier_sophie2 --self-test "D:\SaveCopies\data.dat" "D:\SaveCopies\Sophie2Test"
 ```
 
 Use a separate input copy and a new/empty output folder. Require exit 0,
@@ -100,9 +100,10 @@ source hashes, and rejects save/game-file entries and personal paths.
 The Windows workflow runs the tests, builds the executable and verifies its
 startup and archive before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
-Manual workflow runs only build artifacts. Pushing a tag matching the application
-version, such as `v1.91`, publishes a new release after the native build and checks
-succeed. Existing releases are not replaced.
+Manual workflow runs build artifacts by default. To publish a prepared main
+commit, dispatch with `publish=true` and `expected_sha` matching that exact
+commit. Pushing a tag matching the application version, such as `v2.0`, also
+publishes after the native build and checks succeed. Existing releases are not replaced.
 
 PyInstaller's one-file runtime extracts into a temporary directory at startup.
 An already-built executable requires no installer, game-directory access or

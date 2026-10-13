@@ -181,6 +181,7 @@ class Gundam1PS3Tests(unittest.TestCase):
     def test_identity_only_self_test_companion_has_no_owner_fields(self):
         sentinel = b'OWNER-CONTEXT-MUST-NOT-BE-COPIED'
         (self.folder / 'PARAM.SFO').write_bytes(metadata() + sentinel)
+        self.document = parser.read_save(self.source)
         destination = self.folder / 'self-test' / 'edited.bin'
         parser.prepare_self_test_copy(self.document, destination)
         self.assertEqual((destination.parent / 'PARAM.SFO').read_bytes(), metadata())
@@ -196,6 +197,145 @@ class Gundam1PS3Tests(unittest.TestCase):
         self.assertEqual((output / 'PARAM.SFO').read_bytes(), metadata())
         self.assertNotIn(sentinel, (output / 'self-test-report.json').read_bytes())
         self.assertEqual((self.folder / 'PARAM.SFO').read_bytes(), metadata() + sentinel)
+
+    def test_opaque_source_companion_mutation_rejects_operations(self):
+        # Title/slot remains identical; frozen source context must still match.
+        (self.folder / 'PARAM.SFO').write_bytes(metadata() + b'opaque-changed-context')
+        operations = (lambda: parser.backup(self.document),
+                      lambda: parser.save_as(self.document, {}, self.folder / 'changed.bin'),
+                      lambda: parser.prepare_self_test_copy(self.document,
+                                                             self.folder / 'cli' / 'edited.bin'))
+        for operation in operations:
+            with self.assertRaises(SaveError):
+                operation()
+        self.assertFalse((self.folder / 'changed.bin').exists())
+        self.assertFalse((self.folder / 'cli' / 'PARAM.SFO').exists())
+        self.assertEqual(self.source.read_bytes(), self.document.raw)
+
+    def test_final_source_and_destination_guards_after_backup(self):
+        original_backup = parser.backup
+        for target in ('source', 'destination'):
+            with self.subTest(target=target):
+                other = self.folder / target
+                other.mkdir()
+                (other / 'PARAM.SFO').write_bytes(metadata())
+                destination = other / 'edited.bin'
+                def mutate(document):
+                    result = original_backup(document)
+                    if target == 'source':
+                        self.source.write_bytes(document.raw[:-1] + bytes([document.raw[-1] ^ 1]))
+                    else:
+                        (other / 'PARAM.SFO').write_bytes(metadata() + b'opaque-mutation')
+                    return result
+                with patch.object(parser, 'backup', side_effect=mutate), self.assertRaises(SaveError):
+                    parser.save_as(self.document, {'amuro_skill_1': 1}, destination)
+                self.assertFalse(destination.exists())
+                self.source.write_bytes(self.document.raw)
+
+    def test_changed_companion_during_backup_removes_partial_snapshot(self):
+        original_snapshot = parser.snapshot_backup
+        def mutate(*args, **kwargs):
+            result = original_snapshot(*args, **kwargs)
+            (self.folder / 'PARAM.SFO').write_bytes(metadata() + b'changed-during-backup')
+            return result
+        with patch.object(parser, 'snapshot_backup', side_effect=mutate), self.assertRaises(SaveError):
+            parser.backup(self.document)
+        self.assertEqual(list((self.folder / 'UniversalEditorBackups').iterdir()), [])
+
+    def test_backup_sidecar_collision_preserves_foreign_file(self):
+        original_write = parser.atomic_new
+        foreign = b'foreign-sidecar-created-by-another-operation'
+        collisions = []
+        def collide(data, path):
+            if Path(path).suffix == '.sfo':
+                Path(path).write_bytes(foreign)
+                collisions.append(Path(path))
+                raise FileExistsError('Concurrent sidecar creation')
+            return original_write(data, path)
+        with patch.object(parser, 'atomic_new', side_effect=collide), self.assertRaises(FileExistsError):
+            parser.backup(self.document)
+        self.assertEqual(len(collisions), 1)
+        self.assertEqual(collisions[0].read_bytes(), foreign)
+        self.assertEqual(list((self.folder / 'UniversalEditorBackups').iterdir()), collisions)
+
+    def test_save_rechecks_source_and_opaque_companion_after_atomic_write(self):
+        original_write = parser.atomic_new
+        for target in ('source', 'source-context', 'destination-context'):
+            with self.subTest(target=target):
+                self.source.write_bytes(self.document.raw)
+                (self.folder / 'PARAM.SFO').write_bytes(metadata())
+                other = self.folder / f'after-write-{target}'
+                other.mkdir()
+                (other / 'PARAM.SFO').write_bytes(metadata())
+                destination = other / 'edited.bin'
+                def mutate(data, path):
+                    result = original_write(data, path)
+                    if Path(path) == destination:
+                        if target == 'source':
+                            self.source.write_bytes(self.document.raw[:-1] + bytes([self.document.raw[-1] ^ 1]))
+                        else:
+                            context = self.folder if target == 'source-context' else other
+                            (context / 'PARAM.SFO').write_bytes(metadata() + b'after-write-context')
+                    return result
+                with patch.object(parser, 'atomic_new', side_effect=mutate), self.assertRaises(SaveError):
+                    parser.save_as(self.document, {'amuro_skill_1': 1}, destination)
+                self.assertTrue(destination.exists())  # Preserve the raced path for review.
+
+    def test_restore_postwrite_validation_preserves_raced_destination(self):
+        backup = parser.backup(self.document)
+        original_write = parser.atomic_new
+        for target in ('destination', 'context', 'sidecar'):
+            with self.subTest(target=target):
+                (self.folder / 'PARAM.SFO').write_bytes(metadata())
+                backup.with_suffix('.sfo').write_bytes(metadata())
+                destination = self.folder / f'after-restore-{target}.bin'
+                def mutate(data, path):
+                    result = original_write(data, path)
+                    if Path(path) == destination:
+                        if target == 'destination':
+                            changed = bytearray(data)
+                            changed[-1] ^= 1
+                            destination.write_bytes(parser.seal(bytes(changed)))
+                        else:
+                            companion = self.folder / 'PARAM.SFO' if target == 'context' else backup.with_suffix('.sfo')
+                            companion.write_bytes(metadata() + b'after-restore-context')
+                    return result
+                # Shared restore uses its own atomic helper; patch its write boundary.
+                with patch('koei_editor.shared.copy_storage.atomic_new', side_effect=mutate), self.assertRaises(SaveError):
+                    parser.restore(backup, destination)
+                self.assertTrue(destination.exists())
+        self.assertEqual(self.source.read_bytes(), self.document.raw)
+
+    def test_actual_destination_readback_rejects_changed_output(self):
+        destination = self.folder / 'readback.bin'
+        original_write = parser.atomic_new
+        def corrupt(data, path):
+            result = original_write(data, path)
+            if Path(path) == destination:
+                changed = bytearray(data)
+                changed[-1] ^= 1
+                destination.write_bytes(bytes(changed))
+            return result
+        with patch.object(parser, 'atomic_new', side_effect=corrupt), self.assertRaises(SaveError):
+            parser.save_as(self.document, {'amuro_skill_1': 1}, destination)
+        self.assertEqual(self.source.read_bytes(), self.document.raw)
+
+    def test_restore_rechecks_opaque_destination_and_backup_companion(self):
+        backup = parser.backup(self.document)
+        original_restore = parser.restore_snapshot
+        for target in ('destination', 'backup'):
+            with self.subTest(target=target):
+                (self.folder / 'PARAM.SFO').write_bytes(metadata())
+                backup.with_suffix('.sfo').write_bytes(metadata())
+                destination = self.folder / f'restore-{target}.bin'
+                def mutate(*args, **kwargs):
+                    path = self.folder / 'PARAM.SFO' if target == 'destination' else backup.with_suffix('.sfo')
+                    path.write_bytes(metadata() + b'changed-during-restore')
+                    return original_restore(*args, **kwargs)
+                with patch.object(parser, 'restore_snapshot', side_effect=mutate), self.assertRaises(SaveError):
+                    parser.restore(backup, destination)
+                self.assertFalse(destination.exists())
+        self.assertEqual(self.source.read_bytes(), self.document.raw)
 
     def test_restore_checks_exact_backup_identity_and_integrity(self):
         backup = parser.backup(self.document)

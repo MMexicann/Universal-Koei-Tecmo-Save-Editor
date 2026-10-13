@@ -297,12 +297,16 @@ class BoundScalarAdapter:
             if not getattr(field, 'maxable', True):
                 continue
             try:
-                # Original-value tolerance permits an unusual snapshot to be
-                # restored deliberately, but never turns that value into a
-                # valid bulk Max target. Keep only independently valid targets.
+                # A valid Max target can restore this record's exact opened
+                # value after a reduction, including a higher unusual value.
+                # It cannot grant that value to another record or create an
+                # out-of-range edit when no reduction is pending.
                 field.validate(value)
             except SaveError:
                 if is_opened_value(document, field, value):
+                    if (key in pending and type(value) is int
+                            and type(pending[key]) is int and pending[key] < value):
+                        targets[key] = value
                     continue
                 raise
             targets[key] = value

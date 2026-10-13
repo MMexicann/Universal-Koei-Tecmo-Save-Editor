@@ -183,7 +183,7 @@ class IndependentThreeHopesAudit(unittest.TestCase):
             self.assertEqual(source.read_bytes(), self.raw)
 
     @unittest.skipUnless(os.environ.get('THREE_HOPES_COPY'), 'No private admitted native SlotData3 export')
-    def test_registered_native_cli_reports_three_fields_integrity_and_backup(self):
+    def test_registered_native_cli_reports_qualified_fields_integrity_and_backup(self):
         source = Path(os.environ['THREE_HOPES_COPY'])
         original = source.read_bytes()
         with tempfile.TemporaryDirectory() as folder:
@@ -195,7 +195,7 @@ class IndependentThreeHopesAudit(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             report = json.loads((output / 'self-test-report.json').read_text())
             self.assertEqual(report['game_id'], 'three_hopes')
-            self.assertEqual(report['fields_checked'], 3)
+            self.assertEqual(report['fields_checked'], len(p.fields_for(p.read_save(source))))
             self.assertEqual(report['fields_changed'], 0)
             self.assertEqual(report['integrity_kind'], 'checksum')
             for key in ('success', 'checksum_verified', 'native_integrity_verified',

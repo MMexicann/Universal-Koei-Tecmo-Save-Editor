@@ -4,8 +4,9 @@ This expansion covers the assigned Gundam and Ken's Rage games only. The
 registered console editors accept copied **decrypted gameplay files**, never
 signed console containers. Keep `DATA.BIN` and edited `.bin` copies beside the
 original `PARAM.SFO`. Its bounded `SAVEDATA_DIRECTORY` identifies the selected title and slot.
-Gundam 1 uses an identity-only companion; the v1.9 Gundam profiles bind the
-complete original companion digest. Account fields are never interpreted or
+Gundam 1 emits identity-only output/backup companions and freezes the original
+source companion digest while the copy is open; the v1.9 Gundam profiles bind
+the complete original companion digest for both source and destination. Account fields are never interpreted or
 edited. Missing, malformed or foreign
 identity companions are rejected. Apollo remains responsible for decrypting,
 reimporting, encrypting and resigning the original console save. This application
@@ -55,6 +56,13 @@ dependencies or authorize a copied skill-name catalog. Gundam backups include
 an identity-only `.sfo` sidecar alongside the `.bin` and `.json` snapshot files.
 Keep all three together for restore; its destination must retain the same
 qualified title/slot identity. Full player metadata is never copied into backups.
+The opened original companion is hashed opaquely, so changing any of its bytes
+requires reopening before backup, Save As or private CLI-copy preparation.
+Save As checks the unchanged source again after its backup and verifies the
+actual destination bytes and companion after writing. Restore checks the
+backup sidecar and destination companion again during bounded-byte validation;
+changes during either operation are rejected. These source/destination race
+regressions use procedural fixtures; they do not establish edited-console loading.
 
 The [US Apollo patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLUS30058.savepatch)
 and [EU patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLES00147.savepatch)

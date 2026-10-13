@@ -46,6 +46,19 @@ class CatalogSearchTests(unittest.TestCase):
         self.assertFalse(matching_games(GAMES, 'dead or alive ultimate'))
         self.assertEqual([g.id for g in matching_games(GAMES, 'pokemon', 'Nintendo DS')], ['pokemon_conquest_ds'])
 
+    def test_series_filter_finds_related_titles_across_regional_names(self):
+        horror = matching_games(GAMES, series='Fatal Frame / Project Zero')
+        self.assertEqual({game.id for game in horror},
+                         {'fatal_frame2_remake', 'project_zero_ps2'})
+        self.assertEqual([game.id for game in matching_games(
+            GAMES, 'film', platform='PlayStation 2', series='Fatal Frame / Project Zero')],
+            ['project_zero_ps2'])
+        self.assertEqual({game.id for game in matching_games(
+            GAMES, series='Fist of the North Star')},
+            {'kens_rage1_ps3', 'kens_rage2_ps3'})
+        self.assertEqual({game.id for game in matching_games(GAMES, series='Fire Emblem')},
+                         {'fire_emblem_warriors', 'three_hopes', 'three_houses'})
+
 
 class LibrarySearchGuiTests(unittest.TestCase):
     def setUp(self):

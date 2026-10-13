@@ -226,16 +226,34 @@ def _fields(payload):
     balance = int.from_bytes(payload[cole:cole + 4], 'big', signed=True)
     fields = [Field('cole','Cole (reduce only)',cole,4,balance)] if balance >= 0 else []
     records = _records(payload)
+    active_limits = {key: min(active, physical)
+                     for key, _label, active, physical in _capacity_rows(payload)}
     instances = {}
     for _key,_label,_slot,_offset,instance,_identity,_quality,_editable in records:
         instances[instance] = instances.get(instance,0) + 1
     for key,label,slot,offset,instance,identity,quality,editable in records:
-        if (editable and instances[instance] == 1 and math.isfinite(quality)
+        if (editable and slot <= active_limits[key] and instances[instance] == 1 and math.isfinite(quality)
                 and quality.is_integer() and 1 <= quality <= 0xFFFFFF):
             fields.append(Field(f'{key}_{slot}_quality',
                                 f'Quality (item ID {identity}, instance {instance}; reduce only)',
                                 offset + 4,4,int(quality),label,slot,minimum=1,encoding='float32_be'))
     return tuple(fields)
+
+
+def _capacity_rows(payload):
+    """Inspect stored ordinary-pool limits separately from physical allocation."""
+    _structure(payload)
+    cursor = 32
+    for name, size in ROOTS:
+        if name == 'item':
+            position, end = _node(payload, 'limitSize', cursor, cursor + size, 22)
+            if position + 8 != end:
+                raise SaveError('Original Firis active inventory limit framing is invalid.')
+            basket, container = struct.unpack_from('>II', payload, position)
+            return (('basket', 'Basket', basket, 100),
+                    ('container', 'Container', container, 4000))
+        cursor += size
+    raise SaveError('Original Firis ordinary inventory limits are missing.')
 
 
 def fields_for(document):
@@ -344,6 +362,14 @@ def restore(backup_path, destination, game_id=GAME_ID):
 def item_records(document):
     validate_document(document)
     return _records(document.payload)
+
+
+def inventory_capacity_rows(document):
+    validate_document(document)
+    # Show the actual native words, including unusual values. Only field
+    # admission clamps these values to the independently qualified allocation.
+    return tuple((label, active, physical)
+                 for _key, label, active, physical in _capacity_rows(document.payload))
 
 
 def field_hint(document, key):

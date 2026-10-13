@@ -90,6 +90,32 @@ class FirisFormatTests(unittest.TestCase):
         self.assertNotIn('container_1_quality',ambiguous)
         self.assertEqual(p.serialize(p.decode(bytes(raw)),{}),bytes(raw))
 
+    def test_active_inventory_limits_do_not_authorize_spare_physical_records(self):
+        from koei_editor.games.firis_pc.editor import Presentation
+
+        raw = bytearray(self.raw)
+        pools = p._structure(self.raw)[0]
+        for key, _label, base, _count, editable in pools:
+            if not editable:
+                continue
+            # The first slot beyond each observed active limit retains a
+            # plausible record but must not acquire a quality control.
+            active = 60 if key == 'basket' else 1000
+            struct.pack_into('>HHf', raw, base + active * 52, 900 + active, 42, 20)
+        doc = p.decode(bytes(raw))
+        self.assertNotIn('basket_61_quality', p.field_map(doc))
+        self.assertNotIn('container_1001_quality', p.field_map(doc))
+        self.assertEqual(p.serialize(doc, {}), bytes(raw))
+        self.assertEqual(p.inventory_capacity_rows(doc),
+                         (('Basket', 60, 100), ('Container', 1000, 4000)))
+        tables = Presentation(p, p.GAME_ID).inspection_tables(doc)
+        self.assertEqual(tables[1].rows, p.inventory_capacity_rows(doc))
+        beyond = [row for row in tables[0].rows
+                  if (row[0], row[1]) in (('Basket', 61), ('Container', 1001))]
+        self.assertEqual(len(beyond), 2)
+        self.assertTrue(all(row[-1] == 'Read only' for row in beyond))
+        self.assertEqual(tables[0].rows[0][-1], 'Reduce only')
+
     def test_complete_foreign_and_forged_profile_rejection(self):
         for candidate in (self.raw[:-1],self.raw + b'\0',b'\0' * len(self.raw)):
             with self.assertRaises(SaveError):p.decode(candidate)

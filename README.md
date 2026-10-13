@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-The released **version 1.91** supports **76 game/platform profiles across 13 platforms**.
+**Version 2.0** supports **90 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Supported games
@@ -13,8 +13,8 @@ No Python installation is needed for the Windows app.
 Select the game and platform that match your save. Console editors open
 extracted or decrypted save exports: `.psu` for
 PlayStation 2, `APP.BIN` for Wii U and DW7/DW8 XL PS3, `DATA.BIN` for SW4 PS3, and `svdt`
-for Age of Calamity. The development source also accepts original Bladestorm PS3 `PLAYDATA` copies
-and the newly qualified Pirate Warriors PS3 exports. Some PS3 profiles require the original `PARAM.SFO` beside
+for Age of Calamity, `PLAYDATA` for original Bladestorm PS3, and `DATA.BIN` for
+Pirate Warriors PS3. Some PS3 profiles require the original `PARAM.SFO` beside
 the copied gameplay file and edited output. Export and reimport/resign PS3 saves
 with Apollo Save Tool; this editor does not rebuild `PARAM.PFD` or sign exports.
 
@@ -22,8 +22,8 @@ Berserk and Meruru Plus Vita editors open decrypted exports with their original
 `sce_sys/param.sfo`. DW8 XL Vita opens the qualified plaintext `MainData00.dat` profile.
 Meruru Plus uses `USR-DATA0000`; Berserk uses `app0000.dat` or another supported
 slot. Export and reimport with a Vita save manager. Pokémon Conquest and Monster Rancher DS open raw
-Nintendo DS `.sav` exports. The development source adds Gemfire NES/SNES and
-Nobunaga NES raw battery exports, plus Bandit Kings Macintosh `.cim` data forks.
+Nintendo DS `.sav` exports. Gemfire NES/SNES and Nobunaga NES open raw battery
+exports; Bandit Kings Macintosh opens `.cim` data forks.
 Attack on Titan Vita uses `app0000.dat` with original `sce_sys/param.sfo`.
 
 Persona 5 Strikers PS4 opens a decrypted English `APP.BIN` export with its
@@ -36,8 +36,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below describes the **development source on main**, including additions
-that are not in the v1.91 Windows download.
+The table below lists each supported game/platform and its editing scope.
 
 <!-- BEGIN SUPPORTED GAMES -->
 | Game / edition | Platform | Implemented scope |
@@ -81,10 +80,10 @@ that are not in the v1.91 Windows download.
 | HYRULE WARRIORS LEGENDS — Nintendo 3DS · zmha.bin | Nintendo 3DS | Rupees, materials, map cards, weapon stars, ordinary seals, My Fairy names and existing fairy trust reductions. |
 | ATELIER AYESHA — The Alchemist of Dusk · PS3 US/Japanese export | PlayStation 3 | Cole, existing stack reductions and searchable inventory quality, properties and effects. |
 | DYNASTY WARRIORS 5 SPECIAL — Shin Sangokumusou 4 Special · Windows PC | Windows PC | Existing item ranks, stored officer attack/defense, weapon attack/weight and attributes; named records. |
-| FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold reductions, owned Shez/Byleth name customization and searchable character/weapon records. |
+| FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold and existing material-stock reductions, owned Shez/Byleth name customization and searchable character/weapon records. |
 | DYNASTY WARRIORS 8 EMPIRES — US · decrypted SYSTEM APP.BIN | PlayStation 3 | Existing custom-horse appearance choices; searchable horse stats and ability records. |
 | WARRIORS OROCHI 3 ULTIMATE — US · decrypted APP.BIN · NPUB31505 | PlayStation 3 | Manual unallocated growth points and gems; searchable officer, weapon and inventory inspection. |
-| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, eighteen named ordinary consumable reductions; separate equipment inspection. |
+| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, thirty-two named ordinary consumable reductions; separate equipment inspection. |
 | NINJA GAIDEN II — Original Xbox 360 / Xenia · extracted revision-6 story | Xbox 360 / Xenia | Yellow Essence, existing consumable and ammunition reductions; searchable inventory and separate Karma inspection. |
 | DYNASTY WARRIORS: GUNDAM — US/EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Learn skill flags and choose already learned equipped skills on six qualified level-30 pilots; progression inspection. |
 | DYNASTY WARRIORS: GUNDAM REBORN — EU/Japan · decrypted DATA.BIN + original PARAM.SFO | PlayStation 3 | Spendable money and existing Amuro/Kamille Team Point reductions; searchable pilot progression, earnings and material storage. |
@@ -110,7 +109,7 @@ that are not in the v1.91 Windows download.
 | ROMANCE OF THE THREE KINGDOMS: LEGEND OF LIU BEI — Original Traditional Chinese DOS · MSAVE0–4.R3S | DOS PC | Existing allied troop reductions and within-level EXP; searchable character and carried-item records. |
 | ROMANCE OF THE THREE KINGDOMS III — Original Traditional Chinese DOS · SANGOKU3.SAV | DOS PC | Six existing officer abilities and owned-city resource/commerce reductions; searchable slots, cities and officers. |
 | NOBUNAGA'S AMBITION: TENSHOUKI — Original Japanese Windows Power-Up Kit · SAVEDAT.n6p | Windows PC | Existing district Gold, Rice, Horses and Firearms reductions; searchable generals, castles, clans, treasures and slots. |
-| PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point and base-upgrade tier reductions; searchable slots, camera functions and inventory. |
+| PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point, base-upgrade tier and film-stock reductions; searchable slots, camera functions and inventory. |
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |
 | TECMO SUPER BOWL — NES · compatible original 28-team battery SRAM | NES | Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records. |

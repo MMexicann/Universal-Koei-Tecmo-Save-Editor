@@ -14,10 +14,10 @@ class Presentation(ScalarPresentation):
             InspectionTable('Camera functions', ('Slot', 'Stored function', 'Value'),
                             parser.camera_records(document),
                             'Special abilities and equipped references stay unchanged.'),
-            InspectionTable('Inventory', ('Slot', 'Native item record', 'Stored quantity/status'),
-                            parser.item_records(document),
-                            'Record positions are not named item IDs. Films, consumables and key-item '
-                            'semantics require separate proof before editing.'),
+            InspectionTable('Inventory', ('Slot', 'Native item ID', 'Record', 'Stored quantity/status'),
+                            parser.inventory_records(document),
+                            'Film stocks 1–4 can be reduced while retaining one sheet. Other item '
+                            'and status identities remain unmapped and read only.'),
         )
 
 
@@ -27,4 +27,4 @@ class Editor(ScalarEditor):
     save_extension = parser.EXTENSION
     presentation_type = Presentation
     subtitle = 'Original European PlayStation 2 · SLES-50821 · PSU exports'
-    summary = 'Camera points and existing base-upgrade reductions; searchable slots, functions and inventory.'
+    summary = 'Camera points, base-upgrade tiers and existing film-stock reductions; searchable slots, functions and inventory.'

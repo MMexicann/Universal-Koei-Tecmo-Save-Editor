@@ -32,5 +32,5 @@ class Editor(ScalarEditor):
     save_extension = ''
     presentation_type = Presentation
     subtitle = 'Nintendo Switch — extracted SlotData export'
-    summary = ('Decrease gold and rename already-qualified Shez/Byleth profiles; named read-only '
+    summary = ('Decrease gold/existing material stocks and rename already-qualified Shez/Byleth profiles; named read-only '
                'character/weapon inspection. Recruitment, growth, equipment, renown and story are preserved.')

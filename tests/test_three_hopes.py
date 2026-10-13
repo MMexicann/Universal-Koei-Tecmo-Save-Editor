@@ -127,7 +127,7 @@ class ThreeHopesTests(unittest.TestCase):
             out=p.serialize(d,{field.id:target});allowed=set(range(p.GAMEPLAY_HEADER,p.GAMEPLAY_HEADER+4))
             for at in (field.offset,)+field.mirrors:allowed.update(range(at,at+field.size))
             self.assertLessEqual({i for i,(a,b) in enumerate(zip(raw,out)) if a!=b},allowed)
-            self.assertEqual(p.field_map(p.decode(out))[field.id].value(out),target)
+            self.assertEqual(field.value(p.decode(out).payload),target)
         self.assertEqual(path.read_bytes(),raw)
 
 
@@ -140,3 +140,73 @@ class ThreeHopesGuiTests(GuiWorkflow,unittest.TestCase):
 class ThreeHopesNativeGuiTests(GuiWorkflow,unittest.TestCase):
     backend=p;editor_type=Editor;fixture=staticmethod(lambda:Path(os.environ['THREE_HOPES_COPY']).read_bytes())
     group,search,field,value='Character names','Shez','shez_name','Navi'
+
+
+def procedural_materials():
+    raw = bytearray(procedural_hopes())
+    # Independent literal geometry from the save template; distinctive record
+    # tails expose accidental rewriting of opaque/discovery/reference bytes.
+    for start, count in ((0x831BC, 8), (0x8366C, 4), (0x836BC, 3),
+                         (0x836E4, 3), (0x8370C, 3), (0x83734, 3),
+                         (0x8375C, 3), (0x83784, 3), (0x837AC, 3)):
+        for slot in range(count):
+            struct.pack_into('<H', raw, start + slot * 8, 20 + slot)
+            raw[start + slot * 8 + 2:start + slot * 8 + 8] = bytes((137, 2, 231, 7, 61, 255))
+    return checksum_headers(raw)
+
+
+class ThreeHopesMaterialTests(unittest.TestCase):
+    def setUp(self):
+        self.raw = procedural_materials()
+        self.doc = p.decode(self.raw)
+
+    def test_each_of_33_stock_edits_preserves_opaque_record_tails_and_other_sections(self):
+        fields = [field for field in p.fields_for(self.doc) if field.group == 'Material stocks']
+        self.assertEqual(len(fields), 33)
+        self.assertEqual(sum(row['group'] == 'Material stocks' for row in p.inspection_rows(self.doc)), 33)
+        for field in fields:
+            with self.subTest(field=field.id):
+                out = p.serialize(self.doc, {field.id: 0})
+                expected = bytearray(self.raw)
+                expected[field.offset:field.offset + 2] = bytes(2)
+                self.assertEqual(out, checksum_headers(expected))
+                self.assertEqual(field.value(p.decode(out).payload), 0)
+                self.assertNotIn(field.id, p.field_map(p.decode(out)))
+                self.assertEqual(p.serialize(self.doc, {field.id: field.value(self.raw)}), self.raw)
+        self.assertEqual(p.maximums(self.doc, {}), {})
+
+    def test_original_stock_gate_and_all_pending_material_changes_are_validated(self):
+        raw = bytearray(self.raw)
+        raw[0x831BC:0x831BE] = bytes(2)
+        raw[0x831C4:0x831C6] = b'\xff\xff'
+        document = p.decode(checksum_headers(raw))
+        for key in ('material_stones_1', 'material_stones_2'):
+            self.assertNotIn(key, p.field_map(document))
+            with self.assertRaises(SaveError):
+                p.stage(document, {}, key, 1)
+        self.assertEqual(p.serialize(document, {}), document.raw)
+        key = 'material_training_1'
+        for value in (21, -1, True, 3.0, '3'):
+            for operation in (lambda: p.serialize(self.doc, {key: value}),
+                              lambda: p.maximums(self.doc, {key: value}),
+                              lambda: p.stage(self.doc, {key: value}, 'gold', 1)):
+                with self.assertRaises(SaveError):
+                    operation()
+        pending = p.stage(self.doc, {}, key, 0)
+        self.assertEqual(p.maximums(self.doc, pending), pending)
+        self.assertEqual(p.stage(self.doc, pending, key, 20), {})
+
+
+class ThreeHopesMaterialGuiTests(GuiWorkflow, unittest.TestCase):
+    backend = p
+    editor_type = Editor
+    fixture = staticmethod(procedural_materials)
+    group, search, field, value = 'Material stocks', 'Training gear', 'material_training_1', 3
+
+
+@unittest.skipUnless(os.environ.get('THREE_HOPES_COPY'), 'Private Three Hopes native export absent')
+class ThreeHopesNativeMaterialGuiTests(GuiWorkflow, unittest.TestCase):
+    backend = p
+    editor_type = Editor
+    fixture = staticmethod(lambda: Path(os.environ['THREE_HOPES_COPY']).read_bytes())
+    group, search, field, value = 'Material stocks', 'Training gear', 'material_training_1', 1

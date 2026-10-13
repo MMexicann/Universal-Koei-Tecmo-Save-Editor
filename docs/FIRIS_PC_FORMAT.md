@@ -50,7 +50,7 @@ list, item catalogue or player bytes are copied into the project.
 | Cole | Root `money`, nested `money` span 18, first big-endian signed 32 word. The independently shared native copy stores 900. Permit only 0..opened nonnegative balance; preserve the remaining four native bytes. No balance increase or natural cap is inferred. |
 | Ordinary basket | `m_unitKago`, 100 physical records, 52 bytes each. Existing non-FFFF instance/item identities only. |
 | Ordinary container | `m_unitContainer`, 4000 physical records, 52 bytes each; stored active limits remain 60/1000. Physical storage does not authorize expanding active capacity. |
-| Existing quality | Float32 big-endian at record +4, only finite whole-number opened values 1..16777215 with unique instance identity across all observed pools. Permit 1..opened. Unknown/fractional/nonfinite qualities remain inspection-only. |
+| Existing quality | Float32 big-endian at record +4, only finite whole-number opened values 1..16777215 with unique instance identity across all observed pools and a record within the opened active pool limit. Permit 1..opened. Unknown/fractional/nonfinite qualities and spare physical records remain inspection-only. |
 | Important pools | 100 records each in `m_unitKagoImportant` and `m_unitContainerImportant`; read-only, including their quality. |
 | Party | Revision 3, twelve 840-byte framed records with unique existing identities, plus 128 bytes of native reference/LP data. Inspection/validation only; no character stats, references or ownership changes. |
 | Alchemy | Native `mix_lv/m_lv` and `m_exp` big-endian words are inspected read-only. |
@@ -61,6 +61,16 @@ bytes, items, properties/effects, quantities, equipped references, padding,
 calendar, prerequisite and reward state remain exact. Negative or unusually
 encoded resources do not gain a writable control. Duplicate instance identity
 makes the affected item records read-only.
+
+The inspector separately displays the opened active limits and physical record
+counts. The independently downloaded original clear copy confirms limits of
+60 basket and 1,000 container records in the native BE32 `limitSize` pair,
+against physical allocations of 100 and 4,000. Quality controls use the lower
+of each opened limit and its physical allocation. Plausible stale records in
+spare physical slots remain searchable and read-only; their presence does not
+authorize ownership. Unusual limits are shown exactly and preserved. Inventory
+rows now report actual quality eligibility instead of ordinary-pool membership,
+so fractional, ambiguous and out-of-capacity records are clearly read-only.
 
 ## Mechanics still requiring their own proof
 
@@ -78,10 +88,17 @@ do not grant these dependent systems.
 [Focused tests](../tests/test_firis_pc.py) cover procedural complete framing,
 foreign/truncated/forged snapshots, finite/fractional/unknown quality gates,
 ambiguous identity rejection, exact no-op and surgical float/integer writes.
+An additional capacity-boundary check retains occupied-looking spare records,
+confirms they have no controls, and checks the inspector's eligibility/capacity
+tables without mutating the source or native limits.
 The shared scalar contract checks immutable staging, full pending-map
 validation, read-back, source safety, backups, restore and new destinations.
 The optional `FIRIS_PC_SAVE_COPY` test checks an independently copied native
 original-PC slot: exact no-op, surgical reduction, Save As, backup and exact
 restore. That genuine-file workflow passed locally. Procedural fixtures remain
-non-playable test data. No game binary was executed, no independent edited
+non-playable test data. The same original native slot also passed actual Tk
+Open, Search, Apply, Undo, Review, Inspect, theme change, Save As, backup and
+Restore checks. Both source copies remained unchanged; the quality edit changed
+only its selected four-byte scalar, preserving equipment and active limits.
+No game binary was executed, no independent edited
 load/re-save occurred, and no private input is included in the source archive.

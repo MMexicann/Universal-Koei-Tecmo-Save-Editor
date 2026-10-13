@@ -287,9 +287,11 @@ python -m tools.package_release --verify-executable
 ```
 
 PyInstaller produces a portable Windows folder with one launcher and its complete
-`_internal` runtime. Distribute the complete Windows ZIP; a loose EXE lacks its
-runtime. Active, updated Defender scans must pass before packaged startup and
-publication. A Linux validation bundle does
+`_internal` runtime, plus a separate self-contained standalone EXE. Distribute
+the complete Windows ZIP or the separately built standalone EXE; the portable
+folder's launcher needs its adjacent runtime. Required notices are bundled inside
+`_internal/licenses` and embedded in the standalone EXE. Active, updated Defender
+scans must pass for both forms before packaged startup and publication. A Linux validation bundle does
 not test Windows CNG or constitute a Windows release. Add new public metadata to
 `tools.build_windows.DATA` and explicit adapter imports through the registry as needed.
 

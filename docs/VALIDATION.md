@@ -1,5 +1,29 @@
 # Universal development validation
 
+## v2.02 dual Windows downloads — native qualification pending
+
+Version 2.02 prepares two builds of the same 90-profile application: a portable
+`--onedir --noupx` runtime and a standalone `--onefile --noupx` EXE. The direct
+EXE embeds its runtime and required notices. The Windows ZIP contains only the
+versioned application folder, with the launcher and `_internal`; developer
+documentation remains in the Source ZIP.
+
+The release gate requires active/current Microsoft Defender scans of both
+complete candidates **before either binary is executed**. Both packaged smoke
+tests then run, followed by static package/privacy checks and scans of the exact
+final downloadable EXE, Windows ZIP and Source ZIP. Before/after inventories,
+SHA-256 hashes, version and the tested commit must agree at publication.
+
+The exact v2.02 native build, packaged startup tests and real Defender scans
+have not yet been recorded here. Publication remains pending until that Windows
+run passes; local policy tests, earlier releases and static comparisons do not
+establish a clean scan for these new assets. The published
+`DefenderScan-v2.02.json` and its exact Windows workflow run are the authoritative
+records of eventual native qualification; they bind the results to the tested
+commit and final asset hashes. This source section records the preparation
+state before that run. No edited in-game load/re-save validation is added by
+this distribution change.
+
 ## v2.01 Defender release qualification — 2026-10-13
 
 The 2.0 assets were withdrawn after a Microsoft Defender Sabsik detection was

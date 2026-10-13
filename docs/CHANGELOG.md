@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.02 — 2026-10-13
+
+- Added a direct, self-contained Windows EXE alongside the portable Windows ZIP; the EXE needs no side files.
+- Simplified the Windows ZIP to one versioned application folder containing its launcher and complete runtime.
+- Kept required notices inside the portable runtime and embedded in the standalone EXE; developer documents remain in the Source ZIP.
+- Required active Defender scans of both candidates before either is executed, followed by scans and hash binding of the final EXE and both ZIPs before publication.
+- Retained all 90 game/platform profiles and existing editing features. Native release qualification is recorded separately in [VALIDATION.md](VALIDATION.md).
+
 ## v2.01 — 2026-10-13
 
 - Withdrew the 2.0 download following a Microsoft Defender Sabsik detection.

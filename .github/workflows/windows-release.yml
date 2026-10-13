@@ -162,46 +162,66 @@ jobs:
           }
           & ./tools/scan_release.ps1 -Path $baseline -ReportPath defender-reports/baseline.json -Baseline
           if ($LASTEXITCODE -ne 0) { throw 'Active Defender readiness verification failed.' }
-      - name: Build portable application and scan before packaged startup
+      - name: Build both Windows formats and scan before packaged startup
         run: |
           python -m tools.build_windows
           if ($LASTEXITCODE -ne 0) { throw 'Windows build failed.' }
+          python -m tools.build_windows --standalone
+          if ($LASTEXITCODE -ne 0) { throw 'Standalone Windows build failed.' }
+          python -m tools.package_release --verify-executable
+          if ($LASTEXITCODE -ne 0) { throw 'Portable metadata or privacy verification failed.' }
+          python -m tools.package_release --verify-standalone
+          if ($LASTEXITCODE -ne 0) { throw 'Standalone metadata or privacy verification failed.' }
           $bundle = python -m tools.package_release --bundle-path
           if ($LASTEXITCODE -ne 0) { throw 'Portable bundle path validation failed.' }
           & ./tools/scan_release.ps1 -Path $bundle -ReportPath defender-reports/runtime.json
           if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the portable runtime or scan readiness failed.' }
+          $standalone = python -m tools.package_release --standalone-path
+          if ($LASTEXITCODE -ne 0) { throw 'Standalone executable path validation failed.' }
+          & ./tools/scan_release.ps1 -Path $standalone -ReportPath defender-reports/standalone-runtime.json
+          if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the standalone executable or scan readiness failed.' }
           $launcher = python -m tools.package_release --executable-path
           if ($LASTEXITCODE -ne 0) { throw 'Portable launcher path validation failed.' }
           $smoke = Start-Process -FilePath $launcher -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
           if ($smoke.ExitCode -ne 0) { throw 'Packaged GUI startup failed.' }
+          $standaloneSmoke = Start-Process -FilePath $standalone -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
+          if ($standaloneSmoke.ExitCode -ne 0) { throw 'Standalone packaged GUI startup failed.' }
           # Verify complete external runtime, metadata and privacy before packaging.
           python -m tools.package_release
           if ($LASTEXITCODE -ne 0) { throw 'Bundle validation or local packaging failed.' }
-      - name: Scan exact downloadable archives and record their verified hashes
+      - name: Scan every exact downloadable payload and record verified hashes
         run: |
           $version = python -m tools.package_release --version
           $windowsZip = "release/UniversalKoeiTecmoSaveEditor-v$version-Windows.zip"
           $sourceZip = "release/UniversalKoeiTecmoSaveEditor-v$version-Source.zip"
+          $standaloneExe = "release/UniversalKoeiTecmoSaveEditor-v$version.exe"
+          & ./tools/scan_release.ps1 -Path $standaloneExe -ReportPath defender-reports/standalone.json
+          if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the final standalone EXE or scan readiness failed.' }
           & ./tools/scan_release.ps1 -Path $windowsZip -ReportPath defender-reports/windows-archive.json
           if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the final Windows ZIP or scan readiness failed.' }
           & ./tools/scan_release.ps1 -Path $sourceZip -ReportPath defender-reports/source-archive.json
           if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the final source ZIP or scan readiness failed.' }
           $runtime = Get-Content defender-reports/runtime.json -Raw | ConvertFrom-Json
+          $standaloneRuntime = Get-Content defender-reports/standalone-runtime.json -Raw | ConvertFrom-Json
+          $standalone = Get-Content defender-reports/standalone.json -Raw | ConvertFrom-Json
           $windows = Get-Content defender-reports/windows-archive.json -Raw | ConvertFrom-Json
           $source = Get-Content defender-reports/source-archive.json -Raw | ConvertFrom-Json
           $baseline = Get-Content defender-reports/baseline.json -Raw | ConvertFrom-Json
-          if ($runtime.clean -ne $true -or $windows.clean -ne $true -or $source.clean -ne $true) {
+          if ($runtime.clean -ne $true -or $standaloneRuntime.clean -ne $true -or $standalone.clean -ne $true -or $windows.clean -ne $true -or $source.clean -ne $true) {
             throw 'Defender reports do not establish clean final artifacts.'
           }
+          if ($standaloneRuntime.inputs.Count -ne 1 -or $standalone.inputs.Count -ne 1 -or $standaloneRuntime.inputs[0].sha256 -ne $standalone.inputs[0].sha256) {
+            throw 'The published standalone EXE differs from the executable qualified before startup.'
+          }
           $assets = @{}
-          foreach ($pair in @(@{file=$windowsZip; scan=$windows}, @{file=$sourceZip; scan=$source})) {
+          foreach ($pair in @(@{file=$standaloneExe; scan=$standalone}, @{file=$windowsZip; scan=$windows}, @{file=$sourceZip; scan=$source})) {
             $hash = (Get-FileHash -Algorithm SHA256 $pair.file).Hash.ToLowerInvariant()
             if ($pair.scan.inputs.Count -ne 1 -or $pair.scan.inputs[0].sha256 -ne $hash) {
               throw 'Downloadable archive changed after its Defender scan.'
             }
             $assets[(Split-Path $pair.file -Leaf)] = $hash
           }
-          $report = [ordered]@{ version=$version; commit=$env:GITHUB_SHA; assets=$assets; runtime=$runtime; windows_archive=$windows; source_archive=$source; baseline=$baseline }
+          $report = [ordered]@{ version=$version; commit=$env:GITHUB_SHA; assets=$assets; runtime=$runtime; standalone_runtime=$standaloneRuntime; standalone=$standalone; windows_archive=$windows; source_archive=$source; baseline=$baseline }
           $reportPath = "release/DefenderScan-v$version.json"
           $report | ConvertTo-Json -Depth 20 | Set-Content $reportPath -Encoding utf8NoBOM
           $reportHash = (Get-FileHash -Algorithm SHA256 $reportPath).Hash.ToLowerInvariant()
@@ -273,42 +293,64 @@ jobs:
       - name: Verify artifact hashes
         working-directory: release
         run: sha256sum --check SHA256SUMS.txt
-      - name: Require clean Defender evidence for the exact published archives
+      - name: Require clean Defender evidence for every exact published payload
         run: |
-          python - <<'PY'
-          import hashlib, json, zipfile
+          python -I - <<'PY'
+          import hashlib, json, os, tomllib, zipfile
           from pathlib import Path
-          from tools.package_release import version
-          release_version = version()
+          def require(condition, message):
+              if not condition:
+                  raise ValueError(message)
+          release_version = tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version']
           root = Path('release')
-          report = json.loads((root / f'DefenderScan-v{release_version}.json').read_text(encoding='utf-8'))
-          import os
-          assert report['version'] == release_version and report['commit'] == os.environ['GITHUB_SHA']
-          for key in ('runtime', 'windows_archive', 'source_archive'):
+          prefix = f'UniversalKoeiTecmoSaveEditor-v{release_version}'
+          report_name = f'DefenderScan-v{release_version}.json'
+          payloads = {prefix + '.exe': 'standalone', prefix + '-Windows.zip': 'windows_archive', prefix + '-Source.zip': 'source_archive'}
+          expected_files = set(payloads) | {'SHA256SUMS.txt', report_name}
+          require({item.name for item in root.iterdir()} == expected_files and all(item.is_file() for item in root.iterdir()),
+                  'Release artifact contains missing or unexpected downloads.')
+          report = json.loads((root / report_name).read_text(encoding='utf-8'))
+          require(report['version'] == release_version and report['commit'] == os.environ['GITHUB_SHA'],
+                  'Defender evidence belongs to another version or commit.')
+          require(set(report['assets']) == set(payloads), 'Defender asset list differs from the published payloads.')
+          for key in ('runtime', 'standalone_runtime', 'standalone', 'windows_archive', 'source_archive'):
               scan = report[key]
-              assert scan['clean'] is True and scan['engine_ready'] is True
-              assert scan['scan_exit_code'] == 0 and scan['maps_exit_code'] == 0
-              assert scan['inputs'] and scan['inputs'] == scan['inputs_after']
-          for suffix, key in (('Windows', 'windows_archive'), ('Source', 'source_archive')):
-              name = f'UniversalKoeiTecmoSaveEditor-v{release_version}-{suffix}.zip'
-              digest = hashlib.sha256((root / name).read_bytes()).hexdigest()
-              assert report['assets'][name] == digest
-              assert len(report[key]['inputs']) == 1 and report[key]['inputs'][0]['sha256'] == digest
+              require(scan['baseline'] is False and scan['clean'] is True and scan['engine_ready'] is True,
+                      'Every published payload requires candidate-mode active Defender evidence.')
+              require(scan['scan_exit_code'] == 0 and scan['maps_exit_code'] == 0,
+                      'A Defender scan or cloud connectivity check failed.')
+              require(scan['inputs'] and scan['inputs'] == scan['inputs_after'],
+                      'Files changed during their Defender qualification.')
+          for name, key in payloads.items():
+              data = (root / name).read_bytes()
+              digest = hashlib.sha256(data).hexdigest()
+              require(report['assets'][name] == digest, 'A published payload differs from its recorded hash.')
+              require(len(report[key]['inputs']) == 1 and report[key]['inputs'][0] ==
+                      {'path': name, 'size': len(data), 'sha256': digest},
+                      'A published payload differs from its exact Defender-scanned bytes.')
+          require(report['standalone_runtime']['inputs'] == report['standalone']['inputs'],
+                  'Published standalone differs from the startup-qualified executable.')
           expected = {item['path']: (item['size'], item['sha256']) for item in report['runtime']['inputs']}
-          assert len(expected) == len(report['runtime']['inputs'])
-          prefix = f'UniversalKoeiTecmoSaveEditor-v{release_version}/'
-          archive_path = root / f'UniversalKoeiTecmoSaveEditor-v{release_version}-Windows.zip'
-          with zipfile.ZipFile(archive_path) as archive:
+          require(len(expected) == len(report['runtime']['inputs']), 'Duplicate scanned runtime paths.')
+          with zipfile.ZipFile(root / (prefix + '-Windows.zip')) as archive:
               actual = {}
               for member in archive.infolist():
-                  if member.filename.startswith(prefix) and not member.is_dir():
-                      relative = member.filename.removeprefix(prefix)
-                      assert relative not in actual, 'Duplicate application archive member.'
+                  require(member.filename.startswith(prefix + '/'), 'Unexpected portable archive member outside its application folder.')
+                  if not member.is_dir():
+                      relative = member.filename.removeprefix(prefix + '/')
+                      require(relative not in actual, 'Duplicate application archive member.')
                       data = archive.read(member)
                       actual[relative] = (len(data), hashlib.sha256(data).hexdigest())
-              assert actual == expected, 'Published runtime differs from the individually scanned runtime.'
-          assert not list(root.glob('*.exe')), 'Loose runtime-incomplete EXE must not be published.'
-          print('Active Defender evidence matches both complete downloadable archives and this commit.')
+              require(actual == expected, 'Published runtime differs from the individually scanned runtime.')
+          checksums = {}
+          for line in (root / 'SHA256SUMS.txt').read_text(encoding='ascii').splitlines():
+              digest, name = line.split('  ', 1)
+              require(name not in checksums, 'Duplicate checksum manifest entry.')
+              checksums[name] = digest
+          require(set(checksums) == expected_files - {'SHA256SUMS.txt'}, 'Checksum manifest contains missing or unexpected downloads.')
+          for name, digest in checksums.items():
+              require(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, 'Checksum manifest does not match an exact published asset.')
+          print('Active Defender evidence binds the standalone EXE, complete portable ZIP and source ZIP to this commit.')
           PY
       - name: Publish a new versioned release
         env:
@@ -327,4 +369,4 @@ jobs:
             gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
               -f "ref=refs/tags/$release_tag" -f "sha=$GITHUB_SHA"
           fi
-          gh release create "$release_tag" --verify-tag --title "Universal Koei Tecmo Save Editor v$version" --notes-file docs/RELEASE_NOTES.md release/*.zip release/SHA256SUMS.txt "release/DefenderScan-v$version.json"
+          gh release create "$release_tag" --verify-tag --title "Universal Koei Tecmo Save Editor v$version" --notes-file docs/RELEASE_NOTES.md "release/UniversalKoeiTecmoSaveEditor-v$version.exe" "release/UniversalKoeiTecmoSaveEditor-v$version-Windows.zip" "release/UniversalKoeiTecmoSaveEditor-v$version-Source.zip" release/SHA256SUMS.txt "release/DefenderScan-v$version.json"

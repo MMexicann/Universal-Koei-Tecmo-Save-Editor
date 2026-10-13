@@ -24,6 +24,13 @@ runtime rather than unpacking a runtime into a temporary directory. The Windows
 ZIP must be extracted completely, keeping `_internal` beside the launcher.
 This is a distribution change, not an exception to antivirus protection.
 
+Version 2.02 provides both the complete portable Windows ZIP and a separate
+self-contained EXE. Both modes use `--noupx`, the same 90 profiles, and the same
+required embedded notices. The direct EXE needs no side files and unpacks its
+runtime temporarily when launched. The Windows ZIP contains only its versioned
+application folder; users extract that entire folder, keeping `_internal`
+beside its launcher. The Source ZIP retains developer documentation.
+
 ## Required Windows release checks
 
 GitHub's Windows image installs Defender but disables protections and excludes
@@ -45,11 +52,15 @@ No exclusion is added, no protection is disabled, and no quarantined file is
 restored. Native output and exit code are retained; code 2 can mean a detection
 or a scan error and is never described automatically as a malware finding.
 
-The complete runtime is scanned before its packaged startup test. Both exact
-downloadable ZIPs are then scanned. Complete before/after file inventories and
-SHA-256 hashes must match. Publication independently checks that clean reports,
-asset hashes, application version and tested commit agree. The downloadable
-`DefenderScan-v2.01.json` records that evidence. Scanner diagnostics are retained
+The complete portable runtime and standalone EXE must both pass their scans
+before either binary is executed, including smoke tests and copied-save checks.
+After packaging, the exact final direct EXE and both downloadable ZIPs are
+scanned. Complete before/after file inventories and SHA-256 hashes must match
+through every stage. Publication independently checks that successful reports,
+all three downloadable asset hashes, application version and tested commit
+agree. The downloadable `DefenderScan-v2.02.json` records that evidence only
+after actual native scans pass. See [VALIDATION.md](VALIDATION.md) for the current
+qualification status. Scanner diagnostics are retained
 even if the build fails; an old-baseline diagnostic never qualifies a candidate.
 
 All Windows build wheels are version- and hash-locked. CI force-reinstalls the

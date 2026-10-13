@@ -1,6 +1,11 @@
 # Bundled runtime notices
 
-The Windows executable includes Python, the Tcl/Tk runtime, and the PyInstaller bootloader. Their supplied license texts are retained in the `licenses` folder. PyInstaller's bootloader has an exception for distributed bundled applications; see its full notice.
+The Windows builds include Python, the Tcl/Tk runtime and the PyInstaller
+bootloader. Required project, runtime and adapted-code notices are retained in
+the portable application's `_internal/licenses` folder and embedded under
+`licenses` in the standalone EXE. The Source ZIP retains the original licence
+files and development documentation. PyInstaller's bootloader has an exception
+for distributed bundled applications; see its full notice.
 
 The v1.9 DOS Legend of Liu Bei, ROTK III and Windows Tenshouki adapters
 independently implement native layout and complete-writer facts from the
@@ -24,7 +29,11 @@ constants are independently generated mathematical digits of pi. Complete
 source and qualification boundaries are in
 [NINJA_GAIDEN_BLACK_XBOX_FORMAT.md](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md).
 
-The editor uses Windows CNG from the operating system; no separate crypto library is redistributed. Original editor code is covered by the MIT `LICENSE` file.
+Save cryptography uses Windows CNG from the operating system. The bundled
+CPython standard-library runtime also includes OpenSSL 3.5.7
+(`libcrypto-3.dll` and `libssl-3.dll`); its official licence and notices are
+retained with the runtime licences. Original editor code is covered by the
+MIT `LICENSE` file.
 
 The original Windows Samurai Warriors 2 and Warriors Orochi adapters are
 independent implementations of factual save layouts observed in period Van

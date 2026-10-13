@@ -87,6 +87,20 @@ from .game_registry import GAMES
 # wo4_ultimate: WARRIORS OROCHI 4 ULTIMATE / Windows PC · revision 20200101 [Windows PC]
 # samurai5_pc: SAMURAI WARRIORS 5 / Windows PC · revision 39 castle/menu slot zero [Windows PC]
 # abyss_pc: WARRIORS: ABYSS / Windows PC · revision A4 gameplay slots [Windows PC]
+# bandit_kings_mac: BANDIT KINGS OF ANCIENT CHINA / Original English Macintosh · SUI0/SUI1 data forks [Macintosh]
+# nobunaga_ambition_nes: NOBUNAGA'S AMBITION / Original English NES · 17-fief battery profile [NES]
+# gemfire_nes: GEMFIRE / NES · native structurally qualified battery records [NES]
+# gemfire_snes: GEMFIRE / SNES · native structurally qualified battery records [SNES]
+# bladestorm_ps3: BLADESTORM: THE HUNDRED YEARS’ WAR / Original EU BLES00113 · decrypted PLAYDATA + PARAM.SFO [PlayStation 3]
+# atelier_firis_pc: ATELIER FIRIS / The Alchemist and the Mysterious Journey · original Steam PC [Windows PC]
+# blue_reflection_second_light_pc: BLUE REFLECTION: SECOND LIGHT / Original Steam PC · native tagged gameplay profile [Windows PC]
+# atelier_ryza_pc: ATELIER RYZA / Ever Darkness & the Secret Hideout · original Steam PC [Windows PC]
+# dw8xl_vita: DYNASTY WARRIORS 8 / Xtreme Legends Complete Edition · plaintext Vita revision 0x131002F0 [PlayStation Vita]
+# pw1_ps3: ONE PIECE: PIRATE WARRIORS / Original US PSN NPUB30836 · DATA.BIN + PARAM.SFO [PlayStation 3]
+# pw2_ps3: ONE PIECE: PIRATE WARRIORS 2 / Original EU PSN NPEB01795 · DATA.BIN + PARAM.SFO [PlayStation 3]
+# pw3_ps3: ONE PIECE: PIRATE WARRIORS 3 / Original EU PSN NPEB02211 · DATA.BIN + PARAM.SFO [PlayStation 3]
+# dw8_ps3: DYNASTY WARRIORS 8 / Original US PSN NPUB31234 · plaintext APP.BIN + PARAM.SFO [PlayStation 3]
+# aot1_vita: ATTACK ON TITAN / A.O.T. WINGS OF FREEDOM / Original EU PCSB00898 · app0000.dat + sce_sys/param.sfo [PlayStation Vita]
 # END GENERATED SUPPORTED GAME INDEX
 
 

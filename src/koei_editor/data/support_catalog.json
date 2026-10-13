@@ -42,7 +42,15 @@
     "https://github.com/tenshoukijp/nobu6_tool_savedataeditor/tree/69455e9f566874d8440a572041a61cc0c52e72fa",
     "https://github.com/760194962/NinjaGaidenBlack-Save-Manager/tree/41db2f29ae17dd25cba295dbc430ce6d03e8899a",
     "https://github.com/feudalnate/NinjaCrypt/tree/e0a2a42735f3ffcb0e88c1d66998a126569e2d67",
-    "https://github.com/Ryzee119/xbox_eeprom/tree/a3bbedfd5f49f9508e6fd29b51c34a545a098b8e"
+    "https://github.com/Ryzee119/xbox_eeprom/tree/a3bbedfd5f49f9508e6fd29b51c34a545a098b8e",
+    "https://github.com/danhealy/bandit_kings_modding",
+    "https://github.com/chrisaacson69/na1-decompiler",
+    "https://github.com/chrisaacson69/GemFire-decompiler",
+    "https://github.com/chrisaacson69/Gemfire-snes-decompiler",
+    "https://barrelwisdom.com/firis/",
+    "https://github.com/sterben-Dev10/SaveWizard-Resources",
+    "https://savegame.pro/pc-atelier-ryza-ever-darkness-the-secret-hideout-savegame/",
+    "https://github.com/Rinnegatamante/rinCheat"
   ],
   "games": [
     {
@@ -1214,6 +1222,132 @@
       "evidence": "Complete MIT-licensed system writer and original-author Xemu acceptance independently reviewed. Exact 1,360-byte envelope, bounded compression, seed-preserving cipher, original-console HMAC, validated EEPROM context and coupled count/order restoration pass procedural/actual Tk safe-save, paired backup and corruption checks. Genuine story ciphertext independently corroborates shared crypto only. All times, cursor, settings, unlocks and story files remain unchanged.",
       "needed": "Genuine original system.dat with its matching private EEPROM for native system qualification and edited game-load/re-save checks. Story inner integrity and all story resource/equipment maps remain unregistered research.",
       "editing_verified": false
+    },
+    {
+      "id": "bandit_kings_mac",
+      "title": "BANDIT KINGS OF ANCIENT CHINA",
+      "platform": "Macintosh",
+      "status": "Published native format implemented",
+      "evidence": "Complete published Macintosh raw writer and geometry; public modified scenario checks remain source references, not independent native campaign qualification.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": false
+    },
+    {
+      "id": "nobunaga_ambition_nes",
+      "title": "NOBUNAGA'S AMBITION",
+      "platform": "NES",
+      "status": "Published native format implemented",
+      "evidence": "Native battery writer, KOEI signature and exact additive checksum coverage independently implemented from complete public decompilation; procedural fixtures.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": false
+    },
+    {
+      "id": "gemfire_nes",
+      "title": "GEMFIRE",
+      "platform": "NES",
+      "status": "Published native format implemented",
+      "evidence": "Complete native record-copy writer, pointer geometry and ownership chains derived from public NES decompilation; procedural fixtures.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": false
+    },
+    {
+      "id": "gemfire_snes",
+      "title": "GEMFIRE",
+      "platform": "SNES",
+      "status": "Published native format implemented",
+      "evidence": "Complete native record-copy writer and SNES-specific pointer/global offsets derived from public decompilation; procedural fixtures.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": false
+    },
+    {
+      "id": "bladestorm_ps3",
+      "title": "BLADESTORM: THE HUNDRED YEARS’ WAR",
+      "platform": "PlayStation 3",
+      "status": "File editing verified",
+      "evidence": "Two original EU exports independently checked against published Apollo raw patches; original PARAM.SFO binding and external PS3 export integrity preserved.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "atelier_firis_pc",
+      "title": "ATELIER FIRIS",
+      "platform": "Windows PC",
+      "status": "File editing verified",
+      "evidence": "Complete native plaintext tagged source-reference plus independent in-game hex-transplant report; surgical edits, safe copy and restore checked.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "blue_reflection_second_light_pc",
+      "title": "BLUE REFLECTION: SECOND LIGHT",
+      "platform": "Windows PC",
+      "status": "File editing verified",
+      "evidence": "Two complete native source-reference slots pass mandatory XOR/additive checksums; native container mapping corroborates published patch facts. Exact terminal Guide tail retained opaque.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "atelier_ryza_pc",
+      "title": "ATELIER RYZA",
+      "platform": "Windows PC",
+      "status": "File editing verified",
+      "evidence": "Two original PC source-reference slots pass mandatory native XOR/additive checksums. Earlier complete item roots qualified; exact 112-byte terminal secret-base prefix retained opaque.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "dw8xl_vita",
+      "title": "DYNASTY WARRIORS 8",
+      "platform": "PlayStation Vita",
+      "status": "Published native format implemented",
+      "evidence": "Complete public PC/PS3-to-Vita converter establishes exact plaintext profile and additive byte checksum; reference may be converted, so independent native campaign qualification remains absent.",
+      "needed": "Independent edited in-game load/re-save on copies; revision-labelled untouched native campaigns and controlled action pairs for broader mechanics.",
+      "editing_verified": false
+    },
+    {
+      "id": "pw1_ps3",
+      "title": "ONE PIECE: PIRATE WARRIORS",
+      "platform": "PlayStation 3",
+      "status": "File editing verified",
+      "evidence": "Original native export and complete exact-title Apollo patch writer qualify thirteen level-growth words; unknown/native integrity is not bypassed and PS3 authentication remains external.",
+      "needed": "Independent edited in-game load/re-save on copies; untouched revision-labelled native saves and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "pw2_ps3",
+      "title": "ONE PIECE: PIRATE WARRIORS 2",
+      "platform": "PlayStation 3",
+      "status": "File editing verified",
+      "evidence": "Original native export and complete exact-title Apollo writer qualify primary Berry only; unequal secondary word preserved. Original zero header word retained, no guessed checksum normalization.",
+      "needed": "Independent edited in-game load/re-save on copies; untouched revision-labelled native saves and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "pw3_ps3",
+      "title": "ONE PIECE: PIRATE WARRIORS 3",
+      "platform": "PlayStation 3",
+      "status": "File editing verified",
+      "evidence": "Native public unlocked reference and exact Apollo stat writer qualify positive-XP, native-level 1..99 records among forty-seven characters; paired currency remains read-only. Stats may reset on level-up.",
+      "needed": "Independent edited in-game load/re-save on copies; untouched revision-labelled native saves and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "dw8_ps3",
+      "title": "DYNASTY WARRIORS 8",
+      "platform": "PlayStation 3",
+      "status": "File editing verified",
+      "evidence": "Complete exact-title Apollo patches corroborate three fields in native original-PS3 plaintext export; public reference is modified. Full original PARAM.SFO identity/context retained; PFD authentication external.",
+      "needed": "Independent edited in-game load/re-save on copies; untouched revision-labelled native saves and controlled action pairs for broader mechanics.",
+      "editing_verified": true
+    },
+    {
+      "id": "aot1_vita",
+      "title": "ATTACK ON TITAN / A.O.T. WINGS OF FREEDOM",
+      "platform": "PlayStation Vita",
+      "status": "File editing verified",
+      "evidence": "Two native EU exports corroborate complete published RinCheat SE/Apollo save-writer field facts. Upstream recipe filename/byte-order discrepancies documented. Exact title metadata and all opaque bytes retained; import integrity external.",
+      "needed": "Independent edited in-game load/re-save on copies; untouched revision-labelled native saves and controlled action pairs for broader mechanics.",
+      "editing_verified": true
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

@@ -1,5 +1,14 @@
 # Universal development validation
 
+## Sol development expansion — 2026-10-13
+
+The source library now has 90 registered profiles across 15 platforms. The
+[development report](SOL_EXPANSION.md) lists the 14 additions, shared fixes,
+source qualification boundaries and final verification results. Native reference
+inputs remain outside the checkout. New scalar profiles use the same bound
+complete-pending-map and actual-destination read-back checks as existing profiles.
+
+
 ## v1.91 universal save contract — 2026-10-12
 
 Registered scalar game/platform profiles all pass through `BoundScalarAdapter`.

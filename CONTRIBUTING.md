@@ -82,13 +82,18 @@ Use `maxable=False` for fields that permit deliberate individual edits but shoul
 be excluded from bulk Max, such as historical counters or dependency-sensitive
 choices. The backend's `limit_values` and `maximums` must honor that metadata,
 preserve higher existing values and use validated original records to select fields.
+`limit_values` returns assignments to stage, including targets equal to opened
+values so Max can remove a pending reduction. `maximums` returns the complete
+normalized pending map. Validate native dependencies for the final batch and
+after removing a pending key; the original-value shortcut must not skip them.
 
 When native title identity requires a companion file, qualify that context on
 file reads and safe saves. The optional backend hook
 `prepare_self_test_copy(document, destination)` supplies the qualified companion
 for private copied-save CLI outputs. Prefer minimal identity-only context.
 Profiles that explicitly bind the complete original companion must preserve
-those exact opaque bytes, check their bounded digest again before writing, and
+those exact opaque bytes, check their bounded digest before writing and after
+atomic creation and actual destination read-back, and
 use atomic new-file storage. Never synthesize or edit account/signing fields,
 interpret ownership, or include companion/player bytes in public outputs. In-memory `decode` remains a profile parser.
 

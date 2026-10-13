@@ -7,6 +7,11 @@ them; a missing licence is marked unknown rather than treated as permission to
 reuse. Cheat patches, memory tools, asset editors, and container resigners are
 identified separately. No candidate is registered by this document.
 
+This table retains its 2026-10-12 research state. The subsequent
+[development expansion](SOL_EXPANSION.md) implements 14 separately qualified
+profiles; its format documents and the [current inventory](SUPPORTED_GAMES.md)
+describe the accepted scopes.
+
 ## Disk-save editors and source-backed formats
 
 | Game profile | Public source/tool and licence | Save format and writable-field evidence | Status and limits |

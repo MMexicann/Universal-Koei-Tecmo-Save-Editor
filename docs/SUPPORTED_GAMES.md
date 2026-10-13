@@ -80,5 +80,19 @@ Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_su
 | WARRIORS OROCHI 4 ULTIMATE — Windows PC · revision 20200101 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons. |
 | SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts. |
 | WARRIORS: ABYSS — Windows PC · revision A4 gameplay slots | Windows PC | Karma Embers and searchable persistent recruitment records; preserves original Steam owner context. |
+| BANDIT KINGS OF ANCIENT CHINA — Original English Macintosh · SUI0/SUI1 data forks | Macintosh | Owned-prefecture Gold, Food, Metal and Fur reductions; existing hero Strength, Dexterity and Wisdom reductions. |
+| NOBUNAGA'S AMBITION — Original English NES · 17-fief battery profile | NES | Owned active fief Gold and Rice reductions with native additive checksum validation. |
+| GEMFIRE — NES · native structurally qualified battery records | NES | Player-owned province Gold, Food, Loyalty, Farming and Protection; searchable province records. |
+| GEMFIRE — SNES · native structurally qualified battery records | SNES | Player-owned province Gold, Food, Loyalty, Farming and Protection; searchable province records. |
+| BLADESTORM: THE HUNDRED YEARS’ WAR — Original EU BLES00113 · decrypted PLAYDATA + PARAM.SFO | PlayStation 3 | Money and existing positive book Skill Point reductions; searchable book records. |
+| ATELIER FIRIS — The Alchemist and the Mysterious Journey · original Steam PC | Windows PC | Cole deductions and qualified existing ordinary basket/container quality reductions; searchable inventory. |
+| BLUE REFLECTION: SECOND LIGHT — Original Steam PC · native tagged gameplay profile | Windows PC | Existing uniquely identified ordinary container quantity reductions; searchable inventory records. |
+| ATELIER RYZA — Ever Darkness & the Secret Hideout · original Steam PC | Windows PC | Qualified existing ordinary item/equipment quality reductions; searchable inventory and Party equipment. |
+| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · plaintext Vita revision 0x131002F0 | PlayStation Vita | Resources, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
+| ONE PIECE: PIRATE WARRIORS — Original US PSN NPUB30836 · DATA.BIN + PARAM.SFO | PlayStation 3 | Thirteen named characters’ existing level-growth word reductions; searchable progression. |
+| ONE PIECE: PIRATE WARRIORS 2 — Original EU PSN NPEB01795 · DATA.BIN + PARAM.SFO | PlayStation 3 | Primary spendable Berry reductions; searchable secondary currency and progression. |
+| ONE PIECE: PIRATE WARRIORS 3 — Original EU PSN NPEB02211 · DATA.BIN + PARAM.SFO | PlayStation 3 | Existing progressed-character HP, Attack and Defense reductions; searchable progression and currency. |
+| DYNASTY WARRIORS 8 — Original US PSN NPUB31234 · plaintext APP.BIN + PARAM.SFO | PlayStation 3 | Gold and Ambition facility/weapon material reductions; searchable resources. |
+| ATTACK ON TITAN / A.O.T. WINGS OF FREEDOM — Original EU PCSB00898 · app0000.dat + sce_sys/param.sfo | PlayStation Vita | Money and existing positive numbered material-quantity reductions; searchable stored quantities. |
 
 Scope is specific to each edition and supported save revision. File-level qualification and actual game loading are separate; see [coverage and blockers](EXPANSION_COVERAGE.md) and [validation](VALIDATION.md). Research-only codecs are excluded.

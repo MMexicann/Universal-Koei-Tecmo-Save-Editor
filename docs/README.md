@@ -8,6 +8,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
+- [Current Sol expansion on main](SOL_EXPANSION.md)
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
@@ -23,6 +24,19 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Reviewed bug fixes](BUG_REVIEW.md)
 
 ## Game formats and feature coverage
+
+- [Bandit Kings of Ancient China Macintosh](BANDIT_KINGS_MAC_FORMAT.md)
+- [Nobunaga’s Ambition NES battery format](NOBUNAGA_AMBITION_NES_FORMAT.md)
+- [Gemfire NES and SNES battery formats](GEMFIRE_BATTERY_FORMAT.md)
+- [Original Bladestorm EU PS3](BLADESTORM_PS3_FORMAT.md)
+- [Original Atelier Firis Steam PC](FIRIS_PC_FORMAT.md)
+- [Blue Reflection: Second Light Steam PC](BRSL_PC_FORMAT.md)
+- [Original Atelier Ryza Steam PC](RYZA_PC_FORMAT.md)
+- [DW8 Xtreme Legends plaintext Vita](DW8XL_VITA_FORMAT.md)
+- [Original Pirate Warriors 1 and 2 PS3](PIRATE_WARRIORS_PS3_FORMAT.md)
+- [Pirate Warriors 3 EU PS3](PW3_PS3_FORMAT.md)
+- [Original Dynasty Warriors 8 US PS3](DW8_PS3_FORMAT.md)
+- [Attack on Titan EU Vita](AOT1_VITA_FORMAT.md)
 
 - Current editor-depth reviews: [Team Ninja](TEAM_NINJA_DEPTH.md),
   [Persona/Gust/Fatal Frame](PERSONA_GUST_DEPTH.md),

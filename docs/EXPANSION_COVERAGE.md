@@ -6,12 +6,18 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
-The v1.91 source contains **76 registered game/platform profiles across 13 platforms**.
+The released v1.91 download contains **76 game/platform profiles across 13 platforms**.
+The development source now contains **90 profiles across 15 platforms**, including
+the [14-profile Sol expansion](SOL_EXPANSION.md).
 The new separately qualified profiles are described below;
 the registry-derived [inventory](SUPPORTED_GAMES.md) is authoritative.
 Research-only formats remain outside the library.
 
-## v1.91 additional-game survey
+## Historical v1.91 additional-game survey
+
+This is the survey state before the current development additions. Second Light
+now has a narrow [PC inventory editor](BRSL_PC_FORMAT.md), and the remaining
+platform-specific research entries retain their stated blockers.
 
 The survey reviewed 22 additional game/platform candidates. These remain
 research-only because their complete native integrity, writable field maps,
@@ -45,7 +51,8 @@ interpret a title below as supported by the application.
 
 These titles are useful research targets. Registration requires the complete
 native evidence and gameplay qualification described in the contributor guide;
-the current library remains at 76 profiles until then.
+the historical v1.91 library remained at 76 profiles. The current inventory
+and new format documents describe the subsequently qualified scopes.
 
 A follow-up checked a newly published MIT DW3 Remastered editor for the existing
 Windows Steam profile and a DW8 XL PC/PS3/PS4/Vita container converter. The DW3

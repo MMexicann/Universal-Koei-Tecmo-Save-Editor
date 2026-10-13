@@ -13,7 +13,7 @@ saves, owner context and third-party source copies remain outside the checkout.
 | --- | --- | --- |
 | Ayesha DX, PC app1152300 | [SaveGame.Pro gameplay archive](https://savegame.pro/pc-atelier-ayesha-the-alchemist-of-dusk-dx-savegame/) contains a complete `GAMEDATA77`; a [separate public author's archive](https://www.patreon.com/posts/atelier-ayesha-35367735) contains `GAMEDATA16`, `GAMEDATA17` and `SYSDATA`. | All three gameplay files are 813,056 bytes and begin `57dc320100000000`. Their observed byte order and size differ from the 742,400-byte big-endian PS3 profile. The second author explicitly identifies a repack; neither source establishes the exact current Steam build. Need a Steam build/language-labelled original gameplay file, unchanged re-save, controlled displayed Cole purchase/sale pair and PC loader/writer or independently proved integrity coverage. |
 | Escha & Logy DX, PC app1152310 | [SaveGame.Pro archive](https://savegame.pro/pc-atelier-escha-logy-alchemists-of-the-dusk-sky-dx-savegame/) contains sixteen `GAMEDATA00.pcsave` through `GAMEDATA15.pcsave` files and `SYSDATA.pcsave`. | Gameplay sizes range from 63,760 to 76,544 bytes. Each has a 256-byte plaintext prefix followed by an encoded body; system data is 3,840 bytes. Encoding, compression, complete framing and native integrity are unresolved. Need exact Steam build/language, matched original/decoded pair or PC serializer evidence, unchanged control and one resource/item action pair. These sixteen saves establish available native research inputs, not a qualified decoder or field map. |
-| Shallie DX, PC app1152320 | [Barrel Wisdom's public PC-save collection](https://barrelwisdom.com/blog/atelier-pc-saves) provides `SYSDATA.pcsave`, 3,984 bytes. | The author explicitly labels it **system** data that unlocks difficulty. It is not gameplay, inventory or currency evidence. Need an actual `GAMEDATA*.pcsave`, exact Steam build/language, unchanged control, codec/integrity evidence and one controlled resource/item action pair. |
+| Shallie DX, PC app1152320 | [Barrel Wisdom's public PC-save collection](https://barrelwisdom.com/blog/atelier-pc-saves) provides system data. A fresh [SaveGame.Pro Shallie DX archive](https://savegame.pro/pc-atelier-shallie-alchemists-of-the-dusk-sea-dx-savegame/) additionally supplies fifteen actual `GAMEDATA*.pcsave` gameplay snapshots spanning chapters, both protagonists, clear/NG+ and endings. | Actual gameplay is now available for research, separately from the system unlock file. The checksum-enforcing Gust codec still rejects the acquired gameplay bodies with a native marker mismatch. Need native title/platform loader or matched original/decoded pair establishing framing, compression and integrity, exact build/language and controlled resource/item actions. Neither the collection labels nor additional native files establish a writer. |
 
 The initial inspection only extracted and read files. There is no demonstrated
 native decode/encode roundtrip, surgical gameplay edit, GUI save qualification
@@ -87,9 +87,10 @@ dependencies; they do not establish serialized offsets or storage limits.
 
 ### Shallie DX
 
-- **Cole, inventory and equipped use counts:** obtain gameplay data first,
-  followed by purchase/sale and item-use/refill pairs. The inspected system
-  difficulty file cannot establish any of these fields.
+- **Cole, inventory and equipped use counts:** actual public gameplay snapshots
+  are now acquired, but their native bodies remain undecoded. Qualify the
+  codec/integrity, then obtain purchase/sale and item-use/refill pairs. The
+  separate system difficulty file cannot establish any of these fields.
 - **Synthesis, equipment frames, effect strength and properties:** [item data](https://www.koeitecmoamerica.com/manual/duskdx/shallie/en/4300.html)
   distinguishes remaining uses from synthesized capacity and equipment frames.
   Synthesis can alter both. Its effect-strength bar tops out at 120, while

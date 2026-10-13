@@ -85,7 +85,7 @@ class AdapterDispatchTests(unittest.TestCase):
         from tests.test_nobu6_pk_pc import generated_raw
         from tests.test_samurai4dx_format import procedural_raw
         from tests.test_tecmo_super_bowl_nes import generated_raw as tecmo_raw
-        from tests.test_wolong_format import procedural_payload
+        from tests.test_wolong_expansion import named_battle_set_payload
 
         cases = (
             ('tecmo_super_bowl_nes', tecmo_raw(), {'team_9_play_0': 3}),
@@ -93,7 +93,8 @@ class AdapterDispatchTests(unittest.TestCase):
              {'weapon_0_0_skill_0_rank': 5, 'weapon_0_0_skill_0_active': 1}),
             ('nobu6_pk_pc', generated_raw(), {'slot_0_district_0_gold': 0}),
             ('ayesha_ps3', procedural_save(), {'container_1_quantity': 1}),
-            ('wolong', procedural_payload(), {'sen': 123, 'storage_items_8_num': 1}),
+            ('wolong', named_battle_set_payload(),
+             {'sen': 123, 'battle_set_3_name': 'Short', 'storage_items_8_num': 1}),
         )
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 1.91** supports **76 game/platform profiles across 13 platforms**.
+The released **version 1.91** supports **76 game/platform profiles across 13 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Supported games
@@ -13,14 +13,18 @@ No Python installation is needed for the Windows app.
 Select the game and platform that match your save. Console editors open
 extracted or decrypted save exports: `.psu` for
 PlayStation 2, `APP.BIN` for Wii U and DW7/DW8 XL PS3, `DATA.BIN` for SW4 PS3, and `svdt`
-for Age of Calamity. Some PS3 profiles require the original `PARAM.SFO` beside
+for Age of Calamity. The development source also accepts original Bladestorm PS3 `PLAYDATA` copies
+and the newly qualified Pirate Warriors PS3 exports. Some PS3 profiles require the original `PARAM.SFO` beside
 the copied gameplay file and edited output. Export and reimport/resign PS3 saves
 with Apollo Save Tool; this editor does not rebuild `PARAM.PFD` or sign exports.
 
-PS Vita editors open decrypted exports with their original `sce_sys/param.sfo`.
+Berserk and Meruru Plus Vita editors open decrypted exports with their original
+`sce_sys/param.sfo`. DW8 XL Vita opens the qualified plaintext `MainData00.dat` profile.
 Meruru Plus uses `USR-DATA0000`; Berserk uses `app0000.dat` or another supported
 slot. Export and reimport with a Vita save manager. Pokémon Conquest and Monster Rancher DS open raw
-Nintendo DS `.sav` exports.
+Nintendo DS `.sav` exports. The development source adds Gemfire NES/SNES and
+Nobunaga NES raw battery exports, plus Bandit Kings Macintosh `.cim` data forks.
+Attack on Titan Vita uses `app0000.dat` with original `sce_sys/param.sfo`.
 
 Persona 5 Strikers PS4 opens a decrypted English `APP.BIN` export with its
 original `sce_sys/param.sfo`; reimport using your PS4 save manager.
@@ -31,6 +35,9 @@ beside the copied save and edited output. Copy the complete save folder first.
 Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
+
+The table below describes the **development source on main**, including additions
+that are not in the v1.91 Windows download.
 
 <!-- BEGIN SUPPORTED GAMES -->
 | Game / edition | Platform | Implemented scope |
@@ -111,6 +118,20 @@ Ninja Gaiden 2 Black use different formats.
 | WARRIORS OROCHI 4 ULTIMATE — Windows PC · revision 20200101 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons. |
 | SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts. |
 | WARRIORS: ABYSS — Windows PC · revision A4 gameplay slots | Windows PC | Karma Embers and searchable persistent recruitment records; preserves original Steam owner context. |
+| BANDIT KINGS OF ANCIENT CHINA — Original English Macintosh · SUI0/SUI1 data forks | Macintosh | Owned-prefecture Gold, Food, Metal and Fur reductions; existing hero Strength, Dexterity and Wisdom reductions. |
+| NOBUNAGA'S AMBITION — Original English NES · 17-fief battery profile | NES | Owned active fief Gold and Rice reductions with native additive checksum validation. |
+| GEMFIRE — NES · native structurally qualified battery records | NES | Player-owned province Gold, Food, Loyalty, Farming and Protection; searchable province records. |
+| GEMFIRE — SNES · native structurally qualified battery records | SNES | Player-owned province Gold, Food, Loyalty, Farming and Protection; searchable province records. |
+| BLADESTORM: THE HUNDRED YEARS’ WAR — Original EU BLES00113 · decrypted PLAYDATA + PARAM.SFO | PlayStation 3 | Money and existing positive book Skill Point reductions; searchable book records. |
+| ATELIER FIRIS — The Alchemist and the Mysterious Journey · original Steam PC | Windows PC | Cole deductions and qualified existing ordinary basket/container quality reductions; searchable inventory. |
+| BLUE REFLECTION: SECOND LIGHT — Original Steam PC · native tagged gameplay profile | Windows PC | Existing uniquely identified ordinary container quantity reductions; searchable inventory records. |
+| ATELIER RYZA — Ever Darkness & the Secret Hideout · original Steam PC | Windows PC | Qualified existing ordinary item/equipment quality reductions; searchable inventory and Party equipment. |
+| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · plaintext Vita revision 0x131002F0 | PlayStation Vita | Resources, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
+| ONE PIECE: PIRATE WARRIORS — Original US PSN NPUB30836 · DATA.BIN + PARAM.SFO | PlayStation 3 | Thirteen named characters’ existing level-growth word reductions; searchable progression. |
+| ONE PIECE: PIRATE WARRIORS 2 — Original EU PSN NPEB01795 · DATA.BIN + PARAM.SFO | PlayStation 3 | Primary spendable Berry reductions; searchable secondary currency and progression. |
+| ONE PIECE: PIRATE WARRIORS 3 — Original EU PSN NPEB02211 · DATA.BIN + PARAM.SFO | PlayStation 3 | Existing progressed-character HP, Attack and Defense reductions; searchable progression and currency. |
+| DYNASTY WARRIORS 8 — Original US PSN NPUB31234 · plaintext APP.BIN + PARAM.SFO | PlayStation 3 | Gold and Ambition facility/weapon material reductions; searchable resources. |
+| ATTACK ON TITAN / A.O.T. WINGS OF FREEDOM — Original EU PCSB00898 · app0000.dat + sce_sys/param.sfo | PlayStation Vita | Money and existing positive numbered material-quantity reductions; searchable stored quantities. |
 <!-- END SUPPORTED GAMES -->
 
 ## Download and use

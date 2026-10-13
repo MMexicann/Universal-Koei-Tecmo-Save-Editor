@@ -61,8 +61,19 @@ Scalar backends expose validated original fields, immutable staged changes,
 review, serialization and guarded file operations. Assigning an opened value
 unstages it. Dynamic fields are derived from qualified existing records, not
 manufactured by pending edits. Max honors field metadata, dependency rules and
-higher/unusual original values. Search follows labels/groups/records, and Max
-Visible applies only to filtered rows without dropping hidden pending edits.
+higher/unusual original values. Search follows labels/groups/records and both
+opened and pending displayed values. A record selector uses the field's native
+group/slot identity; the Pending only view shows staged rows. Visible-field and
+hidden-pending counts make active filters explicit. Max Visible applies only to
+filtered rows without dropping hidden pending edits. The selected row, table
+sort and scroll position survive refreshes while those rows remain visible.
+`limit_values` returns validated Max targets, including a target equal to the
+opened value when it is a valid natural maximum. Applying that target removes
+a pending reduction when the opened value was already at maximum. Unusual
+opened values and fields marked `maxable=False` remain excluded from Max
+targets, including after deliberate individual reductions. `maximums` returns
+the complete normalized pending map instead; valid target assignments must not
+be removed before staging.
 
 Adjust Selected applies an integer delta to each selected pending value through
 backend validation, preserving hidden edits and recording one Undo batch. Text
@@ -70,6 +81,14 @@ and named choices use their own controls. Revert Selected removes selected
 pending keys together and validates the complete final payload, so restoring a
 whole loadout does not fail on transient duplicate states. Partial restoration
 that leaves invalid dependencies is rejected without changing edits or history.
+All accepted GUI edit batches pass the backend's complete payload/dependency
+validation before updating pending edits or Undo. The adapter also validates
+native dependencies before and after its exact-opened-value unstage shortcut;
+restoring one equipped reference cannot silently introduce a duplicate in a
+different slot. A backend stage result must contain the requested typed value;
+silently dropping a requested edit is rejected before GUI acceptance. Max and
+Review failures appear as errors while retaining the opened snapshot, pending
+edits and history.
 
 [scalar_presentation.py](../src/koei_editor/shared/scalar_presentation.py)
 defines data-only inspection tables, hints and filename guidance. A game can
@@ -79,6 +98,9 @@ preserves native row IDs/selection; sorting persists when scalar rows refresh.
 Selected displayed rows can be copied with headers using Ctrl+C or the inspector
 button. Named-choice and text hooks remain optional and backend-validated;
 all game encodings and prerequisites stay in the dedicated backend.
+An unusual opened choice remains visible as an exact preserved-value option.
+Bulk selections receive that option only when every selected field has the
+same opened value; Revert Selected restores different originals individually.
 
 [verified_editor.py](../src/koei_editor/shared/verified_editor.py) contains the
 existing shared native DW8 XL/PW3 layouts. Other scalar games retain their own

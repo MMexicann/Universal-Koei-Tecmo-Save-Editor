@@ -36,13 +36,20 @@ identical framing, ownership or dependency rules.
 | Friendship/supporters | Need float/int encodings, rank thresholds, supporter skill dependencies and controlled event/reward pair. |
 | Exploration, collections, quests/story | Need independently qualified progress/reward/prerequisite relationships. No completion or event transplantation is supported. |
 
-No writable Blue Reflection adapter is registered in this work. Precise next
+No writable original Blue Reflection adapter is registered. Precise next
 inputs are an accessible title-specific native serializer/source, untouched
 save/re-save control and a single money/item/growth action pair with game build
 and displayed values. Public gameplay evidence exists; repeating a generic
 request for a save is insufficient to describe the remaining blocker.
 
 ## Blue Reflection: Second Light — Steam app1423600 / PS4
+
+A separate [original Steam PC adapter](BRSL_PC_FORMAT.md) now qualifies existing
+ordinary-container quantity reductions using independently corroborated
+source-backed byte/stride facts, mandatory native checksums and exact opaque
+terminal Guide retention. The earlier observations below remain useful for
+broader mechanics; money/Jewel, TP, recipes, ownership and story writes remain
+unqualified. Edited game loading is still untested.
 
 The independently shared [Barrel Wisdom PC saves](https://barrelwisdom.com/blog/atelier-pc-saves)
 include clear data and an NG+ pre-final-boss gameplay copy. Both original
@@ -66,7 +73,10 @@ Both decoded streams end with a `Guide` node declaring 54 bytes while only 50
 remain, immediately after `isGuidingScenario`'s four-byte length. Both native
 checksum gates pass despite this apparent shortened scalar. Exact source or a
 controlled native save/re-save pair must establish terminal-zero elision before
-any parser completes this node or a writer appends bytes. No repair is applied.
+any parser completes this node or a writer appends bytes. The narrow PC writer
+retains the exactly matched 50-byte terminal profile opaquely and never pads or
+repairs it; its earlier bounded quantity field does not require completing this
+node.
 An external envelope check re-encoded each exact decoded payload and confirmed
 identical decoded bytes and byte-identical native encrypted output, original
 header/footer/seed preservation and corruption rejection. This is genuine-file
@@ -90,15 +100,16 @@ legitimate DLC ownership or installed content.
 | Mechanic | Established facts and precise write blocker |
 | --- | --- |
 | Currency/Coins | The native tagged `money` scalar exists and the converter lists money, but no controlled action links it to displayed resources. [Coin](https://barrelwisdom.com/second-light/items/coin/en) is a craftable Tool item exchanged at facilities, with Warm Sand and Metals ingredients. Do not present an inherited engine money tag as verified player currency. Need a Coin craft/exchange pair and item-ID mapping. |
-| Inventory, quantity and quality | Native pool extents are known; record identities, applicability, quantities and quality/effect encoding are not. Need native item catalog plus a displayed stack consume/craft pair. Commercial arbitrary item creation is not ownership or quantity-bound evidence. |
+| Inventory, quantity and quality | Existing unique ordinary-container counts can now be reduced to at least 1 in the separately qualified original PC profile. Native catalog/applicability, displayed consume/craft pairs, zero/removal, increases, creation and quality/effects remain unqualified. |
 | Synthesis and recipes | [Official crafting manual](https://www.koeitecmoamerica.com/manual/brsl/3200.html) explains Memories obtained through story, requests and Heartscapes; up to four helpers and unit bonuses alter effects. Need an existing unlocked recipe craft pair and exact result/material dependencies, not a generic Atelier trait transplant. |
 | Talents/TP and battle EXP | [Official Talents manual](https://www.koeitecmoamerica.com/manual/brsl/7200.html) distinguishes spendable TP, cumulative TP-driven Talent Level, level rewards and Ao's TP gained from other characters' level increases. Four talent types have story/relationship unlocks. Need allocate/reward controls and native mappings for each linked value; battle EXP is separate. |
 | Fragments/equipment | [Official Fragments manual](https://www.koeitecmoamerica.com/manual/brsl/7300.html) establishes date acquisition, fragment sizes, seven effect types, gear activation and slots expanded through Talents up to 10. Need owned fragment references and equipped-slot/action evidence before edits. |
 | School facilities | Proposals depend on story/requests; each facility can be constructed once, upgraded, stored or placed, and sets activate effects. Need build/upgrade controls and item/reference dependencies. Coins exchanged at facilities remain resource edits separate from proposal/event unlocks. |
 | Friendship, exploration and collections | Dates grant TP and choice-dependent Fragments. Heartscape blocked areas require items or Talent Levels. Need event/reward/prerequisite controls; no story, relationship, objective or collection completion edits are supported. |
 
-No writable Second Light adapter is registered. Remaining inputs are a native
-untouched re-save and terminal Guide source, displayed Coin/item action pairs,
+The registered narrow PC quantity writer has its own [qualification and tests](BRSL_PC_FORMAT.md).
+Broader features still require a native untouched re-save and terminal Guide
+source, displayed Coin/item action pairs,
 title-specific item/TP reference maps and a system companion where relevant.
 Original PC genuine gameplay and envelope integrity are now evidenced; a
 generic request for another save is not the remaining blocker.

@@ -1,43 +1,26 @@
-# Universal Koei Tecmo Save Editor v2.0
+# Universal Koei Tecmo Save Editor v2.01
 
-The library grows from **76 to 90 game/platform profiles across 15 platforms**.
-This release includes the 14 profiles previously prepared on main, deeper
-editing controls and fixes to existing editors.
+Version 2.0 was withdrawn after Microsoft Defender reported
+`Trojan:Win32/Sabsik.TE.A!ml` during its standalone EXE download.
 
-New game/platform profiles:
+This update changes Windows distribution to a **complete portable ZIP**. Extract
+all files, open the versioned application folder and run its EXE. Keep the
+`_internal` folder beside it. No Python installation or administrator privileges
+are needed. All 90 game/platform profiles and existing editing features remain.
 
-- **PS3:** One Piece: Pirate Warriors 1, 2 and 3; original Dynasty Warriors 8;
-  Bladestorm: The Hundred Years’ War.
-- **Vita:** Dynasty Warriors 8 Xtreme Legends Complete Edition;
-  Attack on Titan / A.O.T. Wings of Freedom.
-- **Windows PC:** original Atelier Ryza; Atelier Firis;
-  Blue Reflection: Second Light.
-- **Classic platforms:** Bandit Kings of Ancient China on Macintosh;
-  Nobunaga’s Ambition on NES; Gemfire on NES and SNES.
+The release pipeline now requires an active Microsoft Defender engine, current
+signatures and verified cloud connectivity. It scans the complete runtime before
+executing it, then scans both exact downloadable archives. Missing protection,
+scan errors, detections or changed bytes block publication. The downloadable
+`DefenderScan-v2.01.json` records engine/signature versions, verdicts and file
+hashes. Build dependencies are pinned to verified official wheel hashes.
 
-Existing-editor improvements:
+Source and binary review found no newly introduced malicious behavior, and the
+2.0 bootloader/native libraries match the reviewed official/previous versions.
+That does not establish why Microsoft's classifier flagged the old download.
+The packaging change removes runtime self-extraction; Defender verdicts reflect
+the signatures and cloud state recorded in the report, not every future verdict.
+Version 2.0 remains withdrawn.
 
-- **Nioh 3:** 14 more named ordinary consumables, bringing the total to 32.
-- **Sophie 2 PS4:** 14 more named ordinary materials, bringing the total to 23.
-- **Three Hopes:** reduce existing material stocks across nine categories.
-- **Project Zero PS2:** reduce existing film stocks while retaining one sheet.
-- **Firis PC:** inspect active inventory capacities; quality controls respect
-  the active basket/container bounds.
-- **DW8 PS3:** fixed the Inspect Data crash.
-- **Gundam PS3:** detects changed source/companion files during copied-save
-  backup, saving and restore.
-- **Shared editors:** record selection, pending-only filtering, hidden-edit
-  counts and retained focus/scroll; Max restores exact higher opened values
-  after reductions. Bulk actions continue to respect field exclusions.
-- **Library:** related regional titles and editions share series filters,
-  including Fatal Frame / Project Zero and Fire Emblem.
-
-Controls remain specific to each listed edition and platform. See the
-[supported-game inventory](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.0/docs/SUPPORTED_GAMES.md) and
-[profile evidence](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.0/docs/SOL_EXPANSION.md) for exact scope. PS3/Vita exports still
-need the documented external import/signing workflow. Edited saves have not
-been loaded/re-saved in the games during this update.
-
-Download **UniversalKoeiTecmoSaveEditor-v2.0.exe** for the standalone Windows app,
-or the **Windows ZIP** with the same executable and documentation. No Python
-installation is needed.
+Download **UniversalKoeiTecmoSaveEditor-v2.01-Windows.zip** for the app or the
+**Source ZIP** for development. A loose EXE is no longer offered.

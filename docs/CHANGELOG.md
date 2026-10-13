@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.01 — 2026-10-13
+
+- Withdrew the 2.0 download following a Microsoft Defender Sabsik detection.
+- Replaced self-extracting one-file packaging with a complete portable Windows ZIP.
+- Added active Defender readiness, signature/cloud checks and exact runtime/archive scans before publication.
+- Pinned all Windows build dependencies to verified official wheel hashes.
+- Retained all 90 profiles and existing save-editing features.
+
 ## v2.0 — 2026-10-13
 
 - Added 14 explicit game/platform profiles, bringing the source library to 90

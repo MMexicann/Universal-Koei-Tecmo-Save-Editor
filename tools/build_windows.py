@@ -1,4 +1,4 @@
-"""Build one standalone Windows application with all registered game interfaces."""
+"""Build one portable Windows application folder with all game interfaces."""
 import argparse
 import json
 import os
@@ -8,7 +8,7 @@ from koei_editor.game_registry import ALL_ADAPTERS
 from tools.package_release import RUNTIME_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.0'
+VERSION = '2.01'
 DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME_DATA] + [
     ('LICENSE', '.'), ('docs/THIRD_PARTY_NOTICES.md', '.'),
     ('licenses/atelier-sophie2-save-editor-MIT.txt', 'licenses'),
@@ -16,7 +16,7 @@ DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME
 
 
 def build_args(root=ROOT):
-    args = ['--noconfirm', '--onefile', '--windowed', '--name',
+    args = ['--noconfirm', '--onedir', '--noupx', '--contents-directory', '_internal', '--windowed', '--name',
             f'UniversalKoeiTecmoSaveEditor-v{VERSION}', '--paths', str(root / 'src'),
             '--distpath', str(root / 'dist'), '--workpath', str(root / 'build'),
             '--specpath', str(root / 'build')]

@@ -1,5 +1,23 @@
 # Universal development validation
 
+## v2.01 Defender release qualification — 2026-10-13
+
+The 2.0 assets were withdrawn after a Microsoft Defender Sabsik detection was
+reported during download. Static comparison found no newly introduced native
+runtime or bootloader payload: the code matches the official hash-verified
+PyInstaller wheel and existing runtime libraries. This does not prove the
+detection is false. See [the evidence and release gate](DEFENDER_RELEASE_GUARD.md).
+
+The portable runtime replaces self-extracting one-file packaging. Focused
+packaging, omission/privacy, workflow and scanner-policy tests passed locally;
+the exact original Windows runtime's 92 prospective external files also passed
+strict static preflight, including Tcl/Tk 9 embedded libraries. Scanner policy
+tests are not antivirus results. The Windows workflow must pass the complete
+test inventory and real active/current Defender scans of the runtime and both
+downloadable archives before publication. Its downloadable report binds those
+verdicts to exact asset hashes and the tested commit. No scan is claimed clean
+when the engine, cloud connection or input is unavailable.
+
 ## v2.0 expansion and refinements — 2026-10-13
 
 The release combines the 14 previously prepared profiles with existing-editor

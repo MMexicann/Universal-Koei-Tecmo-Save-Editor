@@ -8,12 +8,14 @@ from pathlib import Path, PurePosixPath
 import re
 import tomllib
 import zipfile
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = 'tools/SOURCE_MANIFEST.json'
 PACKAGE_ROOT = 'src/koei_editor'
 ROOT_FILES = {'.gitignore', '.gitattributes', 'LICENSE', 'README.md', 'AGENTS.md', 'pyproject.toml', 'launch.pyw', 'CONTRIBUTING.md'}
 TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_release.py',
+              'tools/scan_release.ps1',
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
               'tools/run_tests.py', 'tools/test_timings.json',
               'tools/requirements/build.txt', 'tools/requirements/dev.txt'}
@@ -75,6 +77,15 @@ def version(root=ROOT):
 
 def artifact_name(root=ROOT):
     return f'UniversalKoeiTecmoSaveEditor-v{version(root)}'
+
+
+def runtime_directory(root=ROOT):
+    """The complete PyInstaller portable application, including its dependencies."""
+    return Path(root) / 'dist' / artifact_name(root)
+
+
+def executable_path(root=ROOT):
+    return runtime_directory(root) / (artifact_name(root) + '.exe')
 
 
 def public_path(name):
@@ -252,37 +263,177 @@ def embedded_metadata(sources):
 def _bundled_path(name):
     normalized = name.replace('\\', '/')
     path = PurePosixPath(normalized)
-    if (path.is_absolute() or ':' in normalized or '..' in path.parts
-            or any(part.casefold() in {'work', 'tests', 'fixtures', 'source-fixtures'} for part in path.parts)
+    if (path.is_absolute() or ':' in normalized
+            or any(part in ('..', '.', '') for part in normalized.split('/'))
+            or any(part.startswith('.') for part in path.parts)
+            or any(part.casefold() in {'work', 'tests', 'fixtures', 'source-fixtures', '__pycache__'} for part in path.parts)
             or path.suffix.casefold() in {'.sav', '.dat', '.bin', '.pak', '.key', '.psu', '.ps2', '.psv',
                                          '.max', '.cbs', '.vmc', '.sys', '.exe', '.rar', '.7z', '.ct'}):
         raise ValueError(f'Private or unsafe file in executable archive: {name}')
     return normalized, path
 
+
+# The application has no third-party Windows runtime packages. External native
+# libraries are CPython, Tcl/Tk and their ordinary Windows dependencies; a game
+# binary or arbitrary extension is not admitted just because it has a DLL suffix.
+NATIVE_DLL = re.compile(
+    r'(?:python(?:3|3\d+)\.dll|vcruntime140(?:_1)?\.dll|msvcp140\.dll|ucrtbase\.dll|'
+    r'api-ms-win-[a-z0-9-]+\.dll|lib(?:crypto|ssl)-\d+(?:-x64)?\.dll|'
+    r'libffi-\d+\.dll|(?:lib)?(?:tcl|tk)\d+t?\.dll|tcl9tk90\.dll|'
+    r'libtommath\.dll|zlib1\.dll|sqlite3\.dll)\Z', re.I)
+STDLIB_EXTENSIONS = frozenset({
+    '_asyncio', '_bz2', '_ctypes', '_decimal', '_elementtree', '_hashlib', '_lzma',
+    '_multiprocessing', '_overlapped', '_queue', '_socket', '_sqlite3', '_ssl',
+    '_tkinter', '_uuid', '_wmi', '_zoneinfo', '_zstd', 'pyexpat', 'select', 'unicodedata', 'zlib',
+})
+TCL_PACKAGE_DLLS = frozenset({'_tcl_data/dde1.4/tcldde14.dll', '_tcl_data/reg1.3/tclreg13.dll'})
+TCL_RESOURCE_SUFFIXES = frozenset({'', '.tcl', '.tm', '.msg', '.enc', '.txt', '.n'})
+
+
+def _verify_library_zip(label, data, require_stdlib=False):
+    seen = set()
+    total_bytes = 0
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as library:
+            for info in library.infolist():
+                total_bytes += info.file_size
+                if info.file_size > 32 * 1024 * 1024 or total_bytes > 128 * 1024 * 1024 or info.flag_bits & 1:
+                    raise ValueError(f'Oversized or encrypted executable library: {label}')
+                name = info.filename.rstrip('/') if info.is_dir() else info.filename
+                normalized, path = _bundled_path(name)
+                if normalized.casefold() in seen or (info.external_attr >> 16) & 0o170000 == 0o120000:
+                    raise ValueError(f'Duplicate or symlink file in executable library: {label}/{name}')
+                seen.add(normalized.casefold())
+                if path.suffix.casefold() == '.json':
+                    raise ValueError(f'Unreviewed JSON data in executable library: {name}')
+                if not info.is_dir():
+                    scan_bundled_data(label + '/' + name, library.read(info))
+            if require_stdlib and not {'encodings/__init__.pyc', 'encodings/utf_8.pyc'} <= seen:
+                raise ValueError(f'Standard library runtime is incomplete: {label}')
+    except zipfile.BadZipFile as error:
+        raise ValueError(f'Invalid executable library ZIP: {label}') from error
+    return seen
+
+
+def _verify_tcl_zip(label, data, prefix, entry):
+    """Tcl/Tk 9 official Windows DLLs contain their scripts as ZIP resources."""
+    names = _verify_library_zip(label, data)
+    if prefix + '/' + entry not in names:
+        raise ValueError(f'Tcl/Tk embedded runtime library is incomplete: {label}')
+    with zipfile.ZipFile(io.BytesIO(data)) as library:
+        for info in library.infolist():
+            if info.is_dir():
+                continue
+            path = PurePosixPath(info.filename)
+            if (not info.filename.startswith(prefix + '/')
+                    or (path.suffix.casefold() not in TCL_RESOURCE_SUFFIXES | {'.terms', '.gif', '.eps'}
+                        and info.filename != 'tcl_library/cookiejar/public_suffix_list.dat.gz')):
+                raise ValueError(f'Unreviewed Tcl/Tk embedded runtime resource: {label}/{info.filename}')
+            if info.filename.endswith('.gz'):
+                decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+                try:
+                    content = decoder.decompress(library.read(info), 32 * 1024 * 1024 + 1)
+                except zlib.error as error:
+                    raise ValueError(f'Invalid Tcl embedded compressed resource: {label}/{info.filename}') from error
+                if len(content) > 32 * 1024 * 1024 or not decoder.eof or decoder.unused_data:
+                    raise ValueError(f'Unbounded Tcl embedded compressed resource: {label}/{info.filename}')
+                scan_bundled_data(label + '/' + info.filename, content)
+
+
+def _runtime_snapshot(root, sources):
+    """Capture only a complete bounded portable runtime, rejecting unsafe paths."""
+    root = root.resolve()
+    folder = _repo_path(root, runtime_directory(root).relative_to(root).as_posix())
+    if not folder.is_dir():
+        raise ValueError('The complete portable runtime folder is missing; rebuild with --onedir.')
+    expected = embedded_metadata(sources)
+    launcher = executable_path(root).name
+    entries, seen = {}, set()
+    for path in sorted(folder.rglob('*')):
+        name = path.relative_to(folder).as_posix()
+        if path.is_symlink() or not path.resolve().is_relative_to(folder.resolve()):
+            raise ValueError(f'Runtime path escapes the portable folder or is a symlink: {name}')
+        if name.casefold() in seen:
+            raise ValueError(f'Duplicate runtime path: {name}')
+        seen.add(name.casefold())
+        if path.is_dir():
+            if name != '_internal' and not name.startswith('_internal/'):
+                raise ValueError(f'Unexpected directory in portable runtime: {name}')
+            _bundled_path(name)
+            continue
+        if not path.is_file():
+            raise ValueError(f'Non-regular file in portable runtime: {name}')
+        data = path.read_bytes()
+        if name == launcher:
+            if not data.startswith(b'MZ'):
+                raise ValueError('The built executable is not a Windows executable.')
+        else:
+            normalized, relative = _bundled_path(name)
+            if not normalized.startswith('_internal/'):
+                raise ValueError(f'Unexpected external runtime file: {name}')
+            internal = normalized.removeprefix('_internal/')
+            if relative.suffix.casefold() == '.json' and internal not in expected:
+                raise ValueError(f'Unreviewed JSON data in external runtime: {name}')
+            if internal in expected:
+                if data != expected[internal]:
+                    raise ValueError(f'Bundled metadata differs from manifest: {name}')
+            elif internal == 'base_library.zip':
+                _verify_library_zip(name, data, require_stdlib=True)
+            elif relative.suffix.casefold() in {'.dll', '.pyd'}:
+                approved = (internal in TCL_PACKAGE_DLLS or (len(PurePosixPath(internal).parts) == 1
+                            and (NATIVE_DLL.fullmatch(relative.name)
+                                 if relative.suffix.casefold() == '.dll'
+                                 else relative.stem in STDLIB_EXTENSIONS)))
+                if not approved or not data.startswith(b'MZ'):
+                    raise ValueError(f'Unreviewed or invalid native runtime dependency: {name}')
+                if internal == 'tcl90.dll':
+                    _verify_tcl_zip(name, data, 'tcl_library', 'init.tcl')
+                elif internal == 'tcl9tk90.dll':
+                    _verify_tcl_zip(name, data, 'tk_library', 'tk.tcl')
+            elif (PurePosixPath(internal).parts[0] not in {'_tcl_data', '_tk_data'}
+                  or relative.suffix.casefold() not in TCL_RESOURCE_SUFFIXES):
+                raise ValueError(f'Unreviewed external runtime file: {name}')
+        scan_bundled_data(name, data)
+        entries[name] = data
+    required = {launcher, '_internal/base_library.zip', '_internal/_tkinter.pyd'}
+    if '_internal/tcl90.dll' in entries or '_internal/tcl9tk90.dll' in entries:
+        required.update({'_internal/tcl90.dll', '_internal/tcl9tk90.dll',
+                         '_internal/libtommath.dll', '_internal/zlib1.dll'})
+    else:
+        required.update({'_internal/tcl86t.dll', '_internal/tk86t.dll',
+                         '_internal/_tcl_data/init.tcl', '_internal/_tk_data/tk.tcl'})
+    required.update('_internal/' + name for name in expected)
+    missing = required - entries.keys()
+    native_names = {PurePosixPath(name).name.casefold() for name in entries}
+    if len([name for name in native_names if re.fullmatch(r'python3\d+\.dll', name)]) != 1:
+        missing.add('one versioned CPython runtime DLL')
+    if missing:
+        raise ValueError('Verified metadata missing from executable or portable runtime dependencies missing: '
+                         + ', '.join(sorted(missing)))
+    return entries
+
+
 def verify_executable(root=ROOT, archive_reader=None):
+    root = root.resolve()
     _, sources = verified_sources(root)
-    executable = root / 'dist' / f'{artifact_name(root)}.exe'
-    if executable.is_symlink() or not executable.resolve().is_relative_to(root.resolve()):
-        raise ValueError('The executable must be built inside this repository.')
-    binary = executable.read_bytes()
-    if not binary.startswith(b'MZ'):
-        raise ValueError('The built executable is not a Windows executable.')
-    scan_bundled_data('executable', binary)
+    runtime = _runtime_snapshot(root, sources)
+    executable = executable_path(root)
     if archive_reader is None:
         from PyInstaller.archive.readers import CArchiveReader
         archive_reader = CArchiveReader
-    archive, bundled = archive_reader(str(executable)), set()
+    archive, seen = archive_reader(str(executable)), set()
     expected = embedded_metadata(sources)
     for name, entry in archive.toc.items():
         normalized, path = _bundled_path(name)
+        if normalized.casefold() in seen:
+            raise ValueError(f'Duplicate file in executable archive: {name}')
+        seen.add(normalized.casefold())
         if path.suffix.lower() == '.json' and normalized not in expected:
             raise ValueError(f'Unreviewed JSON data in executable archive: {name}')
         data = archive.extract(name)
         scan_bundled_data(name, data)
-        if normalized in expected:
-            if data != expected[normalized]:
-                raise ValueError(f'Bundled metadata differs from manifest: {name}')
-            bundled.add(normalized)
+        if normalized in expected and data != expected[normalized]:
+            raise ValueError(f'Bundled metadata differs from manifest: {name}')
         if entry[-1] == 'z':
             pyz = archive.open_embedded_archive(name)
             for module in pyz.toc:
@@ -290,14 +441,11 @@ def verify_executable(root=ROOT, archive_reader=None):
                     raise ValueError(f'Private or unsafe module in executable archive: {module}')
                 scan_bundled_data(module, pyz.extract(module, raw=True))
         elif path.suffix == '.zip':
-            with zipfile.ZipFile(io.BytesIO(data)) as library:
-                for module in library.namelist():
-                    _, module_path = _bundled_path(module)
-                    if module_path.suffix.casefold() == '.json':
-                        raise ValueError(f'Unreviewed JSON data in executable library: {module}')
-                    scan_bundled_data(module, library.read(module))
-    if expected.keys() - bundled:
-        raise ValueError('Verified metadata missing from executable: ' + ', '.join(sorted(expected.keys() - bundled)))
+            _verify_library_zip(name, data)
+    if not any(entry[-1] == 'z' for entry in archive.toc.values()):
+        raise ValueError('The executable is missing its embedded Python module archive.')
+    if runtime != _runtime_snapshot(root, sources):
+        raise ValueError('Portable runtime changed during validation; rebuild before packaging.')
     return len(archive.toc)
 
 
@@ -305,15 +453,12 @@ def package(root=ROOT, output=None):
     root = root.resolve()
     _, sources = verified_sources(root)
     name = artifact_name(root)
-    executable = root / 'dist' / f'{name}.exe'
-    if executable.is_symlink() or not executable.resolve().is_relative_to(root):
-        raise ValueError('The executable must be built inside this repository.')
-    binary = executable.read_bytes()
-    if not binary.startswith(b'MZ'):
-        raise ValueError('The built executable is not a Windows executable.')
+    runtime = _runtime_snapshot(root, sources)
     verify_executable(root)
+    if runtime != _runtime_snapshot(root, sources):
+        raise ValueError('Portable runtime changed during validation; rebuild before packaging.')
     output = Path(output) if output is not None else root / 'release'
-    assets = [output / f'{name}-Windows.zip', output / f'{name}-Source.zip', output / f'{name}.exe', output / 'SHA256SUMS.txt']
+    assets = [output / f'{name}-Windows.zip', output / f'{name}-Source.zip', output / 'SHA256SUMS.txt']
     if any(path.exists() for path in assets):
         raise ValueError('Release outputs already exist; choose a new output directory.')
     windows = {doc: sources[doc] for doc in WINDOWS_DOCS}
@@ -323,15 +468,13 @@ def package(root=ROOT, output=None):
                     if path.startswith('docs/') and path.endswith('.md')})
     windows.update({doc: sources[doc] for doc in ('docs/RELEASE_NOTES.md', 'AGENTS.md', 'CONTRIBUTING.md') if doc in sources})
     windows.update({path: data for path, data in sources.items() if path.startswith('licenses/')})
-    windows[f'{name}.exe'] = binary
+    windows.update({name + '/' + path: data for path, data in runtime.items()})
     prefix = f'{name}-Source/'
     output.mkdir(parents=True, exist_ok=True)
     write_zip(assets[0], windows)
     write_zip(assets[1], {prefix + path: data for path, data in sources.items()})
-    with assets[2].open('xb') as stream:
-        stream.write(binary)
-    with assets[3].open('x', encoding='ascii', newline='\n') as stream:
-        for path in assets[:3]:
+    with assets[2].open('x', encoding='ascii', newline='\n') as stream:
+        for path in assets[:2]:
             stream.write(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n')
     return assets
 
@@ -339,14 +482,20 @@ def package(root=ROOT, output=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--version', action='store_true', help='Print the matching app/build/project release version.')
+    parser.add_argument('--executable-path', action='store_true', help='Print the portable Windows launcher path.')
+    parser.add_argument('--bundle-path', action='store_true', help='Print the complete portable Windows runtime folder.')
     parser.add_argument('--verify-only', action='store_true', help='Validate public source hashes without creating archives.')
     parser.add_argument('--verify-executable', action='store_true', help='Inspect the built runtime archive (requires PyInstaller).')
     parser.add_argument('--output', type=Path, help='New release output directory (default: release).')
     arguments = parser.parse_args()
     if arguments.version:
         print(version())
+    elif arguments.executable_path:
+        print(executable_path())
+    elif arguments.bundle_path:
+        print(runtime_directory())
     elif arguments.verify_executable:
-        print(f'Verified {verify_executable()} bundled archive entries.')
+        print(f'Verified the portable runtime and {verify_executable()} launcher archive entries.')
     elif arguments.verify_only:
         release_version, sources = verified_sources()
         print(f'v{release_version}: verified {len(sources) - 1} public source files.')

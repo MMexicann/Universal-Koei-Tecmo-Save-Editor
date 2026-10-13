@@ -3,7 +3,8 @@
 The application is an installable package under `src/koei_editor`. Install it
 with `python -m pip install -e .` and run `python -m koei_editor` from the
 repository root. The entry point delegates to `koei_editor.application.main`.
-The same package is bundled into one standalone Windows executable.
+The same package is bundled into a portable Windows folder with one launcher
+and its complete adjacent runtime. The Windows ZIP preserves that folder.
 
 ## Package boundaries
 

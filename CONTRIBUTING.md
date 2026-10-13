@@ -2,8 +2,8 @@
 
 Contributions can improve an existing editor, document a format, or establish a
 new game/platform mapping. Start with this workflow; AI coding agents should also
-read [AGENTS.md](AGENTS.md). The application stays a single lightweight Windows
-executable with dedicated game logic and a shared Tkinter interface.
+read [AGENTS.md](AGENTS.md). The application stays a portable Windows app
+with one launcher, its bundled runtime, dedicated game logic and a shared Tkinter interface.
 
 ## Run and understand the project
 
@@ -286,7 +286,10 @@ python -m tools.build_windows
 python -m tools.package_release --verify-executable
 ```
 
-PyInstaller produces one standalone Windows EXE. A Linux validation bundle does
+PyInstaller produces a portable Windows folder with one launcher and its complete
+`_internal` runtime. Distribute the complete Windows ZIP; a loose EXE lacks its
+runtime. Active, updated Defender scans must pass before packaged startup and
+publication. A Linux validation bundle does
 not test Windows CNG or constitute a Windows release. Add new public metadata to
 `tools.build_windows.DATA` and explicit adapter imports through the registry as needed.
 

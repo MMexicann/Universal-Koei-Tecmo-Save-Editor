@@ -10,6 +10,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)
 - [Current release notes](RELEASE_NOTES.md)
+- [Defender verification and withdrawn 2.0 release](DEFENDER_RELEASE_GUARD.md)
 - [Romance of the Three Kingdoms XIII Switch disk-editor research](ROTK13_SWITCH_RESEARCH.md)
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)

@@ -80,8 +80,10 @@ class UniversalPackagingTests(fixture.PackagingTests):
         archive, blobs, module = self.archive_fixture()
         release.verify_executable(self.root, lambda _: archive)
         del archive.toc[notice]
+        (self.runtime / '_internal' / notice).unlink()
         with self.assertRaisesRegex(ValueError, 'missing from executable'):
             release.verify_executable(self.root, lambda _: archive)
+        self.write_runtime_resources()
         archive.toc[notice] = (0, 0, 0, 0, 'x')
         blobs[notice] = b'Incorrect notice'
         with self.assertRaisesRegex(ValueError, 'differs from manifest'):
@@ -100,8 +102,10 @@ class UniversalPackagingTests(fixture.PackagingTests):
         archive, blobs, _module = self.archive_fixture()
         release.verify_executable(self.root, lambda _: archive)
         del archive.toc[notice]
+        (self.runtime / '_internal' / notice).unlink()
         with self.assertRaisesRegex(ValueError, 'missing from executable'):
             release.verify_executable(self.root, lambda _: archive)
+        self.write_runtime_resources()
         archive.toc[notice] = (0, 0, 0, 0, 'x')
         blobs[notice] = b'Changed notice'
         with self.assertRaisesRegex(ValueError, 'differs from manifest'):
@@ -138,6 +142,7 @@ class UniversalPackagingTests(fixture.PackagingTests):
         with self.assertRaisesRegex(ValueError, 'differs from manifest'):
             release.verify_executable(self.root, lambda _: archive)
         del archive.toc[notice]
+        (self.runtime / '_internal' / notice).unlink()
         with self.assertRaisesRegex(ValueError, 'missing from executable'):
             release.verify_executable(self.root, lambda _: archive)
         self.sources.pop(notice)
@@ -163,7 +168,10 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
     def test_build_uses_one_package_launcher_and_explicit_game_modules(self):
         from tools import build_windows as build
         args = build.build_args()
-        self.assertIn('--onefile', args)
+        self.assertIn('--onedir', args)
+        self.assertIn('--noupx', args)
+        self.assertNotIn('--onefile', args)
+        self.assertEqual(args[args.index('--contents-directory') + 1], '_internal')
         self.assertIn('--windowed', args)
         self.assertEqual(args[args.index('--name') + 1], 'UniversalKoeiTecmoSaveEditor-v' + build.VERSION)
         self.assertEqual(Path(args[-1]), PROJECT / 'launch.pyw')

@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.0** supports **90 game/platform profiles across 15 platforms**.
+**Version 2.01** supports **90 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Supported games
@@ -135,10 +135,16 @@ The table below lists each supported game/platform and its editing scope.
 
 ## Download and use
 
-Download the **Windows EXE** from the
+Download the **Windows ZIP** from the
 [latest GitHub release](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest)
-and run it. The **Windows ZIP** includes the same executable and documentation.
-The standalone app needs no Python installation.
+and extract it completely. Open the versioned application folder and run its
+EXE, keeping the `_internal` folder beside it. The portable app needs no Python
+installation or administrator privileges.
+
+Version 2.0 was withdrawn after a Microsoft Defender detection. Version 2.01
+uses a portable folder and requires updated, active Defender scans before
+publication. The release includes a scan report identifying the tested files
+and signatures.
 
 1. Make a separate copy of your save outside the game and Steam Cloud folders.
 2. Search the **Game Library**, filter by series or platform, and choose

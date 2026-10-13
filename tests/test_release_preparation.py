@@ -1,5 +1,6 @@
 """Release workflow gates and mocked protected PR preparation; no network writes."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -9,6 +10,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+import zipfile
 
 from tools.package_release import version
 
@@ -77,6 +79,82 @@ class ReleasePreparationContracts(unittest.TestCase):
         self.assertIn('merge-multiple: true', build)
         self.assertIn('Full test coverage or shard integrity validation failed.', build)
         self.assertNotIn('python -m unittest discover -s tests -v', build)
+
+    def test_defender_scans_precede_execution_and_bind_publication_to_exact_assets(self):
+        build = job_block('build')
+        scan = build.index('-Path $bundle -ReportPath defender-reports/runtime.json')
+        execute = build.index('Start-Process -FilePath $launcher')
+        package = build.index('python -m tools.package_release\n')
+        archives = build.index('-Path $windowsZip -ReportPath defender-reports/windows-archive.json')
+        self.assertLess(scan, execute)
+        self.assertLess(execute, package)
+        self.assertLess(package, archives)
+        self.assertNotIn('continue-on-error', build)
+        self.assertIn('if ($LASTEXITCODE -ne 0)', build[scan:execute])
+        self.assertIn('$pair.scan.inputs[0].sha256 -ne $hash', build)
+        self.assertIn('$runtime.clean -ne $true', build)
+        release = job_block('release')
+        self.assertIn("report['commit'] == os.environ['GITHUB_SHA']", release)
+        self.assertIn("scan['engine_ready'] is True", release)
+        self.assertIn("scan['scan_exit_code'] == 0", release)
+        self.assertIn("scan['inputs'] == scan['inputs_after']", release)
+        self.assertIn("report[key]['inputs'][0]['sha256'] == digest", release)
+        self.assertIn('DefenderScan-v$version.json', release)
+        self.assertNotIn('release/*.exe', release)
+
+
+class DefenderArtifactEvidenceTests(unittest.TestCase):
+    """Exercise the actual publication gate with fabricated scan evidence only."""
+
+    def run_gate(self, scenario='valid'):
+        release_version = version(PROJECT)
+        prefix = f'UniversalKoeiTecmoSaveEditor-v{release_version}'
+        block = job_block('release')
+        script = textwrap.dedent(block.split("python - <<'PY'\n", 1)[1].split('\n          PY', 1)[0])
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / 'release'
+            root.mkdir()
+            payload = b'procedural public launcher bytes'
+            sha = lambda data: hashlib.sha256(data).hexdigest()
+            def clean_scan(name, data):
+                inputs = [{'path': name, 'size': len(data), 'sha256': sha(data)}]
+                return dict(clean=True, engine_ready=True, scan_exit_code=0,
+                            maps_exit_code=0, inputs=inputs, inputs_after=inputs)
+            report = dict(version=release_version, commit='a' * 40, assets={},
+                          runtime=clean_scan(prefix + '.exe', payload))
+            for suffix, key in (('Windows', 'windows_archive'), ('Source', 'source_archive')):
+                name = f'{prefix}-{suffix}.zip'
+                with zipfile.ZipFile(root / name, 'w') as archive:
+                    if suffix == 'Windows':
+                        data = b'changed after individual scan' if scenario == 'runtime_changed' else payload
+                        archive.writestr(prefix + '/' + prefix + '.exe', data)
+                    else:
+                        archive.writestr('README.md', b'procedural reviewed source')
+                data = (root / name).read_bytes()
+                report[key] = clean_scan(name, data)
+                report['assets'][name] = sha(data)
+            if scenario == 'engine_unavailable':
+                report['windows_archive']['engine_ready'] = False
+            if scenario == 'loose_exe':
+                (root / (prefix + '.exe')).write_bytes(payload)
+            (root / f'DefenderScan-v{release_version}.json').write_text(json.dumps(report))
+            return subprocess.run([sys.executable, '-c', script], cwd=folder,
+                                  env=dict(os.environ, PYTHONPATH=str(PROJECT), GITHUB_SHA='a' * 40),
+                                  capture_output=True, text=True, timeout=20)
+
+    def test_complete_matching_evidence_is_accepted(self):
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_rescanned_zip_cannot_replace_individually_scanned_runtime_bytes(self):
+        result = self.run_gate('runtime_changed')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Published runtime differs', result.stderr)
+
+    def test_unavailable_engine_and_runtime_incomplete_exe_are_rejected(self):
+        for scenario in ('engine_unavailable', 'loose_exe'):
+            with self.subTest(scenario=scenario):
+                self.assertNotEqual(self.run_gate(scenario).returncode, 0)
 
 
 @unittest.skipIf(os.name == 'nt' or not shutil.which('bash'), 'Mocked Ubuntu preparation job requires POSIX bash.')

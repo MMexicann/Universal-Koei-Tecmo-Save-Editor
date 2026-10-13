@@ -153,16 +153,19 @@ class BladestormPS3Tests(unittest.TestCase):
                     companion = folder / 'PARAM.SFO'
                     companion.write_bytes(original_context)
                     destination = folder / 'written.bin'
+                    mutation_triggered = False
                     def replace_context():
+                        nonlocal mutation_triggered
                         # Same native title/directory remains valid; only the
                         # opaque original companion binding has changed.
                         companion.write_bytes(original_context + b'same-title-context-race')
+                        mutation_triggered = True
                     if timing == 'after write':
                         method = 'atomic_new' if operation == 'save' else 'restore_snapshot'
                         original = getattr(parser, method)
                         def mutate(*args, **kwargs):
                             result = original(*args, **kwargs)
-                            if Path(args[1]) == destination:
+                            if Path(args[1]).resolve() == destination.resolve():
                                 replace_context()
                             return result
                     else:
@@ -170,7 +173,7 @@ class BladestormPS3Tests(unittest.TestCase):
                         original = parser.read_save
                         def mutate(*args, **kwargs):
                             result = original(*args, **kwargs)
-                            if Path(args[0]) == destination:
+                            if Path(args[0]).resolve() == destination.resolve():
                                 replace_context()
                             return result
                     with patch.object(parser, method, side_effect=mutate), self.assertRaises(SaveError):
@@ -178,6 +181,7 @@ class BladestormPS3Tests(unittest.TestCase):
                             self.adapter.save_as(self.document, changes, destination)
                         else:
                             self.adapter.restore(backup, destination)
+                    self.assertTrue(mutation_triggered, 'Companion fault injection did not fire.')
                     # A raced destination may have been replaced by another
                     # actor; failure must not delete that new path.
                     self.assertEqual(destination.read_bytes(), expected_edit if operation == 'save' else self.raw)
@@ -189,13 +193,17 @@ class BladestormPS3Tests(unittest.TestCase):
         destination = self.folder / 'postwrite-source-race.bin'
         expected_edit = parser.serialize(self.document, changes)
         original = parser.atomic_new
+        mutation_triggered = False
         def mutate(raw, target):
+            nonlocal mutation_triggered
             result = original(raw, target)
-            if Path(target) == destination:
+            if Path(target).resolve() == destination.resolve():
                 self.source.write_bytes(self.raw[:-1])
+                mutation_triggered = True
             return result
         with patch.object(parser, 'atomic_new', side_effect=mutate), self.assertRaises(SaveError):
             self.adapter.save_as(self.document, changes, destination)
+        self.assertTrue(mutation_triggered, 'Source fault injection did not fire.')
         self.assertEqual(self.source.read_bytes(), self.raw[:-1])
         self.assertEqual(destination.read_bytes(), expected_edit)
 

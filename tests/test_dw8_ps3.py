@@ -127,17 +127,22 @@ class OriginalDw8Ps3Tests(unittest.TestCase):
         context(destination_folder)
         target = destination_folder / 'edited.bin'
         real_atomic_new = parser.atomic_new
+        injections = []
 
         def change_context_after_write(raw, destination):
             result = real_atomic_new(raw, destination)
-            if Path(destination) == target:
+            if Path(destination).resolve() == target.resolve():
+                injections.append(True)
                 companion = destination_folder / 'PARAM.SFO'
                 companion.write_bytes(companion.read_bytes() + b'same-title-opaque-change')
             return result
 
         with patch.object(parser, 'atomic_new', side_effect=change_context_after_write):
-            with self.assertRaises(SaveError):
-                self.adapter.save_as(self.document, {'gold': 12}, target)
+            try:
+                with self.assertRaises(SaveError):
+                    self.adapter.save_as(self.document, {'gold': 12}, target)
+            finally:
+                self.assertEqual(injections, [True], 'The postwrite context fault must be injected exactly once.')
         self.assertEqual(self.source.read_bytes(), self.raw)
         self.assertEqual(target.read_bytes(), parser.serialize(self.document, {'gold': 12}))
 
@@ -147,16 +152,21 @@ class OriginalDw8Ps3Tests(unittest.TestCase):
         context(destination_folder)
         target = destination_folder / 'edited.bin'
         real_read_save = parser.read_save
+        injections = []
 
         def change_context_before_readback(path, game_id=parser.GAME_ID):
-            if Path(path) == target:
+            if Path(path).resolve() == target.resolve():
+                injections.append(True)
                 companion = destination_folder / 'PARAM.SFO'
                 companion.write_bytes(companion.read_bytes() + b'same-title-readback-change')
             return real_read_save(path, game_id)
 
         with patch.object(parser, 'read_save', side_effect=change_context_before_readback):
-            with self.assertRaises(SaveError):
-                self.adapter.save_as(self.document, {'gold': 12}, target)
+            try:
+                with self.assertRaises(SaveError):
+                    self.adapter.save_as(self.document, {'gold': 12}, target)
+            finally:
+                self.assertEqual(injections, [True], 'The read-back context fault must be injected exactly once.')
         self.assertEqual(self.source.read_bytes(), self.raw)
 
     def test_same_title_companion_change_after_atomic_restore_is_rejected(self):
@@ -167,17 +177,22 @@ class OriginalDw8Ps3Tests(unittest.TestCase):
         context(destination_folder)
         target = destination_folder / 'restored.bin'
         real_atomic_new = copy_storage.atomic_new
+        injections = []
 
         def change_context_after_restore(raw, destination):
             result = real_atomic_new(raw, destination)
-            if Path(destination) == target:
+            if Path(destination).resolve() == target.resolve():
+                injections.append(True)
                 companion = destination_folder / 'PARAM.SFO'
                 companion.write_bytes(companion.read_bytes() + b'same-title-restore-change')
             return result
 
         with patch.object(copy_storage, 'atomic_new', side_effect=change_context_after_restore):
-            with self.assertRaises(SaveError):
-                self.adapter.restore(backup, target)
+            try:
+                with self.assertRaises(SaveError):
+                    self.adapter.restore(backup, target)
+            finally:
+                self.assertEqual(injections, [True], 'The postrestore context fault must be injected exactly once.')
         self.assertEqual(self.source.read_bytes(), self.raw)
         self.assertEqual(target.read_bytes(), self.raw)
 

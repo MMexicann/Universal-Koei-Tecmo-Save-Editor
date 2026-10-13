@@ -3193,8 +3193,8 @@
     },
     {
       "path": "tests/test_aot1_vita.py",
-      "bytes": 12034,
-      "sha256": "07edcff161de39c0149ba75e75484ea5cfebcf28beb15d86598ed3ddbe2f2cf1"
+      "bytes": 12506,
+      "sha256": "049a6b0b8c0d3255e2811d69b97bf345b26e4198031977eacff05c1adbbeaec4"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -3238,8 +3238,8 @@
     },
     {
       "path": "tests/test_bladestorm_ps3.py",
-      "bytes": 12360,
-      "sha256": "06a2dd6eefd9f1d8d26f2f0963dd6701b93538432efbb3cf1acaf40cb270b8aa"
+      "bytes": 12869,
+      "sha256": "2caa034f4a3919e8a3418bd99fe2c65104f72ebcd67984754745790faa39ada5"
     },
     {
       "path": "tests/test_bodyguard_rules.py",
@@ -3383,8 +3383,8 @@
     },
     {
       "path": "tests/test_dw8_ps3.py",
-      "bytes": 12591,
-      "sha256": "3a4e057f44afc66a2f8351949628855fc0c77cf4210b2297300001c2540d05a1"
+      "bytes": 13328,
+      "sha256": "ae9c7b9ca6478a4be116df648d1f26b13747af30812451d733598a2800299586"
     },
     {
       "path": "tests/test_dw8_weapon_order.py",
@@ -3908,8 +3908,8 @@
     },
     {
       "path": "tests/test_pirate_warriors_ps3.py",
-      "bytes": 12614,
-      "sha256": "9a4d19c20551dc3cc1b8f4ec0ca718b48c58a80196fe719d89edbdde56f3eb73"
+      "bytes": 13086,
+      "sha256": "b640f6fa5aaa1ddc3bab0ed143e6407bf37426856642def73564366b2bd33224"
     },
     {
       "path": "tests/test_pokemon_conquest_ds.py",
@@ -3948,8 +3948,8 @@
     },
     {
       "path": "tests/test_pw3_ps3.py",
-      "bytes": 11437,
-      "sha256": "fe710d9d00d9084529144c406935f908321a8875119b2d025596e45985936dd4"
+      "bytes": 11946,
+      "sha256": "3b2c4603df111fc1537710e68a22f667164feb4145fe1342966334af74d4b506"
     },
     {
       "path": "tests/test_pw4_format.py",

@@ -151,20 +151,24 @@ class ProfileChecks(ScalarContractTests):
             with self.subTest(phase=phase):
                 companion.write_bytes(self.identity)
                 destination = output / (phase + '.bin')
+                mutations = []
                 def write(data, path):
                     result = original_write(data, path)
-                    if phase == 'write' and Path(path) == destination:
+                    if phase == 'write' and Path(path).resolve() == destination.resolve():
                         companion.write_bytes(self.identity + b'\0')
+                        mutations.append(phase)
                     return result
                 def read(path, *args):
                     result = original_read(path, *args)
-                    if phase == 'read' and Path(path) == destination:
+                    if phase == 'read' and Path(path).resolve() == destination.resolve():
                         companion.write_bytes(self.identity + b'\0')
+                        mutations.append(phase)
                     return result
                 with patch.object(self.backend, 'atomic_new', side_effect=write), \
                         patch.object(self.backend, 'read_save', side_effect=read), \
                         self.assertRaises(SaveError):
                     self.backend.save_as(self.document, {}, destination)
+                self.assertEqual(mutations, [phase], 'The requested companion mutation must execute.')
                 self.assertEqual(self.source.read_bytes(), self.raw)
                 self.assertEqual((self.folder / 'PARAM.SFO').read_bytes(), self.identity)
 
@@ -179,18 +183,21 @@ class ProfileChecks(ScalarContractTests):
             with self.subTest(change=change):
                 companion.write_bytes(self.identity)
                 destination = output / (change + '.bin')
+                mutations = []
                 def write(data, path):
                     result = original_write(data, path)
-                    if Path(path) == destination:
+                    if Path(path).resolve() == destination.resolve():
                         if change == 'context':
                             companion.write_bytes(self.identity + b'\0')
                         else:
                             damaged = bytearray(destination.read_bytes())
                             damaged[-1] ^= 1  # Header still qualifies; full SHA must fail.
                             destination.write_bytes(damaged)
+                        mutations.append(change)
                     return result
                 with patch.object(copy_storage, 'atomic_new', side_effect=write), self.assertRaises(SaveError):
                     self.backend.restore(backup, destination)
+                self.assertEqual(mutations, [change], 'The requested restore mutation must execute.')
                 self.assertEqual(backup.read_bytes(), self.raw)
                 self.assertEqual(self.source.read_bytes(), self.raw)
                 self.assertEqual((self.folder / 'PARAM.SFO').read_bytes(), self.identity)

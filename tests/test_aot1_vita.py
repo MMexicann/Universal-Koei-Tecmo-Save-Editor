@@ -149,19 +149,23 @@ class AOT1VitaTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 companion.write_bytes(identity)
                 destination = output / (phase + '.dat')
+                mutations = []
                 def write(data, path):
                     result = original_write(data, path)
-                    if phase == 'write' and Path(path) == destination:
+                    if phase == 'write' and Path(path).resolve() == destination.resolve():
                         companion.write_bytes(identity + b'\0')
+                        mutations.append(phase)
                     return result
                 def read(path, *args):
                     result = original_read(path, *args)
-                    if phase == 'read' and Path(path) == destination:
+                    if phase == 'read' and Path(path).resolve() == destination.resolve():
                         companion.write_bytes(identity + b'\0')
+                        mutations.append(phase)
                     return result
                 with patch.object(parser, 'atomic_new', side_effect=write), \
                         patch.object(parser, 'read_save', side_effect=read), self.assertRaises(SaveError):
                     parser.save_as(self.document, {'money': 11}, destination)
+                self.assertEqual(mutations, [phase], 'The requested companion mutation must execute.')
                 self.assertEqual(self.source.read_bytes(), self.raw)
                 self.assertEqual((self.folder / 'sce_sys/param.sfo').read_bytes(), identity)
 
@@ -177,18 +181,21 @@ class AOT1VitaTests(unittest.TestCase):
             with self.subTest(change=change):
                 companion.write_bytes(identity)
                 destination = output / (change + '.dat')
+                mutations = []
                 def write(data, path):
                     result = original_write(data, path)
-                    if Path(path) == destination:
+                    if Path(path).resolve() == destination.resolve():
                         if change == 'context':
                             companion.write_bytes(identity + b'\0')
                         else:
                             damaged = bytearray(destination.read_bytes())
                             damaged[-1] ^= 1
                             destination.write_bytes(damaged)
+                        mutations.append(change)
                     return result
                 with patch.object(copy_storage, 'atomic_new', side_effect=write), self.assertRaises(SaveError):
                     parser.restore(backup, destination)
+                self.assertEqual(mutations, [change], 'The requested restore mutation must execute.')
                 self.assertEqual(backup.read_bytes(), self.raw)
                 self.assertEqual(self.source.read_bytes(), self.raw)
                 self.assertEqual((self.folder / 'sce_sys/param.sfo').read_bytes(), identity)

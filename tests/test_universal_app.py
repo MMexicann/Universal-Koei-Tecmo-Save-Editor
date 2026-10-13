@@ -568,7 +568,8 @@ class UniversalGuiTests(unittest.TestCase):
                 error.assert_not_called()
             self.assertEqual(editor.backup.read_bytes(), raw)
             self.assertEqual(len(editor.fields.get_children()), 14)
-            group_selector = next(widgets_of_type(frame, ttk.Combobox))
+            group_selector = editor.group_selector
+            self.assertIn(group_selector, tuple(widgets_of_type(frame, ttk.Combobox)))
             self.assertIn('Material container', group_selector.cget('values'))
             self.assertIn('Alchemy', group_selector.cget('values'))
             self.assertIn('Sophie equipment', group_selector.cget('values'))

@@ -115,25 +115,27 @@ are title-specific mechanics leads and are not transplanted to a Ryza 2 schema.
 
 ## Other Ryza titles
 
-**Original Ryza 1 PC is blocked and unregistered.** Both public gameplay copies
-pass the envelope checks and have coherent earlier 66-byte inventory records,
-but their final `secret_base` node declares 3,532 bytes with only 112 remaining.
-The nested plant-array size declares 3,420 bytes which are absent. This could
-be native zero-tail elision or an altered upstream save. No native loader/source
-or independent third gameplay file has established that omission as legitimate.
-The parser rejects it; it never pads, repairs or rewrites it. Required input:
-an independently sourced complete original Steam gameplay save, or factual
-native loader/serializer evidence explaining this exact omission.
+**Original Ryza 1 PC now has a separate narrow source-reference adapter.**
+The [dedicated PC profile](RYZA_PC_FORMAT.md) accepts the two checksum-valid
+public original-PC slots with native item revision 1 and 29 exact complete
+roots. It preserves their specifically matched 112-byte terminal secret-base
+prefix opaquely and permits only existing qualified quality reductions.
+It never pads the absent 3,420-byte plant extent or accepts generalized
+truncation. Max is disabled and no increase/natural cap is inferred. The old
+shared candidate parser retains its full-root rejection rules; the new adapter
+uses its own explicit game ID/backend. Native copied-save surgical writes,
+backup and restore pass; edited game loading and terminal interpretation remain
+unqualified. A native loader or untouched save/re-save control is still needed
+before plant/secret-base features or broader terminal geometries can qualify.
 
 Separate freely shared original Ryza Switch gameplay files in
 [Viren070/NX_Saves](https://github.com/Viren070/NX_Saves/blob/main/index.md)
 pass the same envelope checks and have complete root framing (491,876-byte
 decoded main-game profiles, native header revision value 4). DLC episodes have
 different revision profiles. These console files corroborate envelope reuse
-but neither qualify the PC revision-0 omission nor establish PC compatibility;
-the PC parser rejects them. The [separate Switch qualification](RYZA_SWITCH_FORMAT.md)
-now proves complete main-game quality writes without accepting the incomplete
-PC tail. DLC episode profiles remain excluded. A separate
+but do not establish PC compatibility. The separate PC adapter requires its
+own exact revision-0 geometry and rejects Switch inputs. The [separate Switch qualification](RYZA_SWITCH_FORMAT.md)
+now proves complete main-game quality writes with a complete console terminal profile. DLC episode profiles remain excluded. A separate
 [PC save-sharing discussion](https://www.reddit.com/r/Atelier/comments/18eupuq/)
 links an independent collection, but its filetransfer.io download host returned
 403 during research; no file from that lead has been inspected.

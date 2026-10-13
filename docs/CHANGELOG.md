@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased development on main — 2026-10-13
+
+- Added 14 explicit game/platform profiles, bringing the source library to 90
+  profiles across 15 platforms, including new Macintosh and SNES support.
+  See [the complete addition list and evidence](SOL_EXPANSION.md).
+- Added record selection, pending-only filtering, hidden-edit counts and
+  preserved field-table focus/scroll in shared scalar editors.
+- Fixed Max actions that failed to restore an opened maximum, prevented invalid
+  loadouts after unstaging, and detected backend staging that drops requested values.
+- Corrected Gemfire SNES ownership/calendar offsets and accepted Nobunaga’s
+  source-native rebel fief state as read-only.
+- Application version and released v1.91 downloads remain unchanged; no release
+  is published by this development update.
+
 ## v1.91
 
 - Added a shared scalar save contract: validate the complete pending edit map,

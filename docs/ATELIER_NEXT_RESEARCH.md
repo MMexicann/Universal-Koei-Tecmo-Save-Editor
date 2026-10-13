@@ -59,7 +59,8 @@ See the [existing coverage checklist](SOPHIE2_COVERAGE.md).
 | Meruru date transfer: [jrpx/Atelier-Meruru-Date-Transfer-Tool](https://github.com/jrpx/Atelier-Meruru-Date-Transfer-Tool), CC0-1.0, `c75f8d3457379677c1e84ff87232f85918ee6985` | The tool transfers opaque date bytes between files. Its author documents inconsistent years, income, quests and Hom timers after rewinds. This is a dependency blocker, not a safe calendar writer. Need native date encoding/integrity and event/timer transition rules; resource/inventory support could proceed independently once a genuine profile is qualified. |
 | Rorona/Meruru DX PC | 27 Rorona and 17 Meruru gameplay snapshots now qualify bounded read-only chunk inspection. Published Rorona PLUS money/item leads partially match but later offsets differ. Native integrity and safe field dependencies remain missing before writes. [Arland evidence](ARLAND_DX_RESEARCH.md). |
 | Original Sophie and Ryza 2 PC | Implemented separate qualified profiles: [Sophie resources/quality](SOPHIE_PC_FORMAT.md) and [Ryza 2 base-cap quality](RYZA_FORMATS.md). Genuine-file and GUI tests pass; actual edited game loading is untested. |
-| Ryza 1/3, Sophie DX/Firis, Dusk DX/Nelke and Blue Reflection | New genuine gameplay acquisitions establish several native leads, but each still lacks specific integrity, complete codec or mechanic/dependency proof. See [Ryza](RYZA_FORMATS.md), [Sophie](SOPHIE_PC_FORMAT.md), [Dusk](DUSK_DX_RESEARCH.md) and [Blue Reflection](BLUE_REFLECTION_RESEARCH.md); system-only files are excluded. |
+| Original Firis PC, original Ryza PC and Second Light PC | Implemented separate bounded profiles: [Firis Cole/quality reductions](FIRIS_PC_FORMAT.md), [Ryza existing quality reductions](RYZA_PC_FORMAT.md) and [Second Light container quantity reductions](BRSL_PC_FORMAT.md). Native copied-save writer checks pass; edited game loading is untested. Ryza/Second Light retain specifically matched terminal bytes opaquely without padding or repair. |
+| Original Ryza 3, Sophie/Firis DX, Dusk DX/Nelke and original Blue Reflection | Native research leads retain title-specific codec/integrity or gameplay mapping blockers. See [Ryza](RYZA_FORMATS.md), [Sophie](SOPHIE_PC_FORMAT.md), [Dusk](DUSK_DX_RESEARCH.md) and [Blue Reflection](BLUE_REFLECTION_RESEARCH.md); system-only files are excluded. |
 
 ## Other Koei-associated candidates considered
 
@@ -77,3 +78,17 @@ modifications do not prove natural caps. A checksum-valid procedural fixture
 tests a writer's contract; it does not establish a native game's ownership,
 rewards or loadability. Each new qualified profile has its own tests and notes
 above, and actual edited game-load/re-save validation remains outstanding.
+
+## Additional original Lydie & Suelle PC input
+
+A fresh [original PC SaveGame.Pro archive](https://savegame.pro/pc-atelier-lydie-suelle-the-alchemists-and-the-mysterious-paintings-savegame/)
+supplies an actual `SAVE DATA09.pcsave` gameplay file of 164,112 bytes and a
+separate 3,632-byte `SYSTEMDATA.pcsave`. This is stronger than the earlier
+system-only Barrel Wisdom lead, but it does not qualify a writable profile.
+The existing checksum-enforcing Gust save codec rejects its native body with
+an encrypted-marker mismatch. No integrity check was disabled and no
+Sophie/Ryza/console item schema was transplanted. Required next evidence is a
+title/platform-specific native loader or matching encoded/decoded pair proving
+framing, compression and checksum coverage, then occupied-record and mechanic
+qualification. DX and Switch remain separate candidates. Archive and input
+bytes stay outside the checkout; no third-party binary was run.

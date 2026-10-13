@@ -21,6 +21,11 @@ claim. Read [CONTRIBUTING.md](../../CONTRIBUTING.md) and the
    still read back as their requested values, and changes outside those ranges
    must still fail verification. Never use this declaration to hide unknown or
    unexpected serializer differences.
+   Validate native dependencies after both staging and unstaging. Max target
+   assignments equal to opened values must reach staging so pending reductions
+   can be removed. When original companion metadata is bound, verify its digest
+   before writing, after atomic creation, and after actual destination read-back
+   for both Save As and restore. Add fault injections for each boundary.
 3. Register the implemented game in `koei_editor.game_registry.GAMES` with
    qualified editor/parser/backend module paths, extension, platform and honest
    provenance. Update reviewed runtime metadata, the supported-game inventory,

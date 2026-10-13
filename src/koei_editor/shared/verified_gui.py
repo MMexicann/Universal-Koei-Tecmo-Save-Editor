@@ -55,6 +55,20 @@ class Editor(Appearance):
         self.search_entry = ttk.Entry(filter_bar, textvariable=self.search, width=40)
         self.search_entry.pack(side='left', fill='x', expand=True)
         ttk.Button(filter_bar, text='Clear', command=lambda: self.search.set('')).pack(side='left', padx=(8, 0))
+        self.pending_only = tk.BooleanVar(root, value=False)
+        ttk.Checkbutton(filter_bar, text='Pending only', variable=self.pending_only,
+                        command=self.refresh).pack(side='left', padx=(12, 0))
+        navigation = ttk.Frame(host, padding=(22, 8, 22, 0))
+        navigation.pack(fill='x')
+        ttk.Label(navigation, text='Record').pack(side='left', padx=(0, 8))
+        self.record = tk.StringVar(root, value='All records')
+        self.record_selector = ttk.Combobox(navigation, textvariable=self.record,
+                                           values=('All records',), state='readonly', width=35)
+        self.record_selector.pack(side='left')
+        self.record_selector.bind('<<ComboboxSelected>>', lambda _event: self.refresh())
+        self._record_keys = {}
+        self.field_count = tk.StringVar(root, value='No save opened.')
+        ttk.Label(navigation, textvariable=self.field_count, style='Muted.TLabel').pack(side='left', padx=12)
         tools = ttk.Frame(host, padding=(22, 8))
         tools.pack(fill='x')
         self.group = tk.StringVar(root, value='All fields')
@@ -150,6 +164,8 @@ class Editor(Appearance):
             return
         self.document, self.backup = document, backup
         self.changes, self.history = {}, []
+        self.record.set('All records')
+        self.pending_only.set(False)
         for button in self.save_buttons + self.edit_buttons:
             button.configure(state='normal')
         self.update_filename('Opened copy: ')
@@ -158,6 +174,8 @@ class Editor(Appearance):
 
     def refresh(self):
         selected = self.fields.selection()
+        focus = self.fields.focus()
+        position = self.fields.yview()[0]
         self.fields.delete(*self.fields.get_children())
         self.selection_info.set('Select a record to inspect its values.')
         self.value_choice.pack_forget()
@@ -170,23 +188,46 @@ class Editor(Appearance):
         self.group_selector.configure(values=groups)
         if self.group.get() not in groups:
             self.group.set('All fields')
+        records = {}
+        for field in fields:
+            if self.group.get() in ('All fields', field.group):
+                # Include the native group and slot even if two groups use the
+                # same display name. Labels never act as editable identities.
+                identity = (field.group, field.slot)
+                records.setdefault(identity, f'{self.record_name(field)} · {field.group} [{field.slot}]')
+        self._record_keys = {label: identity for identity, label in records.items()}
+        self.record_selector.configure(values=('All records',) + tuple(self._record_keys))
+        if self.record.get() not in self._record_keys:
+            self.record.set('All records')
+        record_key = self._record_keys.get(self.record.get())
         tokens = self.search.get().casefold().split()
         for field in fields:
             if self.group.get() not in ('All fields', field.group):
                 continue
+            if record_key is not None and (field.group, field.slot) != record_key:
+                continue
+            if self.pending_only.get() and field.id not in self.changes:
+                continue
             original = field.value(self.document.payload)
             record = self.record_name(field)
             opened = self.display_value(field, original)
-            searchable = f'{field.label} {field.group} {record} {field.id} {opened}'.casefold()
+            pending = self.display_value(field, self.changes[field.id]) if field.id in self.changes else '-'
+            searchable = f'{field.label} {field.group} {record} {field.id} {opened} {pending}'.casefold()
             if any(token not in searchable for token in tokens):
                 continue
-            pending = self.display_value(field, self.changes[field.id]) if field.id in self.changes else '-'
             self.fields.insert('', 'end', iid=field.id,
                                values=(record, field.label, opened, pending,
                                        f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
                                        else f'{field.maximum:,}'))
         self.fields.selection_set([key for key in selected if self.fields.exists(key)])
         sort_table(self.fields)
+        if focus and self.fields.exists(focus):
+            self.fields.focus(focus)
+        self.fields.yview_moveto(position)
+        visible = self.fields.get_children()
+        hidden = len(set(self.changes).difference(visible))
+        self.field_count.set(f'{len(visible):,} visible fields · {len(self.changes):,} pending edits'
+                             + (f' ({hidden:,} hidden)' if hidden else ''))
         self.selected()
 
     def field_options(self, field):
@@ -215,6 +256,14 @@ class Editor(Appearance):
             fields = self.adapter.field_map(self.document)
             if options and all(self.field_options(fields[key]) == options for key in keys):
                 self._choice_values = {f'{number} · {label}': number for number, label in options}
+                opened = {fields[key].value(self.document.payload) for key in keys}
+                if len(opened) == 1:
+                    number = next(iter(opened))
+                    if number not in self._choice_values.values():
+                        # A valid copy may contain an unusual original enum.
+                        # Expose its exact no-op without assigning that value
+                        # to other records whose opened values are different.
+                        self._choice_values[f'{number} · Opened value (preserved)'] = number
                 self.value_choice.configure(values=tuple(self._choice_values))
                 self.choice_value.set(next((label for label, number in self._choice_values.items()
                                            if number == value), ''))
@@ -294,6 +343,10 @@ class Editor(Appearance):
             messagebox.showerror('Cannot Stage Edit', str(error))
 
     def _accept_pending(self, result):
+        # Native dependencies apply to the final batch, including side effects
+        # of backend staging (for example an equipped-slot swap). Reject the
+        # entire action before changing the pending map or its Undo history.
+        self.adapter.changed_payload(self.document, result)
         if result != self.changes:
             self.history.append(dict(self.changes))
             self.changes = result
@@ -320,8 +373,16 @@ class Editor(Appearance):
         self.stage_values({key: value for key in keys})
 
     def max_selected(self):
-        if self.document:
-            self.stage_values(self.adapter.limit_values(self.document, self.changes, self.fields.selection()))
+        self._max_fields(self.fields.selection())
+
+    def _max_fields(self, keys):
+        if self.document is None:
+            return
+        try:
+            values = self.adapter.limit_values(self.document, self.changes, keys)
+            self.stage_values(values)
+        except Exception as error:
+            messagebox.showerror('Cannot Max Fields', str(error))
 
     def adjust_selected(self):
         keys = self.fields.selection()
@@ -352,14 +413,12 @@ class Editor(Appearance):
             # Restore the whole selection in one transaction. Sequentially
             # unstaging a reordered loadout can create a transient duplicate
             # even when the final original loadout is valid.
-            self.adapter.changed_payload(self.document, result)
             self._accept_pending(result)
         except Exception as error:
             messagebox.showerror('Cannot Revert Selection', str(error))
 
     def max_visible(self):
-        if self.document:
-            self.stage_values(self.adapter.limit_values(self.document, self.changes, self.fields.get_children()))
+        self._max_fields(self.fields.get_children())
 
     def undo(self):
         if self.history:
@@ -371,7 +430,11 @@ class Editor(Appearance):
         if self.document is None:
             return
         document = self.document
-        rows = self.adapter.review(document, self.changes)
+        try:
+            rows = self.adapter.review(document, self.changes)
+        except Exception as error:
+            messagebox.showerror('Cannot Review Changes', str(error))
+            return
         dialog = tk.Toplevel(self.root)
         dialog.title('Review Changes')
         dialog.geometry('700x480')

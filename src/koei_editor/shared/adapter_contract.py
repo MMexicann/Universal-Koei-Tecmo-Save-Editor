@@ -261,10 +261,20 @@ class BoundScalarAdapter:
         field = fields[key]
         self._pending_value(document, field, value)
         if is_opened_value(document, field, value):
-            pending.pop(key, None)
+            # The original-value shortcut must retain native dependency
+            # validation. Removing one key from a reordered loadout can leave
+            # duplicate equipped references even though each scalar is valid.
+            self.changed_payload(document, pending)
+            if key in pending:
+                pending.pop(key)
+                self.changed_payload(document, pending)
             return pending
         result = self._call('stage', document, pending, key, value)
-        return self._normalized_changes(document, result)
+        result = self._normalized_changes(document, result)
+        staged = result.get(key, field.value(document.payload))
+        if type(staged) is not type(value) or staged != value:
+            raise SaveError(f'{self.game_id}: requested field {key} did not stage the chosen value.')
+        return result
 
     def limit_values(self, document, changes, keys):
         pending = self._normalized_changes(document, changes)
@@ -277,7 +287,26 @@ class BoundScalarAdapter:
             if type(key) is not str or key not in fields:
                 raise SaveError('A requested field is not verified for this game.')
         result = self._call('limit_values', document, pending, keys)
-        return self._normalized_changes(document, result)
+        # This is a target map, not the complete pending map. A target equal
+        # to the opened value still matters: Max must unstage a deliberate
+        # reduction when the opened value was already at its natural maximum.
+        self._pending_fields(document, result)
+        targets = {}
+        for key, value in result.items():
+            field = fields[key]
+            if not getattr(field, 'maxable', True):
+                continue
+            try:
+                # Original-value tolerance permits an unusual snapshot to be
+                # restored deliberately, but never turns that value into a
+                # valid bulk Max target. Keep only independently valid targets.
+                field.validate(value)
+            except SaveError:
+                if is_opened_value(document, field, value):
+                    continue
+                raise
+            targets[key] = value
+        return targets
 
     def maximums(self, document, changes, group=None):
         pending = self._normalized_changes(document, changes)

@@ -80,11 +80,11 @@ class ComparisonTests(unittest.TestCase):
     def test_report_contains_values_and_hashes_without_paths_raw_or_owner_metadata(self):
         raw=deception.serialize(deception.decode(self.second.read_bytes()),{'warl':14});self.second.write_bytes(raw)
         result=self.prepare();output=self.folder/'report.json'
-        self.assertEqual(comparison.export(result,output),output)
-        report=json.loads(output.read_text());self.assertEqual(report['differences'][0]['right'],14)
+        self.assertEqual(comparison.export(result,output),output.resolve())
+        report=json.loads(output.read_text(encoding='utf-8'));self.assertEqual(report['differences'][0]['right'],14)
         self.assertEqual(report['game_id'],deception.GAME_ID)
         self.assertEqual(report['first_sha256'],result.left.sha256)
-        text=output.read_text()
+        text=output.read_text(encoding='utf-8')
         for private in (str(self.folder),'NPUB31442-GAMEDATA-10','context_digest','PARAM.SFO',self.first.name):
             self.assertNotIn(private,text)
         self.assertEqual(self.first.read_bytes(),fixture(deception))
@@ -102,7 +102,7 @@ class ComparisonTests(unittest.TestCase):
     def test_existing_destination_source_change_and_original_context_change(self):
         result=self.prepare();output=self.folder/'report.json';output.write_text('existing')
         with self.assertRaises(FileExistsError):comparison.export(result,output)
-        self.assertEqual(output.read_text(),'existing')
+        self.assertEqual(output.read_text(encoding='utf-8'),'existing')
         for path in (self.first,self.metadata):
             original=path.read_bytes();path.write_bytes(original+b'changed')
             with self.assertRaises(SaveError):comparison.export(result,self.folder/'stale.json')
@@ -122,7 +122,7 @@ class ComparisonTests(unittest.TestCase):
         command=[sys.executable,'-m','koei_editor','--game',deception.GAME_ID,'--compare',str(self.first),str(self.second)]
         process=subprocess.run(command+['--comparison-report',str(output)],capture_output=True,text=True,env=env,timeout=30)
         self.assertEqual(process.returncode,0,process.stderr)
-        self.assertEqual(json.loads(process.stdout),json.loads(output.read_text()))
+        self.assertEqual(json.loads(process.stdout),json.loads(output.read_text(encoding='utf-8')))
         for args in (['--comparison-report',str(output)],['--compare',str(self.first),str(self.second)],
                      command[3:]+['--dry-run']):
             process=subprocess.run([sys.executable,'-m','koei_editor',*args],capture_output=True,text=True,env=env,timeout=30)

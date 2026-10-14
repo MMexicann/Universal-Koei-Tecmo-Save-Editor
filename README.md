@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.2 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.3 development source** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Save Converter
@@ -42,6 +42,14 @@ Max buttons keep supported limits. Unknown fields, IDs, choices, flags and requi
 record structure remain protected. Backups, Undo and verified Save As stay available.
 See [experimental limits and exceptions](docs/EXPERIMENTAL_EDITING.md).
 
+## Compare Saves
+
+Compare two copies using their exact game/platform profile. View changed values,
+conditional records and other payload differences, search and page through the
+results, and export a private JSON report. Results remain when switching workspaces.
+The comparison reads 93 scalar profiles and verifies original files and metadata
+again before report export. [Instructions](docs/SAVE_COMPARISON.md).
+
 ## Supported games
 
 Select the game and platform that match your save. Console editors open
@@ -70,7 +78,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists source game/platform profiles for v2.1.2.
+The table below lists development source game/platform profiles for v2.3.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->

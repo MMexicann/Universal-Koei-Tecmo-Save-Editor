@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3 — 2026-10-14
+
+- Add retained Compare Saves for all 93 registered scalar profiles, with exact native input qualification, conditional record/definition distinctions, named records, search, difference filters and paging.
+- Add headless comparison and immutable schema-1 JSON reports with source/payload hashes; protect against source/context changes, forged summaries, wrong profiles and existing destinations.
+- Count decoded payload differences separately from bytes outside editable storage spans; preserve raw inputs, original metadata and existing editing/conversion workflows.
+- Cover actual GUI workers, late-result invalidation, session/theme retention, safe report export and an independent native Qoga pair.
+
 ## v2.2 — 2026-10-14
 
 - Add three genuine-file-qualified original PS3 title families: Deception IV: Blood Ties (US PSN), Atelier Escha & Logy (EU PSN), and Ar tonelico Qoga (US).

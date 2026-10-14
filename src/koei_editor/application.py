@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.1'
+VERSION = '2.1.1'
 
 
 class Application(Appearance):
@@ -23,6 +23,7 @@ class Application(Appearance):
         self.theme_name = tk.StringVar(root, value=initial_theme)
         self.sessions = {}
         self.active_game = None
+        self.converter = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
@@ -32,6 +33,8 @@ class Application(Appearance):
         top.pack(fill='x')
         self.home_button = ttk.Button(top, text='‹ Game Library', command=self.show_library)
         self.home_button.pack(side='left')
+        self.converter_button = ttk.Button(top, text='Save Converter', command=self.show_converter)
+        self.converter_button.pack(side='left', padx=(10, 0))
         self.breadcrumb = tk.StringVar(root, value='Choose your game')
         ttk.Label(top, textvariable=self.breadcrumb, style='Muted.TLabel').pack(side='left', padx=14)
         self.theme_selector = ttk.Combobox(top, values=tuple(THEMES), textvariable=self.theme_name,
@@ -206,6 +209,8 @@ class Application(Appearance):
                        background=[('active', palette['hover'])])
         for _frame, editor in self.sessions.values():
             editor.theme_name.set(name)
+        if self.converter is not None:
+            self.converter.apply_theme(palette)
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
@@ -267,6 +272,8 @@ class Application(Appearance):
                 raise
             self.sessions[game_id] = frame, editor
         self.library.pack_forget()
+        if self.converter is not None:
+            self.converter.frame.pack_forget()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         frame, editor = self.sessions[game_id]
@@ -277,12 +284,26 @@ class Application(Appearance):
         return editor
 
     def show_library(self):
+        if self.converter is not None:
+            self.converter.frame.pack_forget()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.library.pack(fill='both', expand=True)
         self.active_game = None
         self.breadcrumb.set('Choose your game')
         self.show_platform()
+
+    def show_converter(self):
+        from koei_editor.shared.conversion_gui import ConversionWorkspace
+        if self.converter is None:
+            self.converter = ConversionWorkspace(self.root, self.workspace)
+        self.library.pack_forget()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        self.converter.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set('Save Converter')
+        self.converter.apply_theme(THEMES[self.theme_name.get()])
 
     def show_platform(self, _event=None):
         for frame in self.platform_frames.values():
@@ -365,6 +386,10 @@ class Application(Appearance):
         Editor.show_contact(self)
 
     def close(self):
+        if self.converter is not None and self.converter.busy:
+            from tkinter import messagebox
+            messagebox.showinfo('Conversion running', 'Wait for the conversion to finish before closing.', parent=self.root)
+            return
         if all(editor.dirty_ok() for _frame, editor in self.sessions.values()):
             self.root.destroy()
 
@@ -378,7 +403,43 @@ def main():
     tests = parser.add_mutually_exclusive_group()
     tests.add_argument('--self-test', nargs=2, metavar=('INPUT', 'OUTPUT'))
     tests.add_argument('--compatibility-test', nargs=2, metavar=('INPUT', 'OUTPUT'))
+    tests.add_argument('--convert', metavar='ROUTE', help='Convert an explicit supported route; requires --source, --template and --output-dir.')
+    tests.add_argument('--list-conversions', action='store_true', help='Print supported platform conversion routes.')
+    parser.add_argument('--source', help='Separate source save copy for conversion.')
+    parser.add_argument('--template', help='Separate destination-platform save copy for conversion.')
+    parser.add_argument('--output-dir', help='New folder for the converted save and local receipt.')
+    parser.add_argument('--dry-run', action='store_true', help='Validate and review conversion without writing files or backups.')
     arguments = parser.parse_args()
+    if arguments.convert or arguments.list_conversions:
+        from koei_editor import conversion
+        import json
+        if arguments.game or arguments.smoke_test or arguments.list_games:
+            parser.error('Use conversion separately from game editor commands.')
+        if arguments.list_conversions:
+            if arguments.source or arguments.template or arguments.output_dir or arguments.dry_run:
+                parser.error('--list-conversions does not take conversion paths or --dry-run.')
+            for route in conversion.ROUTES:
+                # Redirected Windows terminals commonly use cp1252; keep the
+                # route listing portable even with a strict ASCII stdout.
+                print(route.id + ': ' + route.label.replace('→', '->').replace('·', '-'))
+            return
+        if not arguments.source or not arguments.template or (not arguments.dry_run and not arguments.output_dir):
+            parser.error('--convert requires --source, --template and --output-dir (unless --dry-run).')
+        try:
+            prepared = conversion.prepare(arguments.convert, arguments.source, arguments.template)
+            report = {'route': prepared.route.id, 'gameplay_bytes': prepared.gameplay_bytes,
+                      'gameplay_sha256': prepared.gameplay_sha256, 'notes': prepared.notes,
+                      'dry_run': arguments.dry_run, 'game_load_verified': False}
+            if not arguments.dry_run:
+                destination, _backups, receipt = conversion.export(prepared, arguments.output_dir)
+                report.update(receipt)
+                report['output_file'] = destination.name
+            print(json.dumps(report, indent=2))
+        except (OSError, ValueError) as error:
+            parser.exit(1, 'Conversion failed: ' + str(error) + '\n')
+        return
+    if arguments.source or arguments.template or arguments.output_dir or arguments.dry_run:
+        parser.error('Conversion paths and --dry-run require --convert.')
     if arguments.list_games:
         for game in SUPPORTED_GAMES:
             print(f'{game.id}: {game.title} — {game.edition} [{game.platform}]\n  {game.features}')
@@ -415,6 +476,7 @@ def main():
             if editor.document is not None or editor.changes:
                 raise RuntimeError('A fresh editor unexpectedly contains save data.')
         app.apply_theme('Dark')
+        app.show_converter()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

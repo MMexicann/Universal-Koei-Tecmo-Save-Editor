@@ -1,5 +1,40 @@
 # Universal development validation
 
+## v2.1.1 conversion and DW6 PS3
+
+The new [Save Converter](SAVE_CONVERSION.md) registers 12 exact routes and
+transfers complete shared gameplay spans through independently implemented
+per-game codecs. Tests cover all directed and reverse paths, native integrity,
+template encryption/context retention, nonzero-tail rejection, changed inputs,
+forged plans, backup races, exclusive output folders, actual output read-back,
+background GUI work and CLI dry run/failure behavior. Six P5S directions passed
+private native PC/PS4/Switch exports and byte-exact reverse results. DW8 XL
+PS3/Vita full-file source references passed both directions; the modified PC
+reference is refused. DW8 PC routes have procedural preservation/codec evidence.
+
+The [US DW6 PS3 adapter](DW6_PS3_FORMAT.md) was qualified on two independently
+acquired native BLUS30110 exports. Both passed unchanged roundtrips, every
+exposed field's surgical big-endian byte comparison, original metadata retention
+and actual new-copy read-back. Public tests additionally exercise the shared
+scalar contract, experimental encoding bounds, malformed/foreign profiles,
+unknown records, original unstage, backup/metadata races and forged restore.
+The registered editor retains pending edits across converter navigation.
+
+Linux source checks use a real virtual display, the complete test inventory,
+all-profile GUI smoke startup, generated inventory consistency and the reviewed
+public source manifest. These checks do not produce or validate a Windows EXE.
+The existing protected release workflow runs every module on four Windows
+shards, verifies combined coverage, builds portable and standalone forms,
+checks packaged startup and requires active Defender scans on the exact final
+downloads. `DefenderScan-v2.1.1.json` and `SHA256SUMS.txt` are the authoritative
+published binary evidence, bound to their actual commit and assets.
+
+Edited DW6 PS3 loading and converted-save loading/re-saving in the actual games
+remain unverified. No native save, metadata, key, source reference or private
+report is part of the checkout or release assets. Console signing/import remains
+external. Unsupported games, regions and conversion revisions are documented
+with specific remaining inputs instead of inferred from editor availability.
+
 ## v2.1 experimental numeric editing — release qualification pending
 
 The explicit session option expands declared numeric fields to their exact

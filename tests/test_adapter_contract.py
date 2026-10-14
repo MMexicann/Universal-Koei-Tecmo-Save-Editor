@@ -319,6 +319,7 @@ class AdapterDispatchTests(unittest.TestCase):
             validate_session(invalid, 'invalid')
         app = Application.__new__(Application)
         app.sessions = {'first': (None, first), 'second': (None, second)}
+        app.converter = None
         app.active_game = 'second'
         app.root = Mock()
         self.assertEqual(app.dispatch('undo'), 'break')

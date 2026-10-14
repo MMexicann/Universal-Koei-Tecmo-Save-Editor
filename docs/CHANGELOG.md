@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.1.1 — 2026-10-14
+
+- Added a retained Save Converter workspace and CLI review/dry run/export for
+  12 directed DW8 XL PC/US PS3 PSN/Vita and English P5 Strikers PC/PS4/Switch routes.
+- Preserve complete shared gameplay, destination encryption and original
+  console metadata; back up both inputs and write only new export folders.
+  Reject opaque-tail loss, modified DW8 signatures, corrupt input and changed
+  sources/templates. Reparse actual output and write a private hash receipt.
+- Added original US DW6 PS3 existing horse combat-stat and weapon stored
+  damage-bonus/element controls, raising the inventory to 91 profiles.
+- Keep console signing/import external and document untested converted
+  game loading and precise blockers for DW6 conversion and further families.
+- Add cross-platform reverse-roundtrip, asynchronous GUI/CLI, native-copy,
+  big-endian surgical-write, context-race and forged-restore checks.
+
 ## v2.1
 
 - Added opt-in experimental numeric editing across the library, starting with

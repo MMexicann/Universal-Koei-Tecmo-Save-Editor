@@ -6,6 +6,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
+
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
 - [Architecture and package boundaries](ARCHITECTURE.md)
@@ -29,6 +31,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Reviewed bug fixes](BUG_REVIEW.md)
 
 ## Game formats and feature coverage
+
+- [Original US Dynasty Warriors 6 PS3](DW6_PS3_FORMAT.md)
 
 - [Bandit Kings of Ancient China Macintosh](BANDIT_KINGS_MAC_FORMAT.md)
 - [Nobunaga’s Ambition NES battery format](NOBUNAGA_AMBITION_NES_FORMAT.md)

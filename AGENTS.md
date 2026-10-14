@@ -1,7 +1,8 @@
 # Contributor and agent guide
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md). This project is Mexican's
-Universal Koei Tecmo Save Editor: one lightweight Windows executable, an explicit
+Universal Koei Tecmo Save Editor: a Windows app available as a portable folder
+or a self-contained standalone EXE, with an explicit
 game/platform library and a shared Tkinter interface. Preserve existing games,
 branding, themes, backups, Undo, Review Changes and safe saving.
 

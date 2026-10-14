@@ -147,8 +147,12 @@ def validate_document(document):
         raise SaveError('The Origins snapshot changed outside the edit workflow.')
 
 
-@lru_cache(maxsize=3)
 def _fields(payload, revision):
+    return _fields_cached(payload, revision, experimental_enabled())
+
+
+@lru_cache(maxsize=3)
+def _fields_cached(payload, revision, _experimental):
     resources = FORMAT.fields if revision == 29 else FORMAT.fields[:2]
     return resources + tuple(Field(**spec) for spec in progression_specs(payload, revision)) + tuple(
         Field(**spec) for spec in weapon_specs(payload, revision))

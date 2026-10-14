@@ -9,6 +9,7 @@ from unittest.mock import patch
 from koei_editor.games.dw8_ps3 import parser
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
+from koei_editor.shared.scalar_presentation import ScalarPresentation
 from tests import test_ps3_expansion as ps3_context
 
 
@@ -32,6 +33,18 @@ class OriginalDw8Ps3Tests(unittest.TestCase):
         context(self.folder)
         self.adapter = BoundScalarAdapter(parser.GAME_ID, '.bin', parser)
         self.document = self.adapter.read_save(self.source)
+
+    def test_shared_inspector_displays_export_identity_and_read_only_progression(self):
+        tables = ScalarPresentation(parser, parser.GAME_ID).inspection_tables(self.document)
+        self.assertEqual(len(tables), 1)
+        self.assertEqual(tables[0].columns, ('Group', 'Record / field', 'Opened value'))
+        self.assertEqual(tables[0].rows, (
+            ('Export identity', 'Original US PSN export', parser.TITLE_DIRECTORY),
+            ('Export identity', 'Native revision', '0x13011300'),
+            ('Export identity', 'Game data bytes', len(self.raw)),
+            ('Progression', 'Ambition fame (read only)',
+             int.from_bytes(self.raw[0x221D5:0x221D7], 'big'))))
+        self.assertEqual(self.document.raw, self.raw)
 
     def test_exact_noop_and_every_resource_surgical_big_endian_readback(self):
         self.assertEqual(self.adapter.serialize(self.document, {}), self.raw)
@@ -209,6 +222,10 @@ class OriginalDw8Ps3Tests(unittest.TestCase):
             with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(self.source)), \
                  patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
                 editor.open(); errors.assert_not_called()
+            editor.show_inspector()
+            root.update()
+            for child in root.winfo_children():
+                if isinstance(child, tk.Toplevel): child.destroy()
             editor.fields.selection_set('gold'); editor.value.set('12'); editor.apply_selected()
             self.assertEqual(editor.changes, {'gold': 12})
             editor.undo(); self.assertEqual(editor.changes, {})

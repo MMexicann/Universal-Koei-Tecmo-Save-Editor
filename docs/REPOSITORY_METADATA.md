@@ -24,5 +24,5 @@ performed rather than treating prepared text or a successful push as publication
 Recommended About description: Windows save editor by Mexican for 90 Koei Tecmo
 game/platform profiles, with experimental numeric editing, backups, Undo and Review Changes.
 The README and release notes list exact games, editions, platforms and controls.
-Changing the About field requires repository administration permission; the
-connected integration currently lacks it.
+Changing the About field requires authenticated repository administration
+access. Keep it aligned with the exact published inventory and features.

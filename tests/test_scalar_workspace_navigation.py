@@ -211,7 +211,7 @@ class ScalarWorkspaceNavigationTests(unittest.TestCase):
         self.assertIn('1 pending edits (1 hidden)', editor.field_count.get())
         self.assertEqual(editor.document.source.read_bytes(), raw)
 
-    def test_max_excludes_unusual_original_targets_and_nonmaxable_fields(self):
+    def test_max_restores_higher_original_targets_and_excludes_nonmaxable_fields(self):
         import struct
         from koei_editor.games.wo4 import parser as backend
         from tests.test_wo4_pc import generated_raw, repack
@@ -226,15 +226,17 @@ class ScalarWorkspaceNavigationTests(unittest.TestCase):
         before = dict(editor.changes)
         editor.fields.selection_set(tuple(before))
         editor.max_selected()
-        # The valid opened crystal maximum unstages its reduction. Max keeps
-        # deliberately lowered unusual originals and excluded fields pending.
-        self.assertEqual(editor.changes, {'gems': 100, unusual: 10, 'skill_orbs': 5})
+        # Max restores exact higher opened values and the crystal maximum,
+        # while metadata keeps the nonmaxable Skill Orb reduction pending.
+        self.assertEqual(editor.changes, {'skill_orbs': 5})
         editor.undo()
         self.assertEqual(editor.changes, before)
         history = list(editor.history)
         editor.search.set('gems')
         self.assertEqual(editor.fields.get_children(), ('gems',))
         editor.max_visible()
+        self.assertEqual(editor.changes, {'crystals': 10, unusual: 10, 'skill_orbs': 5})
+        editor.undo()
         self.assertEqual(editor.changes, before)
         self.assertEqual(editor.history, history)
         editor.search.set('')

@@ -409,7 +409,7 @@
       "title": "Nioh 3",
       "platform": "Windows PC",
       "status": "Native PC balance and existing-stack editor; two exact USER revisions",
-      "evidence": "Genuine USER revisions 0x01030001 and 0x01040000 qualify native encryption/body checksum, revision-specific eight-byte Amrita/Gold tags and structurally tagged equipment, item-box and storehouse arrays. Balances may decrease through zero; existing positive quantities of seven known common items may decrease. Equipment level, pre-forge level and reinforcement remain separate read-only values. No integrity flags are cleared. Development expansion: Eleven additional independently corroborated ordinary consumable identities extend existing reduction controls to eighteen; both native revisions retain original-record guards.",
+      "evidence": "Genuine USER revisions 0x01030001 and 0x01040000 qualify native encryption/body checksum, revision-specific eight-byte Amrita/Gold tags and structurally tagged equipment, item-box and storehouse arrays. Balances may decrease through zero; existing positive quantities of seven known common items may decrease. Equipment level, pre-forge level and reinforcement remain separate read-only values. No integrity flags are cleared. Development expansion: Eleven additional independently corroborated ordinary consumable identities extend existing reduction controls to eighteen; both native revisions retain original-record guards. Version 2.0 adds fourteen more independently corroborated ordinary consumables (thirty-two total), each exercised on a native stack with surgical deductions and strict shape/uniqueness guards.",
       "needed": "Per-item carry/storage capacities and acquisition/transfer dependencies before increases; currency purchase/increase dependencies, native stat/proficiency/skill maps and controlled forging/equipment/scroll/reward pairs; actual edited game-load/re-save validation.",
       "editing_verified": true
     },
@@ -509,7 +509,7 @@
       "platform": "Nintendo Switch",
       "status": "Native export editor implemented",
       "editing_verified": true,
-      "evidence": "Six independently shared complete native SlotData exports qualify 143 top-level plus one nested own-body checksum. Manual gold reductions and qualified original owned/deployed character names update exact header/body mirrors; all other game systems remain byte-identical. Searchable named character and weapon inspection.",
+      "evidence": "Six independently shared complete native SlotData exports qualify 143 top-level plus one nested own-body checksum. Manual gold reductions and qualified original owned/deployed character names update exact header/body mirrors; all other game systems remain byte-identical. Searchable named character and weapon inspection. Version 2.0 adds decrease-only existing positive material stocks at thirty-three source-typed positions across nine categories, validated surgically across all six native exports; six opaque bytes per record and facility/reward flags remain unchanged.",
       "needed": "Edited game loading; controlled growth/EXP/class/mastery, materials/acquisition, weapon forging/equipment, support and route/reward action pairs. Other revisions/Unicode name encoding require independent profiles."
     },
     {
@@ -1058,8 +1058,8 @@
       "platform": "PlayStation 2",
       "status": "Original European SLES-50821 PSU native-file editor",
       "editing_verified": true,
-      "evidence": "Five complete European exports contain twelve distinct occupied native slots and three empty slots. Packed-structure facts and additive checksums independently verified; all 45 exposed native fields pass surgical byte checks. Existing camera-point and base-tier reductions preserve camera functions, inventory, unknown bytes, icons, padding and untouched/empty slots. Real Tk, source protections and backup/restore pass.",
-      "needed": "Edited PS2 memory-card import/game loading; independently named film/healing/key-item mappings and natural limits, camera purchase/ownership dependencies and controlled mission/photo/collection reward pairs. US/Japanese editions need separate qualification."
+      "evidence": "Five complete European exports contain twelve distinct occupied native slots and three empty slots. Packed-structure facts and additive checksums independently verified; all 45 exposed native fields pass surgical byte checks. Existing camera-point and base-tier reductions preserve camera functions, inventory, unknown bytes, icons, padding and untouched/empty slots. Real Tk, source protections and backup/restore pass. Version 2.0 independently maps native film stocks 1 through 4, qualifies forty-five positive native stacks, and permits reductions retaining one sheet; all checksums and other inventory state are preserved.",
+      "needed": "Edited PS2 memory-card import/game loading; independently named healing/key-item mappings, film-type labels and natural limits, camera purchase/ownership dependencies and controlled mission/photo/collection reward pairs. US/Japanese editions need separate qualification."
     },
     {
       "id": "atelier_ryza3_dx_pc",
@@ -1192,7 +1192,7 @@
       "title": "Atelier Sophie 2: The Alchemist of the Mysterious Dream — PS4 CUSA28451 app 1.0",
       "platform": "PlayStation 4",
       "status": "Native PS4 inventory editor",
-      "evidence": "Genuine complete PS4 export validates the original cipher and all integrity layers, byte-exact true canonical reconstruction and 36 complete tagged roots. Nine individually named ordinary-material IDs qualify existing quality reductions; nineteen named battle-item IDs qualify existing uses within stored capacity. Native LE16 instance identity, duplicate/equipped references and unknown item IDs are guarded. All available native controls pass surgical/combined readback and actual Tk/storage checks with original opaque metadata binding.",
+      "evidence": "Genuine complete PS4 export validates the original cipher and all integrity layers, byte-exact true canonical reconstruction and 36 complete tagged roots. Twenty-three individually named ordinary-material IDs qualify existing quality reductions; nineteen named battle-item IDs qualify existing uses within stored capacity. Native LE16 instance identity, duplicate/equipped references and unknown item IDs are guarded. All available native controls pass surgical/combined readback and actual Tk/storage checks with original opaque metadata binding.",
       "needed": "Edited game-load/re-save checks, other item identities and revisions; coupled wallet preview/header, growth, alchemy rewards and equipment dependencies remain unqualified for edits.",
       "editing_verified": true
     },

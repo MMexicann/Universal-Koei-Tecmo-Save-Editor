@@ -27,9 +27,13 @@ retention improve large editors. Shared fixes protect staged values, Max,
 loadouts and console companion metadata during writing/read-back.
 
 Download **UniversalKoeiTecmoSaveEditor-v2.1.exe** for the standalone Windows app,
-or the Windows ZIP. No Python installation is needed. The source ZIP is for
-contributors. Console export/reimport and external resigning requirements remain.
+or extract the complete Windows ZIP and launch the EXE inside its versioned
+folder, keeping `_internal` beside it. No Python installation is needed. The
+Source ZIP is for contributors. Console export/reimport and external resigning
+requirements remain. The release pipeline scans both Windows builds before
+startup and the final EXE and ZIPs with active Microsoft Defender; the published
+`DefenderScan-v2.1.json` binds those results to the exact downloads and commit.
 
 Experimental in-game loading is unverified. Read
-[experimental scope and exceptions](EXPERIMENTAL_EDITING.md) and the
-[supported inventory](SUPPORTED_GAMES.md) for exact available controls.
+[experimental scope and exceptions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1/docs/EXPERIMENTAL_EDITING.md) and the
+[supported inventory](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1/docs/SUPPORTED_GAMES.md) for exact available controls.

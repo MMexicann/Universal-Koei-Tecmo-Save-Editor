@@ -214,6 +214,7 @@ def fields_for(document):
 
 def changed_payload(document, changes):
     fields = field_map(document)
+    changes = normalize_pending_values(document, changes, fields)
     output = bytearray(document.payload)
     for key, value in changes.items():
         if key not in fields:
@@ -255,8 +256,11 @@ def limit_values(document, changes, keys):
             raise SaveError('This field is not qualified for edits.')
         field = fields[key]
         current = changes.get(key, field.value(document.payload))
-        if field.maxable and type(current) is int and field.minimum <= current <= field.maximum:
-            result[key] = field.maximum
+        if field.maxable:
+            opened = field.value(document.payload)
+            target = max(opened, current, field.maximum)
+            if current != target:
+                result[key] = target
     return result
 
 

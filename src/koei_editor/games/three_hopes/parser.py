@@ -71,7 +71,7 @@ class Format:
     game_load_verified: bool = False
     note: str = ('Nintendo Switch extracted SlotData export, observed 0x50015C profile. '
                  'Open a separate copy; Save As creates a new export with backup. '
-                 'Gold decreases and qualified owned-character names preserve progression.')
+                 'Gold/material decreases and qualified owned-character names preserve progression.')
 
 
 FORMAT = Format()
@@ -102,6 +102,21 @@ GAMEPLAY_HEADER, GAMEPLAY_BODY = 0x77ECC, 0x77EDC
 CHARACTER_BASE, CHARACTER_COUNT, CHARACTER_STRIDE = 0x959EC, 136, 0xD80
 DEPLOY_BASE, RECRUIT_FLAGS = 0x7864C, 0x77FF4
 WEAPON_BASE, WEAPON_COUNT, WEAPON_STRIDE = 0x79D98, 1150, 24
+# Save-specific FEW2Save.bt at the pinned revision documented in the format notes.
+# Each category contains fixed eight-byte records: u16 quantity, six opaque bytes.
+# Item name/order and natural quantity limits are not proved by category labels.
+MATERIAL_REGIONS = (
+    ('stones', 'Stones', 0x831BC, 8),
+    ('building', 'Building materials', 0x8366C, 4),
+    ('training', 'Training gear', 0x836BC, 3),
+    ('manuals', 'Combat manuals', 0x836E4, 3),
+    ('smithing', 'Smithing sets', 0x8370C, 3),
+    ('furnishings', 'Furnishings', 0x83734, 3),
+    ('licenses', 'Licenses', 0x8375C, 3),
+    ('insignias', 'Insignias', 0x83784, 3),
+    ('storage', 'Storage materials', 0x837AC, 3),
+)
+MATERIAL_STRIDE = 8
 
 
 def _uint(payload, offset, size):
@@ -214,6 +229,11 @@ def weapons(document):
 def _inspection(payload):
     rows = [{'group': 'Resources', 'label': 'Gold', 'value': _uint(payload, GOLD_OFFSET, 4)},
             {'group': 'Resources', 'label': 'Renown (read only)', 'value': _uint(payload, GOLD_OFFSET + 8, 4)}]
+    for identity, category, start, count in MATERIAL_REGIONS:
+        rows.extend({'group': 'Material stocks',
+            'label': f'{category}: native stock {slot + 1}',
+            'value': _uint(payload, start + slot * MATERIAL_STRIDE, 2)}
+            for slot in range(count))
     for name, header, body in (('Shez', 0x3C, 0x841FC), ('Byleth', 0x64, 0x84224)):
         text = _ascii_name(payload[body:body + 8]) or 'Unqualified name bytes: ' + payload[body:body + 8].hex()
         rows.append({'group': 'Character names', 'label': name + ': stored name', 'value': text})
@@ -224,6 +244,18 @@ def _inspection(payload):
 def _field_index(payload):
     fields = [Field('gold', 'Gold (decrease only)', GOLD_OFFSET, 4,
                     _uint(payload, GOLD_OFFSET, 4), 'Resources')]
+    for identity, category, start, count in MATERIAL_REGIONS:
+        for slot in range(count):
+            offset = start + slot * MATERIAL_STRIDE
+            opened = _uint(payload, offset, 2)
+            # The source proves quantities, not discovery flags or natural caps.
+            # Require an existing positive stock. Keep the complete native u16
+            # range readable after experimental edits; supported edits remain
+            # reductions. Pending edits cannot admit another original record.
+            if opened > 0:
+                fields.append(Field(f'material_{identity}_{slot + 1}',
+                    f'{category}: native stock {slot + 1} (decrease only)',
+                    offset, 2, opened, 'Material stocks', offset))
     characters = _characters(payload)
     positive = {row['id'] for row in characters if row['hp'] > 0 and row['level'] > 0}
     deployed = {_uint(payload, DEPLOY_BASE + slot * 4, 2) for slot in range(8)}
@@ -363,6 +395,10 @@ def field_hint(document, key):
     if fields[key].kind == 'text':
         return ('Existing qualified character: 1–8 printable ASCII characters. Both name mirrors '
                 'are updated together; recruitment, gender, equipment and progression are preserved. No Max.')
+    if key.startswith('material_'):
+        return ('Decrease an existing material stock only. Native category and physical position are known; '
+                'individual item names and natural quantity caps remain unqualified. No Max. '
+                'Adjacent record bytes, facility upgrades, rewards and discovery state are preserved.')
     return ('Decrease the opened gold balance only. No Max, earning-history, reward or progression changes.')
 
 

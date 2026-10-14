@@ -12,7 +12,23 @@
   below: 90 game/platform profiles across 15 platforms.
 - See [experimental scope and exceptions](EXPERIMENTAL_EDITING.md).
 
-## Unreleased development on main — 2026-10-13
+## v2.02 — 2026-10-13
+
+- Added a direct, self-contained Windows EXE alongside the portable Windows ZIP; the EXE needs no side files.
+- Simplified the Windows ZIP to one versioned application folder containing its launcher and complete runtime.
+- Kept required notices inside the portable runtime and embedded in the standalone EXE; developer documents remain in the Source ZIP.
+- Required active Defender scans of both candidates before either is executed, followed by scans and hash binding of the final EXE and both ZIPs before publication.
+- Retained all 90 game/platform profiles and existing editing features. Native release qualification is recorded separately in [VALIDATION.md](VALIDATION.md).
+
+## v2.01 — 2026-10-13
+
+- Withdrew the 2.0 download following a Microsoft Defender Sabsik detection.
+- Replaced self-extracting one-file packaging with a complete portable Windows ZIP.
+- Added active Defender readiness, signature/cloud checks and exact runtime/archive scans before publication.
+- Pinned all Windows build dependencies to verified official wheel hashes.
+- Retained all 90 profiles and existing save-editing features.
+
+## v2.0 — 2026-10-13
 
 - Added 14 explicit game/platform profiles, bringing the source library to 90
   profiles across 15 platforms, including new Macintosh and SNES support.
@@ -23,8 +39,13 @@
   loadouts after unstaging, and detected backend staging that drops requested values.
 - Corrected Gemfire SNES ownership/calendar offsets and accepted Nobunaga’s
   source-native rebel fief state as read-only.
-- Application version and released v1.91 downloads remain unchanged; no release
-  is published by this development update.
+- Added fourteen Nioh 3 consumable identities and fourteen Sophie 2 PS4
+  ordinary-material identities, existing Three Hopes material-stock reductions
+  and Project Zero PS2 film-stock reductions.
+- Firis quality controls respect active inventory capacities; related regional
+  titles and editions share library series filters.
+- Fixed DW8 PS3 inspection and higher-opened-value Max restoration, and
+  hardened original Gundam PS3 copied-save context and source checks.
 
 ## v1.91
 

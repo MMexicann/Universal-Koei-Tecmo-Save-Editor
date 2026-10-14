@@ -108,6 +108,7 @@ class Document:
     raw: bytes
     payload: bytes
     native_directory: str | None
+    context_digest: str = ""
 
     @property
     def sha256(self):
@@ -120,17 +121,26 @@ def valid_directory(directory):
         and directory[-2:].isascii() and directory[-2:].isdigit() for title in TITLE_IDS)
 
 
-def context(path):
+def context_raw(path):
     companion = safe_path(Path(path).parent / 'PARAM.SFO')
     try:
         with companion.open('rb') as stream:
-            directory = savedata_directory(stream.read(MAX_SFO_SIZE + 1))
+            raw = stream.read(MAX_SFO_SIZE + 1)
+            directory = savedata_directory(raw)
     except FileNotFoundError as error:
         raise SaveError('Keep the original PARAM.SFO beside this decrypted DATA.BIN copy '
                         'to qualify its US/EU PS3 title identity.') from error
     if not valid_directory(directory):
         raise SaveError('PARAM.SFO is not a qualified US/EU Dynasty Warriors: Gundam save.')
-    return directory
+    return raw
+
+
+def context(path):
+    return savedata_directory(context_raw(path))
+
+
+def context_digest(path):
+    return hashlib.sha256(context_raw(path)).hexdigest()
 
 
 def qualify(raw):
@@ -161,7 +171,8 @@ def decode(raw, game_id=GAME_ID, source=Path('copy.bin')):
     get_format(game_id)
     qualify(raw)
     directory = context(source) if (Path(source).parent / 'PARAM.SFO').exists() else None
-    return Document(FORMAT, Path(source), raw, raw, directory)
+    digest = context_digest(source) if directory else ""
+    return Document(FORMAT, Path(source), raw, raw, directory, digest)
 
 
 def read_save(path, game_id=GAME_ID):
@@ -169,15 +180,23 @@ def read_save(path, game_id=GAME_ID):
     path = safe_path(path)
     if path.suffix.lower() != '.bin':
         raise SaveError('Open a separate decrypted DATA.BIN/.bin copy.')
-    directory = context(path)
+    original_context = context_raw(path)
+    directory = savedata_directory(original_context)
+    digest = hashlib.sha256(original_context).hexdigest()
     with path.open('rb') as stream:
         raw = stream.read(SAVE_SIZE + 1)
     qualify(raw)
-    return Document(FORMAT, path, raw, raw, directory)
+    if context_digest(path) != digest:
+        raise SaveError('The original PARAM.SFO changed while opening the copy.')
+    return Document(FORMAT, path, raw, raw, directory, digest)
 
 
 def validate_document(document):
     if (type(document) is not Document or document.format is not FORMAT
+            or not isinstance(document.source, Path)
+            or type(document.context_digest) is not str
+            or (document.native_directory is not None and (len(document.context_digest) != 64
+                or any(c not in "0123456789abcdef" for c in document.context_digest)))
             or type(document.raw) is not bytes or type(document.payload) is not bytes
             or document.raw != document.payload
             or (document.native_directory is not None and not valid_directory(document.native_directory))):
@@ -264,7 +283,7 @@ def serialize(document, changes):
     raw = seal(payload)
     qualify(raw)
     # Requalify every existing-record dependency after the surgical bit writes.
-    reopened = Document(FORMAT, document.source, raw, raw, document.native_directory)
+    reopened = Document(FORMAT, document.source, raw, raw, document.native_directory, document.context_digest)
     validated_changes(reopened, {})
     return raw
 
@@ -329,23 +348,36 @@ def identity_metadata(directory):
             + struct.pack('<HH3I', 0, 0x204, len(value), len(value), 0) + key + value)
 
 
-def backup(document):
+def validate_source(document):
     validate_document(document)
-    if context(document.source) != document.native_directory:
-        raise SaveError('The original PS3 metadata identity changed.')
+    if (not document.context_digest or context(document.source) != document.native_directory
+            or context_digest(document.source) != document.context_digest):
+        raise SaveError('The original PARAM.SFO changed. Reopen the source copy.')
+    with safe_path(document.source).open('rb') as stream:
+        if stream.read(SAVE_SIZE + 1) != document.raw:
+            raise SaveError('The opened copy changed on disk. Reopen before saving.')
+
+
+def backup(document):
+    validate_source(document)
     result = snapshot_backup(document.raw, document.source, GAME_ID,
                              document.source.parent / 'UniversalEditorBackups')
+    sidecar_created = False
     try:
         atomic_new(identity_metadata(document.native_directory), result.with_suffix('.sfo'))
+        sidecar_created = True
+        validate_source(document)
     except Exception:
         result.unlink(missing_ok=True)
         result.with_suffix('.json').unlink(missing_ok=True)
+        if sidecar_created:
+            result.with_suffix('.sfo').unlink(missing_ok=True)
         raise
     return result
 
 
 def save_as(document, changes, destination):
-    validate_document(document)
+    validate_source(document)
     destination = safe_path(destination)
     if destination.suffix.lower() != '.bin':
         raise SaveError('Choose a new decrypted .bin copy destination.')
@@ -353,15 +385,21 @@ def save_as(document, changes, destination):
         raise SaveError('Source and destination need the same original PARAM.SFO save identity.')
     if destination.exists():
         raise FileExistsError('Choose a new destination; existing files are never replaced.')
-    with safe_path(document.source).open('rb') as stream:
-        if stream.read(SAVE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk. Reopen before saving.')
+    destination_digest = context_digest(destination)
     raw = serialize(document, changes)
     backup(document)
+    validate_source(document)
+    if context_digest(destination) != destination_digest:
+        raise SaveError('The destination PARAM.SFO changed before writing.')
     if context(document.source) != document.native_directory or context(destination) != document.native_directory:
         raise SaveError('Source or destination PARAM.SFO identity changed before writing.')
     atomic_new(raw, destination)
-    return decode(raw, GAME_ID, destination)
+    reopened = read_save(destination)
+    validate_source(document)
+    if (reopened.raw != raw or reopened.context_digest != destination_digest
+            or context_digest(destination) != destination_digest):
+        raise SaveError('The written copy or destination PARAM.SFO changed during verification.')
+    return reopened
 
 
 def restore(backup_path, destination, game_id=GAME_ID):
@@ -369,18 +407,34 @@ def restore(backup_path, destination, game_id=GAME_ID):
     identity = safe_path(Path(backup_path).with_suffix('.sfo'))
     try:
         with identity.open('rb') as stream:
-            directory = savedata_directory(stream.read(MAX_SFO_SIZE + 1))
+            identity_raw = stream.read(MAX_SFO_SIZE + 1)
+            directory = savedata_directory(identity_raw)
     except FileNotFoundError as error:
         raise SaveError('This Gundam backup lacks its identity-only companion.') from error
     if context(destination) != directory:
         raise SaveError('Restore needs the same original PARAM.SFO save identity as the backup.')
-    def validate_restore(raw):
-        decode(raw, GAME_ID, destination)
-        if context(destination) != directory:
-            raise SaveError('The restore destination identity changed.')
+    destination_digest = context_digest(destination)
+    validated_raw = None
+    def recheck_context():
+        if context_digest(destination) != destination_digest:
+            raise SaveError('The restore destination PARAM.SFO changed.')
+        with identity.open('rb') as stream:
+            if stream.read(MAX_SFO_SIZE + 1) != identity_raw:
+                raise SaveError('The backup identity companion changed during restore.')
 
-    return restore_snapshot(backup_path, destination, GAME_ID, '.bin', SAVE_SIZE,
-                            validate_raw=validate_restore)
+    def validate_restore(raw):
+        nonlocal validated_raw
+        qualify(raw)
+        recheck_context()
+        validated_raw = raw
+
+    result = restore_snapshot(backup_path, destination, GAME_ID, '.bin', SAVE_SIZE,
+                              validate_raw=validate_restore)
+    reopened = read_save(result)
+    recheck_context()
+    if reopened.raw != validated_raw:
+        raise SaveError('The restored destination changed during verification.')
+    return result
 
 
 def record_label(slot, group='Learned skills'):
@@ -430,13 +484,12 @@ def inspection_rows(document):
 
 def prepare_self_test_copy(document, destination):
     """Emit bounded title/slot identity only; never copy owner/signing metadata."""
-    validate_document(document)
-    if context(document.source) != document.native_directory:
-        raise SaveError('The original PS3 metadata identity changed.')
+    validate_source(document)
     companion = safe_path(Path(destination).parent / 'PARAM.SFO')
     if companion.exists():
         if context(destination) != document.native_directory:
             raise SaveError('The self-test destination belongs to another save identity.')
         return
     atomic_new(identity_metadata(document.native_directory), companion)
+    validate_source(document)
     context(destination)

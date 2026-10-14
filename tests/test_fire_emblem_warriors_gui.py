@@ -15,6 +15,21 @@ class FireEmblemGuiTests(GuiWorkflow, unittest.TestCase):
     fixture = staticmethod(procedural_fe)
     group, search, field, value = 'Weapon stars', 'Brave Sword', 'weapon_1_stars', 5
 
+    def test_max_visible_restores_unusual_opened_stars_after_pending_reduction(self):
+        editor = self.editor
+        editor.group.set('Weapon stars')
+        editor.search.set('slot 3')
+        editor.refresh()
+        self.assertEqual(editor.fields.get_children(), ('weapon_3_stars',))
+        editor.fields.selection_set('weapon_3_stars')
+        editor.value.set('2')
+        editor.apply_selected()
+        self.assertEqual(editor.changes, {'weapon_3_stars': 2})
+        editor.max_visible()
+        self.assertEqual(editor.changes, {})
+        self.assertFalse(self.errors)
+        self.assertEqual(fe.serialize(editor.document, editor.changes), self.raw)
+
     def test_seal_decrease_excluded_from_max_and_extensionless_dialog(self):
         e = self.editor
         e.group.set('Ordinary seal KOs')

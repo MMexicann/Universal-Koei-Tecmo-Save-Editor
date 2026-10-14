@@ -869,7 +869,10 @@ class Editor(Appearance):
             maximum_ids = {change.index for change in changes if change.category=='guard_weapon' and change.field=='MaxBonuses' and change.value is True}
             if maximum_ids:
                 for row in guard_editor.weapon_state(self.document,list(self.changes.values())):
-                    if row['weapon_id'] in maximum_ids: self.changes.pop(('guard_weapon_slot',row['slot'],'Skills'),None)
+                    key = ('guard_weapon_slot', row['slot'], 'Skills')
+                    if row['weapon_id'] in maximum_ids and key in self.changes:
+                        skills = guard_editor.max_skills(row['weapon_id'], row['skills'], row['preservation_baseline'])
+                        self.changes[key] = Change('guard_weapon_slot', row['slot'], 'Skills', skills)
             for change in changes:
                 key = (change.category, change.index, change.field)
                 if change.category in ('item','guard_item') and change.field == 'Owned' and change.value is False:
@@ -1088,6 +1091,7 @@ class Editor(Appearance):
             self.stage_many([Change('weapon_roll',self.current_weapon_data_id,'Skills',skills)])
         except (ValueError,TypeError) as error: messagebox.showerror('Cannot Apply Weapon Bonuses',str(error))
 
+    @experimental_session
     def apply_weapon_element(self):
         if not self.require_save() or self.current_weapon_data_id is None:return
         try:
@@ -1106,6 +1110,7 @@ class Editor(Appearance):
             self.stage_many([Change('weapon_roll',self.current_weapon_data_id,'Skills',skills)])
         except (ValueError,TypeError) as error: messagebox.showerror('Cannot Max Weapon Bonuses',str(error))
 
+    @experimental_session
     def apply_unique_weapon_elements(self):
         if not self.require_save(): return
         try:
@@ -1129,6 +1134,7 @@ class Editor(Appearance):
             self.status.set(f'Maximum normal rolls applied to {len(maximum)} owned copies. {skipped} view-only copies preserved. Save to write the changes.')
         except (ValueError,TypeError) as error: messagebox.showerror('Cannot Max Weapon Bonuses',str(error))
 
+    @experimental_session
     def refresh_bodyguards(self):
         self.bodyguards.delete(*self.bodyguards.get_children())
         for index, record in enumerate(self.document.records('GuardDataArray')):
@@ -1142,6 +1148,7 @@ class Editor(Appearance):
             self.guard_stats.set('');self.guard_budget.set('');self.guard_automatic.set('')
         self.refresh_guard_items(); self.refresh_guard_weapons()
 
+    @experimental_session
     def refresh_guard_items(self):
         self.guard_items.delete(*self.guard_items.get_children())
         for index, state in guard_editor.item_state(self.document, list(self.changes.values())).items():
@@ -1149,6 +1156,7 @@ class Editor(Appearance):
             self.guard_items.insert('', 'end', iid=str(index), text=metadata['name'], values=(state['value'] if metadata['kind']=='normal' else '—', 'Yes' if state['owned'] else 'No'))
         if self.restore_selection(self.guard_items, self.current_guard_item) is not None: self.select_guard_item()
 
+    @experimental_session
     def refresh_guard_weapons(self):
         selected = self.guard_weapons.selection()
         self.guard_weapons.delete(*self.guard_weapons.get_children())
@@ -1167,6 +1175,7 @@ class Editor(Appearance):
             if parent: self.guard_weapons.item(parent, open=True)
             self.select_guard_weapon()
 
+    @experimental_session
     def refresh_guard_equipment(self):
         changes = list(self.changes.values())
         state = guard_editor.team_state(self.document, self.current_bodyguard, changes)
@@ -1209,6 +1218,7 @@ class Editor(Appearance):
         self.refresh_elixirs()
         self.status.set(f'{len(self.changes)} pending changes. Applied in the editor; use Save As or Save Changes to write them.')
 
+    @experimental_session
     def refresh_story_status(self):
         if self.document is None:self.story_status.set('');return
         try:
@@ -1324,6 +1334,7 @@ class Editor(Appearance):
             self.guard_budget.set(f'Check growth: {error}')
             self.guard_automatic.set('Count and AI follow the entered Merit.'); self.guard_stats.set('Enter a legal allocation to preview base stats.')
 
+    @experimental_session
     def select_guard_item(self, event=None):
         selected = self.guard_items.selection()
         if not selected or self.document is None: return
@@ -1448,6 +1459,7 @@ class Editor(Appearance):
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid Value', str(error))
 
+    @experimental_session
     def max_items(self):
         if not self.require_save() or not ITEM_CAPS: return
         changes = []
@@ -1476,17 +1488,20 @@ class Editor(Appearance):
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid Value', str(error))
 
+    @experimental_session
     def max_bodyguard(self, mode='balanced'):
         if self.selected_ok(self.bodyguards): self.stage_many([Change('bodyguard', self.current_bodyguard, 'SPoint', max(99999, self.value('bodyguard', self.current_bodyguard, 'SPoint'), self.original_value(Change('bodyguard', self.current_bodyguard, 'SPoint', 0)))),Change('bodyguard', self.current_bodyguard, 'BGLevels', growth.safe_preset(99999,mode))])
 
     def max_bodyguards(self):
         if self.require_save(): self.stage_many(self.guard_growth_changes())
 
+    @experimental_session
     def guard_growth_changes(self):
         return [Change('bodyguard',index,field,value) for index in range(len(self.document.records('GuardDataArray')))
                 if guard_editor.team_state(self.document,index)['growth_editable']
                 for field,value in [('SPoint',max(99999,self.value('bodyguard',index,'SPoint'),self.original_value(Change('bodyguard',index,'SPoint',0)))),('BGLevels',growth.safe_preset())]]
 
+    @experimental_session
     def apply_guard_equipment(self):
         if not self.selected_ok(self.bodyguards): return
         try:
@@ -1500,6 +1515,7 @@ class Editor(Appearance):
             self.stage_many(changes)
         except (ValueError, KeyError) as error: messagebox.showerror('Cannot Apply Equipment', str(error))
 
+    @experimental_session
     def equip_best_guard_weapons(self):
         if not self.selected_ok(self.bodyguards): return
         try:
@@ -1531,6 +1547,7 @@ class Editor(Appearance):
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid BG Item',str(error))
 
+    @experimental_session
     def guard_item_changes(self, maximum=False):
         changes = []
         for index, metadata in GUARD_ITEMS.items():
@@ -1601,6 +1618,7 @@ class Editor(Appearance):
         try:self.stage_many(progression.musou_clear_changes(self.document))
         except ValueError as error:messagebox.showerror('Cannot Mark Stories Cleared',str(error))
 
+    @experimental_session
     def grind_changes(self):
         changes = [Change('officer', index, field, self.officer_maximum(index, field)) for index in self.officer_indices() for field in CAPS]
         for index, item in self.editable_item_rows():
@@ -1616,6 +1634,7 @@ class Editor(Appearance):
     def remove_grind(self):
         if self.require_save(): self.stage_many(self.grind_changes())
 
+    @experimental_session
     def unlock_everything(self):
         if self.require_save():
             changes = self.grind_changes()

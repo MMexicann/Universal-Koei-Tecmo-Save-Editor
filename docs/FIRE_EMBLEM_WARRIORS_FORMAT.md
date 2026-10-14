@@ -79,6 +79,10 @@ Seals. Only already-positive ordinary quantities are editable, source edit ceili
 No discovery/unlock bitset is qualified, so an exhausted zero count is read-only;
 no missing ownership is fabricated. Existing quantities above 999 survive Max
 and can be unstaged back to their original value.
+Direct serialization also treats exact typed opened values as no-ops, including
+unusual material or weapon-star values. If an unusual higher star value has a
+pending reduction, Max restores the opened value and removes that reduction;
+it preserves the original higher value rather than retaining the smaller edit.
 
 The weapon editor's bounded getter reads **600 physical 32-byte records**, starting
 at `0x127AC` for `0x4B00` bytes, ending exactly at file length. This corrects the
@@ -134,21 +138,22 @@ attribute ID, slayer flag, equipped reference or ownership byte changes.
 
 ## Validation
 
-`tests.test_fire_emblem_warriors` has eight checks for format bounds, immutable
+`tests.test_fire_emblem_warriors` has nine checks for format bounds, immutable
 snapshots, byte-exact unchanged serialization, one-field byte ranges, dynamic
 ownership exclusions, special-item/True Power/Legendary preservation, unknown
 records, unusual originals, invalid pending edits before Max, backup/restore,
 source-change detection and optional public-export qualification.
-`tests.test_fire_emblem_warriors_gui` adds three real Tk workflows: procedural
+`tests.test_fire_emblem_warriors_gui` adds four real Tk workflows: procedural
 search/Apply/Review/Undo/inspection/theme/new-copy Save/backup/restore, the same
 workflow on a temporary public-player-export copy, and ordinary-seal/extensionless
-Save As behavior. With the private optional fixture supplied, those **11/11 tests pass**.
+Save As behavior, and Max restoring an unusual higher opened star value after a
+pending reduction. With the private optional fixture supplied, those **13/13 tests pass**.
 The independent `tests.test_fe_review` adds eight adversarial checks for exact
 immutable type, invalid pending Max edits, higher/unknown/unique records, special
 seals, opaque headers, source transplantation, extension/collision guards,
 foreign-byte restore and every exposed positive public-export field. Combined
-with a real Tk display and the private fixture, **19/19 tests pass without skips**.
-Without it, two genuine-export tests skip explicitly.
+with a real Tk display and the private fixture, **21/21 tests pass without skips**.
+Without it, three genuine-export tests skip explicitly.
 
 The public player export exposes 139 editable fields (106 ordinary drops, 32
 generic-weapon star fields and gold) and 49 occupied weapon records. Every exposed

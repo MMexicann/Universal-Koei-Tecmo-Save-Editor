@@ -16,6 +16,14 @@ def item_document(*, owned=True, value=1):
     return SimpleNamespace(records=lambda name:[record] if name=='GuardEquipItemDataArray' else [])
 
 
+def team_document(merit,levels):
+    record=[{'name':'SPoint','value':merit},
+            {'name':'BGLevels','value':{'values':list(levels)}},
+            {'name':'MemberItem','value':'EGuardEquipItemID::NUM'},
+            {'name':'MemberWeapon','value':{'values':[-1]*10}}]
+    return SimpleNamespace(records=lambda name:[record] if name=='GuardDataArray' else [])
+
+
 class ExperimentalDW3EquipmentTests(unittest.TestCase):
     def officer_info(self):
         return {'owned':True,'experimental_existing':True,'array':'WeaponDataArray',
@@ -43,6 +51,34 @@ class ExperimentalDW3EquipmentTests(unittest.TestCase):
         self.assertEqual(growth.validate_saved_growth(100000,levels),tuple(levels))
         with self.assertRaises(ValueError):
             growth.validate_growth(100000,levels)
+
+    def test_team_retains_original_high_merit_for_noop_and_supported_growth(self):
+        original=[6,6,7,0,3,0]
+        document=team_document(123456,original)
+        for changes in ([],[Change('bodyguard',0,'SPoint',123456)]):
+            with self.subTest(changes=changes):
+                state=guards.team_state(document,0,changes)
+                self.assertEqual(state['SPoint'],123456)
+                self.assertEqual(state['BGLevels'],original)
+        desired=growth.safe_preset()
+        for changes in ([Change('bodyguard',0,'BGLevels',desired)],
+                        [Change('bodyguard',0,'SPoint',123456),Change('bodyguard',0,'BGLevels',desired)]):
+            with self.subTest(changes=changes):
+                state=guards.team_state(document,0,changes)
+                self.assertEqual(state['SPoint'],123456)
+                self.assertEqual(state['BGLevels'],desired)
+
+    def test_team_high_merit_preservation_never_permits_new_high_or_invalid_growth(self):
+        document=team_document(123456,growth.safe_preset())
+        for changes in ([Change('bodyguard',0,'SPoint',123457)],
+                        [Change('bodyguard',0,'SPoint',123456.0)],
+                        [Change('bodyguard',0,'BGLevels',[11,11,11,3,3,3])],
+                        [Change('bodyguard',0,'BGLevels',[12,0,0,3,3,3])]):
+            with self.subTest(changes=changes), self.assertRaises(SaveError):
+                guards.team_state(document,0,changes)
+        with experimental_limits():
+            state=guards.team_state(document,0,[Change('bodyguard',0,'SPoint',123457)])
+            self.assertEqual(state['SPoint'],123457)
 
     def test_owned_guard_item_roll_accepts_native_ceiling_only_in_mode(self):
         document=item_document()

@@ -7,6 +7,51 @@ from koei_editor.shared.experimental_limits import experimental_limits
 
 
 class ExperimentalPcLimitsTests(unittest.TestCase):
+    def test_origins_reopened_fields_are_isolated_between_session_modes(self):
+        from koei_editor.games.origins import origins_codec as codec
+        from koei_editor.games.origins import origins_parser as backend
+        from koei_editor.games.origins.origins_progression import BOND_BASES, PEACE_BASES
+        from koei_editor.games.origins.origins_weapons import BASES
+        from koei_editor.shared.adapter_contract import BoundScalarAdapter
+        from tests.test_origins_parser import fixture
+
+        original = backend.decode(fixture())
+        payload = bytearray(original.payload)
+        peace = PEACE_BASES[original.revision]
+        bond = BOND_BASES[original.revision]
+        weapon = BASES[original.revision]
+        payload[peace:peace + 2] = (10001).to_bytes(2, 'little')
+        payload[bond] = 6
+        payload[bond + 2:bond + 4] = (1000).to_bytes(2, 'little')
+        payload[weapon:weapon + 2] = (0).to_bytes(2, 'little')
+        payload[weapon + 2] = 100
+        raw = codec.encode(bytes(payload), original.seed, 'slot')
+        supported = BoundScalarAdapter('origins', '.dat', backend)
+        experimental = BoundScalarAdapter('origins', '.dat', backend, experimental=True)
+        document = supported.decode(raw)
+        values = {'peace_0': 10001, 'bond_0_level': 6,
+                  'bond_0_training': 1000, 'weapon_0000_upgrade': 100}
+
+        # Opening normally warms discovery before enabling experimental mode.
+        # Alternating sessions must also keep expanded discovery out of strict mode.
+        for adapter in (supported, experimental, supported, experimental):
+            fields = adapter.field_map(document)
+            for key, value in values.items():
+                with self.subTest(experimental=adapter.experimental, field=key):
+                    if adapter.experimental:
+                        self.assertEqual(fields[key].value(document.payload), value)
+                    else:
+                        self.assertNotIn(key, fields)
+            self.assertEqual(adapter.serialize(document, {}), raw)
+
+        changes = {}
+        for key, value in values.items():
+            changes = experimental.stage(document, changes, key, value + 1)
+        reopened = experimental.decode(experimental.serialize(document, changes))
+        fields = experimental.field_map(reopened)
+        for key, value in changes.items():
+            self.assertEqual(fields[key].value(reopened.payload), value)
+
     def test_dynamic_numeric_fields_survive_native_serialization(self):
         cases = (
             ('dw5special.dw5special_parser', 'dw5special_format', 'procedural_raw', 'item_0_rank'),

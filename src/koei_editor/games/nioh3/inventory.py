@@ -32,6 +32,20 @@ COMMON_ITEMS = {
     0x4C5F: 'Throwing Stone',
     0x5943: 'Travel Amulet',
     0x304E: 'Water Amulet',
+    0x2296: 'Yokai Water Pot',
+    0x683B: 'Scampuss Furball',
+    0x3F5A: "Summoner's Candle",
+    0x140F: 'Righteous Jasper',
+    0xCC42: 'Power Pill',
+    0x059A: 'Lantern Plant Fruit',
+    0x3299: 'Steel Pill',
+    0xE4AA: 'Luckbringer Amulet',
+    0x3A1B: 'Uchiko Powder',
+    0x9509: 'Fragrant Wood',
+    0x65B4: 'Healing Pill',
+    0x5EDB: 'Tiger-Running Amulet',
+    0x7EA2: 'Sacred Brush',
+    0xF681: 'Herbal Remedy',
 }
 
 

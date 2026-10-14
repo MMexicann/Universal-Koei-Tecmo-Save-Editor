@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 from koei_editor.games.dw3 import gui, progression_editor as progression, save_writer as writer
 from koei_editor.games.dw3.models import Change, SaveError, fields
-from koei_editor.games.dw3.save_parser import parse_bytes, read_save
+from koei_editor.games.dw3.save_parser import ARRAY_LAYOUTS, parse_bytes, read_save
 from koei_editor.shared.experimental_limits import experimental_enabled, experimental_limits
 from tests.test_elixirs_v11 import synthetic_reset_save, string, tag, typename
 from tests.test_elixirs_v08 import replace_top_tag
@@ -34,6 +34,47 @@ def item_document(*, owned=True):
     record += tag('Value', typename('IntProperty'), struct.pack('<i', int(owned))) + string('None')
     replacement = tag('EquipItemDataArray', equipment, struct.pack('<i', 1) + record)
     return replace_top_tag(document, document.properties['EquipItemDataArray'], replacement)
+
+
+def equipment_document():
+    """Mapped synthetic inventories let real navigation consume pending edits."""
+    document = numeric_document()
+    scope = typename('/Script/Refine')
+    def integer(name, value):
+        return tag(name, typename('IntProperty'), struct.pack('<i', value))
+    def enum(name, family, value):
+        return tag(name, typename('EnumProperty', typename(family, scope), typename('ByteProperty')), string(value))
+    def integers(name, values):
+        return tag(name, typename('ArrayProperty', typename('IntProperty')),
+                   struct.pack('<i', len(values)) + struct.pack('<' + 'i' * len(values), *values))
+    def array(name, rows):
+        kind = typename('ArrayProperty', typename('StructProperty', typename(ARRAY_LAYOUTS[name], scope)))
+        return tag(name, kind, struct.pack('<i', len(rows)) + b''.join(rows))
+    def equipment(*, guard_id=None, officer_id=None, value=0):
+        ordinary = 'EEquipItemID::' + writer.ITEMS[officer_id]['enum'] if officer_id is not None else 'EEquipItemID::NUM'
+        guard = gui.GUARD_ITEMS[guard_id]['enum'] if guard_id is not None else 'EGuardEquipItemID::NUM'
+        return (enum('EquipItemID', 'EEquipItemID', ordinary) + enum('GuardEquipItemID', 'EGuardEquipItemID', guard) +
+                integer('Value', value) + string('None'))
+    def weapon(index, weapon_id, bonuses):
+        identity = gui.GUARD_WEAPONS[weapon_id]['enum'] if weapon_id in gui.GUARD_WEAPONS else gui.WEAPONS[weapon_id]['enum']
+        kind = typename('ArrayProperty', typename('StructProperty', typename('EquipItemSaveData', scope)))
+        return (integer('DataID', index) + enum('ID', 'EWeaponID', identity) + enum('WeaponID', 'EWeaponID', identity) +
+                tag('Attr', typename('Int64Property'), bytes(8)) + tag('GetTime', typename('DoubleProperty'), bytes(8)) +
+                tag('Skill', kind, struct.pack('<i', 9) + b''.join(bonuses + [equipment()] * (9 - len(bonuses)))) + string('None'))
+    rows = [equipment(guard_id=index, value=1 if metadata['kind'] == 'normal' else 0)
+            for index, metadata in gui.GUARD_ITEMS.items()]
+    replacements = {'GuardEquipItemDataArray': rows}
+    team = (integer('SPoint', 1) + integers('BGLevels', [0] * 6) +
+            enum('MemberItem', 'EGuardEquipItemID', 'EGuardEquipItemID::NUM') +
+            integers('MemberWeapon', [-1] * 10) + string('None'))
+    replacements['GuardDataArray'] = [team]
+    replacements['GuardWeaponDataArray'] = [weapon(index, weapon_id,
+        [equipment(guard_id=skill['id'], value=skill['value']) for skill in gui.GUARD_WEAPONS[weapon_id]['max_bonus_profile']])
+        for index, weapon_id in enumerate((175, 178, 181, 184, 187))]
+    replacements['WeaponDataArray'] = [weapon(0, 6, [equipment(officer_id=0, value=1)])]
+    for name, records in replacements.items():
+        document = replace_top_tag(document, document.properties[name], array(name, records))
+    return document
 
 
 class ExperimentalCoreBoundsTests(unittest.TestCase):
@@ -215,3 +256,56 @@ class ExperimentalCoreGuiTests(unittest.TestCase):
         self.assertNotIn(('officer', 0, 'SPoint'), editor.changes)
         self.assertFalse(self.errors)
         self.assertEqual(editor.officer_maximum(0, 'SPoint'), writer.INT32_MAX)
+
+    def test_equipment_navigation_and_actions_keep_experimental_pending_values(self):
+        editor = self.editor
+        editor.document = equipment_document()
+        editor.refresh = gui.Editor.refresh.__get__(editor)
+        editor.set_loaded(True)
+        editor.refresh()
+        editor.experimental_mode.set(True)
+        editor.guard_items.selection_set('0')
+        editor.select_guard_item()
+        editor.guard_item_value.set('1000')
+        editor.apply_guard_item()
+        editor.guard_items.selection_set('1')
+        editor.select_guard_item()
+        self.assertEqual(editor.current_guard_item, 1)
+        editor.max_guard_items()
+        self.assertEqual(editor.changes[('guard_item', 0, 'Value')].value, 1000)
+        editor.bodyguards.selection_set('0')
+        editor.select_bodyguard()
+        editor.bodyguard_merit.set('100000')
+        editor.apply_bodyguard()
+        editor.guard_weapons.selection_set('slot:0')
+        editor.select_guard_weapon()
+        editor.guard_bonus_values[0].set('1000')
+        editor.apply_guard_bonuses()
+        editor.refresh_guard_weapons()
+        editor.refresh_guard_items()
+        editor.refresh_guard_equipment()
+        editor.apply_guard_equipment()
+        editor.equip_best_guard_weapons()
+        editor.guard_weapons.selection_set('slot:0')
+        editor.select_guard_weapon()
+        editor.max_guard_weapon()
+        pending = gui.guard_editor.weapon_state
+        with experimental_limits():
+            rows = pending(editor.document, list(editor.changes.values()))
+        self.assertEqual(rows[0]['skills'][0]['value'], 1000)
+        self.assertEqual(editor.changes[('bodyguard', 0, 'SPoint')].value, 100000)
+        editor.weapons.selection_set('WeaponDataArray:0')
+        editor.select_weapon()
+        editor.weapon_bonus_values[0].set('1000')
+        editor.apply_weapon_rolls()
+        editor.weapon_element.set('Lightning')
+        editor.apply_weapon_element()
+        self.assertFalse(self.errors)
+        self.assertFalse(experimental_enabled())
+        with experimental_limits():
+            raw, _ = writer.serialize(editor.document, list(editor.changes.values()))
+        reopened = parse_bytes(raw)
+        self.assertEqual(fields(reopened.records('GuardDataArray')[0])['SPoint']['value'], 100000)
+        self.assertEqual(fields(reopened.records('GuardEquipItemDataArray')[0])['Value']['value'], 1000)
+        self.assertEqual(fields(fields(reopened.records('GuardWeaponDataArray')[0])['Skill']['value']['records'][0])['Value']['value'], 1000)
+        self.assertEqual(fields(fields(reopened.records('WeaponDataArray')[0])['Skill']['value']['records'][0])['Value']['value'], 1000)

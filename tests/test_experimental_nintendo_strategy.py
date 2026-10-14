@@ -91,6 +91,27 @@ class ExperimentalNintendoStrategyTests(unittest.TestCase):
         reopened = backend.decode(output)
         self.assertEqual(backend.field_map(reopened)['fairy_1_trust'].value(reopened.payload), 255)
 
+    def test_three_hopes_existing_stocks_use_u16_without_changing_record_tails(self):
+        from koei_editor.games.three_hopes import parser
+        from tests.test_three_hopes import procedural_materials, checksum_headers
+        raw = procedural_materials()
+        document = parser.decode(raw)
+        field = parser.field_map(document)['material_training_1']
+        self.assertEqual(field.experimental_maximum, 65535)
+        with self.assertRaises(SaveError):
+            parser.stage(document, {}, field.id, 65535)
+        with experimental_limits():
+            changes = parser.stage(document, {}, field.id, 65535)
+            output = parser.serialize(document, changes)
+            with self.assertRaises(SaveError):
+                parser.stage(document, {}, field.id, 65536)
+        expected = bytearray(raw)
+        expected[field.offset:field.offset + 2] = b'\xff\xff'
+        self.assertEqual(output, checksum_headers(expected))
+        reopened = parser.decode(output)
+        self.assertEqual(parser.field_map(reopened)[field.id].value(reopened.payload), 65535)
+        self.assertEqual(parser.serialize(reopened, {}), output)
+
     def test_enumerations_packed_values_sentinels_and_history_remain_constrained(self):
         from koei_editor.games.tecmo_super_bowl_nes import parser as tecmo
         from koei_editor.games.pokemon_conquest_ds import parser as pokemon

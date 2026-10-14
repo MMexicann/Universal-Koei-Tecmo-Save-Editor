@@ -45,10 +45,10 @@ Version 2.1 adds optional experimental numeric editing across the library. Suppo
 | HYRULE WARRIORS LEGENDS — Nintendo 3DS · zmha.bin | Nintendo 3DS | Rupees, materials, map cards, weapon stars, ordinary seals, My Fairy names and existing fairy trust reductions. |
 | ATELIER AYESHA — The Alchemist of Dusk · PS3 US/Japanese export | PlayStation 3 | Cole, existing stack reductions and searchable inventory quality, properties and effects. |
 | DYNASTY WARRIORS 5 SPECIAL — Shin Sangokumusou 4 Special · Windows PC | Windows PC | Existing item ranks, stored officer attack/defense, weapon attack/weight and attributes; named records. |
-| FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold reductions, owned Shez/Byleth name customization and searchable character/weapon records. |
+| FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold and existing material-stock reductions, owned Shez/Byleth name customization and searchable character/weapon records. |
 | DYNASTY WARRIORS 8 EMPIRES — US · decrypted SYSTEM APP.BIN | PlayStation 3 | Existing custom-horse appearance choices; searchable horse stats and ability records. |
 | WARRIORS OROCHI 3 ULTIMATE — US · decrypted APP.BIN · NPUB31505 | PlayStation 3 | Manual unallocated growth points and gems; searchable officer, weapon and inventory inspection. |
-| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, eighteen named ordinary consumable reductions; separate equipment inspection. |
+| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, thirty-two named ordinary consumable reductions; separate equipment inspection. |
 | NINJA GAIDEN II — Original Xbox 360 / Xenia · extracted revision-6 story | Xbox 360 / Xenia | Yellow Essence, existing consumable and ammunition reductions; searchable inventory and separate Karma inspection. |
 | DYNASTY WARRIORS: GUNDAM — US/EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Learn skill flags and choose already learned equipped skills on six qualified level-30 pilots; progression inspection. |
 | DYNASTY WARRIORS: GUNDAM REBORN — EU/Japan · decrypted DATA.BIN + original PARAM.SFO | PlayStation 3 | Spendable money and existing Amuro/Kamille Team Point reductions; searchable pilot progression, earnings and material storage. |
@@ -74,7 +74,7 @@ Version 2.1 adds optional experimental numeric editing across the library. Suppo
 | ROMANCE OF THE THREE KINGDOMS: LEGEND OF LIU BEI — Original Traditional Chinese DOS · MSAVE0–4.R3S | DOS PC | Existing allied troop reductions and within-level EXP; searchable character and carried-item records. |
 | ROMANCE OF THE THREE KINGDOMS III — Original Traditional Chinese DOS · SANGOKU3.SAV | DOS PC | Six existing officer abilities and owned-city resource/commerce reductions; searchable slots, cities and officers. |
 | NOBUNAGA'S AMBITION: TENSHOUKI — Original Japanese Windows Power-Up Kit · SAVEDAT.n6p | Windows PC | Existing district Gold, Rice, Horses and Firearms reductions; searchable generals, castles, clans, treasures and slots. |
-| PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point and base-upgrade tier reductions; searchable slots, camera functions and inventory. |
+| PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point, base-upgrade tier and film-stock reductions; searchable slots, camera functions and inventory. |
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |
 | TECMO SUPER BOWL — NES · compatible original 28-team battery SRAM | NES | Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records. |

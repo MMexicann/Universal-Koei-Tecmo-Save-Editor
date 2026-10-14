@@ -131,6 +131,35 @@ def source(root, data=None, metadata=None):
 
 
 class Sophie2PS4Tests(unittest.TestCase):
+    def test_additional_source_qualified_materials_preserve_native_dependencies(self):
+        """Each newly named kind uses the same bounded, owned-record gate."""
+        d = p.decode(raw())
+        original = p.field_map(d)["materials_0_quality"]
+        offset = original.offset - 6
+        added = {3, 4, 9, 11, 14, 21, 22, 36, 45, 59, 69, 70, 71, 89}
+        self.assertTrue(added <= p.MATERIAL_NAMES.keys())
+        for identity in sorted(added):
+            with self.subTest(item_id=identity):
+                body = bytearray(d.payload)
+                struct.pack_into("<h", body, offset + 4, identity)
+                modified = p.decode(p.codec.encode_file(d.header, bytes(body), d.seed, d.footer))
+                f = p.field_map(modified)[original.id]
+                self.assertIn(p.MATERIAL_NAMES[identity], f.label)
+                self.assertFalse(f.maxable)
+                intended = p.changed_payload(modified, {f.id: 1})
+                self.assertEqual(intended[:f.offset], modified.payload[:f.offset])
+                self.assertEqual(intended[f.offset + 2:], modified.payload[f.offset + 2:])
+                reopened = p.decode(p.serialize(modified, {f.id: 1}))
+                self.assertEqual(reopened.payload, intended)
+                self.assertEqual(p.serialize(modified, {f.id: 40}), modified.raw)
+                self.assertEqual(p.stage(modified, {f.id: 1}, f.id, 40), {})
+                with self.assertRaises(SaveError):
+                    p.serialize(modified, {f.id: 41})
+                # Stat bonuses still make a known material read-only.
+                body[offset + 0x27] = 1
+                bounded = p.decode(p.codec.encode_file(d.header, bytes(body), d.seed, d.footer))
+                self.assertNotIn(f.id, p.field_map(bounded))
+
     def test_noop_identity_complete_codec_and_surgical_bounded_edits(self):
         adapter = BoundScalarAdapter(p.GAME_ID, ".dat", p)
         d = adapter.decode(raw())
@@ -424,7 +453,7 @@ class Sophie2PS4GUI(unittest.TestCase):
                     editor.open()
                     errors.assert_not_called()
                 fields = p.fields_for(editor.document)
-                f = next(f for f in fields if f.id.endswith("quality"))
+                f = next(f for f in fields if "Tall Taun" in f.label)
                 editor.search.set("Tall Taun")
                 root.update()
                 self.assertIn(f.id, editor.fields.get_children())

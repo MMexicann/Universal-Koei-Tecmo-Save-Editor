@@ -3,7 +3,11 @@
 The application is an installable package under `src/koei_editor`. Install it
 with `python -m pip install -e .` and run `python -m koei_editor` from the
 repository root. The entry point delegates to `koei_editor.application.main`.
-The same package is bundled into one standalone Windows executable.
+The same package is bundled in two Windows modes: a portable folder with a
+launcher and complete adjacent runtime, and a standalone EXE containing its
+runtime. Both retain the same adapters, metadata and notices and use `--noupx`.
+The Windows ZIP contains only the versioned portable application folder;
+developer guides remain in the Source ZIP.
 
 ## Package boundaries
 
@@ -51,6 +55,17 @@ agree with the registry, runtime metadata and tested behavior.
 
 ## Scalar editing contract
 
+Experimental numeric editing is an explicit option on each bound adapter and
+open GUI session. `shared/experimental_limits.py` scopes the option to a complete
+operation with a context variable; it resets after success or failure and does
+not change another session. Fields declare their exact `experimental_maximum`
+from their native encoding. Missing declarations, choices and references retain
+their existing constraints. Supported maxima remain separate from encoding
+ceilings, and Max never authors new above-supported values. Native checksums,
+record eligibility, dependencies and saved-value read-back remain required.
+Opening another save resets the option; disabling it validates pending edits,
+and Undo preserves its history if restoring an experimental value needs opt-in.
+
 [adapter_contract.py](../src/koei_editor/shared/adapter_contract.py) defines the
 field, format, frozen document, backend and launcher session contracts. The
 bound adapter checks completeness, selected identity and extensions before
@@ -70,8 +85,9 @@ sort and scroll position survive refreshes while those rows remain visible.
 `limit_values` returns validated Max targets, including a target equal to the
 opened value when it is a valid natural maximum. Applying that target removes
 a pending reduction when the opened value was already at maximum. Unusual
-opened values and fields marked `maxable=False` remain excluded from Max
-targets, including after deliberate individual reductions. `maximums` returns
+opened values remain excluded unless an exact typed opened numeric target
+restores an existing pending reduction on a maxable field. Fields marked
+`maxable=False` remain excluded. `maximums` returns
 the complete normalized pending map instead; valid target assignments must not
 be removed before staging.
 
@@ -150,7 +166,12 @@ The build and packager in `tools` traverse qualified registered dependencies,
 collect package metadata and validate reviewed paths against
 `tools/SOURCE_MANIFEST.json`. Package checks protect against private files,
 foreign binaries and personal paths. The Windows workflow runs native tests,
-EXE smoke/startup and archive/hash checks before publishing a new release.
+builds both modes and scans the complete portable runtime and standalone EXE
+with active Defender before executing either binary. It then runs both packaged
+smoke tests and validates the exact final direct EXE and both ZIPs. Successful
+scans, before/after hashes, the tested commit and version must agree before
+publication. Required notices stay in the portable `_internal/licenses` folder
+and inside the standalone executable.
 Existing releases are not overwritten. See [BUILDING.md](BUILDING.md).
 
 Context-dependent console adapters may implement `prepare_copy_context` for

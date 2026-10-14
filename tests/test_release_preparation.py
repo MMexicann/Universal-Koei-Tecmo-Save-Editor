@@ -1,5 +1,6 @@
 """Release workflow gates and mocked protected PR preparation; no network writes."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -9,6 +10,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+import zipfile
 
 from tools.package_release import version
 
@@ -77,6 +79,124 @@ class ReleasePreparationContracts(unittest.TestCase):
         self.assertIn('merge-multiple: true', build)
         self.assertIn('Full test coverage or shard integrity validation failed.', build)
         self.assertNotIn('python -m unittest discover -s tests -v', build)
+
+    def test_defender_scans_precede_execution_and_bind_publication_to_exact_assets(self):
+        build = job_block('build')
+        scan = build.index('-Path $bundle -ReportPath defender-reports/runtime.json')
+        standalone_scan = build.index('-Path $standalone -ReportPath defender-reports/standalone-runtime.json')
+        execute = build.index('Start-Process -FilePath $launcher')
+        package = build.index('python -m tools.package_release\n')
+        archives = build.index('-Path $windowsZip -ReportPath defender-reports/windows-archive.json')
+        self.assertLess(scan, execute)
+        self.assertLess(standalone_scan, execute)
+        self.assertLess(standalone_scan, build.index('Start-Process -FilePath $standalone'))
+        for preflight in ('--verify-executable', '--verify-standalone'):
+            self.assertLess(build.index(preflight), scan)
+        self.assertLess(execute, package)
+        self.assertLess(package, archives)
+        self.assertNotIn('continue-on-error', build)
+        self.assertIn('if ($LASTEXITCODE -ne 0)', build[scan:execute])
+        self.assertIn('$pair.scan.inputs[0].sha256 -ne $hash', build)
+        self.assertIn('$runtime.clean -ne $true', build)
+        release = job_block('release')
+        self.assertIn("report['commit'] == os.environ['GITHUB_SHA']", release)
+        self.assertIn("python -I - <<'PY'", release)
+        self.assertIn('def require(condition, message):', release)
+        self.assertIn("scan['engine_ready'] is True", release)
+        self.assertIn("scan['scan_exit_code'] == 0", release)
+        self.assertIn("scan['inputs'] == scan['inputs_after']", release)
+        self.assertIn("'sha256': digest", release)
+        self.assertIn('DefenderScan-v$version.json', release)
+        self.assertNotIn('release/*.exe', release)
+        self.assertNotIn('release/*.zip', release)
+        self.assertIn('release/UniversalKoeiTecmoSaveEditor-v$version.exe', release)
+
+
+class DefenderArtifactEvidenceTests(unittest.TestCase):
+    """Exercise the actual publication gate with fabricated scan evidence only."""
+
+    def run_gate(self, scenario='valid'):
+        release_version = version(PROJECT)
+        prefix = f'UniversalKoeiTecmoSaveEditor-v{release_version}'
+        block = job_block('release')
+        script = textwrap.dedent(block.split("python -I - <<'PY'\n", 1)[1].split('\n          PY', 1)[0])
+        with tempfile.TemporaryDirectory() as folder:
+            area = Path(folder)
+            root = area / 'release'
+            root.mkdir()
+            (area / 'pyproject.toml').write_text('[project]\nversion="' + release_version + '"\n')
+            payload = b'procedural portable launcher bytes'
+            standalone_bytes = b'procedural complete standalone bytes, distinct from portable launcher'
+            sha = lambda data: hashlib.sha256(data).hexdigest()
+            def clean_scan(name, data):
+                inputs = [{'path': name, 'size': len(data), 'sha256': sha(data)}]
+                return dict(baseline=False, clean=True, engine_ready=True, scan_exit_code=0,
+                            maps_exit_code=0, inputs=inputs, inputs_after=inputs)
+            report = dict(version=release_version, commit='a' * 40, assets={},
+                          runtime=clean_scan(prefix + '.exe', payload),
+                          standalone_runtime=clean_scan(prefix + '.exe', standalone_bytes),
+                          standalone=clean_scan(prefix + '.exe', standalone_bytes))
+            executable = prefix + '.exe'
+            final_bytes = b'changed after startup qualification' if scenario == 'standalone_after_startup' else standalone_bytes
+            (root / executable).write_bytes(final_bytes)
+            report['standalone'] = clean_scan(executable, final_bytes)
+            report['assets'][executable] = sha(final_bytes)
+            if scenario == 'standalone_wrong_hash':
+                changed = b'changed after final executable scan'
+                (root / executable).write_bytes(changed)
+                report['assets'][executable] = sha(changed)
+            if scenario == 'standalone_unscanned':
+                report['standalone']['scan_exit_code'] = None
+            for suffix, key in (('Windows', 'windows_archive'), ('Source', 'source_archive')):
+                name = f'{prefix}-{suffix}.zip'
+                with zipfile.ZipFile(root / name, 'w') as archive:
+                    if suffix == 'Windows':
+                        data = b'changed after individual scan' if scenario == 'runtime_changed' else payload
+                        archive.writestr(prefix + '/' + prefix + '.exe', data)
+                        if scenario == 'root_clutter':
+                            archive.writestr('README.txt', b'unscanned download clutter')
+                    else:
+                        archive.writestr('README.md', b'procedural reviewed source')
+                data = (root / name).read_bytes()
+                report[key] = clean_scan(name, data)
+                report['assets'][name] = sha(data)
+            if scenario == 'engine_unavailable':
+                report['windows_archive']['engine_ready'] = False
+            if scenario == 'baseline_mode':
+                report['standalone']['baseline'] = True
+            if scenario == 'extra_exe':
+                (root / 'unscanned.exe').write_bytes(payload)
+            report_file = root / f'DefenderScan-v{release_version}.json'
+            report_file.write_text(json.dumps(report), encoding='utf-8')
+            hashes = {**report['assets'], report_file.name: sha(report_file.read_bytes())}
+            (root / 'SHA256SUMS.txt').write_text(''.join(digest + '  ' + name + '\n' for name, digest in hashes.items()), encoding='ascii')
+            return subprocess.run([sys.executable, '-I', '-O', '-c', script], cwd=area,
+                                  env=dict(os.environ, GITHUB_SHA='a' * 40, PYTHONOPTIMIZE='2'),
+                                  capture_output=True, text=True, timeout=20)
+
+    def test_complete_matching_dual_format_evidence_is_accepted_under_optimization(self):
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_rescanned_zip_cannot_replace_individually_scanned_runtime_bytes(self):
+        result = self.run_gate('runtime_changed')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Published runtime differs', result.stderr)
+
+    def test_unavailable_engine_baseline_mode_and_extra_executable_are_rejected(self):
+        for scenario in ('engine_unavailable', 'baseline_mode', 'extra_exe'):
+            with self.subTest(scenario=scenario):
+                self.assertNotEqual(self.run_gate(scenario).returncode, 0)
+
+    def test_wrong_unscanned_or_changed_standalone_executable_is_rejected(self):
+        for scenario in ('standalone_wrong_hash', 'standalone_unscanned', 'standalone_after_startup'):
+            with self.subTest(scenario=scenario):
+                self.assertNotEqual(self.run_gate(scenario).returncode, 0)
+
+    def test_portable_zip_rejects_unscanned_root_clutter_even_with_clean_zip_evidence(self):
+        result = self.run_gate('root_clutter')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Unexpected portable archive member', result.stderr)
 
 
 @unittest.skipIf(os.name == 'nt' or not shutil.which('bash'), 'Mocked Ubuntu preparation job requires POSIX bash.')

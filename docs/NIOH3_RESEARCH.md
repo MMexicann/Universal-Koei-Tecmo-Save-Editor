@@ -2,7 +2,7 @@
 
 The registered adapter in `src/koei_editor/games/nioh3` accepts native encrypted
 or decoded Windows PC USER copies with revisions `0x01030001` and `0x01040000`.
-It reduces existing positive quantities of eighteen identified common items
+It reduces existing positive quantities of thirty-two identified common items
 in the item box and storehouse, and deducts source-mapped Amrita and Gold balances.
 Assigning the opened amount undoes an edit. Increases, zeroing item records and
 bulk Max remain unavailable. Equipment, unknown items,
@@ -32,7 +32,7 @@ the published 393. This does not qualify any unobserved revision or later DLC.
 
 ## Writable record qualification and dependencies
 
-Eighteen factual disk IDs are independently corroborated against the public
+Thirty-two factual disk IDs are independently corroborated against the public
 editor and genuine record tables. The original seven are `0x05E7` Elixir,
 `0x382A` Sacred Water, `0xF3EE` Arrow,
 `0xA70B` Incendiary Arrow, `0xF8DD` Ochoko Cup, `0x8A41` Salt and `0x79CF` Rifle
@@ -45,6 +45,15 @@ Stone, Travel Amulet and Water Amulet. Their exact IDs, pinned Apache-2.0 factua
 source, native-record corroboration and official manual evidence are recorded
 in [the expansion note](TEAM_NINJA_DEPTH.md). The same original-record
 qualification and reduction-only rules below apply to every addition.
+
+Fourteen further additions are Yokai Water Pot, Scampuss Furball, Summoner's
+Candle, Righteous Jasper, Power Pill, Lantern Plant Fruit, Steel Pill,
+Luckbringer Amulet, Uchiko Powder, Fragrant Wood, Healing Pill, Tiger-Running
+Amulet, Sacred Brush and Herbal Remedy. Each has a qualified positive native
+stack in at least one of the two reviewed revisions; the corpus does not contain
+every item in every pool/revision. The same pinned factual source and independent
+native-record qualification apply. [The refinement evidence](TEAM_NINJA_DEPTH.md#nioh-3-fourteen-further-ordinary-consumables)
+records exact IDs and distinguishes native writes from generated coverage.
 
 An eligible original item-box/storehouse record has a known ID at `+0x00`, the
 same appearance ID at `+0x02`, a positive u16 quantity at `+0x04`, zero level,
@@ -162,7 +171,7 @@ exposed, and the original seed, wrapped keys and excluded tail remain intact.
 | --- | --- |
 | Native identity/revision/size and body checksum | Implemented game adapter and retained no-write inspector; genuine files and malformed-input tests |
 | Native encryption/decryption | Genuine encrypted USER pair qualifies decoded representation, surgical quantity/balance writes/reparse and exact no-op ciphertext |
-| Common consumables and ammunition | Reduce existing positive quantities of eighteen identified ordinary item-box/storehouse IDs; no acquisition, removal or Max |
+| Common consumables and ammunition | Reduce existing positive quantities of thirty-two identified ordinary item-box/storehouse IDs; no acquisition, removal or Max |
 | Quantity increases and natural capacities | Need build-labelled displayed capacities, prerequisite/upgrade state and controlled pickup/restock/transfer pairs; storage ceilings and cheat targets are not natural caps |
 | Amrita and Gold balances | Historical source and explicit native tag profiles qualify u64 deductions `0..opened`, including zero; no Max, increases, transaction history or level-up simulation |
 | Currency increases, lifetime/grave state and transaction dependencies | Need controlled held/spent/recovered/reward pairs and displayed values; independent state is preserved and not inferred from the balance fields |

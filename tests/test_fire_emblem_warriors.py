@@ -127,6 +127,16 @@ class FireEmblemFormatTests(unittest.TestCase):
         self.assertEqual(len(fe.weapons(self.doc)), 3)
         self.assertEqual(len(fe.inspection_rows(self.doc)), len(MATERIALS) + 64)
 
+    def test_max_unstages_reduction_of_higher_opened_stars_and_exact_typed_noop(self):
+        pending = fe.stage(self.doc, {}, 'weapon_3_stars', 2)
+        self.assertEqual(fe.maximums(self.doc, pending, 'Weapon stars').get('weapon_3_stars'), None)
+        result = fe.serialize(self.doc, fe.maximums(self.doc, pending, 'Weapon stars'))
+        self.assertEqual(result[fe.WEAPON_OFFSET + 2 * fe.WEAPON_STRIDE + 26], 7)
+        self.assertEqual(fe.serialize(self.doc, {'weapon_3_stars': 7, 'material_46': 1001}), self.raw)
+        for value in (7.0, True, '7'):
+            with self.assertRaises(SaveError):
+                fe.serialize(self.doc, {'weapon_3_stars': value})
+
     @unittest.skipUnless(os.environ.get('FE_WARRIORS_SAVE_COPY'), 'No private genuine modified player native export')
     def test_public_modified_player_export_roundtrip_and_each_field(self):
         raw = Path(os.environ['FE_WARRIORS_SAVE_COPY']).read_bytes()

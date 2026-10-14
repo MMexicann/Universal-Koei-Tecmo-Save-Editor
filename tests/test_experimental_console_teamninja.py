@@ -148,6 +148,37 @@ class ExperimentalConsoleTeamNinjaTests(unittest.TestCase):
             with self.assertRaises(SaveError):
                 backend.stage(document, {}, 'inventory_999_quantity', 10)
 
+    def test_nioh_all_common_item_identities_have_exact_u16_experimental_limits(self):
+        from koei_editor.games.nioh3 import codec, inventory, parser as backend
+        from tests.test_nioh3_format import procedural_raw
+
+        for revision in codec.SUPPORTED_REVISIONS:
+            with self.subTest(revision=revision):
+                document = backend.decode(procedural_raw(revision))
+                fields = [field for field in backend.fields_for(document)
+                          if field.group in ('Item box', 'Storehouse')]
+                self.assertEqual(len(fields), 2 * len(inventory.COMMON_ITEMS))
+                changes = {}
+                allowed = set(range(codec.CHECKSUM_OFFSET, codec.CHECKSUM_OFFSET + 4))
+                for field in fields:
+                    with self.assertRaises(SaveError):
+                        backend.stage(document, {}, field.id, 65535)
+                with experimental_limits():
+                    for field in fields:
+                        self.assertEqual(field.experimental_maximum, 65535)
+                        changes = backend.stage(document, changes, field.id, 65535)
+                        allowed.update(range(field.offset, field.offset + field.size))
+                        for invalid in (0, 65536):
+                            with self.assertRaises(SaveError):
+                                backend.stage(document, {}, field.id, invalid)
+                    reopened = backend.decode(backend.serialize(document, changes))
+                    self.assertEqual({field.id for field in backend.fields_for(reopened)},
+                                     {field.id for field in backend.fields_for(document)})
+                    self.assertTrue(all(field.value(reopened.payload) == 65535 for field in fields))
+                    touched = {index for index, (before, after) in enumerate(zip(document.payload, reopened.payload))
+                               if before != after}
+                    self.assertLessEqual(touched, allowed)
+
     def test_wolong_json_widths_and_existing_stack_identity(self):
         from koei_editor.games.wolong import wolong_parser as backend
         from tests.test_wolong_format import procedural_payload, seal, root_of

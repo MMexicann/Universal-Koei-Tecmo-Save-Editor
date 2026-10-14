@@ -1,5 +1,84 @@
 # Universal development validation
 
+## v2.1 experimental numeric editing — release qualification pending
+
+The explicit session option expands declared numeric fields to their exact
+encoding ceilings. Supported maxima remain visible and Max retains supported
+targets. Choices, references, ownership, record discovery, checksum validation,
+native dependencies and saved-value read-back remain enforced. DW3 uses its
+existing tagged patch audit; scalar profiles use the bound adapter. Public
+regressions cover strict defaults, opt-in isolation, native roundtrips, overflow,
+protected values, Max restoration, warning cancellation and Undo history.
+
+The final integrated source is being checked with the complete public suite.
+Native Windows builds and real Defender scans must pass before publication;
+their authoritative evidence will be `DefenderScan-v2.1.json`, tied to the
+tested commit and exact downloaded asset hashes. Edited in-game loading and
+re-saving of experimental values remains unverified.
+
+## v2.02 dual Windows downloads — native qualification pending
+
+Version 2.02 prepares two builds of the same 90-profile application: a portable
+`--onedir --noupx` runtime and a standalone `--onefile --noupx` EXE. The direct
+EXE embeds its runtime and required notices. The Windows ZIP contains only the
+versioned application folder, with the launcher and `_internal`; developer
+documentation remains in the Source ZIP.
+
+The release gate requires active/current Microsoft Defender scans of both
+complete candidates **before either binary is executed**. Both packaged smoke
+tests then run, followed by static package/privacy checks and scans of the exact
+final downloadable EXE, Windows ZIP and Source ZIP. Before/after inventories,
+SHA-256 hashes, version and the tested commit must agree at publication.
+
+The exact v2.02 native build, packaged startup tests and real Defender scans
+have not yet been recorded here. Publication remains pending until that Windows
+run passes; local policy tests, earlier releases and static comparisons do not
+establish a clean scan for these new assets. The published
+`DefenderScan-v2.02.json` and its exact Windows workflow run are the authoritative
+records of eventual native qualification; they bind the results to the tested
+commit and final asset hashes. This source section records the preparation
+state before that run. No edited in-game load/re-save validation is added by
+this distribution change.
+
+## v2.01 Defender release qualification — 2026-10-13
+
+The 2.0 assets were withdrawn after a Microsoft Defender Sabsik detection was
+reported during download. Static comparison found no newly introduced native
+runtime or bootloader payload: the code matches the official hash-verified
+PyInstaller wheel and existing runtime libraries. This does not prove the
+detection is false. See [the evidence and release gate](DEFENDER_RELEASE_GUARD.md).
+
+The portable runtime replaces self-extracting one-file packaging. Focused
+packaging, omission/privacy, workflow and scanner-policy tests passed locally;
+the exact original Windows runtime's 92 prospective external files also passed
+strict static preflight, including Tcl/Tk 9 embedded libraries. Scanner policy
+tests are not antivirus results. The Windows workflow must pass the complete
+test inventory and real active/current Defender scans of the runtime and both
+downloadable archives before publication. Its downloadable report binds those
+verdicts to exact asset hashes and the tested commit. No scan is claimed clean
+when the engine, cloud connection or input is unavailable.
+
+## v2.0 expansion and refinements — 2026-10-13
+
+The release combines the 14 previously prepared profiles with existing-editor
+improvements for Nioh 3, Sophie 2 PS4, Three Hopes, Project Zero PS2, Firis PC,
+original Gundam PS3 and DW8 PS3. The library contains 90 profiles across 15
+platforms. Independent reviews checked item identities, active inventory
+capacities, source/companion races, field eligibility and integrity preservation.
+Shared Max targets can restore only an exact typed opened numeric value after
+a pending reduction; nonmaxable fields remain excluded.
+
+Focused genuine-file and actual Tk workflows passed for the expanded inventory
+controls, preserving original sources and unrelated bytes. The respective format
+documents record corpus and test details. Private inputs remain outside the
+checkout. Full local regression and native Windows release verification are
+recorded separately below and in the repository workflow. The complete local
+Python 3.12/Tk run passed 2,227 tests across all 252 modules: 461 optional
+fixture/platform skips, no failures or errors. This run preceded the final
+version-label change to 2.0; inventory, packaging and GUI startup were checked
+again afterward. The release workflow runs the complete final source on Windows
+before publishing. Edited in-game loading/re-saving is untested in this update.
+
 ## Sol development expansion — 2026-10-13
 
 The source library now has 90 registered profiles across 15 platforms. The

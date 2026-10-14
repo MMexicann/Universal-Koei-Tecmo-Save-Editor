@@ -6,14 +6,21 @@ from koei_editor.shared.verified_gui import Editor as ScalarEditor
 
 class Presentation(ScalarPresentation):
     def inspection_tables(self, document):
-        rows = tuple((label,slot,instance,identity,quality,'Yes' if editable else 'No')
-                     for _key,label,slot,_offset,instance,identity,quality,editable
+        fields = self.backend.field_map(document)
+        rows = tuple((label,slot,instance,identity,quality,
+                      'Reduce only' if f'{key}_{slot}_quality' in fields else 'Read only')
+                     for key,label,slot,_offset,instance,identity,quality,_editable
                      in self.backend.item_records(document))
         return (
             InspectionTable('Existing inventory',
-                            ('Location','Record','Instance','Item ID','Stored quality','Ordinary pool'),
+                            ('Location','Record','Instance','Item ID','Stored quality','Quality editing'),
                             rows,'Occupied native 52-byte records. Unknown IDs stay numeric. '
-                            'Important pools, fractional qualities and ambiguous instances have no quality control.'),
+                            'Important pools, records beyond the active capacity, fractional qualities '
+                            'and ambiguous instances have no quality control.'),
+            InspectionTable('Inventory capacities',('Location','Opened active limit','Physical records'),
+                            self.backend.inventory_capacity_rows(document),
+                            'Stored capacity and physical allocation differ. Limits are read-only; '
+                            'spare physical records do not authorize ownership or capacity increases.'),
             InspectionTable('Alchemy progression',('Record','Stored value'),
                             self.backend.progression_rows(document),
                             'Read-only levels and EXP; no recipe, skill or reward change is inferred.'),

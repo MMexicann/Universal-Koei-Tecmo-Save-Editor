@@ -62,18 +62,45 @@ own checksum. The record/name mirrors are checked before exposing controls.
 
 | Field | Proof and dependency gate |
 | --- | --- |
-| Gold | Current u32 at `0x77F64`, within gameplay section `0x77ECC..0x959EB`. The save template distinguishes gold from renown at +8. Existing balance can decrease from opened value down to zero; no increase, storage-target Max, earning history, reward or shop-purchase action. Its exact natural cap is unqualified, so no Max is offered. |
+| Gold | Current u32 at `0x77F64`, within gameplay section `0x77ECC..0x959EB`. The save template distinguishes gold from renown at +8. Normal editing allows decreases from the opened balance to zero. Experimental editing permits values up to 4,294,967,295 after warning; the opened balance is the supported ceiling, not a qualified natural gameplay cap. No Max, earning history, reward or shop-purchase action is offered. |
+| Existing material stocks | Up to 33 positive quantities in the template's nine explicitly typed material arrays. Normal editing allows each u16 LE quantity to decrease to zero or an intermediate opened balance. Experimental editing permits increases up to 65,535 after warning. Positive full-width quantities remain readable; empty records stay read-only. Six adjacent opaque bytes in every eight-byte record, discovery state, facility upgrades and reward records are preserved. Category/physical-stock labels are used until exact item-name order is independently qualified; no Max or new records. |
 | Shez name | Eight-byte ASCII array at `0x841FC`, mirrored in prefix `0x3C`. Both original eight-byte arrays must match exactly; nonempty printable ASCII text must already exist. Requires a currently deployed Shez native ID 110/111 and the corresponding positive-HP/level physical profile. Inactive/default records do not manufacture ownership. |
 | Byleth name | Eight-byte array at `0x84224`, mirrored in prefix `0x64`, with the same original equality/ASCII gates. Requires an original Byleth recruitment bit (bit0 male/bit1 female at `0x77FF4`) and a corresponding positive-HP/level native profile ID0/1. No recruitment or gender bit is changed. |
 | Name validation | New names are nonempty 1–8 printable ASCII characters; shorter names zero-pad only the two declared eight-byte arrays. Untouched non-ASCII/unusual arrays are preserved and remain uneditable. Assigning the opened displayed name is an exact no-op preserving stale padding. Names are excluded from Max; Review Changes and Undo use strings. |
 
 Field eligibility derives solely from the immutable opened snapshot. Pending
 changes cannot activate an unowned/default field. All pending edits are checked
-before new edits, Undo, Max and serialization. Native `SlotData3` exposes gold
-and both names; `SlotData4` exposes gold and the recruited Byleth name. The other
-three reviewed slots expose gold only. This conservative current-deployment gate
+before new edits, Undo, Max and serialization. Native `SlotData3` qualifies
+both names; `SlotData4` qualifies the recruited Byleth name. The other
+three reviewed slots qualify only resource controls. This conservative current-deployment gate
 can withhold Shez customization even where the character exists in the broader
 campaign roster; it does not guess an unqualified roster-ownership flag.
+
+The reviewed save template's material arrays begin after exactly 1,150 24-byte
+weapon records, four opaque bytes, 1,040 eight-byte accessory records and 249
+eight-byte consumable records. This independently places the material master
+block at `0x831B4`. Its explicitly typed quantity arrays are:
+
+| Native category | First quantity | Eight-byte records |
+| --- | --- | ---: |
+| Stones | `0x831BC` | 8 |
+| Building materials | `0x8366C` | 4 |
+| Training gear | `0x836BC` | 3 |
+| Combat manuals | `0x836E4` | 3 |
+| Smithing sets | `0x8370C` | 3 |
+| Furnishings | `0x83734` | 3 |
+| Licenses | `0x8375C` | 3 |
+| Insignias | `0x83784` | 3 |
+| Storage materials | `0x837AC` | 3 |
+
+Following the final array's native gaps, battalion records and trailing bytes
+arrives at the independently qualified Shez name `0x841FC`; no flattened
+inventory or cross-category stride is assumed. All six reviewed native exports
+admit 29–33 positive material stocks and pass the complete section checksums.
+Their edited/cheat-like state does not prove a natural material cap. Reductions
+change only the selected two quantity bytes and the gameplay body's checksum;
+they do not perform a purchase, upgrade, exchange, reward claim or discovery.
+All 33 quantities remain searchable, including withheld empty/unusual words.
 
 ## Per-mechanic checklist and precise blockers
 
@@ -85,7 +112,8 @@ campaign roster; it does not guess an unqualified roster-ownership flag.
 | Classes / skills / combat arts / unique abilities | IDs exist in source, but mastery/learning, class unlocks, unique ability identity, prerequisites, skill capacity and rewards lack synchronized native proof. No arbitrary skill-ID replacement. |
 | Weapon inventory / forging / attributes | 1,150 physical 24-byte records from `0x79D98`, named type, added might/durability, forge steps and skill IDs inspected. Stored forge steps and added stat terms are distinct. Matching material consumption, per-weapon natural limits, smithy progression and intrinsic/personal-weapon rules remain unqualified; no forged-stat or identity writes. |
 | Weapon durability / repair / appraisal / personal weapons | Basic/rusted identities exist but repair/reforge results, costs, unique-weapon entitlements and equipped convoy references are not fully proven. No creation, swap or broad maximum. |
-| Accessories / consumables / gifts / ingredients / facility materials | Source exposes record categories but some names, IDs, quantity/discovery semantics and special building/training upgrade dependencies remain incomplete. No generic inventory-slot Max or facility acquisition. |
+| Stones / facility materials | Existing positive stocks in nine save-specific categories support reductions only; all 33 quantities are searchable. Item-name order, natural caps, discovery and acquisition transitions remain unqualified. No facility upgrade, reward claim or generic inventory-slot Max. |
+| Accessories / consumables / gifts / ingredients | Kept read-only: per-position identities, quantity/discovery semantics and special ownership/equipment dependencies remain incomplete. Material-array proof does not qualify the separate 249-record consumable array. |
 | Battalions | Source pool and deployment references exist; ownership, usable limits, dismissal restrictions and reward/slot capacity dependencies remain unqualified. Public discussion describes an undismissable-battalion reward loop; no destructive blanket wipe. |
 | Bonds / support / camp activity / training / facilities | Per-record thresholds, activity points, first-time rewards and prerequisite transitions need controlled native pairs. No guessed array offsets. |
 | Character recruitment / NG+ / DLC / costumes | Read-only original admission checks where specifically mapped. Full starter records, gender/campaign gates, rewards and entitlements are missing; no unlock writes. |
@@ -94,9 +122,9 @@ campaign roster; it does not guess an unqualified roster-ownership flag.
 
 ## Verification
 
-`tests.test_three_hopes` contains eight format/native checks and two real-Tk
+`tests.test_three_hopes` contains ten format/native checks and four real-Tk
 workflows. With `THREE_HOPES_COPY` pointing privately to an admitted complete
-`SlotData3` export, **10/10 pass without skips**. Procedural data tests endian
+`SlotData3` export, **14/14 pass without skips**. Procedural data tests endian
 encoding, all 144 checksum-covered-body corruption cases (including the nested
 child), malformed size/header/revision, exact immutable snapshot/format/raw type,
 original ownership/name-mirror/ASCII gates, invalid mixed pending edits and
@@ -109,7 +137,7 @@ scalar/name pair and the gameplay-section checksum; source data, recruitment,
 class/gender/deployment and opaque capacity remain unchanged. Real Tk tests on
 procedural and copied genuine data cover named search, Apply, string Review,
 Undo, inspection, themes, backup/new-copy Save As and exact-byte restore.
-Without the optional private native input, two native-dependent tests explicitly
+Without the optional private native input, three native-dependent tests explicitly
 skip. No newly edited save has been imported, loaded or re-saved in the game.
 
 `tests.test_three_hopes_audit` adds eight independent review checks. The reviewer
@@ -121,7 +149,16 @@ pair/checksum writes. Ownership, original mirror agreement, unusual padding,
 invalid pending batches, immutable snapshot qualification and surgical unknown
 byte preservation pass. Registered procedural and genuine copied-save checks also
 verify the canonical checksum profile, backup, source preservation and CLI use
-from an unrelated working directory. **The combined 18 checks pass without skips
+from an unrelated working directory. **The combined 22 checks pass without skips
 under real Tk/Xvfb with all six private inputs.** The review's optional native controls use
 `THREE_HOPES_REVIEW_COPIES`, joined with the local `os.pathsep`; they remain private.
 This independent review is not edited game-load/re-save validation.
+
+Additional material checks cover all 33 records independently, zero-count
+withdrawal from editable fields after reopening, original eligibility and
+full-width-word exclusions, all pending-map validation, precise checksum/byte
+preservation, original-value Undo and exclusion from Max. The real Tk material
+workflow exercises category search, Apply, Review, Undo, themes, new-copy Save As,
+backup and restore. Native every-field audits also cover each newly admitted
+stock across all six private sources; these are native format checks, not
+controlled gameplay acquisition/spending pairs or edited game-load validation.

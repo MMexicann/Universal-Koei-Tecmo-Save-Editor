@@ -129,7 +129,7 @@ class BoundPendingSafetyTests(unittest.TestCase):
         self.assertEqual(pending, {field.id: 100})
         self.assertEqual(adapter.maximums(document, pending, 'Resources').get(field.id), None)
 
-    def test_max_bridge_excludes_unusual_opened_values_and_nonmaxable_targets(self):
+    def test_max_bridge_restores_higher_opened_values_but_excludes_nonmaxable_targets(self):
         import struct
         from koei_editor.games.wo4 import parser as backend
         from tests.test_wo4_pc import generated_raw, repack
@@ -141,7 +141,12 @@ class BoundPendingSafetyTests(unittest.TestCase):
         unusual = 'officer_002_skill_points'
         pending = adapter.stage(document, {}, 'gems', 100)
         pending = adapter.stage(document, pending, unusual, 10)
-        self.assertEqual(adapter.limit_values(document, pending, ('gems', unusual)), {})
+        self.assertEqual(adapter.limit_values(document, pending, ('gems', unusual)),
+                         {'gems': 123456789, unusual: 255})
+        self.assertEqual(adapter.limit_values(document, {}, ('gems', unusual)), {})
+        with patch.object(backend, 'limit_values', return_value={'gems': 123456788}):
+            with self.assertRaises(SaveError):
+                adapter.limit_values(document, pending, ('gems',))
         with patch.object(backend, 'limit_values', return_value={'skill_orbs': 7}):
             self.assertEqual(adapter.limit_values(document, pending, ('skill_orbs',)), {})
         self.assertEqual(pending, {'gems': 100, unusual: 10})

@@ -248,11 +248,15 @@ def team_state(document,index,changes=()):
     original=fields(document.records('GuardDataArray')[index])
     merit=wanted.get('SPoint',original['SPoint']['value'])
     levels=wanted.get('BGLevels',original['BGLevels']['value']['values'])
+    retained_merit=type(merit) is int and merit==original['SPoint']['value']
+    # Historical high Merit remains saved exactly. Only its table lookup is
+    # capped when editing growth; a newly authored high Merit needs opt-in.
+    table_merit=min(merit,growth.MERIT_CAP) if retained_merit else merit
     growth_editable=True;growth_reason=''
     try:
         if 'BGLevels' in wanted:
-            levels=growth.automatic_levels(merit,levels)
-        elif 'SPoint' in wanted:
+            levels=growth.automatic_levels(table_merit,levels)
+        elif 'SPoint' in wanted and not retained_merit:
             if merit<original['SPoint']['value']:
                 raise ValueError('Bodyguard Merit can only be increased in this version.')
             levels=growth.advance_automatic_levels(merit,levels)

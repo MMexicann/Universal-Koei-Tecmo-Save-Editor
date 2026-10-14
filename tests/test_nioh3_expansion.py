@@ -19,6 +19,13 @@ ADDITIONS = {
     0xE7D3: 'Dung Ball', 0x4D66: 'Fireproof Amulet', 0xFC7A: 'Sacred Ash',
     0x5A51: 'Smoke Ball', 0x4C5F: 'Throwing Stone', 0x5943: 'Travel Amulet',
     0x304E: 'Water Amulet',
+    0x2296: 'Yokai Water Pot', 0x683B: 'Scampuss Furball',
+    0x3F5A: "Summoner's Candle", 0x140F: 'Righteous Jasper',
+    0xCC42: 'Power Pill', 0x059A: 'Lantern Plant Fruit',
+    0x3299: 'Steel Pill', 0xE4AA: 'Luckbringer Amulet',
+    0x3A1B: 'Uchiko Powder', 0x9509: 'Fragrant Wood',
+    0x65B4: 'Healing Pill', 0x5EDB: 'Tiger-Running Amulet',
+    0x7EA2: 'Sacred Brush', 0xF681: 'Herbal Remedy',
 }
 
 
@@ -41,8 +48,8 @@ class AdditionalConsumableTests(unittest.TestCase):
                     for value in (0, field.maximum + 1, True, '1'):
                         with self.subTest(revision=revision, identity=identity, value=value), self.assertRaises(SaveError):
                             parser.stage(document, {}, field.id, value)
-            self.assertEqual(len(changes), 22)
-            self.assertEqual(len(parser.review(document, changes)), 22)
+            self.assertEqual(len(changes), 50)
+            self.assertEqual(len(parser.review(document, changes)), 50)
             self.assertEqual(parser.maximums(document, changes), changes)
             output = parser.serialize(document, changes)
             reopened = parser.decode(output)
@@ -72,6 +79,26 @@ class AdditionalConsumableTests(unittest.TestCase):
         document = parser.decode(resign(payload))
         self.assertFalse(any(field.group == 'Equipment' for field in parser.fields_for(document)))
 
+    def test_refined_ids_require_ordinary_shape_and_unique_pool_identity(self):
+        for identity in (0x2296, 0x683B, 0x3F5A, 0x140F, 0xCC42, 0x059A,
+                         0x3299, 0xE4AA, 0x3A1B, 0x9509, 0x65B4, 0x5EDB,
+                         0x7EA2, 0xF681):
+            pool = inventory.POOLS[1]
+            slot = list(inventory.COMMON_ITEMS).index(identity)
+            at = pool.start + slot * pool.stride
+            for relative, value in ((2, 0), (4, 0), (6, 1), (8, 1), (10, 1), (0x1C, 0)):
+                payload = bytearray(procedural_raw())
+                struct.pack_into('<H', payload, at + relative, value)
+                document = parser.decode(resign(payload))
+                with self.subTest(identity=identity, relative=relative):
+                    self.assertNotIn(f'inventory_{slot}_quantity', parser.field_map(document))
+                    self.assertEqual(parser.serialize(document, {}), document.raw)
+            payload = bytearray(procedural_raw())
+            duplicate = pool.start + 100 * pool.stride
+            payload[duplicate:duplicate + pool.stride] = payload[at:at + pool.stride]
+            with self.subTest(identity=identity), self.assertRaises(SaveError):
+                parser.decode(resign(payload))
+
     def test_high_original_quantity_and_unknown_neighbors_remain_reversible(self):
         payload = bytearray(procedural_raw())
         pool = inventory.POOLS[1]
@@ -87,7 +114,7 @@ class AdditionalConsumableTests(unittest.TestCase):
         self.assertEqual(parser.stage(document, changes, field.id, 65535), {})
         self.assertEqual(parser.maximums(document, {}), {})
 
-    def test_antidote_gui_search_review_undo_and_safe_save(self):
+    def test_sacred_brush_gui_search_review_undo_and_safe_save(self):
         try:
             root = tk.Tk()
         except tk.TclError as error:
@@ -104,7 +131,7 @@ class AdditionalConsumableTests(unittest.TestCase):
                     patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
                 editor.open()
                 editor.group.set('Item box')
-                editor.search.set('Antidote')
+                editor.search.set('Sacred Brush')
                 editor.refresh()
                 keys = editor.fields.get_children()
                 self.assertEqual(len(keys), 1)
@@ -133,6 +160,7 @@ class AdditionalConsumableTests(unittest.TestCase):
 class AdditionalNativeConsumableTests(unittest.TestCase):
     def test_both_native_revisions_existing_additional_consumables_only(self):
         revisions = set()
+        refined_identities = set()
         for path in Path(os.environ['NIOH3_NATIVE_DIR']).iterdir():
             if not path.is_file():
                 continue
@@ -145,6 +173,8 @@ class AdditionalNativeConsumableTests(unittest.TestCase):
             self.assertEqual(parser.serialize(document, {}), raw)
             selected = [field for field in parser.fields_for(document)
                         if field.label in {name + ' quantity' for name in ADDITIONS.values()} and field.maximum > 1]
+            refined_identities.update(int.from_bytes(document.payload[field.offset - 4:field.offset - 2], 'little')
+                                      for field in selected)
             self.assertGreater(len(selected), 0)
             changes = {field.id: 1 for field in selected}
             output = parser.serialize(document, changes)
@@ -157,3 +187,8 @@ class AdditionalNativeConsumableTests(unittest.TestCase):
             self.assertLessEqual(touched, allowed)
             self.assertEqual(path.read_bytes(), raw)
         self.assertEqual(revisions, set(codec.SUPPORTED_REVISIONS))
+        # Every newly advertised identity must have a positive native reduction
+        # in the reviewed corpus, not just a procedural record or catalog name.
+        self.assertLessEqual({0x2296, 0x683B, 0x3F5A, 0x140F, 0xCC42, 0x059A,
+                              0x3299, 0xE4AA, 0x3A1B, 0x9509, 0x65B4, 0x5EDB,
+                              0x7EA2, 0xF681}, refined_identities)

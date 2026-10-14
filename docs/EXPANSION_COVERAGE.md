@@ -6,8 +6,7 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
-The released v1.91 download contains **76 game/platform profiles across 13 platforms**.
-The development source now contains **90 profiles across 15 platforms**, including
+Version 2.0 contains **90 game/platform profiles across 15 platforms**, including
 the [14-profile Sol expansion](SOL_EXPANSION.md).
 The new separately qualified profiles are described below;
 the registry-derived [inventory](SUPPORTED_GAMES.md) is authoritative.
@@ -86,7 +85,7 @@ unproved progression, acquisition and reward transitions remain blocked.
 | [Gundam 3, US PS3](GUNDAM3_PS3_FORMAT.md) | Money reductions; lab EXP/license inspection. | Purchase and lab progression/equipment pairs; console load/re-save confirmation and other-region writer proof. |
 | [TRINITY, US PS3](TRINITY_PS3_FORMAT.md) | Money reductions; SP and named stat-word inspection. | Money purchase/load check plus stat-level/skill purchase pairs proving stored-versus-derived values. |
 | [Original Totori](TOTORI_PS3_FORMAT.md), [Meruru](MERURU_PS3_FORMAT.md), [Rorona](RORONA_PS3_FORMAT.md), PS3 | Cole reductions; named character and system inspection. | Original-edition purchase/synthesis/equip/level pairs and edited load/re-save; PS3 evidence does not qualify DX or Plus. |
-| [Sophie 2, PS4 CUSA28451 app 1.0](SOPHIE2_PS4_FORMAT.md) | Quality reductions for nine named ordinary material identities; use refills for nineteen named battle-item identities within existing capacity; party/inventory/equipment inspection. | Synthesis/equip and wallet pairs; other item identities, trait/effect dependencies and edited game-load proof. |
+| [Sophie 2, PS4 CUSA28451 app 1.0](SOPHIE2_PS4_FORMAT.md) | Quality reductions for twenty-three named ordinary material identities; use refills for nineteen named battle-item identities within existing capacity; party/inventory/equipment inspection. | Synthesis/equip and wallet pairs; other item identities, trait/effect dependencies and edited game-load proof. |
 | [Ninja Gaiden Black SYSTEM, original Xbox](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md) | Restore numeric save-list order; inspect thirty slot timestamps. | Genuine SYSTEM.dat plus original EEPROM and successful load-order check. Story-slot inner integrity still needs separate evidence; story editing remains unregistered. |
 
 Genuine-file checks, complete published-writer evidence, procedural tests and

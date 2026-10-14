@@ -37,7 +37,7 @@ class Format:
 
 FORMAT = Format(GAME_ID, 'Nioh 3 (PC)', SAVE_SIZE, (),
                 'Native USER revisions 0x01030001 and 0x01040000: reduce existing '
-                'positive quantities of eighteen known common items in the item box '
+                'positive quantities of thirty-two known common items in the item box '
                 'and storehouse, or deduct source-mapped Amrita/Gold balances. '
                 'Balance edits do not perform a purchase or level-up. Equipment '
                 'level, pre-forge level and reinforcement are inspected separately. '

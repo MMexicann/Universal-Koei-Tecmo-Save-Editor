@@ -309,16 +309,19 @@ class BoundScalarAdapter:
             if not getattr(field, 'maxable', True):
                 continue
             try:
-                # Original-value tolerance permits an unusual snapshot to be
-                # restored deliberately, but never turns that value into a
-                # valid bulk Max target. Keep only independently valid targets.
+                # Max uses supported bounds, while restoring this exact opened
+                # value after a deliberate reduction preserves the original.
                 with experimental_limits(False):
                     field.validate(value)
             except SaveError:
-                if (is_opened_value(document, field, value)
-                        or (experimental_maximum(field) is not None and above_supported(field, value))):
+                if is_opened_value(document, field, value):
+                    if (key in pending and type(value) is int
+                            and type(pending[key]) is int and pending[key] < value):
+                        targets[key] = value
                     continue
-                raise
+                elif not (experimental_maximum(field) is not None and above_supported(field, value)):
+                    raise
+                continue
             targets[key] = value
         return targets
 
@@ -327,14 +330,16 @@ class BoundScalarAdapter:
         pending = self._normalized_changes(document, changes)
         result = self._call('maximums', document, pending, group)
         result = self._normalized_changes(document, result)
-        # Max never authors an experimental value, including restoration of an
-        # unusual opened value after the user deliberately lowered it.
+        # Max never authors a new experimental value. Restoring this same
+        # record's exact opened value after a reduction preserves the source.
         fields = self.backend.field_map(document)
         for key in set(pending) | set(result):
             field = fields[key]
             before = pending.get(key, field.value(document.payload))
             after = result.get(key, field.value(document.payload))
-            if after != before and above_supported(field, after):
+            if (after != before and above_supported(field, after)
+                    and not (is_opened_value(document, field, after) and key in pending
+                             and type(before) is int and before < after)):
                 if key in pending:
                     result[key] = pending[key]
                 else:

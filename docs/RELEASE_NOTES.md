@@ -1,39 +1,35 @@
-# Universal Koei Tecmo Save Editor v2.2
+# Universal Koei Tecmo Save Editor v2.3
 
-Three new title families bring the library to **94 game/platform profiles across
-15 platforms**:
+**Compare Saves** is a new retained workspace for **93 scalar game/platform
+profiles**. Select the exact profile and two copied saves to see changed values,
+conditional record availability and changed field definitions. Named records,
+search, difference filters and paging keep large comparisons usable.
 
-- **Deception IV: Blood Ties — original US PS3 PSN:** Warl editing and separate
-  read-only ability experience.
-- **Atelier Escha & Logy — original EU PS3 PSN:** Cole editing and named stored
-  character/alchemy EXP inspection. This is the original edition, with its own
-  EU offsets; Plus and DX differ.
-- **Ar tonelico Qoga: Knell of Ar Ciel — original US PS3:** Leaf editing and
-  separate stored growth/dive-point inspection.
+Both inputs pass their own native format/integrity and original companion checks.
+The summary counts decoded payload differences and bytes outside editable storage
+spans. Those observations do not qualify new writes or imply conversion support.
+Game files stay unchanged. Results remain when switching between the library,
+editors, Save Converter and Compare Saves; late worker results are discarded
+when selections change.
 
-Open a copied PFD-decrypted native gameplay file with its complete original
-PARAM.SFO beside it. Review, Undo, automatic paired-context backups, guarded
-Save As and native saved-value read-back use the standard workspace. Extensionless
-USR-DATA copies now use the shared PS3 safe-storage path, including restore.
+Export a new private JSON report containing typed scalar differences and input
+hashes. It omits source paths, raw gameplay bytes and original account/signing
+metadata. Editable names can be personal. Reports are verified against frozen
+snapshots and source/context changes are checked before and after atomic creation.
+Existing files are never replaced.
 
-Manual resource limits follow published or observed editing values; they do
-not establish natural gameplay caps, so Max is disabled. The acknowledged
-experimental mode supports the exact unsigned 32-bit encoding range. Story,
-equipment, ownership, rewards and other progression remain unchanged.
+Headless use is available with `--game GAME --compare FIRST SECOND`, optionally
+adding `--comparison-report NEW.json`. DW3 retains its separate tagged editing
+workflow. All **94 editor profiles**, including v2.2's three new PS3 title families,
+and all **20 conversion routes** remain available.
 
-Four complete public native exports independently corroborate the profiles.
-Generated regressions and copied-native checks exercise each title's own size,
-header, offsets, byte order, surgical preservation and opaque metadata binding.
-Edited console game-load/re-save validation remains outstanding. Decryption,
-reimport and signing still use an external console save manager.
+Generated format/GUI/CLI regressions and an independent Qoga native pair validate
+comparison and safe reports. Windows startup, full-suite coverage and active
+Defender scans remain mandatory for release assets. Edited/converted game-load
+validation remains outstanding.
 
-All 20 existing conversion routes, DW6 PC/US PS3 editing, themes, backups and
-retained sessions remain available. DW6 conversion still transfers its mapped
-roster and horses; full story/battle and Xbox 360 conversion remain unavailable.
+Download the standalone **UniversalKoeiTecmoSaveEditor-v2.3.exe**, complete
+**Windows ZIP**, or reviewed **Source ZIP**. SHA256SUMS and Defender evidence
+verify the downloadable files.
 
-Download **UniversalKoeiTecmoSaveEditor-v2.2.exe** for the standalone Windows app,
-the **Windows ZIP** for the complete portable folder, or the **Source ZIP** for
-reviewed source and documentation. Published SHA256SUMS and Defender evidence
-are bound to the downloadable files.
-
-[New profile instructions and evidence](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.2/docs/PS3_NEW_FAMILIES.md).
+[Comparison instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.3/docs/SAVE_COMPARISON.md).

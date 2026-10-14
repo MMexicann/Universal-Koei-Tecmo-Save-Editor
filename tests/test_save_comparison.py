@@ -92,7 +92,8 @@ class ComparisonTests(unittest.TestCase):
     def test_forged_summary_rows_identity_and_wrong_report_extension_rejected(self):
         result=self.prepare()
         for forged in (replace(result,changed_payload_bytes=1),replace(result,unchanged_fields=7),
-                       replace(result,game_id=dw6.GAME_ID),replace(result,rows=(None,))):
+                       replace(result,game_id=dw6.GAME_ID),replace(result,rows=(None,)),
+                       replace(result,unchanged_fields=True),replace(result,rows=[]) ):
             with self.assertRaises(SaveError):comparison.report(forged)
             with self.assertRaises(SaveError):comparison.export(forged,self.folder/'forged.json')
         with self.assertRaises(SaveError):comparison.export(result,self.folder/'report.bin')

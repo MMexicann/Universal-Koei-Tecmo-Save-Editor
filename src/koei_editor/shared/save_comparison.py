@@ -119,6 +119,14 @@ def validate_sources(comparison):
 def report(comparison):
     if type(comparison) is not Comparison:
         raise SaveError('A frozen qualified comparison is required.')
+    if (type(comparison.game_id) is not str or type(comparison.rows) is not tuple
+            or any(type(getattr(comparison, key)) is not int or getattr(comparison, key) < 0
+                   for key in ('unchanged_fields', 'changed_payload_bytes', 'outside_field_bytes'))
+            or any(type(row) is not FieldDifference
+                   or any(type(getattr(row, key)) is not str for key in ('id', 'group', 'label', 'record', 'status'))
+                   or any(getattr(row, key) is not None and type(getattr(row, key)) not in (int, str)
+                          for key in ('left', 'right')) for row in comparison.rows)):
+        raise SaveError('Comparison rows and counts must retain their exact native value types.')
     expected = compare_documents(comparison.game_id, comparison.left, comparison.right)
     if comparison != expected:
         raise SaveError('The comparison does not match its immutable native snapshots.')

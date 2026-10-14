@@ -1,5 +1,16 @@
 # Universal development validation
 
+## v2.3 native comparison workspace
+
+Thirty-six focused comparison/GUI/converter/library tests passed without skips
+when the independent Qoga native pair was selected. Checks cover conditional
+fields, changed definitions, exact typed values, higher originals, outside-span
+counts, forged summaries, stale original metadata, changed sources, atomic
+report read-back, CLI argument isolation, workers, paging and retained sessions.
+Gameplay files and companions remain unchanged. Public fixtures are procedural;
+private native references are excluded. Full-suite and native Windows packaging/
+Defender publication gates remain required. See [comparison instructions](SAVE_COMPARISON.md).
+
 ## v2.2 original PS3 title-family expansion
 
 The three new original PS3 profiles have four independent complete public

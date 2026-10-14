@@ -6,6 +6,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Compare Saves: workspace, reports and interpretation](SAVE_COMPARISON.md)
+
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)

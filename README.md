@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.2 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.3 development source** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Save Converter
@@ -41,6 +41,14 @@ can break the save or game or be reset by the game.
 Max buttons keep supported limits. Unknown fields, IDs, choices, flags and required
 record structure remain protected. Backups, Undo and verified Save As stay available.
 See [experimental limits and exceptions](docs/EXPERIMENTAL_EDITING.md).
+
+## Compare Saves
+
+Compare two copies using their exact game/platform profile. View changed values,
+conditional records and other payload differences, search and page through the
+results, and export a private JSON report. Results remain when switching workspaces.
+The comparison reads 93 scalar profiles and verifies original files and metadata
+again before report export. [Instructions](docs/SAVE_COMPARISON.md).
 
 ## Supported games
 

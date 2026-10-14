@@ -99,6 +99,38 @@ class ConversionGuiTests(unittest.TestCase):
         self.assertTrue(self.root.winfo_exists())
         self.gui.busy = False
 
+    def test_dw6_scope_is_visible_before_review_and_ctrl_f_retains_converter(self):
+        source = fixtures.write_copy(self.folder / 'dw6-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'dw6-template', 'dw6_ps3')
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3').label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.assertIn('destination story', self.gui.scope.get())
+        self.root.update_idletasks()
+        platform = self.app.platform_choice.get()
+        self.app.focus_library_search()
+        self.assertEqual(self.gui.frame.winfo_manager(), 'pack')
+        self.assertEqual(self.app.platform_choice.get(), platform)
+        self.gui.review()
+        self.wait()
+        self.assertIn('partial progress', self.gui.preview.get('1.0', 'end'))
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 7368)
+
+    def test_named_ps3_unlock_workflow_stays_separate_from_stats_and_story(self):
+        editor = self.app.select_game('dw6_ps3')
+        source = self.folder / 'APP.BIN'
+        source.write_bytes(dw6.fixture())
+        dw6.context(self.folder)
+        with patch('tkinter.filedialog.askopenfilename', return_value=str(source)):
+            editor.open()
+        editor.unlock_all()
+        self.assertEqual(len(editor.changes), 21)
+        self.assertTrue(all(key.endswith('_unlocked') for key in editor.changes))
+        self.assertIn('Xiahou Dun', str(editor.backend.inspection_rows(editor.document)))
+        self.app.show_converter()
+        self.assertIs(self.app.select_game('dw6_ps3'), editor)
+        self.assertEqual(len(editor.changes), 21)
+
 
 class ConversionCliTests(unittest.TestCase):
     def test_list_dry_run_export_and_failure_exit_codes(self):

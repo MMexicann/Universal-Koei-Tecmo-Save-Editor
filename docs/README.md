@@ -32,6 +32,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Game formats and feature coverage
 
+- [DW6 PC/US PS3 typed roster-and-horse migration](DW6_CONVERSION.md)
 - [Original US Dynasty Warriors 6 PS3](DW6_PS3_FORMAT.md)
 
 - [Bandit Kings of Ancient China Macintosh](BANDIT_KINGS_MAC_FORMAT.md)

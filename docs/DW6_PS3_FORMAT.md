@@ -2,8 +2,8 @@
 
 The `dw6_ps3` adapter opens copied **PFD-decrypted** original US
 `BLUS30110-SAVEDATA/APP.BIN`, exactly **212,240 bytes**, with its unchanged
-original `PARAM.SFO`. It edits qualified existing horse combat stats and weapon
-stored damage bonuses/elements. Shared staging, Undo, Review Changes,
+original `PARAM.SFO`. It edits named one-way playable officer unlocks, qualified existing horse combat
+stats and weapon stored damage bonuses/elements, with searchable named records. Shared staging, Undo, Review Changes,
 experimental numeric limits, automatic backups, restore and verified new-copy
 Save As apply. Max is disabled for this profile.
 
@@ -34,7 +34,11 @@ scalar contract and safe storage.
 Every read validates exact size and all 41 canonical **big-endian** officer IDs
 0–40 at `0xB18 + index*0xA8 + 136`; original title identity comes from the bounded
 original companion. PC, encrypted exports, Japanese profiles, Empires, Special
-and other lengths/layouts are rejected. No independently established native
+and other lengths/layouts are rejected. The playable byte at +164 is `01` followed by three zero bytes in both original
+US exports, while the preceding numeric words are big endian. It is not a u32
+flag. One-way writes preserve all three opaque neighbors; unknown byte values
+remain read only. Public PC unlock/reload evidence and native PS3 framing
+corroborate this narrow control. No independently established native
 gameplay checksum is claimed. The published patch writes these exported words
 directly; external PS3 PFD authentication must be rebuilt by the save manager.
 Structural qualification does not detect arbitrary corruption of opaque bytes.
@@ -48,9 +52,9 @@ Structural qualification does not detect arbitrary corruption of opaque bytes.
 | Existing weapons | Eight slots per officer, base `0xB20 + officer*0xA8`, stride `0x10`: ID +0, stored damage bonus +4, element +8, skill mask +12. Only existing known IDs with element 0–3 qualify. Empty ID 174 and unknown IDs/elements are excluded. |
 | Weapon bonus | Manual u32 bonus control, normal conservative editing bound 0–100 following the source target. This is not total attack or an independently verified natural cap. Experimental mode permits the exact unsigned encoding range; Max stays disabled. |
 | Weapon element | 0 Fire, 1 Ice, 2 Lightning, 3 no element. Hard choice constraints apply in both modes; identity, bonus, mask and neighboring entries remain unchanged. |
-| Officer growth | Read-only numbered officer stored-level index (+148) and EXP (+152) inspection; skill-tree bytes and playable flags remain unchanged. |
-| Story, unlocks, acquisition and rewards | Preserved. Controlled action pairs and dependency maps are required before adding writes. |
-| Regional/platform scope | US BLUS30110 only. A separately inspected Japanese BLJM60041 export has a different length and is not accepted. PC/PS3 conversion requires a complete typed schema; it is not offered by the Save Converter. |
+| Officers | Named stored level, EXP, kills, title, outfit, equipped slot and 64-bit skill-mask inspection; progression remains read only. One-way playable-byte unlocks at +164 preserve all other bytes and are excluded from Max. |
+| Story, acquisition and rewards | Preserved. Playable unlocks are a separate content action; they do not mark story completion or grant skill nodes. |
+| Regional/platform scope | US BLUS30110 only. A separately inspected Japanese BLJM60041 export has a different length and is not accepted. PC/US PS3 roster-and-horse migration is offered separately; [its scope](DW6_CONVERSION.md) preserves destination story/battle state. |
 
 Writes change only the requested native field spans. The full original
 `PARAM.SFO` digest is bound to opening, backups, output and restore. Same-title

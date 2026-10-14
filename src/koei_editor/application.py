@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.1.1'
+VERSION = '2.1.2'
 
 
 class Application(Appearance):
@@ -362,7 +362,7 @@ class Application(Appearance):
         return 'break'
 
     def focus_library_search(self, _event=None):
-        if self.active_game is not None:
+        if self.active_game is not None or (self.converter is not None and self.converter.frame.winfo_manager()):
             return
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
@@ -428,6 +428,7 @@ def main():
         try:
             prepared = conversion.prepare(arguments.convert, arguments.source, arguments.template)
             report = {'route': prepared.route.id, 'gameplay_bytes': prepared.gameplay_bytes,
+                      'transfer_scope': prepared.route.transfer_scope, 'scope_description': prepared.route.scope_description,
                       'gameplay_sha256': prepared.gameplay_sha256, 'notes': prepared.notes,
                       'dry_run': arguments.dry_run, 'game_load_verified': False}
             if not arguments.dry_run:

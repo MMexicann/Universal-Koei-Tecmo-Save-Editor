@@ -1354,8 +1354,8 @@
       "title": "Dynasty Warriors 6",
       "platform": "PlayStation 3",
       "status": "Original US PS3 decrypted export editor",
-      "evidence": "Two independently acquired BLUS30110 native exports of 212240 bytes qualify big-endian officer identities and published Apollo horse/weapon locations. Existing horse combat stats and weapon damage bonus/element controls preserve unknown bytes and original PARAM.SFO.",
-      "needed": "Edited console load/re-save, other regional/revision exports, controlled progression/horse/weapon dependencies and complete PC/console conversion map.",
+      "evidence": "Two independently acquired BLUS30110 native exports of 212240 bytes qualify big-endian officer identities and published Apollo horse/weapon locations. Named one-way playable-byte unlocks, existing horse combat stats and weapon damage bonus/element controls preserve unknown bytes and original PARAM.SFO. Separate scoped PC/PS3 migration transfers typed roster and complete horse state.",
+      "needed": "Edited console load/re-save, other regional/revision exports, controlled progression/horse/weapon dependencies, full story/suspended-battle conversion and extracted Xbox 360 native qualification.",
       "editing_verified": true
     }
   ],

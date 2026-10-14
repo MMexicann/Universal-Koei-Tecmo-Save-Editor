@@ -29,7 +29,7 @@ def expected_files():
     yield document, ('# Supported games and platforms\n\n'
                      'Generated from `koei_editor.game_registry.GAMES`. Run '
                      '`python -m tools.update_supported_games` after changing an adapter.\n\n'
-                     'Version 2.1.1 adds a separate Save Converter and original US DW6 PS3 editor; '
+                     'Version 2.1.2 expands the Save Converter and original US DW6 PS3 editor; '
                      'see [conversion routes and boundaries](SAVE_CONVERSION.md). '
                      'Optional experimental numeric editing applies across the library. '
                      'Supported maxima and encoding limits remain separate; see '

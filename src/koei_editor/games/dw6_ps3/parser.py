@@ -1,6 +1,6 @@
 """Source-backed US PS3 DW6 controls, qualified on two native player exports.
 
-Only published combat-stat and existing weapon fields are written. The PFD
+Published combat/weapon fields and corroborated one-way playable bytes are written. The PFD
 authentication layer is external; unknown gameplay bytes remain unchanged.
 """
 from dataclasses import dataclass, replace
@@ -10,7 +10,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.games.dw6.dw6_metadata import WEAPON_NAMES
+from koei_editor.games.dw6.dw6_metadata import WEAPON_NAMES, OFFICER_NAMES, ELEMENT_NAMES
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.ps3_export import MAX_SFO_SIZE, savedata_directory
@@ -70,7 +70,7 @@ class Format:
     published_format: bool = True
     game_load_verified: bool = False
     note: str = ('Copied PFD-decrypted BLUS30110 APP.BIN with exact original PARAM.SFO. '
-                 'Manual existing horse speed/attack/jump/destruction and weapon stored damage bonus/element. '
+                 'Named one-way playable unlocks, existing horse speed/attack/jump/destruction and weapon stored damage bonus/element. '
                  'Max disabled. Reimport and resign with Apollo. Story, ownership and officer growth are preserved.')
 
 
@@ -168,9 +168,14 @@ def _fields(payload):
                 continue
             slot = officer * WEAPON_COUNT + weapon + 1
             fields.append(Field(f'officer_{officer}_weapon_{weapon}_damage_bonus',
-                                'Stored damage bonus', base + 4, 4, 100, 'Weapon bonuses', slot))
+                                WEAPON_NAMES[identity] + ': Stored damage bonus', base + 4, 4, 100, 'Weapon bonuses', slot))
             fields.append(Field(f'officer_{officer}_weapon_{weapon}_element',
-                                'Element', base + 8, 4, 3, 'Weapon elements', slot, experimental=False))
+                                WEAPON_NAMES[identity] + ': Element', base + 8, 4, 3, 'Weapon elements', slot, experimental=False))
+    for officer in range(OFFICER_COUNT):
+        base = OFFICER_BASE + officer * OFFICER_STRIDE
+        if payload[base + 164] in (0, 1):
+            fields.append(Field(f'officer_{officer}_unlocked', 'Playable (1 unlock)', base + 164,
+                                1, 1, 'Unlocks', officer + 1, experimental=False))
     return tuple(fields)
 
 
@@ -183,9 +188,16 @@ def field_map(document):
     return MappingProxyType({field.id: field for field in fields_for(document)})
 
 
+def _pending(document, changes, mapping):
+    pending = normalize_pending_values(document, changes, mapping)
+    if any(mapping[key].group == 'Unlocks' and value != 1 for key, value in pending.items()):
+        raise SaveError('Playable unlocks are one-way; relocking officers is unavailable.')
+    return pending
+
+
 def changed_payload(document, changes):
     mapping = field_map(document)
-    pending = normalize_pending_values(document, changes, mapping)
+    pending = _pending(document, changes, mapping)
     result = bytearray(document.payload)
     for key, value in pending.items():
         field = mapping[key]
@@ -201,22 +213,22 @@ def serialize(document, changes):
 
 def stage(document, changes, key, value):
     mapping = field_map(document)
-    pending = normalize_pending_values(document, changes, mapping)
+    pending = _pending(document, changes, mapping)
     if type(key) is not str or key not in mapping:
-        raise SaveError('Choose a qualified existing DW6 PS3 horse or weapon field.')
+        raise SaveError('Choose a qualified existing DW6 PS3 officer, horse or weapon field.')
     pending[key] = value
-    return normalize_pending_values(document, pending, mapping)
+    return _pending(document, pending, mapping)
 
 
 def review(document, changes):
-    pending = normalize_pending_values(document, changes, field_map(document))
+    pending = _pending(document, changes, field_map(document))
     return [(field, field.value(document.payload), pending[field.id])
             for field in fields_for(document) if field.id in pending]
 
 
 def limit_values(document, changes, keys):
     mapping = field_map(document)
-    normalize_pending_values(document, changes, mapping)
+    _pending(document, changes, mapping)
     if isinstance(keys, (str, bytes)):
         raise SaveError('Choose a sequence of qualified field IDs.')
     try:
@@ -229,7 +241,12 @@ def limit_values(document, changes, keys):
 
 
 def maximums(document, changes, group=None):
-    return normalize_pending_values(document, changes, field_map(document))
+    return _pending(document, changes, field_map(document))
+
+
+def unlock_values(document):
+    return {field.id: 1 for field in fields_for(document)
+            if field.group == 'Unlocks' and field.value(document.payload) == 0}
 
 
 def field_options(document, key):
@@ -242,16 +259,52 @@ def field_options(document, key):
 
 def record_label(slot, group='Horses'):
     if group.startswith('Weapon'):
-        return f'Officer {(slot - 1) // WEAPON_COUNT + 1} · Weapon {(slot - 1) % WEAPON_COUNT + 1}'
+        return f'{OFFICER_NAMES[(slot - 1) // WEAPON_COUNT]} / weapon {(slot - 1) % WEAPON_COUNT + 1}'
+    if group == 'Unlocks':
+        return OFFICER_NAMES[slot - 1]
     return f'Horse {slot}'
 
 
 def inspection_rows(document):
     validate_document(document)
-    return [{'group': 'Officer progression', 'label': f'Officer {index + 1}',
-             'value': f'Stored level index: {_u32(document.payload, OFFICER_BASE + index * OFFICER_STRIDE + 148)}; '
-                      f'EXP: {_u32(document.payload, OFFICER_BASE + index * OFFICER_STRIDE + 152)}'}
-            for index in range(OFFICER_COUNT)]
+    payload, rows = document.payload, []
+    for index, name in enumerate(OFFICER_NAMES):
+        base = OFFICER_BASE + index * OFFICER_STRIDE
+        rows.append({'group': 'Officers', 'label': name,
+                     'value': f'Stored level index {_u32(payload, base + 148)}; EXP {_u32(payload, base + 152):,}; '
+                              f'kills {_u32(payload, base + 156):,}; title ID {_u32(payload, base + 144)}; '
+                              f'outfit {_u32(payload, base + 140)}; equipped slot {_u32(payload, base + 160)}; '
+                              f'playable byte {payload[base + 164]}; skill mask 0x{int.from_bytes(payload[base:base + 8], "big"):016X}'})
+        for weapon in range(8):
+            offset = base + 8 + weapon * 16
+            identity, bonus, element, skills = (_u32(payload, offset + relative) for relative in (0, 4, 8, 12))
+            if identity == 174:
+                continue
+            label = WEAPON_NAMES[identity] if identity < len(WEAPON_NAMES) else f'Unknown weapon ID {identity}'
+            element_name = ELEMENT_NAMES[element] if element < len(ELEMENT_NAMES) else f'Unknown {element}'
+            rows.append({'group': 'Weapons', 'label': f'{name} / slot {weapon + 1}: {label}',
+                         'value': f'ID {identity}; stored bonus {bonus}; element {element_name}; skill mask 0x{skills:08X}'})
+    for index in range(HORSE_COUNT):
+        base = HORSE_BASE + index * HORSE_STRIDE
+        stats = '; '.join(f'{label} {_u32(payload, base + relative)}' for _key, label, relative in HORSE_STATS)
+        rows.append({'group': 'Horses', 'label': f'Horse {index + 1}',
+                     'value': f'EXP {_u32(payload, base)}; type {_u32(payload, base + 4)}; '
+                              f'element ID {_u32(payload, base + 8)}; skill mask 0x{_u32(payload, base + 12):08X}; '
+                              f'{stats}; adjacent value {_u32(payload, base + 20)}; '
+                              f'name prefix ID {_u32(payload, base - 16)}; suffix ID {_u32(payload, base - 20)}; '
+                              f'physique ID {_u32(payload, base - 12)}; eyes ID {_u32(payload, base - 8)}'})
+    return tuple(rows)
+
+
+def field_hint(document, key):
+    field = field_map(document)[key]
+    if field.group == 'Unlocks':
+        return 'Set 1 to unlock this officer. Story, rewards, level and skills stay unchanged. Relocking is unavailable; excluded from Max.'
+    if field.group == 'Weapon elements':
+        return 'Choose the element on this existing weapon. Identity, bonus, skills and officer growth stay unchanged; excluded from Max.'
+    if field.group == 'Weapon bonuses':
+        return 'Stored bonus over base damage, not total attack. The normal limit 100 is a published edit target, not a proven gameplay cap. Max stays disabled.'
+    return 'Existing horse stat only. EXP, growth, model, names, skills and adjacent value stay unchanged. Max stays disabled.'
 
 
 _storage = PS3CopyStorage(GAME_ID, SAVE_SIZE, validate_document, context_raw, decode, read_save, serialize)

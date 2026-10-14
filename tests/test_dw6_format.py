@@ -107,6 +107,18 @@ class DW6FormatTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             mapping['fake'] = mapping['horse_0_speed']
 
+    def test_playable_flag_is_one_byte_and_opaque_neighbors_are_preserved(self):
+        raw = bytearray(self.document.raw)
+        offset = backend.OFFICER_BASE + 19 * backend.OFFICER_STRIDE + 164
+        raw[offset:offset + 4] = b'\x00\x61\x82\xa3'
+        doc = backend.decode(bytes(raw))
+        field = backend.field_map(doc)['officer_19_unlocked']
+        self.assertEqual(field.size, 1)
+        updated = backend.serialize(doc, backend.stage(doc, {}, field.id, 1))
+        self.assertEqual(updated[:offset], doc.raw[:offset])
+        self.assertEqual(updated[offset + 1:], doc.raw[offset + 1:])
+        self.assertEqual(updated[offset], 1)
+
     def test_unusual_records_remain_read_only_and_unknown_bytes_preserved(self):
         for offset, value in ((2904 + 164, 2), (10784 + 4, 63), (10784 + 20, 0),
                               (10784 + 24, 0)):

@@ -20,9 +20,13 @@ from koei_editor.games.p5strikers_switch import parser as p5_switch
 from koei_editor.shared.copy_storage import atomic_new
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.dw8xl import converter as dw8_conversion
+from koei_editor.games.dw8xl import ps4_export as dw8_ps4
+from koei_editor.games.dw6 import converter as dw6_conversion
+from koei_editor.games.dw6 import dw6_parser as dw6_pc
+from koei_editor.games.dw6_ps3 import parser as dw6_ps3
 from koei_editor.games.p5strikers_pc import converter as p5_conversion
 
-_FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion})
+_FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion, 'dw6': dw6_conversion})
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,7 @@ class Endpoint:
     companion: str = ''
     companion_limit: int = 0
     import_note: str = ''
+    conversion_only: bool = False
 
 
 ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
@@ -44,12 +49,19 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
              'PFD-decrypted NPUB31449 export. Reimport and resign with Apollo Save Tool.'),
     Endpoint('dw8xl_vita', 'dw8xl', 'DW8 XL · Vita', 'MainData00.dat', dw8_vita,
              import_note='Reimport the plaintext file with your Vita save manager.'),
+    Endpoint('dw8xl_ps4', 'dw8xl', 'DW8 XL · US PS4 zero-extension profile', 'APP.BIN', dw8_ps4,
+             'sce_sys/param.sfo', 4096,
+             'Decrypted CUSA00397 export. Reimport and resign with your PS4 save manager.', True),
     Endpoint('p5strikers_pc', 'p5s', 'Persona 5 Strikers · PC English', 'SAVEDATA.BIN', p5_pc),
     Endpoint('p5strikers_ps4', 'p5s', 'Persona 5 Strikers · PS4 English', 'APP.BIN', p5_ps4,
              'sce_sys/param.sfo', 4096,
              'Decrypted CUSA19640 export. Reimport and resign with your PS4 save manager.'),
     Endpoint('p5strikers_switch', 'p5s', 'Persona 5 Strikers · Switch English', 'savedata', p5_switch,
              import_note='Reimport the exported file with your Switch save manager.'),
+    Endpoint('dw6', 'dw6', 'DW6 · PC', 'save.dat', dw6_pc),
+    Endpoint('dw6_ps3', 'dw6', 'DW6 · US PS3', 'APP.BIN', dw6_ps3,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLUS30110 export. Reimport and resign with Apollo Save Tool.'),
 )})
 
 
@@ -64,7 +76,18 @@ class Route:
 
     @property
     def label(self):
-        return ENDPOINTS[self.source_id].label + ' → ' + ENDPOINTS[self.target_id].label
+        label = ENDPOINTS[self.source_id].label + ' → ' + ENDPOINTS[self.target_id].label
+        if self.transfer_scope == 'roster-and-horses':
+            label += ' (roster and horses)'
+        return label
+
+    @property
+    def transfer_scope(self):
+        return _FAMILIES[ENDPOINTS[self.source_id].family].TRANSFER_SCOPE
+
+    @property
+    def scope_description(self):
+        return _FAMILIES[ENDPOINTS[self.source_id].family].SCOPE_DESCRIPTION
 
 
 ROUTES = tuple(Route(source.id, target.id) for source in ENDPOINTS.values()
@@ -157,17 +180,20 @@ def prepare(route_id, source_path, template_path):
     template = _read(route.target_id, template_path)
     raw = _encode(source, template)
     payload = _gameplay(source)
+    return Conversion(route, source, template, raw, hashlib.sha256(payload).hexdigest(), len(payload), _notes(route))
+
+
+def _notes(route):
     target = ENDPOINTS[route.target_id]
-    notes = ['All shared gameplay bytes are preserved. Original copies remain unchanged.',
+    notes = [route.scope_description + '. Original copies remain unchanged.',
              'Use the same game edition and compatible updates/DLC. Test loading a separate copy in-game.',
              'In-game conversion loading has not been validated by this project.']
     if target.import_note:
         notes.append(target.import_note)
     if target.companion:
         notes.append('Original destination-template metadata is copied unchanged. This is a gameplay export, not a signed console package.')
-    if target.family == 'p5s':
-        notes.append('All ten English slots and their names are transferred; destination reserved tail is retained.')
-    return Conversion(route, source, template, raw, hashlib.sha256(payload).hexdigest(), len(payload), tuple(notes))
+    notes.extend(_FAMILIES[target.family].NOTES)
+    return tuple(notes)
 
 
 def _validate_conversion(conversion):
@@ -185,7 +211,7 @@ def _validate_conversion(conversion):
     payload = _gameplay(conversion.source)
     if (conversion.raw != _encode(conversion.source, conversion.template)
             or conversion.gameplay_sha256 != hashlib.sha256(payload).hexdigest()
-            or conversion.gameplay_bytes != len(payload)):
+            or conversion.gameplay_bytes != len(payload) or conversion.notes != _notes(conversion.route)):
         raise SaveError('The prepared conversion was altered. Review it again.')
 
 
@@ -201,9 +227,13 @@ def export(conversion, output_dir):
                for snapshot in (conversion.source, conversion.template)]
     _validate_conversion(conversion)  # Also catches races during backups.
     receipt = {
-        'schema_version': 1, 'route': conversion.route.id,
+        'schema_version': 2, 'route': conversion.route.id,
+        'transfer_scope': conversion.route.transfer_scope,
+        'scope_description': conversion.route.scope_description,
         'source_sha256': conversion.source.document.sha256,
         'template_sha256': conversion.template.document.sha256,
+        'source_context_sha256': hashlib.sha256(conversion.source.companion_raw).hexdigest() if conversion.source.companion_raw else None,
+        'template_context_sha256': hashlib.sha256(conversion.template.companion_raw).hexdigest() if conversion.template.companion_raw else None,
         'output_sha256': hashlib.sha256(conversion.raw).hexdigest(),
         'gameplay_sha256': conversion.gameplay_sha256,
         'gameplay_bytes': conversion.gameplay_bytes,

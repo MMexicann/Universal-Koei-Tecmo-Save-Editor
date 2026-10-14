@@ -21,6 +21,7 @@ def fixture():
     for officer in range(p.OFFICER_COUNT):
         base = p.OFFICER_BASE + officer * p.OFFICER_STRIDE
         raw[base + 136:base + 140] = officer.to_bytes(4, 'big')
+        raw[base + 164:base + 168] = bytes((officer % 2, 0x61, 0x82, 0xa3))
         for weapon in range(8):
             off = base + 8 + weapon * 16
             raw[off:off + 4] = (174).to_bytes(4, 'big')
@@ -59,7 +60,7 @@ class DW6PS3ContractTests(ScalarContractTests, unittest.TestCase):
 
     def test_big_endian_surgical_writes_all_fields_and_protected_adjacent_word(self):
         fields = p.fields_for(self.document)
-        self.assertEqual(len(fields), 34)
+        self.assertEqual(len(fields), 75)
         for field in fields:
             value = 3 if field.id.endswith('_element') else 1
             raw = p.serialize(self.document, {field.id: value})
@@ -80,6 +81,24 @@ class DW6PS3ContractTests(ScalarContractTests, unittest.TestCase):
         self.assertEqual(p.limit_values(doc, {}, tuple(p.field_map(doc))), {})
         for bad in (True, -1, 4, '1'):
             with self.assertRaises(SaveError): p.stage(doc, {}, 'officer_0_weapon_0_element', bad)
+
+    def test_named_one_way_unlocks_preserve_padding_and_never_enter_max(self):
+        key = 'officer_0_unlocked'
+        pending = p.stage(self.document, {}, key, 1)
+        self.assertEqual(p.stage(self.document, pending, key, 0), {})
+        result = p.serialize(self.document, pending)
+        offset = p.OFFICER_BASE + 164
+        self.assertEqual(result[:offset], self.raw[:offset])
+        self.assertEqual(result[offset + 1:], self.raw[offset + 1:])
+        self.assertEqual(result[offset], 1)
+        self.assertIn(key, p.unlock_values(self.document))
+        self.assertNotIn('officer_1_unlocked', p.unlock_values(self.document))
+        self.assertEqual(p.record_label(1, 'Unlocks'), 'Xiahou Dun')
+        self.assertEqual(p.maximums(self.document, {}), {})
+        for operation in (p.stage,):
+            with self.assertRaises(SaveError): operation(self.document, {}, 'officer_1_unlocked', 0)
+        with self.assertRaises(SaveError): p.serialize(self.document, {'officer_1_unlocked': 0})
+        self.assertTrue(any(row['label'] == 'Xiahou Dun' for row in p.inspection_rows(self.document)))
 
     def test_higher_originals_unstage_and_experimental_encoding_limits(self):
         from koei_editor.shared.experimental_limits import experimental_limits

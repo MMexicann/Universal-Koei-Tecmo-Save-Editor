@@ -1,5 +1,23 @@
 # Changelog
 
+## v2.1.2 — 2026-10-14
+
+- Add explicit original DW6 PC/US PS3 roster-and-horse migration in both
+  directions: all 41 typed officer records and eight complete horse records.
+  Preserve destination story, challenges, options and suspended-battle bytes.
+- Map the u64 skill mask, u32 record values and one-byte playable flag separately.
+  Correct the complete horse boundary, including its preceding name/growth words.
+  Test semantic values and untouched spans in addition to reverse roundtrips.
+- Add six DW8 XL US PS4 zero-extension routes, for 20 total conversion routes.
+  Reject nonzero extension data and unsupported title/revision profiles.
+- Expand US DW6 PS3 with named one-way playable unlocks, separate bulk unlock,
+  named weapon controls and searchable officer/weapon/horse inspection. Preserve
+  the three opaque bytes beside PC unlock flags.
+- Show per-route scope before review and in CLI/schema-2 receipts, including
+  metadata hashes. Reject altered review claims; retain converter on Ctrl+F.
+- Keep full DW6 story/battle conversion, Xbox 360 and actual converted game-load
+  validation explicitly outstanding. Preserve 91 editor profiles/15 platforms.
+
 ## v2.1.1 — 2026-10-14
 
 - Added a retained Save Converter workspace and CLI review/dry run/export for

@@ -22,8 +22,8 @@ class ConversionWorkspace:
         ttk.Label(self.frame, text='SAVE CONVERTER', font=(font_family, 23, 'bold')).pack(anchor='w')
         ttk.Label(self.frame, text='Move a copied save to another platform',
                   style='Muted.TLabel').pack(anchor='w', pady=(2, 14))
-        ttk.Label(self.frame, text='DW8 XL: PC / US PS3 PSN / Vita. Persona 5 Strikers: English PC / PS4 / Switch. '
-                  'Other games and revisions need their own conversion mapping.',
+        ttk.Label(self.frame, text='DW8 XL: PC / US PS3 PSN / US PS4 / Vita. Persona 5 Strikers: English PC / PS4 / Switch. '
+                  'DW6: PC / US PS3 roster and horses. Review the transfer scope for each route.',
                   wraplength=980).pack(anchor='w', pady=(0, 12))
         form = ttk.Frame(self.frame)
         form.pack(fill='x')
@@ -36,8 +36,11 @@ class ConversionWorkspace:
         self.route_selector = ttk.Combobox(form, textvariable=self.route, values=tuple(self._labels), state='readonly')
         self.route_selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=8)
         self.controls.append(self.route_selector)
-        for row, label, variable, kind in ((1, 'Source copy', self.source, 'source'),
-                                           (2, 'Destination template', self.template, 'template')):
+        self.scope = tk.StringVar(root)
+        ttk.Label(form, textvariable=self.scope, wraplength=820, style='Muted.TLabel').grid(
+            row=1, column=1, columnspan=2, sticky='w')
+        for row, label, variable, kind in ((2, 'Source copy', self.source, 'source'),
+                                           (3, 'Destination template', self.template, 'template')):
             ttk.Label(form, text=label).grid(row=row, column=0, sticky='w', padx=(0, 14), pady=8)
             entry = ttk.Entry(form, textvariable=variable)
             entry.grid(row=row, column=1, sticky='ew', pady=8)
@@ -63,8 +66,11 @@ class ConversionWorkspace:
         self.preview.pack(fill='both', expand=True)
         for variable in (self.route, self.source, self.template):
             variable.trace_add('write', self.invalidate)
+        self.invalidate()
 
     def invalidate(self, *_args):
+        route_id = self._labels.get(self.route.get())
+        self.scope.set(conversion.get_route(route_id).scope_description if route_id else 'Choose a supported route.')
         self._revision += 1
         self.prepared = None
         self.export_button.configure(state='disabled')
@@ -127,7 +133,7 @@ class ConversionWorkspace:
         if kind == 'review':
             self.prepared = result
             text = (result.route.label + '\n\n'
-                    + f'{result.gameplay_bytes:,} shared gameplay bytes will be preserved.\n'
+                    + f'{result.gameplay_bytes:,} mapped gameplay bytes will be transferred.\n'
                     + f'Output: {conversion.ENDPOINTS[result.route.target_id].filename}\n\n'
                     + '\n\n'.join(result.notes)
                     + '\n\nBoth inputs receive automatic backups. Export creates a new folder with a local conversion receipt.')

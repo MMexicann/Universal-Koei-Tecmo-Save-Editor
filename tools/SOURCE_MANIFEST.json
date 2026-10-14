@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 21522,
-      "sha256": "c251aa8bb8da11f04029097410325f32d86201ebc65e9f5424957ce3fbf18d36"
+      "bytes": 21520,
+      "sha256": "1e7e169c583c61a65d26e40026c89330f5bf0c9f5ed11bdfecd8e10a77c55ea0"
     },
     {
       "path": ".gitignore",

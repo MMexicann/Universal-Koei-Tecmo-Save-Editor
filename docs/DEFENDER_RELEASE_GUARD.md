@@ -49,7 +49,10 @@ Version 2.1 records and retries recognized Defender RPC startup failures during
 preparation only. At most two complete configuration attempts share a bounded
 120-second service/query settling budget. The report records the failed command,
 exception codes and observed state. A pending service waits; only a stopped
-service is started. After successful queries, the complete protection and
+service is started. During query settling after a recognized RPC restart,
+Defender initialization response `0x800106BA` remains pending within the same
+budget; it never permits a failed configuration or scan to qualify. After
+successful queries, the complete protection and
 signature configuration is replayed, followed by the same strict readiness,
 Microsoft scanner signature, cloud, scan and unchanged-input requirements.
 Persistent and nontransient failures still block publication.

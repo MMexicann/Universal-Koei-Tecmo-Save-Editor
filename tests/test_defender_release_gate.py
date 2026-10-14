@@ -177,13 +177,24 @@ class DefenderReleaseGateContracts(unittest.TestCase):
                 @{exception=[Exception]::new('Signature download failed');
                   id='HRESULT0x80072ee2,Update-MpSignature'; retry=$false},
                 @{exception=[Exception]::new('RPC-looking ID');
-                  id='HRESULT0x800706bee,Update-MpSignature'; retry=$false}
+                  id='HRESULT0x800706bee,Update-MpSignature'; retry=$false},
+                @{exception=[Exception]::new('Defender initialization');
+                  id='HRESULT 0x800106ba,Get-MpPreference'; retry=$false; initializing=$true},
+                @{exception=[Runtime.InteropServices.COMException]::new('Defender initialization',-2147416390);
+                  id='COM'; retry=$false; initializing=$true},
+                @{exception=[ComponentModel.Win32Exception]::new(-2147416390,'Defender initialization');
+                  id='Native'; retry=$false; initializing=$true},
+                @{exception=[Exception]::new('Operation failed: 0x800106ba');
+                  id='Generic'; retry=$false},
+                @{exception=[Exception]::new('Provider error');
+                  id='HRESULT0x800106baa,Get-MpPreference'; retry=$false}
             )
             foreach($vector in $vectors) {
                 $failure=[Management.Automation.ErrorRecord]::new($vector.exception,$vector.id,
                     [Management.Automation.ErrorCategory]::NotSpecified,$null)
                 $details=Get-PreparationFailure $failure
                 if($details.transient_rpc -ne $vector.retry -or
+                   $details.defender_initializing -ne [bool]$vector.initializing -or
                    $details.command -ne $script:preparationCommand -or
                    $details.fully_qualified_error_id -ne $vector.id -or
                    $details.hresults.Count -lt 1) {
@@ -223,6 +234,89 @@ class DefenderReleaseGateContracts(unittest.TestCase):
                          $report.preparation_observations[-1].outcome -ne 'settling_expired') {
                     throw 'A successful query after the settling deadline was accepted.'
                 }
+            }
+        ''')
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
+    def test_defender_initialization_wait_is_only_for_post_rpc_settling_queries(self):
+        self.run_preparation_procedure(r'''
+            function Write-ScanReport {
+                if($report.engine_ready -or $report.clean -or
+                   (ConvertTo-Json -InputObject $report.inputs -Compress) -ne $script:originalInputs) {
+                    throw 'Initialization polling changed inputs or claimed qualification.'
+                }
+            }
+            function Throw-InitializationFailure {
+                param($Command)
+                throw [Management.Automation.ErrorRecord]::new([Exception]::new('Procedural provider not initialized'),
+                    ('HRESULT 0x800106ba,'+$Command),[Management.Automation.ErrorCategory]::NotSpecified,$null)
+            }
+            function Get-Service {
+                param($Name)
+                if($script:mode -in @('service-init','outside-require-queries')) {
+                    Throw-InitializationFailure 'Get-Service'
+                }
+                return [pscustomobject]@{Status='Running'}
+            }
+            function Start-Service {throw 'Initialization polling restarted the service.'}
+            function Get-DefenderState {
+                $script:queries+=1
+                if($script:mode -eq 'expiry' -or
+                   ($script:mode -eq 'recover' -and $script:queries -le 2)) {
+                    Throw-InitializationFailure 'Get-MpPreference'
+                }
+                return Get-Content -LiteralPath $env:DEFENDER_TEST_READY_STATE -Raw | ConvertFrom-Json
+            }
+            function Enable-DefenderProtection {
+                param($Timer,$TimeoutSeconds,$PollSeconds)
+                $script:enableCalls+=1
+                $script:preparationCommand='Update-MpSignature MMPC'
+                if($script:mode -eq 'enable-init') {
+                    $script:preparationCommand='Get-MpPreference'
+                    Throw-InitializationFailure 'Get-MpPreference'
+                }
+                if($script:mode -eq 'signature-init') {
+                    Throw-InitializationFailure 'Update-MpSignature'
+                }
+                if($script:enableCalls -eq 1) {
+                    throw [ComponentModel.Win32Exception]::new(1726,'Procedural RPC restart')
+                }
+            }
+            foreach($mode in @('recover','expiry','enable-init','signature-init','service-init','outside-require-queries')) {
+                $script:mode=$mode; $script:queries=0; $script:enableCalls=0
+                $report=[ordered]@{clean=$false;engine_ready=$false;preparation_attempts=0;
+                    preparation_wait_seconds=0;preparation_observations=@();
+                    inputs=@(@{path='original';size=7;sha256='original-hash'})}
+                $script:originalInputs=ConvertTo-Json -InputObject $report.inputs -Compress
+                $timeout=if($mode -eq 'expiry'){1}else{5}
+                $failed=$false
+                try {
+                    if($mode -eq 'outside-require-queries') {
+                        Wait-DefenderPreparationService -Timer ([Diagnostics.Stopwatch]::StartNew()) `
+                            -TimeoutSeconds $timeout -PollSeconds 1
+                    } else {Invoke-DefenderPreparation -TimeoutSeconds $timeout -PollSeconds 1}
+                } catch {$failed=$true}
+                $expectedCalls=if($mode -eq 'recover'){2}elseif($mode -eq 'outside-require-queries'){0}else{1}
+                if($failed -ne ($mode -ne 'recover') -or $script:enableCalls -ne $expectedCalls -or
+                   $report.preparation_attempts -ne $expectedCalls) {
+                    throw ('Invalid initialization retry scope: '+$mode)
+                }
+                $initializationWaits=@($report.preparation_observations | Where-Object initialization_query_wait)
+                if($mode -in @('recover','expiry')) {
+                    if($initializationWaits.Count -lt 1 -or
+                       @($initializationWaits | Where-Object transient_rpc).Count -ne 0 -or
+                       @($initializationWaits | Where-Object { -not $_.defender_initializing }).Count -ne 0) {
+                        throw 'Initialization wait was incorrectly treated as RPC or lost its diagnostics.'
+                    }
+                    if($mode -eq 'expiry' -and
+                       ($report.preparation_wait_seconds -lt 1 -or
+                        $report.preparation_observations[-1].outcome -ne 'settling_expired')) {
+                        throw 'Initialization query expiry bypassed the original settling budget.'
+                    }
+                } elseif($initializationWaits.Count -ne 0) {
+                    throw ('Initialization errors outside settling queries were retried: '+$mode)
+                }
+                Write-ScanReport
             }
         ''')
 

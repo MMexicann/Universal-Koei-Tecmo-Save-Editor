@@ -183,8 +183,8 @@
     },
     {
       "path": "docs/DEFENDER_RELEASE_GUARD.md",
-      "bytes": 5940,
-      "sha256": "ee321d5c1638098b0404eaa50017921c99891c0cf1134fac6660b63a6ef5fb60"
+      "bytes": 6140,
+      "sha256": "76b845f877c7be31ea7504c4e32e1fb89417580b11f09942cf2d0b394a0aa442"
     },
     {
       "path": "docs/DOA5LR_PC_RESEARCH.md",
@@ -3328,8 +3328,8 @@
     },
     {
       "path": "tests/test_defender_release_gate.py",
-      "bytes": 34553,
-      "sha256": "f4af1eae39a22ecc8797f43d633058ca97d3ff02d890b2f602e209edbeda71f2"
+      "bytes": 40344,
+      "sha256": "07d6d0f9f6602f1363438d08eab1829c1063aa2b17f27f3df180a95c04346caf"
     },
     {
       "path": "tests/test_doa5_ps3.py",
@@ -4563,8 +4563,8 @@
     },
     {
       "path": "tools/scan_release.ps1",
-      "bytes": 24842,
-      "sha256": "c170812611f7bd4c1cd3170ced8c69da3a65cfd62ab56e6fe2fd4e236a98bc83"
+      "bytes": 25668,
+      "sha256": "aabd1a0168643956c9f3047aee56a25b608a0644b4c0a76c7db3de1299c0fd3e"
     },
     {
       "path": "tools/test_timings.json",

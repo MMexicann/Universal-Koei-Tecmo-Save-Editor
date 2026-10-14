@@ -219,6 +219,9 @@ function Get-PreparationFailure($Failure) {
         @($nativeCodes | Where-Object { $_ -in @(1722, 1726, 1727, 2147944122, 2147944126, 2147944127,
                                                        -2147023174, -2147023170, -2147023169) }).Count -gt 0 -or
         $Failure.FullyQualifiedErrorId -match '(?i)(?:^|\bHRESULT\s*|[^a-z0-9])0x800706(?:ba|be|bf)(?![a-z0-9])'
+    $initializing = $codes -contains '0x800106BA' -or
+        @($nativeCodes | Where-Object { $_ -in @(2147550906, -2147416390) }).Count -gt 0 -or
+        $Failure.FullyQualifiedErrorId -match '(?i)(?:^|\bHRESULT\s*|[^a-z0-9])0x800106ba(?![a-z0-9])'
     [ordered]@{
         observed_utc = [DateTime]::UtcNow.ToString('o')
         command = $script:preparationCommand
@@ -227,6 +230,7 @@ function Get-PreparationFailure($Failure) {
         hresults = $codes
         native_error_codes = $nativeCodes
         transient_rpc = [bool]$rpc
+        defender_initializing = [bool]$initializing
         service_status = $null
         state = $null
         state_error = $null
@@ -280,9 +284,15 @@ function Wait-DefenderPreparationService(
             $failure = Get-PreparationFailure $_
             $failure.outcome = 'settling_failure'
             $failure.service_status = $observation.service_status
+            # Defender can expose its service before its status/preferences
+            # provider initializes after an RPC restart. This exact code permits
+            # only preliminary query polling, never another full enable attempt.
+            $initializationQuery = $RequireQueries -and $failure.defender_initializing -and
+                $script:preparationCommand -eq 'Get-MpComputerStatus/Get-MpPreference'
+            $failure.initialization_query_wait = [bool]$initializationQuery
             $report.preparation_observations += $failure
             Write-ScanReport
-            if (-not $failure.transient_rpc) { throw }
+            if (-not $failure.transient_rpc -and -not $initializationQuery) { throw }
         }
         $report.preparation_observations += $observation
         $report.preparation_wait_seconds = [Math]::Round($Timer.Elapsed.TotalSeconds, 3)

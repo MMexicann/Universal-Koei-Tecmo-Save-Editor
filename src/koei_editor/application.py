@@ -24,6 +24,7 @@ class Application(Appearance):
         self.sessions = {}
         self.active_game = None
         self.converter = None
+        self.comparison = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
@@ -35,6 +36,8 @@ class Application(Appearance):
         self.home_button.pack(side='left')
         self.converter_button = ttk.Button(top, text='Save Converter', command=self.show_converter)
         self.converter_button.pack(side='left', padx=(10, 0))
+        self.compare_button = ttk.Button(top, text='Compare Saves', command=self.show_comparison)
+        self.compare_button.pack(side='left', padx=(10, 0))
         self.breadcrumb = tk.StringVar(root, value='Choose your game')
         ttk.Label(top, textvariable=self.breadcrumb, style='Muted.TLabel').pack(side='left', padx=14)
         self.theme_selector = ttk.Combobox(top, values=tuple(THEMES), textvariable=self.theme_name,
@@ -211,6 +214,8 @@ class Application(Appearance):
             editor.theme_name.set(name)
         if self.converter is not None:
             self.converter.apply_theme(palette)
+        if self.comparison is not None:
+            self.comparison.apply_theme(palette)
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
@@ -274,6 +279,8 @@ class Application(Appearance):
         self.library.pack_forget()
         if self.converter is not None:
             self.converter.frame.pack_forget()
+        if self.comparison is not None:
+            self.comparison.frame.pack_forget()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         frame, editor = self.sessions[game_id]
@@ -286,6 +293,8 @@ class Application(Appearance):
     def show_library(self):
         if self.converter is not None:
             self.converter.frame.pack_forget()
+        if self.comparison is not None:
+            self.comparison.frame.pack_forget()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.library.pack(fill='both', expand=True)
@@ -298,12 +307,28 @@ class Application(Appearance):
         if self.converter is None:
             self.converter = ConversionWorkspace(self.root, self.workspace)
         self.library.pack_forget()
+        if self.comparison is not None:
+            self.comparison.frame.pack_forget()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.active_game = None
         self.converter.frame.pack(fill='both', expand=True)
         self.breadcrumb.set('Save Converter')
         self.converter.apply_theme(THEMES[self.theme_name.get()])
+
+    def show_comparison(self):
+        from koei_editor.shared.comparison_gui import ComparisonWorkspace
+        if self.comparison is None:
+            self.comparison = ComparisonWorkspace(self.root, self.workspace)
+        self.library.pack_forget()
+        if self.converter is not None:
+            self.converter.frame.pack_forget()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        self.comparison.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set('Compare Saves')
+        self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def show_platform(self, _event=None):
         for frame in self.platform_frames.values():
@@ -362,7 +387,9 @@ class Application(Appearance):
         return 'break'
 
     def focus_library_search(self, _event=None):
-        if self.active_game is not None or (self.converter is not None and self.converter.frame.winfo_manager()):
+        if (self.active_game is not None
+                or (self.converter is not None and self.converter.frame.winfo_manager())
+                or (self.comparison is not None and self.comparison.frame.winfo_manager())):
             return
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
@@ -386,9 +413,10 @@ class Application(Appearance):
         Editor.show_contact(self)
 
     def close(self):
-        if self.converter is not None and self.converter.busy:
+        if ((self.converter is not None and self.converter.busy)
+                or (self.comparison is not None and self.comparison.busy)):
             from tkinter import messagebox
-            messagebox.showinfo('Conversion running', 'Wait for the conversion to finish before closing.', parent=self.root)
+            messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return
         if all(editor.dirty_ok() for _frame, editor in self.sessions.values()):
             self.root.destroy()
@@ -404,12 +432,32 @@ def main():
     tests.add_argument('--self-test', nargs=2, metavar=('INPUT', 'OUTPUT'))
     tests.add_argument('--compatibility-test', nargs=2, metavar=('INPUT', 'OUTPUT'))
     tests.add_argument('--convert', metavar='ROUTE', help='Convert an explicit supported route; requires --source, --template and --output-dir.')
+    tests.add_argument('--compare', nargs=2, metavar=('FIRST', 'SECOND'), help='Compare two copied saves using an explicit --game profile; no gameplay files are written.')
+    parser.add_argument('--comparison-report', help='Optional new .json report for --compare.')
     tests.add_argument('--list-conversions', action='store_true', help='Print supported platform conversion routes.')
     parser.add_argument('--source', help='Separate source save copy for conversion.')
     parser.add_argument('--template', help='Separate destination-platform save copy for conversion.')
     parser.add_argument('--output-dir', help='New folder for the converted save and local receipt.')
     parser.add_argument('--dry-run', action='store_true', help='Validate and review conversion without writing files or backups.')
     arguments = parser.parse_args()
+    if arguments.compare:
+        from koei_editor.shared import save_comparison
+        import json
+        if not arguments.game or arguments.smoke_test or arguments.list_games:
+            parser.error('--compare requires a separate explicit --game profile.')
+        if arguments.source or arguments.template or arguments.output_dir or arguments.dry_run:
+            parser.error('Conversion options do not apply to --compare.')
+        try:
+            prepared = save_comparison.prepare(arguments.game, *arguments.compare)
+            result = save_comparison.report(prepared)
+            if arguments.comparison_report:
+                save_comparison.export(prepared, arguments.comparison_report)
+            print(json.dumps(result, indent=2, ensure_ascii=True))
+        except (OSError, ValueError) as error:
+            parser.exit(1, 'Comparison failed: ' + str(error) + '\n')
+        return
+    if arguments.comparison_report:
+        parser.error('--comparison-report requires --compare.')
     if arguments.convert or arguments.list_conversions:
         from koei_editor import conversion
         import json
@@ -478,6 +526,7 @@ def main():
                 raise RuntimeError('A fresh editor unexpectedly contains save data.')
         app.apply_theme('Dark')
         app.show_converter()
+        app.show_comparison()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

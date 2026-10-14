@@ -148,7 +148,7 @@ GAMES = (
          '', '.dat', '#526985', 'koei_editor.games.dw6.dw6_editor', 'koei_editor.games.dw6.dw6_parser',
          True, 'VI', True, scalar_backend='koei_editor.games.dw6.dw6_parser'),
     Game('dw6_ps3', 'DYNASTY WARRIORS 6', 'Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO',
-         'Existing horse combat stats, weapon stored damage bonuses and element choices; officer progression inspection.',
+         'Named one-way playable officer unlocks, existing horse combat stats and weapon stored damage bonuses/element choices.',
          '', '.bin', '#526985', 'koei_editor.games.dw6_ps3.editor', 'koei_editor.games.dw6_ps3.parser',
          True, 'VI', True, 'PlayStation 3', scalar_backend='koei_editor.games.dw6_ps3.parser'),
     Game('dw9emp', 'DYNASTY WARRIORS 9 EMPIRES', 'Windows PC · SYSTEMDATA',

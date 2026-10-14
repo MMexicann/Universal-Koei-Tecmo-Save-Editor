@@ -1,5 +1,34 @@
 # Universal development validation
 
+## v2.1.2 typed DW6 migration and DW8 XL PS4
+
+The focused generated/native checks exercise all 20 directed routes, including
+DW6's u64 skill mask, individual u32 fields, one-byte flags/opaque neighbors and
+complete horse records. They compare semantic values, unchanged destination
+spans, real native reopens and reverse results. Review, GUI, CLI and schema-2
+receipts identify partial DW6 scope explicitly. PS4 tests reject nonzero extension
+data, malformed/foreign metadata, backup races and unsupported revisions.
+
+Privately copied independent original PC and both US PS3 DW6 exports passed all
+four exported forward/reverse paths with complete original-byte equality on the
+reverse and native semantic skill-mask equality. The upstream DW8 XL full-file
+PS4 reference passed each of its three outbound transforms and exact reverses.
+Original PS4 metadata was absent from that reference; context/export checks for
+this new endpoint use procedural title-only metadata and do not prove a genuine
+owner export. No source save, original account context, key, binary or static
+report is committed or released. No converted save is claimed to load in-game.
+
+US PS3 named unlocks preserve every byte except the selected playable byte;
+relocking and resource Max unlocks are rejected. The PC correction similarly
+preserves three opaque neighboring bytes. Actual original US exports and
+procedural files pass all-field surgical checks and safe output reopens.
+
+The full inventory and native Windows workflow remain release gates. Publication
+requires stable source-manifest validation, both packaged startup workflows and
+active Defender scans of runtimes, standalone EXE and both final archives, with
+hashes bound to the release commit and downloads. The published Defender JSON
+and checksum list provide the final execution evidence.
+
 ## v2.1.1 conversion and DW6 PS3
 
 The new [Save Converter](SAVE_CONVERSION.md) registers 12 exact routes and

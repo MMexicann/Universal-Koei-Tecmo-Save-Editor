@@ -3,6 +3,10 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.p5strikers_pc import codec
 from koei_editor.games.p5strikers_switch.codec import SLOTS_END
 
+TRANSFER_SCOPE = 'shared-gameplay'
+SCOPE_DESCRIPTION = 'Complete English header and all ten slots; destination reserved tail retained'
+NOTES = ('All ten English slots and their names are transferred; destination reserved tail is retained.',)
+
 
 def gameplay(document):
     return document.payload[:SLOTS_END]

@@ -20,12 +20,17 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
+    if endpoint_id in ('dw6', 'dw6_ps3'):
+        from tests.test_dw6_conversion import fixture as dw6_fixture
+        return dw6_fixture(endpoint_id, variant)
     if endpoint_id.startswith('dw8xl'):
         payload = bytearray((i * 17 + variant) % 256 for i in range(0xB7F44))
         payload[:5] = bytes.fromhex('f002101309')
         checksum = bytes((sum(payload) & 255,))
         if endpoint_id == 'dw8xl_vita':
             return bytes(payload) + checksum
+        if endpoint_id == 'dw8xl_ps4':
+            return bytes(payload) + bytes(0x19001)
         inner = byte_cipher(bytes(payload), 0x13100200)
         if endpoint_id == 'dw8xl_ps3':
             return inner + checksum
@@ -52,8 +57,13 @@ def write_copy(folder, endpoint_id, variant=0):
     if endpoint.companion:
         companion = folder / endpoint.companion
         companion.parent.mkdir(parents=True, exist_ok=True)
-        companion.write_bytes(ps3_context.PS3ContextTests.metadata('NPUB31449-SAVEDATA')
-                              if endpoint_id == 'dw8xl_ps3' else title_only_sfo())
+        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3'):
+            metadata = ps3_context.PS3ContextTests.metadata('NPUB31449-SAVEDATA' if endpoint_id == 'dw8xl_ps3' else 'BLUS30110-SAVEDATA')
+        else:
+            metadata = title_only_sfo()
+            if endpoint_id == 'dw8xl_ps4':
+                metadata = metadata.replace(b'CUSA19640', b'CUSA00397')
+        companion.write_bytes(metadata)
     return path
 
 
@@ -61,6 +71,11 @@ class ConversionTests(unittest.TestCase):
     def test_endpoints_are_exact_registered_adapters_and_routes_are_family_scoped(self):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
+            if endpoint.conversion_only:
+                self.assertEqual(endpoint.id, 'dw8xl_ps4')
+                with self.assertRaises(SaveError):
+                    get_game(endpoint.id)
+                continue
             game = get_game(endpoint.id)
             self.assertIs(game.get_scalar_adapter().backend, endpoint.backend)
             self.assertEqual(game.extension, Path(endpoint.filename).suffix.lower())
@@ -154,7 +169,7 @@ class ConversionTests(unittest.TestCase):
                        replace(conversion, source=None), replace(conversion, raw=bytearray(conversion.raw)),
                        replace(conversion, route=c.Route([], 'dw8xl_vita'))):
             with self.subTest(kind=forged.route), self.assertRaises(SaveError): c.export(forged, self.folder / 'out')
-        for route in ('dw6-to-dw6_ps3', 'dw8xl-to-dw8xl', 'unknown', None):
+        for route in ('dw6-to-dw8xl_ps3', 'dw8xl-to-dw8xl', 'unknown', None):
             with self.assertRaises(SaveError): c.get_route(route)
 
     def test_failed_actual_readback_cleans_only_new_output(self):

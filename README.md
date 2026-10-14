@@ -5,22 +5,31 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.1.1 source** supports **91 game/platform profiles across 15 platforms**.
+**Version 2.1.2 development source** supports **91 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Save Converter
 
-Open **Save Converter** to transfer DW8 XL saves between PC, US PS3 PSN and Vita,
-or English Persona 5 Strikers saves between PC, PS4 and Switch: **12 directed
-routes**, including PC to console. Choose a source copy and a destination-platform
-save template, review, then export into a new folder with automatic backups.
-Console saves need external export/decryption and reimport/resigning. Converted
-game loading remains untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
+Open **Save Converter** for **20 directed routes**:
 
-Version 2.1.1 source also adds **original US DW6 PS3** horse combat stats and
-existing weapon damage-bonus/element controls. Keep original `PARAM.SFO` beside the decrypted
-`APP.BIN` copy. DW6 PC/PS3/Xbox 360 conversion still needs complete format mapping.
-[DW6 PS3 scope](docs/DW6_PS3_FORMAT.md).
+- **DW6 PC ↔ US PS3:** all 41 officer records and eight horses, including skill
+  masks, weapons, stored progression, playable flags, names and growth descriptors.
+  This is a **roster-and-horse migration**; story, challenges and suspended battles
+  remain from the destination template.
+- **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
+  (12 routes). PS4 requires the supported zero-extension profile.
+- **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
+
+Choose separate source and destination-template copies, review the transfer scope,
+then export to a new folder with backups and a hash receipt. Console export/decryption
+and reimport/resigning use an external save manager. Converted game loading remains
+untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
+
+The **US DW6 PS3 editor** now includes named one-way playable officer unlocks,
+searchable officer/weapon/horse inspection, horse combat stats and existing weapon
+bonus/element controls. Original `PARAM.SFO` is required beside decrypted `APP.BIN`.
+Full DW6 story/battle conversion and Xbox 360 remain unavailable.
+[DW6 mapping and limits](docs/DW6_CONVERSION.md).
 
 ## Experimental editing
 
@@ -61,7 +70,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists source game/platform profiles for v2.1.1.
+The table below lists source game/platform profiles for v2.1.2.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->
@@ -90,7 +99,7 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
 | DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse combat stats, existing weapon elements and damage bonuses; searchable records. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Existing horse combat stats, weapon stored damage bonuses and element choices; officer progression inspection. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named one-way playable officer unlocks, existing horse combat stats and weapon stored damage bonuses/element choices. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

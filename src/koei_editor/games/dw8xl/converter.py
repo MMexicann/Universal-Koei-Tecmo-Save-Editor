@@ -4,6 +4,10 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.dw8xl_vita.parser import SIGNATURE
 from koei_editor.shared.koei_codec import byte_cipher, mix_word, word_cipher, word_sum
 
+TRANSFER_SCOPE = 'shared-gameplay'
+SCOPE_DESCRIPTION = 'Complete common DW8 XL gameplay; destination platform framing retained'
+NOTES = ('PS4 requires an entirely zero extension. Nonzero extension data is rejected; no opaque bytes are trimmed.',)
+
 
 def gameplay(document):
     if document.payload[:5] != SIGNATURE:
@@ -21,4 +25,6 @@ def encode(source, template):
                 + bytes(((sum(payload) & 255) ^ (mix_word(seed) & 255),)))
     if template.format.id == 'dw8xl_ps3':
         return byte_cipher(payload, 0x13100200) + bytes((sum(payload) & 255,))
+    if template.format.id == 'dw8xl_ps4':
+        return payload + template.raw[len(payload):]
     return payload + bytes((sum(payload) & 255,))

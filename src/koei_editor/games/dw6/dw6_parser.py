@@ -44,7 +44,7 @@ class Format:
 
 _UNLOCK_FIELDS = tuple(
     Field(f'officer_{i}_unlocked', 'Playable (1 unlock)',
-          OFFICER_BASE + i * OFFICER_STRIDE + 164, 4, 1,
+          OFFICER_BASE + i * OFFICER_STRIDE + 164, 1, 1,
           'Unlocks', i + 1, maxable=False, experimental=False) for i in range(OFFICER_COUNT))
 _HORSE_FIELDS = tuple(
     Field(f'horse_{i}_{key}', label, HORSE_BASE + i * HORSE_STRIDE + relative,
@@ -314,7 +314,7 @@ def inspection_rows(document):
                               f'kills {_u32(payload, base + 156):,}; '
                               f'title ID {_u32(payload, base + 144)}; '
                               f'outfit {_u32(payload, base + 140)}; '
-                              f'playable value {_u32(payload, base + 164)}; '
+                              f'playable value {payload[base + 164]}; '
                               f'skill-tree bytes {payload[base:base + 8].hex(" ")}'})
         for weapon in range(8):
             offset = base + 8 + weapon * 16

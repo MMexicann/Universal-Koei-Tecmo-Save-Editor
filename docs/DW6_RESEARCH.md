@@ -41,8 +41,10 @@ Officers start at decimal 2,904 with 168-byte records. The reader consumes four
 bytes after its nominal seek before reading the first value; blindly copying
 the nominal seek would shift every field. The actual records contain eight
 skill-tree bytes, eight 16-byte weapon entries, then identity at +136, outfit
-+140, title +144, stored level index +148, EXP +152, kills +156, an unknown
-word +160 and playable value +164. The source's Xu Huang unlock at hex `1874`
++140, title +144, stored level index +148, EXP +152, kills +156, selected weapon-slot
+word +160 and a one-byte playable value +164 with three opaque neighbors.
+The 64-bit skill-mask and complete horse geometry are documented in the
+[new cross-platform mapping](DW6_CONVERSION.md). The source's Xu Huang unlock at hex `1874`
 matches row 19's +164 exactly. Canonical officer names and weapon IDs are
 corroborated by the private native sample.
 

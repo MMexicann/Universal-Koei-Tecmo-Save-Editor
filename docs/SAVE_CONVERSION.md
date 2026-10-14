@@ -1,27 +1,28 @@
 # Cross-platform save conversion
 
 The Save Converter is a separate workspace in the same Windows app. It transfers
-the complete shared gameplay data between explicitly supported formats. Existing
+the documented gameplay scope between explicitly supported formats. DW6 uses a
+partial roster-and-horse migration; DW8 XL and P5S transfer their complete
+common gameplay. Existing
 editing sessions, themes and pending changes remain available. Conversion uses
 the copied on-disk save, so first save any editor changes into another copy.
 
 ## Supported routes
 
-Each family below supports all six directed conversions, including PC to console
-and console to PC: **12 routes total**. Editor support for a platform alone does
-not establish a conversion route.
+**20 directed routes** are available. Editor support alone does not establish a
+conversion route; each route shows its own transfer scope before review.
 
 | Family | Platforms and exact scope | Transfer |
 | --- | --- | --- |
-| Dynasty Warriors 8 Xtreme Legends | PC common revision `0x131002F0`, original US PS3 PSN `NPUB31449`, plaintext Vita | All `0xB7F44` gameplay bytes, byte-exact; native encryption and checksums rebuilt. |
-| Persona 5 Strikers | English PC, English PS4 `CUSA19640`, English Switch, revision `0x20012000` | Complete `0x1C` header and all ten `0x88E36` slots, including full names; destination reserved tail retained. |
+| Dynasty Warriors 6 | Original PC ↔ US PS3 BLUS30110; two directions | All 41 typed officer records and eight complete horse records (7,368 bytes). **Partial progress migration:** destination story, challenges, gallery, options and suspended battles retained. |
+| Dynasty Warriors 8 Xtreme Legends | PC common revision `0x131002F0`, US PS3 PSN `NPUB31449`, plaintext Vita, US PS4 `CUSA00397` zero-extension profile; 12 directions | All `0xB7F44` common gameplay bytes; native PC/PS3/Vita encryption/checksums rebuilt. PS4 has a zero native extension. |
+| Persona 5 Strikers | English PC, PS4 `CUSA19640`, Switch, revision `0x20012000`; six directions | Complete `0x1C` header and ten `0x88E36` slots, including names; destination reserved tail retained. |
 
-**DW6 PS3 editing is included separately. DW6 PC/PS3/Xbox 360 conversion is not
-available.** DW8 XL PS4, other regions, modified DW8 PC signatures, Japanese P5S,
-and unrelated editions are outside these routes. Console signing, encryption of
-the platform export container, reimport and account reassignment remain external.
-These routes have format/native-file qualification; this project has not tested
-converted saves by loading and re-saving them in the actual games.
+**Full DW6 story/battle conversion and Xbox 360 are unavailable.** See the
+[DW6 typed mapping](DW6_CONVERSION.md). Modified DW8 PC signatures, nonzero PS4
+extension bytes, other regions and Japanese P5S remain outside these routes.
+Console signing, export-container encryption, reimport and account reassignment
+are external. Converted loading/re-saving in the actual games remains untested.
 
 ## Use the Windows app
 
@@ -37,14 +38,16 @@ converted saves by loading and re-saving them in the actual games.
    name. Both inputs are backed up. The new folder contains the destination's
    expected save filename, required original template metadata and a local
    `conversion.json` receipt. Existing folders/files are refused.
-5. Keep your original saves. Test the new copy in-game. For consoles, reimport
+5. For DW6, finish any destination suspended battle before making its template;
+   the route retains that template's story/battle data. Keep your original saves. Test the new copy in-game. For consoles, reimport
    and resign with the destination platform's save manager, such as
    [Apollo Save Tool](https://bucanero.github.io/apollo-ps3/).
 
 Exported console gameplay and unchanged metadata are not a complete signed
 console package. Icons, PFDs, keystones and platform save containers are not
 created. The receipt reports byte preservation and hashes without input paths,
-names, account values or signing keys. It remains local to your output folder.
+names, account values or signing keys. Schema-2 receipts identify the transfer
+scope and bind required companion metadata by hash. It remains local to your output folder.
 
 ## CLI
 
@@ -52,6 +55,7 @@ Use the installed package from any working directory. List exact route IDs:
 
 ```text
 python -m koei_editor --list-conversions
+python -m koei_editor --convert dw6-to-dw6_ps3 --source PcCopy/save.dat --template Ps3Copy/APP.BIN --dry-run
 python -m koei_editor --convert dw8xl-to-dw8xl_vita --source SourceCopy/save.dat --template VitaCopy/MainData00.dat --dry-run
 python -m koei_editor --convert dw8xl-to-dw8xl_vita --source SourceCopy/save.dat --template VitaCopy/MainData00.dat --output-dir ConvertedVita
 ```
@@ -75,7 +79,11 @@ Inputs and complete console metadata are rechecked around backups and export.
 DW8 XL converts only the common signature; the PC editor's other accepted
 signature is never silently normalized. The destination PC template's original
 word seed is retained. PS3 has its byte XOR layer and native byte sum; Vita uses
-the plaintext plus sum. Unknown gameplay bytes, record IDs, progression, reward
+the plaintext plus sum. The PS4 endpoint is conversion-only and does not add a scalar editor to the
+91-profile library. Its exact `0xD0F45` length, common header, original CUSA00397
+metadata and entirely zero extension are mandatory. No native PS4 checksum is
+claimed. Nonzero extension data is rejected on both source and template, never
+trimmed. Unknown common gameplay bytes, record IDs, progression, reward
 flags and unusual values transfer unchanged. This does not create equipment or
 reinterpret scalar limits.
 
@@ -93,7 +101,8 @@ Research/inspiration, inspected independently:
   and its [author's release discussion](https://www.reddit.com/r/dynastywarriors/comments/1qth7rg/dw8_xl_save_converter_pc_ps3_ps4_psv/):
   platform framing and filename facts. Existing project codecs independently
   implement the streams and checksums. Its permissive truncation/header rewrite
-  behavior is excluded here. No upstream implementation is incorporated.
+  behavior is excluded here. PS4 adds only its documented zero-extension
+  profile, corroborated by the complete public reference. No upstream implementation is incorporated.
 - [zarroboogs P5S save utility](https://github.com/zarroboogs/p5spc.saveutil):
   platform geometry and English name-width facts, corroborated by existing
   native PC/PS4/Switch adapters. No declared reuse licence was identified; no
@@ -110,12 +119,21 @@ Research/inspiration, inspected independently:
 
 ## Validation and remaining mappings
 
-`test_conversion.py` exercises all 12 routes and reverse conversions with
+`test_conversion.py` exercises all 20 routes and reverse conversions with
 distinctive generated unknown bytes, template encryption/context preservation,
 checksums, corruption, foreign metadata, changed sources, forged plans,
 backup races, existing folders, actual destination read-back failures, opaque
 tail preservation and rejection of lossy input. GUI/CLI checks are in
 `test_conversion_gui.py`. Procedural bytes are not gameplay-load evidence.
+`test_dw6_conversion.py` checks the typed migration, semantic mask values,
+complete horse boundaries, scoped receipts and untouched destination remainder.
+Native PC and both US PS3 exports passed all four exported forward/reverse paths.
+`test_dw8xl_ps4_conversion.py` covers zero-extension loss prevention, bounded
+metadata, backup races and every added PS4 direction. The full-file upstream
+PS4 reference passed all three outbound transforms and byte-exact reverses; its
+original console metadata was not supplied. Context/export checks for this
+endpoint therefore use generated title-only metadata and are not independent
+owner-export or game-load proof.
 Private upstream DW8 XL full-file PS3/Vita references passed both directed
 routes and reverse roundtrips; the upstream modified PC signature is correctly
 rejected. The four DW8 PC routes have procedural preservation/codec evidence,
@@ -126,10 +144,10 @@ stay outside the repository; none are packaged.
 
 | Requested expansion | Exact blocker |
 | --- | --- |
-| DW6 PC ↔ PS3 | 212,248 versus 212,240 bytes, little versus big endian, 64-byte officer/horse displacement, differing headers/tails. Need complete typed schema and native paired game-load controls; blanket word swapping would change byte fields. |
+| DW6 full PC ↔ PS3 | Roster/horses now implemented with u64/u32/byte types. Story, challenges, gallery and suspended-battle serialization remain distinct and need their own mapping and native load controls. |
 | DW6 Xbox 360 | Title/revision-labelled extracted native gameplay, integrity/schema map and import/resign workflow. CON/STFS extraction alone does not prove compatibility. |
 | WO3U PS3 ↔ PC / PS4 | PS3/PC records have distinct framing and serialized markers. Need the complete conversion schema, native controls and DLC/reward compatibility. A PS4 rename report does not prove PS3 compatibility. |
-| DW8 XL PS4 | Separate larger native profile, exact tail/revision qualification, original title context and lossless handling of data outside the common core. |
+| DW8 XL additional PS4 profiles | Supported zero extension now implemented. Nonzero extension bytes and additional regions/revisions need exact schemas and independent original-context qualification. |
 | Ryza / Sophie / PW3 / DQB2 | Per-edition full payload/schema and integrity compatibility, native action/transfer pairs and destination import contracts. Shared names/fields are insufficient. |
 
 Adding a family requires its own transform, exact source/destination readers,

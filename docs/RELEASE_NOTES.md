@@ -1,47 +1,49 @@
-# Universal Koei Tecmo Save Editor v2.1.1
+# Universal Koei Tecmo Save Editor v2.1.2
 
-## Save Converter
+DW6 now transfers **roster and horse state between original Windows PC and US
+PS3 BLUS30110**. This is a scoped migration into a destination save template:
 
-Move copied saves between supported platforms from the new **Save Converter** workspace:
+- All 41 officers, including their 64-bit skill masks, eight weapons each,
+  outfit, title, stored level/EXP, kills, equipped slot and playable flag.
+- All eight complete horses, including name, color, growth descriptors, EXP,
+  saddle/type, element, skills and combat stats.
+- Destination story, stages, gallery, challenges, options and suspended battles
+  retained. **Full DW6 story/battle conversion and Xbox 360 remain unavailable.**
 
-- **Dynasty Warriors 8 Xtreme Legends:** common-revision PC, original US PS3 PSN NPUB31449 and plaintext Vita.
-- **Persona 5 Strikers:** English PC, PS4 CUSA19640 and Switch.
-- All six directions in each family: **12 routes**, including PC to console and console to PC.
+The native skill mask, numeric words and playable byte have different encoding
+rules. The converter handles each type explicitly and leaves destination bytes
+outside the two mapped arrays untouched. Finish a suspended battle in the
+destination game before creating its template.
 
-Choose the exact route, a source copy and a destination-platform save template.
-Review first, then export into a new folder. Complete shared gameplay is preserved;
-the destination template supplies its encryption and original console metadata.
-Both inputs receive automatic backups. A local conversion receipt records hashes.
-CLI users can list routes and validate with `--dry-run` before exporting.
+Added **six DW8 XL PS4 routes**, bringing the converter to **20 directed routes**:
+12 DW8 XL PC/US PS3 PSN/US PS4/Vita, six English Persona 5 Strikers PC/PS4/Switch,
+and two DW6 roster/horse routes. DW8 XL PS4 requires decrypted CUSA00397 revision
+0x131002F0 with a completely zero extension; nonzero extension data is refused.
+This endpoint supplies conversion only, without adding a separate PS4 scalar editor.
 
-Unknown nonzero PC tail data, unsupported revisions, damaged input, changed copies
-and existing output folders are refused. Console saves require external export/decryption
-and reimport/resigning. The app exports gameplay files; it does not build signed console packages.
-Converted in-game loading has not been validated by this project.
+The **US DW6 PS3 editor** gains named one-way playable officer unlocks, a separate
+Unlock All action and searchable named officer/weapon/horse inspection. Existing
+horse and weapon controls remain available. PC unlocks now write only the proven
+flag byte and preserve its opaque neighbors. Ctrl+F retains the converter workspace.
 
-## Dynasty Warriors 6 PS3
+Choose separate source and destination-template copies. Review shows what moves
+and what stays. Export creates a new folder, backs up both inputs, verifies the
+saved native output and records scope plus gameplay/context hashes. CLI dry runs
+report the same scope. Original console metadata remains unchanged; decryption,
+reimport and resigning use an external save manager. Converted game loading has
+not been tested by this project.
 
-Added a separate **original US PS3 BLUS30110** editor:
+The library retains **91 editor profiles across 15 platforms**. Generated and
+private native-file checks cover typed values, reverse exports, untouched template
+spans, one-way flags, malformed input/context, metadata/source races, opaque-tail
+loss prevention and GUI/CLI workflows. Final publication requires the complete
+native Windows suite, both packaged startup checks and clean active Defender
+scans bound to the exact downloadable files.
 
-- Speed, attack, jump and destruction for qualified existing horses.
-- Stored damage bonuses and element choices for qualified existing weapons.
-- Read-only officer progression, Undo, Review Changes, backups, restore and verified Save As.
-- Exact original `PARAM.SFO` required beside the copied decrypted `APP.BIN` and output.
+Download **UniversalKoeiTecmoSaveEditor-v2.1.2.exe** for the standalone Windows app,
+or the **Windows ZIP** for the portable folder. The **Source ZIP** contains the
+reviewed source and documentation. `DefenderScan-v2.1.2.json` and `SHA256SUMS.txt`
+provide the release verification evidence.
 
-The library now contains **91 game/platform profiles across 15 platforms**.
-DW6 PC/PS3/Xbox 360 conversion remains unavailable until the full typed format
-mapping is established. Other unsupported games/editions remain outside the converter.
-
-## Downloads and checks
-
-Download **UniversalKoeiTecmoSaveEditor-v2.1.1.exe** for the standalone Windows app,
-or extract the complete Windows ZIP and keep `_internal` beside its launcher.
-No Python installation is needed. Source and contributor documents are in the Source ZIP.
-
-The release pipeline runs every test module on Windows, verifies source/privacy
-and complete test coverage, builds both Windows forms, checks packaged startup,
-and requires active Microsoft Defender scans for the exact EXE and downloadable ZIPs.
-`DefenderScan-v2.1.1.json` and `SHA256SUMS.txt` bind those checks to the downloads.
-
-Read [conversion scope and instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1.1/docs/SAVE_CONVERSION.md)
-and [DW6 PS3 scope](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1.1/docs/DW6_PS3_FORMAT.md).
+[Conversion instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1.2/docs/SAVE_CONVERSION.md)
+and [DW6 mapping and limitations](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1.2/docs/DW6_CONVERSION.md).

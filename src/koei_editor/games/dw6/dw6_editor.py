@@ -10,8 +10,8 @@ class DW6Presentation(ScalarPresentation):
     def inspection_tables(self, document):
         rows = self.backend.inspection_rows(document)
         notes = {'Officers': 'Level, EXP, title, outfit, kills and skill-tree dependencies remain read only.',
-                 'Weapons': 'Search by officer, weapon name or ID. Choose the element of an existing known weapon; manual stored damage bonuses are also editable; identity and skill mask stay unchanged.',
-                 'Horses': 'Only qualified existing combat stats are writable. EXP, type, elements, skills and descriptors remain read only.'}
+                 'Weapons': 'Search by officer, weapon name or ID. Choose the element of an existing known weapon; manual stored damage bonuses and named skill toggles are also editable. Select an equipped weapon from the same officer’s existing inventory.',
+                 'Horses': 'Qualified existing combat stats, named skill toggles and elements are writable. EXP, type and growth descriptors remain read only.'}
         return tuple(InspectionTable(group, ('Record', 'Opened data'),
                                      tuple((row['label'], row['value']) for row in rows if row['group'] == group),
                                      notes[group]) for group in notes)
@@ -23,7 +23,7 @@ class Editor(ScalarEditor):
     backend = dw6_parser
     presentation_type = DW6Presentation
     subtitle = 'Windows PC save editor'
-    summary = 'Playable officer unlocks, existing horse combat stats, named weapon elements, manual stored damage bonuses and searchable records.'
+    summary = 'Playable officer unlocks, existing horse combat stats, named weapon elements, manual stored damage bonuses, named equipment skills, horse elements and own-inventory weapon selection.'
 
     def __init__(self, root, parent=None, theme='Light', on_theme=None):
         super().__init__(root, parent, theme, on_theme)

@@ -3,7 +3,7 @@
 The `dw6_ps3` adapter opens copied **PFD-decrypted** original US
 `BLUS30110-SAVEDATA/APP.BIN`, exactly **212,240 bytes**, with its unchanged
 original `PARAM.SFO`. It edits named one-way playable officer unlocks, qualified existing horse combat
-stats and weapon stored damage bonuses/elements, with searchable named records. Shared staging, Undo, Review Changes,
+stats and weapon stored damage bonuses/elements, named weapon/horse skills, horse elements and existing same-officer weapon selection, with searchable named records. Shared staging, Undo, Review Changes,
 experimental numeric limits, automatic backups, restore and verified new-copy
 Save As apply. Max is disabled for this profile.
 
@@ -48,11 +48,15 @@ Structural qualification does not detect arbitrary corruption of opaque bytes.
 | System | Native field and implemented scope |
 | --- | --- |
 | Horses | Eight rows, base `0x29E0`, stride `0x3C`; speed +16, attack +24, jump +28, destruction +32, unsigned big-endian u32. Occupancy requires observed type 60–64, positive +20 and four positive stats. Individual 0–500 normal editing bounds; these are not independently tested native caps. Higher opened values stay unchanged. |
-| Adjacent horse value | +20 is deliberately read-only; the patch's fifth numeric target does not independently name its mechanic. EXP, type, element, skills, descriptors and names are unchanged. |
+| Adjacent horse value | +20 is deliberately read-only; the patch's fifth numeric target does not independently name its mechanic. EXP, type, descriptors and names are unchanged. Element/skill controls are separately qualified. |
 | Existing weapons | Eight slots per officer, base `0xB20 + officer*0xA8`, stride `0x10`: ID +0, stored damage bonus +4, element +8, skill mask +12. Only existing known IDs with element 0–3 qualify. Empty ID 174 and unknown IDs/elements are excluded. |
 | Weapon bonus | Manual u32 bonus control, normal conservative editing bound 0–100 following the source target. This is not total attack or an independently verified natural cap. Experimental mode permits the exact unsigned encoding range; Max stays disabled. |
 | Weapon element | 0 Fire, 1 Ice, 2 Lightning, 3 no element. Hard choice constraints apply in both modes; identity, bonus, mask and neighboring entries remain unchanged. |
-| Officers | Named stored level, EXP, kills, title, outfit, equipped slot and 64-bit skill-mask inspection; progression remains read only. One-way playable-byte unlocks at +164 preserve all other bytes and are excluded from Max. |
+| Weapon skills | Ten independently corroborated bits at weapon +12: Air Wave, Mystic Seal, True Musou, Leech, Concentration, Balance, Berserk, Renbu Spirit, Arrow Sight and Flash (bits 0–9). Individual toggles preserve neighboring bits. The complete resulting mask allows at most five skills. Unknown bits or over-capacity originals stay read only; Max disabled. |
+| Horse skills | Eleven bits at horse EXP-base +12: Arrow Dance, Find Saddle, Find Weapon, Musou Spirit, Renbu Gait, Winged Hoof, Jagged Hoof, Steel Hoof, Water Spirit, Stone Spirit and Wind Spirit (bits 0–10). Same qualified occupancy as horse stats; at most four skills. Unknown/over-capacity originals stay read only. Horse growth/EXP is preserved; these are equipment effects, separate from the officer skill tree. |
+| Horse element | Qualified occupied horse EXP-base +8, four-byte choice: Fire/Ice/Lightning/None = 0/1/2/3. Unknown original choices remain read only. |
+| Equipped weapon | Officer +160 u32, zero-based index 0–7. Choices list only this officer's existing known-ID/known-element weapon slots; the opened index must also qualify. Empty and unknown records cannot be equipped or manufactured. |
+| Officers | Named stored level, EXP, kills, title, outfit, equipped slot and 64-bit skill-mask inspection; level/EXP/learned-tree progression remains read only. One-way playable-byte unlocks at +164 preserve all other bytes and are excluded from Max. |
 | Story, acquisition and rewards | Preserved. Playable unlocks are a separate content action; they do not mark story completion or grant skill nodes. |
 | Regional/platform scope | US BLUS30110 only. A separately inspected Japanese BLJM60041 export has a different length and is not accepted. PC/US PS3 roster-and-horse migration is offered separately; [its scope](DW6_CONVERSION.md) preserves destination story/battle state. |
 
@@ -76,3 +80,30 @@ Both separately acquired US copies passed no-edit roundtrips, every exposed
 field's surgical byte comparison, new-copy editing with actual read-back and
 opaque companion preservation. Actual PS3 game loading/re-saving after editing
 has not been performed; export/reimport/resigning remain external.
+
+## v2.4 equipment qualification
+
+[cnopt's disk research](https://github.com/cnopt/dynastywarriors6-reverse-engineering)
+provides equipment-mask domains, positions and capacity evidence. Static inspection
+of the older [DW6SaveGameEditor 0.1.0 archive](https://f.gvn.co/threads/pc-download-huong-dan-mod-ss4mspecial-dw4hyper-dw6-ssm6.1548988/)
+independently corroborates bit ordinals and power-of-two decoding, plus the
+stored selected-weapon index. Its code and enum catalog are not imported;
+this project implements individual masked writes independently. Apollo's published
+PS3 attribute writes occupy the low half of these same big-endian mask words.
+The PC and both US PS3 exports have only known equipment bits and observed counts
+within the five/four limits; existing identities, arrays and selected slots agree.
+
+`test_dw6_equipment.py` uses asymmetric masks to check each named bit and the last
+officer/weapon, complete pending-mask limits, remove-before-add, unknown originals,
+invalid own-pool selections, hard bounds in experimental mode, exact source-byte
+preservation and PC/PS3 semantic migration. Actual Tk workflows check named search,
+choice controls, capacity errors without pending-map loss, Undo, Review, themes and
+safe output. Native tests remove known equipment bits, reopen actual written
+copies and retain all other bytes/context. They do not establish edited in-game
+acceptance or qualify officer-level/skill-tree editing.
+
+An older [editor-user report](https://gamefaqs.gamespot.com/boards/945966-dynasty-warriors-6/47751842)
+describes a skill-screen lock after premature full officer-tree unlocks. This is
+anecdotal game behavior, not a serialization map. Officer growth and learned-node
+editing therefore remain separate, read only; migration copies their complete
+existing relationship together.

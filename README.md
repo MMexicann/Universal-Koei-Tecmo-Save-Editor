@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.3 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.4 development source** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Save Converter
@@ -41,6 +41,21 @@ can break the save or game or be reset by the game.
 Max buttons keep supported limits. Unknown fields, IDs, choices, flags and required
 record structure remain protected. Backups, Undo and verified Save As stay available.
 See [experimental limits and exceptions](docs/EXPERIMENTAL_EDITING.md).
+
+## DW6 PC and PS3 equipment
+
+Both original PC and US PS3 editors add named weapon/horse skill toggles, horse
+elements and equipped-weapon selection from the officer's existing inventory.
+Skills respect the five-weapon/four-horse capacities and preserve unknown masks.
+Conversion review names the officer and horse records being replaced, including
+empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
+
+## Batch Converter
+
+Queue reviewed conversions, save/load private plans and validate every job before
+exporting. Each copy gets its own new folder, backups and native read-back.
+Progress, stop-after-current-copy and verified partial-result reports cover up to
+32 jobs across all 20 routes. [Instructions](docs/BATCH_CONVERSION.md).
 
 ## Compare Saves
 
@@ -78,7 +93,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists development source game/platform profiles for v2.3.
+The table below lists development source game/platform profiles for v2.4.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->
@@ -106,8 +121,8 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
-| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse combat stats, existing weapon elements and damage bonuses; searchable records. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named one-way playable officer unlocks, existing horse combat stats and weapon stored damage bonuses/element choices. |
+| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named playable unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

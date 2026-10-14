@@ -28,8 +28,8 @@ Version 2.1.2 expands the Save Converter and original US DW6 PS3 editor; see [co
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
-| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse combat stats, existing weapon elements and damage bonuses; searchable records. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named one-way playable officer unlocks, existing horse combat stats and weapon stored damage bonuses/element choices. |
+| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named playable unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

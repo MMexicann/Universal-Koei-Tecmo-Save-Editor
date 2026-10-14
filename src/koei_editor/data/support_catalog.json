@@ -112,8 +112,8 @@
       "title": "Dynasty Warriors 6",
       "platform": "Windows PC (legacy edition)",
       "status": "Native PC editor",
-      "evidence": "Genuine 212248-byte native PC save with all 41 officer identities; original one-way officer unlocks and four qualified existing horse combat stats, with read-only named weapons/officers/horses. Byte-exact and surgical tests plus real Tk workflow. Existing weapon element choices are independently mapped and surgically verified on genuine records. Development expansion: Existing qualified weapon damage-bonus words are manually editable without changing identity, skills, rarity, ownership or equipment.",
-      "needed": "Edited game-load validation and controlled progression, equipment, horse growth/skills and dependency pairs.",
+      "evidence": "Genuine 212248-byte native PC save with all 41 officer identities; original one-way officer unlocks and four qualified existing horse combat stats, with read-only named weapons/officers/horses. Byte-exact and surgical tests plus real Tk workflow. Existing weapon element choices are independently mapped and surgically verified on genuine records. Development expansion: Existing qualified weapon damage-bonus words are manually editable without changing identity, skills, rarity, ownership or equipment. Version 2.4 independently maps ten weapon and eleven horse skill bits, enforces five/four-skill capacities, protects unknown/over-capacity masks, and adds horse elements plus existing same-officer equipped-weapon choices. Native PC and two US PS3 exports pass surgical equipment writes and safe-copy reopens; no game-load claim.",
+      "needed": "Edited game-load/re-save, controlled officer growth and story/suspended-battle maps, additional original regions/revisions and extracted original Xbox 360 qualification. Officer level/EXP/learned-tree writes and horse growth descriptors remain read only.",
       "editing_verified": true
     },
     {
@@ -1354,8 +1354,8 @@
       "title": "Dynasty Warriors 6",
       "platform": "PlayStation 3",
       "status": "Original US PS3 decrypted export editor",
-      "evidence": "Two independently acquired BLUS30110 native exports of 212240 bytes qualify big-endian officer identities and published Apollo horse/weapon locations. Named one-way playable-byte unlocks, existing horse combat stats and weapon damage bonus/element controls preserve unknown bytes and original PARAM.SFO. Separate scoped PC/PS3 migration transfers typed roster and complete horse state.",
-      "needed": "Edited console load/re-save, other regional/revision exports, controlled progression/horse/weapon dependencies, full story/suspended-battle conversion and extracted Xbox 360 native qualification.",
+      "evidence": "Two independently acquired BLUS30110 native exports of 212240 bytes qualify big-endian officer identities and published Apollo horse/weapon locations. Named one-way playable-byte unlocks, existing horse combat stats and weapon damage bonus/element controls preserve unknown bytes and original PARAM.SFO. Separate scoped PC/PS3 migration transfers typed roster and complete horse state. Version 2.4 independently maps ten weapon and eleven horse skill bits, enforces five/four-skill capacities, protects unknown/over-capacity masks, and adds horse elements plus existing same-officer equipped-weapon choices. Native PC and two US PS3 exports pass surgical equipment writes and safe-copy reopens; no game-load claim.",
+      "needed": "Edited game-load/re-save, controlled officer growth and story/suspended-battle maps, additional original regions/revisions and extracted original Xbox 360 qualification. Officer level/EXP/learned-tree writes and horse growth descriptors remain read only.",
       "editing_verified": true
     },
     {

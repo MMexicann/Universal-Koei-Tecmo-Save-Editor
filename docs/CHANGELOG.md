@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.4 — 2026-10-14
+
+- Extend original DW6 PC/US PS3 with ten named weapon and eleven named horse skill toggles, horse elements and same-officer existing equipped-weapon choices; enforce complete-mask capacities and preserve unknown originals.
+- Add typed DW6 migration review with changed officer names/counts and horse slots; explain empty-slot replacement and preserve growth/learned-tree relationships in complete officer transfers.
+
+- Add retained Batch Converter for up to 32 independent jobs over all 20 existing routes, with complete preflight, progress, stop boundaries and verified partial results.
+- Add reviewed-job handoff from Save Converter, private plan save/load, headless queue review/export and immutable per-copy receipt binding in final reports.
+- Revalidate completed output bytes, original target metadata and per-copy receipts before combined report export; reject path collisions, changed inputs and forged reviews.
+- Unify retained tool hiding and preserve editor/comparison/converter/queue sessions, themes and close protections.
+- Add four unregistered source-only native inspectors and document exact remaining write blockers. Keep supported counts honest: 94 editors, 15 platforms, 20 scoped conversion routes.
+
 ## v2.3 — 2026-10-14
 
 - Add retained Compare Saves for all 93 registered scalar profiles, with exact native input qualification, conditional record/definition distinctions, named records, search, difference filters and paging.

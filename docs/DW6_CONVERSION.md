@@ -77,8 +77,7 @@ spans, not merely hash or length equality.
 
 The US PS3 editor separately adds named one-way playable unlocks, named weapon
 controls and searchable complete officer/weapon/horse inspection. PC unlocks now
-write only the proven flag byte, preserving its three opaque neighbors. Skill
-tree, level/EXP and horse descriptor/growth editing remain read only.
+write only the proven flag byte, preserving its three opaque neighbors. Officer skill-tree, level/EXP and horse descriptor/growth editing remain read only. Version 2.4 separately adds named equipment-skill toggles, horse elements and existing same-officer equipped-weapon choices; complete record migration preserves those values.
 
 **No converted or edited save has been loaded/re-saved in an actual game by this
 project.** Neither inspected native profile establishes an internal gameplay
@@ -86,3 +85,27 @@ checksum; PS3 authentication is external. Full story and battle transfer needs
 its own typed serialization/dependency map. Public Xbox 360 save-set listings
 were found, but no independently qualified extracted original-game payload was
 obtained. Xbox 360, Japanese/EU PS3, Special and Empires routes remain unavailable.
+
+## v2.4 review and remaining research
+
+Review now compares canonical typed records with the destination template:
+changed officer counts/names and changed horse counts/slots are shown before
+export, in CLI dry runs and batch review. Empty source records replace the
+corresponding destination slots; this is not an inventory merge. These summaries
+are recomputed from immutable inputs during review validation and cannot expand
+the transfer scope.
+
+Static investigation of the official Japanese PC trial found its save reader
+and writer use **212,168 bytes**, compared with the qualified retail PC's
+212,248 bytes. It therefore does not establish retail offsets or US PS3 story/
+battle conversion. A matching record array alone is insufficient evidence for
+the remaining serialized state. Neither a blanket endian swap nor replacing the
+whole destination with source bytes is offered.
+
+The [Xbox PAL save-set author's account](https://www.xpgamesaves.com/resources/dynasty-warriors-6-full-legit-saveset-dw6-european-pal.3178/)
+reports that renaming containers caused failed loads and that injecting gameplay
+into a genuine destination container was required. The public listing's download
+requires login; other historic mirrors currently lead to dead Megaupload links.
+No extracted original DW6 Xbox payload, native integrity map or successful
+cross-platform load control was obtained. Empires and Special evidence does not
+qualify this original game's route.

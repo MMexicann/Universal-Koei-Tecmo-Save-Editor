@@ -1,40 +1,59 @@
-# Universal Koei Tecmo Save Editor v2.3
+# Universal Koei Tecmo Save Editor v2.4
 
-**Compare Saves** is a new retained workspace for **93 scalar game/platform
-profiles**. Select the exact profile and two copied saves to see changed values,
-conditional record availability and changed field definitions. Named records,
-search, difference filters and paging keep large comparisons usable.
+**DW6 PC and US PS3 equipment** gains named toggles for all ten weapon skills
+and eleven horse skills, horse element choices and equipped-weapon selection
+from the same officer's existing inventory. Five/four-skill capacities apply
+to complete pending edits; empty/unknown records and unknown/over-capacity masks
+remain protected. Max and experimental numeric options cannot bypass choices.
+Review, Undo, backups, native read-back and original PS3 metadata retention apply.
 
-Both inputs pass their own native format/integrity and original companion checks.
-The summary counts decoded payload differences and bytes outside editable storage
-spans. Those observations do not qualify new writes or imply conversion support.
-Game files stay unchanged. Results remain when switching between the library,
-editors, Save Converter and Compare Saves; late worker results are discarded
-when selections change.
+DW6 PC ↔ US PS3 conversion review now reports how many complete officer and horse
+records differ, names changed officers and lists changed horse slots. It explains
+that source slots replace destination slots, including empty source slots. Level,
+EXP, the learned tree and equipment migrate together. Destination story, battle,
+challenge and gallery state remain in the template; full conversion and Xbox 360
+are still unavailable.
 
-Export a new private JSON report containing typed scalar differences and input
-hashes. It omits source paths, raw gameplay bytes and original account/signing
-metadata. Editable names can be personal. Reports are verified against frozen
-snapshots and source/context changes are checked before and after atomic creation.
-Existing files are never replaced.
+**Batch Converter** queues up to **32 independent jobs across all 20 conversion
+routes**. Add a reviewed conversion from Save Converter, choose its new output
+folder, and review the complete queue before exporting. Every source, template,
+original companion and output path passes preflight before any copy is written.
 
-Headless use is available with `--game GAME --compare FIRST SECOND`, optionally
-adding `--comparison-report NEW.json`. DW3 retains its separate tagged editing
-workflow. All **94 editor profiles**, including v2.2's three new PS3 title families,
-and all **20 conversion routes** remain available.
+Each export retains its native backups, original destination metadata, scoped
+gameplay transfer and actual output read-back. Progress shows each job's status.
+Stop after the current copy, or inspect a partial result if a later job fails;
+completed verified copies remain and remaining jobs do not start.
 
-Generated format/GUI/CLI regressions and an independent Qoga native pair validate
-comparison and safe reports. Windows startup, full-suite coverage and active
-Defender scans remain mandatory for release assets. Edited/converted game-load
-validation remains outstanding.
+Save/load private plans and export combined reports. Plans contain local paths.
+Result reports contain scope, hashes and per-copy receipts; completed files,
+metadata and stored receipts are verified again before report export. Existing
+folders, plans and reports are never replaced. The queue remains while switching
+between the library, editors, comparison and individual conversion workspaces.
 
-The release scanner also handles a confirmed Defender restart followed by its
-status provider briefly being unavailable. Only that exact preliminary query
-wait is retried within the existing deadline; final protection and clean-scan
-requirements are unchanged.
+Headless review/export uses `--batch-convert PLAN.json`, optional `--dry-run`,
+and `--batch-report NEW.json`. Mixed game families and conversion-only PS4
+endpoints share the same validated queue.
 
-Download the standalone **UniversalKoeiTecmoSaveEditor-v2.3.exe**, complete
-**Windows ZIP**, or reviewed **Source ZIP**. SHA256SUMS and Defender evidence
-verify the downloadable files.
+Four additional **unregistered, read-only research inspectors** are included in
+the Source ZIP: Gundam 2 US/EU PS3 and original US Vita Totori Plus, Rorona Plus
+and Ayesha Plus. They qualify their observed native framing/context and known
+Gundam byte sum. Unresolved progression/integrity dependencies keep them outside
+the supported editor library; no additional gameplay writes are claimed.
 
-[Comparison instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.3/docs/SAVE_COMPARISON.md).
+The library remains **94 editor profiles across 15 platforms**, including the
+three editing titles added in v2.2. Compare Saves covers 93 scalar profiles.
+DW6 conversion remains mapped roster-and-horse migration; full story/battle and
+Xbox 360 conversion remain unavailable. Console decryption/import/signing and
+edited/converted game-load validation remain external or outstanding.
+
+Generated regressions, an independent PC and two US PS3 DW6 exports and fourteen
+additional candidate gameplay references cover the new workflows. Publication
+requires the complete native Windows suite, both packaged startup checks and
+clean active Defender evidence bound to the exact downloadable assets.
+
+Download **UniversalKoeiTecmoSaveEditor-v2.4.exe**, the complete **Windows ZIP**,
+or the reviewed **Source ZIP**. SHA256SUMS and Defender evidence verify the files.
+
+[DW6 controls and evidence](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.4/docs/DW6_PS3_FORMAT.md),
+[Batch instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.4/docs/BATCH_CONVERSION.md)
+and [candidate evidence/remaining qualification](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.4/docs/EXPANSION_CANDIDATES.md).

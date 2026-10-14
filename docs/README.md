@@ -6,6 +6,9 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Batch Converter: plans, preflight, preservation and partial results](BATCH_CONVERSION.md)
+- [Additional title qualification and source-only inspection](EXPANSION_CANDIDATES.md)
+
 - [Compare Saves: workspace, reports and interpretation](SAVE_COMPARISON.md)
 
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)

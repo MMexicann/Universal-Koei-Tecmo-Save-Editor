@@ -1,5 +1,33 @@
 # Universal development validation
 
+## v2.4 DW6 equipment, migration review and batch conversion
+
+Focused checks cover named DW6 equipment bits in both byte orders, complete
+pending-mask capacities, existing same-officer equipment references, unknown
+original preservation, surgical writes, native copy reopens, actual GUI workflows
+and semantic PC/PS3 migration with untouched destination remainder. Private inputs
+include one independent original PC and two US PS3 exports. Level/EXP/learned-tree
+writes remain read only; no edited/converted game-load acceptance is claimed.
+Migration review recomputes changed officer/horse counts and names from typed
+snapshots and explains empty-slot replacement without widening transfer scope.
+
+Batch checks exercise whole-queue read-only preflight, mixed families and the
+conversion-only PS4 endpoint, relative private plans, path collisions, source/
+context races, cancellation boundaries and partial failures. Completed reports
+rederive output from frozen native snapshots and verify actual bytes, original
+target metadata and exact stored receipts; forged reviews/receipts and modified
+outputs fail. GUI checks cover retained sessions, worker progress, save-plan/report
+retry, bounded review text and busy-close guards. Explicit UTF-8 report reads and
+canonical Windows temporary paths are included in cross-platform regressions.
+
+Four unregistered source-only inspectors were checked against fourteen private
+native references, including eleven Vita files and three US/EU Gundam 2 copies.
+They do not add editor profiles or qualify gameplay writes. All registered
+interfaces and retained tools pass source smoke startup. The complete suite and
+native Windows builds/startup/active Defender gates remain mandatory before
+publication; final download hashes must match that native evidence.
+
+
 ## v2.3 native comparison workspace
 
 Thirty-six focused comparison/GUI/converter/library tests passed without skips

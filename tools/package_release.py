@@ -17,7 +17,7 @@ ROOT_FILES = {'.gitignore', '.gitattributes', 'LICENSE', 'README.md', 'AGENTS.md
 TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_release.py',
               'tools/scan_release.ps1',
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
-              'tools/run_tests.py', 'tools/test_timings.json',
+              'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
               'tools/requirements/build.txt', 'tools/requirements/dev.txt'}
 ADAPTER_TEMPLATE_FILES = {'tools/adapter_template/new_game_parser.py', 'tools/adapter_template/new_game_editor.py',
                           'tools/adapter_template/contract_test.py', 'tools/adapter_template/INSTRUCTIONS.md'}

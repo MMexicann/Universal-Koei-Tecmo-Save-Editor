@@ -45,6 +45,15 @@ updated within two days. The selected `MpCmdRun.exe` must have a valid Microsoft
 Authenticode signature. Unavailable protection, cloud failure, stale signatures,
 scan errors or detections block candidate publication.
 
+Version 2.1 records and retries recognized Defender RPC startup failures during
+preparation only. At most two complete configuration attempts share a bounded
+120-second service/query settling budget. The report records the failed command,
+exception codes and observed state. A pending service waits; only a stopped
+service is started. After successful queries, the complete protection and
+signature configuration is replayed, followed by the same strict readiness,
+Microsoft scanner signature, cloud, scan and unchanged-input requirements.
+Persistent and nontransient failures still block publication.
+
 Custom scans use `-Scan -ScanType 3 -File ... -DisableRemediation`. Microsoft
 documents that this flag ignores file exclusions, scans archives and reports
 detections without custom-scan remediation. Real-time protection remains active.
@@ -58,7 +67,7 @@ After packaging, the exact final direct EXE and both downloadable ZIPs are
 scanned. Complete before/after file inventories and SHA-256 hashes must match
 through every stage. Publication independently checks that successful reports,
 all three downloadable asset hashes, application version and tested commit
-agree. The downloadable `DefenderScan-v2.02.json` records that evidence only
+agree. The downloadable `DefenderScan-v2.1.json` records that evidence only
 after actual native scans pass. See [VALIDATION.md](VALIDATION.md) for the current
 qualification status. Scanner diagnostics are retained
 even if the build fails; an old-baseline diagnostic never qualifies a candidate.

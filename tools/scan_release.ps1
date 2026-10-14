@@ -30,6 +30,9 @@ $report = [ordered]@{
     defender_before = $null
     defender_after = $null
     engine_ready = $false
+    preparation_attempts = 0
+    preparation_wait_seconds = 0
+    preparation_observations = @()
     readiness_attempts = 0
     readiness_wait_seconds = 0
     readiness_observations = @()
@@ -199,36 +202,178 @@ function Wait-DefenderReady(
     }
 }
 
-function Enable-DefenderProtection {
+function Get-PreparationFailure($Failure) {
+    $codes = @()
+    $nativeCodes = @()
+    $exception = $Failure.Exception
+    for ($depth = 0; $null -ne $exception -and $depth -lt 8; $depth++) {
+        $codes += ('0x{0:X8}' -f ([long]$exception.HResult -band 0xffffffffL))
+        if ($null -ne $exception.PSObject.Properties['NativeErrorCode']) {
+            $nativeCodes += [long]$exception.NativeErrorCode
+        }
+        $exception = $exception.InnerException
+    }
+    # Only the documented RPC unavailable/call failed/call failed without
+    # execution codes qualify. A message alone or generic CIM error does not.
+    $rpc = @($codes | Where-Object { $_ -in @('0x800706BA', '0x800706BE', '0x800706BF') }).Count -gt 0 -or
+        @($nativeCodes | Where-Object { $_ -in @(1722, 1726, 1727, 2147944122, 2147944126, 2147944127,
+                                                       -2147023174, -2147023170, -2147023169) }).Count -gt 0 -or
+        $Failure.FullyQualifiedErrorId -match '(?i)(?:^|\bHRESULT\s*|[^a-z0-9])0x800706(?:ba|be|bf)(?![a-z0-9])'
+    [ordered]@{
+        observed_utc = [DateTime]::UtcNow.ToString('o')
+        command = $script:preparationCommand
+        error = $Failure.Exception.Message
+        fully_qualified_error_id = $Failure.FullyQualifiedErrorId
+        hresults = $codes
+        native_error_codes = $nativeCodes
+        transient_rpc = [bool]$rpc
+        service_status = $null
+        state = $null
+        state_error = $null
+    }
+}
+
+function Wait-DefenderPreparationService(
+    [Diagnostics.Stopwatch]$Timer,
+    [ValidateRange(1, 120)][int]$TimeoutSeconds = 120,
+    [ValidateRange(1, 10)][int]$PollSeconds = 2,
+    [switch]$RequireQueries
+) {
+    while ($true) {
+        if ($Timer.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
+            $report.preparation_wait_seconds = [Math]::Round($Timer.Elapsed.TotalSeconds, 3)
+            $report.preparation_observations += [ordered]@{
+                observed_utc = [DateTime]::UtcNow.ToString('o')
+                outcome = 'settling_expired'
+                command = $script:preparationCommand
+            }
+            Write-ScanReport
+            throw 'Defender preparation service/query settling budget expired.'
+        }
+        $observation = [ordered]@{
+            observed_utc = [DateTime]::UtcNow.ToString('o')
+            outcome = 'settling'
+            service_status = $null
+            state = $null
+        }
+        try {
+            $script:preparationCommand = 'Get-Service WinDefend'
+            $service = Get-Service -Name WinDefend
+            $observation.service_status = $service.Status.ToString()
+            if ($service.Status -eq 'Stopped') {
+                $script:preparationCommand = 'Start-Service WinDefend'
+                Start-Service -Name WinDefend
+            } elseif ($service.Status -eq 'Running') {
+                if ($RequireQueries) {
+                    $script:preparationCommand = 'Get-MpComputerStatus/Get-MpPreference'
+                    # Successful queries only establish that replay is possible.
+                    # The unchanged strict readiness predicate runs afterward.
+                    $observation.state = Get-DefenderState
+                    if ($observation.state.service_status -eq 'Running') {
+                        $observation.outcome = 'service_available'
+                    }
+                } else {
+                    $observation.outcome = 'service_available'
+                }
+            }
+        } catch {
+            $failure = Get-PreparationFailure $_
+            $failure.outcome = 'settling_failure'
+            $failure.service_status = $observation.service_status
+            $report.preparation_observations += $failure
+            Write-ScanReport
+            if (-not $failure.transient_rpc) { throw }
+        }
+        $report.preparation_observations += $observation
+        $report.preparation_wait_seconds = [Math]::Round($Timer.Elapsed.TotalSeconds, 3)
+        Write-ScanReport
+        if ($observation.outcome -eq 'service_available' -and $Timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) { return }
+        $remaining = $TimeoutSeconds - $Timer.Elapsed.TotalSeconds
+        if ($remaining -gt 0) {
+            Start-Sleep -Milliseconds ([int]([Math]::Min($PollSeconds, $remaining) * 1000))
+        }
+    }
+}
+
+function Enable-DefenderProtection(
+    [Diagnostics.Stopwatch]$Timer,
+    [ValidateRange(1, 120)][int]$TimeoutSeconds = 120,
+    [ValidateRange(1, 10)][int]$PollSeconds = 2
+) {
     # Hosted runner images can install Defender but disable its protections.
     # Never treat installation, a stopped service or a policy write as readiness.
     $policy = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows Advanced Threat Protection'
+    $script:preparationCommand = 'Read ForceDefenderPassiveMode policy'
     if (Test-Path -LiteralPath $policy) {
         $current = Get-ItemProperty -LiteralPath $policy -Name ForceDefenderPassiveMode -ErrorAction SilentlyContinue
         if ($null -ne $current -and $current.ForceDefenderPassiveMode -ne 0) {
+            $script:preparationCommand = 'Set-ItemProperty ForceDefenderPassiveMode 0'
             Set-ItemProperty -LiteralPath $policy -Name ForceDefenderPassiveMode -Value 0 -Type DWord
         }
     }
-    $service = Get-Service -Name WinDefend
-    if ($service.Status -ne 'Running') {
-        Start-Service -Name WinDefend
-        $service.WaitForStatus('Running', [TimeSpan]::FromSeconds(30))
-    }
+    Wait-DefenderPreparationService -Timer $Timer -TimeoutSeconds $TimeoutSeconds -PollSeconds $PollSeconds
+    $script:preparationCommand = 'Get-MpPreference'
     $preferences = Get-MpPreference
     foreach ($entry in @($preferences.ExclusionPath)) {
-        if ($entry) { Remove-MpPreference -ExclusionPath $entry }
+        if ($entry) {
+            $script:preparationCommand = 'Remove-MpPreference ExclusionPath'
+            Remove-MpPreference -ExclusionPath $entry
+        }
     }
     foreach ($entry in @($preferences.ExclusionExtension)) {
-        if ($entry) { Remove-MpPreference -ExclusionExtension $entry }
+        if ($entry) {
+            $script:preparationCommand = 'Remove-MpPreference ExclusionExtension'
+            Remove-MpPreference -ExclusionExtension $entry
+        }
     }
     foreach ($entry in @($preferences.ExclusionProcess)) {
-        if ($entry) { Remove-MpPreference -ExclusionProcess $entry }
+        if ($entry) {
+            $script:preparationCommand = 'Remove-MpPreference ExclusionProcess'
+            Remove-MpPreference -ExclusionProcess $entry
+        }
     }
+    $script:preparationCommand = 'Set-MpPreference protection/cloud settings'
     Set-MpPreference -DisableRealtimeMonitoring $false -DisableBehaviorMonitoring $false `
         -DisableIOAVProtection $false -DisableScriptScanning $false -DisableArchiveScanning $false `
         -MAPSReporting Advanced -SubmitSamplesConsent SendSafeSamples -DisableBlockAtFirstSeen $false `
         -PUAProtection Enabled
+    $script:preparationCommand = 'Update-MpSignature MMPC'
     Update-MpSignature -UpdateSource MMPC
+}
+
+function Invoke-DefenderPreparation(
+    [ValidateRange(1, 120)][int]$TimeoutSeconds = 120,
+    [ValidateRange(1, 10)][int]$PollSeconds = 2
+) {
+    # At most two complete attempts share one bounded service/query settling
+    # budget. Input inventory, scanner readiness and scan verdicts are untouched.
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    for ($attempt = 1; $attempt -le 2; $attempt++) {
+        $report.preparation_attempts = $attempt
+        try {
+            Enable-DefenderProtection -Timer $timer -TimeoutSeconds $TimeoutSeconds -PollSeconds $PollSeconds
+            $report.preparation_observations += [ordered]@{
+                observed_utc = [DateTime]::UtcNow.ToString('o')
+                attempt = $attempt
+                outcome = 'prepared'
+            }
+            Write-ScanReport
+            return
+        } catch {
+            $failure = Get-PreparationFailure $_
+            $failure.attempt = $attempt
+            $failure.outcome = 'preparation_failure'
+            try { $failure.service_status = (Get-Service -Name WinDefend).Status.ToString() }
+            catch { $failure.state_error = $_.Exception.Message }
+            try { $failure.state = Get-DefenderState }
+            catch { $failure.state_error = $_.Exception.Message }
+            $report.preparation_observations += $failure
+            Write-ScanReport
+            if (-not $failure.transient_rpc -or $attempt -eq 2) { throw }
+        }
+        Wait-DefenderPreparationService -Timer $timer -TimeoutSeconds $TimeoutSeconds `
+            -PollSeconds $PollSeconds -RequireQueries
+    }
 }
 
 function Get-DefenderCommand {
@@ -274,7 +419,7 @@ try {
     try { $report.defender_before = Get-DefenderState }
     catch { $report.diagnostics_errors += ('Initial Defender state: ' + $_.Exception.Message) }
     Write-ScanReport
-    Enable-DefenderProtection
+    Invoke-DefenderPreparation
     $report.defender_after = Wait-DefenderReady
     $report.defender_scan_start = $report.defender_after
     $command = Get-DefenderCommand

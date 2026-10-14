@@ -44,6 +44,31 @@ def procedural_ready_state():
 
 
 class DefenderReleaseGateContracts(unittest.TestCase):
+    def run_preparation_procedure(self, procedure):
+        command = r'''
+            $ErrorActionPreference='Stop'
+            $tokens=$null; $errors=$null
+            $ast=[System.Management.Automation.Language.Parser]::ParseFile(
+                $env:DEFENDER_SCRIPT_TEST_PATH,[ref]$tokens,[ref]$errors)
+            if($errors.Count -ne 0){throw 'Scanner parse failed.'}
+            foreach($name in @('Get-PreparationFailure','Wait-DefenderPreparationService',
+                              'Enable-DefenderProtection','Invoke-DefenderPreparation',
+                              'Get-DefenderState','Assert-DefenderReady')) {
+                $definition=$ast.Find({param($node)
+                    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+                    $node.Name -eq $name},$true)
+                . ([ScriptBlock]::Create($definition.Extent.Text))
+            }
+        ''' + procedure
+        with tempfile.TemporaryDirectory() as folder:
+            ready = Path(folder).resolve() / 'ready-state.json'
+            ready.write_text(json.dumps(procedural_ready_state()), encoding='utf-8')
+            result = subprocess.run([POWERSHELL, '-NoProfile', '-NonInteractive', '-Command', command],
+                                    env=dict(os.environ, DEFENDER_SCRIPT_TEST_PATH=str(SCANNER),
+                                             DEFENDER_TEST_READY_STATE=str(ready)),
+                                    capture_output=True, text=True, timeout=45)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_input_is_only_scanned_never_executed_and_scanner_is_authenticated(self):
         source = executable_source()
         invoked_variables = set(re.findall(r'&\s+\$(\w+)', source))
@@ -109,6 +134,230 @@ class DefenderReleaseGateContracts(unittest.TestCase):
         self.assertIn('[IO.FileAttributes]::ReparsePoint', source)
         self.assertNotIn('Copy-Item', source)
         self.assertNotIn('-Restore', source)
+
+    def test_preparation_retry_cannot_change_inputs_or_qualification(self):
+        source = executable_source()
+        preparation = source.split('function Get-PreparationFailure', 1)[1].split('function Get-DefenderCommand', 1)[0]
+        self.assertIn('$attempt -le 2', preparation)
+        self.assertIn('[ValidateRange(1, 120)][int]$TimeoutSeconds = 120', preparation)
+        self.assertIn("$service.Status -eq 'Stopped'", preparation)
+        self.assertNotIn("$service.Status -ne 'Running'", preparation)
+        self.assertIn('-RequireQueries', preparation)
+        self.assertIn('Get-DefenderState', preparation)
+        self.assertNotRegex(preparation, r'\$report\.(?:inputs(?:_after)?|engine_ready|clean|verdict)\s*=')
+        self.assertNotRegex(preparation, r'(?i)Stop-Service|Restart-Service|Restart-Computer')
+        self.assertIn('if (-not $failure.transient_rpc -or $attempt -eq 2) { throw }', preparation)
+        self.assertLess(source.index('    Invoke-DefenderPreparation\n'),
+                        source.index('    $report.defender_after = Wait-DefenderReady\n'))
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
+    def test_preparation_retry_recognizes_only_documented_rpc_codes(self):
+        self.run_preparation_procedure(r'''
+            $script:preparationCommand='Update-MpSignature MMPC'
+            $vectors=@(
+                @{exception=[Runtime.InteropServices.COMException]::new('RPC',-2147023170);
+                  id='COM'; retry=$true},
+                @{exception=[Exception]::new('Outer',
+                    [Runtime.InteropServices.COMException]::new('RPC',-2147023174));
+                  id='Nested'; retry=$true},
+                @{exception=[ComponentModel.Win32Exception]::new(1727,'RPC');
+                  id='Native'; retry=$true},
+                @{exception=[Exception]::new('Generic provider exception');
+                  id='HRESULT0x800706be,Update-MpSignature'; retry=$true},
+                @{exception=[Exception]::new('Generic provider exception');
+                  id='HRESULT 0x800706BA,Get-MpPreference'; retry=$true},
+                @{exception=[Exception]::new('Generic provider exception');
+                  id='0x800706bf'; retry=$true},
+                @{exception=[Runtime.InteropServices.COMException]::new('Denied',-2147024891);
+                  id='AccessDenied'; retry=$false},
+                @{exception=[ComponentModel.Win32Exception]::new(5,'Denied');
+                  id='AccessDenied'; retry=$false},
+                @{exception=[Exception]::new('The remote procedure call failed.');
+                  id='Generic'; retry=$false},
+                @{exception=[Exception]::new('Signature download failed');
+                  id='HRESULT0x80072ee2,Update-MpSignature'; retry=$false},
+                @{exception=[Exception]::new('RPC-looking ID');
+                  id='HRESULT0x800706bee,Update-MpSignature'; retry=$false}
+            )
+            foreach($vector in $vectors) {
+                $failure=[Management.Automation.ErrorRecord]::new($vector.exception,$vector.id,
+                    [Management.Automation.ErrorCategory]::NotSpecified,$null)
+                $details=Get-PreparationFailure $failure
+                if($details.transient_rpc -ne $vector.retry -or
+                   $details.command -ne $script:preparationCommand -or
+                   $details.fully_qualified_error_id -ne $vector.id -or
+                   $details.hresults.Count -lt 1) {
+                    throw ('Incorrect RPC classification/diagnostics: '+$vector.id)
+                }
+            }
+        ''')
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
+    def test_preparation_settling_rechecks_service_after_queries_and_enforces_deadline(self):
+        self.run_preparation_procedure(r'''
+            function Write-ScanReport {}
+            function Get-Service {param($Name) return [pscustomobject]@{Status='Running'}}
+            function Start-Service {throw 'Running/pending service was started again.'}
+            function Get-DefenderState {
+                $script:queries+=1
+                if($script:mode -eq 'late') {Start-Sleep -Milliseconds 1100}
+                $status=if($script:mode -eq 'race' -and $script:queries -eq 1){'StartPending'}else{'Running'}
+                return [pscustomobject]@{service_status=$status;status=@{};preferences=@{}}
+            }
+            foreach($mode in @('race','late')) {
+                $script:mode=$mode; $script:queries=0
+                $report=[ordered]@{preparation_wait_seconds=0;preparation_observations=@()}
+                $timer=[Diagnostics.Stopwatch]::StartNew()
+                $timeout=if($mode -eq 'race'){5}else{1}
+                $failed=$false
+                try {Wait-DefenderPreparationService -Timer $timer -TimeoutSeconds $timeout -PollSeconds 1 -RequireQueries}
+                catch {$failed=$true}
+                if($mode -eq 'race') {
+                    if($failed -or $script:queries -ne 2 -or
+                       $report.preparation_observations[0].outcome -ne 'settling' -or
+                       $report.preparation_observations[0].state.service_status -ne 'StartPending' -or
+                       $report.preparation_observations[-1].state.service_status -ne 'Running') {
+                        throw 'Replay accepted a service restart during its status/preference queries.'
+                    }
+                } elseif(-not $failed -or $report.preparation_wait_seconds -lt 1 -or
+                         $report.preparation_observations[-1].outcome -ne 'settling_expired') {
+                    throw 'A successful query after the settling deadline was accepted.'
+                }
+            }
+        ''')
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
+    def test_preparation_replays_strong_settings_and_limits_complete_attempts(self):
+        self.run_preparation_procedure(r'''
+            function Write-ScanReport {
+                if($report.clean -or $report.engine_ready -or
+                   (ConvertTo-Json -InputObject $report.inputs -Compress) -ne $script:originalInputs) {
+                    throw 'Preparation changed inventory or claimed qualification.'
+                }
+            }
+            function Test-Path {param($LiteralPath) return $false}
+            function Get-Service {
+                param($Name)
+                if($script:mode -eq 'recover-start-pending' -and $script:updateCalls -eq 1 -and
+                   $script:serviceReads -lt 3) {
+                    $script:serviceReads+=1
+                    return [pscustomobject]@{Status='StartPending'}
+                }
+                if($script:mode -eq 'start-pending' -and $script:serviceReads -eq 0) {
+                    $script:serviceReads+=1
+                    return [pscustomobject]@{Status='StartPending'}
+                }
+                if($script:mode -eq 'stopped' -and $script:startCalls -eq 0) {
+                    return [pscustomobject]@{Status='Stopped'}
+                }
+                return [pscustomobject]@{Status='Running'}
+            }
+            function Start-Service {param($Name) $script:startCalls+=1}
+            function Get-MpComputerStatus {
+                if($script:updateCalls -eq 1 -and $script:mode -eq 'query-rpc-expiry') {
+                    throw [ComponentModel.Win32Exception]::new(1726,'Procedural query RPC failure')
+                }
+                if($script:updateCalls -eq 1 -and $script:mode -eq 'query-denied') {
+                    throw [ComponentModel.Win32Exception]::new(5,'Procedural query denied')
+                }
+                return $script:state.status
+            }
+            function Get-MpPreference {return $script:state.preferences}
+            function Remove-MpPreference {
+                param($ExclusionPath,$ExclusionExtension,$ExclusionProcess)
+                foreach($name in @('ExclusionPath','ExclusionExtension','ExclusionProcess')) {
+                    if($PSBoundParameters.ContainsKey($name)) {
+                        $script:state.preferences.$name=@()
+                        $script:removed+=$name
+                    }
+                }
+            }
+            function Set-MpPreference {
+                param($DisableRealtimeMonitoring,$DisableBehaviorMonitoring,$DisableIOAVProtection,
+                      $DisableScriptScanning,$DisableArchiveScanning,$MAPSReporting,
+                      $SubmitSamplesConsent,$DisableBlockAtFirstSeen,$PUAProtection)
+                foreach($name in @('DisableRealtimeMonitoring','DisableBehaviorMonitoring',
+                                  'DisableIOAVProtection','DisableScriptScanning',
+                                  'DisableArchiveScanning','DisableBlockAtFirstSeen')) {
+                    if(-not $PSBoundParameters.ContainsKey($name) -or $PSBoundParameters[$name] -ne $false) {
+                        throw ('Preparation disabled or omitted protection: '+$name)
+                    }
+                    $script:state.preferences.$name=$false
+                }
+                if($MAPSReporting -ne 'Advanced' -or $SubmitSamplesConsent -ne 'SendSafeSamples' -or
+                   $PUAProtection -ne 'Enabled') {throw 'Cloud/PUA setting weakened.'}
+                $script:state.preferences.MAPSReporting=2
+                $script:state.preferences.SubmitSamplesConsent=1
+                $script:state.preferences.PUAProtection=1
+                $script:state.status.RealTimeProtectionEnabled=($script:mode -ne 'protection-blocked')
+                $script:state.status.BehaviorMonitorEnabled=$true
+                $script:state.status.IoavProtectionEnabled=$true
+                $script:setCalls+=1
+            }
+            function Update-MpSignature {
+                param($UpdateSource)
+                if($UpdateSource -ne 'MMPC') {throw 'Signature source changed.'}
+                $script:updateCalls+=1
+                if($script:mode -eq 'generic') {throw 'Procedural signature download failed'}
+                if($script:mode -eq 'rpc-message-only') {throw 'The remote procedure call failed.'}
+                if($script:mode -eq 'persistent-rpc' -or
+                   ($script:updateCalls -eq 1 -and $script:mode -in
+                       @('recover','recover-start-pending','query-rpc-expiry','query-denied','protection-blocked'))) {
+                    $failure=[Management.Automation.ErrorRecord]::new(
+                        [Exception]::new('Procedural provider failure'),
+                        'HRESULT0x800706be,Update-MpSignature',
+                        [Management.Automation.ErrorCategory]::NotSpecified,$null)
+                    throw $failure
+                }
+            }
+            foreach($mode in @('first-success','recover','recover-start-pending','persistent-rpc','generic','rpc-message-only',
+                               'query-rpc-expiry','query-denied','start-pending','stopped','protection-blocked')) {
+                $script:mode=$mode; $script:updateCalls=0; $script:setCalls=0
+                $script:startCalls=0; $script:serviceReads=0; $script:removed=@()
+                $script:state=Get-Content -LiteralPath $env:DEFENDER_TEST_READY_STATE -Raw | ConvertFrom-Json
+                foreach($name in @('ExclusionPath','ExclusionExtension','ExclusionProcess')) {
+                    $script:state.preferences | Add-Member -NotePropertyName $name -NotePropertyValue @('procedural')
+                }
+                $report=[ordered]@{clean=$false; engine_ready=$false; preparation_attempts=0;
+                    preparation_wait_seconds=0; preparation_observations=@();
+                    inputs=@(@{path='original';size=7;sha256='original-hash'})}
+                $script:originalInputs=ConvertTo-Json -InputObject $report.inputs -Compress
+                $failed=$false
+                $timeout=if($mode -eq 'query-rpc-expiry'){1}else{5}
+                try {Invoke-DefenderPreparation -TimeoutSeconds $timeout -PollSeconds 1}
+                catch {$failed=$true}
+                $expectedFailure=$mode -in @('persistent-rpc','generic','rpc-message-only','query-rpc-expiry','query-denied')
+                $expectedAttempts=if($mode -in @('recover','recover-start-pending','persistent-rpc','protection-blocked')){2}else{1}
+                if($failed -ne $expectedFailure -or $report.preparation_attempts -ne $expectedAttempts -or
+                   $script:updateCalls -ne $expectedAttempts -or $script:setCalls -ne $expectedAttempts) {
+                    throw ('Incorrect preparation retry: '+$mode+'; '+($report | ConvertTo-Json -Depth 8))
+                }
+                if($script:startCalls -ne [int]($mode -eq 'stopped') -or
+                   $script:removed.Count -ne 3) {throw ('Invalid service/exclusion handling: '+$mode)}
+                if($mode -eq 'query-rpc-expiry' -and
+                   ($report.preparation_wait_seconds -lt 1 -or
+                    @($report.preparation_observations | Where-Object outcome -eq 'settling_expired').Count -ne 1)) {
+                    throw 'Service/query expiry lost its bounded wait evidence.'
+                }
+                if($expectedAttempts -eq 2) {
+                    $available=@($report.preparation_observations | Where-Object {
+                        $_.outcome -eq 'service_available' -and $null -ne $_.state
+                    })
+                    $failures=@($report.preparation_observations | Where-Object outcome -eq 'preparation_failure')
+                    if($available.Count -lt 1 -or $failures.Count -lt 1 -or
+                       $failures[0].command -ne 'Update-MpSignature MMPC' -or
+                       -not $failures[0].transient_rpc -or $null -eq $failures[0].state) {
+                        throw ('Recovery lacked command/state diagnostics or successful replay queries: '+$mode)
+                    }
+                }
+                if($mode -eq 'protection-blocked') {
+                    $rejected=$false
+                    try {Assert-DefenderReady (Get-DefenderState)} catch {$rejected=$true}
+                    if(-not $rejected) {throw 'Preparation recovery bypassed actual readiness.'}
+                }
+                Write-ScanReport
+            }
+        ''')
 
     def test_reports_survive_failures_and_never_dump_account_status(self):
         source = executable_source()

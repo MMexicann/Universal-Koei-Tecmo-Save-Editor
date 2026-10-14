@@ -1,49 +1,39 @@
-# Universal Koei Tecmo Save Editor v2.1.2
+# Universal Koei Tecmo Save Editor v2.2
 
-DW6 now transfers **roster and horse state between original Windows PC and US
-PS3 BLUS30110**. This is a scoped migration into a destination save template:
+Three new title families bring the library to **94 game/platform profiles across
+15 platforms**:
 
-- All 41 officers, including their 64-bit skill masks, eight weapons each,
-  outfit, title, stored level/EXP, kills, equipped slot and playable flag.
-- All eight complete horses, including name, color, growth descriptors, EXP,
-  saddle/type, element, skills and combat stats.
-- Destination story, stages, gallery, challenges, options and suspended battles
-  retained. **Full DW6 story/battle conversion and Xbox 360 remain unavailable.**
+- **Deception IV: Blood Ties — original US PS3 PSN:** Warl editing and separate
+  read-only ability experience.
+- **Atelier Escha & Logy — original EU PS3 PSN:** Cole editing and named stored
+  character/alchemy EXP inspection. This is the original edition, with its own
+  EU offsets; Plus and DX differ.
+- **Ar tonelico Qoga: Knell of Ar Ciel — original US PS3:** Leaf editing and
+  separate stored growth/dive-point inspection.
 
-The native skill mask, numeric words and playable byte have different encoding
-rules. The converter handles each type explicitly and leaves destination bytes
-outside the two mapped arrays untouched. Finish a suspended battle in the
-destination game before creating its template.
+Open a copied PFD-decrypted native gameplay file with its complete original
+PARAM.SFO beside it. Review, Undo, automatic paired-context backups, guarded
+Save As and native saved-value read-back use the standard workspace. Extensionless
+USR-DATA copies now use the shared PS3 safe-storage path, including restore.
 
-Added **six DW8 XL PS4 routes**, bringing the converter to **20 directed routes**:
-12 DW8 XL PC/US PS3 PSN/US PS4/Vita, six English Persona 5 Strikers PC/PS4/Switch,
-and two DW6 roster/horse routes. DW8 XL PS4 requires decrypted CUSA00397 revision
-0x131002F0 with a completely zero extension; nonzero extension data is refused.
-This endpoint supplies conversion only, without adding a separate PS4 scalar editor.
+Manual resource limits follow published or observed editing values; they do
+not establish natural gameplay caps, so Max is disabled. The acknowledged
+experimental mode supports the exact unsigned 32-bit encoding range. Story,
+equipment, ownership, rewards and other progression remain unchanged.
 
-The **US DW6 PS3 editor** gains named one-way playable officer unlocks, a separate
-Unlock All action and searchable named officer/weapon/horse inspection. Existing
-horse and weapon controls remain available. PC unlocks now write only the proven
-flag byte and preserve its opaque neighbors. Ctrl+F retains the converter workspace.
+Four complete public native exports independently corroborate the profiles.
+Generated regressions and copied-native checks exercise each title's own size,
+header, offsets, byte order, surgical preservation and opaque metadata binding.
+Edited console game-load/re-save validation remains outstanding. Decryption,
+reimport and signing still use an external console save manager.
 
-Choose separate source and destination-template copies. Review shows what moves
-and what stays. Export creates a new folder, backs up both inputs, verifies the
-saved native output and records scope plus gameplay/context hashes. CLI dry runs
-report the same scope. Original console metadata remains unchanged; decryption,
-reimport and resigning use an external save manager. Converted game loading has
-not been tested by this project.
+All 20 existing conversion routes, DW6 PC/US PS3 editing, themes, backups and
+retained sessions remain available. DW6 conversion still transfers its mapped
+roster and horses; full story/battle and Xbox 360 conversion remain unavailable.
 
-The library retains **91 editor profiles across 15 platforms**. Generated and
-private native-file checks cover typed values, reverse exports, untouched template
-spans, one-way flags, malformed input/context, metadata/source races, opaque-tail
-loss prevention and GUI/CLI workflows. Final publication requires the complete
-native Windows suite, both packaged startup checks and clean active Defender
-scans bound to the exact downloadable files.
+Download **UniversalKoeiTecmoSaveEditor-v2.2.exe** for the standalone Windows app,
+the **Windows ZIP** for the complete portable folder, or the **Source ZIP** for
+reviewed source and documentation. Published SHA256SUMS and Defender evidence
+are bound to the downloadable files.
 
-Download **UniversalKoeiTecmoSaveEditor-v2.1.2.exe** for the standalone Windows app,
-or the **Windows ZIP** for the portable folder. The **Source ZIP** contains the
-reviewed source and documentation. `DefenderScan-v2.1.2.json` and `SHA256SUMS.txt`
-provide the release verification evidence.
-
-[Conversion instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1.2/docs/SAVE_CONVERSION.md)
-and [DW6 mapping and limitations](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1.2/docs/DW6_CONVERSION.md).
+[New profile instructions and evidence](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.2/docs/PS3_NEW_FAMILIES.md).

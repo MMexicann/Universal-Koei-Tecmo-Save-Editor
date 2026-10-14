@@ -1357,6 +1357,33 @@
       "evidence": "Two independently acquired BLUS30110 native exports of 212240 bytes qualify big-endian officer identities and published Apollo horse/weapon locations. Named one-way playable-byte unlocks, existing horse combat stats and weapon damage bonus/element controls preserve unknown bytes and original PARAM.SFO. Separate scoped PC/PS3 migration transfers typed roster and complete horse state.",
       "needed": "Edited console load/re-save, other regional/revision exports, controlled progression/horse/weapon dependencies, full story/suspended-battle conversion and extracted Xbox 360 native qualification.",
       "editing_verified": true
+    },
+    {
+      "id": "deception4_ps3",
+      "title": "Deception IV: Blood Ties — original US PS3 PSN",
+      "platform": "PlayStation 3",
+      "status": "Native decrypted Warl editor",
+      "evidence": "One complete public native export independently PFD-decrypted and qualified against the exact NPUB31442 original metadata, observed eight-byte profile and 409,600-byte size. Published own-title Apollo writer corroborates the wallet mapping. Manual scalar writes preserve all other bytes. Full opaque PARAM.SFO binding, native read-back, staged Undo, review, backups and safe copied-file workflows are tested. Published/observed editing ceilings do not establish natural caps; Max disabled.",
+      "needed": "Edited game-load/re-save validation and internal integrity qualification. Little-endian Warl at 0x20; separate read-only ability EXP. Traps, requests, abilities, endings and story dependencies require further qualification.",
+      "editing_verified": true
+    },
+    {
+      "id": "escha_logy_ps3",
+      "title": "Atelier Escha & Logy — original EU PS3 PSN",
+      "platform": "PlayStation 3",
+      "status": "Native decrypted Cole editor",
+      "evidence": "One complete public native export independently PFD-decrypted and qualified against the exact NPEB01945 original metadata, observed eight-byte profile and 409,600-byte size. Published own-title Apollo writer corroborates the wallet mapping. Manual scalar writes preserve all other bytes. Full opaque PARAM.SFO binding, native read-back, staged Undo, review, backups and safe copied-file workflows are tested. Published/observed editing ceilings do not establish natural caps; Max disabled.",
+      "needed": "Edited game-load/re-save validation and internal integrity qualification. Big-endian Cole at EU offset 0xBD63; separate named stored character/alchemy EXP. US, Plus/DX, job/rank/calendar, activity funds, items and reward dependencies require their own qualification.",
+      "editing_verified": true
+    },
+    {
+      "id": "ar_tonelico_qoga_ps3",
+      "title": "Ar tonelico Qoga: Knell of Ar Ciel — original US PS3",
+      "platform": "PlayStation 3",
+      "status": "Native decrypted Leaf editor",
+      "evidence": "Two independent complete public native exports independently PFD-decrypted and qualified against the exact BLUS30639 original metadata, observed eight-byte profile and 1,048,576-byte size. Published own-title Apollo writer corroborates the wallet mapping. Manual scalar writes preserve all other bytes. Full opaque PARAM.SFO binding, native read-back, staged Undo, review, backups and safe copied-file workflows are tested. Published/observed editing ceilings do not establish natural caps; Max disabled.",
+      "needed": "Edited game-load/re-save validation and internal integrity qualification. Big-endian Leaf at 0xCCC8; separate stored EXP/dive-point inspection. Inventory, talk topics, endings, system gallery and growth dependencies require further qualification.",
+      "editing_verified": true
     }
   ],
   "scope": "Windows application with explicitly selected game/platform parsers and separate backup identities.",

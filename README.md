@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.1.2 development source** supports **91 game/platform profiles across 15 platforms**.
+**Version 2.2 development source** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Save Converter
@@ -114,6 +114,9 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | WO LONG: FALLEN DYNASTY — Windows PC · USERDATA | Windows PC | Genuine Qi, copper, accolades, ordinary stack reductions, existing battle-set names and equipment inspection. |
 | PERSONA 5 STRIKERS — Windows PC · SAVEDATA.BIN | Windows PC | Money, Persona/BOND points and existing consumables, cooking supplies, incenses, remedies and selected skill cards. |
 | HYRULE WARRIORS LEGENDS — Nintendo 3DS · zmha.bin | Nintendo 3DS | Rupees, materials, map cards, weapon stars, ordinary seals, My Fairy names and existing fairy trust reductions. |
+| DECEPTION IV: BLOOD TIES — Original US PS3 PSN · NPUB31442 | PlayStation 3 | Warl editing and separate read-only ability experience; original decrypted DATA.BIN + PARAM.SFO. |
+| ATELIER ESCHA & LOGY — Original EU PS3 PSN · NPEB01945 | PlayStation 3 | Cole editing and separate named stored EXP inspection; original decrypted USR-DATA + PARAM.SFO. |
+| AR TONELICO QOGA — Knell of Ar Ciel · original US PS3 · BLUS30639 | PlayStation 3 | Leaf editing and separate stored growth/dive-point inspection; decrypted USR-DATA + PARAM.SFO. |
 | ATELIER AYESHA — The Alchemist of Dusk · PS3 US/Japanese export | PlayStation 3 | Cole, existing stack reductions and searchable inventory quality, properties and effects. |
 | DYNASTY WARRIORS 5 SPECIAL — Shin Sangokumusou 4 Special · Windows PC | Windows PC | Existing item ranks, stored officer attack/defense, weapon attack/weight and attributes; named records. |
 | FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold and existing material-stock reductions, owned Shez/Byleth name customization and searchable character/weapon records. |

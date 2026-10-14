@@ -1,5 +1,20 @@
 # Universal development validation
 
+## v2.2 original PS3 title-family expansion
+
+The three new original PS3 profiles have four independent complete public
+exports qualified after private PFD extraction. Copied native files pass
+unchanged roundtrips, manual wallet writes, untouched-byte preservation, exact
+original PARAM.SFO binding, actual destination read-back and paired backup/restore.
+Seventy-eight focused tests passed without skips when private exports were
+selected. Actual Tk workflows exercise open, read-only inspection, Review, Undo,
+manual/no-Max editing and safe copy output. Public fixtures are procedural;
+private bytes and context are excluded. These checks do not establish internal
+integrity or edited game-load/re-save acceptance. The full suite and native
+Windows packaging/active Defender gates remain required for publication.
+
+See [profile instructions and evidence](PS3_NEW_FAMILIES.md).
+
 ## v2.1.2 typed DW6 migration and DW8 XL PS4
 
 The focused generated/native checks exercise all 20 directed routes, including

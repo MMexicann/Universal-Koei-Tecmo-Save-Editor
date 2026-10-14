@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2 — 2026-10-14
+
+- Add three genuine-file-qualified original PS3 title families: Deception IV: Blood Ties (US PSN), Atelier Escha & Logy (EU PSN), and Ar tonelico Qoga (US).
+- Implement surgical manual wallet editing and separate read-only progression inspection with exact per-title sizes, headers, byte order and original metadata binding.
+- Extend shared PS3 copied-save storage to native extensionless gameplay files; preserve paired backups, restore and source/context-change guards.
+- Add bound scalar, experimental-range, format/corruption, source-race, native read-back and actual Tk workflow regressions. Library: 94 profiles, 15 platforms; conversion routes: 20.
+- Keep published editing targets distinct from game caps, disable resource Max and document outstanding console game-load validation.
+
 ## v2.1.2 — 2026-10-14
 
 - Add explicit original DW6 PC/US PS3 roster-and-horse migration in both

@@ -9,10 +9,11 @@ from koei_editor.shared.save_safety import safe_path
 
 
 class PS3CopyStorage:
-    def __init__(self, game_id, size, validate_document, context_raw, decode, read_save, serialize):
+    def __init__(self, game_id, size, validate_document, context_raw, decode, read_save, serialize, extension='.bin'):
         self.game_id, self.size = game_id, size
         self.validate_document, self.context_raw = validate_document, context_raw
         self.decode, self.read_save, self.serialize = decode, read_save, serialize
+        self.extension = extension
 
     def check_context(self, document, destination=None):
         self.validate_document(document)
@@ -57,8 +58,8 @@ class PS3CopyStorage:
 
     def save_as(self, document, changes, destination):
         destination = safe_path(destination)
-        if destination.suffix.lower() != '.bin':
-            raise SaveError('Choose a new decrypted PS3 .bin destination.')
+        if destination.suffix.lower() != self.extension:
+            raise SaveError('Choose a new decrypted PS3 ' + (self.extension or 'extensionless gameplay-file') + ' destination.')
         if destination.exists():
             raise FileExistsError('Choose a new file; existing copies are never replaced.')
         self.check_context(document, destination)
@@ -100,7 +101,7 @@ class PS3CopyStorage:
                 raise SaveError('The PS3 backup context belongs to a different gameplay snapshot.')
             if self.context_raw(destination) != metadata:
                 raise SaveError('The PS3 destination metadata changed during restore.')
-        result = restore_snapshot(backup_path, destination, self.game_id, '.bin', self.size, validate_raw=validate)
+        result = restore_snapshot(backup_path, destination, self.game_id, self.extension, self.size, validate_raw=validate)
         reopened = self.read_save(result, self.game_id)
         if reopened.sha256 != manifest.get('save_sha256') or self.context_raw(result) != metadata:
             raise SaveError('Restored gameplay or PS3 metadata changed during actual read-back.')

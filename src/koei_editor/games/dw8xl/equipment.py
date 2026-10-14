@@ -15,6 +15,10 @@ class WeaponOrderField(Field):
     opened_slots: tuple = ()
 
     @property
+    def experimental_maximum(self):
+        return None
+
+    @property
     def mirrors(self):
         return (self.offset + 2,)
 

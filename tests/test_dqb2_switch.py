@@ -130,10 +130,14 @@ class Dqb2SwitchFormatTests(unittest.TestCase):
         raw[parser.HEADER_SIZE:parser.HEADER_SIZE + len(stream)] = stream
         struct.pack_into('<I', raw, 0x10, parser.HEADER_SIZE + len(stream))
         document = parser.decode(bytes(raw))
-        for index in range(6):
+        for index in range(3):
             self.assertNotIn(f'bag_{index + 1}', parser.field_map(document))
             with self.assertRaises(SaveError):
                 parser.stage(document, {}, f'bag_{index + 1}', 1)
+        for index in range(3, 6):
+            field = parser.field_map(document)[f'bag_{index + 1}']
+            self.assertEqual(field.value(document.payload), examples[index][1])
+            self.assertEqual(parser.stage(document, {}, field.id, examples[index][1]), {})
         changed = parser.decode(parser.serialize(document, {'pockets_1': 3}))
         self.assertEqual(changed.payload[pc.BAG_BASE:pc.BAG_BASE + 24], document.payload[pc.BAG_BASE:pc.BAG_BASE + 24])
         self.assertEqual(parser.player_records(changed), parser.player_records(document))

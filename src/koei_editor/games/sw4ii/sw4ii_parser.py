@@ -119,13 +119,13 @@ def _fields(payload):
         if _mount_choices(payload):
             result.append(Field(f'officer_{index}_equipped_mount', 'Equipped existing mount slot',
                                 base + 0x3D, 1, MOUNT_COUNT - 1, 'Mount equipment',
-                                index + 1, maxable=False))
+                                index + 1, maxable=False, experimental=False))
     for owner in range(OFFICER_COUNT):
         allowed = _weapon_choices(payload, owner)
         if _equipment_choices(payload, owner):
             result.append(Field(f'officer_{owner}_equipped_weapon', 'Equipped own-pool weapon slot',
                                 OFFICER_BASE + owner * OFFICER_STRIDE + 0x3B, 1, 19,
-                                'Equipment', owner + 1, maxable=False))
+                                'Equipment', owner + 1, maxable=False, experimental=False))
         for slot in allowed:
             base = WEAPON_BASE + (owner * WEAPON_SLOTS + slot) * WEAPON_STRIDE
             for attribute in range(8):

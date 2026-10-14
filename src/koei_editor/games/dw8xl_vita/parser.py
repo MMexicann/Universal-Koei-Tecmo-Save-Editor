@@ -16,6 +16,7 @@ from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.verified_editor import DW8_FIELDS, DW8_RANKED_ATTRIBUTES, Field
+from koei_editor.shared.experimental_limits import experimental_enabled
 
 GAME_ID = 'dw8xl_vita'
 SAVE_SIZE, PAYLOAD_SIZE = 0xB7F45, 0xB7F44
@@ -96,7 +97,7 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload):
+def _fields(payload, experimental=False):
     result = list(BASE_FIELDS)
     for index in range(WEAPON_COUNT):
         base = WEAPON_BASE + index * WEAPON_STRIDE
@@ -105,7 +106,7 @@ def _fields(payload):
             continue
         for slot in range(6):
             attribute, rank = payload[base + 6 + slot], payload[base + 12 + slot]
-            if attribute in DW8_RANKED_ATTRIBUTES and 1 <= rank <= 10:
+            if attribute in DW8_RANKED_ATTRIBUTES and 1 <= rank <= (255 if experimental else 10):
                 result.append(Field(f'weapon_{index}_rank_{slot}',
                                     f'{DW8_ATTRIBUTE_NAMES.get(attribute, "Attribute")} rank (ID {attribute})',
                                     base + 12 + slot, 1, 10, 'Weapon attributes', index + 1, 1, False))
@@ -114,7 +115,7 @@ def _fields(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

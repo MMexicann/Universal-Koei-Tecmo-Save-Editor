@@ -54,7 +54,7 @@ class LegendsFormatTests(unittest.TestCase):
 
     def test_owned_resources_max_exclusions_and_higher_originals(self):
         f=p.field_map(self.doc);self.assertIn('material_1924',f)
-        self.assertNotIn('material_1926',f);self.assertNotIn('material_1928',f)
+        self.assertIn('material_1926',f);self.assertNotIn('material_1928',f)
         self.assertEqual(p.maximums(self.doc,{}),{'weapon_1_stars':5})
         self.assertNotIn('weapon_1_skill_1_kos',p.maximums(self.doc,{}))
         raw=bytearray(self.raw);raw[p.WEAPON_BASE+0x14:p.WEAPON_BASE+0x16]=(8).to_bytes(2,'little')
@@ -120,7 +120,7 @@ class LegendsFormatTests(unittest.TestCase):
         self.assertEqual(field.label,'Adventure: Compass');self.assertFalse(field.maxable)
         out=p.serialize(self.doc,{'map_card_2efa':5})
         self.assertEqual(out[:0x2EFA],self.raw[:0x2EFA]);self.assertEqual(out[0x2EFB:],self.raw[0x2EFB:])
-        self.assertNotIn('map_card_2efb',p.field_map(self.doc))
+        self.assertIn('map_card_2efb',p.field_map(self.doc))
         self.assertNotIn('map_card_2efc',p.field_map(self.doc))
         self.assertEqual(p.maximums(self.doc,{},'Adventure map cards'),{})
         for value in (0,6,True,-1):

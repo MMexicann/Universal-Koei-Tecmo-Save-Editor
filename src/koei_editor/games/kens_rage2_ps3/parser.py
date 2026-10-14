@@ -28,6 +28,7 @@ class Field:
     minimum: int = 0
     maxable: bool = False
     kind: str = 'int'
+    experimental_maximum: None = None
 
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'big')

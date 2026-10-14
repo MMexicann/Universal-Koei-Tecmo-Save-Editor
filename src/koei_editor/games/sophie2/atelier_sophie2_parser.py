@@ -15,6 +15,7 @@ from types import MappingProxyType
 import koei_editor.games.sophie2.atelier_sophie2_codec as codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.save_safety import safe_path
 
@@ -50,8 +51,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
+    @property
+    def experimental_maximum(self):
+        return 0x7FFFFFFF if self.group == 'Alchemy' else (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from '
                             f'{self.minimum:,} to {self.maximum:,}.')
 
@@ -245,7 +251,7 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=4)
-def _field_index(payload):
+def _field_index(payload, experimental=False):
     groups, equipment, alchemy, _, _ = _structure(payload)
     fields = [Field(key, f'{"Sophie" if key == "sophie_exp" else "Plachta"}: Alchemy EXP',
                     offset, 4, 0x7FFFFFFF, 'Alchemy', maxable=False)
@@ -258,7 +264,8 @@ def _field_index(payload):
                 fields.append(Field(f'{key}_{index}_quality', f'Quality (item ID {item_id})',
                                     offset + 6, 2, 999, label, index + 1))
                 if key == 'expendable':
-                    _usage_field(fields, payload, offset, f'{key}_{index}', label, index + 1)
+                    _usage_field(fields, payload, offset, f'{key}_{index}', label, index + 1,
+                                 experimental=experimental)
     for identity, start in equipment:
         for index, slot in enumerate(EQUIPMENT_SLOTS):
             offset = start + index * RECORD_SIZE
@@ -269,16 +276,17 @@ def _field_index(payload):
                                     CHARACTER_NAMES[identity] + ' equipment', index + 1))
                 if index >= 4:
                     _usage_field(fields, payload, offset, f'character_{identity}_{index}',
-                                 CHARACTER_NAMES[identity] + ' equipment', index + 1, slot)
+                                 CHARACTER_NAMES[identity] + ' equipment', index + 1, slot,
+                                 experimental=experimental)
     return MappingProxyType({field.id: field for field in fields})
 
 
-def _usage_field(fields, payload, offset, key, group, slot, label='Battle item'):
+def _usage_field(fields, payload, offset, key, group, slot, label='Battle item', *, experimental=False):
     # Published ItemRecord: current uses at +0x24, saved capacity at +0x25.
     # Capacity belongs to this existing item, not a guessed universal maximum.
     # Unusual/inconsistent records stay visible in inspection without writes.
     current, capacity = payload[offset + 0x24:offset + 0x26]
-    if 0 < capacity and current <= capacity:
+    if 0 < capacity and (current <= capacity or experimental):
         fields.append(Field(key + '_uses', f'{label}: Remaining uses (capacity {capacity})',
                             offset + 0x24, 1, capacity, group, slot))
 
@@ -311,7 +319,7 @@ def item_records(document):
 
 def field_map(document):
     validate_document(document)
-    return _field_index(document.payload)
+    return _field_index(document.payload, experimental_enabled())
 
 
 def fields_for(document):

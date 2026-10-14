@@ -45,7 +45,7 @@ class Format:
 _UNLOCK_FIELDS = tuple(
     Field(f'officer_{i}_unlocked', 'Playable (1 unlock)',
           OFFICER_BASE + i * OFFICER_STRIDE + 164, 4, 1,
-          'Unlocks', i + 1, maxable=False) for i in range(OFFICER_COUNT))
+          'Unlocks', i + 1, maxable=False, experimental=False) for i in range(OFFICER_COUNT))
 _HORSE_FIELDS = tuple(
     Field(f'horse_{i}_{key}', label, HORSE_BASE + i * HORSE_STRIDE + relative,
           4, 500, 'Horses', i + 1)
@@ -140,7 +140,7 @@ def _fields(payload):
                 elements.append(Field(f'officer_{officer}_weapon_{weapon}_element',
                                       f'{WEAPON_NAMES[identity]}: Element', offset + 8,
                                       4, 3, 'Weapon elements', officer * WEAPON_COUNT + weapon + 1,
-                                      maxable=False))
+                                      maxable=False, experimental=False))
     return tuple(field for field in _UNLOCK_FIELDS
                  if field.value(payload) in (0, 1)) + tuple(
         field for field in _HORSE_FIELDS if _horse_qualified(payload, field.slot - 1)) + tuple(elements)

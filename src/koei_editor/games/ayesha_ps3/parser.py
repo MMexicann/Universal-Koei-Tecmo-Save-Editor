@@ -14,6 +14,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.ps3_export import validate_optional_context
 from koei_editor.shared.save_safety import safe_path
@@ -43,8 +44,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'big')
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
     def encoded(self, value):
@@ -146,10 +152,10 @@ def _records(payload):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload):
+def _fields(payload, experimental=False):
     fields = [Field('cole', 'Cole', GOLD_OFFSET, 4, 999999)]
     for group, slot, offset, identity, quantity, quality, appraisal in _records(payload):
-        if (2 <= quantity <= 255 and appraisal == 0 and math.isfinite(quality)
+        if ((1 if experimental else 2) <= quantity <= (0xFFFF if experimental else 255) and appraisal == 0 and math.isfinite(quality)
                 and 0 <= quality <= 120):
             fields.append(Field(f'{group.lower()}_{slot}_quantity',
                                 f'Item ID {identity}: Reduce stack quantity', offset + 30,
@@ -159,7 +165,7 @@ def _fields(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

@@ -43,6 +43,11 @@ class Field:
     maxable: bool = False
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        # Appearance positions are native enum choices.
+        return None
+
     def value(self, payload):
         return payload[self.offset]
 

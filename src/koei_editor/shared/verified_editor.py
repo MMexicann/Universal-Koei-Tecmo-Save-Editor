@@ -15,6 +15,7 @@ from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore
 from koei_editor.shared.koei_codec import byte_cipher, mix_word, word_cipher, word_sum
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits
 
 
 @dataclass(frozen=True)
@@ -28,12 +29,21 @@ class Field:
     slot: int = 0
     minimum: int = 0
     maxable: bool = True
+    experimental: bool = True
+
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        if not self.experimental:
+            return None
+        return (1 << (8 * self.size)) - 1
 
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -44,6 +54,10 @@ class CompatibilityField(Field):
     Existing other values remain readable and no-op-safe. Deliberate edits use
     only the four observed native values, rather than arbitrary percentages.
     """
+
+    @property
+    def experimental_maximum(self):
+        return None
 
     def validate(self, value):
         super().validate(value)
@@ -142,7 +156,7 @@ def _field_index(game_id, payload):
             if record['affinity'] in (0, 1, 2):
                 field = Field(f'weapon_{index}_affinity', 'Affinity ID (0, 1 or 2)',
                               DW8_WEAPON_BASE + index * DW8_WEAPON_STRIDE + 4,
-                              1, 2, 'Weapon affinity', index + 1, 0, False)
+                              1, 2, 'Weapon affinity', index + 1, 0, False, experimental=False)
                 fields[field.id] = field
             for attribute, (identity, rank) in enumerate(record['attributes']):
                 if identity not in DW8_RANKED_ATTRIBUTES or rank == 0:

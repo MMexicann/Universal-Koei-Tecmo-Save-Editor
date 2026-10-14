@@ -12,6 +12,7 @@ from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'bandit_kings_mac'
@@ -56,11 +57,16 @@ class Field:
     kind: str = 'int'
     byteorder: str = 'big'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], self.byteorder)
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum} to the opened value ({self.maximum}).')
 
 

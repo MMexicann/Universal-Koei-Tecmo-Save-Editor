@@ -15,6 +15,7 @@ from types import MappingProxyType
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.dw3.game_content import DW8_ATTRIBUTE_NAMES
 from koei_editor.shared.verified_editor import DW8_FIELDS, DW8_RANKED_ATTRIBUTES, Field
+from koei_editor.shared.experimental_limits import experimental_enabled
 from koei_editor.shared.koei_codec import byte_cipher
 from koei_editor.shared.copy_storage import (
     atomic_new,
@@ -184,7 +185,7 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=4)
-def _mapped_fields(payload):
+def _mapped_fields(payload, experimental=False):
     fields = list(BASE_FIELDS)
     for index in range(WEAPON_COUNT):
         start = WEAPON_BASE + index * WEAPON_STRIDE
@@ -195,7 +196,7 @@ def _mapped_fields(payload):
         # attributes, zero/unusual ranks, IDs and every adjacent ownership byte.
         for slot in range(6):
             attr, rank = payload[start + 6 + slot], payload[start + 12 + slot]
-            if attr in DW8_RANKED_ATTRIBUTES and 1 <= rank <= 10:
+            if attr in DW8_RANKED_ATTRIBUTES and 1 <= rank <= (255 if experimental else 10):
                 fields.append(
                     Field(
                         f"weapon_{index}_rank_{slot}",
@@ -214,7 +215,7 @@ def _mapped_fields(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _mapped_fields(document.payload)
+    return _mapped_fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

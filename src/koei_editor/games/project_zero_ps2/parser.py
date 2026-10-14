@@ -11,6 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore_snapshot
 from koei_editor.shared.save_safety import safe_path
 
@@ -79,8 +80,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1 if self.id.endswith('_points') else None
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from 0 to '
                             f'the opened value ({self.maximum:,}).')
 
@@ -187,7 +193,7 @@ def _suffix(path):
 
 
 @lru_cache(maxsize=4)
-def _fields(raw):
+def _fields(raw, experimental=False):
     result = {}
     for entry in _entries(raw):
         if not entry.occupied:
@@ -201,7 +207,7 @@ def _fields(raw):
             value = int.from_bytes(raw[offset:offset + size], 'little')
             if key != 'points' and not 1 <= value <= 3:
                 continue  # Initial or unusual tiers remain read-only, never normalized.
-            if key == 'points' and value == 0:
+            if key == 'points' and value == 0 and not experimental:
                 continue
             field = Field(f'slot_{entry.slot}_{key}', label, offset, size, value,
                           f'Save slot {entry.slot + 1} · Camera', entry.slot + 1)
@@ -211,7 +217,7 @@ def _fields(raw):
 
 def field_map(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def fields_for(document):

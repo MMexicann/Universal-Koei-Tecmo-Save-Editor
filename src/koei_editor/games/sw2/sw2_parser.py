@@ -40,6 +40,10 @@ def _u32(payload, offset):
 @dataclass(frozen=True)
 class SkillField(Field):
     """Rank is the low seven bits; the separate high bit remains untouched."""
+    @property
+    def experimental_maximum(self):
+        return 0x7F
+
     def value(self, payload):
         return payload[self.offset] & 0x7F
 
@@ -133,7 +137,7 @@ def _fields(payload):
         if _weapon_choices(payload, officer):
             fields.append(Field(f'officer_{officer}_equipped_weapon', 'Equipped existing own-pool weapon',
                                 base + 0xC0, 1, WEAPON_COUNT - 1, 'Equipment',
-                                officer + 1, maxable=False))
+                                officer + 1, maxable=False, experimental=False))
         for stat, label in enumerate(STAT_NAMES):
             fields.append(Field(f'officer_{officer}_stat_{stat}', f'{label} (stored growth)',
                                 base + stat * 4, 4, 0xFFFFFFFF, 'Officer growth',

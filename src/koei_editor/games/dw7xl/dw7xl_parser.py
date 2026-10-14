@@ -15,6 +15,7 @@ import koei_editor.games.dw7xl.dw7xl_codec as codec
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits
 
 
 GAME_ID = 'dw7xl'
@@ -37,11 +38,19 @@ class Field:
     maxable: bool = True
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        if self.id.endswith(('_active_weapon', '_seal_meter')):
+            return None
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from '
                             f'{self.minimum:,} to {self.maximum:,}.')
 

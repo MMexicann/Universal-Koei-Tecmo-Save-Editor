@@ -14,6 +14,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.games.ryza import codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
@@ -57,8 +58,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], self.byteorder)
 
+    @property
+    def experimental_maximum(self):
+        return 0x7FFFFFFF if self.id == 'skill_points' else (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum} to {self.maximum}.')
 
 
@@ -312,13 +318,13 @@ def read_save(path, game_id=GAME_ID):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload, game_id):
+def _fields(payload, game_id, experimental=False):
     records, quality_offset = _structure(payload, game_id)
     result = {}
     occurrences = Counter(record[5] for record in records)
     for key, label, slot, offset, item_id, _serial, identity in records:
         quality = struct.unpack_from('<H', payload, offset + quality_offset)[0]
-        if key.startswith('important') or quality in (0, 0xFFFF) or occurrences[_serial] > 1:
+        if key.startswith('important') or (quality == 0 or (quality == 0xFFFF and not experimental)) or occurrences[_serial] > 1:
             continue  # Important/no-quality records do not inherit ordinary item rules.
         if (game_id in (SWITCH_GAME_ID, RYZA2_SWITCH_GAME_ID)
                 and struct.unpack_from('<H', payload, offset + quality_offset + 2)[0] != 0):
@@ -367,7 +373,7 @@ def _skill_point_field(payload):
 
 def field_map(document):
     validate_document(document)
-    return _fields(document.payload, document.format.id)
+    return _fields(document.payload, document.format.id, experimental_enabled())
 
 
 def fields_for(document):

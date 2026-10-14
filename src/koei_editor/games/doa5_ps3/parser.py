@@ -49,6 +49,7 @@ class Field:
     maximum: int = 1
     maxable: bool = False
     kind: str = 'int'
+    experimental_maximum: None = None
 
     def value(self, payload):
         return payload[self.offset]

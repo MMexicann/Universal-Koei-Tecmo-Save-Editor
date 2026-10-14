@@ -13,6 +13,7 @@ from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'rotk3_dos'
@@ -55,11 +56,16 @@ class Field:
     kind: str = 'int'
     byteorder: str = 'little'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum} to {self.maximum}.')
 
 
@@ -127,7 +133,7 @@ def _validate_raw(raw):
         links = {}
         for officer in range(OFFICER_COUNT):
             base = start + OFFICER_START + officer * OFFICER_STRIDE
-            if 1 <= raw[base + 18] <= 127 and 1 <= raw[base + 19] <= 127:
+            if raw[base + 18] > 0 and raw[base + 19] > 0:
                 links[officer] = _link(raw, base + 3)
         if not links:
             raise SaveError('ROTK III occupied slot has no existing officer records.')
@@ -189,13 +195,13 @@ def _fields(raw):
         start = slot * SLOT_STRIDE
         for officer in range(OFFICER_COUNT):
             base = start + OFFICER_START + officer * OFFICER_STRIDE
-            if not (1 <= raw[base + 18] <= 127 and 1 <= raw[base + 19] <= 127):
+            if not (raw[base + 18] > 0 and raw[base + 19] > 0):
                 continue
             group = f'Save slot {slot + 1:02d} · Officer record {officer + 1:03d}'
             for relative, key, label in ((16, 'land', 'Land command'), (17, 'water', 'Naval command'),
                                           (18, 'war', 'War'), (19, 'intelligence', 'Intelligence'),
                                           (20, 'politics', 'Politics'), (21, 'charisma', 'Charisma')):
-                if 1 <= raw[base + relative] <= 100:
+                if raw[base + relative] > 0:
                     field = Field(f's{slot}_o{officer}_{key}', label, base + relative,
                                   100, group, slot + 1, 1, minimum=1)
                     result[field.id] = field
@@ -205,7 +211,7 @@ def _fields(raw):
             if mayor is None:
                 continue
             officer = start + OFFICER_START + mayor * OFFICER_STRIDE
-            if not (1 <= raw[officer + 18] <= 127 and 1 <= raw[officer + 19] <= 127
+            if not (raw[officer + 18] > 0 and raw[officer + 19] > 0
                     and raw[officer + 26] < 21):
                 continue
             group = f'Save slot {slot + 1:02d} · City record {city + 1:02d}'

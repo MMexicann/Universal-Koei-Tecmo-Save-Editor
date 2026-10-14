@@ -26,6 +26,10 @@ claim. Read [CONTRIBUTING.md](../../CONTRIBUTING.md) and the
    can be removed. When original companion metadata is bound, verify its digest
    before writing, after atomic creation, and after actual destination read-back
    for both Save As and restore. Add fault injections for each boundary.
+   Declare `experimental_maximum` only for known existing numeric storage and
+   use the shared scoped numeric validator. Keep choices, IDs and structural
+   dependencies bounded. Exercise both normal and experimental modes, exact
+   ceiling/read-back, overflow rejection and context/cache isolation.
 3. Register the implemented game in `koei_editor.game_registry.GAMES` with
    qualified editor/parser/backend module paths, extension, platform and honest
    provenance. Update reviewed runtime metadata, the supported-game inventory,

@@ -13,6 +13,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 
@@ -47,11 +48,16 @@ class Field:
     maxable: bool = False
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -183,13 +189,13 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload):
+def _fields(payload, experimental=False):
     gold = struct.unpack_from('<I', payload, GOLD_OFFSET)[0]
     result = [Field('gold', 'Gold (reduce only)', GOLD_OFFSET, gold, 'Resources')]
     for index, name in enumerate(MATERIAL_NAMES):
         value = payload[MATERIAL_BASE + index]
         # Do not manufacture undiscovered materials or normalize unusual bytes.
-        if 1 <= value <= 99:
+        if 1 <= value <= (255 if experimental else 99):
             result.append(Field(f'material_{index}', name, MATERIAL_BASE + index,
                                 99, 'Existing materials', index + 1, size=1))
     return tuple(result)
@@ -197,7 +203,7 @@ def _fields(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

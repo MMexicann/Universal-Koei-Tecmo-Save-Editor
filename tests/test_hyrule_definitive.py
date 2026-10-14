@@ -47,11 +47,11 @@ class DefinitiveFormatTests(unittest.TestCase):
 
     def test_existing_named_ordinary_records_only_and_no_bulk_max(self):
         document = p.decode(procedural_raw())
-        self.assertEqual(set(p.field_map(document)), {'rupees', 'material_1afe', 'weapon_1_stars', 'weapon_1_skill_1_kos'})
+        self.assertEqual(set(p.field_map(document)), {'rupees', 'material_1afe', 'material_1b00', 'weapon_1_stars', 'weapon_1_skill_1_kos'})
         self.assertEqual(p.maximums(document, {}, 'Material inventory'), {})
         self.assertEqual(p.maximums(document, {}, 'Resources'), {})
         self.assertEqual(p.maximums(document, {'material_1afe': 50}, 'Material inventory'), {'material_1afe': 50})
-        for key in ('material_1b00', 'material_1b02', 'food_2620', 'character_0_level'):
+        for key in ('material_1b02', 'food_2620', 'character_0_level'):
             with self.assertRaises(SaveError):
                 p.stage(document, {}, key, 1)
         for value in (True, -1, 0, 1000, '4'):

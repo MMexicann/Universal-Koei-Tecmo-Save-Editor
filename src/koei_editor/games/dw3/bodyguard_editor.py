@@ -1,5 +1,11 @@
-"""Verified bodyguard equipment and final-state edit planning, separate from UI."""
+"""Verified bodyguard equipment and final-state edit planning, separate from UI.
+
+Experimental numeric rolls require an existing owned item or existing bonus
+identity in its saved position. IDs, ownership, family/tier eligibility, bonus
+counts, growth dependencies and equipment references retain their rules.
+"""
 from koei_editor.resources import read_json
+from koei_editor.shared.experimental_limits import SIGNED_INT32_MAX, within_numeric_limits
 import struct
 from koei_editor.games.dw3.models import SaveError, fields
 import koei_editor.games.dw3.bodyguard_growth as growth
@@ -10,6 +16,24 @@ FAMILY_NAMES=('Sword','Spear','Pike','Bow','Crossbow')
 ITEM_IDS={r['enum']:i for i,r in GUARD_ITEMS.items()}
 WEAPON_IDS={r['enum']:i for i,r in GUARD_WEAPONS.items()}
 CATEGORIES={'bodyguard','guard_item','guard_weapon','guard_weapon_slot'}
+VALUE_STORAGE_MAXIMUM=SIGNED_INT32_MAX
+
+
+def item_numeric_limits(item_id):
+    """Normal-item minimum, supported maximum and IntProperty ceiling."""
+    if type(item_id) is not int or item_id not in GUARD_ITEMS or GUARD_ITEMS[item_id]['kind']!='normal':
+        raise SaveError('Choose a supported normal bodyguard item.')
+    return 1,GUARD_ITEMS[item_id]['max_value'],VALUE_STORAGE_MAXIMUM
+
+
+def skill_numeric_limits(weapon_id,item_id):
+    """Known bonus minimum, supported tier maximum and IntProperty ceiling."""
+    if type(weapon_id) is not int or weapon_id not in GUARD_WEAPONS:
+        raise SaveError('Choose a supported bodyguard weapon.')
+    row=GUARD_WEAPONS[weapon_id]
+    if type(item_id) is not int or item_id not in row['allowed_skill_ids']:
+        raise SaveError('Choose an eligible bodyguard weapon bonus.')
+    return 1,max(row['allowed_values_by_guard_item_id'][str(item_id)]),VALUE_STORAGE_MAXIMUM
 
 
 def _requests(document,changes):
@@ -70,8 +94,11 @@ def validate_skills(weapon_id,skills,original_skills=()):
         if type(item) is not int or item not in row['allowed_skill_ids'] or item in seen:
             raise SaveError('Duplicate or ineligible bodyguard weapon bonus.')
         original=original_skills[index] if index<len(original_skills) else None
-        preserved=(type(value) is int and value>0 and skill==original)
-        if type(value) is not int or value not in row['allowed_values_by_guard_item_id'][str(item)] and not preserved:
+        preserved=(type(value) is int and 0<value<=VALUE_STORAGE_MAXIMUM and skill==original)
+        minimum,maximum,storage_maximum=skill_numeric_limits(weapon_id,item)
+        experimental=(original is not None and original['id']==item and type(value) is int and value>maximum
+                      and within_numeric_limits(value,minimum,maximum,storage_maximum=storage_maximum))
+        if type(value) is not int or value not in row['allowed_values_by_guard_item_id'][str(item)] and not (preserved or experimental):
             raise SaveError('This bonus value cannot be generated for this weapon tier.')
         seen.add(item);result.append({'id':item,'value':value})
     return result
@@ -111,8 +138,10 @@ def item_state(document,changes=()):
         owned=wanted.get('Owned',original_owned);value=wanted.get('Value',original_value)
         if type(owned) is not bool:raise SaveError('Item ownership requires a boolean.')
         if 'Value' in wanted:
-            preserved=original_owned and owned and type(value) is int and value>0 and value==original_value
-            if item['kind']!='normal' or type(value) is not int or not (1<=value<=item['max_value'] or preserved):
+            preserved=original_owned and owned and type(value) is int and 0<value<=VALUE_STORAGE_MAXIMUM and value==original_value
+            valid=(item['kind']=='normal' and within_numeric_limits(value,1,item['max_value'],storage_maximum=VALUE_STORAGE_MAXIMUM)
+                   and (value<=item['max_value'] or original_owned and owned))
+            if item['kind']!='normal' or not (valid or preserved):
                 raise SaveError(f'{item["name"]} requires a verified normal-item value from 1 to {item["max_value"]}.')
             if 'Owned' not in wanted:owned=True
         if wanted and owned!=original_owned:

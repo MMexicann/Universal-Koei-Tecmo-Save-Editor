@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.adapter_contract import normalize_pending_values, is_opened_value
 from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore_snapshot
 from koei_editor.shared.ps3_export import MAX_SFO_SIZE, savedata_directory
@@ -36,11 +37,16 @@ class Field:
     encoding: str = 'unsigned big-endian integer'
     evidence: str = 'Published Apollo NPUB30836 field map; privately qualified original public PS3 export'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'big')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label}: choose a whole number from 0 to {self.maximum:,}.')
 
     def encoded(self, value):

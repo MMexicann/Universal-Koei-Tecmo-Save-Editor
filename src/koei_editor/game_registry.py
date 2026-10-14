@@ -22,12 +22,13 @@ class Game:
     platform: str = 'Windows PC'
     scalar_backend: str | None = None
 
-    def get_scalar_adapter(self):
+    def get_scalar_adapter(self, *, experimental=False):
         if self not in ALL_ADAPTERS:
             raise SaveError('Unregistered game.')
         if self.scalar_backend is None:
             raise SaveError('This editor uses its own document workflow.')
-        return BoundScalarAdapter(self.id, self.extension, import_module(self.scalar_backend))
+        return BoundScalarAdapter(self.id, self.extension, import_module(self.scalar_backend),
+                                  experimental=experimental)
 
     def create_editor(self, root, parent, theme='Light', on_theme=None):
         if self not in ALL_ADAPTERS:

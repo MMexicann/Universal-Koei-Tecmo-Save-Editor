@@ -142,7 +142,7 @@ def _fields(payload):
                                        'Equipped ordinary Hero Card', offset, 4,
                                        (hero + 1) * ORDINARY_POOL_SIZE - 1,
                                        'Hero cards', slot * HERO_COUNT + hero + 1,
-                                       minimum=hero * ORDINARY_POOL_SIZE, maxable=False))
+                                       minimum=hero * ORDINARY_POOL_SIZE, maxable=False, experimental=False))
     return (tuple(field for field in FIELDS if field.slot in qualified)
             + tuple(field for field in MATERIAL_FIELDS if field.slot in qualified
                     and field.minimum <= field.value(payload) <= field.maximum)

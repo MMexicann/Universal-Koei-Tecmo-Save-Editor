@@ -16,6 +16,7 @@ from koei_editor.research.katana import katana_codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.verified_editor import Field
+from koei_editor.shared.experimental_limits import experimental_enabled
 
 GAME_ID, SAVE_SIZE, JSON_OFFSET = 'wolong', 5_120_272, 0x108
 INTEGRITY_KIND = 'checksum'
@@ -28,6 +29,12 @@ CURRENCY_NAMES = {'senki': 'Available Genuine Qi', 'sen': 'Copper', 'bukun': 'Ac
 
 @dataclass(frozen=True)
 class JsonField(Field):
+    @property
+    def experimental_maximum(self):
+        # JSON token length is not the native integer width. Currency members
+        # are u64; ordinary item counts are u32 in the qualified serializer.
+        return (1 << (64 if self.id in CURRENCY_NAMES else 32)) - 1
+
     def value(self, payload):
         return int(payload[self.offset:self.offset + self.size])
 
@@ -38,6 +45,10 @@ class JsonField(Field):
 @dataclass(frozen=True)
 class JsonTextField(Field):
     kind: str = 'text'
+
+    @property
+    def experimental_maximum(self):
+        return None
 
     def value(self, payload):
         return json.loads(payload[self.offset:self.offset + self.size].decode('utf-8'))
@@ -66,7 +77,9 @@ FORMAT = Format(GAME_ID, 'Wo Long: Fallen Dynasty (PC)', SAVE_SIZE, (),
                 'Current native Windows PC USER revision 0x23121200. Both native '
                 'checksums are verified. Available currencies use a conservative '
                 'manual range, not a claimed natural cap; Max is disabled. Existing '
-                'ordinary stacks can only be reduced while retaining at least one. '
+                'ordinary stacks use reduction limits by default while retaining at least one. '
+                'Experimental numeric editing permits increases within the native '
+                'integer widths, with unverified gameplay capacity. '
                 'Enabled existing battle sets may receive a custom printable ASCII '
                 'name of up to 16 bytes (a conservative editor limit). '
                 'Equipment, skills, level, stored Qi and story are inspected without '
@@ -175,17 +188,17 @@ def validate_document(document):
         raise SaveError('An unchanged immutable Wo Long USER snapshot is required.')
 
 
-def _ordinary_stack(record):
+def _ordinary_stack(record, experimental=False):
     # No item creation/deletion or gear quantities. Native num is retained above
     # zero; reductions need no invented per-item capacity or acquisition flags.
     return (record['key'] != 0 and record['key_num'] != 0xffffffff
-            and 1 < record['num'] <= 0x7fffffff and record['flag'] == 8
+            and 1 < record['num'] <= (0xffffffff if experimental else 0x7fffffff) and record['flag'] == 8
             and record['equipment_part'] == 0 and record['equipment_slot'] == -1
             and record['item_level'] == 1 and record['weapon_skill_level'] == 0)
 
 
 @lru_cache(maxsize=4)
-def _fields(raw):
+def _fields(raw, experimental=False):
     _, root, spans, _ = _qualify(raw)
     fields = []
     for key, label in CURRENCY_NAMES.items():
@@ -196,7 +209,7 @@ def _fields(raw):
                                      ('storage_items', 'Stored stacks', 600)):
         for index, wrapped in enumerate(root['PossessionItemData'][group]):
             record = wrapped['ItemObjectData']
-            if not _ordinary_stack(record):
+            if not _ordinary_stack(record, experimental):
                 continue
             start, end = spans[('PossessionItemData', group, index, 'ItemObjectData', 'num')]
             fields.append(JsonField(f'{group}_{index}_num',
@@ -223,7 +236,7 @@ def _fields(raw):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.raw)
+    return _fields(document.raw, experimental_enabled())
 
 
 def field_map(document):
@@ -391,9 +404,9 @@ def field_hint(document, key):
         return ('Manual balance range 0..2,147,483,647 is a conservative editor limit, '
                 'not a proven natural cap. Max is disabled. Stored Qi, lifetime/history '
                 'records, level and rewards are preserved; unusual opened values can be restored unchanged.')
-    return ('Reduce this existing ordinary stack to 1..the opened quantity. '
-            'Increasing, deleting or creating items is unavailable until per-item '
-            'capacity/ownership dependencies are proved. Identity, flags, equipped '
+    return ('Default limits reduce this existing ordinary stack to 1..the opened quantity. '
+            'Experimental editing permits increases up to 4,294,967,295, with '
+            'unverified gameplay capacity. Deleting or creating item records is unavailable. Identity, flags, equipped '
             'references and acquisition history are preserved. Max is disabled.')
 
 

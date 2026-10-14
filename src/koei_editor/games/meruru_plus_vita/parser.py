@@ -14,6 +14,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 
@@ -55,8 +56,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -193,7 +199,7 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload):
+def _fields(payload, experimental=False):
     result = [Field('cole', 'Cole', COLE_OFFSET, 9999999, 'Resources')]
     for slot, name in enumerate(CHARACTERS):
         base = CHARACTER_BASE + slot * CHARACTER_STRIDE
@@ -202,7 +208,7 @@ def _fields(payload):
                                 999, 'Base character stats', slot + 1, minimum))
         for key, label, relative, minimum in GAUGES:
             original = struct.unpack_from('<I', payload, base + relative)[0]
-            if minimum <= original <= 0x7FFFFFFF:
+            if minimum <= original <= (0xFFFFFFFF if experimental else 0x7FFFFFFF):
                 result.append(Field(f'character_{slot}_current_{key}', label, base + relative,
                                     original, 'Current gauges — reduce only', slot + 1, minimum))
     return tuple(result)
@@ -210,7 +216,7 @@ def _fields(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

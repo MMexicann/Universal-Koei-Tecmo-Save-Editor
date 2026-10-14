@@ -14,6 +14,7 @@ import zlib
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits, experimental_enabled
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'monster_rancher_ds'
@@ -62,6 +63,12 @@ class Field:
     kind: str = 'int'
     record: str = ''
 
+    @property
+    def experimental_maximum(self):
+        if self.kind == 'text':
+            return None
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         raw = payload[self.offset:self.offset + self.size]
         return _name(raw) if self.kind == 'text' else int.from_bytes(raw, 'little')
@@ -71,7 +78,8 @@ class Field:
             if (type(value) is not str or not 1 <= len(value) <= self.maximum
                     or not value.strip() or any(not 32 <= ord(c) <= 126 for c in value)):
                 raise SaveError(f'{self.label}: use 1–{self.maximum} printable ASCII characters.')
-        elif type(value) is not int or not self.minimum <= value <= self.maximum:
+        elif type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label}: use a whole number from {self.minimum} to {self.maximum}.')
 
 
@@ -187,8 +195,8 @@ def _fields(raw):
                             'Resources', record='Ranch funds'))
     for slot in range(31):
         offset, species, name, _age, lifespan, stats = _monster(raw, 0, slot)
-        if (species not in QUALIFIED_SPECIES_IDS or name is None or not _matched(raw, MONSTER_BASE + slot * MONSTER_SIZE, MONSTER_SIZE)
-                or any(value > 1500 for value in stats)):
+        if (species not in QUALIFIED_SPECIES_IDS or name is None
+                or not _matched(raw, MONSTER_BASE + slot * MONSTER_SIZE, MONSTER_SIZE)):
             continue
         record = f'{"Current" if slot == 0 else "Frozen " + str(slot)} · {name}'
         group = 'Current monster' if slot == 0 else 'Frozen monsters'
@@ -200,7 +208,7 @@ def _fields(raw):
             fields.append(Field(f'monster_{slot}_stat_{index}', label, offset + 40 + index * 2,
                                 2, 999, group, slot + 1,
                                 maxable=all(value <= 999 for value in stats), record=record))
-        if 1 <= lifespan <= 9999:
+        if lifespan > 0:
             fields.append(Field(f'monster_{slot}_lifespan', 'Remaining lifespan (10 units / week)',
                                 offset + 32, 2, 9999, group, slot + 1, minimum=lifespan,
                                 maxable=True, record=record))
@@ -237,7 +245,7 @@ def changed_payload(document, changes):
     for slot in range(31):
         old = _monster(document.raw, 0, slot)[-1]
         new = _monster(output, 0, slot)[-1]
-        if sum(new) > max(STAT_BUDGET, sum(old)):
+        if not experimental_enabled() and sum(new) > max(STAT_BUDGET, sum(old)):
             raise SaveError('A monster’s six stats cannot exceed 5994 total; lower other stats first. '
                             'Existing unusual totals may be preserved or reduced.')
     if touched:

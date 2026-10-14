@@ -14,6 +14,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.wo4_ultimate import codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits, experimental_enabled
 
 GAME_ID = 'wo4_ultimate'
 TITLE = 'Warriors Orochi 4 Ultimate (Windows PC)'
@@ -43,11 +44,17 @@ class Field:
     maxable: bool = True
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
     def encoded(self, value):
@@ -129,8 +136,12 @@ def validate_document(document):
         raise SaveError('The opened Ultimate snapshot was altered outside staging.')
 
 
-@lru_cache(maxsize=4)
 def _fields(payload):
+    return _fields_cached(payload, experimental_enabled())
+
+
+@lru_cache(maxsize=4)
+def _fields_cached(payload, _experimental):
     fields = [Field(identity, label, offset, size, maximum, 'Resources', 0)
               for identity, label, offset, size, maximum in RESOURCE_MAP]
     # Element ID 0 is not promoted into an editable inventory entry. Unknown,
@@ -138,7 +149,7 @@ def _fields(payload):
     for identity in range(1, ELEMENT_COUNT):
         offset = ELEMENT_BASE + 2 * identity
         quantity = int.from_bytes(payload[offset:offset + 2], 'little')
-        if 1 <= quantity <= ELEMENT_MAXIMUM:
+        if within_numeric_limits(quantity, 1, ELEMENT_MAXIMUM, storage_maximum=65535):
             fields.append(Field(f'element_{identity}', f'Attribute element ID {identity}: Quantity',
                 offset, 2, ELEMENT_MAXIMUM, 'Attribute elements', identity, minimum=1))
     for record in range(OFFICER_COUNT):
@@ -151,7 +162,7 @@ def _fields(payload):
                 fields.append(Field(f'officer_{record}_upgrade_stones', 'Unspent Upgrade Stones',
                     base + UPGRADE_STONES_RELATIVE, 2, 9_999, 'Officer Upgrade Stones', record + 1))
     orbs = int.from_bytes(payload[0x30E:0x310], 'little')
-    if 1 <= orbs <= 999:
+    if within_numeric_limits(orbs, 1, 999, storage_maximum=65535):
         fields.append(Field('skill_orbs', 'Existing Skill Orbs', 0x30E, 2, orbs,
                             'Skill Orbs', 0, maxable=False))
     return tuple(fields)

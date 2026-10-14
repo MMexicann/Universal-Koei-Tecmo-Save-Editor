@@ -18,6 +18,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.dw3.save_codec import CNG_AES
 from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore_snapshot
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.steam_owner import (OwnerContext, read_owner, validate_owner,
                                             require_matching_owner)
 
@@ -57,11 +58,17 @@ class Field:
     kind: str = 'int'
     maxable: bool = True
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return struct.unpack_from('<I', payload, self.offset)[0]
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError('Karma Embers requires a whole number from 0 to 9,999,999.')
 
 

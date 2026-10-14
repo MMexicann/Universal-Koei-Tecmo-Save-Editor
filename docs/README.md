@@ -6,6 +6,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
+
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)

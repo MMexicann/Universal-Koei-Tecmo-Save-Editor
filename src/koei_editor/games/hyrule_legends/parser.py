@@ -11,6 +11,7 @@ from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.hyrule_legends.catalog import MATERIALS, FOOD, CHARACTERS, WEAPONS, SKILLS, MAP_CARDS
 
@@ -36,6 +37,12 @@ class Field:
     maxable: bool = False
     kind: str = 'integer'
 
+    @property
+    def experimental_maximum(self):
+        if self.kind == 'text':
+            return None
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         raw = payload[self.offset:self.offset + self.size]
         if self.kind == 'text':
@@ -48,7 +55,8 @@ class Field:
                     or any(not 32 <= ord(char) <= 126 for char in value)):
                 raise SaveError(f'{self.label} requires 1–{self.maximum} printable ASCII characters.')
             return
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -205,13 +213,13 @@ def _inspection(payload):
 def _field_index(payload):
     fields = list(FORMAT.fields)
     for index, (offset, name) in enumerate(MATERIALS):
-        # Discovery bits are not independently mapped. Preserve empty, higher
-        # and unidentified slots; do not manufacture ownership or rewards.
-        if 1 <= _uint(payload, offset, 2) <= 999:
+        # Discovery bits are not independently mapped. Positive known quantities
+        # qualify existing ownership, including preserved higher quantities.
+        if _uint(payload, offset, 2) > 0:
             fields.append(Field(f'material_{offset:x}', name, offset, 2, 999,
                                 'Material inventory', index + 1, minimum=1))
     for index, (offset, name) in enumerate(MAP_CARDS):
-        if 1 <= payload[offset] <= 5:
+        if payload[offset] > 0:
             fields.append(Field(f'map_card_{offset:x}', name, offset, 1, 5,
                                 'Adventure map cards', index + 1, minimum=1))
     for slot in range(FAIRY_COUNT):
@@ -226,7 +234,7 @@ def _field_index(payload):
         # thresholds, level and refresh rewards. Admit reductions only; no new
         # growth/skill threshold, reward, feeding or refresh action is asserted.
         if (payload[offset] == 1 and 1 <= payload[offset + 0x1B] <= 99
-                and 1 <= payload[offset + 0x24] <= 100):
+                and payload[offset + 0x24] > 0):
             fields.append(Field(f'fairy_{slot + 1}_trust',
                 f'Fairy slot {slot + 1}: Trust (decrease only)', offset + 0x24,
                 1, payload[offset + 0x24], 'Fairy trust', slot + 1, minimum=1))
@@ -241,11 +249,11 @@ def _field_index(payload):
         fields.append(Field(f'weapon_{slot}_stars', weapon['name'] + f' (slot {slot}): Stars',
             offset + 0x14, 2, 5, 'Weapon stars', slot, maxable=True))
         # Existing positive ordinary seals only; no collection-sensitive seals,
-        # new skill IDs, unused/open slots, counter increases or state changes.
-        # The 5,000 ceiling is a conservative admission bound, not a Max target.
+        # new skill IDs, unused/open slots or state changes. The supported limit
+        # is the opened countdown; experimental edits retain its native width.
         if weapon['state'] == 3:
             for index, (identity, remaining) in enumerate(weapon['skills']):
-                if identity in SKILLS and identity not in (0, 41, 42, 53, 54) and 0 < remaining <= 5000:
+                if identity in SKILLS and identity not in (0, 41, 42, 53, 54) and remaining > 0:
                     fields.append(Field(f'weapon_{slot}_skill_{index + 1}_kos',
                         weapon['name'] + f' (slot {slot}), ' + SKILLS[identity] + ': Remaining KOs',
                         offset + index * 2, 2, remaining, 'Ordinary skill seals',

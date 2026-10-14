@@ -29,6 +29,7 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'weapon_bonus_rules.json', 'progression_routes.json', 'collection_unlocks.json',
                 'origins_evidence.json', 'support_catalog.json')
 WINDOWS_DOCS = ('README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
+                'docs/EXPERIMENTAL_EDITING.md',
                 'docs/BUILDING.md', 'docs/ARCHITECTURE.md', 'docs/VALIDATION.md', 'docs/EXPANSION_COVERAGE.md',
                 'docs/DYNASTY_RESEARCH.md', 'docs/OROCHI_RESEARCH.md', 'docs/SAMURAI_RESEARCH.md',
                 'docs/PIRATE_ABYSS_RESEARCH.md', 'docs/STARS_WO4_RESEARCH.md', 'docs/NIOH3_RESEARCH.md',

@@ -18,8 +18,10 @@ import koei_editor.games.dw3.weapon_collection as weapon_collection
 import koei_editor.games.dw3.bodyguard_customization as bodyguard_customization
 import koei_editor.games.dw3.collection_editor as collection_editor
 import koei_editor.games.dw3.musou_slots as musou_slots
+from koei_editor.shared.experimental_limits import within_numeric_limits
 
 CAPS={'SPoint':99999}  # Only limits proved from game code are enabled.
+INT32_MAX = 0x7fffffff
 OFFICER_FIELDS=('SPoint','MaxHealth','MaxMusou','Attack','Defence')
 METADATA=read_json('game_metadata.json')
 ITEMS={item['id']:item for item in METADATA['items']}
@@ -110,9 +112,10 @@ def plan_changes(document: SaveDocument, changes: list[Change]) -> list[Patch]:
             if change.field not in CAPS:
                 raise SaveError('This permanent stat limit has not been verified; editing is disabled.')
             low=1 if change.field in ('MaxHealth','MaxMusou') else 0
-            if type(change.value) is not int or not low<=change.value<=CAPS[change.field]:
-                raise SaveError(f'{change.field} must be between {low} and {CAPS[change.field]}.')
             prop=fields(document.records(records)[change.index])[change.field]
+            unchanged = type(change.value) is int and change.value == prop['value']
+            if not within_numeric_limits(change.value, low, CAPS[change.field], storage_maximum=INT32_MAX) and not unchanged:
+                raise SaveError(f'{change.field}: supported {low}–{CAPS[change.field]}; experimental storage maximum {INT32_MAX}.')
             offset=prop['data_offset']; after=struct.pack('<i',change.value)
             reason=f'{change.category.title()} {change.index}: {change.field} {prop["value"]} -> {change.value}'
         elif change.category=='unlock':
@@ -145,8 +148,11 @@ def plan_changes(document: SaveDocument, changes: list[Change]) -> list[Patch]:
             if item['kind']!='normal' or index not in ITEM_CAPS:raise SaveError('The maximum for this item has not been verified.')
             preserved_high=(original_owned and owned and type(value) is int and value>0
                             and value==record['Value']['value'])
-            if type(value) is not int or (not 1<=value<=ITEM_CAPS[index] and not preserved_high):
-                raise SaveError(f'{item["name"]} must be 1–{ITEM_CAPS[index]}, or its unchanged saved value.')
+            allowed = within_numeric_limits(value, 1, ITEM_CAPS[index], storage_maximum=INT32_MAX)
+            if type(value) is int and value > ITEM_CAPS[index] and not (original_owned and owned):
+                allowed = False
+            if not allowed and not preserved_high:
+                raise SaveError(f'{item["name"]}: supported 1–{ITEM_CAPS[index]}; experimental storage maximum {INT32_MAX}, or its unchanged saved value.')
             if 'Owned' not in requested:owned=True
         if owned!=original_owned:
             if not owned or item['kind']=='rare':value=0

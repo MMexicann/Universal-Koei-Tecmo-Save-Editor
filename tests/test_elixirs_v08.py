@@ -140,7 +140,7 @@ class ElixirWriteTests(unittest.TestCase):
 
     def test_unusual_saved_counts_remain_read_only_and_unchanged(self):
         prop = self.document.properties['BeansNum']
-        for value in (-1, 1000):
+        for value in (-1,):
             with self.subTest(value=value):
                 unusual = parse_bytes(edited_fixture_bytes(self.document, [(prop, struct.pack('<i', value))]))
                 state = progression.elixir_state(unusual)

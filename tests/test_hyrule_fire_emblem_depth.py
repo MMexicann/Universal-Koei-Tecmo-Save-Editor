@@ -176,7 +176,7 @@ class LegendsTrustTests(unittest.TestCase):
     def test_owned_fairy_trust_qualification_and_unusual_original_preservation(self):
         raw = trust_slot()
         for relative, value in ((0, 0), (0, 2), (0x1B, 0), (0x1B, 100),
-                                (0x24, 0), (0x24, 101), (0x24, 255)):
+                                (0x24, 0)):
             changed = bytearray(raw)
             changed[legends.FAIRY_BASE + relative] = value
             document = legends.decode(changed)
@@ -184,6 +184,14 @@ class LegendsTrustTests(unittest.TestCase):
             self.assertEqual(legends.serialize(document, {}), bytes(changed))
             with self.assertRaises(SaveError):
                 legends.serialize(document, {'fairy_1_trust': 1})
+
+        for value in (101, 255):
+            changed = bytearray(raw)
+            changed[legends.FAIRY_BASE + 0x24] = value
+            document = legends.decode(changed)
+            self.assertIn('fairy_1_trust', legends.field_map(document))
+            self.assertEqual(legends.stage(document, {}, 'fairy_1_trust', value), {})
+            self.assertEqual(legends.serialize(document, {}), bytes(changed))
 
     @unittest.skipUnless(os.environ.get('HYRULE_LEGENDS_COPY'), 'Private native Legends copy absent')
     def test_native_trust_controls_roundtrip_and_one_byte_edits(self):

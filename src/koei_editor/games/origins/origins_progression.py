@@ -5,6 +5,7 @@ Battle history records replay completion only: it does not finish the active
 campaign, trigger story events, grant rewards or establish an ending.
 """
 
+from koei_editor.shared.experimental_limits import within_numeric_limits
 PEACE_BASES = {16: 0x1f64b, 17: 0x1f64c, 29: 0x1f716}
 BOND_BASES = {16: 0x136e, 17: 0x136e, 29: 0x1436}
 HISTORY_BASES = {16: 0x210a1, 17: 0x210a2, 29: 0x21365}
@@ -58,7 +59,7 @@ def progression_specs(payload, revision):
         if offset + 2 > len(payload):
             continue
         value = int.from_bytes(payload[offset:offset + 2], 'little')
-        if value <= 10000:
+        if within_numeric_limits(value, 0, 10000, storage_maximum=65535):
             fields.append(dict(id=f'peace_{index}',
                                label=f'{PROVINCE_NAMES[index]} peace (10,000 = 100%)',
                                offset=offset, size=2, maximum=10000,
@@ -67,7 +68,7 @@ def progression_specs(payload, revision):
         offset = BOND_BASES[revision] + index * 5
         if offset + 5 > len(payload):
             continue
-        if not 1 <= payload[offset] <= 5:
+        if not within_numeric_limits(payload[offset], 1, 5, storage_maximum=255):
             continue
         bond_name = BOND_NAMES.get(index, f'Bond ID {index}')
         fields.append(dict(id=f'bond_{index}_level',
@@ -75,7 +76,7 @@ def progression_specs(payload, revision):
                            offset=offset, size=1, maximum=5, minimum=1,
                            group='Existing bonds', slot=index))
         training = int.from_bytes(payload[offset + 2:offset + 4], 'little')
-        if training <= 999:
+        if within_numeric_limits(training, 0, 999, storage_maximum=65535):
             fields.append(dict(id=f'bond_{index}_training',
                                label=f'{bond_name} training count (threshold 3)',
                                offset=offset + 2, size=2, maximum=999,

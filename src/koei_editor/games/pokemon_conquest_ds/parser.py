@@ -12,6 +12,7 @@ from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'pokemon_conquest_ds'
@@ -73,11 +74,17 @@ class Field:
     maxable: bool = True
     kind: str = 'integer'
 
+    @property
+    def experimental_maximum(self):
+        # Each IV occupies exactly five bits in a shared native word.
+        return (1 << 5) - 1
+
     def value(self, payload):
         return (int.from_bytes(payload[self.offset:self.offset + 4], 'little') >> self.shift) & 31
 
     def validate(self, value):
-        if type(value) is not int or not 0 <= value <= 31:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from 0 to 31.')
 
 

@@ -5,15 +5,26 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-The released **version 1.91** supports **76 game/platform profiles across 13 platforms**.
+**Version 2.1** supports **90 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
+
+## Experimental editing
+
+Supported limits apply by default. Open a save copy and enable **Experimental:
+allow above supported limits** to enter larger numeric values. The editor shows
+the supported maximum and encoding limit, and warns that experimental values
+can break the save or game or be reset by the game.
+
+Max buttons keep supported limits. Unknown fields, IDs, choices, flags and required
+record structure remain protected. Backups, Undo and verified Save As stay available.
+See [experimental limits and exceptions](docs/EXPERIMENTAL_EDITING.md).
 
 ## Supported games
 
 Select the game and platform that match your save. Console editors open
 extracted or decrypted save exports: `.psu` for
 PlayStation 2, `APP.BIN` for Wii U and DW7/DW8 XL PS3, `DATA.BIN` for SW4 PS3, and `svdt`
-for Age of Calamity. The development source also accepts original Bladestorm PS3 `PLAYDATA` copies
+for Age of Calamity. The editor also accepts original Bladestorm PS3 `PLAYDATA` copies
 and the newly qualified Pirate Warriors PS3 exports. Some PS3 profiles require the original `PARAM.SFO` beside
 the copied gameplay file and edited output. Export and reimport/resign PS3 saves
 with Apollo Save Tool; this editor does not rebuild `PARAM.PFD` or sign exports.
@@ -22,7 +33,7 @@ Berserk and Meruru Plus Vita editors open decrypted exports with their original
 `sce_sys/param.sfo`. DW8 XL Vita opens the qualified plaintext `MainData00.dat` profile.
 Meruru Plus uses `USR-DATA0000`; Berserk uses `app0000.dat` or another supported
 slot. Export and reimport with a Vita save manager. Pokémon Conquest and Monster Rancher DS open raw
-Nintendo DS `.sav` exports. The development source adds Gemfire NES/SNES and
+Nintendo DS `.sav` exports. The editor adds Gemfire NES/SNES and
 Nobunaga NES raw battery exports, plus Bandit Kings Macintosh `.cim` data forks.
 Attack on Titan Vita uses `app0000.dat` with original `sce_sys/param.sfo`.
 
@@ -36,8 +47,8 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below describes the **development source on main**, including additions
-that are not in the v1.91 Windows download.
+The table below lists the game/platform profiles included in version 2.1.
+Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->
 | Game / edition | Platform | Implemented scope |

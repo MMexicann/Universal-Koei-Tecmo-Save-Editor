@@ -161,7 +161,9 @@ class ConversionTests(unittest.TestCase):
         conversion = self.prepare()
         original = c._read
         def damaged(endpoint, path):
-            if Path(path).parent == self.folder / 'output':
+            # Windows TEMP can use an 8.3 alias while safe_path returns the
+            # long spelling. Inject into the same resolved destination.
+            if Path(path).resolve().parent == (self.folder / 'output').resolve():
                 raise SaveError('Injected destination read-back failure')
             return original(endpoint, path)
         with patch.object(c, '_read', side_effect=damaged), self.assertRaises(SaveError):

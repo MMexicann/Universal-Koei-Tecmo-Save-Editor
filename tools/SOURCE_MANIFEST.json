@@ -3383,8 +3383,8 @@
     },
     {
       "path": "tests/test_conversion.py",
-      "bytes": 11960,
-      "sha256": "9aa31513347b2c40ed582e0234bbb5faa95900fa9fbba0a1a2edd8439470cb03"
+      "bytes": 12130,
+      "sha256": "e88e970eb9c3911d1606a972cc7512c15da58d479b2441db0fd8e7d6803e79df"
     },
     {
       "path": "tests/test_conversion_gui.py",

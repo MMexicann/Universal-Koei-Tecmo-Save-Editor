@@ -15,6 +15,7 @@ import re
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.games.fatal_frame2_remake import codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
@@ -41,8 +42,14 @@ class Field:
     def value(self, payload):
         return int(payload[self.offset:self.offset + self.size])
 
+    @property
+    def experimental_maximum(self):
+        # Keep the native signed balance inside the original JSON token span.
+        return min(0x7FFFFFFF, 10 ** self.size - 1)
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError('Photo Points may only be reduced from 0 to the opened balance; Max is disabled.')
 
 

@@ -7,6 +7,7 @@ from koei_editor.resources import read_json
 import struct
 
 from koei_editor.games.dw3.models import Change, SaveError, fields
+from koei_editor.shared.experimental_limits import within_numeric_limits
 
 METADATA = read_json('progression_routes.json')
 ROUTES = {row['officer_id']: row for row in METADATA['officers']}
@@ -14,6 +15,7 @@ SIDE_STORIES = {row['id']: row for row in METADATA['side_stories']}
 CATEGORIES = {'progression'}
 SIDE_ARRAYS = ('CanUseReMusouArray', 'NewCanUseReMusouArray')
 ELIXIR_MAX = METADATA['limits']['HuanglongElixirs']
+ELIXIR_STORAGE_MAX = 0x7fffffff
 FIRST_CLEAR_ELIXIRS = METADATA['limits']['first_clear_elixirs']
 
 
@@ -33,19 +35,19 @@ def _elixir_property(document):
     if (type(offset) is not int or not 0 <= offset <= len(document.plaintext) - 4 or
             struct.unpack_from('<i', document.plaintext, offset)[0] != saved):
         return None, saved, 'The Huanglong Elixir counter does not match its saved bytes.'
-    if not 0 <= saved <= ELIXIR_MAX:
-        return None, saved, f'The saved Huanglong Elixir count is outside the verified 0–{ELIXIR_MAX} range.'
+    if not 0 <= saved <= ELIXIR_STORAGE_MAX:
+        return None, saved, 'The saved Huanglong Elixir count is outside nonnegative signed 32-bit storage.'
     return prop, saved, ''
 
 
 def elixir_count_change(value):
     """Set the final balance; do not silently coerce strings, floats or bools."""
-    if type(value) is not int or not 0 <= value <= ELIXIR_MAX:
-        raise SaveError(f'Huanglong Elixirs must be an integer between 0 and {ELIXIR_MAX}.')
+    if not within_numeric_limits(value, 0, ELIXIR_MAX, storage_maximum=ELIXIR_STORAGE_MAX):
+        raise SaveError(f'Huanglong Elixirs: supported 0–{ELIXIR_MAX}; experimental storage maximum {ELIXIR_STORAGE_MAX}.')
     return Change('progression', 0, 'HuanglongElixirs', value)
 
 
-def _requested_elixir_count(changes):
+def _requested_elixir_count(changes, document=None):
     value = None
     found = False
     for change in changes:
@@ -55,7 +57,11 @@ def _requested_elixir_count(changes):
             raise SaveError('Huanglong Elixirs use the single global counter at index 0.')
         if found:
             raise SaveError('Duplicate Huanglong Elixir count changes.')
-        value = elixir_count_change(change.value).value
+        saved = _elixir_property(document)[1] if document is not None else None
+        if type(change.value) is int and change.value == saved:
+            value = change.value
+        else:
+            value = elixir_count_change(change.value).value
         found = True
     return value
 
@@ -64,13 +70,14 @@ def elixir_state(document, changes=()):
     """Read the saved/pending balance without making unsupported saves fail open.
 
     An explicit count is the final balance, including when the same batch marks
-    new Musou clears. Otherwise each new clear awards three, capped at 999.
+    new Musou clears. Otherwise each new clear awards three, capped at 999;
+    an existing balance above that cap is preserved.
     """
     prop, saved, reason = _elixir_property(document)
     if reason:
         return {'value': saved, 'saved_value': saved, 'editable': False, 'reason': reason}
     requests = list(changes)
-    explicit = _requested_elixir_count(requests)
+    explicit = _requested_elixir_count(requests, document)
     value = saved
     if explicit is not None:
         value = explicit
@@ -88,7 +95,7 @@ def elixir_state(document, changes=()):
             seen.add(change.index)
             _, cleared = _bool_array(document, 'EngiClearCharaArray', change.index + 1)
             if not cleared[change.index]:
-                value = min(ELIXIR_MAX, value + FIRST_CLEAR_ELIXIRS)
+                value = max(value, min(ELIXIR_MAX, value + FIRST_CLEAR_ELIXIRS))
     return {'value': value, 'saved_value': saved, 'editable': True, 'reason': ''}
 
 
@@ -208,7 +215,7 @@ def plan_progression_changes(document, changes, add_property, add_insertion):
     requests = [change for change in changes if change.category in CATEGORIES]
     if not requests:
         return
-    explicit_elixirs = _requested_elixir_count(requests)
+    explicit_elixirs = _requested_elixir_count(requests, document)
     seen = set()
     arrays = {}
     direct_unlocks = {}
@@ -274,7 +281,7 @@ def plan_progression_changes(document, changes, add_property, add_insertion):
         if reason:
             raise SaveError(reason)
         value = (explicit_elixirs if explicit_elixirs is not None else
-                 min(ELIXIR_MAX, saved_elixirs + FIRST_CLEAR_ELIXIRS * newly_cleared))
+                 max(saved_elixirs, min(ELIXIR_MAX, saved_elixirs + FIRST_CLEAR_ELIXIRS * newly_cleared)))
         reason = (f'Huanglong Elixirs: explicit final balance -> {value}'
                   if explicit_elixirs is not None else
                   f'{newly_cleared} new Musou clears: Huanglong Elixirs -> {value}')

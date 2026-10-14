@@ -1,7 +1,8 @@
 """Copy-only balance/common-stack reductions and native equipment inspection.
 
-Only already-positive known ordinary quantities can decrease, or return to their
-opened value. Carry-capacity, acquisition, reward and equipped-reference rules
+Default editing allows already-positive known ordinary quantities to decrease,
+or return to their opened value. Experimental numeric editing permits increases
+within their native integer widths. Carry-capacity, acquisition, reward and equipped-reference rules
 are not inferred from an item ID. Native unknown bytes and unusual values stay
 intact; zeroing an owned record and bulk Max are unavailable.
 """
@@ -40,7 +41,8 @@ FORMAT = Format(GAME_ID, 'Nioh 3 (PC)', SAVE_SIZE, (),
                 'and storehouse, or deduct source-mapped Amrita/Gold balances. '
                 'Balance edits do not perform a purchase or level-up. Equipment '
                 'level, pre-forge level and reinforcement are inspected separately. '
-                'Increases, item removal, acquisition, stats, '
+                'Increases require experimental numeric editing and may exceed '
+                'gameplay capacity. Item removal, acquisition, stats, '
                 'affixes, skills, rewards and story are not writable. Genuine-file '
                 'roundtrips are qualified; actual edited game loading is untested.')
 
@@ -224,15 +226,17 @@ def record_label(slot, group='Item box'):
 def field_hint(document, field):
     mapped = field_map(document)[field.id if hasattr(field, 'id') else field]
     if mapped.group == 'Balances':
-        return ('Balance deduction only: 0 to the opened amount '
+        return ('Default balance range: 0 to the opened amount '
                 f'({mapped.maximum:,}). This does not perform a purchase or level-up; '
                 'grave state, EXP, attributes, rewards and transaction history remain '
-                'unchanged. Increases and Max are unavailable; assigning the opened '
+                'unchanged. Experimental editing permits increases up to the native '
+                'unsigned 64-bit ceiling, with unverified gameplay effects. Max is unavailable; assigning the opened '
                 'amount undoes the edit.')
-    return ('Existing quantity only: 1 to the opened amount '
+    return ('Default quantity range: 1 to the opened amount '
             f'({mapped.maximum:,}). Reductions preserve the item record, equipped '
-            'references, acquisition and rewards. Increases and zero are blocked '
-            'until capacity/removal dependencies qualify. Bulk Max leaves this '
+            'references, acquisition and rewards. Experimental editing permits '
+            'increases up to 65,535, with unverified gameplay capacity. Zero and '
+            'record creation remain blocked. Bulk Max leaves this '
             'field unchanged; assigning its opened amount undoes the edit.')
 
 

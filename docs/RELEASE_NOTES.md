@@ -1,19 +1,39 @@
-# Universal Koei Tecmo Save Editor v2.02
+# Universal Koei Tecmo Save Editor v2.1
 
-Choose either Windows download:
+## Experimental values above supported limits
 
-- **UniversalKoeiTecmoSaveEditor-v2.02.exe:** a standalone app that needs no side files. Download and run it.
-- **UniversalKoeiTecmoSaveEditor-v2.02-Windows.zip:** extract the entire versioned application folder, then run its EXE. Keep `_internal` beside it.
+- Start with normal supported limits; enable experimental editing per open
+  session after acknowledging that larger values may break the save or game.
+- See supported maxima and separate encoding limits. Save As warns again for
+  pending values above the supported range.
+- DW3 Remastered supports experimental officer stats, normal item values,
+  elixirs, Bodyguard Merit and existing normal weapon bonuses.
+- Other game/platform editors apply this to their mapped numeric fields where
+  the native encoding permits it. IDs, choices, flags, references and required
+  structure remain constrained. Max keeps supported limits.
+- Keep backups, Undo, Review Changes, native integrity and actual saved-value
+  read-back. Opening a new copy resets experimental mode.
 
-Both include all **90 game/platform profiles** and existing editing features.
-No installed Python or administrator privileges are needed to run either app.
-The Windows ZIP contains only the application folder; developer guides and the
-documentation tree remain in the **Source ZIP**. Required licence notices stay
-inside each Windows runtime.
+## More games and shared refinements
 
-Publication requires active Microsoft Defender scans of both builds before
-either is executed, then scans of the exact final EXE and both ZIPs with matching
-hashes. The release's `DefenderScan-v2.02.json` records actual results once that
-Windows qualification passes. Version 2.0 remains withdrawn following its
-reported Defender detection. See [validation status](VALIDATION.md) for evidence
-and remaining limits.
+The Windows app now includes **90 game/platform profiles across 15 platforms**.
+The 14 additions since v1.91 cover nine additional titles and new platform
+editions, including Gemfire NES/SNES, Bandit Kings Macintosh, Nobunaga NES,
+Bladestorm PS3, Firis PC, Second Light PC, original Ryza PC, DW8 XL Vita,
+Pirate Warriors 1–3 PS3, original DW8 PS3 and Attack on Titan Vita.
+
+Record navigation, pending-only filters, hidden-edit counts and scroll/focus
+retention improve large editors. Shared fixes protect staged values, Max,
+loadouts and console companion metadata during writing/read-back.
+
+Download **UniversalKoeiTecmoSaveEditor-v2.1.exe** for the standalone Windows app,
+or extract the complete Windows ZIP and launch the EXE inside its versioned
+folder, keeping `_internal` beside it. No Python installation is needed. The
+Source ZIP is for contributors. Console export/reimport and external resigning
+requirements remain. The release pipeline scans both Windows builds before
+startup and the final EXE and ZIPs with active Microsoft Defender; the published
+`DefenderScan-v2.1.json` binds those results to the exact downloads and commit.
+
+Experimental in-game loading is unverified. Read
+[experimental scope and exceptions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1/docs/EXPERIMENTAL_EDITING.md) and the
+[supported inventory](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.1/docs/SUPPORTED_GAMES.md) for exact available controls.

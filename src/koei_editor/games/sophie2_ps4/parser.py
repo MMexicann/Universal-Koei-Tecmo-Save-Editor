@@ -15,6 +15,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.games.sophie2 import atelier_sophie2_codec as codec
 from koei_editor.games.sophie2_ps4.context import context
 from koei_editor.shared.copy_storage import (
@@ -145,8 +146,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset : self.offset + self.size], "little")
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(
                 f"{self.label}: use a whole number from {self.minimum} to {self.maximum}."
             )
@@ -382,7 +388,7 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=2)
-def _fields(p):
+def _fields(p, experimental=False):
     pools, party, _, _, _ = _structure(p)
     result = []
     equipment_offsets = tuple(
@@ -421,7 +427,7 @@ def _fields(p):
             if (
                 key == "materials"
                 and identity in MATERIAL_NAMES
-                and 1 <= quality <= 999
+                and 1 <= quality <= (0xFFFF if experimental else 999)
                 and not any(p[off + 0x27 : off + 0x2C])
                 and instance not in equipped
                 and p[off + 0x24 : off + 0x26] == b"\1\1"
@@ -440,7 +446,7 @@ def _fields(p):
                 )
             if key == "expendable" and identity in BATTLE_ITEM_NAMES:
                 current, capacity = p[off + 0x24 : off + 0x26]
-                if 0 < capacity and current <= capacity:
+                if 0 < capacity and (current <= capacity or experimental):
                     result.append(
                         Field(
                             f"expendable_{index}_uses",
@@ -463,7 +469,7 @@ def _fields(p):
             if (
                 identity in BATTLE_ITEM_NAMES
                 and 0 < capacity
-                and current <= capacity
+                and (current <= capacity or experimental)
                 and counts[struct.unpack_from("<H", p, off)[0]] == 1
             ):
                 result.append(
@@ -482,7 +488,7 @@ def _fields(p):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

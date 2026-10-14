@@ -11,6 +11,7 @@ from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.three_hopes.catalog import CHARACTERS, WEAPONS
 
@@ -37,6 +38,12 @@ class Field:
     kind: str = 'integer'
     mirrors: tuple = ()
 
+    @property
+    def experimental_maximum(self):
+        if self.kind == 'text':
+            return None
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         raw = payload[self.offset:self.offset + self.size]
         if self.kind == 'text':
@@ -49,7 +56,8 @@ class Field:
                     or any(not 32 <= ord(char) <= 126 for char in value)):
                 raise SaveError(f'{self.label} requires 1–{self.maximum} printable ASCII characters.')
             return
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -241,9 +249,10 @@ def _field_index(payload):
             offset = start + slot * MATERIAL_STRIDE
             opened = _uint(payload, offset, 2)
             # The source proves quantities, not discovery flags or natural caps.
-            # Withhold empty/full-width exceptional words; existing stocks may
-            # only decrease. Pending edits cannot admit another original record.
-            if 0 < opened < 0xFFFF:
+            # Require an existing positive stock. Keep the complete native u16
+            # range readable after experimental edits; supported edits remain
+            # reductions. Pending edits cannot admit another original record.
+            if opened > 0:
                 fields.append(Field(f'material_{identity}_{slot + 1}',
                     f'{category}: native stock {slot + 1} (decrease only)',
                     offset, 2, opened, 'Material stocks', offset))

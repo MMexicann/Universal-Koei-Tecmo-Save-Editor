@@ -134,8 +134,7 @@ class MonsterRancherDsTests(unittest.TestCase):
         raw = fixture()
         for changed in (modified_monster(raw, lifespan=0),
                         modified_monster(raw, name=b'\xff' + b'\0' * 11),
-                        modified_monster(raw, name=b'A\0trailing!!'),
-                        modified_monster(raw, stats=(65535, 1, 1, 1, 1, 1))):
+                        modified_monster(raw, name=b'A\0trailing!!')):
             doc = p.decode(changed)
             self.assertNotIn('monster_0_stat_0', p.field_map(doc))
             self.assertNotIn('monster_0_lifespan', p.field_map(doc))
@@ -144,7 +143,10 @@ class MonsterRancherDsTests(unittest.TestCase):
         with self.assertRaises(SaveError):
             p.stage(p.decode(raw), {}, 'monster_2_stat_0', 999)
         unusual_life = modified_monster(raw, lifespan=65535)
-        self.assertNotIn('monster_0_lifespan', p.field_map(p.decode(unusual_life)))
+        self.assertIn('monster_0_lifespan', p.field_map(p.decode(unusual_life)))
+        unusual_stats = modified_monster(raw, stats=(65535, 1, 1, 1, 1, 1))
+        self.assertIn('monster_0_stat_0', p.field_map(p.decode(unusual_stats)))
+        self.assertEqual(p.serialize(p.decode(unusual_stats), {}), unusual_stats)
         self.surgical(unusual_life, {'monster_0_stat_0': 999})
         unknown = bytearray(raw)
         for base in p.ENTRY_BASES:

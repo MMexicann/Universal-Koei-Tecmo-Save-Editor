@@ -1,6 +1,7 @@
 """Small Tkinter editor; decoding and validated writes live in separate modules."""
 from koei_editor.resources import read_json
 from pathlib import Path
+from functools import wraps
 import sys
 import tkinter as tk
 import webbrowser
@@ -17,7 +18,7 @@ import koei_editor.games.dw3.bodyguard_customization as customization
 import koei_editor.games.dw3.collection_editor as collections
 import koei_editor.games.dw3.musou_slots as musou_slots
 
-VERSION = '1.1'
+VERSION = '2.1'
 DISCORD_USERNAME = 'mexicannn'
 STEAM_PROFILE = 'https://steamcommunity.com/id/theonlyjuandeagingmexican/'
 NAMES = read_json('officer_names.json')
@@ -34,6 +35,29 @@ GUARD_ITEMS = guard_editor.GUARD_ITEMS
 GUARD_WEAPONS = guard_editor.GUARD_WEAPONS
 from koei_editor.shared.appearance import THEMES, Appearance, ui_font
 import koei_editor.shared.preferences as preferences
+from koei_editor.shared.experimental_limits import (
+    experimental_limits, experimental_enabled, within_numeric_limits,
+    EXPERIMENTAL_WARNING as SHARED_EXPERIMENTAL_WARNING,
+)
+
+INT32_MAX = save_writer.INT32_MAX
+EXPERIMENTAL_WARNING = (
+    SHARED_EXPERIMENTAL_WARNING.rsplit('\n\n', 1)[0] + '\n\n'
+    'Numeric stats, Merit, normal item values, existing normal weapon bonuses, '
+    'and Huanglong Elixirs use signed 32-bit storage: maximum 2,147,483,647. '
+    'Supported maxima are shown beside each field. Max presets use supported maxima. '
+    'Bodyguard growth table caps, equipment identities, ownership and dependencies still apply.'
+)
+
+
+def experimental_session(action):
+    """Keep numeric policy inside this editor callback and its nested calls."""
+    @wraps(action)
+    def scoped(self, *args, **kwargs):
+        mode = getattr(self, 'experimental_mode', None)
+        with experimental_limits(enabled=bool(mode.get()) if mode is not None else False):
+            return action(self, *args, **kwargs)
+    return scoped
 
 
 def weapon_bonus_label(item):
@@ -57,6 +81,7 @@ class Editor(Appearance):
         host = parent if parent is not None else root
         embedded = parent is not None
         self.document = None
+        self.experimental_mode = tk.BooleanVar(root, value=False)
         self.changes = {}
         self.history = []
         self.current_officer = self.current_item = self.current_bodyguard = 0
@@ -116,6 +141,12 @@ class Editor(Appearance):
         locations_button.pack(side='right')
         self.buttons.append(locations_button)
         ttk.Button(bar, text='Contact', command=self.show_contact).pack(side='right', padx=(0, 7))
+        mode_bar = ttk.Frame(outer)
+        mode_bar.pack(fill='x', pady=(8, 0))
+        ttk.Checkbutton(mode_bar, text='Experimental: allow above supported maxima',
+                        variable=self.experimental_mode, command=self.toggle_experimental).pack(side='left')
+        self.experimental_note = tk.StringVar(value='Supported limits active. Max presets use supported maxima.')
+        ttk.Label(mode_bar, textvariable=self.experimental_note, style='Muted.TLabel', wraplength=520).pack(side='right')
         self.filename = tk.StringVar(value='Open a copy of GameStatusData.sav to begin.')
         self.backup_label = tk.StringVar(value='An untouched backup is created automatically when a copy opens.')
         ttk.Label(outer, textvariable=self.filename, wraplength=990).pack(fill='x', pady=(12, 3))
@@ -158,11 +189,31 @@ class Editor(Appearance):
         if not embedded:
             root.protocol('WM_DELETE_WINDOW', self.close)
 
+    def toggle_experimental(self):
+        if self.experimental_mode.get():
+            if not messagebox.askyesno('Enable Experimental Editing', EXPERIMENTAL_WARNING):
+                self.experimental_mode.set(False)
+        elif self.document is not None and self.changes:
+            try:
+                with experimental_limits(enabled=False):
+                    save_writer.plan_changes(self.document, list(self.changes.values()))
+            except (ValueError, KeyError, TypeError, IndexError):
+                self.experimental_mode.set(True)
+                messagebox.showinfo('Experimental Changes Pending',
+                                    'Undo, discard, or reduce the experimental values before disabling experimental editing.')
+        enabled = self.experimental_mode.get()
+        self.experimental_note.set('Experimental active: above-max values may break your save or game.' if enabled else
+                                   'Supported limits active. Max presets use supported maxima.')
+        self.refresh()
+        if self.document is not None:
+            self.select_item(); self.select_guard_item(); self.select_bodyguard(); self.select_weapon(); self.select_guard_weapon()
+
     def apply_theme(self, name):
         super().apply_theme(name)
         if self.on_theme is not None:
             self.on_theme(name)
 
+    @experimental_session
     def set_loaded(self, loaded):
         for button in self.buttons: button.configure(state='normal' if loaded else 'disabled')
         self.max_items_button.configure(state='normal' if loaded and ITEM_CAPS else 'disabled')
@@ -270,11 +321,12 @@ class Editor(Appearance):
         self.inputs = {}
         for field, label in LABELS.items():
             cap = CAPS.get(field)
-            ttk.Label(right, text=f'{label} (max {cap:,})' if cap is not None else f'{label} (view only)').pack(anchor='w')
+            ttk.Label(right, text=f'{label} (supported max {cap:,})' if cap is not None else f'{label} (view only)').pack(anchor='w')
             variable = tk.StringVar()
             self.inputs[field] = variable
             ttk.Entry(right, textvariable=variable, width=24, state='normal' if cap is not None else 'readonly').pack(anchor='w', pady=(3, 8))
         for text, command in [('Apply Officer Changes', self.apply_officer), ('Max Selected Officer', self.max_selected), ('Max All Officers', self.max_all), ('99,999 Merit for All', self.merit_all)]: self.action(right, text, command)
+        ttk.Label(right, text='Experimental storage maximum: 2,147,483,647.', wraplength=220).pack(anchor='w', pady=6)
         ttk.Label(right, text='Apply your entries before selecting another officer.\n\nChanges stay in the editor until you save. Story completion is separate.', wraplength=200).pack(anchor='w', pady=10)
 
     def build_items(self):
@@ -358,6 +410,7 @@ class Editor(Appearance):
         self.weapon_roll_button = self.action(right, 'Apply Weapon Bonuses', self.apply_weapon_rolls)
         self.weapon_max_button = self.action(right, 'Max Selected Existing Bonus Rolls', self.max_selected_weapon_rolls)
         ttk.Label(right, text='Max raises existing normal rolls. One rare bonus is allowed, with no numeric value. Replace existing rare bonuses or elements; removing them is unsupported.', wraplength=370).pack(anchor='w', pady=7)
+        ttk.Label(right, text='Dropdown values show supported rolls. Experimental maximum: 2,147,483,647 for an existing normal bonus in its saved slot.', wraplength=370).pack(anchor='w', pady=7)
 
     def build_bodyguards(self):
         tab = self.tabs['Bodyguards']
@@ -368,7 +421,7 @@ class Editor(Appearance):
         self.bodyguards.bind('<<TreeviewSelect>>', self.select_bodyguard)
         self.bodyguard_selected = tk.StringVar(value='Select a bodyguard team')
         self.bodyguard_merit = tk.StringVar()
-        self.bodyguard_limit = tk.StringVar(value='Merit (max 99,999)')
+        self.bodyguard_limit = tk.StringVar(value='Merit (supported 0–99,999; experimental max 2,147,483,647)')
         ttk.Label(right, textvariable=self.bodyguard_selected, font=(self.font_family, 11, 'bold')).pack(anchor='w', pady=(0, 8))
         self.guard_tabs = ttk.Notebook(right); self.guard_tabs.pack(fill='both', expand=True)
         pages = {}
@@ -376,10 +429,11 @@ class Editor(Appearance):
             page = ttk.Frame(self.guard_tabs, padding=10); self.guard_tabs.add(page, text=name); pages[name] = page
         page = self.scroll_content(pages['Growth'], width=640)
         form = ttk.Frame(page); form.pack(fill='x')
-        ttk.Label(form, text='Merit (0–99,999)').grid(row=0, column=0, sticky='w', pady=4)
+        ttk.Label(form, textvariable=self.bodyguard_limit, wraplength=320).grid(row=0, column=0, sticky='w', pady=4)
         ttk.Entry(form, textvariable=self.bodyguard_merit, width=14).grid(row=0, column=1, sticky='w', padx=12, pady=4)
         self.guard_growth_inputs = {}
         self.guard_growth_boxes = {}
+        ttk.Label(page, text='Growth levels retain their table caps and shared points budget in experimental mode.', wraplength=600).pack(anchor='w', pady=(5, 0))
         for rownum, index in enumerate(growth.ALLOCATED_SLOTS, 1):
             variable = tk.StringVar(); self.guard_growth_inputs[index] = variable
             ttk.Label(form, text=f'{growth.LEVEL_NAMES[index]} growth (0–{growth.LEVEL_CAPS[index]})').grid(row=rownum, column=0, sticky='w', pady=4)
@@ -511,7 +565,7 @@ class Editor(Appearance):
             self.guard_bonus_boxes.append(box); self.guard_bonus_value_boxes.append(valuebox)
         self.guard_bonus_button = ttk.Button(bonuspanel,text='Apply Copy Bonuses',command=self.apply_guard_bonuses,state='disabled')
         self.guard_bonus_button.grid(row=0,column=2,rowspan=3,padx=(10,0)); self.buttons.append(self.guard_bonus_button)
-        ttk.Label(bonuspanel,text='Expand a weapon and select an owned copy. Only bonuses and values possible for its tier are offered.',wraplength=600).grid(row=3,column=0,columnspan=3,sticky='w',pady=(4,0))
+        ttk.Label(bonuspanel,text='Dropdown values show supported rolls for this tier. Experimental maximum: 2,147,483,647 for an existing normal bonus in its saved slot.',wraplength=600).grid(row=3,column=0,columnspan=3,sticky='w',pady=(4,0))
         self.guard_weapons = self.make_tree(page, [('tier','Tier'),('owned','Owned copies'),('power','Base attack')], 'Bodyguard weapon', [300,55,85,85])
         self.guard_weapons.bind('<<TreeviewSelect>>', self.select_guard_weapon)
 
@@ -546,7 +600,7 @@ class Editor(Appearance):
         ttk.Label(right, text='Adds officers, stages, side stories, bodyguard appearance options, the weapon collection, Tactics costumes and music/movie galleries. Story completion and saved runs have separate controls.', wraplength=440).pack(anchor='w', pady=8)
         ttk.Separator(right).pack(fill='x', pady=12)
         ttk.Label(right, text='Huanglong Elixirs', font=(self.font_family, 11, 'bold')).pack(anchor='w')
-        ttk.Label(right, text=f'Choose your final balance: 0–{progression.ELIXIR_MAX}.', wraplength=440).pack(anchor='w', pady=(5, 7))
+        ttk.Label(right, text=f'Supported balance: 0–{progression.ELIXIR_MAX}. Experimental storage maximum: {INT32_MAX:,}.', wraplength=440).pack(anchor='w', pady=(5, 7))
         self.elixir_input = tk.StringVar()
         self.elixir_entry = ttk.Entry(right, textvariable=self.elixir_input, width=16)
         self.elixir_entry.pack(anchor='w', fill='x')
@@ -671,6 +725,8 @@ class Editor(Appearance):
                      'current_weapon_data_id','weapon_rows')
         previous={name:getattr(self,name) for name in state_names}
         previous_status=self.status.get()
+        previous_experimental = self.experimental_mode.get()
+        previous_experimental_note = self.experimental_note.get()
         try:
             document = read_save(Path(path))
             # Prove the display can interpret weapon rows before replacing
@@ -679,6 +735,8 @@ class Editor(Appearance):
             backup = save_writer.backup_save(document)
             self.document, self.backup = document, backup
             self.changes, self.history = {}, []
+            self.experimental_mode.set(False)
+            self.experimental_note.set('Supported limits active. Max presets use supported maxima.')
             self.current_officer = self.current_item = self.current_bodyguard = 0
             self.current_guard_item = 0; self.current_guard_weapon = next(iter(GUARD_WEAPONS)); self.guard_weapon_slot = None
             self.update_paths()
@@ -687,6 +745,8 @@ class Editor(Appearance):
             self.status.set('Save copy opened. An untouched backup is ready.')
         except Exception as error:
             for name,value in previous.items():setattr(self,name,value)
+            self.experimental_mode.set(previous_experimental)
+            self.experimental_note.set(previous_experimental_note)
             if self.document is not None:
                 self.update_paths()
             else:
@@ -748,6 +808,7 @@ class Editor(Appearance):
                     and record['GuardEquipItemID']['value']=='EGuardEquipItemID::NUM'):
                 yield i,row
 
+    @experimental_session
     def original_value(self, change):
         if change.category in collections.CATEGORIES:return collections.original_value(self.document,change)
         if change.category in musou_slots.CATEGORIES:return musou_slots.original_value(self.document,change)
@@ -788,6 +849,7 @@ class Editor(Appearance):
         if change.category == 'item' and change.field == 'Owned': return record['EquipItemID']['value'] != 'EEquipItemID::NUM'
         return record[change.field]['value']
 
+    @experimental_session
     def value(self, category, index, field):
         if category == 'bodyguard': return guard_editor.team_state(self.document, index, list(self.changes.values()))[field]
         change = self.changes.get((category, index, field))
@@ -799,6 +861,7 @@ class Editor(Appearance):
 
     def field_value(self, index, field): return self.value('officer', index, field)
 
+    @experimental_session
     def stage_many(self, changes):
         before = self.changes.copy()
         changes = list(changes)
@@ -806,7 +869,10 @@ class Editor(Appearance):
             maximum_ids = {change.index for change in changes if change.category=='guard_weapon' and change.field=='MaxBonuses' and change.value is True}
             if maximum_ids:
                 for row in guard_editor.weapon_state(self.document,list(self.changes.values())):
-                    if row['weapon_id'] in maximum_ids: self.changes.pop(('guard_weapon_slot',row['slot'],'Skills'),None)
+                    key = ('guard_weapon_slot', row['slot'], 'Skills')
+                    if row['weapon_id'] in maximum_ids and key in self.changes:
+                        skills = guard_editor.max_skills(row['weapon_id'], row['skills'], row['preservation_baseline'])
+                        self.changes[key] = Change('guard_weapon_slot', row['slot'], 'Skills', skills)
             for change in changes:
                 key = (change.category, change.index, change.field)
                 if change.category in ('item','guard_item') and change.field == 'Owned' and change.value is False:
@@ -864,6 +930,7 @@ class Editor(Appearance):
             self.item_entry.configure(state='disabled')
         else: self.select_item()
 
+    @experimental_session
     def refresh_weapons(self):
         if self.document is None: return
         selected = self.weapons.selection()
@@ -903,6 +970,7 @@ class Editor(Appearance):
         if item['kind'] == 'normal': return f'{weapon_bonus_label(item)} +{value}'
         return item['name']
 
+    @experimental_session
     def select_weapon(self, event=None):
         selected = self.weapons.selection()
         if not selected or self.document is None: return
@@ -964,6 +1032,7 @@ class Editor(Appearance):
     def officer_bonus_text(self, skills):
         return ', '.join(self.describe_skill(ITEMS[skill['id']],skill['value']) if skill['id'] in ITEMS else f'Bonus {skill["id"]} +{skill["value"]}' for skill in skills if skill['id'] is not None) or 'No bonuses'
 
+    @experimental_session
     def change_weapon_bonus(self, slot):
         if self.current_weapon_data_id is None: return
         row = weapon_editor.state(self.document,self.current_weapon_data_id,list(self.changes.values()))
@@ -983,11 +1052,14 @@ class Editor(Appearance):
         if item_id is not None and saved['id']==item_id and saved['value']>0:
             values=sorted(set(values+[saved['value']]))
         enabled = row['editable'] and bool(values)
-        self.weapon_bonus_value_boxes[slot].configure(values=tuple(values),state='readonly' if enabled else 'disabled')
+        extended = (experimental_enabled() and row.get('experimental_existing', False)
+                    and item_id in weapon_editor.NORMAL_ITEMS and item_id == saved['id'])
+        self.weapon_bonus_value_boxes[slot].configure(values=tuple(values),state=('normal' if extended else 'readonly') if enabled else 'disabled')
         if item_id is None: self.weapon_bonus_values[slot].set('')
-        elif not self.loading_weapon_form and self.weapon_bonus_values[slot].get() not in {str(value) for value in values}:
+        elif not extended and not self.loading_weapon_form and self.weapon_bonus_values[slot].get() not in {str(value) for value in values}:
             self.weapon_bonus_values[slot].set(str(values[-1]) if values else '')
 
+    @experimental_session
     def apply_weapon_rolls(self):
         if not self.require_save() or self.current_weapon_data_id is None: return
         try:
@@ -1004,7 +1076,13 @@ class Editor(Appearance):
                 value = (original['value'] if item_id==original['id'] else 0) if item_id in weapon_editor.RARE_ITEMS else int(self.weapon_bonus_values[slot].get()) if item_id is not None else 0
                 saved=weapon_editor.original_skills(self.document,self.current_weapon_data_id)[slot]
                 preserved=item_id==saved['id'] and value==saved['value'] and value>0
-                if item_id in weapon_editor.NORMAL_ITEMS and value not in weapon_editor.allowed_values(row,item_id) and not preserved: raise ValueError(f'Slot {slot+1} has a value unavailable to this weapon.')
+                extended = False
+                if item_id in weapon_editor.NORMAL_ITEMS:
+                    low, supported_maximum, storage_maximum = weapon_editor.skill_numeric_limits(row, item_id)
+                    extended = (row.get('experimental_existing', False) and item_id == saved['id'] and value > supported_maximum
+                                and within_numeric_limits(value, low, supported_maximum, storage_maximum=storage_maximum))
+                    if value not in weapon_editor.allowed_values(row,item_id) and not (preserved or extended):
+                        raise ValueError(f'Slot {slot+1}: choose a supported roll up to {supported_maximum}; experimental maximum {storage_maximum:,} applies to its saved bonus.')
                 skills.append({'id':item_id,'value':value})
             normal = [skill['id'] for skill in skills if skill['id'] in ITEMS and ITEMS[skill['id']]['kind']=='normal']
             if len(normal)>row['blue_limit']: raise ValueError(f'This weapon supports at most {row["blue_limit"]} normal bonuses.')
@@ -1013,6 +1091,7 @@ class Editor(Appearance):
             self.stage_many([Change('weapon_roll',self.current_weapon_data_id,'Skills',skills)])
         except (ValueError,TypeError) as error: messagebox.showerror('Cannot Apply Weapon Bonuses',str(error))
 
+    @experimental_session
     def apply_weapon_element(self):
         if not self.require_save() or self.current_weapon_data_id is None:return
         try:
@@ -1023,6 +1102,7 @@ class Editor(Appearance):
             self.stage_many([Change('weapon_element',self.current_weapon_data_id,'Elements',mask)])
         except (ValueError,TypeError) as error:messagebox.showerror('Cannot Apply Weapon Element',str(error))
 
+    @experimental_session
     def max_selected_weapon_rolls(self):
         if not self.require_save() or self.current_weapon_data_id is None: return
         try:
@@ -1030,6 +1110,7 @@ class Editor(Appearance):
             self.stage_many([Change('weapon_roll',self.current_weapon_data_id,'Skills',skills)])
         except (ValueError,TypeError) as error: messagebox.showerror('Cannot Max Weapon Bonuses',str(error))
 
+    @experimental_session
     def apply_unique_weapon_elements(self):
         if not self.require_save(): return
         try:
@@ -1041,6 +1122,7 @@ class Editor(Appearance):
         except (ValueError, TypeError, KeyError) as error:
             messagebox.showerror('Cannot Apply Unique Weapon Elements', str(error))
 
+    @experimental_session
     def max_all_weapon_rolls(self):
         if not self.require_save(): return
         try:
@@ -1052,6 +1134,7 @@ class Editor(Appearance):
             self.status.set(f'Maximum normal rolls applied to {len(maximum)} owned copies. {skipped} view-only copies preserved. Save to write the changes.')
         except (ValueError,TypeError) as error: messagebox.showerror('Cannot Max Weapon Bonuses',str(error))
 
+    @experimental_session
     def refresh_bodyguards(self):
         self.bodyguards.delete(*self.bodyguards.get_children())
         for index, record in enumerate(self.document.records('GuardDataArray')):
@@ -1065,6 +1148,7 @@ class Editor(Appearance):
             self.guard_stats.set('');self.guard_budget.set('');self.guard_automatic.set('')
         self.refresh_guard_items(); self.refresh_guard_weapons()
 
+    @experimental_session
     def refresh_guard_items(self):
         self.guard_items.delete(*self.guard_items.get_children())
         for index, state in guard_editor.item_state(self.document, list(self.changes.values())).items():
@@ -1072,6 +1156,7 @@ class Editor(Appearance):
             self.guard_items.insert('', 'end', iid=str(index), text=metadata['name'], values=(state['value'] if metadata['kind']=='normal' else '—', 'Yes' if state['owned'] else 'No'))
         if self.restore_selection(self.guard_items, self.current_guard_item) is not None: self.select_guard_item()
 
+    @experimental_session
     def refresh_guard_weapons(self):
         selected = self.guard_weapons.selection()
         self.guard_weapons.delete(*self.guard_weapons.get_children())
@@ -1090,6 +1175,7 @@ class Editor(Appearance):
             if parent: self.guard_weapons.item(parent, open=True)
             self.select_guard_weapon()
 
+    @experimental_session
     def refresh_guard_equipment(self):
         changes = list(self.changes.values())
         state = guard_editor.team_state(self.document, self.current_bodyguard, changes)
@@ -1121,6 +1207,7 @@ class Editor(Appearance):
             if current is not None and label not in choices:choices[label]=current
             self.guard_equip_weapons[family_index].set(label)
 
+    @experimental_session
     def refresh(self):
         if self.document is None: return
         self.refresh_officers(); self.refresh_items(); self.refresh_weapons(); self.refresh_bodyguards()
@@ -1131,6 +1218,7 @@ class Editor(Appearance):
         self.refresh_elixirs()
         self.status.set(f'{len(self.changes)} pending changes. Applied in the editor; use Save As or Save Changes to write them.')
 
+    @experimental_session
     def refresh_story_status(self):
         if self.document is None:self.story_status.set('');return
         try:
@@ -1143,6 +1231,7 @@ class Editor(Appearance):
             self.story_status.set(f'{"Cleared" if cleared else "Not cleared"}{" (pending)" if pending else ""}; saved progress {row["progress"]}/{row["route_length"]}.')
         except (ValueError,KeyError,TypeError):self.story_status.set('This save’s story structures are view-only.')
 
+    @experimental_session
     def refresh_elixirs(self):
         if self.document is None:
             return
@@ -1159,19 +1248,27 @@ class Editor(Appearance):
         else:
             self.elixir_note.set(f"Saved balance: {state['saved_value']}")
 
+    @experimental_session
     def apply_elixirs(self):
         if not self.require_save():
             return
         try:
-            change = progression.elixir_count_change(int(self.elixir_input.get().strip()))
+            value = int(self.elixir_input.get().strip())
+            change = (Change('progression', 0, 'HuanglongElixirs', value)
+                      if value == progression.elixir_state(self.document)['saved_value'] else
+                      progression.elixir_count_change(value))
         except (ValueError, TypeError):
-            messagebox.showerror('Cannot Apply Elixirs', f'Enter a whole number from 0 to {progression.ELIXIR_MAX}.')
+            maximum = INT32_MAX if experimental_enabled() else progression.ELIXIR_MAX
+            messagebox.showerror('Cannot Apply Elixirs', f'Enter a whole number from 0 to {maximum:,}. Supported maximum: {progression.ELIXIR_MAX}.')
             return
         self.stage_many([change])
 
+    @experimental_session
     def max_elixirs(self):
         if self.require_save():
-            self.stage_many([progression.elixir_count_change(progression.ELIXIR_MAX)])
+            state = progression.elixir_state(self.document, list(self.changes.values()))
+            value = max(progression.ELIXIR_MAX, state['saved_value'], state['value'])
+            self.stage_many([Change('progression', 0, 'HuanglongElixirs', value)])
 
     def select_officer(self, event=None):
         selected = self.officers.selection()
@@ -1184,10 +1281,11 @@ class Editor(Appearance):
         if not selected or self.document is None: return
         self.current_item = int(selected[0]); row = ITEMS[self.current_item]; cap = self.item_cap(self.current_item)
         self.item_selected.set(row['name'])
-        self.item_detail.set(f'{row.get("effect", "")}\nNormal drop maximum: {cap}' if cap is not None else ('Rare item — ownership only.' if row['kind'] == 'rare' else 'Roll limit is still being verified.'))
+        self.item_detail.set(f'{row.get("effect", "")}\nSupported drop maximum: {cap}\nExperimental storage maximum: {INT32_MAX:,}' if cap is not None else ('Rare item — ownership only.' if row['kind'] == 'rare' else 'Roll limit is still being verified.'))
         self.item_owned.set(self.value('item', self.current_item, 'Owned')); self.item_value.set(str(self.value('item', self.current_item, 'Value')))
         self.item_entry.configure(state='normal' if cap is not None and row['kind'] == 'normal' else 'disabled')
 
+    @experimental_session
     def select_bodyguard(self, event=None):
         selected = self.bodyguards.selection()
         if not selected or self.document is None: return
@@ -1195,7 +1293,7 @@ class Editor(Appearance):
         state = guard_editor.team_state(self.document, self.current_bodyguard, list(self.changes.values()))
         self.loading_guard_form = True
         try:
-            self.bodyguard_limit.set('Merit (0–99,999)')
+            self.bodyguard_limit.set('Merit (supported 0–99,999; experimental max 2,147,483,647)')
             self.bodyguard_merit.set(str(state['SPoint']))
             for index, variable in self.guard_growth_inputs.items():
                 variable.set(str(state['BGLevels'][index]) if index<len(state['BGLevels']) else '')
@@ -1207,14 +1305,18 @@ class Editor(Appearance):
             self.guard_automatic.set('Existing values are preserved.');self.guard_stats.set('')
         self.refresh_guard_equipment()
 
+    @experimental_session
     def growth_form(self):
         merit = int(self.bodyguard_merit.get())
-        caps = growth.earned_caps(merit)
+        opened_merit = self.original_value(Change('bodyguard', self.current_bodyguard, 'SPoint', 0))
+        table_merit = min(merit, growth.MERIT_CAP) if merit == opened_merit and not experimental_enabled() else merit
+        caps = growth.earned_caps(table_merit)
         levels = [0,0,0,caps[3],0,caps[5]]
         for index, variable in self.guard_growth_inputs.items(): levels[index] = int(variable.get())
-        growth.validate_growth(merit, levels)
+        growth.validate_growth(table_merit, levels)
         return merit, levels
 
+    @experimental_session
     def preview_growth(self):
         if self.document is None or self.loading_guard_form: return
         try:
@@ -1225,20 +1327,21 @@ class Editor(Appearance):
                 levels=state['BGLevels'] if merit==state['SPoint'] else growth.advance_automatic_levels(merit,state['BGLevels'])
             else:merit,levels=self.growth_form()
             stats = growth.derive_stats(levels)
-            self.guard_budget.set(f'Growth points: {growth.spent(levels)} / {growth.budget(merit)} used')
+            self.guard_budget.set(f'Growth points: {growth.spent(levels)} / {growth.budget(min(merit, growth.MERIT_CAP))} used')
             self.guard_automatic.set(f'Automatic growth: Count {levels[3]} (team capacity {stats["member_count"]})   •   AI {levels[5]}')
             self.guard_stats.set(f'Growth base: Life {stats["base_hp"]}   Musou {stats["base_musou"]}   Attack {stats["base_attack"]}   Defense {stats["base_defense"]}\nMove {stats["move"]}   Jump {stats["jump"]}   Bow strength {stats["bow_percent"]}%   Moveset {stats["motion_level"]}')
         except (ValueError, TypeError) as error:
             self.guard_budget.set(f'Check growth: {error}')
             self.guard_automatic.set('Count and AI follow the entered Merit.'); self.guard_stats.set('Enter a legal allocation to preview base stats.')
 
+    @experimental_session
     def select_guard_item(self, event=None):
         selected = self.guard_items.selection()
         if not selected or self.document is None: return
         self.current_guard_item = int(selected[0]); metadata = GUARD_ITEMS[self.current_guard_item]
         state = guard_editor.item_state(self.document, list(self.changes.values()))[self.current_guard_item]
         self.guard_item_selected.set(metadata['name'])
-        self.guard_item_detail.set(f'{metadata.get("effect", "").strip()}\nNormal drop maximum: {metadata["max_value"]}' if metadata['kind']=='normal' else 'Rare bodyguard item — ownership only.')
+        self.guard_item_detail.set(f'{metadata.get("effect", "").strip()}\nSupported drop maximum: {metadata["max_value"]}\nExperimental storage maximum: {INT32_MAX:,}' if metadata['kind']=='normal' else 'Rare bodyguard item — ownership only.')
         self.guard_item_owned.set(state['owned']); self.guard_item_value.set(str(state['value'] or 1))
         self.guard_item_entry.configure(state='normal' if metadata['kind']=='normal' else 'disabled')
 
@@ -1250,6 +1353,7 @@ class Editor(Appearance):
             if metadata: labels.append(self.describe_skill(metadata, skill['value']))
         return ', '.join(labels) or 'No bonuses'
 
+    @experimental_session
     def select_guard_weapon(self, event=None):
         selected = self.guard_weapons.selection()
         if not selected or self.document is None: return
@@ -1278,22 +1382,26 @@ class Editor(Appearance):
         for index in range(3): self.guard_bonus_item_changed(index)
         self.guard_bonus_button.configure(state='normal' if self.guard_bonus_editable else 'disabled')
 
+    @experimental_session
     def guard_bonus_item_changed(self,index):
         if self.loading_guard_form: return
         if not getattr(self,'guard_bonus_editable',False):
             self.guard_bonus_value_boxes[index].configure(values=(),state='disabled')
             return
         item = self.guard_bonus_choices.get(self.guard_bonus_items[index].get())
+        extended = False
         values = list(GUARD_WEAPONS[self.current_guard_weapon]['allowed_values_by_guard_item_id'].get(str(item),[])) if item is not None else []
         if self.guard_weapon_slot is not None:
             pending=guard_editor.weapon_state(self.document,list(self.changes.values()))[self.guard_weapon_slot]
             saved=pending.get('preservation_baseline',guard_editor.weapon_state(self.document)[self.guard_weapon_slot]['skills'])
             if index<len(saved) and saved[index] is not None and item is not None and saved[index]['id']==item and saved[index]['value']>0:
                 values=sorted(set(values+[saved[index]['value']]))
-        self.guard_bonus_value_boxes[index].configure(values=tuple(values),state='readonly' if values and self.guard_weapon_slot is not None else 'disabled')
+                extended = experimental_enabled() and GUARD_ITEMS[item]['kind'] == 'normal'
+        self.guard_bonus_value_boxes[index].configure(values=tuple(values),state=('normal' if extended else 'readonly') if values and self.guard_weapon_slot is not None else 'disabled')
         current = self.guard_bonus_values[index].get()
-        if current not in [str(value) for value in values]: self.guard_bonus_values[index].set(str(values[-1]) if values else '')
+        if not extended and current not in [str(value) for value in values]: self.guard_bonus_values[index].set(str(values[-1]) if values else '')
 
+    @experimental_session
     def apply_guard_bonuses(self):
         if not self.require_save() or self.guard_weapon_slot is None: return
         try:
@@ -1309,6 +1417,7 @@ class Editor(Appearance):
 
     def selected_ok(self, tree): return self.require_save() and bool(tree.selection())
 
+    @experimental_session
     def apply_officer(self):
         if not self.selected_ok(self.officers): return
         try:
@@ -1316,20 +1425,26 @@ class Editor(Appearance):
             for field, variable in self.inputs.items():
                 if field not in CAPS: continue
                 value = int(variable.get()); low = 1 if field in ('MaxHealth', 'MaxMusou') else 0
-                if not low <= value <= CAPS[field]: raise ValueError(f'{LABELS[field]} must be {low}–{CAPS[field]:,}.')
+                unchanged = value == self.original_value(Change('officer', self.current_officer, field, value))
+                if not within_numeric_limits(value, low, CAPS[field], storage_maximum=INT32_MAX) and not unchanged:
+                    raise ValueError(f'{LABELS[field]}: supported {low}–{CAPS[field]:,}; experimental maximum {INT32_MAX:,}.')
                 changes.append(Change('officer', self.current_officer, field, value))
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid Value', str(error))
 
     def max_selected(self):
-        if self.selected_ok(self.officers): self.stage_many([Change('officer', self.current_officer, field, cap) for field, cap in CAPS.items()])
+        if self.selected_ok(self.officers): self.stage_many([Change('officer', self.current_officer, field, self.officer_maximum(self.current_officer, field)) for field in CAPS])
 
     def max_all(self):
-        if self.require_save(): self.stage_many([Change('officer', index, field, cap) for index in self.officer_indices() for field, cap in CAPS.items()])
+        if self.require_save(): self.stage_many([Change('officer', index, field, self.officer_maximum(index, field)) for index in self.officer_indices() for field in CAPS])
 
     def merit_all(self):
-        if self.require_save(): self.stage_many([Change('officer', index, 'SPoint', 99999) for index in self.officer_indices()])
+        if self.require_save(): self.stage_many([Change('officer', index, 'SPoint', self.officer_maximum(index, 'SPoint')) for index in self.officer_indices()])
 
+    def officer_maximum(self, index, field):
+        return max(CAPS[field], self.original_value(Change('officer', index, field, 0)), self.field_value(index, field))
+
+    @experimental_session
     def apply_item(self):
         if not self.selected_ok(self.items): return
         try:
@@ -1338,11 +1453,13 @@ class Editor(Appearance):
                 value = int(self.item_value.get())
                 if value == 0: value = 1
                 unchanged=self.original_value(Change('item',index,'Owned',True)) and value==self.original_value(Change('item',index,'Value',value)) and value>0
-                if not 1 <= value <= cap and not unchanged: raise ValueError(f'{ITEMS[index]["name"]} must be 1–{cap}, or its unchanged saved value.')
+                if not within_numeric_limits(value, 1, cap, storage_maximum=INT32_MAX) and not unchanged:
+                    raise ValueError(f'{ITEMS[index]["name"]}: supported 1–{cap}; experimental maximum {INT32_MAX:,}, or its unchanged saved value.')
                 changes.append(Change('item', index, 'Value', value))
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid Value', str(error))
 
+    @experimental_session
     def max_items(self):
         if not self.require_save() or not ITEM_CAPS: return
         changes = []
@@ -1354,11 +1471,14 @@ class Editor(Appearance):
     def unlock_items(self, kind=None):
         if self.require_save(): self.stage_many([Change('item', index, 'Owned', True) for index, row in self.editable_item_rows() if kind is None or row['kind'] == kind])
 
+    @experimental_session
     def apply_bodyguard(self):
         if not self.selected_ok(self.bodyguards): return
         try:
             merit = int(self.bodyguard_merit.get())
-            if not 0<=merit<=99999:raise ValueError('Bodyguard Merit must be 0–99,999.')
+            unchanged = merit == self.original_value(Change('bodyguard', self.current_bodyguard, 'SPoint', merit))
+            if not within_numeric_limits(merit, 0, 99999, storage_maximum=INT32_MAX) and not unchanged:
+                raise ValueError(f'Bodyguard Merit: supported 0–99,999; experimental maximum {INT32_MAX:,}.')
             state = guard_editor.team_state(self.document,self.current_bodyguard,list(self.changes.values()))
             allocation_changed = any(int(variable.get())!=state['BGLevels'][index] for index,variable in self.guard_growth_inputs.items())
             changes = [Change('bodyguard', self.current_bodyguard, 'SPoint', merit)]
@@ -1368,17 +1488,20 @@ class Editor(Appearance):
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid Value', str(error))
 
+    @experimental_session
     def max_bodyguard(self, mode='balanced'):
-        if self.selected_ok(self.bodyguards): self.stage_many([Change('bodyguard', self.current_bodyguard, 'SPoint', 99999),Change('bodyguard', self.current_bodyguard, 'BGLevels', growth.safe_preset(99999,mode))])
+        if self.selected_ok(self.bodyguards): self.stage_many([Change('bodyguard', self.current_bodyguard, 'SPoint', max(99999, self.value('bodyguard', self.current_bodyguard, 'SPoint'), self.original_value(Change('bodyguard', self.current_bodyguard, 'SPoint', 0)))),Change('bodyguard', self.current_bodyguard, 'BGLevels', growth.safe_preset(99999,mode))])
 
     def max_bodyguards(self):
         if self.require_save(): self.stage_many(self.guard_growth_changes())
 
+    @experimental_session
     def guard_growth_changes(self):
         return [Change('bodyguard',index,field,value) for index in range(len(self.document.records('GuardDataArray')))
                 if guard_editor.team_state(self.document,index)['growth_editable']
-                for field,value in [('SPoint',99999),('BGLevels',growth.safe_preset())]]
+                for field,value in [('SPoint',max(99999,self.value('bodyguard',index,'SPoint'),self.original_value(Change('bodyguard',index,'SPoint',0)))),('BGLevels',growth.safe_preset())]]
 
+    @experimental_session
     def apply_guard_equipment(self):
         if not self.selected_ok(self.bodyguards): return
         try:
@@ -1392,6 +1515,7 @@ class Editor(Appearance):
             self.stage_many(changes)
         except (ValueError, KeyError) as error: messagebox.showerror('Cannot Apply Equipment', str(error))
 
+    @experimental_session
     def equip_best_guard_weapons(self):
         if not self.selected_ok(self.bodyguards): return
         try:
@@ -1402,6 +1526,7 @@ class Editor(Appearance):
             self.stage_many([Change('bodyguard',self.current_bodyguard,'MemberWeapon',weapons)])
         except ValueError as error: messagebox.showerror('Cannot Equip Weapons',str(error))
 
+    @experimental_session
     def apply_guard_item(self):
         if not self.selected_ok(self.guard_items): return
         try:
@@ -1416,11 +1541,13 @@ class Editor(Appearance):
                 value = int(self.guard_item_value.get())
                 original=guard_editor.item_state(self.document)[index]
                 unchanged=original['owned'] and value==original['value'] and value>0
-                if not 1 <= value <= metadata['max_value'] and not unchanged: raise ValueError(f'{metadata["name"]} must be 1–{metadata["max_value"]}, or its unchanged saved value.')
+                if not within_numeric_limits(value, 1, metadata['max_value'], storage_maximum=INT32_MAX) and not unchanged:
+                    raise ValueError(f'{metadata["name"]}: supported 1–{metadata["max_value"]}; experimental maximum {INT32_MAX:,}, or its unchanged saved value.')
                 changes.append(Change('guard_item',index,'Value',value))
             self.stage_many(changes)
         except ValueError as error: messagebox.showerror('Invalid BG Item',str(error))
 
+    @experimental_session
     def guard_item_changes(self, maximum=False):
         changes = []
         for index, metadata in GUARD_ITEMS.items():
@@ -1491,8 +1618,9 @@ class Editor(Appearance):
         try:self.stage_many(progression.musou_clear_changes(self.document))
         except ValueError as error:messagebox.showerror('Cannot Mark Stories Cleared',str(error))
 
+    @experimental_session
     def grind_changes(self):
-        changes = [Change('officer', index, field, cap) for index in self.officer_indices() for field, cap in CAPS.items()]
+        changes = [Change('officer', index, field, self.officer_maximum(index, field)) for index in self.officer_indices() for field in CAPS]
         for index, item in self.editable_item_rows():
             cap = self.item_cap(index)
             if item['kind'] == 'rare': changes.append(Change('item', index, 'Owned', True))
@@ -1506,6 +1634,7 @@ class Editor(Appearance):
     def remove_grind(self):
         if self.require_save(): self.stage_many(self.grind_changes())
 
+    @experimental_session
     def unlock_everything(self):
         if self.require_save():
             changes = self.grind_changes()
@@ -1519,8 +1648,23 @@ class Editor(Appearance):
             changes.extend(Change('unlock', index, field, True) for field, count in [('CanUseCharaArray', 42), ('CanUseScenarioArray', 108)] for index in range(min(count,len(self.document.properties[field]['value']['values']))))
             self.stage_many(changes)
 
+    @experimental_session
     def undo(self):
-        if self.history: self.changes = self.history.pop(); self.refresh()
+        if not self.history:
+            return
+        previous = self.history[-1]
+        try:
+            save_writer.plan_changes(self.document, list(previous.values()))
+        except (ValueError, KeyError, TypeError, IndexError) as error:
+            if not experimental_enabled():
+                messagebox.showinfo('Experimental Changes in Undo',
+                                    'Enable experimental editing before restoring these historical changes. '
+                                    'Your current changes and Undo history are preserved.\n\n' + str(error))
+            else:
+                messagebox.showerror('Cannot Undo', str(error))
+            return
+        self.changes = self.history.pop()
+        self.refresh()
 
     def discard(self):
         if self.changes and self.dirty_ok(): self.changes, self.history = {}, []; self.refresh()
@@ -1529,6 +1673,8 @@ class Editor(Appearance):
         if not self.require_save(): return
         window = tk.Toplevel(self.root); window.title('Review Pending Changes'); window.geometry('900x520')
         ttk.Label(window, text=f'{len(self.changes)} pending changes. Save to write them into your copy.', padding=12).pack(fill='x')
+        if self.experimental_mode.get():
+            ttk.Label(window, text='Experimental editing active. Above-max values may break your save or game. Signed 32-bit numeric storage maximum: 2,147,483,647.', wraplength=850, padding=(12, 0, 12, 8)).pack(fill='x')
         pages = ttk.Notebook(window)
         pages.pack(fill='both', expand=True, padx=12, pady=(0, 12))
         changes_page = ttk.Frame(pages, padding=8)
@@ -1555,6 +1701,7 @@ class Editor(Appearance):
             text.configure(state='disabled')
         self.theme_widgets(window)
 
+    @experimental_session
     def review_change(self, change):
         before, after = self.original_value(change), change.value
         labels = {'BGLevels':'Growth (Life / Attack / Defense / Count / Bow / AI)','MemberItem':'Equipped item','MemberWeapon':'Equipped weapon families','MaxBonuses':'Legal maximum bonuses','Skills':'Copy bonuses','Owned':'Owned','Value':'Value'}
@@ -1622,7 +1769,11 @@ class Editor(Appearance):
             self.status.set('Opened-copy backup created. Pending changes are kept in the editor.')
         except Exception as error: messagebox.showerror('Backup Failed', str(error))
 
+    @experimental_session
     def save_to(self, path, overwrite=False):
+        if self.experimental_mode.get() and self.changes:
+            if not messagebox.askyesno('Save Experimental Changes', EXPERIMENTAL_WARNING + '\n\nWrite this edited copy?'):
+                return
         self.set_loaded(False)
         self.status.set('Saving and validating the edited copy…')
         self.root.configure(cursor='wait' if sys.platform == 'win32' else 'watch')

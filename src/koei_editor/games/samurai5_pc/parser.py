@@ -11,6 +11,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.samurai5_pc import codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.steam_owner import OwnerContext, read_owner, validate_owner, require_matching_owner
 
 GAME_ID = 'samurai5_pc'
@@ -39,10 +40,16 @@ class Field:
     minimum: int = 0
     maxable: bool = True
     kind: str = 'int'
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
     def encoded(self, value):
         self.validate(value)

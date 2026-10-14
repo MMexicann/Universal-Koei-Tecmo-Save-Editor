@@ -3,8 +3,12 @@
 Normal and verified rare bonuses and single elements are editable. Identity,
 power definition, hit flags, time, equipment and collection caches stay
 unchanged. No material-consuming fusion workflow is performed here.
+Experimental numeric rolls only extend a normal bonus already present in its
+saved physical slot; new acquisitions, rare values, identities, slot counts,
+element flags and references retain their supported rules.
 """
 from koei_editor.resources import data_file, read_json
+from koei_editor.shared.experimental_limits import SIGNED_INT32_MAX, within_numeric_limits
 import struct
 from koei_editor.games.dw3.models import Change, SaveError, fields
 
@@ -23,6 +27,7 @@ RARE_ITEMS={int(r['id']):r for r in RULES.get('rare_items',[])}
 ELEMENTS=RULES.get('elements',{})
 ELEMENT_MASK=RULES.get('element_mask',0)
 CATEGORIES={'weapon_roll','weapon_element'}
+VALUE_STORAGE_MAXIMUM=SIGNED_INT32_MAX
 
 
 def _requests(changes):
@@ -77,6 +82,23 @@ def allowed_values(info,item_id):
     return sorted(v for v in values if v>0)
 
 
+def skill_numeric_limits(info,item_id):
+    """Normal bonus minimum, supported maximum and signed IntProperty ceiling."""
+    if type(item_id) is not int or item_id not in NORMAL_ITEMS:
+        raise SaveError('Only normal weapon bonuses have numeric limits.')
+    return 1,max(allowed_values(info,item_id)),VALUE_STORAGE_MAXIMUM
+
+
+def _experimental_roll(info,index,skill):
+    """Extend an existing normal bonus value without creating a new identity."""
+    item,value=skill['id'],skill['value'];original=info['skills'][index]
+    if not info.get('experimental_existing') or original['id']!=item or item not in NORMAL_ITEMS:
+        return False
+    minimum,maximum,storage_maximum=skill_numeric_limits(info,item)
+    return (type(value) is int and value>maximum and
+            within_numeric_limits(value,minimum,maximum,storage_maximum=storage_maximum))
+
+
 def allowed_elements(info):
     return {label:mask for label,mask in ELEMENTS.items() if mask or not info['elements']}
 
@@ -106,6 +128,7 @@ def _base_state(document,data_id,changes):
     metadata=WEAPONS.get(weapon_id,{})
     minimum=sum(s['item_id'] in NORMAL_ITEMS for s in template['skill_slots']) if template else (0 if metadata.get('initial_possession') else 1)
     info={'data_id':data_id,'array':array,'index':index,'weapon_id':weapon_id,'owned':owned,
+          'experimental_existing':record is not None and owned and not newly_acquired,
           'skills':skills,'metadata':metadata,'attr':attr,'elements':attr & ELEMENT_MASK,
           'blue_limit':None,'blue_minimum':minimum,'red_limit':1,
           'red_minimum':sum(s['id'] in ITEMS and ITEMS[s['id']]['kind']=='rare' for s in skills),
@@ -161,7 +184,8 @@ def validate_skills(info,skills):
         if not isinstance(skill,dict) or set(skill)!={'id','value'}:raise SaveError('Each weapon slot needs an item ID and value.')
         item,value=skill['id'],skill['value'];original=info['skills'][index]
         if item is not None and type(item) is not int:raise SaveError('Weapon bonus IDs must be integers or None.')
-        if type(value) is not int:raise SaveError('Weapon bonus values must be integers.')
+        if type(value) is not int or not -(1<<31)<=value<=VALUE_STORAGE_MAXIMUM:
+            raise SaveError('Weapon bonus values must fit their signed IntProperty.')
         if original['id'] is not None and original['id'] not in NORMAL_ITEMS and original['id'] not in RARE_ITEMS:
             if skill!=original:raise SaveError('Existing unsupported weapon skills must be preserved in their saved slots.')
         elif item is None:
@@ -175,7 +199,7 @@ def validate_skills(info,skills):
             seen.add(item)
             if item in NORMAL_ITEMS:
                 blue+=1
-                if value not in allowed_values(info,item) and not (value>0 and skill==original):
+                if value not in allowed_values(info,item) and not (value>0 and skill==original) and not _experimental_roll(info,index,skill):
                     raise SaveError(f'{ITEMS[item]["name"]} has an unsupported weapon roll. An existing saved value can only be preserved in its original slot.')
             else:red+=1
         result.append({'id':item,'value':value})

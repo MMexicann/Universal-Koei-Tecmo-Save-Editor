@@ -4,14 +4,18 @@ The six saved levels are HP, Attack, Defense, Count, Bow/Moveset and AI.
 Only HP, Attack, Defense and Bow/Moveset consume the shared growth budget.
 Derived values below are growth base values. Equipment, formation/order,
 bodyguard type and battle modifiers are intentionally excluded.
+Experimental Merit uses the same shipped gates and budget. Growth levels remain
+bounded table indexes, including Count, Bow/Moveset and AI.
 """
 from koei_editor.resources import read_json
+from koei_editor.shared.experimental_limits import SIGNED_INT32_MAX, within_numeric_limits
 
 from bisect import bisect_right
 
 
 _DATA = read_json('bodyguard_growth.json')
 MERIT_CAP = _DATA["merit_cap"]
+MERIT_STORAGE_MAXIMUM = SIGNED_INT32_MAX
 LEVEL_NAMES = tuple(slot["label"] for slot in _DATA["slots"])
 LEVEL_CAPS = tuple(slot["maximum"] for slot in _DATA["slots"])
 ALLOCATED_SLOTS = tuple(_DATA["allocated_slots"])
@@ -19,8 +23,13 @@ BUDGET_THRESHOLDS = tuple(_DATA["budget_thresholds"])
 PRESET_NAMES = {"balanced": "Balanced", "life": "Favor Life", "attack": "Favor Attack", "defense": "Favor Defense"}
 
 
+def merit_numeric_limits() -> tuple[int, int, int]:
+    """Minimum, supported maximum and signed IntProperty storage ceiling."""
+    return 0, MERIT_CAP, MERIT_STORAGE_MAXIMUM
+
+
 def _merit(merit: int) -> int:
-    if type(merit) is not int or not 0 <= merit <= MERIT_CAP:
+    if not within_numeric_limits(merit, 0, MERIT_CAP, storage_maximum=MERIT_STORAGE_MAXIMUM):
         raise ValueError(f"Bodyguard Merit must be an integer from 0 to {MERIT_CAP:,}.")
     return merit
 
@@ -81,7 +90,8 @@ def validate_saved_growth(merit: int, levels) -> tuple[int, ...]:
     is not assumed: reading or preserving it must not reallocate saved levels.
     Newly authored allocations still use conservative ``validate_growth``.
     """
-    _merit(merit)
+    if type(merit) is not int or not 0 <= merit <= MERIT_STORAGE_MAXIMUM:
+        raise ValueError("Saved Bodyguard Merit must fit its nonnegative IntProperty.")
     return _levels(levels)
 
 

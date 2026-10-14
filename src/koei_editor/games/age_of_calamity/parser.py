@@ -12,6 +12,7 @@ from types import MappingProxyType
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.age_of_calamity.catalog import MATERIALS, WEAPONS, SEALS
 
@@ -37,13 +38,23 @@ class Field:
     slot: int = 0
     minimum: int = 0
     maxable: bool = True
+    structural_maximum: int | None = None
+
+    @property
+    def experimental_maximum(self):
+        if self.group == 'Weapon protection':
+            return None
+        return (1 << (self.size * 8)) - 1
 
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], BYTEORDER)
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
+        if self.structural_maximum is not None and value > self.structural_maximum:
+            raise SaveError('Carried rupees cannot exceed the preserved lifetime earned total.')
 
 
 @dataclass(frozen=True)
@@ -189,7 +200,8 @@ def _field_index(payload):
     # A second source qualifies an earned-total companion. Preserve its history
     # and prevent new edits from exceeding that existing total.
     fields[0] = Field('rupees', 'Rupees (bounded by preserved lifetime total)',
-                      RUPEES_OFFSET, 4, min(9_999_999, _uint(payload, TOTAL_RUPEES_OFFSET, 4)))
+                      RUPEES_OFFSET, 4, min(9_999_999, _uint(payload, TOTAL_RUPEES_OFFSET, 4)),
+                      structural_maximum=_uint(payload, TOTAL_RUPEES_OFFSET, 4))
     for weapon in _weapons(payload):
         if (weapon['source_owner'] == weapon['owner'] and '[Broken]' not in weapon['name']
                 and weapon['protected'] in (0, 1) and weapon['rusty'] == 0):

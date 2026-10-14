@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.1
+
+- Added opt-in experimental numeric editing across the library, starting with
+  DW3 Remastered. Supported maxima and encoding ceilings are shown separately.
+- Warn before enabling experimental mode and saving above-limit pending values.
+  Keep native width, identity, structure, integrity and save read-back checks.
+- Preserve supported Max presets, higher opened values, session isolation, Undo
+  and original backups; reject experimental Undo history until mode is enabled.
+- Include the 14 previously unreleased profiles and shared editor refinements
+  below: 90 game/platform profiles across 15 platforms.
+- See [experimental scope and exceptions](EXPERIMENTAL_EDITING.md).
+
 ## v2.02 — 2026-10-13
 
 - Added a direct, self-contained Windows EXE alongside the portable Windows ZIP; the EXE needs no side files.

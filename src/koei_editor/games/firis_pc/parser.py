@@ -14,6 +14,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 
@@ -63,8 +64,13 @@ class Field:
             return int(struct.unpack_from('>f', payload, self.offset)[0])
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'big')
 
+    @property
+    def experimental_maximum(self):
+        return (1 << 24) if self.encoding == 'float32_be' else 0x7FFFFFFF
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
     def encoded(self, value):
@@ -221,7 +227,7 @@ def _records(payload):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload):
+def _fields(payload, experimental=False):
     _, cole, _ = _structure(payload)
     balance = int.from_bytes(payload[cole:cole + 4], 'big', signed=True)
     fields = [Field('cole','Cole (reduce only)',cole,4,balance)] if balance >= 0 else []
@@ -233,7 +239,7 @@ def _fields(payload):
         instances[instance] = instances.get(instance,0) + 1
     for key,label,slot,offset,instance,identity,quality,editable in records:
         if (editable and slot <= active_limits[key] and instances[instance] == 1 and math.isfinite(quality)
-                and quality.is_integer() and 1 <= quality <= 0xFFFFFF):
+                and quality.is_integer() and 1 <= quality <= (1 << 24 if experimental else 0xFFFFFF)):
             fields.append(Field(f'{key}_{slot}_quality',
                                 f'Quality (item ID {identity}, instance {instance}; reduce only)',
                                 offset + 4,4,int(quality),label,slot,minimum=1,encoding='float32_be'))
@@ -258,7 +264,7 @@ def _capacity_rows(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

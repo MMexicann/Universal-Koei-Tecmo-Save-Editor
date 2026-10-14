@@ -21,8 +21,9 @@ class Editor(ScalarEditor):
     backend = parser
     presentation_type = Nioh3Presentation
     subtitle = 'Native PC USER balance and common-item reductions'
-    summary = ('Deduct Amrita/Gold balances or reduce existing common-item quantities; inspect equipment level, '
-               'pre-forge level and reinforcement separately. Increases and Max are unavailable.')
+    summary = ('Edit existing Amrita/Gold balances and common-item quantities; inspect equipment level, '
+               'pre-forge level and reinforcement separately. Default limits allow reductions; '
+               'increases require experimental editing. Max is unavailable.')
 
 
 def read_save(path):

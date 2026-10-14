@@ -13,6 +13,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.copy_storage import (
     atomic_new,
     restore_snapshot,
@@ -42,11 +43,16 @@ class Field:
     encoding: str = 'unsigned big-endian integer'
     evidence: str = 'Apollo NPUB31234 active native resource patches; complete original public export'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'big')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from 0 to the opened balance ({self.maximum}).')
 
 

@@ -12,6 +12,7 @@ from pathlib import Path
 import struct
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.copy_storage import atomic_new, snapshot_backup, restore_snapshot
 MAX_SFO_SIZE = 4096
 from koei_editor.shared.save_safety import safe_path
@@ -39,11 +40,16 @@ class Field:
     encoding: str = 'unsigned little-endian integer'
     evidence: str = 'Apollo PCSB00898 map; complete fixed-address writer; two original EU Vita exports'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label}: choose a whole number from 0 to {self.maximum:,}.')
 
     def encoded(self, value):

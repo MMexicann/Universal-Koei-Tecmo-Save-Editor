@@ -13,6 +13,7 @@ from types import MappingProxyType
 
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits, experimental_enabled
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.games.dw9emp import dw9emp_codec as codec
@@ -37,11 +38,17 @@ class Field:
     maxable: bool = False
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from '
                             f'{self.minimum:,} to {self.maximum:,}.')
 
@@ -112,13 +119,18 @@ def validate_document(document):
         raise SaveError('The opened DW9 Empires snapshot was changed outside the edit workflow.')
 
 
-@lru_cache(maxsize=4)
 def _mapped_fields(payload):
+    return _mapped_fields_cached(payload, experimental_enabled())
+
+
+@lru_cache(maxsize=4)
+def _mapped_fields_cached(payload, _experimental):
     return tuple(Field(f'item_{identity}_quantity', f'Item ID {identity}: Quantity',
                        ITEM_BASE + 2 * identity, slot=identity + 1)
                  for identity in range(ITEM_COUNT)
-                 if 1 <= int.from_bytes(payload[ITEM_BASE + 2 * identity:
-                                               ITEM_BASE + 2 * identity + 2], 'little') <= ITEM_MAXIMUM)
+                 if within_numeric_limits(int.from_bytes(payload[ITEM_BASE + 2 * identity:
+                                               ITEM_BASE + 2 * identity + 2], 'little'),
+                                          1, ITEM_MAXIMUM, storage_maximum=65535))
 
 
 def fields_for(document):

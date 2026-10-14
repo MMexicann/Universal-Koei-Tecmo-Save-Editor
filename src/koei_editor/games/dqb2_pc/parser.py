@@ -15,6 +15,7 @@ import zlib
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'dqb2_pc'
@@ -54,11 +55,16 @@ class Field:
     maxable: bool = False
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         return struct.unpack_from('<H', payload, self.offset)[0]
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label}: reduce the existing quantity to a whole number '
                             f'from {self.minimum} to {self.maximum}.')
 
@@ -175,7 +181,7 @@ def _fields(payload):
     return tuple(Field(f'{group.lower()}_{slot}', f'{ORDINARY_ITEMS[item_id]} quantity',
                        offset + 2, quantity, group, slot)
                  for group, slot, offset, item_id, quantity in _records(payload)
-                 if item_id in ORDINARY_ITEMS and 2 <= quantity <= 999)
+                 if item_id in ORDINARY_ITEMS and quantity >= 1)
 
 
 def fields_for(document):

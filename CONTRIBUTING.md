@@ -111,6 +111,17 @@ meaningful natural maximum exists. Proven fixed-width names may declare
 `kind='text'`, with byte/encoding validation in the game backend and
 `maxable=False`. The shared GUI keeps mixed text/numeric bulk edits separate.
 
+Mapped numeric fields can declare an `experimental_maximum` property containing
+their exact native encoding ceiling. Use `within_numeric_limits` from the shared
+experimental policy in their numeric validator; None keeps the normal range.
+Declare signedness, packed widths, bias, sentinel exclusions or exact float
+precision explicitly. Choices/flags/references retain hard constraints. The
+bound adapter scopes an acknowledged experimental session through all save and
+read-back operations; backend format/identity/integrity checks still apply.
+Test both modes, ceilings/overflow, cache isolation, reopened higher originals,
+Max, Undo and actual destination read-back. See
+[experimental editing](docs/EXPERIMENTAL_EDITING.md).
+
 Subclass [tests/scalar_contract.py](tests/scalar_contract.py)'s
 `ScalarContractTests` alongside `unittest.TestCase`, providing `game_id` and
 `fixture_bytes()`. Its shared checks exercise no-op round trips, immutable staged

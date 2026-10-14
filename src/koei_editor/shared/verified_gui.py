@@ -1,5 +1,6 @@
 """Shared scalar save editor with retained independent sessions."""
 import json
+from dataclasses import replace
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from koei_editor.shared.appearance import Appearance
@@ -7,6 +8,8 @@ from koei_editor.shared.copy_storage import atomic_new
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared.scalar_presentation import ScalarPresentation
 from koei_editor.shared.table_tools import attach_sorting, sort_table, copy_selected
+from koei_editor.shared.experimental_limits import (
+    EXPERIMENTAL_WARNING, above_supported, experimental_maximum, experimental_operation)
 import koei_editor.shared.verified_editor as backend
 
 
@@ -15,7 +18,7 @@ class Editor(Appearance):
     backend = backend
     save_extension = '.dat'
     subtitle = 'Windows PC save editor'
-    limit_heading = 'Edit limit'
+    limit_heading = 'Supported maximum'
     summary = ''
     presentation_type = ScalarPresentation
 
@@ -28,6 +31,7 @@ class Editor(Appearance):
         self.theme_name = tk.StringVar(root, value=theme)
         self.document, self.backup = None, None
         self.changes, self.history = {}, []
+        self.experimental_mode = tk.BooleanVar(root, value=False)
         self.apply_theme(theme)
         host = parent if parent is not None else root
         header = ttk.Frame(host, padding=(22, 16))
@@ -48,6 +52,14 @@ class Editor(Appearance):
         ttk.Button(bar, text='Restore Backup...', command=self.restore).pack(side='left', padx=8)
         self.filename = tk.StringVar(root, value=f'Open a separate {self.save_extension or "save"} copy to begin.')
         ttk.Label(host, textvariable=self.filename, padding=(22, 12)).pack(anchor='w')
+        risk_bar = ttk.Frame(host, padding=(22, 0, 22, 8))
+        risk_bar.pack(fill='x')
+        self.experimental_toggle = ttk.Checkbutton(
+            risk_bar, text='Experimental: allow above supported limits',
+            variable=self.experimental_mode, command=self.toggle_experimental, state='disabled')
+        self.experimental_toggle.pack(side='left')
+        self.limit_status = tk.StringVar(root, value='Supported limits apply. Max uses supported limits.')
+        ttk.Label(risk_bar, textvariable=self.limit_status, wraplength=600).pack(side='left', padx=12)
         filter_bar = ttk.Frame(host, padding=(22, 0))
         filter_bar.pack(fill='x')
         ttk.Label(filter_bar, text='Find fields').pack(side='left', padx=(0, 8))
@@ -119,11 +131,11 @@ class Editor(Appearance):
         self.status_label.pack(anchor='w')
         frame = ttk.Frame(host, padding=(22, 0))
         frame.pack(fill='both', expand=True)
-        self.fields = ttk.Treeview(frame, columns=('slot', 'field', 'original', 'pending', 'limit'),
+        self.fields = ttk.Treeview(frame, columns=('slot', 'field', 'original', 'pending', 'limit', 'storage'),
                                   show='headings', selectmode='extended')
         for column, label, width in (('slot', 'Record', 140), ('field', 'Field', 210),
                                      ('original', 'Opened value', 160), ('pending', 'Pending value', 160),
-                                     ('limit', self.limit_heading, 160)):
+                                     ('limit', self.limit_heading, 140), ('storage', 'Encoding limit', 140)):
             self.fields.heading(column, text=label)
             self.fields.column(column, width=width)
         self.fields.pack(side='left', fill='both', expand=True)
@@ -163,6 +175,9 @@ class Editor(Appearance):
             messagebox.showerror('Cannot Open Save', str(error))
             return
         self.document, self.backup = document, backup
+        self.adapter = replace(self.adapter, experimental=False)
+        self.experimental_mode.set(False)
+        self.experimental_toggle.configure(state='normal')
         self.changes, self.history = {}, []
         self.record.set('All records')
         self.pending_only.set(False)
@@ -172,6 +187,11 @@ class Editor(Appearance):
         self.status.set('Opened save copy. Automatic backup: ' + backup.name)
         self.refresh()
 
+    @property
+    def experimental(self):
+        return self.adapter.experimental
+
+    @experimental_operation
     def refresh(self):
         selected = self.fields.selection()
         focus = self.fields.focus()
@@ -218,7 +238,8 @@ class Editor(Appearance):
             self.fields.insert('', 'end', iid=field.id,
                                values=(record, field.label, opened, pending,
                                        f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
-                                       else f'{field.maximum:,}'))
+                                        else f'{field.maximum:,}',
+                                        self.storage_display(field)))
         self.fields.selection_set([key for key in selected if self.fields.exists(key)])
         sort_table(self.fields)
         if focus and self.fields.exists(focus):
@@ -228,8 +249,44 @@ class Editor(Appearance):
         hidden = len(set(self.changes).difference(visible))
         self.field_count.set(f'{len(visible):,} visible fields · {len(self.changes):,} pending edits'
                              + (f' ({hidden:,} hidden)' if hidden else ''))
+        count = len(self.experimental_changes())
+        self.limit_status.set(
+            f'EXPERIMENTAL: save or game may break. {count:,} pending edits above supported limits.'
+            if self.experimental_mode.get() else 'Supported limits apply. Max uses supported limits.')
         self.selected()
 
+    def storage_display(self, field):
+        maximum = experimental_maximum(field)
+        return f'{maximum:,}' if maximum is not None else 'Required choices/structure'
+
+    def experimental_changes(self):
+        if self.document is None:
+            return {}
+        fields = self.adapter.field_map(self.document)
+        return {key: value for key, value in self.changes.items()
+                if key in fields and above_supported(fields[key], value)
+                and value != fields[key].value(self.document.payload)}
+
+    def toggle_experimental(self):
+        requested = self.experimental_mode.get()
+        if requested and not self.adapter.experimental:
+            if not messagebox.askyesno('Experimental Editing Warning', EXPERIMENTAL_WARNING):
+                self.experimental_mode.set(False)
+                return
+        candidate = replace(self.adapter, experimental=requested)
+        try:
+            if self.document is not None:
+                candidate.changed_payload(self.document, self.changes)
+        except Exception as error:
+            self.experimental_mode.set(self.adapter.experimental)
+            messagebox.showerror('Experimental Edits Remain',
+                                 'Revert or save edits above supported limits before disabling experimental editing.\n\n'
+                                 + str(error))
+            return
+        self.adapter = candidate
+        self.refresh()
+
+    @experimental_operation
     def field_options(self, field):
         if self.document is not None and hasattr(self.backend, 'field_options'):
             return tuple(self.backend.field_options(self.document, field.id))
@@ -245,13 +302,19 @@ class Editor(Appearance):
         if self.choice_value.get() in self._choice_values:
             self.value.set(str(self._choice_values[self.choice_value.get()]))
 
+    @experimental_operation
     def selected(self, _event=None):
         keys = self.fields.selection()
         if keys and self.document:
             field = self.adapter.field_map(self.document)[keys[0]]
             value = self.changes.get(field.id, field.value(self.document.payload))
             self.value.set(str(value))
-            self.selection_info.set(self.presentation.field_hint(self.document, field))
+            hint = self.presentation.field_hint(self.document, field)
+            maximum = experimental_maximum(field)
+            if maximum is not None:
+                hint += (f' Supported maximum: {field.maximum:,}; encoding limit: {maximum:,}.'
+                         ' Above the supported maximum is experimental and may break the save or game.')
+            self.selection_info.set(hint)
             options = self.field_options(field)
             fields = self.adapter.field_map(self.document)
             if options and all(self.field_options(fields[key]) == options for key in keys):
@@ -274,9 +337,11 @@ class Editor(Appearance):
                 self.value_choice.pack_forget()
                 self.value_entry.pack(side='left')
 
+    @experimental_operation
     def record_name(self, field):
         return self.presentation.record_name(field)
 
+    @experimental_operation
     def show_inspector(self):
         if self.document is None:
             return
@@ -422,6 +487,13 @@ class Editor(Appearance):
 
     def undo(self):
         if self.history:
+            try:
+                self.adapter.changed_payload(self.document, self.history[-1])
+            except Exception as error:
+                messagebox.showerror('Cannot Undo',
+                                     'Enable experimental editing to restore edits above supported limits.\n\n'
+                                     + str(error))
+                return
             self.changes = self.history.pop()
             self.refresh()
             self.status.set(f'Undo complete. {len(self.changes)} pending edits.')
@@ -438,7 +510,11 @@ class Editor(Appearance):
         dialog = tk.Toplevel(self.root)
         dialog.title('Review Changes')
         dialog.geometry('700x480')
-        ttk.Label(dialog, text=f'{self.layout.title}\n{len(rows)} staged field edits', padding=15).pack(anchor='w')
+        experimental_count = len(self.experimental_changes())
+        warning = (f'\nEXPERIMENTAL: {experimental_count} edits above supported limits; save/game may break.'
+                   if experimental_count else '')
+        ttk.Label(dialog, text=f'{self.layout.title}\n{len(rows)} staged field edits' + warning,
+                  padding=15, wraplength=660).pack(anchor='w')
         body = ttk.Frame(dialog)
         body.pack(fill='both', expand=True, padx=15)
         body.rowconfigure(0, weight=1)
@@ -467,6 +543,7 @@ class Editor(Appearance):
             path = filedialog.asksaveasfilename(title='Export Change Review', defaultextension='.changes.json')
             if path:
                 report = {'game_id': self.game_id, 'source_sha256': document.sha256,
+                          'experimental': bool(experimental_count),
                           'changes': [{'field': field.id, 'before': before, 'after': after}
                                       for field, before, after in rows]}
                 try:
@@ -493,6 +570,13 @@ class Editor(Appearance):
 
     def save_to(self, path):
         try:
+            count = len(self.experimental_changes())
+            if count and not messagebox.askyesno(
+                    'Save Experimental Copy?',
+                    f'{count} pending edits exceed supported limits. The save file or game may break, '
+                    'or the game may reset these values. Your original and backup are preserved.\n\n'
+                    'Save this experimental copy?'):
+                return
             document = self.adapter.save_as(self.document, self.changes, path)
         except Exception as error:
             messagebox.showerror('Cannot Save Copy', str(error))

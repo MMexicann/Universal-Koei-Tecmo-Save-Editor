@@ -12,6 +12,7 @@ from types import MappingProxyType
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.fire_emblem_warriors.catalog import MATERIALS, WEAPONS, SEALS, CHARACTERS
 
@@ -38,11 +39,16 @@ class Field:
     minimum: int = 0
     maxable: bool = True
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], BYTEORDER)
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -187,8 +193,9 @@ def _field_index(payload):
                                 offset + 26, 1, 5, 'Weapon stars', slot))
         for index, (identity, remaining) in enumerate(zip(weapon['attributes'], weapon['kos'])):
             # True Power/Legendary require unique-weapon badge/scroll/opus flags.
-            # Unknown/empty/unused attributes and exceptional counters stay opaque.
-            if identity in ORDINARY_SEAL_CAPS and 0 < remaining <= ORDINARY_SEAL_CAPS[identity]:
+            # Unknown/empty/unused attributes stay opaque. Positive existing
+            # counters stay readable after experimental numeric edits.
+            if identity in ORDINARY_SEAL_CAPS and remaining > 0:
                 fields.append(Field(f'weapon_{slot}_seal_{index + 1}_kos',
                     weapon['name'] + f' (slot {slot}), ' + SEALS[identity] + ': Remaining KOs',
                     offset + index * 2, 2, remaining, 'Ordinary seal KOs',

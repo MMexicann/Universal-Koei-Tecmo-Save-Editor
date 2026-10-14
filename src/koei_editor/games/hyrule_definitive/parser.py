@@ -12,6 +12,7 @@ from types import MappingProxyType
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.hyrule_definitive.catalog import MATERIALS, FOOD, CHARACTERS, WEAPONS, SKILLS
 
@@ -36,11 +37,16 @@ class Field:
     minimum: int = 0
     maxable: bool = False
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], BYTEORDER)
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
 
@@ -170,9 +176,9 @@ def _inspection(payload):
 def _field_index(payload):
     fields = list(FORMAT.fields)
     for index, (offset, name) in enumerate(MATERIALS):
-        # Discovery bits are not independently mapped. Preserve empty, higher
-        # and unidentified slots; do not manufacture ownership or rewards.
-        if 1 <= _uint(payload, offset, 2) <= 999:
+        # Discovery bits are not independently mapped. Positive known quantities
+        # qualify existing ownership, including preserved higher quantities.
+        if _uint(payload, offset, 2) > 0:
             fields.append(Field(f'material_{offset:x}', name, offset, 2, 999,
                                 'Material inventory', index + 1, minimum=1))
     # Independent Switch getters/setters qualify these exact scalar positions;
@@ -186,11 +192,11 @@ def _field_index(payload):
         fields.append(Field(f'weapon_{slot}_stars', weapon['name'] + f' (slot {slot}): Stars',
             offset + 0x14, 2, 5, 'Weapon stars', slot, maxable=True))
         # Existing positive ordinary seals only; no collection-sensitive seals,
-        # new skill IDs, unused/open slots, counter increases or state changes.
-        # The 5,000 ceiling is a conservative admission bound, not a Max target.
+        # new skill IDs, unused/open slots or state changes. The supported limit
+        # is the opened countdown; experimental edits retain its native width.
         if weapon['state'] == 3:
             for index, (identity, remaining) in enumerate(weapon['skills']):
-                if identity in SKILLS and identity not in (0, 41, 42, 53) and 0 < remaining <= 5000:
+                if identity in SKILLS and identity not in (0, 41, 42, 53) and remaining > 0:
                     fields.append(Field(f'weapon_{slot}_skill_{index + 1}_kos',
                         weapon['name'] + f' (slot {slot}), ' + SKILLS[identity] + ': Remaining KOs',
                         offset + index * 2, 2, remaining, 'Ordinary skill seals',

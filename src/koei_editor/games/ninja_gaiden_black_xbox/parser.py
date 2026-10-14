@@ -32,6 +32,7 @@ class Field:
     group: str = 'Load list'
     slot: int = 0
     kind: str = 'int'
+    experimental_maximum: None = None
     maxable: bool = False
     def value(self, payload):
         return int(payload[COUNT] == 30 and payload[ORDER:ORDER + 30] == bytes(range(30)))

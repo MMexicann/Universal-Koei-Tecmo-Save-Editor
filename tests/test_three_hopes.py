@@ -180,10 +180,13 @@ class ThreeHopesMaterialTests(unittest.TestCase):
         raw[0x831BC:0x831BE] = bytes(2)
         raw[0x831C4:0x831C6] = b'\xff\xff'
         document = p.decode(checksum_headers(raw))
-        for key in ('material_stones_1', 'material_stones_2'):
+        for key in ('material_stones_1',):
             self.assertNotIn(key, p.field_map(document))
             with self.assertRaises(SaveError):
                 p.stage(document, {}, key, 1)
+        field = p.field_map(document)['material_stones_2']
+        self.assertEqual(field.value(document.payload), 65535)
+        self.assertEqual(p.stage(document, {}, field.id, 65535), {})
         self.assertEqual(p.serialize(document, {}), document.raw)
         key = 'material_training_1'
         for value in (21, -1, True, 3.0, '3'):

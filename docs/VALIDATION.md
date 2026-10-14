@@ -1,5 +1,21 @@
 # Universal development validation
 
+## v2.1 experimental numeric editing — release qualification pending
+
+The explicit session option expands declared numeric fields to their exact
+encoding ceilings. Supported maxima remain visible and Max retains supported
+targets. Choices, references, ownership, record discovery, checksum validation,
+native dependencies and saved-value read-back remain enforced. DW3 uses its
+existing tagged patch audit; scalar profiles use the bound adapter. Public
+regressions cover strict defaults, opt-in isolation, native roundtrips, overflow,
+protected values, Max restoration, warning cancellation and Undo history.
+
+The final integrated source is being checked with the complete public suite.
+Native Windows builds and real Defender scans must pass before publication;
+their authoritative evidence will be `DefenderScan-v2.1.json`, tied to the
+tested commit and exact downloaded asset hashes. Edited in-game loading and
+re-saving of experimental values remains unverified.
+
 ## v2.02 dual Windows downloads — native qualification pending
 
 Version 2.02 prepares two builds of the same 90-profile application: a portable

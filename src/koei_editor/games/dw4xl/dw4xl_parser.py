@@ -16,6 +16,7 @@ from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapsh
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits
 
 
 GAME_ID = 'dw4xl_ps2'
@@ -66,12 +67,25 @@ class Field:
     maxable: bool = True
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        if (self.id == 'difficulty'
+                or self.group in ('Equipment', 'General equipment')
+                or (self.storage == 'item-level' and self.maximum == 1)):
+            return None
+        if self.storage == 'item-level':
+            # FF is the locked sentinel; levels 1..255 encode as 00..FE.
+            return 255
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         stored = int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
         return (0 if stored == 255 else stored + 1) if self.storage == 'item-level' else stored
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from '
                             f'{self.minimum:,} to {self.maximum:,}.')
 

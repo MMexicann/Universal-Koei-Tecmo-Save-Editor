@@ -15,6 +15,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.three_houses import codec
 from koei_editor.games.three_houses.equipment import ORDINARY_EQUIPMENT
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
+from koei_editor.shared.experimental_limits import within_numeric_limits
 from koei_editor.shared.save_safety import safe_path
 
 GAME_ID = 'three_houses'
@@ -46,11 +47,18 @@ class Field:
     forbidden: tuple = ()
     choices: tuple = ()
 
+    @property
+    def experimental_maximum(self):
+        if self.choices:
+            return None
+        return (1 << (self.size * 8)) - 1
+
     def value(self, payload):
         return codec.uint(payload, self.offset, self.size)
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
         if value in self.forbidden:
             raise SaveError('The native unlimited-durability sentinel cannot be granted by a numeric edit.')

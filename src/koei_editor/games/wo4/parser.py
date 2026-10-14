@@ -16,6 +16,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.wo4 import codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits, experimental_enabled
 
 GAME_ID = 'wo4_pc'
 REVISION = 20180720
@@ -46,11 +47,17 @@ class Field:
     kind: str = 'int'
     byteorder: str = 'little'
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label}: use a whole number from {self.minimum} to {self.maximum}.')
 
 
@@ -126,8 +133,12 @@ def validate_document(document):
         raise SaveError('WO4 snapshot changed outside staged edits.')
 
 
-@lru_cache(maxsize=2)
 def _fields(payload):
+    return _fields_cached(payload, experimental_enabled())
+
+
+@lru_cache(maxsize=2)
+def _fields_cached(payload, _experimental):
     fields = {
         'gems': Field('gems', 'Gems', SYSTEM_GLOBAL + 0xCC, 4, 9_999_999),
         'crystals': Field('crystals', 'Crystals', SYSTEM_GLOBAL + 0xD4, 2, 999),
@@ -136,13 +147,13 @@ def _fields(payload):
     for element in range(64):
         offset = SYSTEM_GLOBAL + 0xE6 + element * 2
         amount = int.from_bytes(payload[offset:offset + 2], 'little')
-        if 1 <= amount <= 999:
+        if within_numeric_limits(amount, 1, 999, storage_maximum=65535):
             key = f'element_{element:02d}'
             fields[key] = Field(key, f'Element ID {element}: existing quantity', offset, 2, 999,
                                 minimum=1, group='Existing weapon elements', slot=element,
                                 maxable=False)
     orbs = int.from_bytes(payload[SYSTEM_GLOBAL + 0x166:SYSTEM_GLOBAL + 0x168], 'little')
-    if 1 <= orbs <= 999:
+    if within_numeric_limits(orbs, 1, 999, storage_maximum=65535):
         fields['skill_orbs'] = Field('skill_orbs', 'Skill Orbs (reduce only)',
                                     SYSTEM_GLOBAL + 0x166, 2, orbs, maxable=False)
     for officer in range(OFFICER_COUNT):

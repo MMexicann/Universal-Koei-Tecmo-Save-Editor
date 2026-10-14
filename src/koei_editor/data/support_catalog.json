@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "policy": "The library contains independently verified file editors and explicitly labelled implementations of published platform-specific editors. editing_verified remains false until independent genuine-file qualification for new published formats.",
+  "policy": "The library contains independently verified file editors and explicitly labelled implementations of published platform-specific editors. editing_verified remains false until independent genuine-file qualification for new published formats. Version 2.1 offers explicitly scoped experimental authoring above supported numeric limits only for mapped existing fields with declared native encoding ceilings; identity, structure, choices, integrity and copy safety remain required.",
   "references": [
     "https://github.com/koko-tsuu/dw8xl_save_converter",
     "https://github.com/Ceraph1216/pirateWarriors3Save",

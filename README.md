@@ -5,8 +5,19 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.02** supports **90 game/platform profiles across 15 platforms**.
+**Version 2.1** supports **90 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
+
+## Experimental editing
+
+Supported limits apply by default. Open a save copy and enable **Experimental:
+allow above supported limits** to enter larger numeric values. The editor shows
+the supported maximum and encoding limit, and warns that experimental values
+can break the save or game or be reset by the game.
+
+Max buttons keep supported limits. Unknown fields, IDs, choices, flags and required
+record structure remain protected. Backups, Undo and verified Save As stay available.
+See [experimental limits and exceptions](docs/EXPERIMENTAL_EDITING.md).
 
 ## Supported games
 
@@ -36,7 +47,8 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists each supported game/platform and its editing scope.
+The table below lists the game/platform profiles included in version 2.1.
+Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->
 | Game / edition | Platform | Implemented scope |

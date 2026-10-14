@@ -2,6 +2,8 @@
 
 Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_supported_games` after changing an adapter.
 
+Version 2.1 adds optional experimental numeric editing across the library. Supported maxima and encoding limits remain separate; see [experimental scope and warnings](EXPERIMENTAL_EDITING.md).
+
 | Game / edition | Platform | Implemented scope |
 | --- | --- | --- |
 | DYNASTY WARRIORS 3 — Complete Edition Remastered | Windows PC | Character progression, equipment, companions and unlocks. |

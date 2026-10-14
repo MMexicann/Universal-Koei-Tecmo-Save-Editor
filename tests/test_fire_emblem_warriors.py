@@ -89,9 +89,9 @@ class FireEmblemFormatTests(unittest.TestCase):
         with self.assertRaises(SaveError): fe.stage(self.doc, {}, 'weapon_1_stars', 6)
 
     def test_seal_natural_caps_and_nonsealed_attribute_exclusions(self):
-        for identity, count, eligible in ((23, 2000, True), (23, 2001, False),
-                (37, 3000, True), (37, 3001, False), (38, 2500, True),
-                (47, 4000, True), (48, 4001, False), (1, 1000, False),
+        for identity, count, eligible in ((23, 2000, True), (23, 2001, True),
+                (37, 3000, True), (37, 3001, True), (38, 2500, True),
+                (47, 4000, True), (48, 4001, True), (1, 1000, False),
                 (35, 1000, False), (46, 1000, False), (34, 1000, False),
                 (55, 1000, False)):
             raw = bytearray(self.raw)

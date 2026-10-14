@@ -868,7 +868,9 @@ class UniversalGuiTests(unittest.TestCase):
             visible = '\n'.join(texts).lower()
             for phrase in REMOVED_UI_PHRASES:
                 self.assertNotIn(phrase.lower(), visible, game_id)
-            self.assertEqual(editor.fields.heading('limit', 'text'), 'Edit limit')
+            self.assertEqual(editor.fields.heading('limit', 'text'), 'Supported maximum')
+            self.assertEqual(editor.fields.heading('storage', 'text'), 'Encoding limit')
+            self.assertIn('Experimental: allow above supported limits', texts)
             for label in ('Open Save Copy', 'Save As...', 'Backup Save', 'Review Changes',
                           'Undo', 'Restore Backup...', 'Apply Selected', 'Max Selected',
                           'Max Visible Fields', 'Inspect Data'):

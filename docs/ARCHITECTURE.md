@@ -55,6 +55,17 @@ agree with the registry, runtime metadata and tested behavior.
 
 ## Scalar editing contract
 
+Experimental numeric editing is an explicit option on each bound adapter and
+open GUI session. `shared/experimental_limits.py` scopes the option to a complete
+operation with a context variable; it resets after success or failure and does
+not change another session. Fields declare their exact `experimental_maximum`
+from their native encoding. Missing declarations, choices and references retain
+their existing constraints. Supported maxima remain separate from encoding
+ceilings, and Max never authors new above-supported values. Native checksums,
+record eligibility, dependencies and saved-value read-back remain required.
+Opening another save resets the option; disabling it validates pending edits,
+and Undo preserves its history if restoring an experimental value needs opt-in.
+
 [adapter_contract.py](../src/koei_editor/shared/adapter_contract.py) defines the
 field, format, frozen document, backend and launcher session contracts. The
 bound adapter checks completeness, selected identity and extensions before

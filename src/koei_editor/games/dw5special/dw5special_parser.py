@@ -14,6 +14,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.dw5special import dw5special_codec as codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits, experimental_enabled
 
 GAME_ID = 'dw5special'
 SAVE_SIZE = codec.SAVE_SIZE
@@ -60,11 +61,16 @@ class Field:
     maxable: bool = False
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        return None if self.id.endswith('_weight') else 255
+
     def value(self, payload):
         return payload[self.offset]
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a value from {self.minimum} to {self.maximum}.')
 
     def encoded(self, value):
@@ -131,11 +137,15 @@ def validate_document(document):
         raise SaveError('The opened DW5 Special snapshot was changed externally.')
 
 
-@lru_cache(maxsize=4)
 def _mapped_fields(payload):
+    return _mapped_fields_cached(payload, experimental_enabled())
+
+
+@lru_cache(maxsize=4)
+def _mapped_fields_cached(payload, _experimental):
     fields = []
     for identity, name in enumerate(ITEM_NAMES):
-        if payload[ITEM_BASE + identity] <= 19:
+        if within_numeric_limits(payload[ITEM_BASE + identity], 0, 19, storage_maximum=255):
             fields.append(Field(f'item_{identity}_rank', f'{name}: rank (0 = level 1)',
                                 ITEM_BASE + identity, slot=identity + 1))
     for identity, name in enumerate(OFFICER_NAMES):
@@ -159,12 +169,12 @@ def _mapped_fields(payload):
             if payload[start + 2] <= 2:
                 fields.append(Field(prefix + '_weight', label + ': weight', start + 2,
                                     maximum=2, group='Weapon weights', slot=slot))
-            if payload[start + 14] <= 40:
+            if within_numeric_limits(payload[start + 14], 0, 40, storage_maximum=255):
                 fields.append(Field(prefix + '_attack', label + ': stored attack adjustment', start + 14,
                                     maximum=40, group='Weapon attack adjustment', slot=slot))
             for attribute in range(5):
                 at = start + 4 + attribute * 2
-                if payload[at] < len(ATTRIBUTE_NAMES) and payload[at + 1] <= 19:
+                if payload[at] < len(ATTRIBUTE_NAMES) and within_numeric_limits(payload[at + 1], 0, 19, storage_maximum=255):
                     fields.append(Field(prefix + f'_attribute_{attribute}',
                                         label + ': ' + ATTRIBUTE_NAMES[payload[at]] + ' rank (0 = level 1)',
                                         at + 1, group='Weapon attributes', slot=slot))

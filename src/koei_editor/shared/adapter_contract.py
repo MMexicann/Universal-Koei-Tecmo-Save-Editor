@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Protocol, Sequence
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import (
+    above_supported, experimental_limits, experimental_maximum, experimental_operation)
 
 
 class ScalarField(Protocol):
@@ -131,8 +133,11 @@ class BoundScalarAdapter:
     game_id: str
     extension: str
     backend: ScalarBackend
+    experimental: bool = False
 
     def __post_init__(self):
+        if type(self.experimental) is not bool:
+            raise SaveError('Experimental editing requires an explicit boolean option.')
         missing = [name for name in SCALAR_OPERATIONS if not callable(getattr(self.backend, name, None))]
         if missing:
             raise SaveError(f'{self.game_id}: incomplete scalar backend ({", ".join(missing)}).')
@@ -158,10 +163,12 @@ class BoundScalarAdapter:
         if getattr(layout, 'id', None) != self.game_id or layout is not self.get_format():
             raise SaveError('This document belongs to a different game/platform adapter.')
 
+    @experimental_operation
     def validate_document(self, document):
         self._document_identity(document)
         self.backend.validate_document(document)
 
+    @experimental_operation
     def read_save(self, path, game_id=None):
         self._identity(game_id)
         self._path(path)
@@ -169,6 +176,7 @@ class BoundScalarAdapter:
         self.validate_document(document)
         return document
 
+    @experimental_operation
     def decode(self, raw, game_id=None, source=None):
         self._identity(game_id)
         source = Path('copy' + self.extension) if source is None else Path(source)
@@ -184,9 +192,11 @@ class BoundScalarAdapter:
         self._document_identity(document)
         return getattr(self.backend, operation)(document, *args)
 
+    @experimental_operation
     def fields_for(self, document):
         return self._call('fields_for', document)
 
+    @experimental_operation
     def field_map(self, document):
         return self._call('field_map', document)
 
@@ -253,6 +263,7 @@ class BoundScalarAdapter:
         return all(before == after or offset in ignored
                    for offset, (before, after) in enumerate(zip(expected, actual)))
 
+    @experimental_operation
     def stage(self, document, changes, key, value):
         pending = self._normalized_changes(document, changes)
         fields = self.backend.field_map(document)
@@ -276,6 +287,7 @@ class BoundScalarAdapter:
             raise SaveError(f'{self.game_id}: requested field {key} did not stage the chosen value.')
         return result
 
+    @experimental_operation
     def limit_values(self, document, changes, keys):
         pending = self._normalized_changes(document, changes)
         fields = self.backend.field_map(document)
@@ -297,30 +309,49 @@ class BoundScalarAdapter:
             if not getattr(field, 'maxable', True):
                 continue
             try:
-                # A valid Max target can restore this record's exact opened
-                # value after a reduction, including a higher unusual value.
-                # It cannot grant that value to another record or create an
-                # out-of-range edit when no reduction is pending.
-                field.validate(value)
+                # Max uses supported bounds, while restoring this exact opened
+                # value after a deliberate reduction preserves the original.
+                with experimental_limits(False):
+                    field.validate(value)
             except SaveError:
                 if is_opened_value(document, field, value):
                     if (key in pending and type(value) is int
                             and type(pending[key]) is int and pending[key] < value):
                         targets[key] = value
                     continue
-                raise
+                elif not (experimental_maximum(field) is not None and above_supported(field, value)):
+                    raise
+                continue
             targets[key] = value
         return targets
 
+    @experimental_operation
     def maximums(self, document, changes, group=None):
         pending = self._normalized_changes(document, changes)
         result = self._call('maximums', document, pending, group)
-        return self._normalized_changes(document, result)
+        result = self._normalized_changes(document, result)
+        # Max never authors a new experimental value. Restoring this same
+        # record's exact opened value after a reduction preserves the source.
+        fields = self.backend.field_map(document)
+        for key in set(pending) | set(result):
+            field = fields[key]
+            before = pending.get(key, field.value(document.payload))
+            after = result.get(key, field.value(document.payload))
+            if (after != before and above_supported(field, after)
+                    and not (is_opened_value(document, field, after) and key in pending
+                             and type(before) is int and before < after)):
+                if key in pending:
+                    result[key] = pending[key]
+                else:
+                    result.pop(key, None)
+        return result
 
+    @experimental_operation
     def review(self, document, changes):
         pending = self._normalized_changes(document, changes)
         return self._call('review', document, pending)
 
+    @experimental_operation
     def changed_payload(self, document, changes):
         pending = self._normalized_changes(document, changes)
         payload = self._call('changed_payload', document, pending)
@@ -328,6 +359,7 @@ class BoundScalarAdapter:
             raise SaveError(f'{self.game_id}: backend did not return an encoded payload.')
         return payload
 
+    @experimental_operation
     def serialize(self, document, changes):
         self.validate_document(document)
         pending = self._normalized_changes(document, changes)
@@ -344,9 +376,11 @@ class BoundScalarAdapter:
         self._verify_serialized(document, pending, raw, expected_payload)
         return raw, expected_payload
 
+    @experimental_operation
     def backup(self, document):
         return self._call('backup', document)
 
+    @experimental_operation
     def save_as(self, document, changes, destination):
         self._path(destination)
         self.validate_document(document)
@@ -385,6 +419,7 @@ class BoundScalarAdapter:
                     raise SaveError(f'{self.game_id}: edited field {key} did not apply in the saved copy.')
         return saved
 
+    @experimental_operation
     def restore(self, backup_path, destination, game_id=None):
         self._identity(game_id)
         self._path(backup_path)

@@ -128,7 +128,7 @@ class Rotk3DosTests(unittest.TestCase):
         raw[0x544E + 16] = 127
         raw[0x544E + 49 + 26] = 255
         doc = parser.decode(raw)
-        self.assertNotIn('s0_o0_land', parser.field_map(doc))
+        self.assertIn('s0_o0_land', parser.field_map(doc))
         self.assertNotIn('s0_c1_gold', parser.field_map(doc))
         self.assertEqual(parser.officer_records(doc)[0][3], 127)
         self.assertEqual(parser.serialize(doc, {}), bytes(raw))

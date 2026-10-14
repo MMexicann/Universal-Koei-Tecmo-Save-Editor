@@ -12,6 +12,7 @@ from types import MappingProxyType
 import unicodedata
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.games.p5strikers_pc import codec
 from koei_editor.games.p5strikers_pc.catalog import ITEM_GROUPS, CHARACTERS
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
@@ -44,8 +45,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from {self.minimum:,} to {self.maximum:,}.')
 
     def encoded(self, value):
@@ -138,7 +144,7 @@ def _occupied(payload, slot):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload):
+def _fields(payload, experimental=False):
     fields = []
     for slot in range(1, codec.PC_SLOT_COUNT):
         if not _occupied(payload, slot):
@@ -152,7 +158,7 @@ def _fields(payload):
                 offset = base + relative
                 # Published editor identifies the low quantity byte. The next
                 # byte remains opaque and is never clobbered by a wider write.
-                if payload[offset + 1] == 0 and 1 <= payload[offset] <= 99:
+                if payload[offset + 1] == 0 and 1 <= payload[offset] <= (255 if experimental else 99):
                     fields.append(Field(f'slot_{slot}_item_{relative:x}', name,
                                         offset, 1, 99, group, slot, minimum=1))
     return tuple(fields)
@@ -160,7 +166,7 @@ def _fields(payload):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

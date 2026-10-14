@@ -44,6 +44,7 @@ class Field:
     group: str = 'Learned skills'
     maxable: bool = False
     kind: str = 'int'
+    experimental_maximum: None = None
 
     def value(self, payload):
         return int(bool(payload[self.offset] & (1 << self.bit)))
@@ -65,6 +66,7 @@ class EquippedField:
     group: str = 'Equipped skills'
     maxable: bool = False
     kind: str = 'int'
+    experimental_maximum: None = None
     encoding: str = 'unsigned byte; native learned skill reference'
     evidence: str = 'Four US/EU native copies; CONSOLE_PIRATE_STRATEGY_DEPTH.md'
 

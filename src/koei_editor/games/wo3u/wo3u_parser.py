@@ -15,6 +15,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.games.wo3u import wo3u_equipment as equipment
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.experimental_limits import within_numeric_limits, experimental_enabled
 
 GAME_ID = 'wo3u'
 SAVE_SIZE = 0x2119CA
@@ -50,11 +51,21 @@ class Field:
     maxable: bool = True
     kind: str = 'int'
 
+    @property
+    def experimental_maximum(self):
+        """Largest representable numeric value; protected choices stay bounded."""
+        if ('_equipped_item_' in self.id
+                or self.id.endswith('_slots')
+                or (self.id.startswith('weapon_') and '_rank_' in self.id and self.maximum == 1)):
+            return None
+        return (1 << (8 * self.size)) - 1
+
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if not within_numeric_limits(value, self.minimum, self.maximum,
+                                     storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label} requires a whole number from '
                             f'{self.minimum:,} to {self.maximum:,}.')
 
@@ -168,8 +179,12 @@ def validate_document(document):
         raise SaveError('The opened WO3 Ultimate Definitive snapshot was modified externally.')
 
 
-@lru_cache(maxsize=4)
 def _fields(payload):
+    return _fields_cached(payload, experimental_enabled())
+
+
+@lru_cache(maxsize=4)
+def _fields_cached(payload, _experimental):
     result = list(FORMAT.fields)
     for officer in range(OFFICER_COUNT):
         offset = OFFICER_BASE + officer * OFFICER_STRIDE
@@ -179,7 +194,7 @@ def _fields(payload):
         # Native promotion/allocation UI treats this as a separate spendable
         # balance and clamps it to 891. Do not enable promotion or normalize an
         # unpromoted or unusual record merely to expose this resource.
-        if 1 <= promotions <= 9 and stones <= UPGRADE_STONE_MAXIMUM:
+        if 1 <= promotions <= 9 and within_numeric_limits(stones, 0, UPGRADE_STONE_MAXIMUM, storage_maximum=65535):
             result.append(Field(f'officer_{officer}_upgrade_stones',
                                 f'Officer {officer + 1}: Unallocated upgrade stones',
                                 offset + UPGRADE_STONE_OFFSET, 2,
@@ -204,7 +219,7 @@ def _fields(payload):
         reinforcement = payload[offset + 3]
         # Native total attack adds this separate byte. Decreasing an ordinary
         # existing value cannot exceed a grade-specific reinforcement ceiling.
-        if 1 <= reinforcement <= 99:
+        if within_numeric_limits(reinforcement, 1, 99, storage_maximum=255):
             result.append(Field(f'weapon_{index}_reinforcement',
                                 f'Weapon {index + 1} (ID {identity}): Reinforcement (decrease only)',
                                 offset + 3, 1, reinforcement, 'Weapons', index + 1,
@@ -234,8 +249,12 @@ def fields_for(document):
     return _fields(document.payload)
 
 
-@lru_cache(maxsize=4)
 def _field_index(payload):
+    return _field_index_cached(payload, experimental_enabled())
+
+
+@lru_cache(maxsize=4)
+def _field_index_cached(payload, _experimental):
     return MappingProxyType({field.id: field for field in _fields(payload)})
 
 

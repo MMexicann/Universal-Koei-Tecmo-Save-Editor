@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import within_numeric_limits
 
 
 BASES = MappingProxyType({16: 0x1567, 17: 0x1567, 29: 0x162f})
@@ -65,7 +66,7 @@ class WeaponRecord:
     @property
     def upgrade_qualified(self):
         return (self.weapon_id in REFORGABLE_WEAPON_IDS and
-                0 <= self.upgrade <= MAXIMUM_UPGRADE)
+                within_numeric_limits(self.upgrade, 0, MAXIMUM_UPGRADE, storage_maximum=255))
 
 
 def weapon_records(payload, revision):
@@ -109,7 +110,7 @@ def validate_weapon_changes(payload, revision, changes):
             continue
         if key not in specs:
             raise SaveError('This Origins weapon upgrade is not qualified for editing.')
-        if type(value) is not int or not 0 <= value <= MAXIMUM_UPGRADE:
+        if not within_numeric_limits(value, 0, MAXIMUM_UPGRADE, storage_maximum=255):
             raise SaveError('Origins weapon upgrades require a whole number from 0 to 99.')
 
 

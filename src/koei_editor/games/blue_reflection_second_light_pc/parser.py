@@ -12,6 +12,7 @@ import struct
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.experimental_limits import experimental_enabled, within_numeric_limits
 from koei_editor.games.sophie2 import atelier_sophie2_codec as codec
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
@@ -60,8 +61,13 @@ class Field:
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
 
+    @property
+    def experimental_maximum(self):
+        return (1 << (8 * self.size)) - 1
+
     def validate(self, value):
-        if type(value) is not int or not self.minimum <= value <= self.maximum:
+        if type(value) is not int or not within_numeric_limits(
+                value, self.minimum, self.maximum, storage_maximum=self.experimental_maximum):
             raise SaveError(f'{self.label}: use a whole number from 1 to the opened count ({self.maximum}).')
 
 
@@ -228,7 +234,7 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=2)
-def _fields(payload):
+def _fields(payload, experimental=False):
     _roots,regions,_members = _structure(payload)
     instances = {}
     for _label,start,count in regions:
@@ -246,7 +252,7 @@ def _fields(payload):
         # Never set zero/remove ownership or raise counts. +7 is opaque, so only
         # source-backed one-byte counts with zero high byte qualify.
         if (instance != 0xffff and identity != 0xffff and instances.get(instance) == 1
-                and quantity > 1 and payload[offset + 7] == 0):
+                and quantity >= (1 if experimental else 2) and payload[offset + 7] == 0):
             key = f'container_{slot + 1}_quantity'
             fields[key] = Field(key,f'Quantity (item ID {identity}, instance {instance}; reduce only)',
                                 offset + 6,quantity,slot=slot + 1)
@@ -255,7 +261,7 @@ def _fields(payload):
 
 def field_map(document):
     validate_document(document)
-    return _fields(document.payload)
+    return _fields(document.payload, experimental_enabled())
 
 
 def fields_for(document):

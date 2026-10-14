@@ -15,10 +15,10 @@ python -m tools.build_windows
 python -m tools.build_windows --standalone
 ```
 
-The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v2.02/`**, a
+The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v2.1/`**, a
 portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
-**`dist-standalone/UniversalKoeiTecmoSaveEditor-v2.02.exe`**. That direct download
+**`dist-standalone/UniversalKoeiTecmoSaveEditor-v2.1.exe`**. That direct download
 needs no side files. Both modes use pinned Python 3.14.7 and `--noupx`, with the
 same 90 game/platform profiles, runtime metadata and required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
@@ -140,7 +140,7 @@ startup and archives before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
-commit. Pushing a tag matching the application version, such as `v2.02`, also
+commit. Pushing a tag matching the application version, such as `v2.1`, also
 publishes after the native build and checks succeed. Existing releases are not replaced.
 
 The portable runtime loads from the adjacent `_internal` folder. Users extract

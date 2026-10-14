@@ -19,10 +19,10 @@ reporting a release complete, verify the public version, description, release
 notes, standalone Windows EXE and Windows ZIP downloads. Record checks actually
 performed rather than treating prepared text or a successful push as publication.
 
-## Version 1.9 description
+## Version 2.1 description
 
-Recommended About description: Windows save editor by Mexican for 76 Koei Tecmo
-game/platform profiles, with searchable records, backups, Undo and Review Changes.
+Recommended About description: Windows save editor by Mexican for 90 Koei Tecmo
+game/platform profiles, with experimental numeric editing, backups, Undo and Review Changes.
 The README and release notes list exact games, editions, platforms and controls.
-Changing the About field requires repository administration permission; the
-connected integration currently lacks it.
+Changing the About field requires authenticated repository administration
+access. Keep it aligned with the exact published inventory and features.

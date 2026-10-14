@@ -15,6 +15,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.verified_editor import Field
+from koei_editor.games.dw6 import equipment
 from koei_editor.games.dw6.dw6_metadata import OFFICER_NAMES, WEAPON_NAMES, ELEMENT_NAMES
 
 GAME_ID = 'dw6'
@@ -55,7 +56,7 @@ FORMAT = Format(GAME_ID, 'Dynasty Warriors 6 (PC)', SAVE_SIZE,
                 'Observed 212,248-byte native PC profile with canonical officer identities. '
                 'One-way playable unlocks, qualified existing horse combat stats and '
                 'individual element choices and manual stored damage bonuses on existing known weapons. '
-                'Officer progression, equipment and story remain read only. '
+                'Named weapon/horse skill toggles, horse element choices and existing own-pool weapon selection. Officer growth and story remain read only. '
                 'Genuine sample parsing is verified; edited game-load validation has not '
                 'been performed by this project.')
 
@@ -143,7 +144,8 @@ def _fields(payload):
                                       maxable=False, experimental=False))
     return tuple(field for field in _UNLOCK_FIELDS
                  if field.value(payload) in (0, 1)) + tuple(
-        field for field in _HORSE_FIELDS if _horse_qualified(payload, field.slot - 1)) + tuple(elements)
+        field for field in _HORSE_FIELDS if _horse_qualified(payload, field.slot - 1)) + tuple(elements) + equipment.fields(payload, OFFICER_BASE, HORSE_BASE, 'little',
+                                                        lambda horse: _horse_qualified(payload, horse))
 
 
 def fields_for(document):
@@ -178,19 +180,18 @@ def stage(document, changes, key, value):
         result.pop(key, None)
     else:
         result[key] = value
+    changed_payload(document, result)
     return result
 
 
 def changed_payload(document, changes):
     mapped = field_map(document)
-    result = bytearray(document.payload)
     for key, value in changes.items():
         field = mapped.get(key)
         if field is None:
             raise SaveError('The requested record is not qualified for DW6 PC editing.')
         _validate_edit(field, value, field.value(document.payload))
-        result[field.offset:field.offset + field.size] = value.to_bytes(field.size, 'little')
-    raw = bytes(result)
+    raw = equipment.apply(document.payload, changes, mapped, 'little')
     _validate_raw(raw)
     return raw
 
@@ -262,28 +263,30 @@ def restore(backup_path, destination, game_id=GAME_ID):
 
 
 def record_label(slot, group='Unlocks'):
-    if group in ('Unlocks', 'Officers') and 1 <= slot <= OFFICER_COUNT:
+    if group in ('Unlocks', 'Officers', 'Equipment') and 1 <= slot <= OFFICER_COUNT:
         return OFFICER_NAMES[slot - 1]
-    if group in ('Weapon elements', 'Weapon bonuses') and type(slot) is int and 1 <= slot <= OFFICER_COUNT * WEAPON_COUNT:
+    if group in ('Weapon elements', 'Weapon bonuses', 'Weapon skills') and type(slot) is int and 1 <= slot <= OFFICER_COUNT * WEAPON_COUNT:
         officer, weapon = divmod(slot - 1, WEAPON_COUNT)
         return f'{OFFICER_NAMES[officer]} / weapon {weapon + 1}'
-    return f'Horse slot {slot}' if group == 'Horses' else group
+    return f'Horse slot {slot}' if group.startswith('Horse') else group
 
 
 def field_options(document, field):
     """Optional choice metadata; the backend validates every value independently."""
-    key = field.id if isinstance(field, Field) else field
+    key = field.id if isinstance(field, (Field, equipment.EquipmentField)) else field
     if type(key) is not str:
         raise SaveError('Choose a mapped DW6 field name.')
     mapped = field_map(document).get(key)
     if mapped is None:
         raise SaveError('The requested DW6 field is not editable.')
-    return WEAPON_ELEMENT_CHOICES if mapped.group == 'Weapon elements' else ()
+    return WEAPON_ELEMENT_CHOICES if mapped.group == 'Weapon elements' else equipment.options(mapped)
 
 
 def field_hint(document, field):
-    key = field.id if isinstance(field, Field) else field
+    key = field.id if isinstance(field, (Field, equipment.EquipmentField)) else field
     mapped = field_map(document)[key]
+    if isinstance(mapped, equipment.EquipmentField):
+        return equipment.hint(mapped)
     if mapped.group == 'Unlocks':
         return ('Set 1 to unlock this playable officer. Use the separate content-unlock '
                 'action for all qualified officers. Story completion, level, EXP, '
@@ -313,7 +316,7 @@ def inspection_rows(document):
                               f'EXP {_u32(payload, base + 152):,}; '
                               f'kills {_u32(payload, base + 156):,}; '
                               f'title ID {_u32(payload, base + 144)}; '
-                              f'outfit {_u32(payload, base + 140)}; '
+                              f'outfit {_u32(payload, base + 140)}; equipped slot {_u32(payload, base + 160)}; '
                               f'playable value {payload[base + 164]}; '
                               f'skill-tree bytes {payload[base:base + 8].hex(" ")}'})
         for weapon in range(8):
@@ -325,14 +328,14 @@ def inspection_rows(document):
             element_name = ELEMENT_NAMES[element] if element < len(ELEMENT_NAMES) else f'Unknown {element}'
             rows.append({'group': 'Weapons', 'label': f'{name} / slot {weapon + 1}: {label}',
                          'value': f'ID {identity}; raw damage bonus {bonus}; '
-                                  f'element {element_name}; skill mask 0x{skills:08X}'})
+                                  f'element {element_name}; skill mask 0x{skills:08X}: {equipment.skill_names(skills, equipment.WEAPON_SKILLS)}'})
     for index in range(HORSE_COUNT):
         base = HORSE_BASE + index * HORSE_STRIDE
         stats = '; '.join(f'{label} {_u32(payload, base + rel)}' for _, label, rel in HORSE_STATS)
         rows.append({'group': 'Horses', 'label': f'Horse slot {index + 1}',
                      'value': f'EXP {_u32(payload, base)}; type {_u32(payload, base + 4)}; '
                               f'element ID {_u32(payload, base + 8)}; '
-                              f'skill mask 0x{_u32(payload, base + 12):08X}; {stats}; '
+                              f'skills {equipment.skill_names(_u32(payload, base + 12), equipment.HORSE_SKILLS)}; {stats}; '
                               f'adjacent value {_u32(payload, base + 20)}; '
                               f'qualified for stats: {_horse_qualified(payload, index)}'})
     return tuple(rows)

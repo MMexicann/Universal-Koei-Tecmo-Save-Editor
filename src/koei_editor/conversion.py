@@ -180,10 +180,10 @@ def prepare(route_id, source_path, template_path):
     template = _read(route.target_id, template_path)
     raw = _encode(source, template)
     payload = _gameplay(source)
-    return Conversion(route, source, template, raw, hashlib.sha256(payload).hexdigest(), len(payload), _notes(route))
+    return Conversion(route, source, template, raw, hashlib.sha256(payload).hexdigest(), len(payload), _notes(route, source, template))
 
 
-def _notes(route):
+def _notes(route, source, template):
     target = ENDPOINTS[route.target_id]
     notes = [route.scope_description + '. Original copies remain unchanged.',
              'Use the same game edition and compatible updates/DLC. Test loading a separate copy in-game.',
@@ -192,11 +192,20 @@ def _notes(route):
         notes.append(target.import_note)
     if target.companion:
         notes.append('Original destination-template metadata is copied unchanged. This is a gameplay export, not a signed console package.')
-    notes.extend(_FAMILIES[target.family].NOTES)
+    family = _FAMILIES[target.family]
+    notes.extend(family.NOTES)
+    preview = getattr(family, 'preview_notes', None)
+    if preview is not None:
+        notes.extend(preview(source.document, template.document))
     return tuple(notes)
 
 
-def _validate_conversion(conversion):
+def validate_review_snapshot(conversion):
+    """Verify immutable native content, including a completed export’s frozen review.
+
+    Original disk files are checked separately before every new export. This
+    content check also works after a later job has changed an original input.
+    """
     if (type(conversion) is not Conversion or type(conversion.route) is not Route
             or type(conversion.route.source_id) is not str or type(conversion.route.target_id) is not str
             or get_route(conversion.route.id) != conversion.route):
@@ -206,13 +215,29 @@ def _validate_conversion(conversion):
             or conversion.template.endpoint_id != conversion.route.target_id
             or type(conversion.raw) is not bytes):
         raise SaveError('Conversion snapshots do not match the chosen route.')
-    _validate_snapshot(conversion.source)
-    _validate_snapshot(conversion.template)
+    for snapshot in (conversion.source, conversion.template):
+        endpoint = ENDPOINTS[snapshot.endpoint_id]
+        endpoint.backend.validate_document(snapshot.document)
+        if (type(snapshot.companion_raw) is not bytes
+                or (not endpoint.companion and snapshot.companion_raw)
+                or (endpoint.companion and not 0 < len(snapshot.companion_raw) <= endpoint.companion_limit)):
+            raise SaveError('Conversion context does not match its frozen endpoint.')
     payload = _gameplay(conversion.source)
     if (conversion.raw != _encode(conversion.source, conversion.template)
             or conversion.gameplay_sha256 != hashlib.sha256(payload).hexdigest()
-            or conversion.gameplay_bytes != len(payload) or conversion.notes != _notes(conversion.route)):
+            or conversion.gameplay_bytes != len(payload) or conversion.notes != _notes(conversion.route, conversion.source, conversion.template)):
         raise SaveError('The prepared conversion was altered. Review it again.')
+
+
+def _validate_conversion(conversion):
+    validate_review_snapshot(conversion)
+    _validate_snapshot(conversion.source)
+    _validate_snapshot(conversion.template)
+
+
+def validate_review(prepared):
+    """Revalidate a frozen review and both copied inputs without writing."""
+    _validate_conversion(prepared)
 
 
 def export(conversion, output_dir):

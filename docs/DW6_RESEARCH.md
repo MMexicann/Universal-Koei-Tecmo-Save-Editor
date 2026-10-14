@@ -1,11 +1,9 @@
 # Dynasty Warriors 6 — original Windows PC
 
 The adapter implements named playable-officer unlocks, existing horse combat
-stats, existing weapon element choices, manual stored weapon damage bonuses and
+stats/elements, existing weapon element choices, named equipment skill toggles, same-officer equipped-weapon selection, manual stored weapon damage bonuses and
 searchable officer/weapon/horse inspection. This is the original Windows game,
-not DW6 Empires, PS2 Special, PS3 or Xbox 360. The latest independent bonus
-expansion and native/GUI checks are documented in
-[Samurai / classic Dynasty editor depth](SAMURAI_DYNASTY_DEPTH.md).
+not DW6 Empires, PS2 Special, PS3 or Xbox 360. The v2.4 equipment expansion and native/GUI proof are shared with the independently qualified [US PS3 profile](DW6_PS3_FORMAT.md#v24-equipment-qualification). Earlier bonus expansion checks are documented in [Samurai / classic Dynasty editor depth](SAMURAI_DYNASTY_DEPTH.md).
 
 ## Provenance and qualification
 
@@ -53,7 +51,7 @@ read only. Unlock All Qualified Officers is a separate action and does not
 change story, rewards, skill trees, levels or equipment. Resource Max excludes
 all unlock flags.
 
-Eight 60-byte horse rows start at decimal 10,784. Their initial stat group
+Eight complete 60-byte horse rows start 24 bytes before the EXP-base at decimal 10,784. The EXP-based stat group
 matches the documented native record: EXP +0, type +4, element +8, skills +12,
 Speed +16, unqualified adjacent value +20, Attack +24, Jump +28 and Destruction
 +32. The research's explicitly named memory entries establish that order; the
@@ -62,8 +60,7 @@ Writable horse rows require an observed type (60, 61 or 64), positive adjacent
 value and four positive combat stats. Empty, unknown and unusual variants stay
 read only. Speed, Attack, Jump and Destruction accept 0–500; the documented
 effective ceiling is 500. Max preserves higher existing values. Returning to
-an unusual opened value unstages an edit. EXP, skill mask, type, element,
-descriptors, model, names and all other bytes are preserved.
+an unusual opened value unstages an edit. Stat edits preserve EXP, skill mask, type, element, descriptors, model and names. Separate v2.4 choices qualify existing horse elements and equipment skills.
 
 The weapon inspector recognizes 123 known weapon IDs, shows eight existing
 slots per officer, and omits the documented empty ID 174. Unknown IDs and masks
@@ -75,7 +72,7 @@ existing known weapon records. The bonus is the independent u32 at weapon `+4`,
 not total attack; identity, element, mask, inventory and officer growth remain
 unchanged. Its manual unsigned 32-bit bound is a storage limit, excluded from
 Max. The published tentative value 32 and displayed attack limit do not prove
-a natural bonus maximum. No weapon acquisition or skill-mask writes are added.
+a natural bonus maximum. Bonus edits do not acquire weapons or change skills. Separate v2.4 controls toggle qualified equipment-skill bits and select existing own-pool weapons.
 
 ## Coverage and exact remaining inputs
 
@@ -86,10 +83,10 @@ a natural bonus maximum. No weapon acquisition or skill-mask writes are added.
 | Officer level/EXP and derived stats | Read-only stored values. Level changes alter Life/Musou/Attack/Defense; EXP alone does not immediately level. Need controlled level-up/EXP pairs or the native PC executable's level/reward routines before exposing progression edits. |
 | Officer identity, title, outfit and kills | Read-only. Identity can redirect inventories/progression; title affects stat distribution. Need independently identified title/outfit domains, eligibility and update dependencies. Identity replacement is deliberately unavailable. |
 | Officer skill trees | Read-only raw eight-byte data. Per-officer nodes/counts differ; broad FF writes in old research do not identify every valid node or reserved bit. Need node maps, level/prerequisite rules and controlled allocation pairs. |
-| Weapons and equipment | Named inventory, manual existing-element choices and independent stored damage bonuses on qualified existing weapons. Bonus edits use u32 storage bounds with no Max; the proposed “32” maximum and display limit remain unproven natural caps. Skill mask and equipment references stay read only. Need native natural bonus bounds, equipped references, rank/weapon-type eligibility and controlled acquisition/equip pairs. |
-| Weapon elements / skills | Existing known element enum writable individually, excluded from Max; native sample contains all four valid choices. Skill masks remain read only: published lists describe skills but do not prove every bit, valid combinations or five-slot enforcement in disk records. Need exact masks, enum/slot limits and acquisition/write-path proof. |
+| Weapons and equipment | Named inventory, manual existing-element choices, stored damage bonuses and existing same-officer equipped-weapon choices. The opened equipped index must qualify; empty/unknown slots are excluded. Bonus edits use u32 storage bounds with no Max; natural bonus caps and acquisition/rank/weapon-type writes remain unqualified. |
+| Weapon elements / skills | Existing known element choices and ten named equipment-skill toggles. Complete masks allow at most five skills; unknown bits/over-capacity originals remain read only. Both choice categories are excluded from Max and experimental numeric expansion. See [equipment evidence](DW6_PS3_FORMAT.md#v24-equipment-qualification). |
 | Horse EXP/level/growth, names, type and model | Read-only. Growth descriptors and model transformation are interdependent. Red Hare requires the relevant coat, eyes/physique, level and Wind Spirit conditions; changing a type/model alone does not create a legitimate horse. Need complete descriptor offsets/enums and controlled growth/transform pairs. |
-| Horse skills/elements | Read-only. Skills are a combined mask with a four-skill limit. Need complete bit semantics and native mutation/slot rules before writing masks. |
+| Horse skills/elements | Eleven named equipment-skill toggles and known element choices on the same qualified occupied horses. Complete masks allow at most four skills; unknown/over-capacity masks stay read only. Growth, EXP, names and model remain separate and read only. |
 | Stages, difficulty records, objectives, challenges and leaderboards | Preserved. Public runtime identity changes also affected challenge results, showing dependencies. Need native disk field maps and controlled clear/objective/reward pairs, separate from playable unlocks. |
 | Gallery, movies, music, costumes and collections | Preserved; no qualified disk flag maps. Need controlled unlock/view/equip pairs and legitimate prerequisites. |
 | Currency, bonds, companions/bodyguards, fusion, reinforcement and other inventories | No safely identified independent DW6 disk systems in the inspected evidence. No fields or mechanics are invented from systems in later games. Further controls require proof that the specific system exists and is saved. |
@@ -111,8 +108,19 @@ not performed an edited in-game load or re-save.** Such validation requires the
 original Windows game plus controlled saves from a player; it remains distinct
 from successful parser and GUI tests.
 
-## Unreleased weapon-element expansion checks
+## Earlier weapon-element expansion checks
 
 `tests/test_dw6_elements.py` adds named existing-record selection, all four valid choices, surgical single-word writes, unknown/empty records, invalid values, choice exclusion from Max, review/unstage and guarded new-copy/backup/reopen checks. With `DW6_SAVE` pointing to the privately held independent native sample, all **202 qualified existing weapon element fields** passed individual surgical edits and reparsing; the sample contains Fire, Ice, Lightning and no-element records. The combined existing format/contract and new element checks passed **19 tests** with the native fixture. No player save, source parser code or asset is included, and no new edited in-game load is claimed.
 
 The underlying public research remains pinned to `f2152f67b031091a0268154203d25fa9f65d2664`; the independent implementation uses its factual enum and record positions. Its lack of an explicit project licence still precludes copying its implementation.
+
+## v2.4 equipment checks
+
+The PC and both independent US PS3 native exports pass qualified equipment-bit
+removals, surgical preservation, safe copied-file output and native reopens.
+Generated tests cover every named bit, each byte order, last officer/weapon,
+capacity errors, remove-before-add, invalid/unknown inventory choices and
+PC/PS3 migration of edited equipment. Actual Tk workflows cover named search,
+choices, error retention, Undo/Review, themes and new-file saving. Officer
+level/EXP/learned-tree, story and suspended battles remain separate; see
+[conversion proof and unresolved mapping](DW6_CONVERSION.md).

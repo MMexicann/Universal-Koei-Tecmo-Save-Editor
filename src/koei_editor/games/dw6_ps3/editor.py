@@ -11,7 +11,7 @@ class Editor(ScalarEditor):
     presentation_type = DW6Presentation
     save_extension = '.bin'
     subtitle = 'Original US PS3 · BLUS30110 · decrypted APP.BIN'
-    summary = ('Named playable officer unlocks, horses, weapon stored damage bonuses and elements. '
+    summary = ('Named playable unlocks, equipment skills, horse stats/elements and own-inventory weapon selection. '
                'Keep original PARAM.SFO. Reimport and resign with Apollo Save Tool.')
 
     def __init__(self, root, parent=None, theme='Light', on_theme=None):

@@ -10,8 +10,10 @@ from koei_editor.shared.appearance import ui_font
 
 
 class ConversionWorkspace:
-    def __init__(self, root, parent):
+    def __init__(self, root, parent, on_queue=None):
         self.root = root
+        self.on_queue = on_queue
+        self.queue_button = None
         self.frame = ttk.Frame(parent, padding=(28, 16))
         self.prepared = None
         self.busy = False
@@ -59,6 +61,9 @@ class ConversionWorkspace:
         self.export_button = ttk.Button(buttons, text='Export to new folder…', command=self.export, state='disabled')
         self.export_button.pack(side='left', padx=10)
         self.controls.append(self.review_button)
+        if on_queue is not None:
+            self.queue_button = ttk.Button(buttons, text='Add reviewed job to batch…', command=self.queue_review, state='disabled')
+            self.queue_button.pack(side='left', padx=10)
         self.status = tk.StringVar(root, value='Choose separate source and destination-template copies, then review.')
         ttk.Label(self.frame, textvariable=self.status, wraplength=980).pack(anchor='w', pady=(14, 8))
         self.preview = tk.Text(self.frame, height=15, wrap='word', relief='flat', padx=14, pady=12,
@@ -74,6 +79,8 @@ class ConversionWorkspace:
         self._revision += 1
         self.prepared = None
         self.export_button.configure(state='disabled')
+        if self.queue_button is not None:
+            self.queue_button.configure(state='disabled')
         self._show('')
         if not self.busy:
             self.status.set('Selections changed. Review the conversion before exporting.')
@@ -103,6 +110,8 @@ class ConversionWorkspace:
         for control in self.controls:
             control.configure(state='disabled')
         self.export_button.configure(state='disabled')
+        if self.queue_button is not None:
+            self.queue_button.configure(state='disabled')
         self.status.set('Checking copied saves…' if kind == 'review' else 'Backing up and exporting the converted copy…')
         def worker():
             try:
@@ -140,10 +149,14 @@ class ConversionWorkspace:
             self._show(text)
             self.status.set('Review complete. Ready to export a separate copy.')
             self.export_button.configure(state='normal')
+            if self.queue_button is not None:
+                self.queue_button.configure(state='normal')
         else:
             destination, _backups, _receipt = result
             self.status.set('Exported: ' + str(destination))
             self.export_button.configure(state='normal')
+            if self.queue_button is not None:
+                self.queue_button.configure(state='normal')
             messagebox.showinfo('Conversion exported', 'Saved a separate converted copy with backups.\n\n'
                                 + str(destination) + '\n\nTest the copy in-game. Console imports require your save manager.', parent=self.root)
 
@@ -158,6 +171,10 @@ class ConversionWorkspace:
         self.prepared = None
         self._show('')
         self._start(lambda: conversion.prepare(route_id, source, template), 'review')
+
+    def queue_review(self):
+        if not self.busy and self.prepared is not None and self.on_queue is not None:
+            self.on_queue(self.prepared)
 
     def export(self):
         if self.busy or self.prepared is None:

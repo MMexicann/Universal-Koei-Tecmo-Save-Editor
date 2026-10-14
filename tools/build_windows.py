@@ -8,7 +8,7 @@ from koei_editor.game_registry import ALL_ADAPTERS
 from tools.package_release import RUNTIME_DATA, RUNTIME_LICENSES
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.3'
+VERSION = '2.4'
 DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME_DATA] + [
     ('LICENSE', 'licenses'), ('docs/THIRD_PARTY_NOTICES.md', 'licenses'),
     ('licenses/atelier-sophie2-save-editor-MIT.txt', 'licenses'),

@@ -10,6 +10,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.games.dw6 import equipment
 from koei_editor.games.dw6.dw6_metadata import WEAPON_NAMES, OFFICER_NAMES, ELEMENT_NAMES
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.experimental_limits import within_numeric_limits
@@ -71,7 +72,7 @@ class Format:
     game_load_verified: bool = False
     note: str = ('Copied PFD-decrypted BLUS30110 APP.BIN with exact original PARAM.SFO. '
                  'Named one-way playable unlocks, existing horse speed/attack/jump/destruction and weapon stored damage bonus/element. '
-                 'Max disabled. Reimport and resign with Apollo. Story, ownership and officer growth are preserved.')
+                 'Named weapon/horse skill toggles, horse element choices and existing own-pool weapon selection. Max disabled. Reimport and resign with Apollo. Story, ownership and officer growth are preserved.')
 
 
 FORMAT = Format()
@@ -176,7 +177,9 @@ def _fields(payload):
         if payload[base + 164] in (0, 1):
             fields.append(Field(f'officer_{officer}_unlocked', 'Playable (1 unlock)', base + 164,
                                 1, 1, 'Unlocks', officer + 1, experimental=False))
-    return tuple(fields)
+    qualified_horses = {field.slot - 1 for field in fields if field.group == 'Horses'}
+    return tuple(fields) + equipment.fields(payload, OFFICER_BASE, HORSE_BASE, 'big',
+                                            lambda horse: horse in qualified_horses)
 
 
 def fields_for(document):
@@ -192,17 +195,14 @@ def _pending(document, changes, mapping):
     pending = normalize_pending_values(document, changes, mapping)
     if any(mapping[key].group == 'Unlocks' and value != 1 for key, value in pending.items()):
         raise SaveError('Playable unlocks are one-way; relocking officers is unavailable.')
+    equipment.apply(document.payload, pending, mapping, 'big')
     return pending
 
 
 def changed_payload(document, changes):
     mapping = field_map(document)
     pending = _pending(document, changes, mapping)
-    result = bytearray(document.payload)
-    for key, value in pending.items():
-        field = mapping[key]
-        result[field.offset:field.offset + field.size] = value.to_bytes(field.size, 'big')
-    return bytes(result)
+    return equipment.apply(document.payload, pending, mapping, 'big')
 
 
 def serialize(document, changes):
@@ -254,13 +254,13 @@ def field_options(document, key):
         raise SaveError('Choose a qualified existing field.')
     if key.endswith('_element'):
         return ((0, 'Fire'), (1, 'Ice'), (2, 'Lightning'), (3, 'No element'))
-    return ()
+    return equipment.options(field_map(document)[key])
 
 
 def record_label(slot, group='Horses'):
     if group.startswith('Weapon'):
         return f'{OFFICER_NAMES[(slot - 1) // WEAPON_COUNT]} / weapon {(slot - 1) % WEAPON_COUNT + 1}'
-    if group == 'Unlocks':
+    if group in ('Unlocks', 'Equipment'):
         return OFFICER_NAMES[slot - 1]
     return f'Horse {slot}'
 
@@ -283,13 +283,13 @@ def inspection_rows(document):
             label = WEAPON_NAMES[identity] if identity < len(WEAPON_NAMES) else f'Unknown weapon ID {identity}'
             element_name = ELEMENT_NAMES[element] if element < len(ELEMENT_NAMES) else f'Unknown {element}'
             rows.append({'group': 'Weapons', 'label': f'{name} / slot {weapon + 1}: {label}',
-                         'value': f'ID {identity}; stored bonus {bonus}; element {element_name}; skill mask 0x{skills:08X}'})
+                         'value': f'ID {identity}; stored bonus {bonus}; element {element_name}; skill mask 0x{skills:08X}: {equipment.skill_names(skills, equipment.WEAPON_SKILLS)}'})
     for index in range(HORSE_COUNT):
         base = HORSE_BASE + index * HORSE_STRIDE
         stats = '; '.join(f'{label} {_u32(payload, base + relative)}' for _key, label, relative in HORSE_STATS)
         rows.append({'group': 'Horses', 'label': f'Horse {index + 1}',
                      'value': f'EXP {_u32(payload, base)}; type {_u32(payload, base + 4)}; '
-                              f'element ID {_u32(payload, base + 8)}; skill mask 0x{_u32(payload, base + 12):08X}; '
+                              f'element ID {_u32(payload, base + 8)}; skills {equipment.skill_names(_u32(payload, base + 12), equipment.HORSE_SKILLS)}; '
                               f'{stats}; adjacent value {_u32(payload, base + 20)}; '
                               f'name prefix ID {_u32(payload, base - 16)}; suffix ID {_u32(payload, base - 20)}; '
                               f'physique ID {_u32(payload, base - 12)}; eyes ID {_u32(payload, base - 8)}'})
@@ -298,6 +298,8 @@ def inspection_rows(document):
 
 def field_hint(document, key):
     field = field_map(document)[key]
+    if isinstance(field, equipment.EquipmentField):
+        return equipment.hint(field)
     if field.group == 'Unlocks':
         return 'Set 1 to unlock this officer. Story, rewards, level and skills stay unchanged. Relocking is unavailable; excluded from Max.'
     if field.group == 'Weapon elements':

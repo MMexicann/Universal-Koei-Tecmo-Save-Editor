@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.3'
+VERSION = '2.4'
 
 
 class Application(Appearance):
@@ -25,6 +25,7 @@ class Application(Appearance):
         self.active_game = None
         self.converter = None
         self.comparison = None
+        self.batch = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
@@ -38,14 +39,18 @@ class Application(Appearance):
         self.converter_button.pack(side='left', padx=(10, 0))
         self.compare_button = ttk.Button(top, text='Compare Saves', command=self.show_comparison)
         self.compare_button.pack(side='left', padx=(10, 0))
+        self.batch_button = ttk.Button(top, text='Batch Converter', command=self.show_batch)
+        self.batch_button.pack(side='left', padx=(10, 0))
         self.breadcrumb = tk.StringVar(root, value='Choose your game')
-        ttk.Label(top, textvariable=self.breadcrumb, style='Muted.TLabel').pack(side='left', padx=14)
         self.theme_selector = ttk.Combobox(top, values=tuple(THEMES), textvariable=self.theme_name,
                                           state='readonly', width=7)
         self.theme_selector.pack(side='right')
         self.theme_selector.bind('<<ComboboxSelected>>', lambda _event: self.apply_theme(self.theme_name.get()))
         ttk.Label(top, text='Appearance', style='Muted.TLabel').pack(side='right', padx=9)
-        ttk.Label(top, text='Made by Mexican', style='Muted.TLabel').pack(side='right', padx=20)
+        self.author_label = ttk.Label(top, text='Made by Mexican', style='Muted.TLabel')
+        self.author_label.pack(side='right', padx=20)
+        self.breadcrumb_label = ttk.Label(top, textvariable=self.breadcrumb, style='Muted.TLabel', width=1)
+        self.breadcrumb_label.pack(side='left', fill='x', expand=True, padx=14)
         self.workspace = ttk.Frame(root)
         self.workspace.pack(fill='both', expand=True)
         self.library = ttk.Frame(self.workspace, padding=(38, 20))
@@ -216,6 +221,8 @@ class Application(Appearance):
             self.converter.apply_theme(palette)
         if self.comparison is not None:
             self.comparison.apply_theme(palette)
+        if self.batch is not None:
+            self.batch.apply_theme(palette)
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
@@ -277,10 +284,7 @@ class Application(Appearance):
                 raise
             self.sessions[game_id] = frame, editor
         self.library.pack_forget()
-        if self.converter is not None:
-            self.converter.frame.pack_forget()
-        if self.comparison is not None:
-            self.comparison.frame.pack_forget()
+        self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         frame, editor = self.sessions[game_id]
@@ -291,10 +295,7 @@ class Application(Appearance):
         return editor
 
     def show_library(self):
-        if self.converter is not None:
-            self.converter.frame.pack_forget()
-        if self.comparison is not None:
-            self.comparison.frame.pack_forget()
+        self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.library.pack(fill='both', expand=True)
@@ -305,10 +306,9 @@ class Application(Appearance):
     def show_converter(self):
         from koei_editor.shared.conversion_gui import ConversionWorkspace
         if self.converter is None:
-            self.converter = ConversionWorkspace(self.root, self.workspace)
+            self.converter = ConversionWorkspace(self.root, self.workspace, self.queue_conversion)
         self.library.pack_forget()
-        if self.comparison is not None:
-            self.comparison.frame.pack_forget()
+        self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.active_game = None
@@ -321,14 +321,41 @@ class Application(Appearance):
         if self.comparison is None:
             self.comparison = ComparisonWorkspace(self.root, self.workspace)
         self.library.pack_forget()
-        if self.converter is not None:
-            self.converter.frame.pack_forget()
+        self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.active_game = None
         self.comparison.frame.pack(fill='both', expand=True)
         self.breadcrumb.set('Compare Saves')
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
+
+    def _tool_workspaces(self):
+        return tuple(tool for tool in (self.converter, self.comparison, self.batch) if tool is not None)
+
+    def _hide_tools(self):
+        for tool in self._tool_workspaces():
+            tool.frame.pack_forget()
+
+    def _batch_workspace(self):
+        if self.batch is None:
+            from koei_editor.shared.batch_conversion_gui import BatchWorkspace
+            self.batch = BatchWorkspace(self.root, self.workspace)
+        return self.batch
+
+    def show_batch(self):
+        batch = self._batch_workspace()
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        batch.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set('Batch Converter')
+        batch.apply_theme(THEMES[self.theme_name.get()])
+
+    def queue_conversion(self, prepared):
+        if self._batch_workspace().add_review(prepared):
+            self.show_batch()
 
     def show_platform(self, _event=None):
         for frame in self.platform_frames.values():
@@ -389,7 +416,8 @@ class Application(Appearance):
     def focus_library_search(self, _event=None):
         if (self.active_game is not None
                 or (self.converter is not None and self.converter.frame.winfo_manager())
-                or (self.comparison is not None and self.comparison.frame.winfo_manager())):
+                or (self.comparison is not None and self.comparison.frame.winfo_manager())
+                or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
@@ -414,7 +442,8 @@ class Application(Appearance):
 
     def close(self):
         if ((self.converter is not None and self.converter.busy)
-                or (self.comparison is not None and self.comparison.busy)):
+                or (self.comparison is not None and self.comparison.busy)
+                or (self.batch is not None and self.batch.busy)):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return
@@ -432,6 +461,8 @@ def main():
     tests.add_argument('--self-test', nargs=2, metavar=('INPUT', 'OUTPUT'))
     tests.add_argument('--compatibility-test', nargs=2, metavar=('INPUT', 'OUTPUT'))
     tests.add_argument('--convert', metavar='ROUTE', help='Convert an explicit supported route; requires --source, --template and --output-dir.')
+    tests.add_argument('--batch-convert', metavar='PLAN', help='Review or export an explicit JSON conversion queue.')
+    parser.add_argument('--batch-report', help='Optional new .json summary for --batch-convert.')
     tests.add_argument('--compare', nargs=2, metavar=('FIRST', 'SECOND'), help='Compare two copied saves using an explicit --game profile; no gameplay files are written.')
     parser.add_argument('--comparison-report', help='Optional new .json report for --compare.')
     tests.add_argument('--list-conversions', action='store_true', help='Print supported platform conversion routes.')
@@ -440,6 +471,31 @@ def main():
     parser.add_argument('--output-dir', help='New folder for the converted save and local receipt.')
     parser.add_argument('--dry-run', action='store_true', help='Validate and review conversion without writing files or backups.')
     arguments = parser.parse_args()
+    if arguments.batch_convert:
+        from koei_editor.shared import batch_conversion
+        import json
+        if (arguments.game or arguments.smoke_test or arguments.list_games or arguments.source
+                or arguments.template or arguments.output_dir or arguments.comparison_report):
+            parser.error('Use --batch-convert separately from editor, comparison and individual conversion options.')
+        try:
+            prepared = batch_conversion.prepare(arguments.batch_convert)
+            if arguments.batch_report:
+                batch_conversion.check_report_destination(prepared, arguments.batch_report)
+            if arguments.dry_run:
+                report = batch_conversion.review_report(prepared)
+            else:
+                outcomes = batch_conversion.execute(prepared)
+                report = batch_conversion.outcome_report(prepared, outcomes)
+            if arguments.batch_report:
+                batch_conversion.export_report(report, arguments.batch_report)
+            print(json.dumps(report, indent=2, ensure_ascii=True))
+            if not arguments.dry_run and not report['success']:
+                parser.exit(1)
+        except (OSError, ValueError) as error:
+            parser.exit(1, 'Batch conversion failed: ' + str(error) + '\n')
+        return
+    if arguments.batch_report:
+        parser.error('--batch-report requires --batch-convert.')
     if arguments.compare:
         from koei_editor.shared import save_comparison
         import json
@@ -527,6 +583,7 @@ def main():
         app.apply_theme('Dark')
         app.show_converter()
         app.show_comparison()
+        app.show_batch()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

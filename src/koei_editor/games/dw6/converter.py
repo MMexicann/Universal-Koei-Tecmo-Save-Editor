@@ -76,3 +76,19 @@ def encode(source, template):
     raw = bytes(result)
     backend.validate_document(backend.decode(raw))
     return raw
+
+
+def preview_notes(source, template):
+    """Describe exactly which complete typed records replace the template."""
+    from koei_editor.games.dw6.dw6_metadata import OFFICER_NAMES
+    before, after = gameplay(template), gameplay(source)
+    changed = [name for i, name in enumerate(OFFICER_NAMES)
+               if before[i * 168:(i + 1) * 168] != after[i * 168:(i + 1) * 168]]
+    start = 41 * 168
+    horses = [str(i + 1) for i in range(8)
+              if before[start + i * 60:start + (i + 1) * 60] != after[start + i * 60:start + (i + 1) * 60]]
+    return (f'Roster review: {len(changed)} of 41 complete officer records differ from the destination template. '
+            'Level, EXP, learned tree, equipment and playable state move together; no independent level or skill-tree unlock is applied.',
+            'Officers replaced with different source state: ' + (', '.join(changed) or 'None; all roster records already match.'),
+            f'Horse review: {len(horses)} of eight complete records differ. Slots: ' + (', '.join(horses) or 'None; all horse records already match.')
+            + '. Empty source slots also replace destination slots; this is replacement, not an inventory merge.')

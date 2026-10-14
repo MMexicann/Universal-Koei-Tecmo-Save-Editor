@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.1.2'
+VERSION = '2.2'
 
 
 class Application(Appearance):

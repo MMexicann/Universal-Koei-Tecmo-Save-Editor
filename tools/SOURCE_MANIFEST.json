@@ -3373,8 +3373,8 @@
     },
     {
       "path": "tests/test_adapter_contract.py",
-      "bytes": 16369,
-      "sha256": "5ebeb9aed63252067158c593749fef99afd99b9e9d36767471030ac172366e45"
+      "bytes": 16399,
+      "sha256": "6dbd43a5761c02101fb2e5f916ea89895a5f15283eb770ad7c6e139891e88217"
     },
     {
       "path": "tests/test_aot1_vita.py",

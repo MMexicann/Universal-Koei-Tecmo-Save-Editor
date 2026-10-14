@@ -320,6 +320,7 @@ class AdapterDispatchTests(unittest.TestCase):
         app = Application.__new__(Application)
         app.sessions = {'first': (None, first), 'second': (None, second)}
         app.converter = None
+        app.comparison = None
         app.active_game = 'second'
         app.root = Mock()
         self.assertEqual(app.dispatch('undo'), 'break')

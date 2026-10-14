@@ -419,7 +419,9 @@ def main():
             if arguments.source or arguments.template or arguments.output_dir or arguments.dry_run:
                 parser.error('--list-conversions does not take conversion paths or --dry-run.')
             for route in conversion.ROUTES:
-                print(route.id + ': ' + route.label)
+                # Redirected Windows terminals commonly use cp1252; keep the
+                # route listing portable even with a strict ASCII stdout.
+                print(route.id + ': ' + route.label.replace('→', '->').replace('·', '-'))
             return
         if not arguments.source or not arguments.template or (not arguments.dry_run and not arguments.output_dir):
             parser.error('--convert requires --source, --template and --output-dir (unless --dry-run).')

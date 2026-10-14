@@ -107,9 +107,11 @@ class ConversionCliTests(unittest.TestCase):
             source = fixtures.write_copy(folder / 'source', 'dw8xl')
             template = fixtures.write_copy(folder / 'template', 'dw8xl_vita')
             base = [sys.executable, '-m', 'koei_editor']
-            listed = subprocess.run(base + ['--list-conversions'], capture_output=True, text=True, cwd=directory, timeout=30)
+            listed = subprocess.run(base + ['--list-conversions'], capture_output=True, text=True, cwd=directory,
+                                    env={**os.environ, 'PYTHONIOENCODING': 'ascii'}, timeout=30)
             self.assertEqual(listed.returncode, 0, listed.stderr)
             self.assertEqual(len(listed.stdout.splitlines()), len(conversion.ROUTES))
+            self.assertTrue(listed.stdout.isascii())
             command = base + ['--convert', 'dw8xl-to-dw8xl_vita', '--source', str(source), '--template', str(template)]
             result = subprocess.run(command + ['--dry-run'], capture_output=True, text=True, cwd=directory, timeout=30)
             self.assertEqual(result.returncode, 0, result.stderr)

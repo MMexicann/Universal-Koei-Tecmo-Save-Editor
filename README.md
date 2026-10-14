@@ -5,8 +5,22 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.1** supports **90 game/platform profiles across 15 platforms**.
+**Version 2.1.1 source** supports **91 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
+
+## Save Converter
+
+Open **Save Converter** to transfer DW8 XL saves between PC, US PS3 PSN and Vita,
+or English Persona 5 Strikers saves between PC, PS4 and Switch: **12 directed
+routes**, including PC to console. Choose a source copy and a destination-platform
+save template, review, then export into a new folder with automatic backups.
+Console saves need external export/decryption and reimport/resigning. Converted
+game loading remains untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
+
+Version 2.1.1 source also adds **original US DW6 PS3** horse combat stats and
+existing weapon damage-bonus/element controls. Keep original `PARAM.SFO` beside the decrypted
+`APP.BIN` copy. DW6 PC/PS3/Xbox 360 conversion still needs complete format mapping.
+[DW6 PS3 scope](docs/DW6_PS3_FORMAT.md).
 
 ## Experimental editing
 
@@ -47,7 +61,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists the game/platform profiles included in version 2.1.
+The table below lists source game/platform profiles for v2.1.1.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->
@@ -76,6 +90,7 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
 | DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse combat stats, existing weapon elements and damage bonuses; searchable records. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Existing horse combat stats, weapon stored damage bonuses and element choices; officer progression inspection. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

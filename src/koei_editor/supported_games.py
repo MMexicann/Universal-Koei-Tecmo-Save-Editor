@@ -34,6 +34,7 @@ from .game_registry import GAMES
 # sw4ii: SAMURAI WARRIORS 4-II / Windows PC edition [Windows PC]
 # sw2: SAMURAI WARRIORS 2 / Original Windows PC · save revision 2 [Windows PC]
 # dw6: DYNASTY WARRIORS 6 / Native Windows PC edition [Windows PC]
+# dw6_ps3: DYNASTY WARRIORS 6 / Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO [PlayStation 3]
 # dw9emp: DYNASTY WARRIORS 9 EMPIRES / Windows PC · SYSTEMDATA [Windows PC]
 # orochiz: WARRIORS OROCHI Z / Native Windows PC edition [Windows PC]
 # stars: WARRIORS ALL-STARS / Windows PC · revision F4 [Windows PC]

@@ -51,7 +51,13 @@ preparation only. At most two complete configuration attempts share a bounded
 exception codes and observed state. A pending service waits; only a stopped
 service is started. During query settling after a recognized RPC restart,
 Defender initialization response `0x800106BA` remains pending within the same
-budget; it never permits a failed configuration or scan to qualify. After
+budget; it never permits a failed configuration or scan to qualify.
+Version 2.3 also waits for exact WMI provider-load failure `0x80041013` during
+those preliminary status/preference queries, only after a confirmed RPC restart.
+A separate post-RPC marker prevents this wait from applying during ordinary
+preparation or signature updates. Message-only errors, other provider codes,
+access denial and an expired budget still fail. This does not add complete
+configuration attempts or change any readiness, cloud, signature or scan gate. After
 successful queries, the complete protection and
 signature configuration is replayed, followed by the same strict readiness,
 Microsoft scanner signature, cloud, scan and unchanged-input requirements.

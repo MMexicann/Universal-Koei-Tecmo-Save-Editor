@@ -222,6 +222,9 @@ function Get-PreparationFailure($Failure) {
     $initializing = $codes -contains '0x800106BA' -or
         @($nativeCodes | Where-Object { $_ -in @(2147550906, -2147416390) }).Count -gt 0 -or
         $Failure.FullyQualifiedErrorId -match '(?i)(?:^|\bHRESULT\s*|[^a-z0-9])0x800106ba(?![a-z0-9])'
+    $providerLoad = $codes -contains '0x80041013' -or
+        @($nativeCodes | Where-Object { $_ -in @(2147749907, -2147217389) }).Count -gt 0 -or
+        $Failure.FullyQualifiedErrorId -match '(?i)^(?:HRESULT\s*)?0x80041013(?:,|$)'
     [ordered]@{
         observed_utc = [DateTime]::UtcNow.ToString('o')
         command = $script:preparationCommand
@@ -231,6 +234,7 @@ function Get-PreparationFailure($Failure) {
         native_error_codes = $nativeCodes
         transient_rpc = [bool]$rpc
         defender_initializing = [bool]$initializing
+        provider_load_failure = [bool]$providerLoad
         service_status = $null
         state = $null
         state_error = $null
@@ -241,7 +245,8 @@ function Wait-DefenderPreparationService(
     [Diagnostics.Stopwatch]$Timer,
     [ValidateRange(1, 120)][int]$TimeoutSeconds = 120,
     [ValidateRange(1, 10)][int]$PollSeconds = 2,
-    [switch]$RequireQueries
+    [switch]$RequireQueries,
+    [switch]$AfterRpcRestart
 ) {
     while ($true) {
         if ($Timer.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
@@ -289,10 +294,16 @@ function Wait-DefenderPreparationService(
             # only preliminary query polling, never another full enable attempt.
             $initializationQuery = $RequireQueries -and $failure.defender_initializing -and
                 $script:preparationCommand -eq 'Get-MpComputerStatus/Get-MpPreference'
+            # A confirmed RPC restart can briefly leave the WMI provider unloaded.
+            # Poll only this exact query failure within the original budget; never
+            # classify it as permission for another complete preparation attempt.
+            $providerQuery = $RequireQueries -and $AfterRpcRestart -and $failure.provider_load_failure -and
+                $script:preparationCommand -eq 'Get-MpComputerStatus/Get-MpPreference'
             $failure.initialization_query_wait = [bool]$initializationQuery
+            $failure.provider_query_wait = [bool]$providerQuery
             $report.preparation_observations += $failure
             Write-ScanReport
-            if (-not $failure.transient_rpc -and -not $initializationQuery) { throw }
+            if (-not $failure.transient_rpc -and -not $initializationQuery -and -not $providerQuery) { throw }
         }
         $report.preparation_observations += $observation
         $report.preparation_wait_seconds = [Math]::Round($Timer.Elapsed.TotalSeconds, 3)
@@ -382,7 +393,7 @@ function Invoke-DefenderPreparation(
             if (-not $failure.transient_rpc -or $attempt -eq 2) { throw }
         }
         Wait-DefenderPreparationService -Timer $timer -TimeoutSeconds $TimeoutSeconds `
-            -PollSeconds $PollSeconds -RequireQueries
+            -PollSeconds $PollSeconds -RequireQueries -AfterRpcRestart
     }
 }
 

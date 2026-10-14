@@ -204,6 +204,83 @@ class DefenderReleaseGateContracts(unittest.TestCase):
         ''')
 
     @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
+    def test_provider_load_failure_only_waits_for_queries_after_confirmed_rpc_restart(self):
+        self.run_preparation_procedure(r'''
+            function Write-ScanReport {
+                if($report.engine_ready -or $report.clean -or
+                   (ConvertTo-Json -InputObject $report.inputs -Compress) -ne $script:originalInputs) {
+                    throw 'Provider polling changed inputs or claimed qualification.'
+                }
+            }
+            function Throw-ProviderFailure {
+                param($Command,$Code='0x80041013')
+                throw [Management.Automation.ErrorRecord]::new([Exception]::new('Procedural provider load failure'),
+                    ('HRESULT '+$Code+','+$Command),[Management.Automation.ErrorCategory]::NotSpecified,$null)
+            }
+            function Get-Service {
+                param($Name)
+                if($script:mode -eq 'service-provider') {Throw-ProviderFailure 'Get-Service'}
+                return [pscustomobject]@{Status='Running'}
+            }
+            function Start-Service {throw 'Provider polling restarted the service.'}
+            function Get-DefenderState {
+                $script:queries+=1
+                if($script:mode -eq 'wrong-code') {Throw-ProviderFailure 'Get-MpComputerStatus' '0x800410131'}
+                if($script:mode -eq 'message-only') {throw 'Provider load failure 0x80041013'}
+                if($script:mode -ne 'recover' -or $script:queries -le 2) {
+                    Throw-ProviderFailure 'Get-MpComputerStatus'
+                }
+                return Get-Content -LiteralPath $env:DEFENDER_TEST_READY_STATE -Raw | ConvertFrom-Json
+            }
+            function Enable-DefenderProtection {
+                param($Timer,$TimeoutSeconds,$PollSeconds)
+                $script:enableCalls+=1
+                $script:preparationCommand='Update-MpSignature MMPC'
+                if($script:mode -in @('enable-provider','signature-provider')) {
+                    if($script:mode -eq 'enable-provider') {$script:preparationCommand='Get-MpPreference'}
+                    Throw-ProviderFailure $script:preparationCommand
+                }
+                if($script:enableCalls -eq 1) {
+                    throw [ComponentModel.Win32Exception]::new(1726,'Procedural RPC restart')
+                }
+            }
+            foreach($mode in @('recover','expiry','enable-provider','signature-provider','service-provider',
+                               'query-without-rpc','wrong-code','message-only')) {
+                $script:mode=$mode; $script:queries=0; $script:enableCalls=0
+                $report=[ordered]@{clean=$false;engine_ready=$false;preparation_attempts=0;
+                    preparation_wait_seconds=0;preparation_observations=@();
+                    inputs=@(@{path='original';size=7;sha256='original-hash'})}
+                $script:originalInputs=ConvertTo-Json -InputObject $report.inputs -Compress
+                $timeout=if($mode -eq 'expiry'){1}else{5}
+                $failed=$false
+                try {
+                    if($mode -eq 'query-without-rpc') {
+                        Wait-DefenderPreparationService -Timer ([Diagnostics.Stopwatch]::StartNew()) `
+                            -TimeoutSeconds $timeout -PollSeconds 1 -RequireQueries
+                    } else {Invoke-DefenderPreparation -TimeoutSeconds $timeout -PollSeconds 1}
+                } catch {$failed=$true}
+                $expectedCalls=if($mode -eq 'recover'){2}elseif($mode -eq 'query-without-rpc'){0}else{1}
+                if($failed -ne ($mode -ne 'recover') -or $script:enableCalls -ne $expectedCalls -or
+                   $report.preparation_attempts -ne $expectedCalls) {
+                    throw ('Provider load error widened complete retry scope: '+$mode)
+                }
+                $waits=@($report.preparation_observations | Where-Object provider_query_wait)
+                if($mode -in @('recover','expiry')) {
+                    if($waits.Count -lt 1 -or @($waits | Where-Object transient_rpc).Count -ne 0 -or
+                       @($waits | Where-Object { -not $_.provider_load_failure }).Count -ne 0) {
+                        throw 'Provider settling lost its exact classification or diagnostics.'
+                    }
+                    if($mode -eq 'expiry' -and
+                       ($report.preparation_wait_seconds -lt 1 -or
+                        $report.preparation_observations[-1].outcome -ne 'settling_expired')) {
+                        throw 'Provider polling bypassed the original settling budget.'
+                    }
+                } elseif($waits.Count -ne 0) {throw ('Provider polling escaped post-RPC query scope: '+$mode)}
+                Write-ScanReport
+            }
+        ''')
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell is available in Windows CI.')
     def test_preparation_settling_rechecks_service_after_queries_and_enforces_deadline(self):
         self.run_preparation_procedure(r'''
             function Write-ScanReport {}

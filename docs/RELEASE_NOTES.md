@@ -28,6 +28,11 @@ comparison and safe reports. Windows startup, full-suite coverage and active
 Defender scans remain mandatory for release assets. Edited/converted game-load
 validation remains outstanding.
 
+The release scanner also handles a confirmed Defender restart followed by its
+status provider briefly being unavailable. Only that exact preliminary query
+wait is retried within the existing deadline; final protection and clean-scan
+requirements are unchanged.
+
 Download the standalone **UniversalKoeiTecmoSaveEditor-v2.3.exe**, complete
 **Windows ZIP**, or reviewed **Source ZIP**. SHA256SUMS and Defender evidence
 verify the downloadable files.

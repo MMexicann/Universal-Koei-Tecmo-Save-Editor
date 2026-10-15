@@ -222,14 +222,14 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(source.read_bytes(),self.document.encrypted)
         self.assertFalse(list(self.folder.glob('*.changes.json')))
 
-    def test_save_commit_failure_cleans_prepared_audit(self):
+    def test_save_commit_failure_keeps_prepared_audit_and_unchanged_source(self):
         source=self.folder/'copy.sav';source.write_bytes(self.document.encrypted)
         doc=read_save(source)
         with patch.object(save_writer.os,'replace',side_effect=OSError('Simulated commit failure')):
             with self.assertRaises(OSError):
                 write_save(doc,source,[Change('officer',0,'Attack',150)],overwrite=True)
         self.assertEqual(source.read_bytes(),self.document.encrypted)
-        self.assertFalse(list(self.folder.glob('*.changes.json')))
+        self.assertEqual(len(list(self.folder.glob('*.changes.json'))),1)
         self.assertFalse(list(self.folder.glob('.*.tmp')))
 
     def test_wrong_output_extension_refused(self):

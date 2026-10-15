@@ -15,12 +15,12 @@ python -m tools.build_windows
 python -m tools.build_windows --standalone
 ```
 
-The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v2.5.2/`**, a
+The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v2.5.3/`**, a
 portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
-**`dist-standalone/UniversalKoeiTecmoSaveEditor-v2.5.2.exe`**. That direct download
+**`dist-standalone/UniversalKoeiTecmoSaveEditor-v2.5.3.exe`**. That direct download
 needs no side files. Both modes use pinned Python 3.14.7 and `--noupx`, with the
-same 94 game/platform profiles, runtime metadata and required notices.
+same 96 game/platform profiles, runtime metadata and required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
 
@@ -140,7 +140,7 @@ startup and archives before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
-commit. Pushing a tag matching the application version, such as `v2.5.2`, also
+commit. Pushing a tag matching the application version, such as `v2.5.3`, also
 publishes after the native build and checks succeed. Existing releases are not replaced.
 
 The portable runtime loads from the adjacent `_internal` folder. Users extract
@@ -174,7 +174,7 @@ scan error or changed input blocks the release. Reports are retained for review.
 ## Reviewed offline user guides
 
 `tools.package_release.RUNTIME_GUIDES` is the explicit user-document allowlist.
-The Windows builder collects these seven files into `guides` for both build forms.
+The Windows builder collects these eleven files into `guides` for both build forms.
 The portable ZIP exposes them under `_internal/guides/`. Their exact bytes are
 bound to the reviewed source manifest and verified alongside other runtime
 metadata; missing, altered or unreviewed guide files fail packaging. Repository

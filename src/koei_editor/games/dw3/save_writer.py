@@ -279,13 +279,10 @@ def backup_save(document: SaveDocument,folder: Path | None=None) -> Path:
     path=folder/f'GameStatusData.{stamp}.{uuid.uuid4().hex[:8]}.sav'
     path=_atomic_write(document.encrypted,path)
     metadata={'size_bytes':len(document.encrypted),'sha256':hashlib.sha256(document.encrypted).hexdigest()}
-    try:
-        _atomic_write(json.dumps(metadata,indent=2).encode(),path.with_suffix('.json'))
-    except Exception:
-        # Only this newly created, uniquely named incomplete backup is removed.
-        try:path.unlink()
-        except OSError:pass
-        raise
+    # Keep a completed snapshot if its manifest cannot be created. Its path
+    # may already contain another app's replacement; failed backups remain
+    # unusable for restore without a matching manifest.
+    _atomic_write(json.dumps(metadata,indent=2).encode(),path.with_suffix('.json'))
     return path
 
 def write_save(document: SaveDocument,path: Path,changes: list[Change]=(),overwrite=False) -> tuple[Path,dict]:
@@ -312,14 +309,10 @@ def write_save(document: SaveDocument,path: Path,changes: list[Change]=(),overwr
     # "unsaved" error after a successful save commit.
     audit_path=path.with_name(path.name+'.'+uuid.uuid4().hex[:8]+'.changes.json')
     _atomic_write(json.dumps(audit,indent=2).encode(),audit_path)
-    try:
-        _atomic_write(raw,path,overwrite,expected_bytes=expected_bytes)
-    except Exception:
-        try:
-            audit_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise
+    # A failed commit may leave this prepared report. Its existence does not
+    # establish a successful save, and deleting it could erase another app's
+    # replacement. The write still fails and existing destinations stay guarded.
+    _atomic_write(raw,path,overwrite,expected_bytes=expected_bytes)
     return path,audit
 
 def restore_backup(backup: Path,destination: Path) -> Path:

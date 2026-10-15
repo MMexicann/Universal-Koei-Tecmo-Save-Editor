@@ -162,7 +162,7 @@ class ReviewIntegrationTests(CopyTestCase):
         with patch.object(writer, 'serialize', side_effect=concurrent_change), self.assertRaises(SaveError):
             writer.write_save(document, source, [Change('officer', 0, 'Attack', 150)], overwrite=True)
         self.assertEqual(source.read_bytes(), concurrent)
-        self.assertFalse(list(self.folder.glob('*.changes.json')))
+        self.assertEqual(len(list(self.folder.glob('*.changes.json'))), 1)
         self.assertFalse(list(self.folder.glob('.*.tmp')))
 
     def test_destination_created_during_serialization_is_preserved(self):
@@ -175,9 +175,9 @@ class ReviewIntegrationTests(CopyTestCase):
         with patch.object(writer, 'serialize', side_effect=concurrent_change), self.assertRaises(FileExistsError):
             writer.write_save(self.document, destination, overwrite=True)
         self.assertEqual(destination.read_bytes(), b'Created by another process')
-        self.assertFalse(list(self.folder.glob('*.changes.json')))
+        self.assertEqual(len(list(self.folder.glob('*.changes.json'))), 1)
 
-    def test_backup_manifest_failure_removes_only_new_incomplete_backup(self):
+    def test_backup_manifest_failure_keeps_completed_snapshot_and_existing_backup(self):
         self.folder.joinpath('existing.sav').write_bytes(b'Existing backup')
         real = writer._atomic_write
         def manifest_failure(data, path, *args, **kwargs):
@@ -186,7 +186,10 @@ class ReviewIntegrationTests(CopyTestCase):
             return real(data, path, *args, **kwargs)
         with patch.object(writer, '_atomic_write', side_effect=manifest_failure), self.assertRaises(OSError):
             writer.backup_save(self.document, self.folder)
-        self.assertEqual(list(self.folder.glob('*.sav')), [self.folder / 'existing.sav'])
+        snapshots = [path for path in self.folder.glob('*.sav') if path.name != 'existing.sav']
+        self.assertEqual(len(snapshots), 1)
+        self.assertEqual(snapshots[0].read_bytes(), self.document.encrypted)
+        self.assertFalse(snapshots[0].with_suffix('.json').exists())
         self.assertEqual((self.folder / 'existing.sav').read_bytes(), b'Existing backup')
 
     def test_restore_manifest_is_bounded_and_validated(self):

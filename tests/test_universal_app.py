@@ -244,7 +244,7 @@ class UniversalGuiTests(unittest.TestCase):
             self.assertIn('Review Changes', texts)
             rows = [view.item(key, 'values') for view in widgets_of_type(self.root, ttk.Treeview)
                     for key in view.get_children()]
-            self.assertIn(('Gold', '3456', '999999'), rows)
+            self.assertIn(('Gold', '3,456', '999,999'), rows)
             self.assertIn(('DLC Skill Points', '20', '999'), rows)
             self.assertIn(('Format', 'Native slot revision', '29'), rows)
             # A valid system envelope must fail the gameplay slot parser without
@@ -614,7 +614,7 @@ class UniversalGuiTests(unittest.TestCase):
                           if isinstance(dialog, tk.Toplevel) and dialog.title() == 'Review Changes')
             tree = next(widgets_of_type(review, ttk.Treeview))
             self.assertEqual(len(tree.get_children()), 2)
-            self.assertEqual({int(tree.item(key)['values'][2]) for key in tree.get_children()}, {777, 3456})
+            self.assertEqual({str(tree.item(key)['values'][2]) for key in tree.get_children()}, {'777', '3,456'})
             review.destroy()
             invoke('Inspect Data')
             inspector = next(dialog for dialog in self.root.winfo_children()

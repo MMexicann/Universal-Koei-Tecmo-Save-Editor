@@ -308,13 +308,10 @@ def backup(document):
                              document.source.parent / 'UniversalEditorBackups')
     metadata = {'game_id': GAME_ID, 'kind': 'aot1-vita-export-context',
                 'context_sha256': document.context_digest, 'save_sha256': document.sha256}
-    try:
-        atomic_new(json.dumps(metadata).encode('utf-8'),
-                   result.with_name(result.name + '.context.json'))
-    except Exception:
-        result.unlink(missing_ok=True)
-        result.with_suffix('.json').unlink(missing_ok=True)
-        raise
+    # Preserve completed backup files if companion creation or source
+    # revalidation fails; these paths may now contain another app's bytes.
+    atomic_new(json.dumps(metadata).encode('utf-8'),
+               result.with_name(result.name + '.context.json'))
     return result
 
 

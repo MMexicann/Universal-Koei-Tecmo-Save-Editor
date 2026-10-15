@@ -1,8 +1,10 @@
 """Category navigation and compact controls preserve the retained edit session."""
 
+import json
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
@@ -163,6 +165,112 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
             any("[1 pending]" in label for label in self.app._session_labels)
         )
         self.assertEqual(self.source.read_bytes(), fixture())
+
+    def test_mixed_selection_requires_a_deliberate_value_and_clears_stale_controls(self):
+        editor = self.editor
+        editor.fields.selection_set(('gold', 'skill_points'))
+        editor.selected()
+        self.assertEqual(editor.value.get(), '')
+        self.assertIn('2 selected fields; mixed current values', editor.selection_info.get())
+        with patch('koei_editor.shared.verified_gui.messagebox.showerror') as error:
+            editor.apply_selected()
+        error.assert_called_once()
+        self.assertEqual(editor.changes, {})
+        editor.value.set('77')
+        editor.apply_selected()
+        self.assertEqual(editor.changes, {'gold': 77, 'skill_points': 77})
+        self.assertEqual(editor.value.get(), '77')
+        editor.fields.selection_set('gold')
+        editor.selected()
+        self.assertIn('Opened: 3,456; current: 77', editor.selection_info.get())
+        editor.fields.selection_remove(editor.fields.selection())
+        editor.selected()
+        self.assertEqual(editor.value.get(), '')
+        self.assertEqual(editor.choice_value.get(), '')
+        editor.undo()
+        self.assertEqual(editor.changes, {})
+        self.assertEqual(self.source.read_bytes(), fixture())
+
+    def test_review_search_keeps_the_complete_frozen_export(self):
+        editor = self.editor
+        editor.stage_values({'gold': 1234, 'skill_points': 88})
+        editor.review()
+        dialog = next(child for child in self.root.winfo_children()
+                      if isinstance(child, tk.Toplevel) and child.title() == 'Review Changes')
+        tree = dialog.review_tree
+        self.assertEqual(len(tree.get_children()), 2)
+        dialog.review_query.set('gold 1234')
+        self.assertEqual(len(tree.get_children()), 1)
+        self.assertEqual(tree.item(tree.get_children()[0], 'values'), ('Gold', '3,456', '1,234'))
+        dialog.review_query.set('skill_points')
+        self.assertEqual(len(tree.get_children()), 1)
+        self.assertEqual(tree.item(tree.get_children()[0], 'values')[-1], '88')
+        # The review describes the state when it opened. Filtering and later
+        # staging must never silently narrow or rewrite its exported review.
+        editor.stage_values({'gold': 999})
+        destination = self.folder / 'frozen.changes.json'
+        export = next(child for child in dialog.winfo_children()
+                      if isinstance(child, ttk.Button) and child.cget('text') == 'Export Review...')
+        with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename',
+                   return_value=str(destination)):
+            export.invoke()
+        report = json.loads(destination.read_text())
+        self.assertEqual({item['field']: item['after'] for item in report['changes']},
+                         {'gold': 1234, 'skill_points': 88})
+        dialog.review_query.set('')
+        self.assertEqual(len(tree.get_children()), 2)
+        self.assertEqual(self.source.read_bytes(), fixture())
+
+    def test_inventory_choice_search_preserves_native_reference_and_undo(self):
+        from koei_editor.games.sw4ii import sw4ii_parser as backend
+        from tests.test_sw4ii_format import procedural_raw, seal
+
+        # Generated occupied records exercise the real adapter's source-owned
+        # mount choices. This is a GUI regression, not an in-game fixture.
+        original = backend.decode(procedural_raw())
+        payload = bytearray(original.payload)
+        for index in range(backend.MOUNT_COUNT):
+            base = backend.MOUNT_BASE + index * backend.MOUNT_STRIDE
+            payload[base] = 0
+            payload[base + 3:base + 5] = bytes((12, 25))
+            payload[base + 0xA:base + 0xD] = bytes((20, 23, 27))
+        payload[backend.OFFICER_BASE + 0x3D] = 0
+        raw = seal(payload, original.seed)
+        source = self.folder / 'mounts.dat'
+        source.write_bytes(raw)
+        editor = self.app.select_game('sw4ii')
+        with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
+            editor.open()
+        editor.group.set('Mount equipment')
+        editor.refresh()
+        editor.fields.selection_set('officer_0_equipped_mount')
+        editor.selected()
+        self.root.update()
+        self.assertTrue(editor.choice_tools.winfo_ismapped())
+        self.assertEqual(len(editor.value_choice.cget('values')), 20)
+        editor.choice_search.set('slot 17')
+        choices = editor.value_choice.cget('values')
+        self.assertEqual(len(choices), 1)
+        self.assertEqual(editor._choice_values[choices[0]], 17)
+        self.assertEqual(editor.value.get(), '0')
+        self.assertEqual(editor.changes, {})
+        editor.choice_value.set(choices[0])
+        editor.selected_choice()
+        editor.apply_selected()
+        self.assertEqual(editor.changes, {'officer_0_equipped_mount': 17})
+        editor.choice_search.set('no matching inventory')
+        self.assertEqual(editor.value_choice.cget('values'), '')
+        self.assertEqual(editor.value.get(), '17')
+        editor.clear_choice_search()
+        self.assertEqual(len(editor.value_choice.cget('values')), 20)
+        editor.review()
+        dialog = next(child for child in self.root.winfo_children()
+                      if isinstance(child, tk.Toplevel) and child.title() == 'Review Changes')
+        dialog.review_query.set('mount slot 17')
+        self.assertEqual(len(dialog.review_tree.get_children()), 1)
+        editor.undo()
+        self.assertEqual(editor.changes, {})
+        self.assertEqual(source.read_bytes(), raw)
 
 
 if __name__ == "__main__":

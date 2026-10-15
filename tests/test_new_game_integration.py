@@ -79,7 +79,7 @@ class NewGameGuiTests(unittest.TestCase):
                         yield from descendants(child)
                 tree = next(w for w in descendants(review) if isinstance(w, ttk.Treeview))
                 self.assertEqual(len(tree.get_children()), 1)
-                self.assertEqual(int(tree.item(tree.get_children()[0], 'values')[2]), 12345)
+                self.assertEqual(tree.item(tree.get_children()[0], 'values')[2], '12,345')
                 review.destroy()
                 target = folder / 'edited.dat'
                 with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename', return_value=str(target)), \

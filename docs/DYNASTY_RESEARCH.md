@@ -44,6 +44,17 @@ persistent state from original US/European PS3 XL into this PC profile. It does
 not add independent progression-edit controls or qualify converted game loading.
 Three distinct PC states and original regional PS3 context are now available.
 
+Version 2.5.3 adds [PC weapon loadouts and applied seals](DW7XL_WEAPONS.md):
+two existing-reference selectors per qualified playable officer, restricted to
+owned references witnessed equipped in the opened copy; and learned ordinary
+seal substitution/removal in originally occupied positions. Native menu proof
+enforces distinct officer weapon slots, duplicate-seal rejection, smith-learning
+exclusions and inactive suspended-battle state. Base attack, element, element
+level and capacity are separately loaded game parameters, absent from saved
+weapon records. Arbitrary edits to those parameters are not save features.
+The [original US/EU XL PS3 editor](DW7XL_PS3.md) separately qualifies full native
+scalar bounds from official PS3 getters/setters and validators.
+
 ### Independent executable evidence
 
 The supplied x86 `SM6EN.exe` contains the PC save path and filename. Its text
@@ -131,7 +142,8 @@ fixture uses `DW7XL_SAVE_COPY`. No edited save was loaded in the game.
 | Active equipped weapon | Implemented; only existing equipped owned references; no bulk Max |
 | Weapon inventory ownership | Searchable read-only physical records; granting requires native weapon classification and acquisition dependencies |
 | Seal learning / weapon seals | Original exact owned/unlearned flags and meter 1..1000 permit decrease only, with no Max or reward changes. Increasing, acquiring or revoking a learned seal still requires external weapon-to-seal thresholds and system reward dependencies |
-| Weapon names, types, attack and seal slots | Need weapon parameter/localization data; five native short fields have unproven semantics and are preserved |
+| Weapon loadouts and applied seals | Existing source-witnessed owned variants and already learned ordinary seals in occupied positions are editable; unknown/duplicate records, smith reservations and suspended battles remain protected. The five saved shorts are applied-seal references, not attack/element/capacity. |
+| Weapon names, types, base attack, element and capacity | External parameter/localization data; arbitrary same-variant base attack/element edits require a separately qualified game-data mod, not a save offset. Empty seal slots do not prove capacity. |
 | Officer names / slot identities | Need native playable roster identity table or controlled named saves; standard roster order is not proof |
 | Purchased skills / EX unlocks | Read-only masks; need officer-specific definitions, available bit counts, costs, prerequisites and any stat rewards from game parameter data |
 | Guardian beasts / mounts | Read-only equipped references; Red Hare ID 7 corroborated by published patch; ownership bitsets and other named IDs remain unproven |

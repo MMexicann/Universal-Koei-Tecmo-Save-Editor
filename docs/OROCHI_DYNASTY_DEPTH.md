@@ -18,12 +18,13 @@ independently proved edit that leaves its dependencies intact.
 
 The existing adapter already edits resources and qualified weapon capacity,
 reinforcement and existing attribute ranks, and inspects compatibility.
-This pass adds two systems:
+The following systems now include the v2.5.3 mount refinement:
 
 | New control | Qualification and bounds | Independent evidence |
 | --- | --- | --- |
 | Unallocated upgrade stones | Playable officer with original promotion count 1..9 and original balance 0..891; manual 0..891 | Native serializer `0x140258CA0` maps the word at officer `+52`; level gains add to that word after promotion, while allocation subtracts spending and clamps the remaining balance to 891 |
 | Equipped items | Active original slots only, count 2..6; choices are originally owned non-mount items with positive original rank, or Unequipped | Native ownership menu, positive-rank getter, six-reference duplicate guard and selected-slot assignment; the packed serializer maps six bytes at officer `+38` and count at `+44` |
+| Owned mount loadouts | Two stored selector bytes at `0xE943` and `0xE0DF`; original owned binary mount items 28..31 with rank exactly 1, or Unequipped | Native system-copy bridge, explicit packed selector serialization and mount menu lookup/set/clear paths prove ordinals 0..3 and empty 255 |
 
 Officer records start at file `0xECF2`, stride `0x2B0`. The 145 playable records
 are distinct from five internal records. Ownership is the 64-bit mask at
@@ -46,6 +47,28 @@ allocation totals and slot count. Original balances above 891 stay opaque;
 the supplied native sample has 19 balances of 999, which are preserved. It
 qualifies 126 upgrade balances and 812 active equipment selectors.
 
+For mounts, native `0x140248C60` / `0x140248D70` copy the current and serialized
+system objects in opposite directions. Following that bridge resolves the
+menu's runtime members to the two file offsets above. Serializer
+`0x14025D060` visits both bytes, while setter `0x1403252E0` uses table
+`0x140A7F020`: item IDs 28, 29, 30 and 31 become stored ordinals 0, 1, 2 and 3.
+The remaining thirteen table entries are unmapped. The native clear path writes
+255. Choices come only from original ownership and original rank-one records;
+unknown/unowned/unusually ranked originals keep that loadout read only.
+Both loadouts may use the same owned mount. No mount is acquired, upgraded or
+renamed, and the numbered labels do not infer which mode/team uses a loadout.
+Stored battle objects and ordinary equipped items are preserved; changing a
+persistent loadout does not rewrite a mounted actor in a battle snapshot.
+
+Both genuine PC references qualify two selectors and four owned mounts. Twenty
+copied-native exports checked every choice/empty assignment against literal
+one-byte expectations, actual destination read-back and original preservation.
+Two native GUI workflows checked Review, Undo, Max exclusion, backups, Save As
+and restore. The six focused WO3 modules passed 46 tests without skips. Loading
+or resuming an edited save in-game remains untested. Experimental mode now also
+preserves the existing reinforcement decrease-only bound and leaves unusual
+original reinforcement bytes above 99 read only.
+
 | Reviewed mechanic | Remaining dependency or evidence required |
 | --- | --- |
 | Level / EXP / promotion | Runtime EXP thresholds are reached through root `+0x1DA240` (`0x14025B870`); promotion and level transitions also affect growth, rewards, EXP resets, stones and item slots. The complete matching initialization/growth data and transition proof remain missing |
@@ -53,7 +76,7 @@ qualifies 126 upgrade balances and 812 active equipment selectors.
 | Weapon reinforcement / compatibility | Existing bounded fields remain; descriptor-grade-specific attack calculation uses native `0x14025B9A0`, but the complete matching descriptor-grade map needed for broader reinforcement caps is unavailable |
 | Fusion / crafting / ownership | Independent existing ranks and resources remain; fusion material costs, consumption, acquisition and special-weapon descriptors are not replaced by invented combinations |
 | Bonds / team effects | The complete persistent relationship map, thresholds and reward interactions remain unproved |
-| Item ranks / mount ownership | Ownership/ranks qualify existing equipped-item choices; new acquisition, rank increases and mount assignment need complete native rules |
+| Item ranks / mount ownership | Original ownership/ranks qualify ordinary-item and mount-loadout choices. Acquisition, rank changes and complete mount naming/mode association still need native rules |
 | Story, Hundun and content unlocks | Clear flags, prerequisite routes and unlock rewards remain separate; no blanket unlock writes |
 
 Sources: [PC achievement/mechanics guide](https://steamcommunity.com/sharedfiles/filedetails/?id=2851197510)
@@ -134,6 +157,17 @@ Sources: [Understanding Warriors All Stars](https://steamcommunity.com/sharedfil
 and [native review](STARS_WO4_RESEARCH.md).
 
 ## Dynasty Warriors 7 Xtreme Legends Definitive Edition PC
+
+Version 2.5.3 adds [existing weapon loadouts and learned applied seals](DW7XL_WEAPONS.md).
+New weapon choices use original owned references already equipped by a playable
+officer; ownership alone does not prove the external availability/DLC predicate.
+New applied-seal controls replace/remove only originally occupied ordinary
+learned positions. Native menus prove duplicate restrictions, five reserved
+smith-learning references and direct removal without compaction. Both new groups
+are unavailable during suspended battles and excluded from Max/experimental
+bypass. Three distinct native PC states pass 54 independent surgical exports,
+with original seed and every unrelated payload byte preserved. These are not
+in-game tests. Arbitrary base attack/element edits remain outside the save format.
 
 A separate [v2.5.2 PS3 XL → PC conversion preview](DW7XL_CONVERSION.md) now
 transfers qualified existing persistent state with mixed-width native mapping.

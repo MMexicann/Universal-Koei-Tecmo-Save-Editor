@@ -352,7 +352,7 @@ class ThreeHousesHeadlessCallbackTests(unittest.TestCase):
             font.return_value.measure.return_value = 400
             editor.review()
             values = [call.kwargs['values'][1:] for call in tree.return_value.insert.call_args_list]
-            self.assertEqual(values, [(12000, 2), (3, 2)])
+            self.assertEqual(values, [('12,000', '2'), ('3', '2')])
         self.assertEqual(editor.changes, before)
         editor.undo()
         self.assertEqual(editor.changes, {})

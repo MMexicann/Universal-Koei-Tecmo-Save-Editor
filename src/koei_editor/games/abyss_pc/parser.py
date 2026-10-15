@@ -284,14 +284,10 @@ def backup(document):
     metadata = {'game_id': GAME_ID, 'kind': 'abyss-steam-owner-context',
                 'owner_sha256': document.owner.sha256, 'owner_basename': document.owner.basename,
                 'native_sha256': document.sha256}
-    try:
-        atomic_new(json.dumps(metadata).encode('utf-8'), snapshot.with_name(snapshot.name + '.context.json'))
-        _source(document)
-    except Exception:
-        snapshot.unlink(missing_ok=True)
-        snapshot.with_suffix('.json').unlink(missing_ok=True)
-        snapshot.with_name(snapshot.name + '.context.json').unlink(missing_ok=True)
-        raise
+    # Preserve completed backup files if companion creation or source
+    # revalidation fails; these paths may now contain another app's bytes.
+    atomic_new(json.dumps(metadata).encode('utf-8'), snapshot.with_name(snapshot.name + '.context.json'))
+    _source(document)
     return snapshot
 
 
@@ -351,12 +347,9 @@ def prepare_copy_context(document, directory):
         stream.write(document.owner.raw)
         stream.flush()
         os.fsync(stream.fileno())
-    try:
-        require_matching_owner(document.owner, directory / 'input-copy.bin')
-        _source(document)
-    except Exception:
-        target.unlink(missing_ok=True)
-        raise
+    # A failed check must not delete a concurrently replaced companion.
+    require_matching_owner(document.owner, directory / 'input-copy.bin')
+    _source(document)
 
 
 def record_label(slot, group='Resources'):

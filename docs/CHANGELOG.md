@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.5.3 — 2026-10-15
+
+- Add source-witnessed DW7 XL PC weapon loadouts and learned applied-seal replacement/removal in occupied slots, with duplicate, smith-learning and suspension guards. Base attack/element/capacity live in external game parameters; arbitrary edits remain unavailable.
+- Add a dedicated original US/EU DW7 XL PS3 editor with native-proven Gold/officer stat/SP bounds and Max, existing active-weapon choices, unlearned meter reductions and original-context protection.
+- Add Nights of Azure 2 Switch Libra reductions for exact qualified English Chapter 1/7/Clear profiles; synchronize native preview/current integrity and preserve checkpoints/inactive tails. Library: 96 profiles across 15 platforms; conversion routes remain139.
+- Add two original-owned mount loadouts to WO3 Ultimate PC and enforce decrease-only reinforcement even in experimental mode. Correct DW7 XL experimental signed-short ceilings.
+- Make large choices and Review Changes searchable, show opened/current/mixed selection states and named enum reviews, and keep exported snapshots complete and typed.
+- Preserve completed backups/manifests/companions across 24 affected formats and DW3 prepared reports after failures; retain foreign replacements rather than unlinking them.
+- Bundle eleven reviewed user guides. Origins proficiency-level and Old Coin writers remain unimplemented; edited/converted game loading remains untested.
+
 ## v2.5.2 — 2026-10-15
 
 - Expand Save Converter from 20 to 139 directed routes: four partial DW6 scopes across original PC, US/European/Japanese PS3 and NA/EU Xbox 360; one-way DW7 XL PS3 → Definitive Edition PC transfer; existing DW8 XL and P5S routes remain available.

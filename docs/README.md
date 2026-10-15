@@ -6,6 +6,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [v2.5.3 equipment, new profiles and shared refinements](releases/v2.5.3.md)
 - [v2.5.2 changes and remaining request limits](releases/v2.5.2.md)
 - [Editor workspace: categories, open sessions and keyboard controls](EDITOR_WORKSPACE.md)
 - [Origins proficiency and Old Coin request: status and evidence](ORIGINS_REQUEST_STATUS.md)
@@ -17,6 +18,9 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
 - [DW7 XL PS3 to Definitive Edition PC: transfer scope and native proof](DW7XL_CONVERSION.md)
+- [DW7 XL PC weapon loadouts, learned seals and base-parameter limits](DW7XL_WEAPONS.md)
+- [DW7 XL original US/EU PS3 editor](DW7XL_PS3.md)
+- [Nights of Azure 2 original Switch: qualified Libra reductions](NOA2_SWITCH_FORMAT.md)
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 

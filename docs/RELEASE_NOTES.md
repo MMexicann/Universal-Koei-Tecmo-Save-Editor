@@ -1,77 +1,76 @@
-# Universal Koei Tecmo Save Editor v2.5.2
+# Universal Koei Tecmo Save Editor v2.5.3
 
-This patch adds **DW7 XL PS3 → Definitive Edition PC transfer**, a **DW6
-conversion preview**, Origins proficiency inspection and
-stronger backup/export checks. The library remains **94 game/platform profiles
-across 15 platforms**. Save Converter expands from 20 to **139 directed routes**.
+This update adds DW7 XL PC weapon loadouts and learned applied-seal controls,
+a dedicated original US/EU PS3 XL editor, Nights of Azure 2 Switch Libra
+reductions, WO3 Ultimate mount loadouts and shared interface/backup fixes.
+The library now has **96 game/platform profiles across 15 platforms**;
+Save Converter retains **139 directed routes**.
 
-## New features
+## DW7 XL weapon request
 
-- **DW7 XL PS3 → PC:** transfer qualified persistent progress from original US
-  BLUS30873 or European BLES01496 Xtreme Legends into a Definitive Edition PC
-  template. Includes Story/Legend state, officers, weapons, seals, guardians and
-  challenge records. One-way preview; PC settings/platform data stay in place.
-  Active suspensions and unidentified nonzero progression extensions are refused.
-- **DW6 conversion:** original PC, US/European/Japanese PS3 and North
-  American/European Xbox 360. Choose roster/horses; add persistent stage/Musou
-  records; add 20 stored Musou run slots; or also transfer gallery availability
-  and five challenge boards. These are four separate partial transfer scopes.
-- **DW6 PC/US PS3 editors:** one-way Free Mode stage and named Musou availability
-  unlocks, with playable-officer prerequisites. Clear records and rewards remain
-  separate.
-- **Origins inspection:** a searchable, read-only Proficiency tab shows stored XP
-  and equipped Battle Art IDs for recognized native records. Unfamiliar layouts
-  withhold this optional view without blocking existing qualified resource edits.
-- **Converter interface:** search by game, region, title ID or scope. Reviews
-  identify the records being replaced; changing the route clears stale reviews.
-  Batch Converter supports all 139 routes.
+Select an owned weapon already equipped by a playable officer in the opened
+PC save, or replace/remove an already learned ordinary seal in an occupied
+position. Native rules protect distinct weapon slots, duplicate seals,
+smith-learning reservations, unknown records and suspended battles.
 
-## Save-safety fixes
+**Arbitrary base weapon attack and element editing is not implemented.** The
+native game loads attack, element, element level and seal capacity from separate
+game parameters. Selecting a different existing variant uses that variant's
+attributes; it does not rewrite the original variant. Empty seal slots remain
+read only because saved empty positions do not establish native capacity.
 
-Backups verify the actual gameplay snapshot, manifest and original console
-context. Export rechecks gameplay, companion metadata, receipt and both inputs
-before reporting success. Failed exports and late-failed Origins saves retain
-completed files so another application's replacements cannot be deleted.
-**Do not import files from a failed operation, even if a receipt exists.**
+## New profiles and existing-game refinements
 
-## Scope and remaining requests
+- **DW7 XL original US/EU PS3:** Gold, 65 playable officers' stored stats and
+  skill points with independently proven native bounds and Max; existing owned
+  active-weapon choices; unlearned seal-meter reductions. Requires PFD-decrypted
+  `APP.BIN` and its complete original `PARAM.SFO`. Suspended battles are read only.
+  Console decryption, reimport and signing remain external.
+- **Nights of Azure 2 Switch:** reduce Libra in the qualified original English
+  Chapter 1, Chapter 7 and Clear profiles. Synchronize the labelled save preview
+  and current native block hashes; preserve chapter checkpoints and inactive
+  retained data. Max/increases, other chapters/languages and other mechanics
+  remain unavailable.
+- **WO3 Ultimate Definitive PC:** select originally owned mounts for two native
+  stored loadouts. Ownership, item ranks and battle actors stay separate.
+  Experimental mode can no longer bypass decrease-only reinforcement bounds.
+- **DW7 XL experimental stats:** respect native signed-short getter limits,
+  preserving unusual opened values and the usual default gameplay bounds.
 
-**Origins proficiency-level and Old Coin editing are still not implemented.**
-The new view is inspection only; it does not calculate levels or grant moves,
-weapons, rewards or ownership.
+## Shared interface and save integrity
 
-DW7 XL conversion does not guarantee equivalent 100% completion, PC achievements
-or missing DLC assets. Base DW7, other PS3 regions, old 2012 PC saves and reverse
-PC-to-PS3 conversion are unsupported.
+Large choice dropdowns are searchable. Selection feedback distinguishes opened,
+current and mixed values. Review Changes searches records, names, field IDs and
+raw/formatted values, and displays named enum choices. Filtered reviews still
+export their complete frozen snapshot with raw typed values.
 
-DW6 options, suspended battles and unmapped framing remain from the destination
-template. Finish suspended battles before making both copies. **Actual edited
-or converted game loading/re-saving remains unverified.** Other Xbox regions,
-DW6 Special and Empires are separate, unsupported conversion formats.
+Backup failures across **24 affected format profiles** retain completed
+snapshots, manifests and companion files, protecting concurrent replacements.
+DW3 failed commits also retain prepared change reports. **A retained file or
+report does not establish success; do not import output from a failed operation.**
 
-Xbox endpoints require extracted `DW6_NA.dat` or `DW6_EU.dat` beside the unchanged
-original container named `ORIGINAL.CON`. Export retains that CON unchanged:
-**it still contains the old template gameplay**. Replace its embedded gameplay
-with the converted raw file in Horizon or an equivalent save manager, then
-rehash/resign externally. The editor does not rebuild STFS, verify RSA or sign
-console packages. PS3 decryption/reimport/resigning also remains external.
+## Validation and remaining limits
 
-## Validation and downloads
+Native copied-file checks include three distinct DW7 XL PC states, original
+US/EU PS3 contexts sharing one gameplay state, two WO3 Ultimate native sources
+and three Nights of Azure 2 states. Two Nights of Azure archives do not establish
+independent publishers, and a modified early-game sample does not prove a natural
+currency cap. Tests cover surgical writes, unrelated-byte/seed preservation,
+original-source protection, native read-back, GUI, backup and restore workflows.
 
-Copied-file checks cover eleven DW6 PC/PS3 references, 81 original Xbox containers
-representing 40 distinct gameplay states, and nine Origins slots across revisions
-16, 17 and 29. DW7 XL adds three distinct PC states and two original regional PS3
-contexts containing one shared gameplay state, with independently inspected native
-PC and official PS3 update serializers. Procedural tests, native copied-file
-checks and actual game loading are distinct. Saves, account context, game binaries and private reports are not
-included.
+**Edited or converted game loading and re-saving remain untested.** The existing
+DW7 XL PS3-to-PC route remains a conversion preview; equivalent 100% completion,
+PC achievements and DLC entitlements are not guaranteed. Origins proficiency
+level and Old Coin writers remain **unimplemented**.
 
-Publication requires the full native Windows suite, portable and standalone
-startup checks, and active Defender scans bound to every exact downloadable
-payload. Download **UniversalKoeiTecmoSaveEditor-v2.5.2.exe**, the complete
-**Windows ZIP**, or **Source ZIP**. SHA256SUMS and Defender evidence accompany
-the release.
+Publication requires the complete native Windows test suite, portable and
+standalone build/startup checks, active Defender scans of the exact payloads and
+matching checksums. Download the standalone EXE, complete Windows ZIP or Source
+ZIP; SHA256SUMS and Defender evidence accompany the release. Eleven reviewed
+offline guides are bundled in both Windows forms.
 
-[Conversion workflow and limits](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.2/docs/SAVE_CONVERSION.md),
-[DW7 XL transfer instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.2/docs/DW7XL_CONVERSION.md)
-and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.2/docs/ORIGINS_REQUEST_STATUS.md).
+[DW7 XL PC weapons](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/DW7XL_WEAPONS.md),
+[DW7 XL PS3 editor](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/DW7XL_PS3.md),
+[Nights of Azure 2 scope](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/NOA2_SWITCH_FORMAT.md),
+[conversion limits](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/SAVE_CONVERSION.md)
+and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/ORIGINS_REQUEST_STATUS.md).

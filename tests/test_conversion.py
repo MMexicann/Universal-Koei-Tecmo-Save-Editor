@@ -87,7 +87,7 @@ class ConversionTests(unittest.TestCase):
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
                 self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
-                                            'dw6_xbox360_na', 'dw6_xbox360_eu', 'dw7xl_ps3'))
+                                            'dw6_xbox360_na', 'dw6_xbox360_eu'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
                 continue

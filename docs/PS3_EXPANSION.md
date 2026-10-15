@@ -1,5 +1,8 @@
 # Dynasty Warriors 7, DW7 Empires and Samurai Warriors 4: PS3 exports
 
+Original US/EU **DW7 Xtreme Legends** has a separate
+[native-bound editor and guide](DW7XL_PS3.md). It is not the base-DW7 format below.
+
 These are separate PS3 adapters. They accept copied **decrypted** exports, not
 PC saves or encrypted files copied directly from a console. Use Apollo Save Tool
 to export a decrypted `APP.BIN` (DW7) or `DATA.BIN` (DW7 Empires/SW4), keep the original

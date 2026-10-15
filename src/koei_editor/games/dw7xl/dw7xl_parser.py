@@ -13,6 +13,7 @@ from types import MappingProxyType
 
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 import koei_editor.games.dw7xl.dw7xl_codec as codec
+from koei_editor.games.dw7xl import equipment
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.save_safety import safe_path
@@ -42,9 +43,12 @@ class Field:
     @property
     def experimental_maximum(self):
         """Largest representable numeric value; protected choices stay bounded."""
-        if self.id.endswith(('_active_weapon', '_seal_meter')):
+        if (self.id.endswith(('_active_weapon', '_seal_meter'))
+                or equipment.reference_key(self.id) or equipment.seal_key(self.id)):
             return None
-        return (1 << (8 * self.size)) - 1
+        # Native officer getters sign-extend these serialized shorts. An
+        # unsigned storage ceiling would turn a large experimental stat negative.
+        return (1 << (8 * self.size - (1 if self.size == 2 else 0))) - 1
 
     def value(self, payload):
         return int.from_bytes(payload[self.offset:self.offset + self.size], 'little')
@@ -94,7 +98,8 @@ FORMAT = Format(
     'Qualified native PC revision 0x11080200. Gold and 65 playable officer '
     'health, attack, defense, power, speed and skill points. '
     'Switch between already equipped owned weapons; inspect inventory, '
-    'purchased skill bits and guardian beast references; reduce existing unlearned seal meters. '
+    'choose weapons witnessed equipped in the opened copy and replace/remove '
+    'already learned seals in occupied slots; reduce existing unlearned seal meters. '
     'Progression, story and rewards are preserved. '
     'Genuine PC file roundtrips verified; edited game loading remains untested.'
 )
@@ -161,6 +166,28 @@ def fields_for(document):
 @lru_cache(maxsize=4)
 def _mapped_fields(payload):
     fields = list(FORMAT.fields)
+    choices = equipment.weapon_choices(payload)
+    if choices:
+        for officer in range(OFFICER_COUNT):
+            start = OFFICER_BASE + officer * OFFICER_STRIDE
+            first, second, active = (equipment.word(payload, start + relative)
+                                     for relative in (18, 20, 22))
+            if (active not in (0, 1) or not equipment.owned(payload, (first, second)[active])
+                    or first == second):
+                continue
+            for position in (1, 2):
+                fields.append(Field(f'officer_{officer}_weapon_{position}',
+                                    f'Officer {officer + 1}: Weapon {position}',
+                                    start + 16 + position * 2, 2, WEAPON_COUNT - 1,
+                                    'Weapon loadouts', officer + 1, maxable=False))
+    for weapon, seals in equipment.seal_records(payload):
+        for position, identity in enumerate(seals, 1):
+            if identity != equipment.EMPTY:
+                fields.append(Field(f'weapon_{weapon}_applied_seal_{position}',
+                                    f'Weapon record {weapon + 1}: Applied seal {position}',
+                                    WEAPON_BASE + weapon * WEAPON_STRIDE + 6 + position * 2,
+                                    2, equipment.EMPTY, 'Applied seals', weapon + 1,
+                                    maxable=False))
     for weapon in range(WEAPON_COUNT):
         offset = WEAPON_BASE + weapon * WEAPON_STRIDE
         flags = int.from_bytes(payload[offset + 4:offset + 6], 'little')
@@ -189,6 +216,7 @@ def field_map(document):
 def changed_payload(document, changes):
     validate_document(document)
     mapping = field_map(document)
+    changes = normalize_pending_values(document, changes, mapping)
     result = bytearray(document.payload)
     for key, value in changes.items():
         if key not in mapping:
@@ -197,9 +225,11 @@ def changed_payload(document, changes):
         # An existing unusual value may be unstaged and preserved unchanged.
         if type(value) is int and value == field.value(document.payload):
             continue
-        if key.endswith('_active_weapon'):
-            _validate_active_weapon(document, field, value)
         result[field.offset:field.offset + field.size] = field.encoded(value)
+    equipment.validate_changes(document.payload, result, changes)
+    for key, value in changes.items():
+        if key.endswith('_active_weapon'):
+            _validate_active_weapon(document, mapping[key], value, result)
     return bytes(result)
 
 
@@ -225,22 +255,21 @@ def stage(document, changes, key, value):
         result.pop(key, None)
     else:
         field.validate(value)
-        if key.endswith('_active_weapon'):
-            _validate_active_weapon(document, field, value)
         result[key] = value
     changed_payload(document, result)
     return result
 
 
-def _validate_active_weapon(document, field, value):
+def _validate_active_weapon(document, field, value, payload=None):
     field.validate(value)
+    payload = document.payload if payload is None else payload
     officer = OFFICER_BASE + (field.slot - 1) * OFFICER_STRIDE
-    reference = int.from_bytes(document.payload[officer + 18 + 2 * value:
-                                                officer + 20 + 2 * value], 'little')
+    reference = int.from_bytes(payload[officer + 18 + 2 * value:
+                                       officer + 20 + 2 * value], 'little')
     if reference >= WEAPON_COUNT:
         raise SaveError('The selected equipped weapon slot is empty or unsupported.')
-    flags = int.from_bytes(document.payload[WEAPON_BASE + reference * WEAPON_STRIDE + 4:
-                                           WEAPON_BASE + reference * WEAPON_STRIDE + 6], 'little')
+    flags = int.from_bytes(payload[WEAPON_BASE + reference * WEAPON_STRIDE + 4:
+                                  WEAPON_BASE + reference * WEAPON_STRIDE + 6], 'little')
     if not flags & 1:
         raise SaveError('The selected equipped weapon is not owned in this save.')
 
@@ -308,7 +337,7 @@ def restore(backup_path, destination, game_id=GAME_ID):
 
 
 def record_label(slot, group='Officers'):
-    if group in ('Officers', 'Equipment') and type(slot) is int and 1 <= slot <= OFFICER_COUNT:
+    if group in ('Officers', 'Equipment', 'Weapon loadouts') and type(slot) is int and 1 <= slot <= OFFICER_COUNT:
         return f'Officer slot {slot}'
     return group if not slot else f'{group} record {slot}'
 
@@ -345,11 +374,36 @@ def weapons(document):
     return tuple(rows)
 
 
+def applied_seal_rows(document):
+    """Inspect saved seal references without inventing an external catalog."""
+    validate_document(document)
+    editable = frozenset(index for index, _seals in equipment.seal_records(document.payload))
+    rows = []
+    for index in range(WEAPON_COUNT):
+        if not equipment.owned(document.payload, index):
+            continue
+        start = WEAPON_BASE + index * WEAPON_STRIDE
+        seals = tuple(equipment.word(document.payload, start + relative) for relative in range(8, 18, 2))
+        labels = tuple('Empty' if identity == equipment.EMPTY else f'Seal ID {identity}' for identity in seals)
+        rows.append((index + 1, *labels, 'Occupied slots editable' if index in editable else 'Read only'))
+    return tuple(rows)
+
+
 def field_hint(document, field):
     mapping = field_map(document)
     key = field.id if isinstance(field, Field) else field
     if key not in mapping:
         raise SaveError('The requested field is not mapped for DW7 XL PC.')
+    if equipment.reference_key(key):
+        return ('Select an owned weapon already equipped by a playable officer in the opened copy. '
+                'The two slots must differ; smith-learning weapons and suspended battles are excluded. '
+                'The selected variant uses its existing game-defined attack and element. '
+                'This does not edit base weapon parameters, grant weapons or change seals. Excluded from Max.')
+    if equipment.seal_key(key):
+        return ('Replace an occupied slot with an ordinary seal already learned in this save, or remove it. '
+                'Duplicate seals on one weapon, unknown records and smith-learning weapons are excluded. '
+                'Empty slots cannot be filled because capacity comes from game data. '
+                'Learning progress, ownership and base attack/element stay unchanged. Excluded from Max.')
     if key.endswith('_seal_meter'):
         return ("Decrease an existing owned, unlearned weapon's learning meter, "
                 '0 through its opened value. No threshold is crossed upward and no seal '
@@ -371,24 +425,32 @@ def field_hint(document, field):
 
 def field_options(document, field):
     """Existing equipped choices, with the same ownership guard as staging."""
+    return field_options_for_changes(document, {}, field)
+
+
+def field_options_for_changes(document, changes, field):
+    """Current choice labels/dependencies with original eligibility retained."""
     mapping = field_map(document)
     key = field.id if isinstance(field, Field) else field
     if type(key) is not str:
         raise SaveError('Choose a mapped DW7 XL field name.')
     if key not in mapping:
         raise SaveError('The requested field is not mapped for DW7 XL PC.')
-    if not key.endswith('_active_weapon'):
+    if not (equipment.reference_key(key) or equipment.seal_key(key) or key.endswith('_active_weapon')):
         return ()
+    payload = changed_payload(document, changes)
+    if equipment.reference_key(key) or equipment.seal_key(key):
+        return equipment.options(document.payload, key, payload)
     mapped = mapping[key]
     start = OFFICER_BASE + (mapped.slot - 1) * OFFICER_STRIDE
     options = []
     for value, name in ((0, 'First equipped weapon'), (1, 'Second equipped weapon')):
         try:
-            _validate_active_weapon(document, mapped, value)
+            _validate_active_weapon(document, mapped, value, payload)
         except SaveError:
             continue
-        reference = int.from_bytes(document.payload[start + 18 + value * 2:
-                                                    start + 20 + value * 2], 'little')
+        reference = int.from_bytes(payload[start + 18 + value * 2:
+                                           start + 20 + value * 2], 'little')
         options.append((value, f'{name} · inventory slot {reference + 1}'))
     return tuple(options)
 

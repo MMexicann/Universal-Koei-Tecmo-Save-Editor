@@ -234,15 +234,21 @@ class Gundam1PS3Tests(unittest.TestCase):
                 self.assertFalse(destination.exists())
                 self.source.write_bytes(self.document.raw)
 
-    def test_changed_companion_during_backup_removes_partial_snapshot(self):
+    def test_changed_companion_during_backup_keeps_completed_snapshot(self):
         original_snapshot = parser.snapshot_backup
+        snapshots = []
         def mutate(*args, **kwargs):
             result = original_snapshot(*args, **kwargs)
+            snapshots.append(result)
             (self.folder / 'PARAM.SFO').write_bytes(metadata() + b'changed-during-backup')
             return result
         with patch.object(parser, 'snapshot_backup', side_effect=mutate), self.assertRaises(SaveError):
             parser.backup(self.document)
-        self.assertEqual(list((self.folder / 'UniversalEditorBackups').iterdir()), [])
+        self.assertEqual(len(snapshots), 1)
+        snapshot = snapshots[0]
+        self.assertEqual(snapshot.read_bytes(), self.document.raw)
+        self.assertTrue(snapshot.with_suffix('.json').exists())
+        self.assertEqual(snapshot.with_suffix('.sfo').read_bytes(), metadata())
 
     def test_backup_sidecar_collision_preserves_foreign_file(self):
         original_write = parser.atomic_new
@@ -258,7 +264,9 @@ class Gundam1PS3Tests(unittest.TestCase):
             parser.backup(self.document)
         self.assertEqual(len(collisions), 1)
         self.assertEqual(collisions[0].read_bytes(), foreign)
-        self.assertEqual(list((self.folder / 'UniversalEditorBackups').iterdir()), collisions)
+        snapshot = collisions[0].with_suffix(self.source.suffix)
+        self.assertEqual(snapshot.read_bytes(), self.document.raw)
+        self.assertTrue(snapshot.with_suffix('.json').exists())
 
     def test_save_rechecks_source_and_opaque_companion_after_atomic_write(self):
         original_write = parser.atomic_new

@@ -1,5 +1,45 @@
 # Universal development validation
 
+## v2.5.3 weapons, new profiles and shared refinements
+
+DW7 XL PC weapon qualification independently inspects native parameter loaders,
+save serializers and equipment/seal pickers. Three distinct native PC states
+pass 54 independent equipment exports: 18 reference substitutions, 18 learned
+seal substitutions and 18 removals. Each preserves the native seed and every
+unrelated payload byte. Duplicate slots/seals, original smith reservations,
+unknown records and suspended-battle cases are guarded. Base attack, element,
+element level and capacity are external parameters, not mapped save members.
+[Exact controls and proof](DW7XL_WEAPONS.md).
+
+Original DW7 XL US/EU PS3 setters/getters/validators independently establish
+Gold and 65 playable officers' six stored scalar bounds, active-weapon choice
+and negative unlearned-meter operations. Official regional code comparisons,
+499 surgical edits and 413 no-ops per native context, shared scalar self-tests,
+and GUI/copy/backup/restore checks pass. Both original regions share one gameplay
+state. [PS3 format and external signing limits](DW7XL_PS3.md).
+
+Nights of Azure 2 Switch qualifies three complete native states from two source
+archives, without claiming independent publishers. An independent walk checks
+60 active unsigned-byte FNV-1a blocks; 35 numeric/preservation cases, 379 invalid
+cases and three copied-native save/backup/restore workflows check Libra and its
+coupled preview. Chapter checkpoints, unknown preview padding and inactive clear
+tails remain unchanged. Only exact English Chapter 1/7/Clear profiles qualify;
+no natural cap is inferred from a modified source. [Scope](NOA2_SWITCH_FORMAT.md).
+
+WO3 Ultimate's native mount-menu lookup, state-copy bridge and serializers
+qualify two stored selectors. Two original native sources pass 20 exact-byte
+exports and two GUI/save/backup/restore workflows. Ownership, binary item ranks,
+ordinary item equipment and inactive battle actors remain separate.
+
+Cross-game regressions cover completed backup/context/manifest retention after
+disk errors and concurrent replacements in 24 formats, plus DW3 prepared-report
+retention. Shared GUI tests exercise large choice filtering, mixed selection,
+named/formatted review search and complete frozen typed JSON export. The full
+suite, native Windows builds/startups, active Defender scans and exact public
+download verification remain required release gates. Eleven reviewed user guides
+are bundled. Actual edited/converted game loading remains untested; Origins
+proficiency-level and Old Coin writers remain unimplemented.
+
 ## v2.5.2 DW6 expansion, DW7 XL transfer and Origins inspection
 
 DW7 XL's one-way original US/European PS3 to Definitive Edition PC route is

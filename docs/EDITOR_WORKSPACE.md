@@ -1,6 +1,6 @@
 # Editing workspace
 
-The portable Windows ZIP includes this guide and the six companion user guides
+The portable Windows ZIP includes this guide and ten companion user guides
 in `_internal/guides/`. The full developer documentation remains in the Source ZIP.
 
 Choose an exact game/platform in the library, then open a separate save copy.
@@ -23,6 +23,14 @@ Changed rows have a subtle background in both Light and Dark themes. Opened and
 pending values remain separate columns. Use horizontal scrolling to reach wide
 record names and columns. **Show editing guide** expands the selected game's
 instructions. Selection guidance remains below the table.
+
+Large choice lists have a **Find choices** search. Filtering the dropdown does
+not replace the selected native value or stage an edit. Selection guidance
+shows opened and current values; mixed bulk selections leave the value blank
+until an explicit assignment. **Review Changes** searches names, stable field
+IDs, records and raw/formatted values, and shows named choices where available.
+Filtering a review does not narrow its exported JSON: the complete reviewed
+snapshot retains raw typed values and stays frozen if later edits change.
 
 **More options** reveals experimental editing and the encoding-limit column.
 Hiding the panel does not turn an acknowledged experimental session off or

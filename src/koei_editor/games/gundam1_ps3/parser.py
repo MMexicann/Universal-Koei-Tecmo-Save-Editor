@@ -362,17 +362,10 @@ def backup(document):
     validate_source(document)
     result = snapshot_backup(document.raw, document.source, GAME_ID,
                              document.source.parent / 'UniversalEditorBackups')
-    sidecar_created = False
-    try:
-        atomic_new(identity_metadata(document.native_directory), result.with_suffix('.sfo'))
-        sidecar_created = True
-        validate_source(document)
-    except Exception:
-        result.unlink(missing_ok=True)
-        result.with_suffix('.json').unlink(missing_ok=True)
-        if sidecar_created:
-            result.with_suffix('.sfo').unlink(missing_ok=True)
-        raise
+    # Preserve completed backup files if companion creation or source
+    # revalidation fails; these paths may now contain another app's bytes.
+    atomic_new(identity_metadata(document.native_directory), result.with_suffix('.sfo'))
+    validate_source(document)
     return result
 
 

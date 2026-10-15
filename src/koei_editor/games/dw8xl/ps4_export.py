@@ -98,14 +98,10 @@ def backup(document):
     path = snapshot_backup(document.raw, document.source, GAME_ID,
                            document.source.parent / 'UniversalEditorBackups')
     companion = path.with_name(path.name + '.param.sfo')
-    try:
-        atomic_new(metadata, companion)
-        reopened = read_save(document.source)
-        if reopened.raw != document.raw or reopened.context_digest != document.context_digest:
-            raise SaveError('The PS4 copy changed during backup.')
-    except Exception:
-        path.unlink(missing_ok=True)
-        path.with_suffix('.json').unlink(missing_ok=True)
-        companion.unlink(missing_ok=True)
-        raise
+    # Preserve completed backup files if companion creation or source
+    # revalidation fails; these paths may now contain another app's bytes.
+    atomic_new(metadata, companion)
+    reopened = read_save(document.source)
+    if reopened.raw != document.raw or reopened.context_digest != document.context_digest:
+        raise SaveError('The PS4 copy changed during backup.')
     return path

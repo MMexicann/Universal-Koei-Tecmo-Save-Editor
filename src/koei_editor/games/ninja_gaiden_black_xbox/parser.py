@@ -246,14 +246,10 @@ def backup(document):
                'eeprom_sha256': document.context.eeprom_hash, 'metadata_sha256': document.context.metadata_hash,
                'eeprom_basename': document.context.basename}
     context_path = snapshot.with_name(snapshot.name + '.context.json')
-    try:
-        atomic_new(json.dumps(binding).encode('utf-8'), context_path)
-        _source(document)
-    except Exception:
-        snapshot.unlink(missing_ok=True)
-        snapshot.with_suffix('.json').unlink(missing_ok=True)
-        context_path.unlink(missing_ok=True)
-        raise
+    # Preserve completed backup files if companion creation or source
+    # revalidation fails; these paths may now contain another app's bytes.
+    atomic_new(json.dumps(binding).encode('utf-8'), context_path)
+    _source(document)
     return snapshot
 
 

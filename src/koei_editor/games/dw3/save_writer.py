@@ -279,13 +279,10 @@ def backup_save(document: SaveDocument,folder: Path | None=None) -> Path:
     path=folder/f'GameStatusData.{stamp}.{uuid.uuid4().hex[:8]}.sav'
     path=_atomic_write(document.encrypted,path)
     metadata={'size_bytes':len(document.encrypted),'sha256':hashlib.sha256(document.encrypted).hexdigest()}
-    try:
-        _atomic_write(json.dumps(metadata,indent=2).encode(),path.with_suffix('.json'))
-    except Exception:
-        # Only this newly created, uniquely named incomplete backup is removed.
-        try:path.unlink()
-        except OSError:pass
-        raise
+    # Keep a completed snapshot if its manifest cannot be created. Its path
+    # may already contain another app's replacement; failed backups remain
+    # unusable for restore without a matching manifest.
+    _atomic_write(json.dumps(metadata,indent=2).encode(),path.with_suffix('.json'))
     return path
 
 def write_save(document: SaveDocument,path: Path,changes: list[Change]=(),overwrite=False) -> tuple[Path,dict]:

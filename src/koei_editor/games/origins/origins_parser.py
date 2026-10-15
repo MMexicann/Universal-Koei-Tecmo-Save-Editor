@@ -253,11 +253,22 @@ def review(document, changes):
             for field in fields_for(document) if field.id in changes]
 
 
-def backup(document):
+def _unchanged_source(document):
     validate_document(document)
     source = safe_path(document.source)
-    return snapshot_backup(document.raw, source, GAME_ID,
-                           safe_path(source.parent / 'WarriorsEditorBackups'))
+    with source.open('rb') as stream:
+        current = stream.read(MAX_FILE_SIZE + 1)
+    if current != document.raw:
+        raise SaveError('The opened Origins copy changed on disk. Reopen it before saving or backing up.')
+    return source
+
+
+def backup(document):
+    source = _unchanged_source(document)
+    result = snapshot_backup(document.raw, source, GAME_ID,
+                             safe_path(source.parent / 'WarriorsEditorBackups'))
+    _unchanged_source(document)
+    return result
 
 
 def save_as(document, changes, destination):
@@ -266,15 +277,30 @@ def save_as(document, changes, destination):
         raise SaveError('Choose a new .dat destination.')
     if destination.exists():
         raise FileExistsError('Choose a new file; existing files are never replaced.')
-    validate_document(document)
-    with safe_path(document.source).open('rb') as stream:
-        current = stream.read(MAX_FILE_SIZE + 1)
-    if current != document.raw:
-        raise SaveError('The opened copy changed on disk. Reopen it before saving.')
+    _unchanged_source(document)
     raw = serialize(document, changes)
     backup(document)
+    _unchanged_source(document)
     atomic_new(raw, destination)
-    return decode(raw, GAME_ID, destination)
+    try:
+        _unchanged_source(document)
+        reopened = read_save(destination)
+        if reopened.raw != raw:
+            raise SaveError('The Origins destination differs from the verified edit.')
+        _unchanged_source(document)
+    except Exception:
+        # Only remove the exact copy we just created. A destination changed by
+        # another process is retained; neither an opened input nor a preexisting
+        # file is ever removed by this cleanup.
+        try:
+            with destination.open('rb') as stream:
+                ours = stream.read(MAX_FILE_SIZE + 1) == raw
+            if ours:
+                destination.unlink()
+        except OSError:
+            pass
+        raise
+    return reopened
 
 
 def restore(backup_path, destination, game_id=GAME_ID):

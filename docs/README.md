@@ -6,6 +6,9 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Editor workspace: categories, open sessions and keyboard controls](EDITOR_WORKSPACE.md)
+- [Origins proficiency and Old Coin request: status and evidence](ORIGINS_REQUEST_STATUS.md)
+
 - [Batch Converter: plans, preflight, preservation and partial results](BATCH_CONVERSION.md)
 - [Additional title qualification and source-only inspection](EXPANSION_CANDIDATES.md)
 

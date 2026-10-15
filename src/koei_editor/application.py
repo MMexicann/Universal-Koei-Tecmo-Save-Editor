@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.4'
+VERSION = '2.5'
 
 
 class Application(Appearance):
@@ -51,6 +51,15 @@ class Application(Appearance):
         self.author_label.pack(side='right', padx=20)
         self.breadcrumb_label = ttk.Label(top, textvariable=self.breadcrumb, style='Muted.TLabel', width=1)
         self.breadcrumb_label.pack(side='left', fill='x', expand=True, padx=14)
+        self.session_bar = ttk.Frame(root, padding=(18, 0, 18, 8))
+        self.session_caption = tk.StringVar(root, value='Open editors')
+        ttk.Label(self.session_bar, textvariable=self.session_caption, style='Muted.TLabel').pack(side='left', padx=(0, 10))
+        self.session_choice = tk.StringVar(root)
+        self.session_selector = ttk.Combobox(self.session_bar, textvariable=self.session_choice, state='readonly', width=1)
+        self.session_selector.pack(side='left', fill='x', expand=True)
+        self.session_selector.bind('<<ComboboxSelected>>', self.resume_session)
+        self._session_labels = {}
+        self._session_order = []
         self.workspace = ttk.Frame(root)
         self.workspace.pack(fill='both', expand=True)
         self.library = ttk.Frame(self.workspace, padding=(38, 20))
@@ -144,6 +153,36 @@ class Application(Appearance):
                                  ('<Control-Shift-S>', 'save_as'), ('<Control-z>', 'undo'), ('<Control-r>', 'review')):
             root.bind(shortcut, lambda _event, name=method: self.dispatch(name))
         root.protocol('WM_DELETE_WINDOW', self.close)
+
+    def refresh_sessions(self):
+        if not hasattr(self, 'session_bar'):
+            return
+        ordered = [key for key in self._session_order if key in self.sessions]
+        ordered += [key for key in self.sessions if key not in ordered]
+        labels = {}
+        current = None
+        for key in ordered:
+            game = get_game(key)
+            editor = self.sessions[key][1]
+            count = len(editor.changes)
+            label = f'{game.title} - {game.subtitle}' + (f' [{count:,} pending]' if count else '')
+            labels[label] = key
+            if key == self.active_game:
+                current = label
+        previous = self._session_labels.get(self.session_choice.get())
+        self._session_labels = labels
+        self.session_selector.configure(values=tuple(labels))
+        self.session_caption.set(f'Open editors ({len(labels)})')
+        self.session_choice.set(current or next((label for label, key in labels.items() if key == previous),
+                                                next(iter(labels), '')))
+        if labels and not self.session_bar.winfo_manager():
+            self.session_bar.pack(fill='x', before=self.workspace)
+
+    def resume_session(self, _event=None):
+        key = self._session_labels.get(self.session_choice.get())
+        if key in self.sessions:
+            self.select_game(key)
+        return 'break'
 
     def create_library_cards(self, scope):
         if scope in self.library_cards:
@@ -283,6 +322,11 @@ class Application(Appearance):
                 frame.destroy()
                 raise
             self.sessions[game_id] = frame, editor
+            status = getattr(editor, 'status', None)
+            if hasattr(status, 'trace_add'):
+                status.trace_add('write', lambda *_args: self.refresh_sessions())
+        if hasattr(self, '_session_order'):
+            self._session_order = [game_id] + [key for key in self._session_order if key != game_id]
         self.library.pack_forget()
         self._hide_tools()
         for frame, _editor in self.sessions.values():
@@ -290,6 +334,7 @@ class Application(Appearance):
         frame, editor = self.sessions[game_id]
         frame.pack(fill='both', expand=True)
         self.active_game = game_id
+        self.refresh_sessions()
         self.breadcrumb.set(game.title + ' · ' + game.subtitle)
         self.apply_theme(self.theme_name.get())
         return editor
@@ -414,8 +459,11 @@ class Application(Appearance):
         return 'break'
 
     def focus_library_search(self, _event=None):
-        if (self.active_game is not None
-                or (self.converter is not None and self.converter.frame.winfo_manager())
+        if self.active_game is not None:
+            editor = self.sessions[self.active_game][1]
+            focus = getattr(editor, 'focus_field_search', None)
+            return focus() if focus is not None else None
+        if ((self.converter is not None and self.converter.frame.winfo_manager())
                 or (self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return

@@ -2,7 +2,9 @@
 
 Every registered editor has an explicit experimental editing option. It is off
 by default, belongs to the current editor session and resets after opening a
-new save. Enabling it requires acknowledging that values above supported limits
+new save. In scalar editors, open **More options** to reveal the toggle and
+encoding-limit column. Hiding that panel does not change the editing mode or
+pending values. Enabling it requires acknowledging that values above supported limits
 can break the save file or game, or be clamped/reset by the game. Saving pending
 values above the supported range displays another warning.
 

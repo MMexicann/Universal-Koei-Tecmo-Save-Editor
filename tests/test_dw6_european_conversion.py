@@ -8,7 +8,7 @@ import unittest
 
 from koei_editor import conversion as c
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.games.dw6 import converter, progression_conversion, campaign_conversion
+from koei_editor.games.dw6 import converter, progression_conversion, campaign_conversion, records_conversion
 from koei_editor.games.dw6_ps3 import european_export as eu, japanese_export as jp
 from tests.test_conversion import fixture, write_copy
 from tests import test_ps3_expansion as ps3_context
@@ -59,9 +59,9 @@ class EuropeanDW6ConversionTests(unittest.TestCase):
 
     def test_all_european_routes_have_distinct_scopes_and_actual_export_receipts(self):
         routes = [route for route in c.ROUTES if eu.GAME_ID in (route.source_id, route.target_id)]
-        self.assertEqual(len(routes), 18)
-        self.assertEqual(len(c.ROUTES), 54)
-        self.assertEqual(len(set(route.label for route in c.ROUTES)), 54)
+        self.assertEqual(len(routes), 40)
+        self.assertEqual(len(c.ROUTES), 138)
+        self.assertEqual(len(set(route.label for route in c.ROUTES)), 138)
         for route in routes:
             with self.subTest(route=route.id), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
@@ -70,7 +70,7 @@ class EuropeanDW6ConversionTests(unittest.TestCase):
                 original, original_template = source.read_bytes(), template.read_bytes()
                 reviewed = c.prepare(route.id, source, template)
                 destination, _backups, receipt = c.export(reviewed, root / 'forward')
-                expected_size = {'': 7368, 'progress': 8336, 'campaigns': 10976}[route.variant]
+                expected_size = {'': 7368, 'progress': 8336, 'campaigns': 10976, 'records': 11203}[route.variant]
                 self.assertEqual(receipt['gameplay_bytes'], expected_size)
                 self.assertEqual(receipt['transfer_scope'], route.transfer_scope)
                 self.assertFalse(receipt['game_load_verified'])
@@ -94,7 +94,8 @@ class EuropeanDW6NativeTests(unittest.TestCase):
             originals = {'dw6': Path(os.environ['DW6_SAVE']),
                          'dw6_ps3': Path(os.environ['DW6_PS3_SAVE_COPIES'].split(os.pathsep)[0]),
                          jp.GAME_ID: Path(os.environ['DW6_PS3_JP_SAVE']), eu.GAME_ID: Path(european)}
-            for route in (r for r in c.ROUTES if eu.GAME_ID in (r.source_id, r.target_id)):
+            for route in (r for r in c.ROUTES if eu.GAME_ID in (r.source_id, r.target_id)
+                          and r.source_id in originals and r.target_id in originals):
                 with self.subTest(reference=Path(european).parent.name, route=route.id), tempfile.TemporaryDirectory() as temporary:
                     root, copies = Path(temporary), {}
                     hashes = {key: hashlib.sha256(path.read_bytes()).hexdigest() for key, path in originals.items()}
@@ -116,11 +117,21 @@ class EuropeanDW6NativeTests(unittest.TestCase):
                     self.assertEqual(restored.read_bytes(), copies[route.source_id].read_bytes())
                     backend = c.ENDPOINTS[route.target_id].backend
                     start, end = backend.OFFICER_BASE, backend.HORSE_BASE - 24 + 8 * 60
-                    if route.variant == 'campaigns':
+                    if route.variant in ('campaigns', 'records'):
                         start -= 20 * 132
-                    self.assertEqual(reviewed.raw[:start], reviewed.template.document.raw[:start])
-                    self.assertEqual(reviewed.raw[end:], reviewed.template.document.raw[end:])
-                    transform = {'': converter, 'progress': progression_conversion, 'campaigns': campaign_conversion}[route.variant]
+                    allowed = [(start, end)]
+                    if route.variant == 'records':
+                        gallery, challenges = {'dw6': (0xB4, 0x2BF6), 'dw6_ps3': (0xAC, 0x2BA8),
+                                               'dw6_ps3_eu': (0xAC, 0x2BA8), 'dw6_ps3_jp': (0xAC, 0x2BB6)}[route.target_id]
+                        allowed.extend(((gallery, gallery + 27), (challenges, challenges + 200)))
+                        self.assertEqual(reviewed.raw[gallery + 26] & 0xFC,
+                                         reviewed.template.document.raw[gallery + 26] & 0xFC)
+                    expected = bytearray(reviewed.template.document.raw)
+                    for left, right in allowed:
+                        expected[left:right] = reviewed.raw[left:right]
+                    self.assertEqual(reviewed.raw, bytes(expected))
+                    transform = {'': converter, 'progress': progression_conversion, 'campaigns': campaign_conversion,
+                                 'records': records_conversion}[route.variant]
                     actual = backend.read_save(destination)
                     self.assertEqual(transform.gameplay(actual), transform.gameplay(reviewed.source.document))
                     # Independent values catch reversible but wrong word/byte swaps.
@@ -132,6 +143,7 @@ class EuropeanDW6NativeTests(unittest.TestCase):
                         self.assertEqual(int.from_bytes(actual.raw[tb:tb + 8], target_order),
                                          int.from_bytes(reviewed.source.document.raw[sa:sa + 8], order))
                         self.assertEqual(actual.raw[tb + 164:tb + 168], reviewed.source.document.raw[sa + 164:sa + 168])
-                    self.assertEqual(receipt['gameplay_bytes'], {'': 7368, 'progress': 8336, 'campaigns': 10976}[route.variant])
+                    self.assertEqual(receipt['gameplay_bytes'], {'': 7368, 'progress': 8336, 'campaigns': 10976,
+                                                               'records': 11203}[route.variant])
                     for key, original in originals.items():
                         self.assertEqual(hashlib.sha256(original.read_bytes()).hexdigest(), hashes[key])

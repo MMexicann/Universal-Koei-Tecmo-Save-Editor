@@ -282,24 +282,14 @@ def save_as(document, changes, destination):
     backup(document)
     _unchanged_source(document)
     atomic_new(raw, destination)
-    try:
-        _unchanged_source(document)
-        reopened = read_save(destination)
-        if reopened.raw != raw:
-            raise SaveError('The Origins destination differs from the verified edit.')
-        _unchanged_source(document)
-    except Exception:
-        # Only remove the exact copy we just created. A destination changed by
-        # another process is retained; neither an opened input nor a preexisting
-        # file is ever removed by this cleanup.
-        try:
-            with destination.open('rb') as stream:
-                ours = stream.read(MAX_FILE_SIZE + 1) == raw
-            if ours:
-                destination.unlink()
-        except OSError:
-            pass
-        raise
+    # Retain an atomically created destination if later verification fails.
+    # Comparing its bytes before unlinking cannot protect a replacement made
+    # between that comparison and deletion by another application's write.
+    _unchanged_source(document)
+    reopened = read_save(destination)
+    if reopened.raw != raw:
+        raise SaveError('The Origins destination differs from the verified edit.')
+    _unchanged_source(document)
     return reopened
 
 

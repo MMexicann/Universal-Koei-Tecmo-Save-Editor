@@ -1,6 +1,6 @@
 {
   "game_id": "origins",
-  "format_status": "Native Steam envelope and revisions 16, 17, 29 qualified; resources, existing bonds, provincial peace, catalogue-qualified weapon reinforcement and persistent battle clear history mapped; independent game loading unvalidated",
+  "format_status": "Native Steam envelope and revisions 16, 17, 29 qualified; existing editable scope unchanged; guarded read-only stored proficiency/Battle Art inspection; proficiency and Old Coin writers unavailable; independent game loading unvalidated",
   "native_evidence": {
     "steam_build": "21711288",
     "executable_sha256": "5b8599854143ef7483b272dfa28f7cae616add6b2a8c31550c8a0c8eb1bd63d9",
@@ -36,6 +36,70 @@
       "sha256": "1e0e1668c6398bc9c67d47d5510833c30d0720e2eddb2c11795bfa49ce4ac758",
       "description": "Public Steam Dream of the 4 Heroes DLC save, identified by its publisher; not independently game-load validated",
       "license": "Unlicense"
+    },
+    {
+      "source": "https://down.gamersky.com/pc/202501/1874480.shtml",
+      "file": "SLOT0004.dat",
+      "bytes": 2561636,
+      "sha256": "2cb10bf2fa5f415852e12216a6f4ade324db81e34beefa535da70730e3eab331",
+      "revision": 16,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://down.gamersky.com/pc/202501/1875385.shtml",
+      "file": "SLOT0001.dat",
+      "bytes": 2561636,
+      "sha256": "bdd0e9263ee79fa0c269a4c3e58973a61155c14e1ee045fc37af83fdb2fa7a1f",
+      "revision": 17,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://down.gamersky.com/pc/202502/1882167.shtml",
+      "file": "SLOT0006.dat",
+      "bytes": 2561636,
+      "sha256": "5644ef14b500c08aa9846446643d1e0c1e11587ae3644e6af4b20351bcdc95d5",
+      "revision": 17,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://dl.3dmgame.com/patch/331175.html",
+      "file": "SLOT0001.dat",
+      "bytes": 2561636,
+      "sha256": "2d60780c5c1b2ec0c846061cef9c2ed3354bd5565df9e62e3fa916e67d5618fa",
+      "revision": 16,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://dl.3dmgame.com/patch/331177.html",
+      "file": "SLOT0000.dat",
+      "bytes": 2561636,
+      "sha256": "49b3d7db53b4fa1a7c602ff5196d03ac9e1286aaed796f869360fb9602a92c84",
+      "revision": 16,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://dl.3dmgame.com/patch/331177.html",
+      "file": "SLOT0001.dat",
+      "bytes": 2561636,
+      "sha256": "61d8da9d9696d582b1ad256d79bc2be65d19a59ffd460fc31bb3752124b24ac0",
+      "revision": 16,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://dl.3dmgame.com/patch/331177.html",
+      "file": "SLOT0002.dat",
+      "bytes": 2561636,
+      "sha256": "ed96f2425e9e9fd13359c881706c7f8a7b12aef499bf5f65161a429b039c081a",
+      "revision": 16,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
+    },
+    {
+      "source": "https://dl.3dmgame.com/patch/331177.html",
+      "file": "SLOT0003.dat",
+      "bytes": 2561636,
+      "sha256": "0a99d3ee4487215fa78b77b9933a4886987a1c396501ce892683f6266b6eb160",
+      "revision": 16,
+      "description": "Published modified Steam slot; integrity and exact unchanged roundtrip verified; not a controlled action pair or independently game-load validated"
     }
   ],
   "asset_research": {
@@ -147,7 +211,7 @@
         "maximum": 999,
         "maxable": false
       },
-      "qualification": "Existing formed level 1–5 only; event/reward/learned-art bytes preserved",
+      "qualification": "Existing formed level 1\u20135 only; event/reward/learned-art bytes preserved",
       "serializer_rva": "0xaeafa0",
       "confidence": "high"
     },
@@ -236,15 +300,61 @@
         "https://github.com/bbfox0703/Mydev-Cheat-Engine-Tables/blob/main/DYNASTY%20WARRIORS%20ORIGINS/DWORIGINS.CT",
         "https://github.com/fusigi0930/game_script/blob/2423aae6d8ef8afce6dbd6c755e41a7b29983cdc/pc/cheat_engine_table/DWORIGINS.CT"
       ],
-      "needed": "Native disk serialization, semantic getter/setter limits, collection and reward-claim relationships. Runtime adjacency to SP does not prove disk adjacency."
+      "needed": "Native disk placement/semantic getter-setter or documented count-change pair, applicable bounds, collection and reward-claim relationships. Runtime adjacency to Skill Points does not prove disk adjacency.",
+      "unqualified_body_candidate": "0xa95",
+      "candidate_status": "Correlated resource-block hypothesis across nine public slots; no native serialization, count display or controlled action proof",
+      "published_table_revisions_reviewed": 22
     },
     "proficiency": {
       "writable": false,
-      "revision_29_candidate": "0x8055",
-      "candidate_status": "Pattern-only match on one complete public native slot; not an independently qualified disk mapping.",
+      "candidate_status": "Geometry corroborated on nine public native slots for guarded read-only inspection; no writer qualification",
       "records": 50,
       "packed_stride": 14,
-      "needed": "Disk positions for supported revisions; family IDs, thresholds, story/DLC gates, moveset/rank/reward/skill transitions and idempotent claimed-state handling."
+      "needed": "Complete native serializer placement proof for writes; exact thresholds, story/DLC gates, moveset/rank/reward/skill transitions and idempotent claimed-state handling.",
+      "body_bases": {
+        "16": "0x7f8d",
+        "17": "0x7f8d",
+        "29": "0x8055"
+      },
+      "readonly_inspector": true,
+      "public_native_references": 9
     }
-  }
+  },
+  "readonly_structures": [
+    {
+      "id": "stored_proficiency",
+      "writable": false,
+      "bases": {
+        "16": "0x7f8d",
+        "17": "0x7f8d",
+        "29": "0x8055"
+      },
+      "records": 50,
+      "stride": 14,
+      "xp": {
+        "relative_offset": 0,
+        "width": 4,
+        "encoding": "little-endian unsigned integer"
+      },
+      "equipped_battle_arts": {
+        "relative_offset": 4,
+        "count": 4,
+        "width": 2,
+        "empty_id": 65535
+      },
+      "opaque_relative_offsets": [
+        12,
+        13
+      ],
+      "gap_after_weapon_array": 174,
+      "native_public_references": 9,
+      "native_revision_distribution": {
+        "16": 6,
+        "17": 2,
+        "29": 1
+      },
+      "qualification": "Original ten-family Art topology required; unfamiliar layout withholds optional view without rejecting existing editable fields",
+      "limitations": "Stored XP is not a calculated level. Formed Art records do not establish ownership. Reserved records and all opaque bytes preserved."
+    }
+  ]
 }

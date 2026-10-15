@@ -19,7 +19,8 @@ NOTES = (
     'This transfers stored campaign slots, not an interim battle snapshot. Gallery, challenge boards, options '
     'and suspended battles remain from the destination template. No active battle is resumed by this route.',
     'Finish suspended battles before making the source copy and destination template. '
-    'Original PC, US BLUS30110, European BLES00215 and Japanese BLJM60041 only; Special and Empires differ.',
+    'Original PC, US BLUS30110, European BLES00215 and Japanese BLJM60041 PS3, '
+    'and North American 4B4F07E0/European 4B4F07E1 Xbox 360 only; Special and Empires differ.',
 )
 SLOT_COUNT, SLOT_STRIDE, RESULT_COUNT, RESULT_STRIDE = 20, 132, 6, 16
 

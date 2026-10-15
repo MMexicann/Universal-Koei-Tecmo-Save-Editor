@@ -41,11 +41,10 @@ def snapshot_backup(raw, source, game_id, folder=None):
     manifest = {'game_id': game_id, 'sha256': hashlib.sha256(raw).hexdigest(), 'size_bytes': len(raw),
                 'kind': 'opaque-copy', 'created_utc': stamp}
     result = atomic_new(raw, destination)
-    try:
-        atomic_new(json.dumps(manifest, indent=2).encode('utf-8'), destination.with_suffix('.json'))
-    except Exception:
-        result.unlink(missing_ok=True)
-        raise
+    # If manifest creation fails, keep the completed snapshot. Another app may
+    # have replaced either path; failure must never delete its bytes. Restore
+    # still requires a matching manifest before accepting this backup.
+    atomic_new(json.dumps(manifest, indent=2).encode('utf-8'), destination.with_suffix('.json'))
     return result
 
 

@@ -15,7 +15,7 @@ from tests.test_conversion import fixture, write_copy
 class DW6ProgressionConversionTests(unittest.TestCase):
     def test_each_direction_preserves_typed_stage_values_flags_and_unmapped_state(self):
         routes = [route for route in c.ROUTES if route.variant == 'progress']
-        self.assertEqual(len(routes), 12)
+        self.assertEqual(len(routes), 30)
         for route in routes:
             with self.subTest(route=route.id):
                 source_backend, target_backend = (c.ENDPOINTS[key].backend for key in (route.source_id, route.target_id))

@@ -23,20 +23,24 @@ reviewed user guides in `_internal/guides/`; the Source ZIP contains the full do
 
 Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.1.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
-controls remain available. New research has corroborated runtime fields and identified a proficiency-array
-candidate, but save positions and progression dependencies still need qualification. [Evidence and precise remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
+controls remain available. The development inspector shows stored proficiency XP
+and equipped Battle Art IDs, corroborated on nine public native slots. It does
+not calculate levels or change progression. Old Coin serialization and proficiency
+transition rules remain unresolved. [Evidence and remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
 
 ## Save Converter
 
 The changes below are **unreleased**; the published v2.5.1 app retains its 20 routes.
-The development Save Converter now offers **54 directed routes**:
+The development Save Converter now offers **138 directed routes**:
 
-- **DW6 PC and US/European/Japanese PS3:** 12 roster-and-horse routes, 12
+- **DW6 PC, US/European/Japanese PS3 and North American/European Xbox 360:** 30 roster-and-horse routes, 30
   **progress** routes adding 45 stage records and 17 Musou availability/clear
-  records, and 12 **campaign-slot** routes also carrying all 20 stored Musou
-  run slots. Gallery, challenges and interim battles remain from the destination
+  records, 30 **campaign-slot** routes also carrying all 20 stored Musou
+  run slots, and 30 **records** routes adding music/movie availability and five
+  challenge boards. Options and interim battles remain from the destination
   template. European BLES00215 and Japanese BLJM60041 are conversion-only;
-  each requires its own original metadata.
+  each requires its own original metadata. Xbox endpoints are also conversion-only
+  and require extracted gameplay beside its unchanged original `ORIGINAL.CON`.
 - **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
   (12 routes). PS4 requires the supported zero-extension profile.
 - **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
@@ -51,7 +55,8 @@ availability unlocks under **More unlocks**. Musou modes require their playable
 officers; clear records and rewards stay separate. The US editor also includes named one-way playable officer unlocks,
 searchable officer/weapon/horse inspection, horse combat stats and existing weapon
 bonus/element controls. Original `PARAM.SFO` is required beside decrypted `APP.BIN`.
-Full DW6 story/battle conversion and Xbox 360 remain unavailable.
+Xbox export needs external gameplay injection and rehash/resigning; the retained
+CON still contains the template gameplay. Active battle transfer remains unavailable.
 [DW6 mapping and limits](docs/DW6_CONVERSION.md).
 
 ## Experimental editing
@@ -78,7 +83,7 @@ empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
 Queue reviewed conversions, save/load private plans and validate every job before
 exporting. Each copy gets its own new folder, backups and native read-back.
 Progress, stop-after-current-copy and verified partial-result reports cover up to
-32 jobs across all 54 development routes. [Instructions](docs/BATCH_CONVERSION.md).
+32 jobs across all 138 development routes. [Instructions](docs/BATCH_CONVERSION.md).
 
 ## Compare Saves
 
@@ -138,7 +143,7 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
 | FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
 | DYNASTY WARRIORS 4 — Xtreme Legends · SLUS-20812 | PlayStation 2 | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, and bodyguard growth. |
-| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history. |
+| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
 | WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes and owned ordinary-item equipment. |
 | WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |

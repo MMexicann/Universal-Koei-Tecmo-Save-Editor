@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 26859,
-      "sha256": "d3e8ab1f3ea51ef18f29ff0a176c46a218053ec744a43008d13a7d5d850cacc8"
+      "bytes": 27307,
+      "sha256": "0080806c28f688f5fbdc3ba71250d7f92e4fb821d4bdef95029125f2c5dcc645"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -103,8 +103,8 @@
     },
     {
       "path": "docs/BATCH_CONVERSION.md",
-      "bytes": 4802,
-      "sha256": "eed55fbe56c7b8e72d012a8c3e16ca78ec6b02e57144c1e217897a2d1e5db421"
+      "bytes": 5333,
+      "sha256": "819839ed39613b2ae73e732d3ac0d231367f8abdfd9819f81c5476d95fcc4e1e"
     },
     {
       "path": "docs/BERSERK_PC_RESEARCH.md",
@@ -233,8 +233,8 @@
     },
     {
       "path": "docs/DW6_CONVERSION.md",
-      "bytes": 15589,
-      "sha256": "72280a73c2d1b4d94b83c794b06eced919b85165f933ebd84d0735fb6412fc7f"
+      "bytes": 22036,
+      "sha256": "65241d4931a85f8c8eb6b7fb5422996b72b52ad2272d432a3df4abd99c453c7f"
     },
     {
       "path": "docs/DW6_PS3_FORMAT.md",
@@ -483,13 +483,13 @@
     },
     {
       "path": "docs/ORIGINS_FORMAT.md",
-      "bytes": 20419,
-      "sha256": "aca6ef026cbf1c5d6f4e57db840c46898299ce11cee4a71ba4c6b17770ab42bc"
+      "bytes": 21751,
+      "sha256": "699b58fb6500cca74d32cc4c558f4e2b4e307fed97afd5ff22fe84f89c54d3be"
     },
     {
       "path": "docs/ORIGINS_REQUEST_STATUS.md",
-      "bytes": 5476,
-      "sha256": "d9d23925eb84ebed30dde4c154d039816ce7edb1ac9b540688e04f1743fa0d5c"
+      "bytes": 6489,
+      "sha256": "de1a09ebec9ca660fa4987d330a2e4d6e62e7b859922d6e3fc416075f7210265"
     },
     {
       "path": "docs/OROCHI_DYNASTY_DEPTH.md",
@@ -593,8 +593,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 12730,
-      "sha256": "5cb39133ae85b34d4bf288eff0d71d7b8e7d4348f995c181d5ea7cfac80999b5"
+      "bytes": 12733,
+      "sha256": "3c109d6fba3cbf1601255822aa215a37594cd451d4d03fc8a08531dff5e02d31"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -713,8 +713,8 @@
     },
     {
       "path": "docs/SAVE_CONVERSION.md",
-      "bytes": 12479,
-      "sha256": "500427f29a82eb9fc40a22d28187df33f1a786c4068aa01bb6cfe74bec02ee95"
+      "bytes": 15193,
+      "sha256": "1c53af02ab8946ca38b2d65e60c00a0a077625b5b84e6f6b1ffb8456af0d1d20"
     },
     {
       "path": "docs/SAVE_FORMAT.md",
@@ -763,8 +763,8 @@
     },
     {
       "path": "docs/SUPPORTED_GAMES.md",
-      "bytes": 18613,
-      "sha256": "5e9340276a0f5d6dee677039ef880ead8b485679a83c31784451696d1beb2b71"
+      "bytes": 18655,
+      "sha256": "afa3cb57bff0748ffa6884a7477f0c9ecefcc1533c34a03b928a02997758f148"
     },
     {
       "path": "docs/SW2HD_PS3.md",
@@ -1043,8 +1043,8 @@
     },
     {
       "path": "src/koei_editor/conversion.py",
-      "bytes": 15473,
-      "sha256": "3a1b0e620a3cc1cc76890da6345d532932c9c0c9ef529cb1153b81eeac7fda66"
+      "bytes": 17447,
+      "sha256": "f959f50fcf891ab4babc538eab74748d1a5f46cd1a3b67702b963bb6156c276a"
     },
     {
       "path": "src/koei_editor/data/AGENTS.md",
@@ -1073,8 +1073,8 @@
     },
     {
       "path": "src/koei_editor/data/dw6_migration_evidence.json",
-      "bytes": 3863,
-      "sha256": "b6fdeba71ad502f8caaf73bce1425bd22085c4e72be285244d5d7eb94e8f72d6"
+      "bytes": 9665,
+      "sha256": "a8d1ac61fa9bcba804199e72bd64f4f5f6dd2646fd5d0ddaef1f8a24bb3cab59"
     },
     {
       "path": "src/koei_editor/data/game_metadata.json",
@@ -1098,8 +1098,8 @@
     },
     {
       "path": "src/koei_editor/data/origins_evidence.json",
-      "bytes": 8909,
-      "sha256": "8206bb6149887b305af90c7f11fb7ab25cbb83ef2fb328585790552cae09e16c"
+      "bytes": 13677,
+      "sha256": "cc5f6db9749294f5e4339cebaad0d6737e128fcb36b2e5b771be24e2879eb015"
     },
     {
       "path": "src/koei_editor/data/progression_routes.json",
@@ -1128,8 +1128,8 @@
     },
     {
       "path": "src/koei_editor/game_registry.py",
-      "bytes": 42445,
-      "sha256": "5fadf21984e6d96f10278c928d4a3e1c0e43b44c92e7769ddea010b9dc9df125"
+      "bytes": 42487,
+      "sha256": "4dc168b6dbcd17576c55b0eeceab9f4daf0d680f1686a2b5fe39adb5fd74d028"
     },
     {
       "path": "src/koei_editor/games/AGENTS.md",
@@ -1533,13 +1533,13 @@
     },
     {
       "path": "src/koei_editor/games/dw6/campaign_conversion.py",
-      "bytes": 3712,
-      "sha256": "b3990ad6e20a54cfec8ad73eb0cd9adefa354d0d6f93b361201aa952fa4f0671"
+      "bytes": 3779,
+      "sha256": "966b3e278e017478dddaaf5a1f66bab96390f757dcf6125b3aa82d5cbfd873f3"
     },
     {
       "path": "src/koei_editor/games/dw6/converter.py",
-      "bytes": 5349,
-      "sha256": "4c855e1263af9afb6bde3e0713fadfef0379f522dbca88a0d765c90bd4209e52"
+      "bytes": 5667,
+      "sha256": "18455c264ca0048872dc58ec8b92947f9f1d6bef1c622f1fde0669616c1f8806"
     },
     {
       "path": "src/koei_editor/games/dw6/dw6_editor.py",
@@ -1563,8 +1563,13 @@
     },
     {
       "path": "src/koei_editor/games/dw6/progression_conversion.py",
-      "bytes": 4239,
-      "sha256": "85f044131bff7210f9b30377b66d3f19abeb04b11641f3240fe5a728bcaa6201"
+      "bytes": 4306,
+      "sha256": "ab44af64f53f4ec54476fefe4de2ee4aa8707b721971ec69cc0e33dc1da66317"
+    },
+    {
+      "path": "src/koei_editor/games/dw6/records_conversion.py",
+      "bytes": 4925,
+      "sha256": "bfa513547691451e2386728725623d5d15ab3f55b3c8bff3ceefcc92cee2b1c9"
     },
     {
       "path": "src/koei_editor/games/dw6_ps3/__init__.py",
@@ -1595,6 +1600,31 @@
       "path": "src/koei_editor/games/dw6_ps3/regional_export.py",
       "bytes": 4265,
       "sha256": "e58981fe07bca3713c2001e42bc46a04b030e24da05cf85e1a6f22c17a3a2036"
+    },
+    {
+      "path": "src/koei_editor/games/dw6_xbox360/__init__.py",
+      "bytes": 77,
+      "sha256": "2196e81a17c9dedb6e1bd35312f65e035f1055ddfd59c073d923581cab929e6d"
+    },
+    {
+      "path": "src/koei_editor/games/dw6_xbox360/european_export.py",
+      "bytes": 617,
+      "sha256": "8f097eef637f4170988a0a8aff23a4f4bff0a27f6a505bbf60cd92f72216b5e3"
+    },
+    {
+      "path": "src/koei_editor/games/dw6_xbox360/north_american_export.py",
+      "bytes": 629,
+      "sha256": "bfa3de430e41cedff8295d964da5990bfa9d57d31e4482228ab701dd29d645bb"
+    },
+    {
+      "path": "src/koei_editor/games/dw6_xbox360/regional_export.py",
+      "bytes": 6167,
+      "sha256": "fe53f32c4ba6b4493b6521357717659f526334b6e4a0ca4d76dd8c28619af792"
+    },
+    {
+      "path": "src/koei_editor/games/dw6_xbox360/stfs_context.py",
+      "bytes": 5744,
+      "sha256": "2e6cbfde02ffb072837bfe8ae2c1ebd53e54732faca5a25f62a88274c9ca16d7"
     },
     {
       "path": "src/koei_editor/games/dw7_ps3/__init__.py",
@@ -2223,13 +2253,18 @@
     },
     {
       "path": "src/koei_editor/games/origins/origins_parser.py",
-      "bytes": 14292,
-      "sha256": "1db3b82abbed14c7fa47f857b9f5d1a917c621506596693cc2a278b1a989e1c3"
+      "bytes": 14023,
+      "sha256": "a08224614d54a44c47d6d5d609f6d489bb08f5bae6d0b77be4cabdafa27381db"
     },
     {
       "path": "src/koei_editor/games/origins/origins_presentation.py",
-      "bytes": 1563,
-      "sha256": "4d5a003313431f01361a2580b3b13e1f503ed016d1983e6b67e4df4198a7336d"
+      "bytes": 2436,
+      "sha256": "fb9b6024637efa42bf93d110d1946ac4188a2cf7f7dba71b6e2b6dad66b83a7c"
+    },
+    {
+      "path": "src/koei_editor/games/origins/origins_proficiency.py",
+      "bytes": 3581,
+      "sha256": "fa67b035ce38ae180b30eabf49b388e8bf2100a854ad3156e71cb4135299f009"
     },
     {
       "path": "src/koei_editor/games/origins/origins_progression.py",
@@ -3363,8 +3398,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 3370,
-      "sha256": "90aaad5386666040e08d8caf3d744dbc25abda1caa3e5ab87321d406b3beb619"
+      "bytes": 3510,
+      "sha256": "162970df5c7cc18b242877b699296631319c9245ef3b00cb53807a5f58052557"
     },
     {
       "path": "src/koei_editor/shared/experimental_limits.py",
@@ -3398,8 +3433,8 @@
     },
     {
       "path": "src/koei_editor/shared/ps3_copy.py",
-      "bytes": 5764,
-      "sha256": "f8260c4c0b1882c576a1838882cd90d664f926a525370bc63c27b9a86f6c4f33"
+      "bytes": 6981,
+      "sha256": "7105b21f1ece604ee755fe334db34f81e85bb30469c71c12ebcbce6c19cf59a8"
     },
     {
       "path": "src/koei_editor/shared/ps3_export.py",
@@ -3613,13 +3648,23 @@
     },
     {
       "path": "tests/test_conversion.py",
-      "bytes": 13064,
-      "sha256": "d9498a5d284b71bba9adec2e88c521f8fc71a6e78239eadafa587949b27d59b6"
+      "bytes": 13676,
+      "sha256": "7a6713622b91e7f8b3172d6691885120a44d8996a7c1140045c5cec66324dd1c"
+    },
+    {
+      "path": "tests/test_conversion_final_readback.py",
+      "bytes": 7227,
+      "sha256": "ab4a3a5330fa105b1dc86e568372d62d55ff7078fdd6a94bd1efef765bab6c5b"
     },
     {
       "path": "tests/test_conversion_gui.py",
-      "bytes": 11740,
-      "sha256": "0f67b0ac6b3a4498e30a14f8a6812726352b8f56db1267c5ed54eeba5b132068"
+      "bytes": 13339,
+      "sha256": "0fffcac85d3818f7f2c8b10c018e20d602b8586e39a16d52221d6a54e5083a36"
+    },
+    {
+      "path": "tests/test_copy_backup_races.py",
+      "bytes": 7287,
+      "sha256": "4814cc4517f72a36407787043090bc0c54485eaca37faf7cc14c162453fd2c80"
     },
     {
       "path": "tests/test_defender_release_gate.py",
@@ -3674,7 +3719,7 @@
     {
       "path": "tests/test_dw6_campaign_conversion.py",
       "bytes": 8560,
-      "sha256": "58ef205261bd49d86fca5aa738d724eecc51be25b29ca8f5686d35144c26d3ce"
+      "sha256": "7b26840cc1888bd2d40b938d3501d449acf6ab17d1616bad1a1acfaa50d0a5a0"
     },
     {
       "path": "tests/test_dw6_conversion.py",
@@ -3698,8 +3743,8 @@
     },
     {
       "path": "tests/test_dw6_european_conversion.py",
-      "bytes": 8933,
-      "sha256": "8e06a2f4ed25def4b84cdad6409358062c17d4e417dee4777bf9acb46f658a09"
+      "bytes": 9867,
+      "sha256": "c9205bf6b705945dc7c410e7336c678ad699324c8b8d6ba36e0fe9a8effdcc36"
     },
     {
       "path": "tests/test_dw6_format.py",
@@ -3719,7 +3764,7 @@
     {
       "path": "tests/test_dw6_progression_conversion.py",
       "bytes": 8460,
-      "sha256": "ceeae283873f5137855e933e656e5cc8e217fa1d21284e86dc442d832adf4d55"
+      "sha256": "a8a674d4bb7186c33e1bf6821f6f2fea05195f789010d4803cce7ffcd495c43d"
     },
     {
       "path": "tests/test_dw6_ps3.py",
@@ -3727,9 +3772,19 @@
       "sha256": "2ca1d88728e9ab70ee31b783aab38ef3e3bd34c556a462f075660e1409f6e27f"
     },
     {
+      "path": "tests/test_dw6_records_conversion.py",
+      "bytes": 11612,
+      "sha256": "72bdd8a7a1fa2cea6a00b96ba5ac4e5866461d3caf66740c6b3af462e909be31"
+    },
+    {
       "path": "tests/test_dw6_source_safety.py",
       "bytes": 2609,
       "sha256": "58b5be0c63b203d0b92331d2786e4888af15fbad58b9e71c29ddcc7025ac1b85"
+    },
+    {
+      "path": "tests/test_dw6_xbox360_conversion.py",
+      "bytes": 23417,
+      "sha256": "844dceae61f3f10cf451e1a4e60adf8a4536d6b555ff23da65ed655f94e40c6f"
     },
     {
       "path": "tests/test_dw7e_ps3.py",
@@ -4208,8 +4263,13 @@
     },
     {
       "path": "tests/test_origins_presentation.py",
-      "bytes": 1840,
-      "sha256": "e69298fd50a594da86ec4becbe86715750289b317bd267704b1a9e780f494b6f"
+      "bytes": 5339,
+      "sha256": "6f89c06a57dc88a1faca6f2469d67fb70562fa9840acc76452158d6182e5ee8e"
+    },
+    {
+      "path": "tests/test_origins_proficiency.py",
+      "bytes": 8021,
+      "sha256": "385d65588f2e1e5a98b5a7884dc8a85bf5ec028778e5b2866a3c9e27a8d646f5"
     },
     {
       "path": "tests/test_origins_progression.py",
@@ -4223,8 +4283,8 @@
     },
     {
       "path": "tests/test_origins_tools.py",
-      "bytes": 9279,
-      "sha256": "8964616410b710be3ef32406d100f0bb9f7b176b50b494144a8305255db45d8b"
+      "bytes": 9657,
+      "sha256": "db348f34c35bed8154b1aee891a9b0aeaaf7b5721abc88641ca3ec5aeb8511bf"
     },
     {
       "path": "tests/test_origins_weapons.py",
@@ -4233,8 +4293,8 @@
     },
     {
       "path": "tests/test_origins_write_races.py",
-      "bytes": 5185,
-      "sha256": "5f4a37b50d53b73a5ff52a4cedfd263b98f835f798de951e747eae0649e23b5d"
+      "bytes": 7369,
+      "sha256": "a513ff719463a82685dba275a823f1ce8a095766b606ec641d959f2e72b53580"
     },
     {
       "path": "tests/test_orochiz_candidate_codec.py",

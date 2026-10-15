@@ -46,14 +46,31 @@ class PS3CopyStorage:
         result = snapshot_backup(document.raw, source, self.game_id, source.parent / 'UniversalEditorBackups')
         metadata = {'game_id': self.game_id, 'kind': 'ps3-export-context',
                     'context_sha256': document.context_digest, 'save_sha256': document.sha256}
+        context_data = json.dumps(metadata).encode('utf-8')
+        context_path = result.with_name(result.name + '.context.json')
+        # Retain completed backups if context creation or a later source check
+        # fails. A racing app may have replaced these paths, so rollback cannot
+        # assume that they still contain files created by this call.
+        atomic_new(context_data, context_path)
+        self.check_source(document)
+        with safe_path(result).open('rb') as stream:
+            if stream.read(self.size + 1) != document.raw:
+                raise SaveError('The newly created PS3 backup changed during verification.')
+        with safe_path(result.with_suffix('.json')).open('rb') as stream:
+            manifest_data = stream.read(4097)
         try:
-            atomic_new(json.dumps(metadata).encode('utf-8'), result.with_name(result.name + '.context.json'))
-            self.check_source(document)
-        except Exception:
-            result.unlink(missing_ok=True)
-            result.with_suffix('.json').unlink(missing_ok=True)
-            result.with_name(result.name + '.context.json').unlink(missing_ok=True)
-            raise
+            manifest = json.loads(manifest_data) if len(manifest_data) <= 4096 else None
+        except (ValueError, UnicodeError) as error:
+            raise SaveError('The newly created PS3 backup manifest changed.') from error
+        if (type(manifest) is not dict or manifest.get('game_id') != self.game_id
+                or manifest.get('kind') != 'opaque-copy'
+                or manifest.get('sha256') != document.sha256
+                or manifest.get('size_bytes') != self.size):
+            raise SaveError('The newly created PS3 backup manifest no longer matches its snapshot.')
+        with safe_path(context_path).open('rb') as stream:
+            if stream.read(len(context_data) + 1) != context_data:
+                raise SaveError('The newly created PS3 backup context changed.')
+        self.check_source(document)
         return result
 
     def save_as(self, document, changes, destination):

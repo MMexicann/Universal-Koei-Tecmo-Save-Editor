@@ -96,7 +96,7 @@ class OriginsCopyTests(unittest.TestCase):
             origins.duplicate_copy(self.document, self.folder / 'stale.dat')
         self.assertFalse((self.folder / 'stale.dat').exists())
 
-    def test_backup_manifest_failure_cleans_only_newly_created_backup(self):
+    def test_backup_manifest_failure_retains_completed_snapshot(self):
         original = copy_storage.atomic_new
         def injected(data, destination):
             if Path(destination).suffix == '.json':
@@ -105,7 +105,13 @@ class OriginsCopyTests(unittest.TestCase):
         with patch.object(copy_storage, 'atomic_new', side_effect=injected):
             with self.assertRaises(OSError):
                 origins.backup_copy(self.document)
-        self.assertFalse(list((self.folder / 'OriginsEditorBackups').glob('*')))
+        snapshots = list((self.folder / 'OriginsEditorBackups').glob('*.dat'))
+        self.assertEqual(len(snapshots), 1)
+        self.assertEqual(snapshots[0].read_bytes(), self.raw)
+        # An incomplete backup cannot be restored without its hash manifest.
+        with self.assertRaises((OSError, SaveError)):
+            origins.restore_backup(snapshots[0], self.folder / 'incomplete.dat')
+        self.assertFalse((self.folder / 'incomplete.dat').exists())
         self.assertEqual(self.source.read_bytes(), self.raw)
 
     def test_racing_destination_creation_is_never_overwritten(self):

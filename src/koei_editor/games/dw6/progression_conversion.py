@@ -17,7 +17,8 @@ NOTES = (
     'This is a partial persistent-progress migration. Gallery, challenge boards, options and suspended battles '
     'remain from the destination template; it does not continue an active campaign or battle.',
     'Finish any suspended battle in the destination game before creating its template. '
-    'Original PC, US BLUS30110, European BLES00215 and Japanese BLJM60041 only; Special and Empires differ.',
+    'Original PC, US BLUS30110, European BLES00215 and Japanese BLJM60041 PS3, '
+    'and North American 4B4F07E0/European 4B4F07E1 Xbox 360 only; Special and Empires differ.',
 )
 STAGE_COUNT, STAGE_STRIDE, MUSOU_COUNT, MUSOU_STRIDE = 45, 20, 17, 4
 

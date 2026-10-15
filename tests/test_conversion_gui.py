@@ -157,7 +157,9 @@ class ConversionGuiTests(unittest.TestCase):
         self.assertIs(self.gui.prepared, reviewed)
         self.gui.route_search.set('BLES00215 campaigns')
         labels = self.gui.route_selector.cget('values')
-        self.assertEqual(len(labels), 6)
+        expected = {route.label for route in conversion.ROUTES if route.variant == 'campaigns'
+                    and 'dw6_ps3_eu' in (route.source_id, route.target_id)}
+        self.assertEqual(set(labels), expected)
         self.assertEqual(self.gui.route.get(), '')
         self.assertIsNone(self.gui.prepared)
         self.assertIn('disabled', self.gui.export_button.state())
@@ -199,6 +201,32 @@ class ConversionGuiTests(unittest.TestCase):
         self.wait()
         self.assertIsNone(self.gui.prepared)
         self.assertIn('disabled', self.gui.export_button.state())
+
+    def test_gallery_challenge_scope_review_is_separate_from_campaign_slots(self):
+        source = fixtures.write_copy(self.folder / 'records-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'records-template', 'dw6_ps3_jp', 1)
+        self.gui.route_search.set('Japanese gallery challenges')
+        route = conversion.get_route('dw6-to-dw6_ps3_jp-records')
+        self.assertIn(route.label, self.gui.route_selector.cget('values'))
+        self.gui.route.set(route.label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.assertIn('five challenge boards', self.gui.scope.get())
+        self.gui.review()
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 11203)
+        preview = self.gui.preview.get('1.0', 'end')
+        self.assertIn('Gallery review:', preview)
+        self.assertIn('Challenge review:', preview)
+        self.assertIn('reserved bits remain from the destination', preview)
+        self.gui.route_search.set('')
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3_jp-campaigns').label)
+        self.assertIsNone(self.gui.prepared)
+        self.assertIn('disabled', self.gui.export_button.state())
+        self.gui.review()
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 10976)
+        self.assertNotIn('Gallery review:', self.gui.preview.get('1.0', 'end'))
 
 
 class ConversionCliTests(unittest.TestCase):

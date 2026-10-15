@@ -120,7 +120,7 @@ GAMES = (
          '', '.psu', '#785d8a',
          'koei_editor.games.dw4xl.dw4xl_editor', 'koei_editor.games.dw4xl.dw4xl_parser', True, 'IV XL', True, 'PlayStation 2', scalar_backend='koei_editor.games.dw4xl.dw4xl_parser'),
     Game('origins', 'DYNASTY WARRIORS: ORIGINS', 'Steam PC · slot saves',
-         'Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history.',
+         'Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection.',
          '', '.dat', '#806126', 'koei_editor.games.origins.origins_game_editor', 'koei_editor.games.origins.origins_parser', True,
          'ORIGINS', scalar_backend='koei_editor.games.origins.origins_parser'),
     Game('wo3u', 'WARRIORS OROCHI 3 ULTIMATE', 'Definitive Edition · PC',

@@ -20,6 +20,9 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
+    if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
+        from tests.test_dw6_xbox360_conversion import raw_fixture
+        return raw_fixture(variant)
     if endpoint_id in ('dw6', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
         from tests.test_dw6_conversion import fixture as dw6_fixture
         return dw6_fixture(endpoint_id, variant)
@@ -57,7 +60,10 @@ def write_copy(folder, endpoint_id, variant=0):
     if endpoint.companion:
         companion = folder / endpoint.companion
         companion.parent.mkdir(parents=True, exist_ok=True)
-        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
+        if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
+            from tests.test_dw6_xbox360_conversion import context_fixture
+            metadata = context_fixture(endpoint_id, fixture(endpoint_id, variant), variant)
+        elif endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
             metadata = ps3_context.PS3ContextTests.metadata({
                 'dw8xl_ps3': 'NPUB31449-SAVEDATA', 'dw6_ps3': 'BLUS30110-SAVEDATA',
                 'dw6_ps3_jp': 'BLJM60041-SAVEDATA',
@@ -76,7 +82,8 @@ class ConversionTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
-                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu'))
+                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
+                                            'dw6_xbox360_na', 'dw6_xbox360_eu'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
                 continue
@@ -176,7 +183,7 @@ class ConversionTests(unittest.TestCase):
         for route in ('dw6-to-dw8xl_ps3', 'dw8xl-to-dw8xl', 'unknown', None):
             with self.assertRaises(SaveError): c.get_route(route)
 
-    def test_failed_actual_readback_cleans_only_new_output(self):
+    def test_failed_actual_readback_retains_incomplete_output_without_receipt(self):
         conversion = self.prepare()
         original = c._read
         def damaged(endpoint, path):
@@ -187,7 +194,8 @@ class ConversionTests(unittest.TestCase):
             return original(endpoint, path)
         with patch.object(c, '_read', side_effect=damaged), self.assertRaises(SaveError):
             c.export(conversion, self.folder / 'output')
-        self.assertFalse((self.folder / 'output').exists())
+        self.assertEqual((self.folder / 'output' / 'MainData00.dat').read_bytes(), conversion.raw)
+        self.assertFalse((self.folder / 'output' / 'conversion.json').exists())
 
     def test_nonzero_pc_tail_is_not_silently_discarded(self):
         source = write_copy(self.folder / 'source', 'p5strikers_pc')

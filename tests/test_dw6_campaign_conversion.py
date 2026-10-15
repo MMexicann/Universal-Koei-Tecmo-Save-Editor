@@ -15,7 +15,7 @@ from tests.test_conversion import fixture, write_copy
 class DW6CampaignConversionTests(unittest.TestCase):
     def test_all_directions_convert_each_word_preserve_result_bytes_and_destination_remainder(self):
         routes = [r for r in c.ROUTES if r.variant == 'campaigns']
-        self.assertEqual(len(routes), 12)
+        self.assertEqual(len(routes), 30)
         words = tuple(range(0, 20, 4)) + tuple(20 + stage * 16 + r for stage in range(6) for r in (0, 4, 8)) + (116, 120, 124, 128)
         for route in routes:
             with self.subTest(route=route.id):

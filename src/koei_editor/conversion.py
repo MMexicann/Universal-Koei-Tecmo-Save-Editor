@@ -24,15 +24,19 @@ from koei_editor.games.dw8xl import ps4_export as dw8_ps4
 from koei_editor.games.dw6 import converter as dw6_conversion
 from koei_editor.games.dw6 import progression_conversion as dw6_progression
 from koei_editor.games.dw6 import campaign_conversion as dw6_campaigns
+from koei_editor.games.dw6 import records_conversion as dw6_records
 from koei_editor.games.dw6 import dw6_parser as dw6_pc
 from koei_editor.games.dw6_ps3 import parser as dw6_ps3
 from koei_editor.games.dw6_ps3 import japanese_export as dw6_ps3_jp
 from koei_editor.games.dw6_ps3 import european_export as dw6_ps3_eu
+from koei_editor.games.dw6_xbox360 import north_american_export as dw6_xbox360_na
+from koei_editor.games.dw6_xbox360 import european_export as dw6_xbox360_eu
 from koei_editor.games.p5strikers_pc import converter as p5_conversion
 
 _FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion, 'dw6': dw6_conversion})
 _VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression,
-                              ('dw6', 'campaigns'): dw6_campaigns})
+                              ('dw6', 'campaigns'): dw6_campaigns,
+                              ('dw6', 'records'): dw6_records})
 
 
 def _transform(route):
@@ -79,6 +83,16 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('dw6_ps3_eu', 'dw6', 'DW6 · European PS3', 'APP.BIN', dw6_ps3_eu,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLES00215 export. Reimport and resign with Apollo Save Tool.', True),
+    Endpoint('dw6_xbox360_na', 'dw6', 'DW6 · North American Xbox 360', 'DW6_NA.dat', dw6_xbox360_na,
+             'ORIGINAL.CON', 1024 * 1024,
+             'Original 4B4F07E0 extracted DW6_NA.dat with its unchanged package copied as ORIGINAL.CON. '
+             'The copied CON is context only and still contains the old template gameplay. Replace its embedded '
+             'DW6_NA.dat with the converted raw export, then rehash and resign a separate package using Horizon.', True),
+    Endpoint('dw6_xbox360_eu', 'dw6', 'DW6 · European Xbox 360', 'DW6_EU.dat', dw6_xbox360_eu,
+             'ORIGINAL.CON', 1024 * 1024,
+             'Original 4B4F07E1 extracted DW6_EU.dat with its unchanged package copied as ORIGINAL.CON. '
+             'The copied CON is context only and still contains the old template gameplay. Replace its embedded '
+             'DW6_EU.dat with the converted raw export, then rehash and resign a separate package using Horizon.', True),
 )})
 
 
@@ -248,6 +262,9 @@ def validate_review_snapshot(conversion):
                 or (not endpoint.companion and snapshot.companion_raw)
                 or (endpoint.companion and not 0 < len(snapshot.companion_raw) <= endpoint.companion_limit)):
             raise SaveError('Conversion context does not match its frozen endpoint.')
+        context_digest = getattr(snapshot.document, 'context_digest', '')
+        if context_digest and hashlib.sha256(snapshot.companion_raw).hexdigest() != context_digest:
+            raise SaveError('Conversion context does not match its frozen native document.')
     payload = _gameplay(conversion.source, conversion.route)
     if (conversion.raw != _encode(conversion.source, conversion.template, conversion.route)
             or conversion.gameplay_sha256 != hashlib.sha256(payload).hexdigest()
@@ -267,7 +284,7 @@ def validate_review(prepared):
 
 
 def export(conversion, output_dir):
-    """Write a new private export folder, with backups and actual native read-back."""
+    """Write a new private export with read-back; retain incomplete files on failure."""
     _validate_conversion(conversion)
     output_dir = safe_path(output_dir)
     if output_dir.exists():
@@ -294,14 +311,11 @@ def export(conversion, output_dir):
     }
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir()  # Exclusive reservation, including empty folders and races.
-    written = []
     try:
         if target.companion:
             data = conversion.template.companion_raw
             path = atomic_new(data, output_dir / target.companion)
-            written.append((path, data))
         destination = atomic_new(conversion.raw, output_dir / target.filename)
-        written.append((destination, conversion.raw))
         actual = _read(target.id, destination)
         if (actual.document.raw != conversion.raw
                 or actual.companion_raw != conversion.template.companion_raw
@@ -310,20 +324,20 @@ def export(conversion, output_dir):
         _validate_conversion(conversion)
         data = (json.dumps(receipt, indent=2) + '\n').encode('utf-8')
         path = atomic_new(data, output_dir / 'conversion.json')
-        written.append((path, data))
-    except Exception:
-        # Remove only our exact bytes. Never erase a file changed by another app.
-        for path, data in reversed(written):
-            if not path.is_symlink() and path.is_file() and path.read_bytes() == data:
-                path.unlink()
-        if target.companion and '/' in target.companion:
-            try:
-                (output_dir / Path(target.companion).parent).rmdir()
-            except OSError:
-                pass
-        try:
-            output_dir.rmdir()
-        except OSError:
-            pass
-        raise
+        # Receipt creation is another opportunity for another application to
+        # replace the completed output or its console context. Verify the final
+        # files and both opened inputs before reporting a successful export.
+        actual = _read(target.id, destination)
+        if (actual.document.raw != conversion.raw
+                or actual.companion_raw != conversion.template.companion_raw):
+            raise SaveError('The completed conversion or its console metadata changed during final verification.')
+        _validate_conversion(conversion)
+        with safe_path(path).open('rb') as stream:
+            if stream.read(len(data) + 1) != data:
+                raise SaveError('The completed conversion receipt changed during final verification.')
+    except SaveError as error:
+        # Comparing bytes and then unlinking cannot establish ownership: another
+        # application can replace a path between those operations. Keep every
+        # completed file and report failure, including for a final receipt check.
+        raise SaveError(str(error) + ' The incomplete export folder was retained; do not import it.') from error
     return destination, tuple(backups), receipt

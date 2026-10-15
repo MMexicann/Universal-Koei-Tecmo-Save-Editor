@@ -8,6 +8,8 @@ from koei_editor.games.dw6 import dw6_parser as pc
 from koei_editor.games.dw6_ps3 import parser as ps3
 from koei_editor.games.dw6_ps3 import japanese_export as ps3_jp
 from koei_editor.games.dw6_ps3 import european_export as ps3_eu
+from koei_editor.games.dw6_xbox360 import north_american_export as xbox_na
+from koei_editor.games.dw6_xbox360 import european_export as xbox_eu
 
 TRANSFER_SCOPE = 'roster-and-horses'
 SCOPE_DESCRIPTION = 'DW6 roster and horses only; destination story and battle state retained'
@@ -33,7 +35,11 @@ def _profile(document):
     if identity == ps3_eu.GAME_ID:
         ps3_eu.validate_document(document)
         return ps3_eu, 'big'
-    raise SaveError('DW6 migration requires original PC, US BLUS30110, European BLES00215 or Japanese BLJM60041 PS3 saves.')
+    for backend in (xbox_na, xbox_eu):
+        if identity == backend.GAME_ID:
+            backend.validate_document(document)
+            return backend, 'big'
+    raise SaveError('DW6 migration requires an exact original PC, US/European/Japanese PS3 or North American/European Xbox 360 profile.')
 
 
 def _canonical(document):

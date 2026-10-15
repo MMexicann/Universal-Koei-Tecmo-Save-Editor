@@ -29,17 +29,19 @@ candidate, but save positions and progression dependencies still need qualificat
 ## Save Converter
 
 The changes below are **unreleased**; the published v2.5.1 app retains its 20 routes.
-The development Save Converter now offers **30 directed routes**:
+The development Save Converter now offers **54 directed routes**:
 
-- **DW6 PC, US PS3 and Japanese PS3:** six roster-and-horse routes, plus six
-  optional **progress** routes adding 45 stage records and 17 Musou availability/clear
-  records. Gallery, challenges and suspended battles remain from the destination
-  template. Japanese PS3 is conversion-only and needs original BLJM60041 metadata.
+- **DW6 PC and US/European/Japanese PS3:** 12 roster-and-horse routes, 12
+  **progress** routes adding 45 stage records and 17 Musou availability/clear
+  records, and 12 **campaign-slot** routes also carrying all 20 stored Musou
+  run slots. Gallery, challenges and interim battles remain from the destination
+  template. European BLES00215 and Japanese BLJM60041 are conversion-only;
+  each requires its own original metadata.
 - **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
   (12 routes). PS4 requires the supported zero-extension profile.
 - **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
 
-Choose separate source and destination-template copies, review the transfer scope,
+Search routes by game, region, title ID or scope. Choose separate source and destination-template copies, review the transfer scope,
 then export to a new folder with backups and a hash receipt. Console export/decryption
 and reimport/resigning use an external save manager. Converted game loading remains
 untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
@@ -76,7 +78,7 @@ empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
 Queue reviewed conversions, save/load private plans and validate every job before
 exporting. Each copy gets its own new folder, backups and native read-back.
 Progress, stop-after-current-copy and verified partial-result reports cover up to
-32 jobs across all 30 development routes. [Instructions](docs/BATCH_CONVERSION.md).
+32 jobs across all 54 development routes. [Instructions](docs/BATCH_CONVERSION.md).
 
 ## Compare Saves
 

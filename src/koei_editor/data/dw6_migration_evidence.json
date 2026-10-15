@@ -3,15 +3,18 @@
   "family": "dw6",
   "status": "Unreleased development; application version remains 2.5.1",
   "profiles": [
-    {"id": "dw6", "size": 212248, "byte_order": "little", "officers": "0xb58", "stages": "0x2640", "musou": "0x29c4", "horses": "0x2a08"},
-    {"id": "dw6_ps3", "size": 212240, "byte_order": "big", "directory": "BLUS30110-SAVEDATA", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8"},
-    {"id": "dw6_ps3_jp", "size": 212176, "byte_order": "big", "directory": "BLJM60041-SAVEDATA", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8", "conversion_only": true}
+    {"id": "dw6", "size": 212248, "byte_order": "little", "campaigns": "0x108", "officers": "0xb58", "stages": "0x2640", "musou": "0x29c4", "horses": "0x2a08"},
+    {"id": "dw6_ps3", "size": 212240, "byte_order": "big", "directory": "BLUS30110-SAVEDATA", "campaigns": "0xc8", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8"},
+    {"id": "dw6_ps3_jp", "size": 212176, "byte_order": "big", "directory": "BLJM60041-SAVEDATA", "campaigns": "0xc8", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8", "conversion_only": true},
+    {"id": "dw6_ps3_eu", "size": 212240, "byte_order": "big", "directory": "BLES00215-SAVEDATA", "campaigns": "0xc8", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8", "conversion_only": true}
   ],
   "stages": {"count": 45, "stride": 20, "u32_offsets": [0, 4, 8], "byte_offsets": [12, 13, 16], "opaque_padding": [14, 15, 17, 18, 19]},
   "musou": {"count": 17, "stride": 4, "byte_offsets": [0, 1], "opaque_padding": [2, 3]},
+  "campaigns": {"count": 20, "stride": 132, "timestamp_u32_offsets": [0, 4, 8, 12, 16], "results_base": 20, "results_count": 6, "results_stride": 16, "result_u32_offsets": [0, 4, 8], "result_byte_offsets": [12, 13], "result_opaque_padding": [14, 15], "selection_u32_offsets": [116, 120, 124, 128], "interim_battle_included": false},
   "scopes": [
     {"id": "roster-and-horses", "bytes": 7368, "variant": ""},
-    {"id": "roster-stages-and-musou", "bytes": 8336, "variant": "progress"}
+    {"id": "roster-stages-and-musou", "bytes": 8336, "variant": "progress"},
+    {"id": "roster-stages-musou-and-slots", "bytes": 10976, "variant": "campaigns"}
   ],
   "native_static_evidence": {
     "source": "https://worthplaying.com/article/2008/10/4/news/55450-dynasty-warriors-6-pc-english-demo-available-now/",
@@ -24,15 +27,23 @@
     "constructed_arrays_va": "0x5cf890",
     "stage_constructor_va": "0x5cf6d0",
     "musou_constructor_va": "0x5ce3f0",
+    "campaign_constructor_va": "0x5ceff0",
+    "campaign_reset_va": "0x5cf050",
+    "campaign_result_constructor_va": "0x5cf6f0",
     "qualification": "Static inspection only; exact retail PC byte count and array boundaries corroborated on independently acquired complete native PC and PS3 copies. Demo version footer differs from the retail reference and is never transplanted. No executable was run or redistributed."
   },
   "native_references": [
     "https://savegame.pro/pc-dynasty-warriors-6-savegame/",
     "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/34847",
     "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16788",
-    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16605"
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16605",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16807",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16808",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16825",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/19093"
   ],
+  "european_reference_archive": "https://archive.org/details/game-faqs-saves-2024-09-05",
   "game_load_verified": false,
   "preserved_destination_state": ["Gallery", "Challenge boards", "Options", "Suspended battle", "All bytes outside the selected mapped arrays"],
-  "unavailable": ["Xbox 360", "EU PS3", "Special", "Empires", "Full active story/battle conversion", "Console signing"]
+  "unavailable": ["Xbox 360", "Special", "Empires", "Full active story/battle conversion", "Console signing"]
 }

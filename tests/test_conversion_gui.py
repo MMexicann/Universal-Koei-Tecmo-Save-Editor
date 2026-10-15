@@ -146,6 +146,60 @@ class ConversionGuiTests(unittest.TestCase):
         self.assertIn('Stage review:', self.gui.preview.get('1.0', 'end'))
         self.assertIn('Musou history review:', self.gui.preview.get('1.0', 'end'))
 
+    def test_route_search_covers_region_scope_and_ids_without_silent_reselection(self):
+        self.select_copies()
+        self.gui.review()
+        self.wait()
+        reviewed = self.gui.prepared
+        selected = self.gui.route.get()
+        self.gui.route_search.set('dw8 vita')
+        self.assertIn(selected, self.gui.route_selector.cget('values'))
+        self.assertIs(self.gui.prepared, reviewed)
+        self.gui.route_search.set('BLES00215 campaigns')
+        labels = self.gui.route_selector.cget('values')
+        self.assertEqual(len(labels), 6)
+        self.assertEqual(self.gui.route.get(), '')
+        self.assertIsNone(self.gui.prepared)
+        self.assertIn('disabled', self.gui.export_button.state())
+        self.assertIn('disabled', self.gui.review_button.state())
+        # The paths are retained for deliberate review after choosing a route.
+        self.assertTrue(self.gui.source.get())
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3_eu-campaigns').label)
+        self.assertIn('20 Musou run slots', self.gui.scope.get())
+        self.gui.route_search.set('no-such-game')
+        self.assertEqual(tuple(self.gui.route_selector.cget('values')), ())
+        self.assertIn('disabled', self.gui.route_selector.state())
+        with patch('tkinter.messagebox.showerror') as error, patch('tkinter.filedialog.askopenfilename') as browse:
+            self.gui.review()
+            self.gui.browse('source')
+        self.assertEqual(error.call_count, 2)
+        browse.assert_not_called()
+        self.gui.route_search.set('')
+        self.assertEqual(len(self.gui.route_selector.cget('values')), len(conversion.ROUTES))
+        self.assertIn('readonly', self.gui.route_selector.state())
+        self.assertEqual(self.gui.route.get(), '')
+        with patch.object(self.gui.search_entry, 'focus_set') as focus:
+            self.assertEqual(self.app.focus_library_search(), 'break')
+        focus.assert_called_once()
+
+    def test_european_campaign_scope_review_and_filter_change_during_worker(self):
+        source = fixtures.write_copy(self.folder / 'campaign-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'campaign-template', 'dw6_ps3_eu')
+        self.gui.route_search.set('BLES00215 campaigns')
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3_eu-campaigns').label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.gui.review()
+        self.assertIn('disabled', self.gui.search_entry.state())
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 10976)
+        self.assertIn('Musou slot review:', self.gui.preview.get('1.0', 'end'))
+        self.gui.review()
+        self.gui.route_search.set('Persona')
+        self.wait()
+        self.assertIsNone(self.gui.prepared)
+        self.assertIn('disabled', self.gui.export_button.state())
+
 
 class ConversionCliTests(unittest.TestCase):
     def test_list_dry_run_export_and_failure_exit_codes(self):

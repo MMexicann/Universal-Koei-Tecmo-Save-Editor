@@ -20,7 +20,7 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
-    if endpoint_id in ('dw6', 'dw6_ps3', 'dw6_ps3_jp'):
+    if endpoint_id in ('dw6', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
         from tests.test_dw6_conversion import fixture as dw6_fixture
         return dw6_fixture(endpoint_id, variant)
     if endpoint_id.startswith('dw8xl'):
@@ -57,10 +57,11 @@ def write_copy(folder, endpoint_id, variant=0):
     if endpoint.companion:
         companion = folder / endpoint.companion
         companion.parent.mkdir(parents=True, exist_ok=True)
-        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp'):
+        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
             metadata = ps3_context.PS3ContextTests.metadata({
                 'dw8xl_ps3': 'NPUB31449-SAVEDATA', 'dw6_ps3': 'BLUS30110-SAVEDATA',
                 'dw6_ps3_jp': 'BLJM60041-SAVEDATA',
+                'dw6_ps3_eu': 'BLES00215-SAVEDATA',
             }[endpoint_id])
         else:
             metadata = title_only_sfo()
@@ -75,7 +76,7 @@ class ConversionTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
-                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp'))
+                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
                 continue

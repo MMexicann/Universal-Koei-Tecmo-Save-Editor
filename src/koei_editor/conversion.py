@@ -23,13 +23,16 @@ from koei_editor.games.dw8xl import converter as dw8_conversion
 from koei_editor.games.dw8xl import ps4_export as dw8_ps4
 from koei_editor.games.dw6 import converter as dw6_conversion
 from koei_editor.games.dw6 import progression_conversion as dw6_progression
+from koei_editor.games.dw6 import campaign_conversion as dw6_campaigns
 from koei_editor.games.dw6 import dw6_parser as dw6_pc
 from koei_editor.games.dw6_ps3 import parser as dw6_ps3
 from koei_editor.games.dw6_ps3 import japanese_export as dw6_ps3_jp
+from koei_editor.games.dw6_ps3 import european_export as dw6_ps3_eu
 from koei_editor.games.p5strikers_pc import converter as p5_conversion
 
 _FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion, 'dw6': dw6_conversion})
-_VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression})
+_VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression,
+                              ('dw6', 'campaigns'): dw6_campaigns})
 
 
 def _transform(route):
@@ -73,6 +76,9 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('dw6_ps3_jp', 'dw6', 'DW6 · Japanese PS3', 'APP.BIN', dw6_ps3_jp,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLJM60041 export. Reimport and resign with Apollo Save Tool.', True),
+    Endpoint('dw6_ps3_eu', 'dw6', 'DW6 · European PS3', 'APP.BIN', dw6_ps3_eu,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLES00215 export. Reimport and resign with Apollo Save Tool.', True),
 )})
 
 

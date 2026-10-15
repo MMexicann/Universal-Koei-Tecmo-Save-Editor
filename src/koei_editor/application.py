@@ -463,8 +463,9 @@ class Application(Appearance):
             editor = self.sessions[self.active_game][1]
             focus = getattr(editor, 'focus_field_search', None)
             return focus() if focus is not None else None
-        if ((self.converter is not None and self.converter.frame.winfo_manager())
-                or (self.comparison is not None and self.comparison.frame.winfo_manager())
+        if self.converter is not None and self.converter.frame.winfo_manager():
+            return self.converter.focus_route_search()
+        if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
         self.platform_choice.set(ALL_PLATFORMS)

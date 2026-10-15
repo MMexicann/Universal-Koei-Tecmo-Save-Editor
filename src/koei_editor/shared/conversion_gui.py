@@ -30,19 +30,28 @@ class ConversionWorkspace:
         form = ttk.Frame(self.frame)
         form.pack(fill='x')
         form.columnconfigure(1, weight=1)
+        self.route_search = tk.StringVar(root)
+        self.route_count = tk.StringVar(root)
         self.route = tk.StringVar(root, value=next(iter(self._labels)))
         self.source = tk.StringVar(root)
         self.template = tk.StringVar(root)
         self.controls = []
-        ttk.Label(form, text='Conversion').grid(row=0, column=0, sticky='w', padx=(0, 14), pady=8)
+        ttk.Label(form, text='Find route').grid(row=0, column=0, sticky='w', padx=(0, 14), pady=8)
+        self.search_entry = ttk.Entry(form, textvariable=self.route_search)
+        self.search_entry.grid(row=0, column=1, sticky='ew', pady=8)
+        ttk.Label(form, textvariable=self.route_count, style='Muted.TLabel').grid(
+            row=0, column=2, sticky='w', padx=(10, 0))
+        self.search_entry.bind('<Escape>', lambda _event: self.route_search.set(''))
+        self.controls.append(self.search_entry)
+        ttk.Label(form, text='Conversion').grid(row=1, column=0, sticky='w', padx=(0, 14), pady=8)
         self.route_selector = ttk.Combobox(form, textvariable=self.route, values=tuple(self._labels), state='readonly')
-        self.route_selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=8)
+        self.route_selector.grid(row=1, column=1, columnspan=2, sticky='ew', pady=8)
         self.controls.append(self.route_selector)
         self.scope = tk.StringVar(root)
         ttk.Label(form, textvariable=self.scope, wraplength=820, style='Muted.TLabel').grid(
-            row=1, column=1, columnspan=2, sticky='w')
-        for row, label, variable, kind in ((2, 'Source copy', self.source, 'source'),
-                                           (3, 'Destination template', self.template, 'template')):
+            row=2, column=1, columnspan=2, sticky='w')
+        for row, label, variable, kind in ((3, 'Source copy', self.source, 'source'),
+                                           (4, 'Destination template', self.template, 'template')):
             ttk.Label(form, text=label).grid(row=row, column=0, sticky='w', padx=(0, 14), pady=8)
             entry = ttk.Entry(form, textvariable=variable)
             entry.grid(row=row, column=1, sticky='ew', pady=8)
@@ -71,7 +80,28 @@ class ConversionWorkspace:
         self.preview.pack(fill='both', expand=True)
         for variable in (self.route, self.source, self.template):
             variable.trace_add('write', self.invalidate)
+        self.route_search.trace_add('write', self._filter_routes)
+        self._filter_routes()
         self.invalidate()
+
+    def _filter_routes(self, *_args):
+        terms = self.route_search.get().casefold().split()
+        labels = []
+        for route in conversion.ROUTES:
+            endpoints = [conversion.ENDPOINTS[key] for key in (route.source_id, route.target_id)]
+            text = ' '.join((route.label, route.id, route.scope_description,
+                             *(endpoint.import_note for endpoint in endpoints))).casefold()
+            if all(term in text for term in terms):
+                labels.append(route.label)
+        self.route_selector.configure(values=tuple(labels))
+        self.route_count.set(f'{len(labels)} of {len(self._labels)} routes')
+        # Filtering must never silently choose a different direction/scope for
+        # the retained input paths or keep an invisible reviewed selection.
+        if self.route.get() not in labels:
+            self.route.set('')
+        if not self.busy:
+            self.route_selector.configure(state='readonly' if labels else 'disabled')
+            self.review_button.configure(state='normal' if self.route.get() in self._labels else 'disabled')
 
     def invalidate(self, *_args):
         route_id = self._labels.get(self.route.get())
@@ -83,6 +113,7 @@ class ConversionWorkspace:
             self.queue_button.configure(state='disabled')
         self._show('')
         if not self.busy:
+            self.review_button.configure(state='normal' if route_id else 'disabled')
             self.status.set('Selections changed. Review the conversion before exporting.')
 
     def _show(self, text):
@@ -91,12 +122,22 @@ class ConversionWorkspace:
         self.preview.insert('1.0', text)
         self.preview.configure(state='disabled')
 
+    def focus_route_search(self):
+        if not self.busy:
+            self.search_entry.focus_set()
+            self.search_entry.selection_range(0, 'end')
+        return 'break'
+
     def apply_theme(self, palette):
         self.preview.configure(background=palette['surface'], foreground=palette['text'],
                                insertbackground=palette['text'])
 
     def browse(self, kind):
-        route = conversion.get_route(self._labels[self.route.get()])
+        route_id = self._labels.get(self.route.get())
+        if not route_id:
+            messagebox.showerror('Choose a conversion', 'Choose an exact conversion route first.', parent=self.root)
+            return
+        route = conversion.get_route(route_id)
         endpoint = conversion.ENDPOINTS[route.source_id if kind == 'source' else route.target_id]
         suffix = Path(endpoint.filename).suffix
         filters = [(endpoint.label, '*' + suffix), ('All files', '*')] if suffix else [('All files', '*')]
@@ -130,6 +171,7 @@ class ConversionWorkspace:
         self.busy = False
         for control in self.controls:
             control.configure(state='readonly' if control is self.route_selector else 'normal')
+        self._filter_routes()
         if kind == 'review' and revision != self._revision:
             self.status.set('Selections changed during review. Review the current copies again.')
             return
@@ -154,19 +196,22 @@ class ConversionWorkspace:
         else:
             destination, _backups, _receipt = result
             self.status.set('Exported: ' + str(destination))
-            self.export_button.configure(state='normal')
+            self.export_button.configure(state='normal' if self.prepared is not None else 'disabled')
             if self.queue_button is not None:
-                self.queue_button.configure(state='normal')
+                self.queue_button.configure(state='normal' if self.prepared is not None else 'disabled')
             messagebox.showinfo('Conversion exported', 'Saved a separate converted copy with backups.\n\n'
                                 + str(destination) + '\n\nTest the copy in-game. Console imports require your save manager.', parent=self.root)
 
     def review(self):
         if self.busy:
             return
+        route_id = self._labels.get(self.route.get())
+        if not route_id:
+            messagebox.showerror('Choose a conversion', 'Choose an exact conversion route first.', parent=self.root)
+            return
         if not self.source.get().strip() or not self.template.get().strip():
             messagebox.showerror('Choose both copies', 'Choose a source copy and a destination-template copy.', parent=self.root)
             return
-        route_id = self._labels[self.route.get()]
         source, template = self.source.get(), self.template.get()
         self.prepared = None
         self._show('')

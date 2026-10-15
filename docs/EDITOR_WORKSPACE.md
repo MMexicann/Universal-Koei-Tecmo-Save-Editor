@@ -35,6 +35,8 @@ Max actions still honor supported limits and fields excluded from Max.
 | --- | --- |
 | Ctrl+F in a scalar editor | Focus and select the field search |
 | Ctrl+F in Game Library | Search all platforms |
+| Ctrl+F in Save Converter | Focus and select Find route; search game, region, title ID or scope |
+| Escape in Find route | Clear the route search; preserve input paths and editor sessions |
 | Escape in the field search | Clear search, category, record and Pending only filters; preserve edits |
 | Enter in the numeric/text value entry | Apply to the selected fields through normal validation |
 | Ctrl+O / Ctrl+S / Ctrl+Shift+S | Open copy / Save As / Save As |

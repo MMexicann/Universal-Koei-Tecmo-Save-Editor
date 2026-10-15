@@ -1,21 +1,21 @@
 # Cross-platform save conversion
 
 The Save Converter is a separate workspace in the same Windows app. It transfers
-the documented gameplay scope between explicitly supported formats. DW6 uses a
-partial roster-and-horse migration; DW8 XL and P5S transfer their complete
+the documented gameplay scope between explicitly supported formats. DW6 offers
+three explicit partial migration scopes; DW8 XL and P5S transfer their complete
 common gameplay. Existing
 editing sessions, themes and pending changes remain available. Conversion uses
 the copied on-disk save, so first save any editor changes into another copy.
 
 ## Supported routes
 
-**30 directed routes** are available in unreleased development source; the
+**54 directed routes** are available in unreleased development source; the
 published v2.5.1 app has 20. The application version remains unchanged. Editor support alone does not establish a
 conversion route; each route shows its own transfer scope before review.
 
 | Family | Platforms and exact scope | Transfer |
 | --- | --- | --- |
-| Dynasty Warriors 6 | Original PC, US PS3 BLUS30110 and Japanese PS3 BLJM60041; six basic and six optional progress directions | Basic: 41 officers and eight horses (7,368 bytes). **Progress:** also 45 stage records and 17 Musou availability/clear records (8,336 bytes). Both preserve destination gallery, challenges, options and suspended battles. Japanese PS3 is conversion-only. |
+| Dynasty Warriors 6 | Original PC, US PS3 BLUS30110, European PS3 BLES00215 and Japanese PS3 BLJM60041; 12 directions for each of three scopes | **Basic:** 41 officers and eight horses (7,368 bytes). **Progress:** also 45 stage records and 17 Musou availability/clear records (8,336 bytes). **Campaigns:** also 20 complete Musou run slots (10,976 bytes). All retain destination gallery, challenges, options and interim battles. European/Japanese endpoints are conversion-only. |
 | Dynasty Warriors 8 Xtreme Legends | PC common revision `0x131002F0`, US PS3 PSN `NPUB31449`, plaintext Vita, US PS4 `CUSA00397` zero-extension profile; 12 directions | All `0xB7F44` common gameplay bytes; native PC/PS3/Vita encryption/checksums rebuilt. PS4 has a zero native extension. |
 | Persona 5 Strikers | English PC, PS4 `CUSA19640`, Switch, revision `0x20012000`; six directions | Complete `0x1C` header and ten `0x88E36` slots, including names; destination reserved tail retained. |
 
@@ -33,14 +33,17 @@ are external. Converted loading/re-saving in the actual games remains untested.
    This **destination template** supplies native framing/encryption context.
    Preserve its original `PARAM.SFO` beside PS3 `APP.BIN`, or
    `sce_sys/param.sfo` beside PS4 `APP.BIN`.
-3. Open **Save Converter**, choose the exact route and the two copies, and select
+3. Open **Save Converter**, use **Find route** to search by game, region, title ID
+   or scope, then choose the exact route and the two copies and select
    **Review conversion**. Use compatible game updates and installed DLC.
 4. Select **Export to new folder**, choose its parent, and enter a new folder
    name. Both inputs are backed up. The new folder contains the destination's
    expected save filename, required original template metadata and a local
    `conversion.json` receipt. Existing folders/files are refused.
-5. For DW6, finish any destination suspended battle before making its template;
-   basic routes retain its stage/Musou records too, while progress routes replace those persistent records. Keep your original saves. Test the new copy in-game. For consoles, reimport
+5. For DW6, finish suspended battles before making the copies. Basic routes retain
+   destination stage/Musou records; progress routes replace those records while
+   retaining its 20 run slots; campaign routes replace the slots too. Keep your
+   original saves. Test the new copy in-game. For consoles, reimport
    and resign with the destination platform's save manager, such as
    [Apollo Save Tool](https://bucanero.github.io/apollo-ps3/).
 
@@ -58,6 +61,7 @@ Use the installed package from any working directory. List exact route IDs:
 python -m koei_editor --list-conversions
 python -m koei_editor --convert dw6-to-dw6_ps3 --source PcCopy/save.dat --template Ps3Copy/APP.BIN --dry-run
 python -m koei_editor --convert dw6-to-dw6_ps3-progress --source PcCopy/save.dat --template Ps3Copy/APP.BIN --dry-run
+python -m koei_editor --convert dw6-to-dw6_ps3_eu-campaigns --source PcCopy/save.dat --template EuropeanPs3Copy/APP.BIN --dry-run
 python -m koei_editor --convert dw8xl-to-dw8xl_vita --source SourceCopy/save.dat --template VitaCopy/MainData00.dat --dry-run
 python -m koei_editor --convert dw8xl-to-dw8xl_vita --source SourceCopy/save.dat --template VitaCopy/MainData00.dat --output-dir ConvertedVita
 ```
@@ -73,6 +77,9 @@ windowed build is primarily a GUI app; use the Python entry for terminal JSON.
 snapshots, bounded reads, backups and safe exports. Each game's converter owns
 its actual native transformation. GUI work runs in a background worker with Tk
 updates confined to the main thread. Changing selections invalidates the review.
+Filtering out the selected route clears it and its review; the app never silently
+switches directions or scopes for retained paths. A matching search retains the
+current route and review. Escape clears the search.
 Native inputs must first pass their exact existing reader and unchanged
 roundtrip. Source gameplay is compared with the decoded output before writing,
 and the actual saved file is read through the destination reader afterward.
@@ -121,7 +128,7 @@ Research/inspiration, inspected independently:
 
 ## Validation and remaining mappings
 
-`test_conversion.py` exercises all 30 development routes and reverse conversions with
+`test_conversion.py` exercises all 54 development routes and reverse conversions with
 distinctive generated unknown bytes, template encryption/context preservation,
 checksums, corruption, foreign metadata, changed sources, forged plans,
 backup races, existing folders, actual destination read-back failures, opaque
@@ -131,8 +138,13 @@ tail preservation and rejection of lossy input. GUI/CLI checks are in
 complete horse boundaries, scoped receipts and untouched destination remainder.
 Native PC and both US PS3 exports passed all four original exported forward/reverse paths.
 The added Japanese profile passes its four basic paths. `test_dw6_progression_conversion.py`
-checks all six optional progress routes with semantic numeric/flag tests, unchanged
+checks all 12 optional progress routes with semantic numeric/flag tests, unchanged
 destination remainder and twelve private native forward/reverse export pairs.
+`test_dw6_european_conversion.py` exercises all three scopes on all four independent
+European references, with safe exports, actual read-back and exact reverses.
+`test_dw6_campaign_conversion.py` checks every timestamp/selection word and every
+result byte/padding boundary in all 12 campaign directions, plus native PC/US/Japanese
+forward/reverse exports. Campaign hashes and receipts include the slots.
 `test_dw8xl_ps4_conversion.py` covers zero-extension loss prevention, bounded
 metadata, backup races and every added PS4 direction. The full-file upstream
 PS4 reference passed all three outbound transforms and byte-exact reverses; its
@@ -149,7 +161,7 @@ stay outside the repository; none are packaged.
 
 | Requested expansion | Exact blocker |
 | --- | --- |
-| DW6 full PC ↔ PS3 | Roster/horses and optional persistent stage/Musou records are implemented with u64/u32/byte types. Gallery, challenges and suspended battles still need their own mapping and native load controls. |
+| DW6 full PC ↔ PS3 | Roster/horses, persistent stage/Musou records and stored Musou run slots are implemented with u64/u32/byte types. Gallery, challenges, options and suspended battles still need their own mapping and native load controls. |
 | DW6 Xbox 360 | Title/revision-labelled extracted native gameplay, integrity/schema map and import/resign workflow. CON/STFS extraction alone does not prove compatibility. |
 | WO3U PS3 ↔ PC / PS4 | PS3/PC records have distinct framing and serialized markers. Need the complete conversion schema, native controls and DLC/reward compatibility. A PS4 rename report does not prove PS3 compatibility. |
 | DW8 XL additional PS4 profiles | Supported zero extension now implemented. Nonzero extension bytes and additional regions/revisions need exact schemas and independent original-context qualification. |

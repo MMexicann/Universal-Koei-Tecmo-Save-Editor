@@ -1,12 +1,13 @@
 # DW6 PC and original PS3 progress migration
 
 **Unreleased development, version unchanged at 2.5.1:** original Japanese PS3
-`BLJM60041` joins PC and US PS3 as a conversion-only endpoint. Six directions
-transfer roster/horses. Six additional routes ending in **`-progress`** also
-transfer all 45 persistent stage records and 17 Musou availability/clear records.
-The two scopes remain separate choices in the converter. Gallery, challenge
+`BLJM60041` and European PS3 `BLES00215` join PC and US PS3 as conversion-only
+endpoints. Twelve directions transfer roster/horses. Twelve **`-progress`**
+routes also transfer all 45 persistent stage records and 17 Musou availability/clear
+records. Twelve **`-campaigns`** routes additionally transfer all 20 stored Musou
+run slots. The three scopes remain separate choices in the converter. Gallery, challenge
 boards, options, suspended battles and all other unmapped bytes stay from the
-destination template. This does not continue an active campaign or battle.
+destination template. No scope transfers an active interim battle snapshot.
 
 Version 2.1.2 adds **PC ↔ US PS3 BLUS30110** transfer of all 41 officer records
 and eight complete horse records. It is explicitly a **partial progress
@@ -92,8 +93,8 @@ project.** Neither inspected native profile establishes an internal gameplay
 checksum; PS3 authentication is external. Full story and battle transfer needs
 its own typed serialization/dependency map. Public Xbox 360 save-set listings
 were found, but no independently qualified extracted original-game payload was
-obtained. Xbox 360, EU PS3, Special and Empires routes remain unavailable.
-Japanese PS3 is now covered by the separate development profile described below.
+obtained. Xbox 360, Special and Empires routes remain unavailable.
+Japanese and European PS3 are covered by the separate development profiles below.
 
 ## v2.4 review and remaining research
 
@@ -139,7 +140,7 @@ Initialization also uses the same first-17 officer indices for Musou availabilit
 and playable prerequisites. The demo's version footer differs from the native
 retail PC reference, so its framing and footer are never transplanted.
 
-| Array | PC | US/Japanese PS3 | Transform |
+| Array | PC | US/European/Japanese PS3 | Transform |
 | --- | --- | --- | --- |
 | Stages, 45 × 20 | `0x2640` | `0x2600` | Three u32s converted separately; the eight remaining flag/padding bytes copied without word swapping. |
 | Musou, 17 × 4 | `0x29C4` | `0x2984` | Availability byte, clear byte and two opaque padding bytes copied unchanged. |
@@ -167,4 +168,63 @@ Japanese paths pass safe exports and exact reverses. These are format and copied
 checks; **actual game loading/re-saving remains unverified**.
 
 Reviewed provenance and layouts are packaged in `dw6_migration_evidence.json`.
-The Japanese endpoint does not add a scalar editor to the 94-profile inventory.
+The regional conversion-only endpoints do not add scalar editors to the
+94-profile inventory.
+
+## European PS3 qualification
+
+Four independent original European exports were acquired from the
+[GameFAQs save archive](https://archive.org/details/game-faqs-saves-2024-09-05),
+preserving their original `BLES00215-SAVEDATA` metadata. The original listings are
+[16807](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16807),
+[16808](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16808),
+[16825](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16825) and
+[19093](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/19093).
+Only the archive index and selected small save members were downloaded.
+
+All four decrypted gameplay files are exactly **212,240 bytes**. Their 41
+big-endian canonical officer identities, complete horse records, stage/Musou
+arrays and run slots independently corroborate the typed map. US and European
+files share a size, so that size alone cannot select a region. European file
+reads require the exact European directory in bounded original `PARAM.SFO`;
+the complete original metadata digest is bound and rechecked around backup and
+export. Japanese and European framing share one conversion-only implementation,
+with distinct immutable formats, sizes and required title directories. Scalar
+editing remains available only through the separately qualified PC/US editors.
+
+## Stored Musou run slots
+
+Native constructor `0x5CF890` constructs **20 × 132-byte records** at PC `0x108`,
+ending exactly at the officer boundary `0xB58`. Record constructor `0x5CEFF0`
+and reset routine `0x5CF050` establish this layout:
+
+| Relative range | Native representation | Transfer |
+| --- | --- | --- |
+| +0 through +19 | Five timestamp u32s | Convert each word independently. |
+| +20 through +115 | Six 16-byte result records | Convert each record's three u32s; copy its two flag and two padding bytes unchanged. |
+| +116 through +131 | Four u32 selections | Preserve the complete mode/difficulty/stage/horse relationship, converting each word. |
+
+The result constructor `0x5CF6F0` and reset routine preserve the distinction
+between three numeric words and byte flags. Empty-slot defaults include mode
+17, difficulty 5, stage 0 and horse 8. These sentinel values are transported,
+not turned into gameplay choices or independently edited.
+
+The native PC, two US, four European and Japanese references independently match
+the full array at PS3 `0xC8`, ending at `0xB18`. They include empty, completed and
+unfinished runs, with ordinary timestamp words and stage indices below six as
+well as completed stage-six records. The map does not come from applying a
+constant offset to unexamined bytes. No native references or player timestamps
+are packaged.
+
+The separate `-campaigns` scope carries **10,976 canonical bytes**: the existing
+8,336-byte persistent scope plus these complete 2,640 bytes. All officers and
+horses travel with their referenced run slots. Review identifies changed slot
+numbers and explains replacement of empty as well as occupied slots. Hashes,
+receipts and destination read-back include the complete selected scope. Basic
+and `-progress` routes continue to preserve destination run slots.
+
+The large interim battle object starting after the persistent records remains
+unmapped and excluded, as do gallery, challenges, options and native framing.
+Finish suspended battles before making both copies. Stored-slot transfer has
+copied-native preservation and semantic-value checks; **loading and resuming
+the converted slots in the destination game remains unverified**.

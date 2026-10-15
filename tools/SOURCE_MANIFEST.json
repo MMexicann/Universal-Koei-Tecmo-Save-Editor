@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 26709,
-      "sha256": "a0946355d1c006aeeb52e2f13e1a5ee11e1808d452050e082d919aa407d123f1"
+      "bytes": 26859,
+      "sha256": "d3e8ab1f3ea51ef18f29ff0a176c46a218053ec744a43008d13a7d5d850cacc8"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -233,8 +233,8 @@
     },
     {
       "path": "docs/DW6_CONVERSION.md",
-      "bytes": 11910,
-      "sha256": "4e10593be030dc4400d4f025a99bb1a7dcc1d708a76b6ec9d8029d8e8aa9ea73"
+      "bytes": 15589,
+      "sha256": "72280a73c2d1b4d94b83c794b06eced919b85165f933ebd84d0735fb6412fc7f"
     },
     {
       "path": "docs/DW6_PS3_FORMAT.md",
@@ -303,8 +303,8 @@
     },
     {
       "path": "docs/EDITOR_WORKSPACE.md",
-      "bytes": 2653,
-      "sha256": "8011162d8724442903e32a0e67d87a821b063643d51209cdef2880264f07104a"
+      "bytes": 2844,
+      "sha256": "8f209706aea6334ae11602e7c9bff200026dff7d846e6ff8ba3e01995da282f9"
     },
     {
       "path": "docs/EXISTING_EDITORS.md",
@@ -713,8 +713,8 @@
     },
     {
       "path": "docs/SAVE_CONVERSION.md",
-      "bytes": 11488,
-      "sha256": "b92d4994dc97911cd773cbd75b4466b7e19b647ae8c197ea1619216661c988f5"
+      "bytes": 12479,
+      "sha256": "500427f29a82eb9fc40a22d28187df33f1a786c4068aa01bb6cfe74bec02ee95"
     },
     {
       "path": "docs/SAVE_FORMAT.md",
@@ -1038,13 +1038,13 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 35955,
-      "sha256": "033d69f91b11e04a70105eb4480838432d3b93b3c0ce7091724413421ad638d6"
+      "bytes": 36001,
+      "sha256": "fe9182b7a26f3ddd1377bbb1a39f5bf7fb9768f01ae646824ce99407924b3672"
     },
     {
       "path": "src/koei_editor/conversion.py",
-      "bytes": 15057,
-      "sha256": "04d5338b622773a7c65641eac7f02d57b734930732021b6587322df93e3b34c8"
+      "bytes": 15473,
+      "sha256": "3a1b0e620a3cc1cc76890da6345d532932c9c0c9ef529cb1153b81eeac7fda66"
     },
     {
       "path": "src/koei_editor/data/AGENTS.md",
@@ -1073,8 +1073,8 @@
     },
     {
       "path": "src/koei_editor/data/dw6_migration_evidence.json",
-      "bytes": 2631,
-      "sha256": "d44121f36f44fed5026699302906db130a02582bcba2158132a67c809a190fc3"
+      "bytes": 3863,
+      "sha256": "b6fdeba71ad502f8caaf73bce1425bd22085c4e72be285244d5d7eb94e8f72d6"
     },
     {
       "path": "src/koei_editor/data/game_metadata.json",
@@ -1532,9 +1532,14 @@
       "sha256": "2eb27903d4251c87fd1c080e6c0854bcada683ae42dcb550e081df9dc269556a"
     },
     {
+      "path": "src/koei_editor/games/dw6/campaign_conversion.py",
+      "bytes": 3712,
+      "sha256": "b3990ad6e20a54cfec8ad73eb0cd9adefa354d0d6f93b361201aa952fa4f0671"
+    },
+    {
       "path": "src/koei_editor/games/dw6/converter.py",
-      "bytes": 5158,
-      "sha256": "4956d070ae1d87c2b4aad6b730ab8d25e8b54305e6e3d1c173c90ac87422e52b"
+      "bytes": 5349,
+      "sha256": "4c855e1263af9afb6bde3e0713fadfef0379f522dbca88a0d765c90bd4209e52"
     },
     {
       "path": "src/koei_editor/games/dw6/dw6_editor.py",
@@ -1558,8 +1563,8 @@
     },
     {
       "path": "src/koei_editor/games/dw6/progression_conversion.py",
-      "bytes": 4219,
-      "sha256": "70c5a7bd14b8e280368b2102068864789684b85be7fae31d50d618226f67e0f6"
+      "bytes": 4239,
+      "sha256": "85f044131bff7210f9b30377b66d3f19abeb04b11641f3240fe5a728bcaa6201"
     },
     {
       "path": "src/koei_editor/games/dw6_ps3/__init__.py",
@@ -1572,14 +1577,24 @@
       "sha256": "bdf587b83f0273057155801a5b0f07702787322917c44dd07f852437b0833c30"
     },
     {
+      "path": "src/koei_editor/games/dw6_ps3/european_export.py",
+      "bytes": 899,
+      "sha256": "e94069f304f0ff7464412a9325f83637a081be7678bb34823fe70d2c4c42591d"
+    },
+    {
       "path": "src/koei_editor/games/dw6_ps3/japanese_export.py",
-      "bytes": 3832,
-      "sha256": "5853386860dbadcd31e24af8bf5b9f08940ca65df8146790401c1e55337d7f31"
+      "bytes": 922,
+      "sha256": "55835b35df5f8d8906f38937b3ffd7b34cb70c5e51d1370db277dd192722e7b3"
     },
     {
       "path": "src/koei_editor/games/dw6_ps3/parser.py",
       "bytes": 14718,
       "sha256": "b1a956bf57dde680b26ecf208f161c2668eec69704440bb680d9c3912bbe09a0"
+    },
+    {
+      "path": "src/koei_editor/games/dw6_ps3/regional_export.py",
+      "bytes": 4265,
+      "sha256": "e58981fe07bca3713c2001e42bc46a04b030e24da05cf85e1a6f22c17a3a2036"
     },
     {
       "path": "src/koei_editor/games/dw7_ps3/__init__.py",
@@ -3343,8 +3358,8 @@
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",
-      "bytes": 10418,
-      "sha256": "63ea936ccaea84a6f43027b5c55057870c69b486c01b01d8096a7af363ce2c5a"
+      "bytes": 12974,
+      "sha256": "0d551e57894d2f580aaef72271c5b686f0a1200a8de1fca42337fdcb003040e2"
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
@@ -3598,13 +3613,13 @@
     },
     {
       "path": "tests/test_conversion.py",
-      "bytes": 12970,
-      "sha256": "f8b82b7d2b5a121db22d3fa912f20d5533e9d131b43d4b66fff36c5a0a1d9645"
+      "bytes": 13064,
+      "sha256": "d9498a5d284b71bba9adec2e88c521f8fc71a6e78239eadafa587949b27d59b6"
     },
     {
       "path": "tests/test_conversion_gui.py",
-      "bytes": 8847,
-      "sha256": "ce664a86bbcd8521cd49f438680940782bb8a94c264f715cb3bf19b6ebe38906"
+      "bytes": 11740,
+      "sha256": "0f67b0ac6b3a4498e30a14f8a6812726352b8f56db1267c5ed54eeba5b132068"
     },
     {
       "path": "tests/test_defender_release_gate.py",
@@ -3657,6 +3672,11 @@
       "sha256": "d3d7e76e2d18f8f5fc41388a53a4605774216c784188741d689a578142c5d3b3"
     },
     {
+      "path": "tests/test_dw6_campaign_conversion.py",
+      "bytes": 8560,
+      "sha256": "58ef205261bd49d86fca5aa738d724eecc51be25b29ca8f5686d35144c26d3ce"
+    },
+    {
       "path": "tests/test_dw6_conversion.py",
       "bytes": 8694,
       "sha256": "3fdad584c1178d4050e741c845b146efcef970ed641bdf4ed4626e40f1071368"
@@ -3677,6 +3697,11 @@
       "sha256": "f526cf013424964bd96f33ef1bfc9b5861e7621bd0ed497c990c859cbe719cb9"
     },
     {
+      "path": "tests/test_dw6_european_conversion.py",
+      "bytes": 8933,
+      "sha256": "8e06a2f4ed25def4b84cdad6409358062c17d4e417dee4777bf9acb46f658a09"
+    },
+    {
       "path": "tests/test_dw6_format.py",
       "bytes": 12803,
       "sha256": "d66da0c3f6e76e5b9a3e27192a46a42d0e1cabd9011ddf3e9de16d0faefc2cd8"
@@ -3693,8 +3718,8 @@
     },
     {
       "path": "tests/test_dw6_progression_conversion.py",
-      "bytes": 8367,
-      "sha256": "0c3d133d52975464aed7dcfb3e29a708a9fbd05c3189cc562620f82ecc0ab6f5"
+      "bytes": 8460,
+      "sha256": "ceeae283873f5137855e933e656e5cc8e217fa1d21284e86dc442d832adf4d55"
     },
     {
       "path": "tests/test_dw6_ps3.py",

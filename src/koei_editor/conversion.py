@@ -70,7 +70,7 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('dw6_ps3', 'dw6', 'DW6 · US PS3', 'APP.BIN', dw6_ps3,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLUS30110 export. Reimport and resign with Apollo Save Tool.'),
-    Endpoint('dw6_ps3_jp', 'dw6', 'DW6 / Shin Sangoku Musou 5 · Japanese PS3', 'APP.BIN', dw6_ps3_jp,
+    Endpoint('dw6_ps3_jp', 'dw6', 'DW6 · Japanese PS3', 'APP.BIN', dw6_ps3_jp,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLJM60041 export. Reimport and resign with Apollo Save Tool.', True),
 )})

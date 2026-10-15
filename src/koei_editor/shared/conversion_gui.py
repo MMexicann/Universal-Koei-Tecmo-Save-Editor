@@ -24,8 +24,8 @@ class ConversionWorkspace:
         ttk.Label(self.frame, text='SAVE CONVERTER', font=(font_family, 23, 'bold')).pack(anchor='w')
         ttk.Label(self.frame, text='Move a copied save to another platform',
                   style='Muted.TLabel').pack(anchor='w', pady=(2, 14))
-        ttk.Label(self.frame, text='DW8 XL: PC / US PS3 PSN / US PS4 / Vita. Persona 5 Strikers: English PC / PS4 / Switch. '
-                  'DW6: PC / US PS3 roster and horses. Review the transfer scope for each route.',
+        ttk.Label(self.frame, text='Choose the exact game editions and transfer scope supported by your copies. '
+                  'Each route lists what will move and what stays in the destination template.',
                   wraplength=980).pack(anchor='w', pady=(0, 12))
         form = ttk.Frame(self.frame)
         form.pack(fill='x')

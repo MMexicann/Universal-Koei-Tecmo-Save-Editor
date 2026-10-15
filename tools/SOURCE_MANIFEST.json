@@ -1043,8 +1043,8 @@
     },
     {
       "path": "src/koei_editor/conversion.py",
-      "bytes": 15080,
-      "sha256": "88f763cfbdc849148285be15bb496dcc29af8b1b659af2ced492bc415f488628"
+      "bytes": 15057,
+      "sha256": "04d5338b622773a7c65641eac7f02d57b734930732021b6587322df93e3b34c8"
     },
     {
       "path": "src/koei_editor/data/AGENTS.md",
@@ -3343,8 +3343,8 @@
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",
-      "bytes": 10432,
-      "sha256": "48e951c3348408e68e9141f7c21711eb1f4281e111da583c702c77b59bf45346"
+      "bytes": 10418,
+      "sha256": "63ea936ccaea84a6f43027b5c55057870c69b486c01b01d8096a7af363ce2c5a"
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",

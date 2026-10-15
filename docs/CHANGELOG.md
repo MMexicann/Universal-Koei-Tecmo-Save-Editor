@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.5.1 — 2026-10-15
+
+- Correct actual Windows guide bundling: collect seven reviewed guides as runtime metadata and validate their exact bytes in both builds.
+- Check the actual Windows ZIP guide contents and reject missing, modified or unreviewed guide resources.
+- Correct the v2.5 documentation claim; no gameplay mappings, supported profiles or conversion scopes change.
+
 ## v2.5 — 2026-10-15
 
 - Rework scalar editors with a category sidebar, field/pending counts, theme-aware edited rows and horizontal table scrolling.

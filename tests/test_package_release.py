@@ -236,6 +236,42 @@ class PackagingTests(unittest.TestCase):
         with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1), self.assertRaises(ValueError):
             release.package(self.root)
 
+    def test_actual_windows_zip_contains_exact_reviewed_guides_collected_by_builder(self):
+        from tools import build_windows
+        for source in release.RUNTIME_GUIDES:
+            self.assertIn((source, 'guides'), build_windows.DATA)
+        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
+            assets = release.package(self.root)
+        with zipfile.ZipFile(assets[0]) as archive:
+            for source in release.RUNTIME_GUIDES:
+                target = 'UniversalKoeiTecmoSaveEditor-v1.0/_internal/guides/' + source.removeprefix('docs/')
+                self.assertEqual(archive.read(target), self.sources[source])
+            self.assertFalse(any('/src/' in name or '/AGENTS.md' in name for name in archive.namelist()))
+
+    def test_missing_changed_and_unreviewed_guides_fail_runtime_validation(self):
+        source = release.RUNTIME_GUIDES[0]
+        name = 'guides/' + source.removeprefix('docs/')
+        path = self.runtime / '_internal' / name
+        opened = path.read_bytes()
+        archive, _blobs, _module = self.archive_fixture()
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing'):
+            release.verify_executable(self.root, lambda _: archive)
+        path.write_bytes(b'changed guide')
+        with self.assertRaisesRegex(ValueError, 'differs from manifest'):
+            release.verify_executable(self.root, lambda _: archive)
+        path.write_bytes(opened)
+        unreviewed = path.with_name('private-notes.md')
+        unreviewed.write_bytes(b'unreviewed text')
+        with self.assertRaises(ValueError):
+            release.verify_executable(self.root, lambda _: archive)
+        unreviewed.unlink()
+        standalone, blobs, _module = self.standalone_archive_fixture()
+        self.assertIn(name, standalone.toc)
+        blobs[name] = b'changed embedded guide'
+        with self.assertRaisesRegex(ValueError, 'differs from manifest'):
+            release.verify_standalone(self.root, lambda _: standalone)
+
     def test_hash_mismatch_prevents_any_release_output(self):
         (self.root / 'README.md').write_text('Changed after manifest', encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'hash or length mismatch'):

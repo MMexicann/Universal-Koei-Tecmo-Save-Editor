@@ -30,6 +30,11 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'bodyguard_growth.json', 'bodyguard_items.json', 'bodyguard_weapons.json',
                 'weapon_bonus_rules.json', 'progression_routes.json', 'collection_unlocks.json',
                 'origins_evidence.json', 'support_catalog.json')
+# Explicit user guides are reviewed runtime metadata in both Windows builds.
+# Repository/developer documentation remains confined to the Source ZIP.
+RUNTIME_GUIDES = ('docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
+                  'docs/SAVE_CONVERSION.md', 'docs/SAVE_COMPARISON.md',
+                  'docs/BATCH_CONVERSION.md', 'docs/DW6_CONVERSION.md', 'docs/DW6_PS3_FORMAT.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
 WINDOWS_DOCS = ('README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
@@ -220,7 +225,7 @@ def verified_sources(root=ROOT):
         if '\0' in text or PERSONAL_PATH.search(text):
             raise ValueError(f'Binary content or personal home path in public source: {name}')
         sources[name] = data
-    required = set(WINDOWS_DOCS) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'docs/RELEASE_NOTES.md',
+    required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'docs/RELEASE_NOTES.md',
                                                 '.github/workflows/windows-release.yml'}
     required.update(_required_runtime(root, sources))
     required.update(PACKAGE_ROOT + '/data/' + name for name in RUNTIME_DATA)
@@ -266,6 +271,7 @@ def embedded_metadata(sources):
     expected.update({'licenses/LICENSE': sources['LICENSE'],
                      'licenses/THIRD_PARTY_NOTICES.md': sources['docs/THIRD_PARTY_NOTICES.md']})
     expected.update({name: sources[name] for name in RUNTIME_LICENSES})
+    expected.update({'guides/' + name.removeprefix('docs/'): sources[name] for name in RUNTIME_GUIDES})
     for codec, notice in CODEC_LICENSES.items():
         if codec in sources:
             expected[notice] = sources[notice]
@@ -526,8 +532,8 @@ def package(root=ROOT, output=None):
               output / f'{name}.exe', output / 'SHA256SUMS.txt']
     if any(path.exists() for path in assets):
         raise ValueError('Release outputs already exist; choose a new output directory.')
-    # The user ZIP is exactly the validated application folder. Developer
-    # documentation and repository instructions remain in the source archive.
+    # The user ZIP is exactly the validated application folder, including the
+    # explicitly reviewed user guides. Developer/repository documents stay in Source.
     windows = {name + '/' + path: data for path, data in runtime.items()}
     prefix = f'{name}-Source/'
     output.mkdir(parents=True, exist_ok=True)

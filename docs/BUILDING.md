@@ -163,3 +163,12 @@ complete portable runtime and standalone EXE before either packaged startup.
 It then scans the exact final direct EXE and both final ZIPs and checks their
 recorded hashes again at publication. Any unavailable protection, detection,
 scan error or changed input blocks the release. Reports are retained for review.
+
+## Reviewed offline user guides
+
+`tools.package_release.RUNTIME_GUIDES` is the explicit user-document allowlist.
+The Windows builder collects these seven files into `guides` for both build forms.
+The portable ZIP exposes them under `_internal/guides/`. Their exact bytes are
+bound to the reviewed source manifest and verified alongside other runtime
+metadata; missing, altered or unreviewed guide files fail packaging. Repository
+and developer documents are still confined to the Source ZIP.

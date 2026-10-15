@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.5 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.5.1 development source** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Editor workspace
@@ -16,11 +16,12 @@ table scrolls horizontally; **Show editing guide** opens each game's guidance.
 **More options** contains experimental editing and the separate encoding-limit
 column. Ctrl+F searches fields in scalar editors and games in the library;
 Escape in the field search clears its filters without changing pending edits.
-[Workspace guide](docs/EDITOR_WORKSPACE.md).
+[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the seven
+reviewed user guides in `_internal/guides/`; the Source ZIP contains the full documentation.
 
 ## Origins request status
 
-Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.
+Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.1.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
 controls remain available. This update fixes backup/source-change and output
 read-back checks. [Evidence and precise remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).

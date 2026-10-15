@@ -31,7 +31,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Windows build and packaging](BUILDING.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)
 - [Validation and evidence boundaries](VALIDATION.md)
-- [Current release notes](RELEASE_NOTES.md), [v1.8 release notes](releases/v1.8.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
+- [Current release notes](RELEASE_NOTES.md), [v2.5 release notes](releases/v2.5.md), [v1.8 release notes](releases/v1.8.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
   [v1.5 release notes](releases/v1.5.md)
   and [changelog](CHANGELOG.md)
 - [Repository identity](REPOSITORY_METADATA.md)

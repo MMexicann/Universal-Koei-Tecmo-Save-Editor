@@ -1,5 +1,8 @@
 # Editing workspace
 
+The portable Windows ZIP includes this guide and the six companion user guides
+in `_internal/guides/`. The full developer documentation remains in the Source ZIP.
+
 Choose an exact game/platform in the library, then open a separate save copy.
 The editor retains its document, filters, pending edits and Undo history when
 switching to another editor or a conversion/comparison workspace.

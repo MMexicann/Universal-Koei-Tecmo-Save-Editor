@@ -1,6 +1,6 @@
 # Origins: proficiency levels and Old Coins
 
-**Neither requested edit is implemented in v2.5.** The existing qualified Steam
+**Neither requested edit is implemented in v2.5.1.** The existing qualified Steam
 slot revisions 16, 17 and 29 retain their documented editing scope. Experimental
 numeric mode does not enable unknown fields or bypass progression dependencies.
 See [native format evidence](ORIGINS_FORMAT.md).

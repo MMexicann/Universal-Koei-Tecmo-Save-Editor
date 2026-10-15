@@ -1,47 +1,32 @@
-# Universal Koei Tecmo Save Editor v2.5
+# Universal Koei Tecmo Save Editor v2.5.1
 
-The scalar editor now has a **category sidebar**, field/pending counts, edited-row
-highlighting in both themes and horizontal table scrolling. **Show editing guide**
-expands the game's instructions; **More options** reveals experimental editing
-and the encoding-limit column. Supported maxima and normal editing actions stay
-accessible. Hiding options preserves the current mode and pending edits.
+Fixes the missing offline guides in the v2.5 Windows ZIP. The builder now collects
+seven explicitly reviewed guides into both Windows builds, and the portable ZIP
+exposes them under **`_internal/guides/`**:
 
-An **Open editors** selector resumes exact game/platform sessions and shows live
-pending-edit counts. Ctrl+F searches fields in scalar editors and games in the
-library. Enter applies a value through normal validation; Escape in field search
-clears its filters without discarding edits. Review, Undo, backups and retained
-converter/comparison/batch workspaces remain available.
+- Editor workspace and Origins request status.
+- Save Converter, Compare Saves and Batch Converter.
+- DW6 conversion scope and US PS3 format/controls.
 
-The **Windows ZIP** now includes offline workspace, comparison, batch, conversion
-and DW6 guides alongside the existing documentation.
+Their exact bytes are bound to the source manifest and verified as runtime
+metadata. Missing, changed or unreviewed guide resources fail packaging. Tests
+inspect the actual generated Windows ZIP contents, including the guide bytes;
+repository/developer documents remain confined to the Source ZIP.
 
-**Origins copy safety** now rejects changed sources during backups and across
-serialization/output creation. Save As reparses the actual destination before
-accepting it. A failed post-write source check cleans up only an output that still
-matches the exact newly created bytes. Externally changed destinations are
-retained and reported as failures; existing files are never overwritten.
+The v2.5 public description has been corrected. Its original downloads and tag
+are unchanged. This patch carries forward the category sidebar, open-editor
+selector, pending-row highlighting, keyboard controls and Origins copy-safety
+fixes from v2.5.
 
-**Origins weapon proficiency levels and Old Coin editing are not implemented.**
-The available evidence does not yet establish the exact coin member and complete
-proficiency/moveset/rank/reward transition rules. The request remains open; this
-release does not claim to satisfy it. Existing Origins gameplay controls retain
-their documented scope. No new game profile is added: the library remains
-**94 editor profiles across 15 platforms**, with **20 scoped conversion routes**
-and native comparison for 93 scalar profiles.
+**Origins proficiency levels and Old Coin editing remain unimplemented.** No new
+game profile or gameplay mapping is added. The library remains **94 profiles
+across 15 platforms**, with **20 scoped conversion routes**. The existing
+in-game validation limitations and console import/signing requirements remain.
 
-Additional title research acquired seven distinct native Uncharted Waters IV HD
-references, but found edition-size differences from the published writer and
-unresolved integrity handling. Those inputs are not promoted into editable
-profiles. Private saves, owner context, game binaries and research downloads are
-excluded from the release.
+Publication requires the complete native Windows suite, both packaged startup
+checks, all exact-payload active Defender scans and actual public-download
+verification. Download **UniversalKoeiTecmoSaveEditor-v2.5.1.exe**, the complete
+**Windows ZIP**, or **Source ZIP**, with SHA256SUMS and Defender evidence.
 
-Focused native-copy, GUI, source-change and corruption regressions precede the
-complete native Windows suite, both packaged startup checks and clean active
-Defender scans. Published downloads must match the tested source and scan hashes.
-No edited/converted game-load or re-save acceptance is claimed.
-
-Download **UniversalKoeiTecmoSaveEditor-v2.5.exe**, the complete **Windows ZIP**, or
-the reviewed **Source ZIP**. SHA256SUMS and Defender evidence accompany the files.
-
-[Workspace guide](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5/docs/EDITOR_WORKSPACE.md)
-and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5/docs/ORIGINS_REQUEST_STATUS.md).
+[Workspace guide](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.1/docs/EDITOR_WORKSPACE.md)
+and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.1/docs/ORIGINS_REQUEST_STATUS.md).

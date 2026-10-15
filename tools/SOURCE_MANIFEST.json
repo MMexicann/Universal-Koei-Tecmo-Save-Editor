@@ -1,5 +1,5 @@
 {
-  "version": "2.5",
+  "version": "2.5.1",
   "files": [
     {
       "path": ".gitattributes",
@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 26065,
-      "sha256": "21a6ff6d443da122dee3605f97b962514b275162fe3382ba1f202fa3ceb7952e"
+      "bytes": 26197,
+      "sha256": "6aebdeaf3468abd76a994edb7ca267ac579990eb50af008f336696f6cf6f5bab"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -158,13 +158,13 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 8460,
-      "sha256": "e006340f7b86d0edb4c79a2863ebe1e6642a7fb4fb63cdc89a1ff3011a74f175"
+      "bytes": 8953,
+      "sha256": "834233c5466869d86f5da56354ff6d5796d74b748a3427d70c9134a17e4fdb83"
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 23414,
-      "sha256": "71af8af2c0b0c009d2ed6014e2b361debd284607c36c1eb7197606678c7e0682"
+      "bytes": 23795,
+      "sha256": "16b5e58c3df0a7df24b42771b11f36f2b99f4e330213200a475ded2f15ce02a5"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
@@ -303,8 +303,8 @@
     },
     {
       "path": "docs/EDITOR_WORKSPACE.md",
-      "bytes": 2489,
-      "sha256": "c6dc972f56e7357aac18103625b71c06da37a132126b1ab8a93d1d577a42c1bf"
+      "bytes": 2653,
+      "sha256": "8011162d8724442903e32a0e67d87a821b063643d51209cdef2880264f07104a"
     },
     {
       "path": "docs/EXISTING_EDITORS.md",
@@ -488,8 +488,8 @@
     },
     {
       "path": "docs/ORIGINS_REQUEST_STATUS.md",
-      "bytes": 3801,
-      "sha256": "705769f36043173bcb526cd186b81f431ef433af43c2b4aa81a3cc02d92d7199"
+      "bytes": 3803,
+      "sha256": "d91a80c982c720a580bc1621ea1dc47a22a76eceb85149cffdf76209a14ac352"
     },
     {
       "path": "docs/OROCHI_DYNASTY_DEPTH.md",
@@ -593,8 +593,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 12690,
-      "sha256": "839c395c86d12fe362c08ad01fe6d3dbdd76d3029cee9375692fb2938ff4269d"
+      "bytes": 12730,
+      "sha256": "5cb39133ae85b34d4bf288eff0d71d7b8e7d4348f995c181d5ea7cfac80999b5"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -608,8 +608,8 @@
     },
     {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 2929,
-      "sha256": "fe0df1328b38223b0dca4e629eb8e474f39615262f7936d1405ce496b20ca91f"
+      "bytes": 1829,
+      "sha256": "ffea2e05ce2d1327b960fd1c6d1cc956babbfe0e66311035420cb750ed690575"
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
@@ -868,8 +868,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 83871,
-      "sha256": "84367c2d1a94eee3a8cf86d59ce1ea524542061805c7fe19bd68b27fd77b262e"
+      "bytes": 84551,
+      "sha256": "08644ed113f7652585155682a49495c39e9c914431335f54f8c56995cf3b793b"
     },
     {
       "path": "docs/WEAPON_ATTRIBUTES_FIX.md",
@@ -962,6 +962,11 @@
       "sha256": "7c5a8141a57c8dde76ddfcc61fdd25b94b1f12d8d3aacc1065d2c3b0f467aef1"
     },
     {
+      "path": "docs/releases/v2.5.md",
+      "bytes": 3029,
+      "sha256": "7c582c24da32cd8defa9bf0b762cc21cbf01ab6f6d514fc85882d8a6d3809462"
+    },
+    {
       "path": "launch.pyw",
       "bytes": 49,
       "sha256": "444a19c6b889796340300f6746fb6842e55999a94fe7bb581c3824b6e310e6c0"
@@ -1008,8 +1013,8 @@
     },
     {
       "path": "pyproject.toml",
-      "bytes": 675,
-      "sha256": "6505c2b6105e2dcf7c1d7a04d6cbda462c61f0ad3c2e77ce3ca895a8cc6efa32"
+      "bytes": 677,
+      "sha256": "810d120c496eb909ae8f7d176832807a07b814fa7fa07a711a31c1f52f5ed574"
     },
     {
       "path": "src/koei_editor/AGENTS.md",
@@ -1033,8 +1038,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 35953,
-      "sha256": "d446f12b79631540a6cc7466c0253b2217d8f10102acf7711d2eeb6f995a56d6"
+      "bytes": 35955,
+      "sha256": "033d69f91b11e04a70105eb4480838432d3b93b3c0ce7091724413421ad638d6"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -4233,8 +4238,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 28857,
-      "sha256": "ffcd19aaab53fa00e7621aab3b926a0cf233a0469bb943d145c567dba2d7b2a4"
+      "bytes": 30924,
+      "sha256": "9d0043a9a61652e202eda824c60c4d5f212ae3680d0f8732ccff00157d85b11e"
     },
     {
       "path": "tests/test_parallel_runner.py",
@@ -4838,8 +4843,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 2581,
-      "sha256": "a7022aa4790a61c64436466e3b4d0231a0c006af04a4859b0762519ea69c1575"
+      "bytes": 2657,
+      "sha256": "8a9646c61763149e890b292c490761cb8cff53d91f08971aa6065e79ab5a93f1"
     },
     {
       "path": "tools/inspect_candidate.py",
@@ -4848,8 +4853,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 30920,
-      "sha256": "22b693b6f355adc6c448801e02778da11ec3d749af0f81562a78be31c27965d7"
+      "bytes": 31458,
+      "sha256": "e898393a9c536c15122ebe474824ea1318d5e03c54191d5e927c191babba87b3"
     },
     {
       "path": "tools/refresh_manifest.py",

@@ -1,5 +1,16 @@
 # Universal development validation
 
+## v2.5.1 actual offline-guide packaging
+
+A check of the actual v2.5 public Windows ZIP found the seven advertised guide
+files absent, despite all hash/content/scan checks matching the produced runtime.
+The public v2.5 description was corrected without altering its immutable downloads.
+The patch collects only the seven explicit reviewed guides into both native
+builds, validates their exact source-manifest bytes and tests the resulting ZIP
+contents. Missing, changed and unreviewed guide resources are separate rejection
+cases. Fresh complete source/Windows checks, both startup forms, all exact-payload
+Defender scans and actual public-download verification remain required.
+
 ## v2.5 editor workspace and Origins copy safety
 
 Focused GUI checks exercise category counts, pending-row styling across both

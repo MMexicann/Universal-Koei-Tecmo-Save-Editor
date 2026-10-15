@@ -5,15 +5,16 @@ import os
 from pathlib import Path
 
 from koei_editor.game_registry import ALL_ADAPTERS
-from tools.package_release import RUNTIME_DATA, RUNTIME_LICENSES
+from tools.package_release import RUNTIME_DATA, RUNTIME_LICENSES, RUNTIME_GUIDES
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.5'
+VERSION = '2.5.1'
 DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME_DATA] + [
     ('LICENSE', 'licenses'), ('docs/THIRD_PARTY_NOTICES.md', 'licenses'),
     ('licenses/atelier-sophie2-save-editor-MIT.txt', 'licenses'),
     ('licenses/katana-save-data-resigner-MIT.txt', 'licenses')]
 DATA += [(source, 'licenses') for source in RUNTIME_LICENSES]
+DATA += [(source, 'guides') for source in RUNTIME_GUIDES]
 
 
 def build_args(root=ROOT, *, standalone=False):

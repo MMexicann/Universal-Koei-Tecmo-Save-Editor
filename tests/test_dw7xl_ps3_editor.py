@@ -241,14 +241,20 @@ class DW7XLPS3EditorTests(unittest.TestCase):
     def test_late_context_race_retains_new_copy_and_rejects_success(self):
         destination = self.output()
         real_atomic = ps3_copy.atomic_new
+        mutations = []
         def mutate_after_create(raw, path):
             result = real_atomic(raw, path)
-            if Path(path) == destination:
+            # Windows may spell the resolved temporary directory differently
+            # (for example its long name instead of an inherited short alias).
+            # Match the created file itself so the intended race always runs.
+            if destination.exists() and Path(path).samefile(destination):
                 (destination.parent / 'PARAM.SFO').write_bytes(
                     (destination.parent / 'PARAM.SFO').read_bytes() + b'changed')
+                mutations.append(path)
             return result
         with patch.object(ps3_copy, 'atomic_new', side_effect=mutate_after_create), self.assertRaises(SaveError):
             self.adapter.save_as(self.document, {'gold': 1}, destination)
+        self.assertEqual(len(mutations), 1)
         self.assertTrue(destination.exists())
         self.assertEqual(self.path.read_bytes(), self.document.raw)
 

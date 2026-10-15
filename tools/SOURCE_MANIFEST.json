@@ -3893,8 +3893,8 @@
     },
     {
       "path": "tests/test_dw7xl_ps3_editor.py",
-      "bytes": 19209,
-      "sha256": "a4475efdadae90c32ee284e48bfed1058eb8679c49388d182054bff08bc52d58"
+      "bytes": 19581,
+      "sha256": "5626bc53df32f5a5d969b1e18307ab96ac671beb6eb6da1930ead15d224e2e37"
     },
     {
       "path": "tests/test_dw7xl_ps3_profile.py",

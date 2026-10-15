@@ -309,14 +309,10 @@ def write_save(document: SaveDocument,path: Path,changes: list[Change]=(),overwr
     # "unsaved" error after a successful save commit.
     audit_path=path.with_name(path.name+'.'+uuid.uuid4().hex[:8]+'.changes.json')
     _atomic_write(json.dumps(audit,indent=2).encode(),audit_path)
-    try:
-        _atomic_write(raw,path,overwrite,expected_bytes=expected_bytes)
-    except Exception:
-        try:
-            audit_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise
+    # A failed commit may leave this prepared report. Its existence does not
+    # establish a successful save, and deleting it could erase another app's
+    # replacement. The write still fails and existing destinations stay guarded.
+    _atomic_write(raw,path,overwrite,expected_bytes=expected_bytes)
     return path,audit
 
 def restore_backup(backup: Path,destination: Path) -> Path:

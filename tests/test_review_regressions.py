@@ -162,7 +162,7 @@ class ReviewIntegrationTests(CopyTestCase):
         with patch.object(writer, 'serialize', side_effect=concurrent_change), self.assertRaises(SaveError):
             writer.write_save(document, source, [Change('officer', 0, 'Attack', 150)], overwrite=True)
         self.assertEqual(source.read_bytes(), concurrent)
-        self.assertFalse(list(self.folder.glob('*.changes.json')))
+        self.assertEqual(len(list(self.folder.glob('*.changes.json'))), 1)
         self.assertFalse(list(self.folder.glob('.*.tmp')))
 
     def test_destination_created_during_serialization_is_preserved(self):
@@ -175,7 +175,7 @@ class ReviewIntegrationTests(CopyTestCase):
         with patch.object(writer, 'serialize', side_effect=concurrent_change), self.assertRaises(FileExistsError):
             writer.write_save(self.document, destination, overwrite=True)
         self.assertEqual(destination.read_bytes(), b'Created by another process')
-        self.assertFalse(list(self.folder.glob('*.changes.json')))
+        self.assertEqual(len(list(self.folder.glob('*.changes.json'))), 1)
 
     def test_backup_manifest_failure_keeps_completed_snapshot_and_existing_backup(self):
         self.folder.joinpath('existing.sav').write_bytes(b'Existing backup')

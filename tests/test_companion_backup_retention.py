@@ -254,3 +254,55 @@ class TaggedBackupRetentionTests(unittest.TestCase):
         self.assertEqual(captured[0].read_bytes(), foreign)
         self.assertEqual(captured[0].with_suffix('.json').read_bytes(), foreign)
         self.assertEqual(self.source.read_bytes(), self.document.encrypted)
+
+    def test_failed_dw3_save_keeps_foreign_prepared_report_and_concurrent_destination(self):
+        destination = self.folder / 'edited.sav'
+        original_atomic = self.backend._atomic_write
+        reports = []
+        foreign_report = b'Another application replaced the prepared report'
+        foreign_save = b'Another application created the requested destination'
+
+        def concurrent_commit(raw, path, *args, **kwargs):
+            path = Path(path)
+            if path == destination:
+                reports[0].write_bytes(foreign_report)
+                destination.write_bytes(foreign_save)
+            result = original_atomic(raw, path, *args, **kwargs)
+            if path.name.endswith('.changes.json'):
+                reports.append(result)
+            return result
+
+        with patch.object(self.backend, '_atomic_write', side_effect=concurrent_commit):
+            with self.assertRaises(FileExistsError):
+                self.backend.write_save(self.document, destination)
+        self.assertEqual(len(reports), 1)
+        self.assertEqual(reports[0].read_bytes(), foreign_report)
+        self.assertEqual(destination.read_bytes(), foreign_save)
+        self.assertEqual(self.source.read_bytes(), self.document.encrypted)
+        # Retrying cannot reuse the concurrently occupied output. A fresh
+        # destination succeeds without touching the failed attempt's files.
+        with self.assertRaises(FileExistsError):
+            self.backend.write_save(self.document, destination)
+        fresh = self.folder / 'fresh-copy.sav'
+        self.backend.write_save(self.document, fresh)
+        self.assertEqual(fresh.read_bytes(), self.document.encrypted)
+        self.assertEqual(reports[0].read_bytes(), foreign_report)
+        self.assertEqual(destination.read_bytes(), foreign_save)
+
+    def test_failed_dw3_commit_keeps_prepared_report_and_untouched_source(self):
+        original_atomic = self.backend._atomic_write
+        destination = self.folder / 'edited.sav'
+
+        def fail_commit(raw, path, *args, **kwargs):
+            if Path(path) == destination:
+                raise OSError('Save commit failed')
+            return original_atomic(raw, path, *args, **kwargs)
+
+        with patch.object(self.backend, '_atomic_write', side_effect=fail_commit):
+            with self.assertRaisesRegex(OSError, 'Save commit failed'):
+                self.backend.write_save(self.document, destination)
+        reports = list(self.folder.glob('edited.sav.*.changes.json'))
+        self.assertEqual(len(reports), 1)
+        self.assertIsInstance(json.loads(reports[0].read_bytes()), dict)
+        self.assertFalse(destination.exists())
+        self.assertEqual(self.source.read_bytes(), self.document.encrypted)

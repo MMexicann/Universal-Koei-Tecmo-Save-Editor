@@ -51,7 +51,7 @@ class DW7XLPS3ProfileTests(unittest.TestCase):
                 backend.read_save(Path('missing.bin'), game_id)
             opened.assert_not_called()
 
-    def test_frozen_snapshot_identity_payload_source_and_empty_only_serialization(self):
+    def test_frozen_snapshot_identity_payload_source_and_pending_map_validation(self):
         raw = profile_fixture()
         document = backend.decode(raw)
         for fake in (None, object(), replace(document, format=backend.Format()),
@@ -61,10 +61,10 @@ class DW7XLPS3ProfileTests(unittest.TestCase):
                      replace(document, source='APP.BIN'), replace(document, context_digest=None)):
             with self.subTest(type=type(fake).__name__), self.assertRaises(SaveError):
                 backend.validate_document(fake)
-        for changes in (None, [], (), {'gold': 123}, {'officer_0_health': 1000}):
+        for changes in (None, [], (), {'unknown': 123}, {'gold': True}):
             with self.subTest(changes=changes), self.assertRaises(SaveError):
                 backend.serialize(document, changes)
-        self.assertFalse(hasattr(backend, 'fields_for'))
+        self.assertTrue(callable(backend.fields_for))
 
     def test_both_native_regional_contexts_are_required_exact_and_fully_bound(self):
         for directory in ('BLUS30873-SAVEDATA', 'BLES01496-SAVEDATA'):

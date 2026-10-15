@@ -148,8 +148,17 @@
       "title": "Dynasty Warriors 7: Xtreme Legends Definitive Edition",
       "platform": "Windows PC",
       "status": "Native PC file editor",
-      "evidence": "Genuine PC save qualifies exact title, two-step stream and odd-tail checksum. Gold, 65 officers base stats/skill points and active selection between existing owned equipped weapons are mapped. Inventory and skill bits are inspected read only. Development expansion: Qualified owned unlearned weapon seal meters can be reduced; learning flags and earned rewards remain separate. Positive native unlearned-meter qualification is still missing. v2.5.2 one-way conversion preview: original US/European PS3 XL to PC DE transfers 50,138 canonical bytes of qualified system/Story/Legend, officer, weapon/seal, guardian and challenge state. Native PC and official PS3 update static serializers corroborate mixed widths. Three distinct PC states and two original regional PS3 contexts (one shared gameplay state) pass copied-file checks.",
+      "evidence": "Genuine PC save qualifies exact title, two-step stream and odd-tail checksum. Gold, 65 officers base stats/skill points and active selection between existing owned equipped weapons are mapped. Inventory ownership and purchased skill bits are inspected read only. Development expansion: Qualified owned unlearned weapon seal meters can be reduced; learning flags and earned rewards remain separate. Positive native unlearned-meter qualification is still missing. v2.5.2 one-way conversion preview: original US/European PS3 XL to PC DE transfers 50,138 canonical bytes of qualified system/Story/Legend, officer, weapon/seal, guardian and challenge state. Native PC and official PS3 update static serializers corroborate mixed widths. Three distinct PC states and two original regional PS3 contexts (one shared gameplay state) pass copied-file checks. Version 2.5.3 adds source-witnessed owned equipped-weapon references and learned ordinary applied-seal replacement/removal in already occupied slots. Native equipment pickers prove distinct slot references, duplicate-seal rejection, smith-learning exclusions and the separate game-parameter storage of base attack/element/capacity. Three native PC states pass independent surgical equipment exports, unrelated-byte and seed preservation; arbitrary base attack/element editing is not implemented.",
       "needed": "Matching LINKDATA parameter/name assets or controlled skill/seal/roster/progression pairs; edited game-load validation. Converted game load/re-save and equivalent completion; reverse PC-to-PS3, other regions and nonzero unidentified progress extensions remain unsupported.",
+      "editing_verified": true
+    },
+    {
+      "id": "dw7xl_ps3",
+      "title": "Dynasty Warriors 7: Xtreme Legends",
+      "platform": "PlayStation 3",
+      "status": "Original US/European native export editor",
+      "evidence": "Exact original BLUS30873/BLES01496 metadata and 470303-byte PFD-decrypted APP.BIN qualify revision 0x11080200. Official US/EU native update getters, setters and validators independently prove Gold and 65 playable officers stored health/attack/defense/power/speed/skill points and their bounds. Existing owned equipped-weapon active choices and owned unlearned seal-meter decreases preserve ownership/rewards and unknown bytes. Both regional contexts (one shared gameplay state) pass surgical scalar edits, native read-back and GUI/copy/backup/restore checks. Suspended battles remain read only.",
+      "needed": "External PFD decryption and console reimport/resigning; actual edited game load/re-save unverified. More independent progress histories and matching parameter data for named equipment, skills and progression.",
       "editing_verified": true
     },
     {
@@ -211,7 +220,7 @@
       "title": "Warriors Orochi 3 Ultimate Definitive Edition",
       "platform": "Windows PC",
       "status": "Native Steam PC file editor",
-      "evidence": "Supplied executable serializer and genuine shared native PC save qualify packed revision, 145 playable officer stat records, growth points/gems, attribute orbs, crafting and existing weapon attribute slots/ranks. ASLR-dependent record markers and unknown bytes are preserved. Development expansion: Already promoted coherent officers have unallocated upgrade-stone controls; ordinary-item equipment uses original ownership/ranks, active slots and duplicate checks.",
+      "evidence": "Supplied executable serializer and genuine shared native PC save qualify packed revision, 145 playable officer stat records, growth points/gems, attribute orbs, crafting and existing weapon attribute slots/ranks. ASLR-dependent record markers and unknown bytes are preserved. Development expansion: Already promoted coherent officers have unallocated upgrade-stone controls; ordinary-item equipment uses original ownership/ranks, active slots and duplicate checks. Version 2.5.3 adds two native persisted mount-loadout selectors using only originally owned binary-rank mount IDs 28–31, with a separate ordinal mapping. The native menu, root state-copy bridge and serializer independently qualify both bytes. Two native sources and full copy/GUI workflows preserve ownership/ranks, ordinary equipment and all unrelated data. Decrease-only reinforcement remains bounded under experimental editing.",
       "needed": "Actual edited game loads, roster/material ID names, controlled promotion/progression/bonds/story rewards and remaining weapon descriptors.",
       "editing_verified": true
     },
@@ -636,6 +645,15 @@
       "status": "Original native PC bounded quality editor",
       "evidence": "A distinct independently shared native original Ryza 2 gameplay autosave passes XOR/additive integrity, complete title-specific tagged framing, 100-byte item records and owned Party equipment. Existing ordinary quality is edited surgically from 1–100; important/empty records, adjacent words, identities, original seeds and unknown state are preserved. Several other files in the advertised Ryza 2 archive are byte-identical Ryza 1 files and excluded. Development expansion: Exact qualified AlchemyTree/SkillPoint framing permits unspent SP reductions only; big-endian scalar storage and separate SkillState ownership are preserved.",
       "needed": "Edited game load/re-save, further build-labelled saves, higher quality-cap skill dependencies, currency and growth limits, item names/applicability, synthesis/traits/effects, recipes, exploration/collections and controlled acquisition/equip pairs. Original Ryza 1 PC and Ryza 3 are not registered.",
+      "editing_verified": true
+    },
+    {
+      "id": "nights_azure2_switch",
+      "title": "Nights of Azure 2: Bride of the New Moon",
+      "platform": "Nintendo Switch",
+      "status": "Original English-preview Chapter 1/7/Clear native profiles",
+      "evidence": "Three distinct complete public native states corroborate the labelled Libra balance in the current #PLD record and the English save preview. All active framed root/leaf/chapter checkpoint blocks independently validate unsigned-byte FNV-1a hashes. Libra decrease-only writes synchronize the preview and recompute only current player/root integrity; the chapter checkpoint, inactive clear-data retained tail and all other gameplay data are preserved. Max and experimental increases are disabled; a modified early-game reference does not establish a natural cap.",
+      "needed": "Actual edited game-load/re-save validation; additional chapter/language/revision qualification, independent native serializer or controlled action pairs before other growth/resource/inventory writers. Only the exact qualified 77509/91828-byte profiles are accepted.",
       "editing_verified": true
     },
     {

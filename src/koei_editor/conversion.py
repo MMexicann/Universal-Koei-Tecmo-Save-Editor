@@ -101,7 +101,7 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('dw7xl_ps3', 'dw7xl', 'DW7 Xtreme Legends · US/European PS3', 'APP.BIN', dw7_ps3,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLUS30873 or BLES01496 export with its original PARAM.SFO. '
-             'One-way transfer to Definitive Edition PC; base DW7 and Empires are separate formats.', True),
+             'One-way transfer to Definitive Edition PC; base DW7 and Empires are separate formats.'),
 )})
 
 

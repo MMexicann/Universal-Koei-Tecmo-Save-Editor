@@ -6,6 +6,16 @@ addresses, format details, sources, test commands and individual mechanic
 blockers. A qualified codec is distinct from a gameplay editor; a successful
 file roundtrip is distinct from loading an edited file in the game.
 
+Version 2.5.3 has **96 game/platform profiles across 15 platforms**. It adds
+[original US/EU DW7 XL PS3 editing](DW7XL_PS3.md) and
+[Nights of Azure 2 Switch](NOA2_SWITCH_FORMAT.md), narrowly scoped to Libra
+reductions in qualified English Chapter 1/7/Clear layouts. Existing
+[DW7 XL PC weapons](DW7XL_WEAPONS.md) gain source-witnessed loadouts and learned
+applied seals; WO3 Ultimate gains two owned mount loadouts. Base DW7 XL weapon
+attack/element live in external game data and are not arbitrary save fields.
+Shared scalar navigation/reviews and completed-backup retention are refined;
+Origins level/Old Coin writers remain unimplemented; edited game loading remains untested.
+
 Version 2.0 contains **90 game/platform profiles across 15 platforms**, including
 the [14-profile Sol expansion](SOL_EXPANSION.md).
 The new separately qualified profiles are described below;

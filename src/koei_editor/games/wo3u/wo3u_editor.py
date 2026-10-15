@@ -5,7 +5,7 @@ from koei_editor.shared.scalar_presentation import ScalarPresentation, Inspectio
 
 
 class WO3Presentation(ScalarPresentation):
-    extra_groups = ('Weapons', 'Equipment', 'Upgrade stones')
+    extra_groups = ('Weapons', 'Equipment', 'Mount equipment', 'Upgrade stones')
 
     def inspection_tables(self, document):
         rows = self.backend.inspection_rows(document)
@@ -15,7 +15,9 @@ class WO3Presentation(ScalarPresentation):
                         if row['group'] == 'Weapons')
         resources = tuple((field.group, field.label, field.value(document.payload))
                           for field in self.backend.fields_for(document)
-                          if field.group not in ('Officers', 'Weapons'))
+                          if field.group not in ('Officers', 'Weapons', 'Mount equipment'))
+        mounts = tuple((row['label'], row['value']) for row in rows
+                       if row['group'] == 'Mount equipment')
         return (
             InspectionTable('Progression', ('Record', 'Opened progression'), progression,
                             'Level, EXP, promotion and item-slot dependencies remain read only.'),
@@ -23,6 +25,9 @@ class WO3Presentation(ScalarPresentation):
                             'Search by proven attribute names or weapon IDs. Unknown IDs are preserved.'),
             InspectionTable('Resources', ('Group', 'Resource', 'Opened balance'), resources,
                             'Resource edit limits are published patch limits; bulk Max excludes them.'),
+            InspectionTable('Mount loadouts', ('Loadout', 'Opened mount'), mounts,
+                            'Two stored loadouts. Choose only originally owned mounts; '
+                            'acquisition and ranks stay unchanged.'),
         )
 
 
@@ -32,7 +37,7 @@ class Editor(ScalarEditor):
     presentation_type = WO3Presentation
     backend = wo3u_parser
     subtitle = 'Steam Windows PC save editor'
-    summary = 'Officer stats, upgrade stones, owned items, growth points, crafting and weapons.'
+    summary = 'Officer stats, upgrade stones, owned items and mounts, growth points, crafting and weapons.'
 
 
 def read_save(path):

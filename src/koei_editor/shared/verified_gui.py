@@ -110,9 +110,10 @@ class Editor(Appearance):
         self.value_entry.bind('<Return>', lambda _event: self.apply_selected())
         self.choice_value = tk.StringVar(root)
         self.value_choice = ttk.Combobox(value_frame, textvariable=self.choice_value,
-                                         width=18, state='readonly')
+                                         width=30, state='readonly')
         self._choice_values = {}
         self.value_choice.bind('<<ComboboxSelected>>', self.selected_choice)
+        self._choice_selection = ()
         self.edit_buttons = []
         for label, callback in (('Apply Selected', self.apply_selected),
                                 ('Max Selected', self.max_selected), ('Max Visible Fields', self.max_visible)):
@@ -122,7 +123,18 @@ class Editor(Appearance):
         inspect = ttk.Button(tools, text='Inspect Data', command=self.show_inspector, state='disabled')
         inspect.pack(side='right', padx=4)
         self.edit_buttons.append(inspect)
+        self.choice_tools = ttk.Frame(host, padding=(18, 0, 18, 6))
+        ttk.Label(self.choice_tools, text='Find choices').pack(side='left', padx=(0, 8))
+        self.choice_search = tk.StringVar(root)
+        self.choice_search_entry = ttk.Entry(self.choice_tools, textvariable=self.choice_search, width=38)
+        self.choice_search_entry.pack(side='left', fill='x', expand=True)
+        self.choice_search_entry.bind('<Escape>', self.clear_choice_search)
+        ttk.Button(self.choice_tools, text='Clear', command=self.clear_choice_search).pack(side='left', padx=8)
+        self.choice_count = tk.StringVar(root)
+        ttk.Label(self.choice_tools, textvariable=self.choice_count, style='Muted.TLabel').pack(side='left')
+        self.choice_search.trace_add('write', self.filter_choices)
         bulk = ttk.Frame(host, padding=(18, 0, 18, 6))
+        self.bulk_bar = bulk
         bulk.pack(fill='x')
         for label, callback in (('Adjust Selected...', self.adjust_selected),
                                 ('Revert Selected', self.revert_selected)):
@@ -292,6 +304,8 @@ class Editor(Appearance):
         self.changes, self.history = {}, []
         self.record.set('All records')
         self.pending_only.set(False)
+        self.choice_search.set('')
+        self._choice_selection = ()
         for button in self.save_buttons + self.edit_buttons:
             button.configure(state='normal')
         self.update_filename('Opened copy: ')
@@ -342,9 +356,10 @@ class Editor(Appearance):
                 continue
             original = field.value(self.document.payload)
             record = self.record_name(field)
-            opened = self.display_value(field, original)
+            opened = self.display_value(field, original, changes={})
             pending = self.display_value(field, self.changes[field.id]) if field.id in self.changes else '-'
-            searchable = f'{field.label} {field.group} {record} {field.id} {opened} {pending}'.casefold()
+            searchable = (f'{field.label} {field.group} {record} {field.id} {opened} {pending} '
+                          f'{original} {self.changes.get(field.id, "")}').casefold()
             if any(token not in searchable for token in tokens):
                 continue
             self.fields.insert('', 'end', iid=field.id, tags=('pending',) if field.id in self.changes else (),
@@ -403,36 +418,65 @@ class Editor(Appearance):
         self.refresh()
 
     @experimental_operation
-    def field_options(self, field):
+    def field_options(self, field, *, changes=None):
+        if self.document is not None and hasattr(self.backend, 'field_options_for_changes'):
+            pending = self.changes if changes is None else changes
+            return tuple(self.backend.field_options_for_changes(self.document, pending, field.id))
         if self.document is not None and hasattr(self.backend, 'field_options'):
             return tuple(self.backend.field_options(self.document, field.id))
         return ()
 
-    def display_value(self, field, value):
+    def display_value(self, field, value, *, changes=None):
         if type(value) is not int:
             return str(value)
-        label = dict(self.field_options(field)).get(value)
+        label = dict(self.field_options(field, changes=changes)).get(value)
         return f'{value:,} · {label}' if label is not None else f'{value:,}'
 
     def selected_choice(self, _event=None):
         if self.choice_value.get() in self._choice_values:
             self.value.set(str(self._choice_values[self.choice_value.get()]))
 
+    def clear_choice_search(self, _event=None):
+        self.choice_search.set('')
+        return 'break'
+
+    def filter_choices(self, *_args):
+        tokens = self.choice_search.get().casefold().split()
+        labels = tuple(label for label in self._choice_values
+                       if all(token in label.casefold() for token in tokens))
+        self.value_choice.configure(values=labels)
+        self.choice_count.set(f'{len(labels):,} of {len(self._choice_values):,} choices')
+
     @experimental_operation
     def selected(self, _event=None):
         keys = self.fields.selection()
+        if tuple(keys) != self._choice_selection:
+            self._choice_selection = tuple(keys)
+            self.choice_search.set('')
+        self.choice_tools.pack_forget()
         if keys and self.document:
-            field = self.adapter.field_map(self.document)[keys[0]]
-            value = self.changes.get(field.id, field.value(self.document.payload))
-            self.value.set(str(value))
+            fields = self.adapter.field_map(self.document)
+            field = fields[keys[0]]
+            values = {self.changes.get(key, fields[key].value(self.document.payload)) for key in keys}
+            value = next(iter(values)) if len(values) == 1 else None
+            self.value.set(str(value) if value is not None else '')
             hint = self.presentation.field_hint(self.document, field)
+            if len(keys) == 1:
+                opened = self.display_value(field, field.value(self.document.payload), changes={})
+                current = self.display_value(field, value)
+                hint = (f'{self.record_name(field)} / {field.label}. Opened: {opened}; current: {current}. '
+                        + hint)
+            else:
+                hint = (f'{len(keys):,} selected fields; '
+                        + ('mixed current values. Choose a value to assign to all. ' if value is None
+                           else f'current value: {self.display_value(field, value)}. Apply assigns to all. ')
+                        + hint)
             maximum = experimental_maximum(field)
             if maximum is not None:
                 hint += (f' Supported maximum: {field.maximum:,}; encoding limit: {maximum:,}.'
                          ' Above the supported maximum is experimental and may break the save or game.')
             self.selection_info.set(hint)
             options = self.field_options(field)
-            fields = self.adapter.field_map(self.document)
             if options and all(self.field_options(fields[key]) == options for key in keys):
                 self._choice_values = {f'{number} · {label}': number for number, label in options}
                 opened = {fields[key].value(self.document.payload) for key in keys}
@@ -443,15 +487,24 @@ class Editor(Appearance):
                         # Expose its exact no-op without assigning that value
                         # to other records whose opened values are different.
                         self._choice_values[f'{number} · Opened value (preserved)'] = number
-                self.value_choice.configure(values=tuple(self._choice_values))
+                self.filter_choices()
                 self.choice_value.set(next((label for label, number in self._choice_values.items()
                                            if number == value), ''))
                 self.value_entry.pack_forget()
                 self.value_choice.pack(side='left')
+                if len(self._choice_values) > 10:
+                    self.choice_tools.pack(fill='x', before=self.bulk_bar)
             else:
                 self._choice_values = {}
                 self.value_choice.pack_forget()
                 self.value_entry.pack(side='left')
+        else:
+            self.value.set('')
+            self.choice_value.set('')
+            self._choice_values = {}
+            self.value_choice.pack_forget()
+            self.value_entry.pack(side='left')
+            self.selection_info.set('Select a record to inspect its values.')
 
     @experimental_operation
     def record_name(self, field):
@@ -618,37 +671,77 @@ class Editor(Appearance):
         if self.document is None:
             return
         document = self.document
+        pending = dict(self.changes)
         try:
-            rows = self.adapter.review(document, self.changes)
+            rows = self.adapter.review(document, pending)
         except Exception as error:
             messagebox.showerror('Cannot Review Changes', str(error))
             return
         dialog = tk.Toplevel(self.root)
         dialog.title('Review Changes')
-        dialog.geometry('700x480')
+        dialog.geometry('1000x520')
         experimental_count = len(self.experimental_changes())
         warning = (f'\nEXPERIMENTAL: {experimental_count} edits above supported limits; save/game may break.'
                    if experimental_count else '')
         ttk.Label(dialog, text=f'{self.layout.title}\n{len(rows)} staged field edits' + warning,
                   padding=15, wraplength=660).pack(anchor='w')
+        search_bar = ttk.Frame(dialog, padding=(15, 0, 15, 8))
+        search_bar.pack(fill='x')
+        ttk.Label(search_bar, text='Find changes').pack(side='left', padx=(0, 8))
+        query = tk.StringVar(dialog)
+        query_entry = ttk.Entry(search_bar, textvariable=query)
+        query_entry.pack(side='left', fill='x', expand=True)
+        ttk.Button(search_bar, text='Clear', command=lambda: query.set('')).pack(side='left', padx=8)
+        count = tk.StringVar(dialog, value=f'{len(rows):,} of {len(rows):,} changes')
+        ttk.Label(search_bar, textvariable=count, style='Muted.TLabel').pack(side='left')
         body = ttk.Frame(dialog)
         body.pack(fill='both', expand=True, padx=15)
         body.rowconfigure(0, weight=1)
         body.columnconfigure(0, weight=1)
         tree = ttk.Treeview(body, columns=('field', 'before', 'after'), show='headings')
-        for column, label in (('field', 'Field / slot'), ('before', 'Before'), ('after', 'After')):
+        for column, label in (('field', 'Field / record'), ('before', 'Opened value'), ('after', 'Pending value')):
             tree.heading(column, text=label)
         attach_sorting(tree)
         from tkinter.font import Font
         label_font = Font(root=dialog, font=self.style.lookup('Treeview', 'font') or 'TkDefaultFont')
         label_width = 300
+        value_widths = [140, 140]
+        records = []
         for field, before, after in rows:
             label = field.label + (f' / {self.record_name(field)}' if field.slot else '')
             label_width = max(label_width, label_font.measure(label) + 24)
-            tree.insert('', 'end', values=(label, before, after))
+            displayed = (label, self.display_value(field, before, changes={}),
+                         self.display_value(field, after, changes=pending))
+            for index, value in enumerate(displayed[1:]):
+                value_widths[index] = max(value_widths[index], min(420, label_font.measure(value) + 24))
+            identity = tree.insert('', 'end', values=displayed)
+            records.append((identity, (' '.join(displayed)
+                                       + f' {field.id} {field.group} {before} {after}').casefold()))
+        def filter_rows(*_args):
+            tokens = query.get().casefold().split()
+            visible = 0
+            for identity, text in records:
+                if all(token in text for token in tokens):
+                    tree.move(identity, '', 'end')
+                    visible += 1
+                else:
+                    tree.detach(identity)
+            sort_table(tree)
+            count.set(f'{visible:,} of {len(rows):,} changes')
+        query.trace_add('write', filter_rows)
+        def focus_search(_event):
+            query_entry.focus_set()
+            query_entry.selection_range(0, 'end')
+            return 'break'
+        def clear_search(_event):
+            query.set('')
+            return 'break'
+        dialog.bind('<Control-f>', focus_search)
+        query_entry.bind('<Escape>', clear_search)
+        dialog.review_query, dialog.review_tree = query, tree
         tree.column('field', width=label_width, minwidth=300, stretch=False)
-        tree.column('before', width=140, minwidth=100)
-        tree.column('after', width=140, minwidth=100)
+        tree.column('before', width=value_widths[0], minwidth=100)
+        tree.column('after', width=value_widths[1], minwidth=100)
         tree.grid(row=0, column=0, sticky='nsew')
         vertical = ttk.Scrollbar(body, orient='vertical', command=tree.yview)
         vertical.grid(row=0, column=1, sticky='ns')

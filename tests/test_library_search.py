@@ -12,8 +12,10 @@ from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matchi
 class CatalogSearchTests(unittest.TestCase):
     def test_short_name_and_platform_disambiguate_editions(self):
         self.assertEqual([game.id for game in matching_games(GAMES, 'dw7')],
-                         ['dw7_ps3', 'dw7xl', 'dw7e_ps3'])
+                         ['dw7_ps3', 'dw7xl', 'dw7xl_ps3', 'dw7e_ps3'])
         self.assertEqual([game.id for game in matching_games(GAMES, 'dw7 pc')], ['dw7xl'])
+        self.assertEqual([game.id for game in matching_games(GAMES, 'dw7 xtreme', 'PlayStation 3')],
+                         ['dw7xl_ps3'])
         self.assertEqual({game.id for game in matching_games(GAMES, 'sóphie 2')},
                          {'atelier_sophie2', 'atelier_sophie2_ps4'})
         self.assertEqual([game.id for game in matching_games(GAMES, 'sóphie 2', 'Windows PC')],

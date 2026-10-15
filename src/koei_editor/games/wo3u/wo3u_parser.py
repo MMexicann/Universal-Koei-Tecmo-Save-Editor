@@ -55,6 +55,8 @@ class Field:
     def experimental_maximum(self):
         """Largest representable numeric value; protected choices stay bounded."""
         if ('_equipped_item_' in self.id
+                or self.group == 'Mount equipment'
+                or self.id.endswith('_reinforcement')
                 or self.id.endswith('_slots')
                 or (self.id.startswith('weapon_') and '_rank_' in self.id and self.maximum == 1)):
             return None
@@ -107,7 +109,7 @@ FORMAT = Format(GAME_ID, 'Warriors Orochi 3 Ultimate Definitive Edition (Steam P
                 SAVE_SIZE, tuple(_static),
                 'Native copied-file validation; edited game loading remains untested. '
                 'Stats, growth points, gems, attribute orbs, crafting materials and '
-                'existing weapon slots/ranked attributes, reinforcement reduction, unallocated upgrade stones and owned ordinary-item equipment. Story, unlocks and promotions '
+                'existing weapon slots/ranked attributes, reinforcement reduction, unallocated upgrade stones, owned ordinary-item equipment and owned mount loadouts. Story, unlocks and promotions '
                 'remain unchanged. Five internal officer records are read only.')
 
 
@@ -208,6 +210,11 @@ def _fields_cached(payload, _experimental):
                                 offset + equipment.EQUIPPED_ITEM_OFFSET + item_slot,
                                 1, equipment.EMPTY_ITEM, 'Equipment', officer + 1,
                                 maxable=False))
+    for index in equipment.qualified_mount_loadouts(payload):
+        result.append(Field(f'mount_loadout_{index}', 'Equipped owned mount',
+                            equipment.MOUNT_LOADOUT_OFFSETS[index], 1,
+                            equipment.EMPTY_ITEM, 'Mount equipment', index + 1,
+                            maxable=False))
     for index in range(WEAPON_COUNT):
         offset = WEAPON_BASE + index * WEAPON_STRIDE
         identity = int.from_bytes(payload[offset:offset + 2], 'little')
@@ -219,7 +226,7 @@ def _fields_cached(payload, _experimental):
         reinforcement = payload[offset + 3]
         # Native total attack adds this separate byte. Decreasing an ordinary
         # existing value cannot exceed a grade-specific reinforcement ceiling.
-        if within_numeric_limits(reinforcement, 1, 99, storage_maximum=255):
+        if 1 <= reinforcement <= 99:
             result.append(Field(f'weapon_{index}_reinforcement',
                                 f'Weapon {index + 1} (ID {identity}): Reinforcement (decrease only)',
                                 offset + 3, 1, reinforcement, 'Weapons', index + 1,
@@ -264,6 +271,8 @@ def field_map(document):
 
 
 def record_label(slot, group='Officers'):
+    if group == 'Mount equipment' and slot:
+        return f'Mount loadout {slot}'
     if group in ('Upgrade stones', 'Equipment') and slot:
         return f'Officer {slot}'
     if group == 'Weapons' and slot:
@@ -281,6 +290,8 @@ def changed_payload(document, changes):
         # Slots must neither hide existing nor activate dormant attributes,
         # including unknown IDs whose relationship to the count is unproved.
         field.validate(value)
+        if field.group == 'Mount equipment':
+            equipment.validate_mount_selector(document.payload, field.slot - 1, value)
         if key.startswith('weapon_') and key.endswith('_slots'):
             index = field.slot - 1
             base = WEAPON_BASE + index * WEAPON_STRIDE
@@ -302,6 +313,8 @@ def field_options(document, key):
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested WO3 Ultimate Definitive field is not mapped.')
+    if mapped[key].group == 'Mount equipment':
+        return equipment.mount_options(document.payload)
     return equipment.options(document.payload) if '_equipped_item_' in key else ()
 
 
@@ -401,6 +414,21 @@ def restore(backup_path, destination, game_id=GAME_ID):
 def inspection_rows(document):
     validate_document(document)
     rows = []
+    owned_mounts = equipment.owned_mounts(document.payload)
+    for index, offset in enumerate(equipment.MOUNT_LOADOUT_OFFSETS):
+        selector = document.payload[offset]
+        if selector == equipment.EMPTY_ITEM:
+            description = 'Unequipped'
+        elif selector < len(equipment.MOUNT_ITEM_IDS):
+            identity = equipment.MOUNT_ITEM_IDS[selector]
+            description = (f'Mount item ID {identity}; '
+                           + ('original ownership and rank qualified' if selector in owned_mounts
+                              else 'unsupported ownership or rank; read only'))
+        else:
+            description = f'Unknown selector {selector}; read only'
+        rows.append({'group': 'Mount equipment',
+                     'label': record_label(index + 1, 'Mount equipment'),
+                     'value': description})
     for index in range(SERIALIZED_OFFICER_COUNT):
         offset = OFFICER_BASE + index * OFFICER_STRIDE
         rows.append({'group': 'Progression', 'label': f'Officer {index + 1}' if index <145
@@ -432,6 +460,12 @@ def field_hint(document, field):
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested WO3 Ultimate Definitive field is not mapped.')
+    if mapped[key].group == 'Mount equipment':
+        return ('Choose an originally owned mount item, or Unequipped. These are two '
+                'stored mount loadouts, separate from officers\' ordinary item slots. '
+                'Mount identity, ownership, ranks, acquisition, story and battle state '
+                'are preserved. Unknown selectors and unusual mount ranks stay read only. '
+                'Excluded from Max and experimental range expansion.')
     if mapped[key].group == 'Equipment':
         return ('Choose an already owned ordinary item with a positive existing rank, '
                 'or Unequipped. Duplicate items on the same officer are rejected. '

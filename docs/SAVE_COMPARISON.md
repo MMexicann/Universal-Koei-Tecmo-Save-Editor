@@ -2,7 +2,7 @@
 
 Compare Saves shows changes between two independently qualified copies of the
 **same registered game/platform profile**. It is available for the library's
-93 scalar profiles; DW3's separate tagged editor is excluded from this workflow.
+95 scalar profiles; DW3's separate tagged editor is excluded from this workflow.
 The comparison validates the exact selected backend, format, native integrity
 and each copy's required original console metadata. It does not edit gameplay
 files or create gameplay backups.

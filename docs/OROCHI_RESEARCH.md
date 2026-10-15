@@ -46,6 +46,9 @@ Static evidence locations in the inspected image:
 | `0x14026D4B0`..`0x14026D551`, `0x14026E290`..`0x14026E312` | Factory paths distinguish binary IDs 26..31 and 46..57 from ranked IDs 0..25 and 32..45 |
 | `0x1404080D5`, `0x140409724` | Blacksmith UI checks each of eight ranks: binary ranges have one rank; other native attributes reach rank ten |
 | `0x14026C8C0`, `0x14026CC90` | Serialize runtime reinforcement byte `+0xB` at packed weapon `+3`; total attack reads it separately from descriptor attack and u32 compatibility |
+| `0x140248C60`, `0x140248D70` | Copy the `0xEBF8`-byte current/serialized system bodies in opposite directions; establishes the menu-to-save bridge for both mount loadouts |
+| `0x14025E4F2`, `0x14025F172` | Serialize the separate mount selector bytes at system/file `0xE0DF` and `0xE943` |
+| `0x1403252E0`, table `0x140A7F020` | Mount menu maps owned item IDs 28..31 to stored ordinals 0..3; the other thirteen lookup positions are unmapped |
 
 The independent public native sample was acquired from an annotated
 [Steam save-sharing discussion](https://steamcommunity.com/app/1879330/discussions/0/592904528464062941/).
@@ -107,6 +110,7 @@ immutable original snapshot; pending edits cannot manufacture records.
 | Existing reinforcement | `0xC8013 + weapon*0x1C`, u8 | Existing 1..99 only, manual decrease to 0..opened value; raising and bulk Max are disabled |
 | Unallocated upgrade stones | Officer `+52`, u16 | Already promoted original records with balance 0..891 only; manual 0..891, excluded from Max; allocation, promotion and growth unchanged |
 | Existing owned ordinary-item equipment | Officer `+38`..`+43`, active count `+44` | Original owned positive-rank non-mount item choices or empty; qualified active slots only, no duplicates, no Max or ownership changes |
+| Existing owned mount loadouts | `0xE943` and `0xE0DF`, u8 | Stored lookup ordinals 0..3 select original owned binary mount items 28..31; 255 means Unequipped. Original ownership/rank and selector qualification, no Max or experimental expansion |
 
 The [existing-editor depth review](OROCHI_DYNASTY_DEPTH.md) documents the native
 serializer, allocation clamp, ownership/rank getter and complete staged equipment
@@ -132,10 +136,48 @@ ceiling; the descriptor, grade, compatibility, costs and equipped references are
 preserved. The native total-attack getter reads reinforcement directly.
 
 The shared GUI provides search, grouped field controls, existing-weapon inspection,
-separate progression and resource tables, staged batch Undo, Review Changes,
+separate progression, resource and mount-loadout tables, staged batch Undo, Review Changes,
 automatic backups and atomic Save As to a new `.bin` destination. Restore qualifies
 the exact bounded bytes written, including the backup manifest/hash. Common
 path protections and source-change detection remain in force.
+
+### Owned mount loadouts
+
+The two native stored mount selectors are separate from each officer's ordinary
+item references. The current system object begins at runtime root `+0x33B60`;
+the serialization copy begins at `+0x42760`. Native `0x140248C60` copies the
+`0xEBF8`-byte body to the serialization copy, and `0x140248D70` restores it in
+the opposite direction. Following that bridge establishes the menu members
+root `+0x424A3` / `+0x41C3F` as system/file `0xE943` / `0xE0DF`, rather than
+treating runtime root offsets as file offsets. The packed serializer explicitly
+reads and writes each byte at `0x14025F172` / `0x14025F183` and
+`0x14025E4F2` / `0x14025E503`.
+
+The original ownership mask and item-rank table are the same already qualified
+records used by ordinary-item equipment. The native mount tab admits item IDs
+28..31 and its assignment routine `0x1403252E0` maps those IDs through a
+seventeen-entry lookup table. Only the first four entries identify mounts;
+they produce stored ordinals 0..3. The native clear path
+`0x1403250F4`–`0x140325194` writes the signed empty sentinel -1, stored as 255.
+The editor offers only originally owned mount records with original binary rank
+exactly 1, plus Unequipped. An unknown original selector or a selector pointing
+to an unowned or unusually ranked mount keeps that loadout read only. The other
+qualified loadout remains available. Pending edits cannot manufacture ownership
+or admit a previously unsupported mount.
+
+Both stored loadouts can refer to the same owned mount; the ordinary-item
+six-slot duplicate check does not apply across them. Labels remain numbered
+loadouts and native item IDs, without guessing mount names or a game-mode/team
+association. Assignment changes only the selected byte. Item ownership/ranks,
+acquisition and collection/reward state, ordinary equipment and stored battle
+objects remain unchanged. This does not alter a mounted actor inside an existing
+battle snapshot; the effect of loading/resuming edited copies remains untested.
+Mount choices are excluded from Max and experimental numeric expansion.
+
+The same refinement closes an experimental-range bypass for existing weapon
+reinforcement. A decrease-only field now retains its opened upper bound even in
+experimental mode, and unusual original reinforcement bytes above 99 remain
+read only instead of becoming eligible when that mode is enabled.
 
 ### Coverage checklist
 
@@ -153,9 +195,9 @@ path protections and source-change detection remain in force.
 | Weapon compatibility and reinforcement | Existing ordinary reinforcement decreases are writable. Increases need grade-specific caps. Compatibility is a preserved packed u32, distinct from reinforcement and descriptor attack; its progression clamp remains unqualified |
 | Attribute-orb inventory | 58 balances editable; ID-to-name catalogue and natural clamps pending |
 | Crafting inventory/recipes | 295 balances editable; materials' names, receipt/new flags, recipe unlocks and natural clamps pending |
-| Equipped items and item enhancement | Qualified active ordinary-item selectors can choose original owned positive-rank items or empty; duplicates rejected. Enhancement/acquisition, mounts and slot-count changes require further dependency proof |
+| Equipped items and item enhancement | Qualified active ordinary-item selectors can choose original owned positive-rank items or empty; duplicates rejected. Enhancement/acquisition and slot-count changes require further dependency proof |
 | Bonds and companions | Low-bond genuine fixture available; pair symmetry, support thresholds, consumption and maximum semantics not yet mapped |
-| Mounts | Native menu separates item IDs 28..31; mount assignment/acquisition dependencies remain protected and require further proof |
+| Mounts | Two stored loadouts can select originally owned rank-one mount items 28..31 or Unequipped. Unknown selectors and unusual ranks remain read only. New acquisition, rank changes, names and mode/team association remain unqualified |
 | Costumes and color customization | Annotated changed colors present; exact character/color-channel association and costume prerequisites not proved |
 | Story, stages and campaigns | Preserved and separate from resources/stats; chapter endings, Redux/side-story unlocks and rewards need controlled completion pairs |
 | Gauntlet/exploration, keystones and allies | Public patches indicate regions; four keystone types, summon ownership, progression/rewards and ally consumption need native mappings and controlled pairs |
@@ -184,6 +226,17 @@ and theme switching. Fixtures generated by `procedural_raw()` are explicitly
 synthetic. A native complete bulk action preserved all five internal records;
 1,399 changed bytes belonged only to declared Musou or existing weapon-slot
 fields. This is file-level validation, not an edited game-load claim.
+
+The mount refinement adds `tests.test_wo3u_mounts`. A focused run of that module
+and the five format/review/expansion/depth/GUI modules passed **46 tests with no
+skips**, with the supplied native fixture available and Tk under Xvfb. The two
+independent native references each qualify both loadouts and all four existing
+mount choices. Twenty copied-native exports independently changed each selector
+to 0, 1, 2, 3 and 255, reparsed the actual destination, and preserved every other
+byte and both originals. Two additional native GUI workflows passed choice
+selection, Max exclusion, Review, Undo, automatic backup, Save As and byte-exact
+restore. These are structural/native-file checks; no edited save was loaded in
+the game.
 
 ## Musou / Warriors Orochi Z
 

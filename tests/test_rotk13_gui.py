@@ -71,8 +71,8 @@ class ROTK13GuiTests(unittest.TestCase):
                             if isinstance(widget, ttk.Treeview))
                 rows = tree.get_children()
                 self.assertEqual(len(rows), 1)
-                self.assertEqual(tuple(int(item) for item in tree.item(rows[0], 'values')[1:]),
-                                 (original, value))
+                self.assertEqual(tree.item(rows[0], 'values')[1:],
+                                 (f'{original:,}', f'{value:,}'))
                 review.destroy()
                 editor.show_inspector()
                 self.assertTrue(editor.presentation.inspection_tables(editor.document))

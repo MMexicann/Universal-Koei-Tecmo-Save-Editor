@@ -12,6 +12,10 @@ been tested**. A PS3 save described as 100% complete does not establish that eve
 PC achievement, bundled DLC item or edition-specific condition will be complete.
 The converter moves stored state and does not synthesize a completed save.
 
+Version 2.5.3 also provides a separate [original US/EU PS3 scalar editor](DW7XL_PS3.md)
+and [PC loadout/applied-seal controls](DW7XL_WEAPONS.md). These do not broaden the
+conversion route, qualify reverse conversion or establish destination game loading.
+
 ## Use it
 
 1. Finish any suspended battle in both editions, then close both games.

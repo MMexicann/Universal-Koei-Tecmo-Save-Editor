@@ -8,7 +8,8 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | --- | --- | --- |
 | DYNASTY WARRIORS 3 — Complete Edition Remastered | Windows PC | Character progression, equipment, companions and unlocks. |
 | DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · PC | Windows PC | Resources, officer stats, weapon compatibility, affinity, attribute ranks and equipped weapon order. |
-| DYNASTY WARRIORS 7 — Xtreme Legends Definitive Edition · PC | Windows PC | Gold, officer stats, skill points, active weapons and existing unlearned seal-meter reductions. |
+| DYNASTY WARRIORS 7 — Xtreme Legends Definitive Edition · PC | Windows PC | Gold, officer stats, source-witnessed weapon loadouts, learned applied-seal replacement/removal and unlearned seal-meter reductions. |
+| DYNASTY WARRIORS 7 — Xtreme Legends · original US/EU PS3 | PlayStation 3 | Gold, 65 officers’ stored stats/skill points, owned active-weapon choices and existing unlearned seal-meter reductions. |
 | ONE PIECE: PIRATE WARRIORS 3 — Windows PC edition | Windows PC | Individual or bulk character stats, special bars and skill slots. |
 | ONE PIECE: PIRATE WARRIORS 4 — Windows PC · WW/JP/EA revision 15 | Windows PC | Beli, existing obtained coin quantities and searchable resource history. |
 | DYNASTY WARRIORS 4 HYPER — Native Windows PC edition | Windows PC | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, bodyguards and customization. |
@@ -19,11 +20,12 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | ATELIER RORONA — The Alchemist of Arland · original US PS3 | PlayStation 3 | Cole reductions; searchable seven named character raw records and serialized systems. |
 | ATELIER SOPHIE — Original Steam PC · GAMEDATA slots | Windows PC | Cole, Tess tickets and existing basket/container quality; searchable inventory and alchemy progression. |
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Steam PC | Windows PC | Ordinary item/equipment quality from 1–100 and qualified unspent skill-tree SP reductions; inventory inspection. |
+| NIGHTS OF AZURE 2 — Bride of the New Moon · original Switch English Chapter 1/7/Clear profiles | Nintendo Switch | Libra reductions with synchronized native save preview; read-only resource and checkpoint inspection. |
 | ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
 | FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
 | DYNASTY WARRIORS 4 — Xtreme Legends · SLUS-20812 | PlayStation 2 | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, and bodyguard growth. |
 | DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
-| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes and owned ordinary-item equipment. |
+| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes, owned ordinary-item equipment and two owned-mount loadouts. |
 | WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |

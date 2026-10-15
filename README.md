@@ -5,8 +5,32 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.5.2** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.5.3** supports **96 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
+
+## New game and equipment controls
+
+**DW7 XL Definitive Edition PC:** select owned weapons already equipped by a
+playable officer in the opened copy, or replace/remove already learned seals in
+occupied slots. The native game stores base weapon attack, element and capacity
+in game data, so arbitrary edits to those parameters are **not available through
+the save**. [Weapon controls and exact limits](docs/DW7XL_WEAPONS.md).
+
+**DW7 XL original US/EU PS3:** a dedicated editor adds Gold, 65 officers’ stored
+stats and skill points, active equipped-weapon choices and existing unlearned
+seal-meter reductions. Keep the original `PARAM.SFO` beside decrypted `APP.BIN`;
+console reimport/resigning remains external. [PS3 guide](docs/DW7XL_PS3.md).
+
+**Nights of Azure 2, Switch:** reduce Libra in the qualified original English
+Chapter 1/7/Clear profiles, with synchronized native save preview and block
+hashes. Other chapters, languages and mechanics remain unqualified.
+[Exact input profiles](docs/NOA2_SWITCH_FORMAT.md).
+
+**WO3 Ultimate Definitive PC:** choose originally owned mounts for two stored
+loadouts; ownership and item ranks stay separate. All scalar editors gain
+searchable large choice lists and searchable reviews with named before/after
+values. Backup failures preserve completed snapshots and concurrent replacements
+across 24 affected format profiles. Edited and converted game loading remains untested.
 
 ## Editor workspace
 
@@ -16,12 +40,12 @@ table scrolls horizontally; **Show editing guide** opens each game's guidance.
 **More options** contains experimental editing and the separate encoding-limit
 column. Ctrl+F searches fields in scalar editors and games in the library;
 Escape in the field search clears its filters without changing pending edits.
-[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the eight
+[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the eleven
 reviewed user guides in `_internal/guides/`; the Source ZIP contains the full documentation.
 
 ## Origins request status
 
-Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.2.
+Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.3.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
 controls remain available. The inspector shows stored proficiency XP
 and equipped Battle Art IDs, corroborated on nine public native slots. It does
@@ -96,7 +120,7 @@ Progress, stop-after-current-copy and verified partial-result reports cover up t
 Compare two copies using their exact game/platform profile. View changed values,
 conditional records and other payload differences, search and page through the
 results, and export a private JSON report. Results remain when switching workspaces.
-The comparison reads 93 scalar profiles and verifies original files and metadata
+The comparison reads 95 scalar profiles and verifies original files and metadata
 again before report export. [Instructions](docs/SAVE_COMPARISON.md).
 
 ## Supported games
@@ -127,7 +151,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists game/platform editor profiles for v2.5.2.
+The table below lists game/platform editor profiles for v2.5.3.
 Conversion-only endpoints are listed separately in the Save Converter guide.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
@@ -136,7 +160,8 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | --- | --- | --- |
 | DYNASTY WARRIORS 3 — Complete Edition Remastered | Windows PC | Character progression, equipment, companions and unlocks. |
 | DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · PC | Windows PC | Resources, officer stats, weapon compatibility, affinity, attribute ranks and equipped weapon order. |
-| DYNASTY WARRIORS 7 — Xtreme Legends Definitive Edition · PC | Windows PC | Gold, officer stats, skill points, active weapons and existing unlearned seal-meter reductions. |
+| DYNASTY WARRIORS 7 — Xtreme Legends Definitive Edition · PC | Windows PC | Gold, officer stats, source-witnessed weapon loadouts, learned applied-seal replacement/removal and unlearned seal-meter reductions. |
+| DYNASTY WARRIORS 7 — Xtreme Legends · original US/EU PS3 | PlayStation 3 | Gold, 65 officers’ stored stats/skill points, owned active-weapon choices and existing unlearned seal-meter reductions. |
 | ONE PIECE: PIRATE WARRIORS 3 — Windows PC edition | Windows PC | Individual or bulk character stats, special bars and skill slots. |
 | ONE PIECE: PIRATE WARRIORS 4 — Windows PC · WW/JP/EA revision 15 | Windows PC | Beli, existing obtained coin quantities and searchable resource history. |
 | DYNASTY WARRIORS 4 HYPER — Native Windows PC edition | Windows PC | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, bodyguards and customization. |
@@ -147,11 +172,12 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | ATELIER RORONA — The Alchemist of Arland · original US PS3 | PlayStation 3 | Cole reductions; searchable seven named character raw records and serialized systems. |
 | ATELIER SOPHIE — Original Steam PC · GAMEDATA slots | Windows PC | Cole, Tess tickets and existing basket/container quality; searchable inventory and alchemy progression. |
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Steam PC | Windows PC | Ordinary item/equipment quality from 1–100 and qualified unspent skill-tree SP reductions; inventory inspection. |
+| NIGHTS OF AZURE 2 — Bride of the New Moon · original Switch English Chapter 1/7/Clear profiles | Nintendo Switch | Libra reductions with synchronized native save preview; read-only resource and checkpoint inspection. |
 | ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
 | FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
 | DYNASTY WARRIORS 4 — Xtreme Legends · SLUS-20812 | PlayStation 2 | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, and bodyguard growth. |
 | DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
-| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes and owned ordinary-item equipment. |
+| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes, owned ordinary-item equipment and two owned-mount loadouts. |
 | WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |

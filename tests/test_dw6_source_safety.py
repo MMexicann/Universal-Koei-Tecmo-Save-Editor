@@ -47,7 +47,9 @@ class DW6SourceSafetyTests(unittest.TestCase):
         external = bytes(changed)
         def racing(data, path):
             result = original(data, path)
-            if Path(path) == destination:
+            # Windows temporary directories can use an 8.3 alias while the
+            # guarded writer resolves its destination to the long path.
+            if Path(path).resolve() == destination.resolve():
                 destination.write_bytes(external)
             return result
         with patch.object(p, 'atomic_new', side_effect=racing), self.assertRaises(SaveError):

@@ -3703,8 +3703,8 @@
     },
     {
       "path": "tests/test_dw6_source_safety.py",
-      "bytes": 2442,
-      "sha256": "ece397124ec5b192caf9b82f566184f54c0dfb152fd57b03ebecd5978cb1d2f8"
+      "bytes": 2609,
+      "sha256": "58b5be0c63b203d0b92331d2786e4888af15fbad58b9e71c29ddcc7025ac1b85"
     },
     {
       "path": "tests/test_dw7e_ps3.py",

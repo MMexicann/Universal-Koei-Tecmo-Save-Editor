@@ -296,6 +296,7 @@ class BatchConversionTests(unittest.TestCase):
         for source_id, target_id in (
             ("dw8xl", "dw8xl_ps4"),
             ("p5strikers_pc", "p5strikers_switch"),
+            ("dw7xl_ps3", "dw7xl"),
         ):
             source = write_copy(self.folder / source_id, source_id)
             template = write_copy(self.folder / target_id, target_id, 1)
@@ -310,12 +311,14 @@ class BatchConversionTests(unittest.TestCase):
             )
         prepared = batch.prepare_specs(tuple(specs))
         report = batch.review_report(prepared)
-        self.assertEqual(len(report["jobs"]), 3)
+        self.assertEqual(len(report["jobs"]), 4)
         self.assertEqual(report["jobs"][0]["transfer_scope"], "roster-and-horses")
         self.assertNotEqual(report["jobs"][1]["transfer_scope"], "roster-and-horses")
         outcomes = batch.execute(prepared)
         self.assertTrue(batch.outcome_report(prepared, outcomes)["success"])
         self.assertTrue((specs[1].output_dir / "sce_sys/param.sfo").exists())
+        self.assertTrue((specs[3].output_dir / "save.dat").exists())
+        self.assertEqual(report['jobs'][3]['route'], 'dw7xl_ps3-to-dw7xl')
         self.assert_originals()
 
     @unittest.skipUnless(

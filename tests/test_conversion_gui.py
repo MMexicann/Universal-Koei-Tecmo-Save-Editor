@@ -131,8 +131,166 @@ class ConversionGuiTests(unittest.TestCase):
         self.assertIs(self.app.select_game('dw6_ps3'), editor)
         self.assertEqual(len(editor.changes), 21)
 
+    def test_progress_scope_and_japanese_destination_are_reviewable_before_export(self):
+        source = fixtures.write_copy(self.folder / 'progress-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'progress-template', 'dw6_ps3_jp')
+        route = conversion.get_route('dw6-to-dw6_ps3_jp-progress')
+        self.gui.route.set(route.label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.assertIn('45 persistent stage', self.gui.scope.get())
+        self.assertIn('17 Musou', self.gui.scope.get())
+        self.gui.review()
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 8336)
+        self.assertIn('Stage review:', self.gui.preview.get('1.0', 'end'))
+        self.assertIn('Musou history review:', self.gui.preview.get('1.0', 'end'))
+
+    def test_route_search_covers_region_scope_and_ids_without_silent_reselection(self):
+        self.select_copies()
+        self.gui.review()
+        self.wait()
+        reviewed = self.gui.prepared
+        selected = self.gui.route.get()
+        self.gui.route_search.set('dw8 vita')
+        self.assertIn(selected, self.gui.route_selector.cget('values'))
+        self.assertIs(self.gui.prepared, reviewed)
+        self.gui.route_search.set('BLES00215 campaigns')
+        labels = self.gui.route_selector.cget('values')
+        expected = {route.label for route in conversion.ROUTES if route.variant == 'campaigns'
+                    and 'dw6_ps3_eu' in (route.source_id, route.target_id)}
+        self.assertEqual(set(labels), expected)
+        self.assertEqual(self.gui.route.get(), '')
+        self.assertIsNone(self.gui.prepared)
+        self.assertIn('disabled', self.gui.export_button.state())
+        self.assertIn('disabled', self.gui.review_button.state())
+        # The paths are retained for deliberate review after choosing a route.
+        self.assertTrue(self.gui.source.get())
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3_eu-campaigns').label)
+        self.assertIn('20 Musou run slots', self.gui.scope.get())
+        self.gui.route_search.set('no-such-game')
+        self.assertEqual(tuple(self.gui.route_selector.cget('values')), ())
+        self.assertIn('disabled', self.gui.route_selector.state())
+        with patch('tkinter.messagebox.showerror') as error, patch('tkinter.filedialog.askopenfilename') as browse:
+            self.gui.review()
+            self.gui.browse('source')
+        self.assertEqual(error.call_count, 2)
+        browse.assert_not_called()
+        self.gui.route_search.set('')
+        self.assertEqual(len(self.gui.route_selector.cget('values')), len(conversion.ROUTES))
+        self.assertIn('readonly', self.gui.route_selector.state())
+        self.assertEqual(self.gui.route.get(), '')
+        with patch.object(self.gui.search_entry, 'focus_set') as focus:
+            self.assertEqual(self.app.focus_library_search(), 'break')
+        focus.assert_called_once()
+
+    def test_european_campaign_scope_review_and_filter_change_during_worker(self):
+        source = fixtures.write_copy(self.folder / 'campaign-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'campaign-template', 'dw6_ps3_eu')
+        self.gui.route_search.set('BLES00215 campaigns')
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3_eu-campaigns').label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.gui.review()
+        self.assertIn('disabled', self.gui.search_entry.state())
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 10976)
+        self.assertIn('Musou slot review:', self.gui.preview.get('1.0', 'end'))
+        self.gui.review()
+        self.gui.route_search.set('Persona')
+        self.wait()
+        self.assertIsNone(self.gui.prepared)
+        self.assertIn('disabled', self.gui.export_button.state())
+
+    def test_gallery_challenge_scope_review_is_separate_from_campaign_slots(self):
+        source = fixtures.write_copy(self.folder / 'records-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'records-template', 'dw6_ps3_jp', 1)
+        self.gui.route_search.set('Japanese gallery challenges')
+        route = conversion.get_route('dw6-to-dw6_ps3_jp-records')
+        self.assertIn(route.label, self.gui.route_selector.cget('values'))
+        self.gui.route.set(route.label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.assertIn('five challenge boards', self.gui.scope.get())
+        self.gui.review()
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 11203)
+        preview = self.gui.preview.get('1.0', 'end')
+        self.assertIn('Gallery review:', preview)
+        self.assertIn('Challenge review:', preview)
+        self.assertIn('reserved bits remain from the destination', preview)
+        self.gui.route_search.set('')
+        self.gui.route.set(conversion.get_route('dw6-to-dw6_ps3_jp-campaigns').label)
+        self.assertIsNone(self.gui.prepared)
+        self.assertIn('disabled', self.gui.export_button.state())
+        self.gui.review()
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 10976)
+        self.assertNotIn('Gallery review:', self.gui.preview.get('1.0', 'end'))
+
+    def test_dw7_xl_one_way_scope_search_review_and_pc_export(self):
+        from koei_editor.games.dw7xl import conversion as transfer
+        from koei_editor.games.dw7xl import dw7xl_parser as pc
+        source = fixtures.write_copy(self.folder / 'xl-source', 'dw7xl_ps3')
+        template = fixtures.write_copy(self.folder / 'xl-template', 'dw7xl', 1)
+        original_source, original_template = source.read_bytes(), template.read_bytes()
+        self.gui.route_search.set('DW7 BLES01496')
+        route = conversion.get_route('dw7xl_ps3-to-dw7xl')
+        self.assertEqual(tuple(self.gui.route_selector.cget('values')), (route.label,))
+        self.gui.route.set(route.label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.assertIn('Definitive Edition PC', self.gui.scope.get())
+        self.gui.review()
+        self.wait()
+        reviewed = self.gui.prepared
+        self.assertIsNotNone(reviewed)
+        preview = self.gui.preview.get('1.0', 'end')
+        self.assertIn('Officer review:', preview)
+        self.assertIn('Weapon review:', preview)
+        self.assertIn('Challenge review:', preview)
+        self.assertIn('re-saving remain unverified', preview)
+        with patch('tkinter.filedialog.askdirectory', return_value=str(self.folder)), \
+             patch('tkinter.simpledialog.askstring', return_value='xl-converted'), \
+             patch('tkinter.messagebox.showinfo'):
+            self.gui.export()
+            self.wait()
+        output = self.folder / 'xl-converted'
+        reopened = pc.read_save(output / 'save.dat')
+        self.assertEqual(transfer.gameplay(reopened), transfer.gameplay(reviewed.source.document))
+        self.assertFalse((output / 'PARAM.SFO').exists())
+        self.assertEqual(source.read_bytes(), original_source)
+        self.assertEqual(template.read_bytes(), original_template)
+        self.assertFalse(json.loads((output / 'conversion.json').read_text())['game_load_verified'])
+
 
 class ConversionCliTests(unittest.TestCase):
+    def test_dw7_xl_cli_export_and_unqualified_reverse_rejection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            source = fixtures.write_copy(folder / 'source', 'dw7xl_ps3')
+            template = fixtures.write_copy(folder / 'template', 'dw7xl', 1)
+            command = [sys.executable, '-m', 'koei_editor', '--convert', 'dw7xl_ps3-to-dw7xl',
+                       '--source', str(source), '--template', str(template)]
+            dry = subprocess.run(command + ['--dry-run'], capture_output=True, text=True,
+                                 cwd=directory, timeout=30)
+            self.assertEqual(dry.returncode, 0, dry.stderr)
+            self.assertTrue(json.loads(dry.stdout)['dry_run'])
+            self.assertFalse(any(folder.rglob('UniversalEditorBackups')))
+            result = subprocess.run(command + ['--output-dir', str(folder / 'output')],
+                                    capture_output=True, text=True, cwd=directory, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            receipt = json.loads(result.stdout)
+            self.assertEqual(receipt['route'], 'dw7xl_ps3-to-dw7xl')
+            self.assertEqual(receipt['output_file'], 'save.dat')
+            self.assertFalse(receipt['game_load_verified'])
+            self.assertTrue((folder / 'output' / 'save.dat').exists())
+            command[4] = 'dw7xl-to-dw7xl_ps3'
+            rejected = subprocess.run(command + ['--dry-run'], capture_output=True, text=True,
+                                      cwd=directory, timeout=30)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertNotIn('Traceback', rejected.stderr)
+
     def test_list_dry_run_export_and_failure_exit_codes(self):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)

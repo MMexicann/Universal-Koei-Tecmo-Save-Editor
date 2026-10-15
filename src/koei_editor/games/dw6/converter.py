@@ -6,6 +6,10 @@ DW6_CONVERSION.md for the native field geometry and evidence boundaries.
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.dw6 import dw6_parser as pc
 from koei_editor.games.dw6_ps3 import parser as ps3
+from koei_editor.games.dw6_ps3 import japanese_export as ps3_jp
+from koei_editor.games.dw6_ps3 import european_export as ps3_eu
+from koei_editor.games.dw6_xbox360 import north_american_export as xbox_na
+from koei_editor.games.dw6_xbox360 import european_export as xbox_eu
 
 TRANSFER_SCOPE = 'roster-and-horses'
 SCOPE_DESCRIPTION = 'DW6 roster and horses only; destination story and battle state retained'
@@ -25,7 +29,17 @@ def _profile(document):
     if identity == ps3.GAME_ID:
         ps3.validate_document(document)
         return ps3, 'big'
-    raise SaveError('DW6 migration requires original PC or US BLUS30110 PS3 saves.')
+    if identity == ps3_jp.GAME_ID:
+        ps3_jp.validate_document(document)
+        return ps3_jp, 'big'
+    if identity == ps3_eu.GAME_ID:
+        ps3_eu.validate_document(document)
+        return ps3_eu, 'big'
+    for backend in (xbox_na, xbox_eu):
+        if identity == backend.GAME_ID:
+            backend.validate_document(document)
+            return backend, 'big'
+    raise SaveError('DW6 migration requires an exact original PC, US/European/Japanese PS3 or North American/European Xbox 360 profile.')
 
 
 def _canonical(document):

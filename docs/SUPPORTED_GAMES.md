@@ -2,7 +2,7 @@
 
 Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_supported_games` after changing an adapter.
 
-Version 2.1.2 expands the Save Converter and original US DW6 PS3 editor; see [conversion routes and boundaries](SAVE_CONVERSION.md). Optional experimental numeric editing applies across the library. Supported maxima and encoding limits remain separate; see [experimental scope and warnings](EXPERIMENTAL_EDITING.md).
+The Save Converter has explicit platform/region routes and transfer scopes; see [conversion routes and boundaries](SAVE_CONVERSION.md). Optional experimental numeric editing applies across the library. Supported maxima and encoding limits remain separate; see [experimental scope and warnings](EXPERIMENTAL_EDITING.md).
 
 | Game / edition | Platform | Implemented scope |
 | --- | --- | --- |
@@ -22,14 +22,14 @@ Version 2.1.2 expands the Save Converter and original US DW6 PS3 editor; see [co
 | ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
 | FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
 | DYNASTY WARRIORS 4 — Xtreme Legends · SLUS-20812 | PlayStation 2 | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, and bodyguard growth. |
-| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history. |
+| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
 | WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes and owned ordinary-item equipment. |
 | WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
-| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named playable unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

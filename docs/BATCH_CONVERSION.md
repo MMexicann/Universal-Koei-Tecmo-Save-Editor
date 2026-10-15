@@ -1,9 +1,10 @@
 # Batch Converter
 
-Batch Converter reviews up to **32 independent conversions** across the existing
-**20 supported routes**. Every job needs its own explicit route, separate source
+Batch Converter reviews up to **32 independent conversions** across the
+**139 routes in v2.5.2**. Every job needs its own explicit route, separate source
 and destination-template copies, and a new output folder. It preserves each
-route's existing scope: DW6 transfers mapped roster/horse state; DW8 XL and
+route's selected scope: DW6 has four partial scopes, from roster/horses through
+persistent records, Musou run slots, gallery and challenges; DW8 XL and
 Persona 5 Strikers transfer their supported common gameplay.
 
 ## Use the workspace
@@ -25,6 +26,9 @@ unstarted. If a later job fails, completed verified copies remain in their new
 folders, the failed job is reported, and subsequent jobs do not start. This is
 an explicit partial result; it does not claim that the whole queue succeeded.
 Original gameplay files and console metadata remain unchanged.
+Files from a failed job are retained and must not be imported, even if a receipt
+was already created. Re-review and retry that job into a different new folder.
+Completed jobs remain separate from failed output.
 
 Save/load a private JSON plan to retain queued selections across launches.
 **Plans contain local paths**, unlike the combined result report. Keep plans
@@ -94,3 +98,6 @@ native DW6 PC/US PS3 pair also passes queued exports in both directions.
 Console decryption, reimport and signing remain external. Batch conversion does
 not extend a route's format coverage, qualify additional game state, establish
 new scalar editors or prove that converted copies load in-game.
+DW6 Xbox output includes an unchanged original CON containing old template
+gameplay; apply the raw export with an external save manager before rehashing/
+resigning. See [the conversion workflow](SAVE_CONVERSION.md).

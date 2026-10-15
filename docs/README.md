@@ -6,6 +6,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [v2.5.2 changes and remaining request limits](releases/v2.5.2.md)
 - [Editor workspace: categories, open sessions and keyboard controls](EDITOR_WORKSPACE.md)
 - [Origins proficiency and Old Coin request: status and evidence](ORIGINS_REQUEST_STATUS.md)
 
@@ -15,6 +16,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Compare Saves: workspace, reports and interpretation](SAVE_COMPARISON.md)
 
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
+- [DW7 XL PS3 to Definitive Edition PC: transfer scope and native proof](DW7XL_CONVERSION.md)
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
@@ -42,7 +44,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 - [Deception IV, Escha & Logy and Ar tonelico Qoga original PS3](PS3_NEW_FAMILIES.md)
 
-- [DW6 PC/US PS3 typed roster-and-horse migration](DW6_CONVERSION.md)
+- [DW6 PC, PS3 and Xbox 360 typed progress migration](DW6_CONVERSION.md)
 - [Original US Dynasty Warriors 6 PS3](DW6_PS3_FORMAT.md)
 
 - [Bandit Kings of Ancient China Macintosh](BANDIT_KINGS_MAC_FORMAT.md)

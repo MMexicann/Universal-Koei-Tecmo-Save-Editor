@@ -5,10 +5,11 @@ import os
 from pathlib import Path
 
 from koei_editor.game_registry import ALL_ADAPTERS
+from koei_editor.conversion import ENDPOINTS
 from tools.package_release import RUNTIME_DATA, RUNTIME_LICENSES, RUNTIME_GUIDES
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.5.1'
+VERSION = '2.5.2'
 DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME_DATA] + [
     ('LICENSE', 'licenses'), ('docs/THIRD_PARTY_NOTICES.md', 'licenses'),
     ('licenses/atelier-sophie2-save-editor-MIT.txt', 'licenses'),
@@ -30,6 +31,9 @@ def build_args(root=ROOT, *, standalone=False):
         for module in dict.fromkeys((game.editor_module, game.parser_module, game.scalar_backend)):
             if module is not None:
                 args.extend(['--hidden-import', module])
+    for endpoint in ENDPOINTS.values():
+        if endpoint.conversion_only:
+            args.extend(['--hidden-import', endpoint.backend.__name__])
     # The thin launcher uses an absolute package import. __main__.py remains
     # the module entry point, whose relative imports need python -m context.
     args.append(str(root / 'launch.pyw'))

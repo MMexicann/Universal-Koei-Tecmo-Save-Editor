@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.5.1'
+VERSION = '2.5.2'
 
 
 class Application(Appearance):
@@ -463,8 +463,9 @@ class Application(Appearance):
             editor = self.sessions[self.active_game][1]
             focus = getattr(editor, 'focus_field_search', None)
             return focus() if focus is not None else None
-        if ((self.converter is not None and self.converter.frame.winfo_manager())
-                or (self.comparison is not None and self.comparison.frame.winfo_manager())
+        if self.converter is not None and self.converter.frame.winfo_manager():
+            return self.converter.focus_route_search()
+        if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
         self.platform_choice.set(ALL_PLATFORMS)

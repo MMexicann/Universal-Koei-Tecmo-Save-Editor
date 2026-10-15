@@ -33,6 +33,13 @@ def fixture():
         raw[base + 20:base + 24] = (156).to_bytes(4, 'big')
         for _key, _label, offset in p.HORSE_STATS:
             raw[base + offset:base + offset + 4] = (270).to_bytes(4, 'big')
+    # Keep this older combat/equipment fixture's unmapped availability variants
+    # opaque. Dedicated availability fixtures qualify canonical 0/1 flags.
+    stages = p.OFFICER_BASE + 41 * 168
+    for index in range(45):
+        raw[stages + index * 20 + 16] = 0x7e
+    for index in range(17):
+        raw[stages + 900 + index * 4] = 0x7e
     return bytes(raw)
 
 

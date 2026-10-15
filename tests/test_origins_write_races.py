@@ -44,8 +44,9 @@ class OriginsWriteRaceTests(unittest.TestCase):
         self.assertFalse(self.target.exists())
         self.assertEqual(self.source.read_bytes(), b"new source state")
 
-    def test_source_drift_after_atomic_creation_removes_only_our_output(self):
+    def test_source_drift_after_atomic_creation_retains_the_completed_output(self):
         real = backend.atomic_new
+        expected = backend.serialize(self.document, self.pending)
 
         def write(raw, destination):
             result = real(raw, destination)
@@ -57,11 +58,56 @@ class OriginsWriteRaceTests(unittest.TestCase):
             self.assertRaises(SaveError),
         ):
             backend.save_as(self.document, self.pending, self.target)
-        self.assertFalse(self.target.exists())
+        self.assertEqual(self.target.read_bytes(), expected)
         self.assertEqual(self.source.read_bytes(), b"new source state")
         backups = list((self.folder / "WarriorsEditorBackups").glob("*.dat"))
         self.assertEqual(len(backups), 1)
         self.assertEqual(backups[0].read_bytes(), self.document.raw)
+
+    def test_late_failure_never_opens_a_destination_cleanup_deletion_window(self):
+        real_write, real_unlink = backend.atomic_new, Path.unlink
+        expected = backend.serialize(self.document, self.pending)
+        deletion_attempts = []
+
+        def write(raw, destination):
+            result = real_write(raw, destination)
+            self.source.write_bytes(b'new source state')
+            return result
+
+        def replace_between_comparison_and_unlink(path, *args, **kwargs):
+            if path == self.target:
+                # The previous cleanup compared the original bytes before
+                # calling unlink. Replace them in exactly that deletion gap.
+                path.write_bytes(b'another application replaced this output')
+                deletion_attempts.append(path)
+            return real_unlink(path, *args, **kwargs)
+
+        with (
+            patch.object(backend, 'atomic_new', side_effect=write),
+            patch.object(Path, 'unlink', replace_between_comparison_and_unlink),
+            self.assertRaises(SaveError),
+        ):
+            backend.save_as(self.document, self.pending, self.target)
+        self.assertEqual(deletion_attempts, [])
+        self.assertEqual(self.target.read_bytes(), expected)
+        self.assertEqual(self.source.read_bytes(), b'new source state')
+
+    def test_source_drift_after_destination_readback_retains_the_completed_output(self):
+        read = backend.read_save
+        expected = backend.serialize(self.document, self.pending)
+
+        def change_after_readback(path, *args, **kwargs):
+            reopened = read(path, *args, **kwargs)
+            self.source.write_bytes(b'new source state after read-back')
+            return reopened
+
+        with (
+            patch.object(backend, 'read_save', side_effect=change_after_readback),
+            self.assertRaises(SaveError),
+        ):
+            backend.save_as(self.document, self.pending, self.target)
+        self.assertEqual(self.target.read_bytes(), expected)
+        self.assertEqual(self.source.read_bytes(), b'new source state after read-back')
 
     def test_actual_destination_corruption_is_rejected_and_retained(self):
         real = backend.atomic_new

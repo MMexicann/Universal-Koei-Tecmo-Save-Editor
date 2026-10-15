@@ -1,5 +1,6 @@
 """Searchable views of independently mapped Origins inventory records."""
 from koei_editor.games.origins.origins_weapons import weapon_records
+from koei_editor.games.origins.origins_proficiency import proficiency_records
 from koei_editor.shared.scalar_presentation import InspectionTable, ScalarPresentation
 
 
@@ -18,6 +19,17 @@ class OriginsPresentation(ScalarPresentation):
                         'Six trait levels', 'Reinforcement editing'), weapons,
             'Existing inventory records. Search any column. Trait IDs/levels, equipment references '
             'and progression are preserved; weapon IDs without mapped names remain numeric.')]
+        proficiency = proficiency_records(document)
+        tables.append(InspectionTable(
+            'Proficiency', ('Family ID', 'Weapon family', 'Stored XP',
+                            'Battle Art 1', 'Battle Art 2', 'Battle Art 3', 'Battle Art 4'),
+            tuple((record.index, record.family, record.stored_xp,
+                   *('Empty' if value is None else value for value in record.battle_arts))
+                  for record in proficiency),
+            ('Stored XP and equipped Battle Art IDs. Records can exist before a weapon is acquired. '
+             'Proficiency levels and unlocks are not editable here.' if proficiency else
+             'Stored proficiency records are unavailable for this copy. '
+             'Proficiency levels and unlocks are not editable here.')))
         grouped = {}
         for row in self.backend.inspection_rows(document):
             if row['group'] != 'Weapons':

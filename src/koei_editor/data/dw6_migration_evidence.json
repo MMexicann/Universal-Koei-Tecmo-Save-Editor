@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "family": "dw6",
+  "status": "v2.5.2 conversion preview; actual converted game loading remains unverified",
+  "profiles": [
+    {
+      "id": "dw6",
+      "size": 212248,
+      "byte_order": "little",
+      "campaigns": "0x108",
+      "officers": "0xb58",
+      "stages": "0x2640",
+      "musou": "0x29c4",
+      "horses": "0x2a08"
+    },
+    {
+      "id": "dw6_ps3",
+      "size": 212240,
+      "byte_order": "big",
+      "directory": "BLUS30110-SAVEDATA",
+      "campaigns": "0xc8",
+      "officers": "0xb18",
+      "stages": "0x2600",
+      "musou": "0x2984",
+      "horses": "0x29c8"
+    },
+    {
+      "id": "dw6_ps3_jp",
+      "size": 212176,
+      "byte_order": "big",
+      "directory": "BLJM60041-SAVEDATA",
+      "campaigns": "0xc8",
+      "officers": "0xb18",
+      "stages": "0x2600",
+      "musou": "0x2984",
+      "horses": "0x29c8",
+      "conversion_only": true
+    },
+    {
+      "id": "dw6_ps3_eu",
+      "size": 212240,
+      "byte_order": "big",
+      "directory": "BLES00215-SAVEDATA",
+      "campaigns": "0xc8",
+      "officers": "0xb18",
+      "stages": "0x2600",
+      "musou": "0x2984",
+      "horses": "0x29c8",
+      "conversion_only": true
+    },
+    {
+      "id": "dw6_xbox360_na",
+      "size": 212496,
+      "byte_order": "big",
+      "title_id": "4B4F07E0",
+      "campaigns": "0xc8",
+      "officers": "0xb18",
+      "stages": "0x2600",
+      "musou": "0x2984",
+      "horses": "0x29c8",
+      "conversion_only": true,
+      "original_context": "ORIGINAL.CON",
+      "version_marker_offset": "0x33e04",
+      "version_marker_hex": "07090400"
+    },
+    {
+      "id": "dw6_xbox360_eu",
+      "size": 212496,
+      "byte_order": "big",
+      "title_id": "4B4F07E1",
+      "campaigns": "0xc8",
+      "officers": "0xb18",
+      "stages": "0x2600",
+      "musou": "0x2984",
+      "horses": "0x29c8",
+      "conversion_only": true,
+      "original_context": "ORIGINAL.CON",
+      "version_marker_offset": "0x33e04",
+      "version_marker_hex": "07090400"
+    }
+  ],
+  "stages": {
+    "count": 45,
+    "stride": 20,
+    "u32_offsets": [
+      0,
+      4,
+      8
+    ],
+    "byte_offsets": [
+      12,
+      13,
+      16
+    ],
+    "opaque_padding": [
+      14,
+      15,
+      17,
+      18,
+      19
+    ]
+  },
+  "musou": {
+    "count": 17,
+    "stride": 4,
+    "byte_offsets": [
+      0,
+      1
+    ],
+    "opaque_padding": [
+      2,
+      3
+    ]
+  },
+  "campaigns": {
+    "count": 20,
+    "stride": 132,
+    "timestamp_u32_offsets": [
+      0,
+      4,
+      8,
+      12,
+      16
+    ],
+    "results_base": 20,
+    "results_count": 6,
+    "results_stride": 16,
+    "result_u32_offsets": [
+      0,
+      4,
+      8
+    ],
+    "result_byte_offsets": [
+      12,
+      13
+    ],
+    "result_opaque_padding": [
+      14,
+      15
+    ],
+    "selection_u32_offsets": [
+      116,
+      120,
+      124,
+      128
+    ],
+    "interim_battle_included": false
+  },
+  "scopes": [
+    {
+      "id": "roster-and-horses",
+      "bytes": 7368,
+      "variant": ""
+    },
+    {
+      "id": "roster-stages-and-musou",
+      "bytes": 8336,
+      "variant": "progress"
+    },
+    {
+      "id": "roster-stages-musou-and-slots",
+      "bytes": 10976,
+      "variant": "campaigns"
+    },
+    {
+      "id": "roster-stages-musou-slots-gallery-and-challenges",
+      "bytes": 11203,
+      "variant": "records"
+    }
+  ],
+  "native_static_evidence": {
+    "source": "https://worthplaying.com/article/2008/10/4/news/55450-dynasty-warriors-6-pc-english-demo-available-now/",
+    "archive": "https://web.archive.org/web/20151028095120/http://www.gamefront.com/files/11992788",
+    "installer_sha256": "f0e51dcdb488c0bfaf3b9eb3ab2c832238bba6ddcb79e40c5e4a31064ac5ecf0",
+    "executable_sha256": "447ff4dedb4177665ce4fa5bd7c7edec029548402ddaa6c86420f20e6da5c727",
+    "executable_md5": "0680523e58556d09bc1c9786d555502f",
+    "reader_va": "0x5d1a10",
+    "writer_va": "0x5d1a60",
+    "constructed_arrays_va": "0x5cf890",
+    "stage_constructor_va": "0x5cf6d0",
+    "musou_constructor_va": "0x5ce3f0",
+    "campaign_constructor_va": "0x5ceff0",
+    "campaign_reset_va": "0x5cf050",
+    "campaign_result_constructor_va": "0x5cf6f0",
+    "qualification": "Static inspection only; exact retail PC byte count and array boundaries corroborated on independently acquired complete native PC and PS3 copies. Demo version footer differs from the retail reference and is never transplanted. No executable was run or redistributed."
+  },
+  "native_references": [
+    "https://savegame.pro/pc-dynasty-warriors-6-savegame/",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/34847",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16788",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16605",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16807",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16808",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16825",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/19093",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16687",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16754",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/19334"
+  ],
+  "european_reference_archive": "https://archive.org/details/game-faqs-saves-2024-09-05",
+  "game_load_verified": false,
+  "preserved_destination_state": [
+    "Options and controller mappings",
+    "Suspended battle",
+    "Native framing and unmapped Xbox trailer",
+    "All bytes outside the selected mapped arrays"
+  ],
+  "unavailable": [
+    "Other Xbox 360 regions/STFS profiles",
+    "Special",
+    "Empires",
+    "Active battle conversion",
+    "STFS writing and console signing"
+  ],
+  "gallery": {
+    "music_bits": 40,
+    "movie_bits": 170,
+    "canonical_bytes": 27,
+    "music_bases": {
+      "dw6": "0xb4",
+      "console": "0xac"
+    },
+    "movie_bases": {
+      "dw6": "0xb9",
+      "console": "0xb1"
+    },
+    "reserved_movie_high_bits": 6,
+    "reserved_policy": "Retain destination high bits; canonical hashes mask them to zero",
+    "music_setter_va": "0x5cee00",
+    "movie_setter_va": "0x5cee40",
+    "movie_playback_va": "0x5e4350"
+  },
+  "challenges": {
+    "boards": 5,
+    "ranks_per_board": 10,
+    "stride": 4,
+    "bases": {
+      "dw6": "0x2bf6",
+      "dw6_ps3": "0x2ba8",
+      "dw6_ps3_eu": "0x2ba8",
+      "dw6_ps3_jp": "0x2bb6",
+      "dw6_xbox360_na": "0x2ba8",
+      "dw6_xbox360_eu": "0x2ba8"
+    },
+    "score": {
+      "offset": 0,
+      "width": 2,
+      "byte_order": "native profile"
+    },
+    "officer_byte": 2,
+    "opaque_byte": 3,
+    "constructor_va": "0x5cf973",
+    "loader_va": "0x5ce400",
+    "score_reader_va": "0x59cb0f",
+    "policy": "Replace all complete records; no best-score merge"
+  },
+  "xbox360_evidence": {
+    "sources": [
+      {
+        "url": "https://web.archive.org/web/20110730191047id_/http://www.xpgamesaves.com/files/getdownload/4995-dynasty-warriors-6-north-american-version-single-acheivements-full-saveset/",
+        "size": 565875,
+        "sha256": "3a1ec297b5ea44e23b46c73997cac3ab0926c7fbaa8d9eefe547514b397615e8",
+        "native_regions": [
+          "NA"
+        ],
+        "files": 40
+      },
+      {
+        "url": "https://web.archive.org/web/20110730190734id_/http://www.xpgamesaves.com/files/getdownload/5259-dynasty-warriors-6-european-pal-version-single-acheivements-full-saveset/",
+        "size": 530236,
+        "sha256": "85978012825053c9d8cafcca22b7cf77b87e8c20242bc218df0d35e92ca35534",
+        "native_regions": [
+          "EU"
+        ],
+        "files": 40
+      },
+      {
+        "url": "https://web.archive.org/web/20110730190225id_/http://www.xpgamesaves.com/files/getdownload/5827-dynasty-warriors-6/",
+        "size": 39724,
+        "sha256": "e47b85126c3d3c5a435addd381422e8ee809bf84cef2c1f7d5cb60173e010653",
+        "native_regions": [
+          "EU"
+        ],
+        "files": 1
+      }
+    ],
+    "original_containers": 81,
+    "distinct_gameplay_states": 40,
+    "regional_payload_duplication": "The European set shares the North American gameplay states; not 81 independent playthroughs",
+    "context_profile": "Bounded single-file level-zero CON only; title, embedded filename and native payload framing qualified",
+    "verified_integrity": [
+      "Header SHA-1",
+      "Root SHA-1",
+      "File-table and every gameplay block SHA-1",
+      "Bounded non-overlapping used block chains"
+    ],
+    "rsa_verified": false,
+    "raw_may_differ_from_embedded_original": true,
+    "export_contract": "Converted raw .dat plus unchanged ORIGINAL.CON containing old template gameplay. Replace the embedded file in an external manager, then rehash/resign.",
+    "inner_integrity": "No native checksum identified; Xbox PPC writer/unmodified game load not available. Outer integrity qualification is complete and separate from absent RSA verification. Do not claim native game-load proof.",
+    "trailer_policy": "Unmapped bytes retained exactly; no achievement semantics inferred",
+    "game_load_verified": false
+  },
+  "scope_conditionally_preserved": {
+    "gallery_and_challenges": "Retained by basic, progress and campaigns; replaced only by records"
+  },
+  "active_battle_research": {
+    "implemented": false,
+    "queue_writer_va": "0x544520",
+    "payload_writer_va": "0x53f7c0",
+    "regional_difference": "Japanese/English PC trial text buffers differ by 80 bytes including alignment",
+    "remaining": "Typed variable script/event payloads, relocated references, locale/packing and actual native resume qualification"
+  }
+}

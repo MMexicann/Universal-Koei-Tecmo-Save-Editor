@@ -10,9 +10,10 @@ been validated; procedural fixtures do not establish that outcome either.
 The v2.5 request status is tracked [separately](ORIGINS_REQUEST_STATUS.md).
 Weapon proficiency and Old Coin writes remain unavailable. Backup creation now
 checks the opened source before and after backup; Save As checks it around
-serialization/output creation and reparses the actual destination. A failed
-post-write source check removes only an output that still matches the exact
-new bytes; externally changed destinations are retained and reported as failures.
+serialization/output creation and reparses the actual destination. Failed
+post-write verification retains the destination and reports failure; comparing
+bytes before deletion cannot protect a concurrent replacement. Do not import
+output from a failed save operation; review again and choose a new destination.
 
 ## Native executable evidence
 
@@ -342,3 +343,24 @@ levels remain unchanged. This is inspection, not an ownership grant or a new
 trait writer. Other tabs keep resources, provincial peace, bonds, training and
 battle history separate. A complete public DLC save passed unchanged inspection;
 procedural tests also cover high and reserved values.
+
+## Stored proficiency inspection
+
+The v2.5.2 Proficiency tab displays stored XP and equipped Battle Art IDs
+without enabling writes. Both unmapped state bytes are preserved. Separate public initial,
+advanced and DLC slots corroborate a 50 × 14-byte array at body `0x7F8D` for
+revisions 16/17 and `0x8055` for revision 29, 174 bytes after the qualified weapon
+array. A conservative original-family/Art-ID topology check gates the optional
+view. Unrecognized topology produces no rows and does not reject a save that
+otherwise qualifies for existing edits.
+
+Only formed original-family and recognized DLC rows are displayed; the remaining
+capacity stays opaque. Formed Art slots are present even for weapons that have
+not been acquired. Their presence is never used as an ownership flag. Bow is
+named where present; the other unmapped DLC family keeps its numeric identity.
+The inspector does not infer levels from XP or modify the two state bytes.
+
+Public-source provenance and precise unfinished writer requirements are in
+[Origins request status](ORIGINS_REQUEST_STATUS.md). Candidate Coin body `0xA95`
+remains unqualified and is not a field. Resource writes preserve the entire
+proficiency area and all unqualified resource candidates byte-exact.

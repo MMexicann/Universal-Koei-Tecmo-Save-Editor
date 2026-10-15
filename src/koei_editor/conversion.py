@@ -22,11 +22,30 @@ from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.dw8xl import converter as dw8_conversion
 from koei_editor.games.dw8xl import ps4_export as dw8_ps4
 from koei_editor.games.dw6 import converter as dw6_conversion
+from koei_editor.games.dw6 import progression_conversion as dw6_progression
+from koei_editor.games.dw6 import campaign_conversion as dw6_campaigns
+from koei_editor.games.dw6 import records_conversion as dw6_records
 from koei_editor.games.dw6 import dw6_parser as dw6_pc
 from koei_editor.games.dw6_ps3 import parser as dw6_ps3
+from koei_editor.games.dw6_ps3 import japanese_export as dw6_ps3_jp
+from koei_editor.games.dw6_ps3 import european_export as dw6_ps3_eu
+from koei_editor.games.dw6_xbox360 import north_american_export as dw6_xbox360_na
+from koei_editor.games.dw6_xbox360 import european_export as dw6_xbox360_eu
 from koei_editor.games.p5strikers_pc import converter as p5_conversion
+from koei_editor.games.dw7xl import conversion as dw7_conversion
+from koei_editor.games.dw7xl import dw7xl_parser as dw7_pc
+from koei_editor.games.dw7xl_ps3 import parser as dw7_ps3
 
-_FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion, 'dw6': dw6_conversion})
+_FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion,
+                            'dw6': dw6_conversion, 'dw7xl': dw7_conversion})
+_VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression,
+                              ('dw6', 'campaigns'): dw6_campaigns,
+                              ('dw6', 'records'): dw6_records})
+
+
+def _transform(route):
+    family = ENDPOINTS[route.source_id].family
+    return _VARIANTS[(family, route.variant)] if route.variant else _FAMILIES[family]
 
 
 @dataclass(frozen=True)
@@ -62,6 +81,27 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('dw6_ps3', 'dw6', 'DW6 · US PS3', 'APP.BIN', dw6_ps3,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLUS30110 export. Reimport and resign with Apollo Save Tool.'),
+    Endpoint('dw6_ps3_jp', 'dw6', 'DW6 · Japanese PS3', 'APP.BIN', dw6_ps3_jp,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLJM60041 export. Reimport and resign with Apollo Save Tool.', True),
+    Endpoint('dw6_ps3_eu', 'dw6', 'DW6 · European PS3', 'APP.BIN', dw6_ps3_eu,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLES00215 export. Reimport and resign with Apollo Save Tool.', True),
+    Endpoint('dw6_xbox360_na', 'dw6', 'DW6 · North American Xbox 360', 'DW6_NA.dat', dw6_xbox360_na,
+             'ORIGINAL.CON', 1024 * 1024,
+             'Original 4B4F07E0 extracted DW6_NA.dat with its unchanged package copied as ORIGINAL.CON. '
+             'The copied CON is context only and still contains the old template gameplay. Replace its embedded '
+             'DW6_NA.dat with the converted raw export, then rehash and resign a separate package using Horizon.', True),
+    Endpoint('dw6_xbox360_eu', 'dw6', 'DW6 · European Xbox 360', 'DW6_EU.dat', dw6_xbox360_eu,
+             'ORIGINAL.CON', 1024 * 1024,
+             'Original 4B4F07E1 extracted DW6_EU.dat with its unchanged package copied as ORIGINAL.CON. '
+             'The copied CON is context only and still contains the old template gameplay. Replace its embedded '
+             'DW6_EU.dat with the converted raw export, then rehash and resign a separate package using Horizon.', True),
+    Endpoint('dw7xl', 'dw7xl', 'DW7 XL Definitive Edition · PC', 'save.dat', dw7_pc),
+    Endpoint('dw7xl_ps3', 'dw7xl', 'DW7 Xtreme Legends · US/European PS3', 'APP.BIN', dw7_ps3,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLUS30873 or BLES01496 export with its original PARAM.SFO. '
+             'One-way transfer to Definitive Edition PC; base DW7 and Empires are separate formats.', True),
 )})
 
 
@@ -69,30 +109,43 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
 class Route:
     source_id: str
     target_id: str
+    variant: str = ''
 
     @property
     def id(self):
-        return self.source_id + '-to-' + self.target_id
+        return self.source_id + '-to-' + self.target_id + ('-' + self.variant if self.variant else '')
 
     @property
     def label(self):
         label = ENDPOINTS[self.source_id].label + ' → ' + ENDPOINTS[self.target_id].label
         if self.transfer_scope == 'roster-and-horses':
             label += ' (roster and horses)'
+        elif getattr(_transform(self), 'ROUTE_LABEL', ''):
+            label += ' (' + _transform(self).ROUTE_LABEL + ')'
         return label
 
     @property
     def transfer_scope(self):
-        return _FAMILIES[ENDPOINTS[self.source_id].family].TRANSFER_SCOPE
+        return _transform(self).TRANSFER_SCOPE
 
     @property
     def scope_description(self):
-        return _FAMILIES[ENDPOINTS[self.source_id].family].SCOPE_DESCRIPTION
+        return _transform(self).SCOPE_DESCRIPTION
+
+
+def _supported_direction(source, target):
+    if source.family != target.family or source.id == target.id:
+        return False
+    directions = getattr(_FAMILIES[source.family], 'SUPPORTED_DIRECTIONS', None)
+    return directions is None or (source.id, target.id) in directions
 
 
 ROUTES = tuple(Route(source.id, target.id) for source in ENDPOINTS.values()
                for target in ENDPOINTS.values()
-               if source.family == target.family and source.id != target.id)
+               if _supported_direction(source, target))
+ROUTES += tuple(Route(route.source_id, route.target_id, variant)
+                for route in ROUTES for family, variant in _VARIANTS
+                if ENDPOINTS[route.source_id].family == family)
 _ROUTES = MappingProxyType({route.id: route for route in ROUTES})
 
 
@@ -160,16 +213,18 @@ def _validate_snapshot(snapshot):
         raise SaveError('A source, template or console metadata changed. Reopen both copies.')
 
 
-def _gameplay(snapshot):
-    return _FAMILIES[ENDPOINTS[snapshot.endpoint_id].family].gameplay(snapshot.document)
+def _gameplay(snapshot, route=None):
+    transform = _transform(route) if route is not None else _FAMILIES[ENDPOINTS[snapshot.endpoint_id].family]
+    return transform.gameplay(snapshot.document)
 
 
-def _encode(source, template):
+def _encode(source, template, route=None):
     endpoint = ENDPOINTS[template.endpoint_id]
-    payload = _gameplay(source)
-    raw = _FAMILIES[endpoint.family].encode(source.document, template.document)
+    payload = _gameplay(source, route)
+    transform = _transform(route) if route is not None else _FAMILIES[endpoint.family]
+    raw = transform.encode(source.document, template.document)
     converted = endpoint.backend.decode(raw, template.endpoint_id)
-    if _gameplay(Snapshot(template.endpoint_id, converted)) != payload:
+    if _gameplay(Snapshot(template.endpoint_id, converted), route) != payload:
         raise SaveError('Destination reparse changed the transferred gameplay bytes.')
     return raw
 
@@ -178,21 +233,21 @@ def prepare(route_id, source_path, template_path):
     route = get_route(route_id)
     source = _read(route.source_id, source_path)
     template = _read(route.target_id, template_path)
-    raw = _encode(source, template)
-    payload = _gameplay(source)
+    raw = _encode(source, template, route)
+    payload = _gameplay(source, route)
     return Conversion(route, source, template, raw, hashlib.sha256(payload).hexdigest(), len(payload), _notes(route, source, template))
 
 
 def _notes(route, source, template):
     target = ENDPOINTS[route.target_id]
     notes = [route.scope_description + '. Original copies remain unchanged.',
-             'Use the same game edition and compatible updates/DLC. Test loading a separate copy in-game.',
+             'Use the exact game editions listed by this route and compatible updates/DLC. Test loading a separate copy in-game.',
              'In-game conversion loading has not been validated by this project.']
     if target.import_note:
         notes.append(target.import_note)
     if target.companion:
         notes.append('Original destination-template metadata is copied unchanged. This is a gameplay export, not a signed console package.')
-    family = _FAMILIES[target.family]
+    family = _transform(route)
     notes.extend(family.NOTES)
     preview = getattr(family, 'preview_notes', None)
     if preview is not None:
@@ -208,6 +263,7 @@ def validate_review_snapshot(conversion):
     """
     if (type(conversion) is not Conversion or type(conversion.route) is not Route
             or type(conversion.route.source_id) is not str or type(conversion.route.target_id) is not str
+            or type(conversion.route.variant) is not str
             or get_route(conversion.route.id) != conversion.route):
         raise SaveError('Review a prepared conversion before exporting.')
     if (type(conversion.source) is not Snapshot or type(conversion.template) is not Snapshot
@@ -222,8 +278,11 @@ def validate_review_snapshot(conversion):
                 or (not endpoint.companion and snapshot.companion_raw)
                 or (endpoint.companion and not 0 < len(snapshot.companion_raw) <= endpoint.companion_limit)):
             raise SaveError('Conversion context does not match its frozen endpoint.')
-    payload = _gameplay(conversion.source)
-    if (conversion.raw != _encode(conversion.source, conversion.template)
+        context_digest = getattr(snapshot.document, 'context_digest', '')
+        if context_digest and hashlib.sha256(snapshot.companion_raw).hexdigest() != context_digest:
+            raise SaveError('Conversion context does not match its frozen native document.')
+    payload = _gameplay(conversion.source, conversion.route)
+    if (conversion.raw != _encode(conversion.source, conversion.template, conversion.route)
             or conversion.gameplay_sha256 != hashlib.sha256(payload).hexdigest()
             or conversion.gameplay_bytes != len(payload) or conversion.notes != _notes(conversion.route, conversion.source, conversion.template)):
         raise SaveError('The prepared conversion was altered. Review it again.')
@@ -241,7 +300,7 @@ def validate_review(prepared):
 
 
 def export(conversion, output_dir):
-    """Write a new private export folder, with backups and actual native read-back."""
+    """Write a new private export with read-back; retain incomplete files on failure."""
     _validate_conversion(conversion)
     output_dir = safe_path(output_dir)
     if output_dir.exists():
@@ -268,36 +327,33 @@ def export(conversion, output_dir):
     }
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir()  # Exclusive reservation, including empty folders and races.
-    written = []
     try:
         if target.companion:
             data = conversion.template.companion_raw
             path = atomic_new(data, output_dir / target.companion)
-            written.append((path, data))
         destination = atomic_new(conversion.raw, output_dir / target.filename)
-        written.append((destination, conversion.raw))
         actual = _read(target.id, destination)
         if (actual.document.raw != conversion.raw
                 or actual.companion_raw != conversion.template.companion_raw
-                or _gameplay(actual) != _gameplay(conversion.source)):
+                or _gameplay(actual, conversion.route) != _gameplay(conversion.source, conversion.route)):
             raise SaveError('Saved conversion failed actual destination read-back.')
         _validate_conversion(conversion)
         data = (json.dumps(receipt, indent=2) + '\n').encode('utf-8')
         path = atomic_new(data, output_dir / 'conversion.json')
-        written.append((path, data))
-    except Exception:
-        # Remove only our exact bytes. Never erase a file changed by another app.
-        for path, data in reversed(written):
-            if not path.is_symlink() and path.is_file() and path.read_bytes() == data:
-                path.unlink()
-        if target.companion and '/' in target.companion:
-            try:
-                (output_dir / Path(target.companion).parent).rmdir()
-            except OSError:
-                pass
-        try:
-            output_dir.rmdir()
-        except OSError:
-            pass
-        raise
+        # Receipt creation is another opportunity for another application to
+        # replace the completed output or its console context. Verify the final
+        # files and both opened inputs before reporting a successful export.
+        actual = _read(target.id, destination)
+        if (actual.document.raw != conversion.raw
+                or actual.companion_raw != conversion.template.companion_raw):
+            raise SaveError('The completed conversion or its console metadata changed during final verification.')
+        _validate_conversion(conversion)
+        with safe_path(path).open('rb') as stream:
+            if stream.read(len(data) + 1) != data:
+                raise SaveError('The completed conversion receipt changed during final verification.')
+    except SaveError as error:
+        # Comparing bytes and then unlinking cannot establish ownership: another
+        # application can replace a path between those operations. Keep every
+        # completed file and report failure, including for a final receipt check.
+        raise SaveError(str(error) + ' The incomplete export folder was retained; do not import it.') from error
     return destination, tuple(backups), receipt

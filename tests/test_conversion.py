@@ -20,7 +20,13 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
-    if endpoint_id in ('dw6', 'dw6_ps3'):
+    if endpoint_id in ('dw7xl', 'dw7xl_ps3'):
+        from tests.test_dw7xl_conversion import fixture as dw7_fixture
+        return dw7_fixture(endpoint_id, variant)
+    if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
+        from tests.test_dw6_xbox360_conversion import raw_fixture
+        return raw_fixture(variant)
+    if endpoint_id in ('dw6', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
         from tests.test_dw6_conversion import fixture as dw6_fixture
         return dw6_fixture(endpoint_id, variant)
     if endpoint_id.startswith('dw8xl'):
@@ -57,8 +63,16 @@ def write_copy(folder, endpoint_id, variant=0):
     if endpoint.companion:
         companion = folder / endpoint.companion
         companion.parent.mkdir(parents=True, exist_ok=True)
-        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3'):
-            metadata = ps3_context.PS3ContextTests.metadata('NPUB31449-SAVEDATA' if endpoint_id == 'dw8xl_ps3' else 'BLUS30110-SAVEDATA')
+        if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
+            from tests.test_dw6_xbox360_conversion import context_fixture
+            metadata = context_fixture(endpoint_id, fixture(endpoint_id, variant), variant)
+        elif endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu', 'dw7xl_ps3'):
+            metadata = ps3_context.PS3ContextTests.metadata({
+                'dw8xl_ps3': 'NPUB31449-SAVEDATA', 'dw6_ps3': 'BLUS30110-SAVEDATA',
+                'dw6_ps3_jp': 'BLJM60041-SAVEDATA',
+                'dw6_ps3_eu': 'BLES00215-SAVEDATA',
+                'dw7xl_ps3': 'BLUS30873-SAVEDATA',
+            }[endpoint_id])
         else:
             metadata = title_only_sfo()
             if endpoint_id == 'dw8xl_ps4':
@@ -72,7 +86,8 @@ class ConversionTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
-                self.assertEqual(endpoint.id, 'dw8xl_ps4')
+                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
+                                            'dw6_xbox360_na', 'dw6_xbox360_eu', 'dw7xl_ps3'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
                 continue
@@ -83,6 +98,10 @@ class ConversionTests(unittest.TestCase):
         for route in c.ROUTES:
             self.assertNotEqual(route.source_id, route.target_id)
             self.assertEqual(c.ENDPOINTS[route.source_id].family, c.ENDPOINTS[route.target_id].family)
+        self.assertEqual([route.id for route in c.ROUTES if c.ENDPOINTS[route.source_id].family == 'dw7xl'],
+                         ['dw7xl_ps3-to-dw7xl'])
+        with self.assertRaises(SaveError):
+            c.get_route('dw7xl-to-dw7xl_ps3')
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -105,7 +124,7 @@ class ConversionTests(unittest.TestCase):
                 path, backups, receipt = c.export(conversion, output)
                 target = c.ENDPOINTS[route.target_id]
                 reopened = target.backend.read_save(path, route.target_id)
-                self.assertEqual(c._gameplay(c.Snapshot(route.target_id, reopened)), c._gameplay(conversion.source))
+                self.assertEqual(c._gameplay(c.Snapshot(route.target_id, reopened), route), c._gameplay(conversion.source, route))
                 self.assertEqual(source.read_bytes(), original)
                 self.assertEqual(template.read_bytes(), original_template)
                 self.assertEqual([p.read_bytes() for p in backups], [original, original_template])
@@ -117,8 +136,14 @@ class ConversionTests(unittest.TestCase):
                 self.assertEqual(receipt['output_sha256'], hashlib.sha256(path.read_bytes()).hexdigest())
                 self.assertFalse(receipt['game_load_verified'])
                 self.assertNotIn(str(self.folder), json.dumps(receipt))
-                reverse = c.prepare(route.target_id + '-to-' + route.source_id, path, source)
-                self.assertEqual(reverse.raw, original)
+                reverse_id = route.target_id + '-to-' + route.source_id
+                if reverse_id in {item.id for item in c.ROUTES}:
+                    reverse = c.prepare(reverse_id, path, source)
+                    self.assertEqual(reverse.raw, original)
+                else:
+                    self.assertEqual(route.id, 'dw7xl_ps3-to-dw7xl')
+                    with self.assertRaises(SaveError):
+                        c.get_route(reverse_id)
 
     def test_readonly_prepare_has_no_backups_or_output(self):
         conversion = self.prepare()
@@ -172,7 +197,7 @@ class ConversionTests(unittest.TestCase):
         for route in ('dw6-to-dw8xl_ps3', 'dw8xl-to-dw8xl', 'unknown', None):
             with self.assertRaises(SaveError): c.get_route(route)
 
-    def test_failed_actual_readback_cleans_only_new_output(self):
+    def test_failed_actual_readback_retains_incomplete_output_without_receipt(self):
         conversion = self.prepare()
         original = c._read
         def damaged(endpoint, path):
@@ -183,7 +208,8 @@ class ConversionTests(unittest.TestCase):
             return original(endpoint, path)
         with patch.object(c, '_read', side_effect=damaged), self.assertRaises(SaveError):
             c.export(conversion, self.folder / 'output')
-        self.assertFalse((self.folder / 'output').exists())
+        self.assertEqual((self.folder / 'output' / 'MainData00.dat').read_bytes(), conversion.raw)
+        self.assertFalse((self.folder / 'output' / 'conversion.json').exists())
 
     def test_nonzero_pc_tail_is_not_silently_discarded(self):
         source = write_copy(self.folder / 'source', 'p5strikers_pc')

@@ -1,4 +1,15 @@
-# DW6 PC and original US PS3 roster migration
+# DW6 PC, PS3 and Xbox 360 progress migration
+
+**v2.5.2 conversion preview:** original Japanese PS3
+`BLJM60041`, European PS3 `BLES00215`, North American Xbox 360 `4B4F07E0` and
+European Xbox 360 `4B4F07E1` join PC and US PS3 as conversion-only endpoints.
+Thirty directions transfer roster/horses. Thirty **`-progress`**
+routes also transfer all 45 persistent stage records and 17 Musou availability/clear
+records. Thirty **`-campaigns`** routes additionally transfer all 20 stored Musou
+run slots. Thirty **`-records`** routes additionally transfer 40 music/170 movie
+availability bits and five challenge boards. The four scopes remain separate
+choices in the converter. Options, suspended battles and all other unmapped bytes stay from the
+destination template. No scope transfers an active interim battle snapshot.
 
 Version 2.1.2 adds **PC ↔ US PS3 BLUS30110** transfer of all 41 officer records
 and eight complete horse records. It is explicitly a **partial progress
@@ -81,10 +92,11 @@ write only the proven flag byte, preserving its three opaque neighbors. Officer 
 
 **No converted or edited save has been loaded/re-saved in an actual game by this
 project.** Neither inspected native profile establishes an internal gameplay
-checksum; PS3 authentication is external. Full story and battle transfer needs
-its own typed serialization/dependency map. Public Xbox 360 save-set listings
-were found, but no independently qualified extracted original-game payload was
-obtained. Xbox 360, Japanese/EU PS3, Special and Empires routes remain unavailable.
+checksum; PS3 authentication is external. Active battle transfer needs its own
+typed serialization/dependency map. Special and Empires remain unavailable.
+Japanese/European PS3 and NA/EU Xbox 360 use the separately qualified conversion
+profiles below. Xbox outer-container integrity is distinct from native gameplay
+integrity and actual game loading.
 
 ## v2.4 review and remaining research
 
@@ -104,8 +116,209 @@ whole destination with source bytes is offered.
 
 The [Xbox PAL save-set author's account](https://www.xpgamesaves.com/resources/dynasty-warriors-6-full-legit-saveset-dw6-european-pal.3178/)
 reports that renaming containers caused failed loads and that injecting gameplay
-into a genuine destination container was required. The public listing's download
-requires login; other historic mirrors currently lead to dead Megaupload links.
-No extracted original DW6 Xbox payload, native integrity map or successful
-cross-platform load control was obtained. Empires and Special evidence does not
-qualify this original game's route.
+into a genuine destination container was required. The current download requires
+login. Separately preserved public 2011 binary captures now provide native
+original-game evidence, described below; no login barrier was bypassed.
+Empires and Special evidence does not qualify this original game's route.
+
+## Native stage and Musou mapping
+
+The later [official English PC demo announcement](https://worthplaying.com/article/2008/10/4/news/55450-dynasty-warriors-6-pc-english-demo-available-now/)
+led to a complete installer preserved in the
+[public GameFront archive](https://web.archive.org/web/20151028095120/http://www.gamefront.com/files/11992788).
+Its SHA-256 is `f0e51dcdb488c0bfaf3b9eb3ab2c832238bba6ddcb79e40c5e4a31064ac5ecf0`.
+The extracted executable's MD5 matches the independently
+[published file identity](https://www.shouldiremoveit.com/DYNASTY-WARRIORS-6-Playable-Demo-132370-program.aspx),
+`0680523e58556d09bc1c9786d555502f`. Installer and game were never executed.
+Their bytes and private disassembly remain outside the repository.
+
+This demo's native reader VA `0x5D1A10` and writer `0x5D1A60` read/write exactly
+`0x33D18` (212,248) bytes. Constructor `0x5CF890` places 41 officers at `0xB58`,
+45 stage records at `0x2640`, 17 Musou records at `0x29C4`, and eight horses at
+`0x2A08`. Stage constructor `0x5CF6D0` initializes three u32s and separate bytes
+at +12, +13 and +16; Musou constructor `0x5CE3F0` initializes bytes +0 and +1.
+Initialization also uses the same first-17 officer indices for Musou availability
+and playable prerequisites. The demo's version footer differs from the native
+retail PC reference, so its framing and footer are never transplanted.
+
+| Array | PC | US/European/Japanese PS3 | Transform |
+| --- | --- | --- | --- |
+| Stages, 45 × 20 | `0x2640` | `0x2600` | Three u32s converted separately; the eight remaining flag/padding bytes copied without word swapping. |
+| Musou, 17 × 4 | `0x29C4` | `0x2984` | Availability byte, clear byte and two opaque padding bytes copied unchanged. |
+| Japanese complete file | — | 212,176 bytes | Exact original `BLJM60041-SAVEDATA` metadata required; every untransferred byte comes from this region's own template. |
+
+The complete native PC reference, both independent US PS3 references and the
+[Japanese reference 16605](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16605)
+corroborate these arrays, individual counter values, byte flags, officer IDs and
+horse boundaries. Metadata, exact lengths and canonical identities distinguish
+profiles; regions are never relabelled or padded into one another.
+
+The `-progress` scope transfers **8,336 bytes** of canonical typed state. Existing
+roster-only routes retain their **7,368-byte** scope and preserve destination
+stage/Musou records. Review names changed stage/mode IDs and explains that locked
+or incomplete source entries also replace destination state. Extended receipt
+hashes and read-back checks cover the extended scope, preventing a review from
+being silently downgraded to roster-only validation.
+
+Generated checks use asymmetric words and flag/padding bytes, including native
+default stage time `0x4F1A0`, to catch an incorrect blanket endian swap. Private
+native checks exercise all six progress directions with each US reference:
+twelve actual forward/reverse export pairs, with complete original bytes restored
+and individual numeric/flag values compared independently. Four additional basic
+Japanese paths pass safe exports and exact reverses. These are format and copied-file
+checks; **actual game loading/re-saving remains unverified**.
+
+Reviewed provenance and layouts are packaged in `dw6_migration_evidence.json`.
+The regional conversion-only endpoints do not add scalar editors to the
+94-profile inventory.
+
+## European PS3 qualification
+
+Four independent original European exports were acquired from the
+[GameFAQs save archive](https://archive.org/details/game-faqs-saves-2024-09-05),
+preserving their original `BLES00215-SAVEDATA` metadata. The original listings are
+[16807](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16807),
+[16808](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16808),
+[16825](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16825) and
+[19093](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/19093).
+Only the archive index and selected small save members were downloaded.
+
+All four decrypted gameplay files are exactly **212,240 bytes**. Their 41
+big-endian canonical officer identities, complete horse records, stage/Musou
+arrays and run slots independently corroborate the typed map. US and European
+files share a size, so that size alone cannot select a region. European file
+reads require the exact European directory in bounded original `PARAM.SFO`;
+the complete original metadata digest is bound and rechecked around backup and
+export. Japanese and European framing share one conversion-only implementation,
+with distinct immutable formats, sizes and required title directories. Scalar
+editing remains available only through the separately qualified PC/US editors.
+
+## Stored Musou run slots
+
+Native constructor `0x5CF890` constructs **20 × 132-byte records** at PC `0x108`,
+ending exactly at the officer boundary `0xB58`. Record constructor `0x5CEFF0`
+and reset routine `0x5CF050` establish this layout:
+
+| Relative range | Native representation | Transfer |
+| --- | --- | --- |
+| +0 through +19 | Five timestamp u32s | Convert each word independently. |
+| +20 through +115 | Six 16-byte result records | Convert each record's three u32s; copy its two flag and two padding bytes unchanged. |
+| +116 through +131 | Four u32 selections | Preserve the complete mode/difficulty/stage/horse relationship, converting each word. |
+
+The result constructor `0x5CF6F0` and reset routine preserve the distinction
+between three numeric words and byte flags. Empty-slot defaults include mode
+17, difficulty 5, stage 0 and horse 8. These sentinel values are transported,
+not turned into gameplay choices or independently edited.
+
+The native PC, five US, four European and Japanese references independently match
+the full array at PS3 `0xC8`, ending at `0xB18`. They include empty, completed and
+unfinished runs, with ordinary timestamp words and stage indices below six as
+well as completed stage-six records. The map does not come from applying a
+constant offset to unexamined bytes. No native references or player timestamps
+are packaged.
+
+The separate `-campaigns` scope carries **10,976 canonical bytes**: the existing
+8,336-byte persistent scope plus these complete 2,640 bytes. All officers and
+horses travel with their referenced run slots. Review identifies changed slot
+numbers and explains replacement of empty as well as occupied slots. Hashes,
+receipts and destination read-back include the complete selected scope. Basic
+and `-progress` routes continue to preserve destination run slots.
+
+The large interim battle object starting after the persistent records remains
+excluded. This scope also retains gallery, challenges, options and native framing;
+the separate records scope below transfers gallery and challenges.
+Finish suspended battles before making both copies. Stored-slot transfer has
+copied-native preservation and semantic-value checks; **loading and resuming
+the converted slots in the destination game remains unverified**.
+
+## Gallery and challenge records
+
+The separate `-records` scope adds **227 canonical bytes** to campaign migration:
+27 bytes carrying 210 qualified gallery availability bits, plus 50 four-byte
+challenge records. The combined scope is **11,203 canonical bytes**. It replaces
+source availability and complete boards, including locked entries and lower
+scores; it does not merge maximum scores or manufacture rewards.
+
+| Data | PC | US/European PS3 and NA/EU Xbox | Japanese PS3 | Transfer |
+| --- | --- | --- | --- | --- |
+| Music, 40 availability bits | `0xB4` | `0xAC` | `0xAC` | Five bytes, copied as bits. |
+| Movies, 170 availability bits | `0xB9` | `0xB1` | `0xB1` | Twenty-one complete bytes and two low bits; the six high reserved bits stay from the destination. |
+| Challenges, five boards × ten ranks × four bytes | `0x2BF6` | `0x2BA8` | `0x2BB6` | Each score is u16 and changes byte order; its officer byte and opaque byte remain byte values. |
+
+Native music/movie setters `0x5CEE00`/`0x5CEE40` index their separate 40/170
+availability tables. Movie playback `0x5E4350` connects these IDs to movie files;
+the ending table maps Musou officer *i* to movie bit `9 + 10*i`. Partial original
+exports independently match those ending bits to persistent Musou clear flags.
+The constructor at `0x5CF973`, five-board loader `0x5CE400` and score reader
+`0x59CB0F` establish the challenge layout and u16 score width. Independently
+played European references contain changed scores and officer references.
+
+Three additional original US references,
+[16687](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16687),
+[16754](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16754) and
+[19334](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/19334),
+bring the PC/PS3 qualification corpus to eleven files. All endpoint/reference
+pairs pass typed-value checks, actual safe exports and exact reverses, preserving
+original metadata and the untouched destination remainder. Native inputs are
+not packaged. Actual game loading remains unverified.
+
+Options stay platform-specific. PC initializes graphics/audio settings in the
+space before its Musou slots, and controller mappings differ between platforms.
+Suspended battle state is also separate: native serialization includes a
+variable-length script/event queue with opaque typed payloads and relocated
+references. Its regional object sizes and packing differ, so a global word swap
+or a destination event queue cannot qualify an active-battle transfer.
+
+## North American and European Xbox 360 qualification
+
+Three preserved public XPG downloads provide 81 original CON containers:
+[40 North American exports](https://web.archive.org/web/20110730191047id_/http://www.xpgamesaves.com/files/getdownload/4995-dynasty-warriors-6-north-american-version-single-acheivements-full-saveset/),
+[40 European exports](https://web.archive.org/web/20110730190734id_/http://www.xpgamesaves.com/files/getdownload/5259-dynasty-warriors-6-european-pal-version-single-acheivements-full-saveset/)
+and [one additional European container](https://web.archive.org/web/20110730190225id_/http://www.xpgamesaves.com/files/getdownload/5827-dynasty-warriors-6/).
+The regional sets share gameplay states: they represent **40 distinct payloads**,
+not 81 independent playthroughs. Native containers, extracted files and original
+account context remain private.
+
+Both extracted regional files are **212,496 bytes**, big-endian. Officers start
+at `0xB18`, stages at `0x2600`, Musou records at `0x2984`, complete horses at
+`0x29C8`, run slots at `0xC8`, gallery at `0xAC` and challenges at `0x2BA8`.
+The native version marker is `07 09 04 00` at `0x33E04`. The additional trailer
+is unmapped and retained byte-exact; no achievement semantics are inferred.
+The 210 gallery bits, typed challenges and every other transferred field are
+independently checked against the native references.
+
+Opening `DW6_NA.dat` or `DW6_EU.dat` requires its unchanged original container
+beside it as **`ORIGINAL.CON`**. Exact title ID, filename, native framing and
+file length must match. The bounded reader accepts only the observed small
+single-file, level-zero CON profile; it verifies header/root and every file-table
+and gameplay-block SHA-1, block use, chain bounds and the contained native profile.
+It refuses unsupported STFS layouts. RSA signatures are not verified. The
+original container hash is bound to review, backup and export checks. The raw
+file may differ from its embedded original, allowing converted copies to reopen;
+the actual exported raw file is checked against the reviewed result.
+
+Export creates converted raw gameplay plus the unchanged destination CON.
+**The CON still contains the old template gameplay.** Replace its embedded
+`DW6_NA.dat`/`DW6_EU.dat` with the new raw file in Horizon or an equivalent
+save manager, then rehash/resign and restore it. This editor does not write STFS
+or sign containers. See the [step-by-step workflow](SAVE_CONVERSION.md).
+
+All 81 contexts pass integrity and copied-file checks. All 72 added directed
+routes and all four scopes for each original Xbox reference pass safe exports,
+independent typed-value/preservation checks and exact reverses. No inner gameplay
+checksum was identified across the 40 states; the related PC writer writes raw
+state. Those observations are not direct proof of the Xbox PPC serializer or
+absence of an internal checksum. **Actual converted Xbox loading/re-saving
+remains unverified.** Japanese, Korean and Asian Xbox title IDs remain unsupported.
+
+## Suspended battle research
+
+Static comparison of the official Japanese and English PC demos explains an
+80-byte regional difference: a localized battle-text buffer has different
+capacity and encoding. The suspended object also contains multiple typed
+subobjects and a variable script/event queue. Native queue writer `0x544520`
+delegates to `0x53F7C0` and serializes typed payloads with relocated references.
+Preserving a destination queue while transplanting source battle objects, or
+swapping every word, would leave incompatible state. A safe active-battle
+converter still needs those payload kinds, reference packing, locale handling
+and native load/resume controls. These findings do not expand any route's scope.

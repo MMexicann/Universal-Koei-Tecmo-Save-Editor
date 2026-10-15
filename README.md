@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.5.1 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.5.2** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Editor workspace
@@ -16,37 +16,53 @@ table scrolls horizontally; **Show editing guide** opens each game's guidance.
 **More options** contains experimental editing and the separate encoding-limit
 column. Ctrl+F searches fields in scalar editors and games in the library;
 Escape in the field search clears its filters without changing pending edits.
-[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the seven
+[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the eight
 reviewed user guides in `_internal/guides/`; the Source ZIP contains the full documentation.
 
 ## Origins request status
 
-Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.1.
+Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.2.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
-controls remain available. This update fixes backup/source-change and output
-read-back checks. [Evidence and precise remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
+controls remain available. The inspector shows stored proficiency XP
+and equipped Battle Art IDs, corroborated on nine public native slots. It does
+not calculate levels or change progression. Old Coin serialization and proficiency
+transition rules remain unresolved. [Evidence and remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
 
 ## Save Converter
 
-Open **Save Converter** for **20 directed routes**:
+The Save Converter offers **139 directed routes**. The expanded DW6 routes and new DW7 XL transfer are
+conversion previews; actual converted game loading remains unverified:
 
-- **DW6 PC ↔ US PS3:** all 41 officer records and eight horses, including skill
-  masks, weapons, stored progression, playable flags, names and growth descriptors.
-  This is a **roster-and-horse migration**; story, challenges and suspended battles
-  remain from the destination template.
+- **DW6 PC, US/European/Japanese PS3 and North American/European Xbox 360:** 30 roster-and-horse routes, 30
+  **progress** routes adding 45 stage records and 17 Musou availability/clear
+  records, 30 **campaign-slot** routes also carrying all 20 stored Musou
+  run slots, and 30 **records** routes adding music/movie availability and five
+  challenge boards. Options and interim battles remain from the destination
+  template. European BLES00215 and Japanese BLJM60041 are conversion-only;
+  each requires its own original metadata. Xbox endpoints are also conversion-only
+  and require extracted gameplay beside its unchanged original `ORIGINAL.CON`.
+- **DW7 Xtreme Legends PS3 → Definitive Edition PC:** one-way US BLUS30873 /
+  European BLES01496 transfer of qualified Story/Legend progress, officers, weapons,
+  seals, guardians and challenge records. Original PS3 metadata and a PC template
+  are required. Settings and platform data stay from the PC template; suspended
+  battles and nonzero unqualified progression extensions are rejected.
+  [Exact scope and instructions](docs/DW7XL_CONVERSION.md).
 - **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
   (12 routes). PS4 requires the supported zero-extension profile.
 - **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
 
-Choose separate source and destination-template copies, review the transfer scope,
+Search routes by game, region, title ID or scope. Choose separate source and destination-template copies, review the transfer scope,
 then export to a new folder with backups and a hash receipt. Console export/decryption
 and reimport/resigning use an external save manager. Converted game loading remains
 untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
 
-The **US DW6 PS3 editor** now includes named one-way playable officer unlocks,
+The **PC and US DW6 PS3 editors** add one-way Free Mode stage and named Musou
+availability unlocks under **More unlocks**. Musou modes require their playable
+officers; clear records and rewards stay separate. The US editor also includes named one-way playable officer unlocks,
 searchable officer/weapon/horse inspection, horse combat stats and existing weapon
 bonus/element controls. Original `PARAM.SFO` is required beside decrypted `APP.BIN`.
-Full DW6 story/battle conversion and Xbox 360 remain unavailable.
+Xbox export needs external gameplay injection and rehash/resigning; the retained
+CON still contains the template gameplay. Active battle transfer remains unavailable.
 [DW6 mapping and limits](docs/DW6_CONVERSION.md).
 
 ## Experimental editing
@@ -73,7 +89,7 @@ empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
 Queue reviewed conversions, save/load private plans and validate every job before
 exporting. Each copy gets its own new folder, backups and native read-back.
 Progress, stop-after-current-copy and verified partial-result reports cover up to
-32 jobs across all 20 routes. [Instructions](docs/BATCH_CONVERSION.md).
+32 jobs across all 139 routes. [Instructions](docs/BATCH_CONVERSION.md).
 
 ## Compare Saves
 
@@ -111,7 +127,8 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists development source game/platform profiles for v2.4.
+The table below lists game/platform editor profiles for v2.5.2.
+Conversion-only endpoints are listed separately in the Save Converter guide.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->
@@ -133,14 +150,14 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
 | FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
 | DYNASTY WARRIORS 4 — Xtreme Legends · SLUS-20812 | PlayStation 2 | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, and bodyguard growth. |
-| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history. |
+| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
 | WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes and owned ordinary-item equipment. |
 | WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
-| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named playable unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

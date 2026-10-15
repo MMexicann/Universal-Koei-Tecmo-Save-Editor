@@ -16,7 +16,7 @@ run, no player file was uploaded to a web editor, and no private save is bundled
 | Toukiden: The Age of Demons, US Vita | [Apollo archive](https://github.com/bucanero/apollo-saves/tree/master/PSV/PCSE00381) | This archive contains only encrypted Vita Content Manager `savedata.psvimg` / `psvmd` / `psvinf`, not a decrypted gameplay export; original owner decryption context or a decrypted export and complete native writer are required |
 | Romance of the Three Kingdoms XI, Windows | [PythWare/ROTK-XI-Tools](https://github.com/PythWare/ROTK-XI-Tools), complete `ROTK11_tool.pyw` | This source explicitly writes scenario mods, not saved campaigns. A complete campaign writer and matching native save are still needed |
 | Uncharted Waters IV with Power-Up Kit, original Windows | [litsungyi/Dk4PkEditor](https://github.com/litsungyi/Dk4PkEditor) and [public original native files](https://github.com/supermizar/dk4pk) | Current active program is a reader; old editing entry is commented out and references an unavailable `Kafka::FileWriter`. Header word +24/integrity handling remains unqualified. HD mappings are not interchangeable |
-| Uncharted Waters IV HD, Windows | [Kyeongrok/dh4-helper](https://github.com/Kyeongrok/dh4-helper), active `SaveEditService` money writer | Matching genuine HD native gameplay export and exact edition/header qualification; original small `.DK4` files do not qualify the HD layout |
+| Uncharted Waters IV HD, Windows | [Kyeongrok/dh4-helper](https://github.com/Kyeongrok/dh4-helper), active `SaveEditService` money writer | Seven distinct Traditional Chinese HD opening exports are now acquired; each differs by 16 bytes from its named published writer case. Exact regional serialization, money positions and native integrity remain unqualified; original small `.DK4` files do not qualify HD |
 
 ## Switch XIII Power-Up Kit details
 
@@ -74,3 +74,20 @@ story seed `0x190518`, body `[0x10, 0x190528)`; system seed `0xA628`, body
 editable record semantics still need a matching export and complete writer.
 No account, jockey/career ownership, horse catalogue, progression or resource
 mapping is inferred from these checksum spans.
+
+## v2.5 Uncharted Waters IV HD native follow-up
+
+A [Traditional Chinese author-shared opening set](https://forum.gamer.com.tw/Co.php?bsn=3551&sn=11521)
+provided seven distinct complete HD slot files, one per protagonist. The author
+labels the set modified to expose additional ports; it is not a controlled
+vanilla gameplay action pair. The copies have the expected native magic and
+LE32 length at +20. Their lengths are 107,082, 107,094, 107,278, 107,306,
+107,394, 107,438 and 107,466 bytes. Each is 16 bytes shorter than the
+corresponding named case in the [published HD writer](https://github.com/Kyeongrok/dh4-helper/blob/3abeb5c1db84ee521f58bd7890745dc14dae4d86/Dh4Launcher.Forms/Services/SaveEditService.cs).
+
+The writer itself explicitly calls the +24 word unresolved, and reports money-only
+loads rather than implementing its calculation. A shifted plausible resource
+value is not independently proved disk-layout equivalence. This follow-up adds
+native research evidence, not an editor registration, inferred checksum repair or
+verified game-load claim. Regional serializer/integrity proof and controlled
+resource changes remain necessary before promoting this candidate.

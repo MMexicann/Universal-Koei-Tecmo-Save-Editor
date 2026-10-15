@@ -3,7 +3,7 @@ import json
 from dataclasses import replace
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
-from koei_editor.shared.appearance import Appearance
+from koei_editor.shared.appearance import Appearance, THEMES
 from koei_editor.shared.copy_storage import atomic_new
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared.scalar_presentation import ScalarPresentation
@@ -34,13 +34,17 @@ class Editor(Appearance):
         self.experimental_mode = tk.BooleanVar(root, value=False)
         self.apply_theme(theme)
         host = parent if parent is not None else root
-        header = ttk.Frame(host, padding=(22, 16))
+        header = ttk.Frame(host, padding=(18, 10))
         header.pack(fill='x')
         ttk.Label(header, text=self.layout.title, font=(self.font_family, 18, 'bold')).pack(anchor='w')
         ttk.Label(header, text=self.subtitle, style='Muted.TLabel').pack(anchor='w', pady=(5, 0))
         summary = self.summary or 'Edit save values and review changes.'
-        ttk.Label(header, text=summary, wraplength=990).pack(anchor='w', pady=(8, 0))
-        bar = ttk.Frame(host, padding=(22, 0))
+        self.details_visible = tk.BooleanVar(root, value=False)
+        self.details_toggle = ttk.Checkbutton(header, text='Show editing guide',
+            variable=self.details_visible, command=self.toggle_details)
+        self.details_toggle.pack(anchor='w', pady=(5, 0))
+        self.details_label = ttk.Label(header, text=summary, wraplength=990)
+        bar = ttk.Frame(host, padding=(18, 0))
         bar.pack(fill='x')
         ttk.Button(bar, text='Open Save Copy', command=self.open, style='Primary.TButton').pack(side='left')
         self.save_buttons = []
@@ -51,26 +55,19 @@ class Editor(Appearance):
             self.save_buttons.append(button)
         ttk.Button(bar, text='Restore Backup...', command=self.restore).pack(side='left', padx=8)
         self.filename = tk.StringVar(root, value=f'Open a separate {self.save_extension or "save"} copy to begin.')
-        ttk.Label(host, textvariable=self.filename, padding=(22, 12)).pack(anchor='w')
-        risk_bar = ttk.Frame(host, padding=(22, 0, 22, 8))
-        risk_bar.pack(fill='x')
-        self.experimental_toggle = ttk.Checkbutton(
-            risk_bar, text='Experimental: allow above supported limits',
-            variable=self.experimental_mode, command=self.toggle_experimental, state='disabled')
-        self.experimental_toggle.pack(side='left')
-        self.limit_status = tk.StringVar(root, value='Supported limits apply. Max uses supported limits.')
-        ttk.Label(risk_bar, textvariable=self.limit_status, wraplength=600).pack(side='left', padx=12)
-        filter_bar = ttk.Frame(host, padding=(22, 0))
+        ttk.Label(host, textvariable=self.filename, padding=(18, 8), wraplength=1000).pack(anchor='w')
+        filter_bar = ttk.Frame(host, padding=(18, 0))
         filter_bar.pack(fill='x')
         ttk.Label(filter_bar, text='Find fields').pack(side='left', padx=(0, 8))
         self.search = tk.StringVar(root)
         self.search_entry = ttk.Entry(filter_bar, textvariable=self.search, width=40)
         self.search_entry.pack(side='left', fill='x', expand=True)
+        self.search_entry.bind('<Escape>', lambda _event: self.clear_field_filters())
         ttk.Button(filter_bar, text='Clear', command=lambda: self.search.set('')).pack(side='left', padx=(8, 0))
         self.pending_only = tk.BooleanVar(root, value=False)
         ttk.Checkbutton(filter_bar, text='Pending only', variable=self.pending_only,
                         command=self.refresh).pack(side='left', padx=(12, 0))
-        navigation = ttk.Frame(host, padding=(22, 8, 22, 0))
+        navigation = ttk.Frame(host, padding=(18, 6, 18, 0))
         navigation.pack(fill='x')
         ttk.Label(navigation, text='Record').pack(side='left', padx=(0, 8))
         self.record = tk.StringVar(root, value='All records')
@@ -81,21 +78,36 @@ class Editor(Appearance):
         self._record_keys = {}
         self.field_count = tk.StringVar(root, value='No save opened.')
         ttk.Label(navigation, textvariable=self.field_count, style='Muted.TLabel').pack(side='left', padx=12)
-        tools = ttk.Frame(host, padding=(22, 8))
+        self.options_visible = tk.BooleanVar(root, value=False)
+        self.options_toggle = ttk.Checkbutton(navigation, text='More options',
+            variable=self.options_visible, command=self.toggle_options)
+        self.options_toggle.pack(side='right')
+        self.options_panel = ttk.Frame(host, padding=(18, 5))
+        risk_bar = self.options_panel
+        self.experimental_toggle = ttk.Checkbutton(
+            risk_bar, text='Experimental: allow above supported limits',
+            variable=self.experimental_mode, command=self.toggle_experimental, state='disabled')
+        self.experimental_toggle.pack(side='left')
+        self.limit_status = tk.StringVar(root, value='Supported limits apply. Max uses supported limits.')
+        ttk.Label(risk_bar, textvariable=self.limit_status, wraplength=600).pack(side='left', padx=12)
+        tools = ttk.Frame(host, padding=(18, 6))
+        self.tools_bar = tools
         tools.pack(fill='x')
         self.group = tk.StringVar(root, value='All fields')
         groups = ('All fields',) + tuple(dict.fromkeys(field.group for field in self.layout.fields))
         groups += self.presentation.extra_groups
         select = ttk.Combobox(tools, textvariable=self.group, values=groups, state='readonly', width=18)
         self.group_selector = select
-        select.pack(side='left')
+        # Category navigation lives beside the fields; keep the variable and
+        # selector available to existing presentations and session callbacks.
         select.bind('<<ComboboxSelected>>', lambda _event: self.refresh())
-        ttk.Label(tools, text='Value').pack(side='left', padx=(18, 8))
+        ttk.Label(tools, text='Value').pack(side='left', padx=(0, 8))
         self.value = tk.StringVar(root)
         value_frame = ttk.Frame(tools)
         value_frame.pack(side='left')
         self.value_entry = ttk.Entry(value_frame, textvariable=self.value, width=15)
         self.value_entry.pack(side='left')
+        self.value_entry.bind('<Return>', lambda _event: self.apply_selected())
         self.choice_value = tk.StringVar(root)
         self.value_choice = ttk.Combobox(value_frame, textvariable=self.choice_value,
                                          width=18, state='readonly')
@@ -110,7 +122,7 @@ class Editor(Appearance):
         inspect = ttk.Button(tools, text='Inspect Data', command=self.show_inspector, state='disabled')
         inspect.pack(side='right', padx=4)
         self.edit_buttons.append(inspect)
-        bulk = ttk.Frame(host, padding=(22, 0, 22, 8))
+        bulk = ttk.Frame(host, padding=(18, 0, 18, 6))
         bulk.pack(fill='x')
         for label, callback in (('Adjust Selected...', self.adjust_selected),
                                 ('Revert Selected', self.revert_selected)):
@@ -122,35 +134,134 @@ class Editor(Appearance):
         # Reserve field guidance and status before the expanding table.
         feedback = ttk.Frame(host)
         feedback.pack(side='bottom', fill='x')
+        self.mode_banner = ttk.Label(feedback, textvariable=self.limit_status, wraplength=1000,
+                                     padding=(18, 5), style='Muted.TLabel')
         self.selection_info = tk.StringVar(root, value='Select a record to inspect its values.')
         self.selection_label = ttk.Label(feedback, textvariable=self.selection_info, wraplength=1000,
-                                         padding=(22, 8), style='Muted.TLabel')
+                                         padding=(18, 6), style='Muted.TLabel')
         self.selection_label.pack(anchor='w')
         self.status = tk.StringVar(root, value='Copy-only editing. The opened file is never overwritten.')
-        self.status_label = ttk.Label(feedback, textvariable=self.status, padding=(22, 15), wraplength=1000)
+        self.status_label = ttk.Label(feedback, textvariable=self.status, padding=(18, 8), wraplength=1000)
         self.status_label.pack(anchor='w')
-        frame = ttk.Frame(host, padding=(22, 0))
+        frame = ttk.Frame(host, padding=(18, 0))
         frame.pack(fill='both', expand=True)
-        self.fields = ttk.Treeview(frame, columns=('slot', 'field', 'original', 'pending', 'limit', 'storage'),
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=1)
+        category_frame = ttk.Frame(frame, width=190)
+        category_frame.grid(row=0, column=0, sticky='nsew', padx=(0, 10))
+        category_frame.rowconfigure(1, weight=1)
+        category_frame.columnconfigure(0, weight=1)
+        ttk.Label(category_frame, text='Categories (* pending)', style='Section.TLabel').grid(
+            row=0, column=0, sticky='w', pady=(0, 5))
+        self.categories = ttk.Treeview(category_frame, show='tree', selectmode='browse')
+        self.categories.column('#0', width=180, minwidth=130, stretch=True)
+        self.categories.grid(row=1, column=0, sticky='nsew')
+        category_scroll = ttk.Scrollbar(category_frame, orient='vertical', command=self.categories.yview)
+        category_scroll.grid(row=1, column=1, sticky='ns')
+        self.categories.configure(yscrollcommand=category_scroll.set)
+        self.categories.bind('<<TreeviewSelect>>', self.choose_category)
+        self._category_groups = {}
+        self._updating_categories = False
+        table_frame = ttk.Frame(frame)
+        table_frame.grid(row=0, column=1, sticky='nsew')
+        table_frame.rowconfigure(0, weight=1)
+        table_frame.columnconfigure(0, weight=1)
+        self.fields = ttk.Treeview(table_frame, columns=('slot', 'field', 'original', 'pending', 'limit', 'storage'),
+                                  displaycolumns=('slot', 'field', 'original', 'pending', 'limit'),
                                   show='headings', selectmode='extended')
-        for column, label, width in (('slot', 'Record', 140), ('field', 'Field', 210),
-                                     ('original', 'Opened value', 160), ('pending', 'Pending value', 160),
-                                     ('limit', self.limit_heading, 140), ('storage', 'Encoding limit', 140)):
+        for column, label, width in (('slot', 'Record', 145), ('field', 'Field', 255),
+                                     ('original', 'Opened value', 130), ('pending', 'Pending value', 130),
+                                     ('limit', self.limit_heading, 135), ('storage', 'Encoding limit', 140)):
             self.fields.heading(column, text=label)
-            self.fields.column(column, width=width)
-        self.fields.pack(side='left', fill='both', expand=True)
-        scroll = ttk.Scrollbar(frame, orient='vertical', command=self.fields.yview)
-        scroll.pack(side='right', fill='y')
-        self.fields.configure(yscrollcommand=scroll.set)
+            self.fields.column(column, width=width, minwidth=85)
+        self.fields.grid(row=0, column=0, sticky='nsew')
+        scroll = ttk.Scrollbar(table_frame, orient='vertical', command=self.fields.yview)
+        scroll.grid(row=0, column=1, sticky='ns')
+        self.field_horizontal_scroll = ttk.Scrollbar(table_frame, orient='horizontal', command=self.fields.xview)
+        self.field_horizontal_scroll.grid(row=1, column=0, sticky='ew')
+        self.fields.configure(yscrollcommand=scroll.set, xscrollcommand=self.field_horizontal_scroll.set)
+        self.fields._pending_edits_style = True
+        self._style_pending_rows()
         attach_sorting(self.fields)
         self.fields.bind('<<TreeviewSelect>>', self.selected)
         self.search.trace_add('write', lambda *_args: self.refresh())
         if parent is None:
+            root.bind('<Control-f>', self.focus_field_search, add='+')
             root.title(self.layout.title + ' — Save Editor')
             root.protocol('WM_DELETE_WINDOW', self.close)
 
+    def focus_field_search(self, _event=None):
+        self.search_entry.focus_set()
+        self.search_entry.selection_range(0, 'end')
+        return 'break'
+
+    def toggle_details(self):
+        if self.details_visible.get():
+            self.details_label.pack(anchor='w', pady=(6, 0))
+        else:
+            self.details_label.pack_forget()
+
+    def toggle_options(self):
+        if self.options_visible.get():
+            self.options_panel.pack(fill='x', before=self.tools_bar)
+        else:
+            self.options_panel.pack_forget()
+        self.fields.configure(displaycolumns=('slot', 'field', 'original', 'pending', 'limit', 'storage')
+                              if self.options_visible.get() else ('slot', 'field', 'original', 'pending', 'limit'))
+
+    def clear_field_filters(self):
+        self.group.set('All fields')
+        self.record.set('All records')
+        self.pending_only.set(False)
+        self.search.set('')
+        self.refresh()
+        return 'break'
+
+    def choose_category(self, _event=None):
+        if self._updating_categories:
+            return
+        selected = self.categories.selection()
+        if not selected:
+            return
+        group = self._category_groups.get(selected[0])
+        if group is not None and group != self.group.get():
+            self.group.set(group)
+            self.record.set('All records')
+            self.refresh()
+
+    def _refresh_categories(self, fields):
+        counts = {'All fields': len(fields)}
+        pending = {'All fields': len(self.changes)}
+        for field in fields:
+            counts[field.group] = counts.get(field.group, 0) + 1
+            pending[field.group] = pending.get(field.group, 0) + int(field.id in self.changes)
+        self._updating_categories = True
+        try:
+            self._category_groups = {f'category_{index}': group for index, group in enumerate(counts)}
+            keep = tuple(self._category_groups)
+            obsolete = [key for key in self.categories.get_children() if key not in keep]
+            if obsolete:
+                self.categories.delete(*obsolete)
+            for key, group in self._category_groups.items():
+                text = f'{group} ({counts[group]:,})' + (f' *{pending[group]:,}' if pending.get(group) else '')
+                if self.categories.exists(key):
+                    self.categories.item(key, text=text)
+                else:
+                    self.categories.insert('', 'end', iid=key, text=text)
+                if group == self.group.get():
+                    self.categories.selection_set(key)
+            self.category_counts = counts
+        finally:
+            self._updating_categories = False
+
+    def _style_pending_rows(self):
+        if hasattr(self, 'fields'):
+            palette = THEMES[self.theme_name.get()]
+            self.fields.tag_configure('pending', background=palette['hover'], foreground=palette['text'])
+
     def apply_theme(self, name):
         super().apply_theme(name)
+        self._style_pending_rows()
         if self.on_theme is not None:
             self.on_theme(name)
 
@@ -208,6 +319,7 @@ class Editor(Appearance):
         self.group_selector.configure(values=groups)
         if self.group.get() not in groups:
             self.group.set('All fields')
+        self._refresh_categories(fields)
         records = {}
         for field in fields:
             if self.group.get() in ('All fields', field.group):
@@ -235,7 +347,7 @@ class Editor(Appearance):
             searchable = f'{field.label} {field.group} {record} {field.id} {opened} {pending}'.casefold()
             if any(token not in searchable for token in tokens):
                 continue
-            self.fields.insert('', 'end', iid=field.id,
+            self.fields.insert('', 'end', iid=field.id, tags=('pending',) if field.id in self.changes else (),
                                values=(record, field.label, opened, pending,
                                        f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
                                         else f'{field.maximum:,}',
@@ -253,6 +365,10 @@ class Editor(Appearance):
         self.limit_status.set(
             f'EXPERIMENTAL: save or game may break. {count:,} pending edits above supported limits.'
             if self.experimental_mode.get() else 'Supported limits apply. Max uses supported limits.')
+        if self.experimental_mode.get():
+            self.mode_banner.pack(fill='x', before=self.selection_label)
+        else:
+            self.mode_banner.pack_forget()
         self.selected()
 
     def storage_display(self, field):

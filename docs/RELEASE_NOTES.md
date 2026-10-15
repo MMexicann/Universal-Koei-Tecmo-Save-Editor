@@ -1,59 +1,44 @@
-# Universal Koei Tecmo Save Editor v2.4
+# Universal Koei Tecmo Save Editor v2.5
 
-**DW6 PC and US PS3 equipment** gains named toggles for all ten weapon skills
-and eleven horse skills, horse element choices and equipped-weapon selection
-from the same officer's existing inventory. Five/four-skill capacities apply
-to complete pending edits; empty/unknown records and unknown/over-capacity masks
-remain protected. Max and experimental numeric options cannot bypass choices.
-Review, Undo, backups, native read-back and original PS3 metadata retention apply.
+The scalar editor now has a **category sidebar**, field/pending counts, edited-row
+highlighting in both themes and horizontal table scrolling. **Show editing guide**
+expands the game's instructions; **More options** reveals experimental editing
+and the encoding-limit column. Supported maxima and normal editing actions stay
+accessible. Hiding options preserves the current mode and pending edits.
 
-DW6 PC ↔ US PS3 conversion review now reports how many complete officer and horse
-records differ, names changed officers and lists changed horse slots. It explains
-that source slots replace destination slots, including empty source slots. Level,
-EXP, the learned tree and equipment migrate together. Destination story, battle,
-challenge and gallery state remain in the template; full conversion and Xbox 360
-are still unavailable.
+An **Open editors** selector resumes exact game/platform sessions and shows live
+pending-edit counts. Ctrl+F searches fields in scalar editors and games in the
+library. Enter applies a value through normal validation; Escape in field search
+clears its filters without discarding edits. Review, Undo, backups and retained
+converter/comparison/batch workspaces remain available.
 
-**Batch Converter** queues up to **32 independent jobs across all 20 conversion
-routes**. Add a reviewed conversion from Save Converter, choose its new output
-folder, and review the complete queue before exporting. Every source, template,
-original companion and output path passes preflight before any copy is written.
+**Origins copy safety** now rejects changed sources during backups and across
+serialization/output creation. Save As reparses the actual destination before
+accepting it. A failed post-write source check cleans up only an output that still
+matches the exact newly created bytes. Externally changed destinations are
+retained and reported as failures; existing files are never overwritten.
 
-Each export retains its native backups, original destination metadata, scoped
-gameplay transfer and actual output read-back. Progress shows each job's status.
-Stop after the current copy, or inspect a partial result if a later job fails;
-completed verified copies remain and remaining jobs do not start.
+**Origins weapon proficiency levels and Old Coin editing are not implemented.**
+The available evidence does not yet establish the exact coin member and complete
+proficiency/moveset/rank/reward transition rules. The request remains open; this
+release does not claim to satisfy it. Existing Origins gameplay controls retain
+their documented scope. No new game profile is added: the library remains
+**94 editor profiles across 15 platforms**, with **20 scoped conversion routes**
+and native comparison for 93 scalar profiles.
 
-Save/load private plans and export combined reports. Plans contain local paths.
-Result reports contain scope, hashes and per-copy receipts; completed files,
-metadata and stored receipts are verified again before report export. Existing
-folders, plans and reports are never replaced. The queue remains while switching
-between the library, editors, comparison and individual conversion workspaces.
+Additional title research acquired seven distinct native Uncharted Waters IV HD
+references, but found edition-size differences from the published writer and
+unresolved integrity handling. Those inputs are not promoted into editable
+profiles. Private saves, owner context, game binaries and research downloads are
+excluded from the release.
 
-Headless review/export uses `--batch-convert PLAN.json`, optional `--dry-run`,
-and `--batch-report NEW.json`. Mixed game families and conversion-only PS4
-endpoints share the same validated queue.
+Focused native-copy, GUI, source-change and corruption regressions precede the
+complete native Windows suite, both packaged startup checks and clean active
+Defender scans. Published downloads must match the tested source and scan hashes.
+No edited/converted game-load or re-save acceptance is claimed.
 
-Four additional **unregistered, read-only research inspectors** are included in
-the Source ZIP: Gundam 2 US/EU PS3 and original US Vita Totori Plus, Rorona Plus
-and Ayesha Plus. They qualify their observed native framing/context and known
-Gundam byte sum. Unresolved progression/integrity dependencies keep them outside
-the supported editor library; no additional gameplay writes are claimed.
+Download **UniversalKoeiTecmoSaveEditor-v2.5.exe**, the complete **Windows ZIP**, or
+the reviewed **Source ZIP**. SHA256SUMS and Defender evidence accompany the files.
 
-The library remains **94 editor profiles across 15 platforms**, including the
-three editing titles added in v2.2. Compare Saves covers 93 scalar profiles.
-DW6 conversion remains mapped roster-and-horse migration; full story/battle and
-Xbox 360 conversion remain unavailable. Console decryption/import/signing and
-edited/converted game-load validation remain external or outstanding.
-
-Generated regressions, an independent PC and two US PS3 DW6 exports and fourteen
-additional candidate gameplay references cover the new workflows. Publication
-requires the complete native Windows suite, both packaged startup checks and
-clean active Defender evidence bound to the exact downloadable assets.
-
-Download **UniversalKoeiTecmoSaveEditor-v2.4.exe**, the complete **Windows ZIP**,
-or the reviewed **Source ZIP**. SHA256SUMS and Defender evidence verify the files.
-
-[DW6 controls and evidence](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.4/docs/DW6_PS3_FORMAT.md),
-[Batch instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.4/docs/BATCH_CONVERSION.md)
-and [candidate evidence/remaining qualification](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.4/docs/EXPANSION_CANDIDATES.md).
+[Workspace guide](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5/docs/EDITOR_WORKSPACE.md)
+and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5/docs/ORIGINS_REQUEST_STATUS.md).

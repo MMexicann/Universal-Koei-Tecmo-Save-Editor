@@ -870,7 +870,14 @@ class UniversalGuiTests(unittest.TestCase):
                 self.assertNotIn(phrase.lower(), visible, game_id)
             self.assertEqual(editor.fields.heading('limit', 'text'), 'Supported maximum')
             self.assertEqual(editor.fields.heading('storage', 'text'), 'Encoding limit')
-            self.assertIn('Experimental: allow above supported limits', texts)
+            self.assertIn('More options', texts)
+            self.assertNotIn('Experimental: allow above supported limits', texts)
+            editor.options_visible.set(True)
+            editor.toggle_options()
+            self.root.update()
+            self.assertIn('Experimental: allow above supported limits', widget_texts(frame, mapped_only=True))
+            editor.options_visible.set(False)
+            editor.toggle_options()
             for label in ('Open Save Copy', 'Save As...', 'Backup Save', 'Review Changes',
                           'Undo', 'Restore Backup...', 'Apply Selected', 'Max Selected',
                           'Max Visible Fields', 'Inspect Data'):

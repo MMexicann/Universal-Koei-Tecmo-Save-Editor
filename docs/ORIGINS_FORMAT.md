@@ -7,6 +7,13 @@ pool. Native executable analysis and copied-save roundtrips establish the
 format evidence below. Loading and re-saving an edited copy in the game has not
 been validated; procedural fixtures do not establish that outcome either.
 
+The v2.5 request status is tracked [separately](ORIGINS_REQUEST_STATUS.md).
+Weapon proficiency and Old Coin writes remain unavailable. Backup creation now
+checks the opened source before and after backup; Save As checks it around
+serialization/output creation and reparses the actual destination. A failed
+post-write source check removes only an output that still matches the exact
+new bytes; externally changed destinations are retained and reported as failures.
+
 ## Native executable evidence
 
 The save reader, writer, serializer dispatch, size calculators, and merchant
@@ -325,7 +332,7 @@ up to 128 changed regions; totals include all regions. Reports use
 paths, and are excluded by the repository's privacy rules.
 
 
-## Unreleased named inventory inspection
+## Named inventory inspection
 
 The shared inspector now exposes existing qualified weapon records as searchable
 rows: native slot, weapon ID, stored upgrade, six trait IDs and their individual

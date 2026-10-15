@@ -95,6 +95,8 @@ class Appearance:
                 widget.configure(background=palette['surface'], foreground=palette['text'],
                                  insertbackground=palette['text'], selectbackground=palette['accent'],
                                  selectforeground='#ffffff')
+            elif isinstance(widget, ttk.Treeview) and getattr(widget, '_pending_edits_style', False):
+                widget.tag_configure('pending', background=palette['hover'], foreground=palette['text'])
             elif isinstance(widget, ttk.Combobox):
                 # Tk keeps dropdown listboxes after their first use. The option
                 # database covers new ones; recolor any already-created popup.

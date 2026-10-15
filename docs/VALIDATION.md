@@ -1,5 +1,23 @@
 # Universal development validation
 
+## v2.5 editor workspace and Origins copy safety
+
+Focused GUI checks exercise category counts, pending-row styling across both
+themes, compact/expanded controls, minimum-window table space, search shortcuts,
+filter clearing, session selection and retained pending edits. Forty-two focused
+Origins/GUI cases pass with the separately acquired public revision-29 DLC slot
+selected; public test inputs remain procedural. Existing library, conversion,
+comparison and batch GUI regression checks pass separately.
+
+Origins write regressions inject source changes during serialization and atomic
+creation, destination corruption and existing-output collisions. Backups reject
+stale sources. A successful copy is read from disk and qualified again; failure
+cleanup removes only the exact bytes created by the current operation. Changed
+destination bytes are retained. No proficiency, Old Coin or new-game writer is
+qualified by these tests. Actual game-load/re-save acceptance remains untested.
+The complete source suite, native Windows tests, both packaged startup checks,
+active Defender scans and actual public-download verification remain mandatory.
+
 ## v2.4 DW6 equipment, migration review and batch conversion
 
 Focused checks cover named DW6 equipment bits in both byte orders, complete

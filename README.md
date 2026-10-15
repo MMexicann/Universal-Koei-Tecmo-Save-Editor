@@ -5,8 +5,25 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.4 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.5 development source** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
+
+## Editor workspace
+
+Use the category sidebar to browse fields and see pending edits, or jump between
+open editors with the session selector. Edited rows are highlighted. The field
+table scrolls horizontally; **Show editing guide** opens each game's guidance.
+**More options** contains experimental editing and the separate encoding-limit
+column. Ctrl+F searches fields in scalar editors and games in the library;
+Escape in the field search clears its filters without changing pending edits.
+[Workspace guide](docs/EDITOR_WORKSPACE.md).
+
+## Origins request status
+
+Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.
+The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
+controls remain available. This update fixes backup/source-change and output
+read-back checks. [Evidence and precise remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
 
 ## Save Converter
 
@@ -33,7 +50,7 @@ Full DW6 story/battle conversion and Xbox 360 remain unavailable.
 
 ## Experimental editing
 
-Supported limits apply by default. Open a save copy and enable **Experimental:
+Supported limits apply by default. Open a save copy, open **More options** and enable **Experimental:
 allow above supported limits** to enter larger numeric values. The editor shows
 the supported maximum and encoding limit, and warns that experimental values
 can break the save or game or be reset by the game.

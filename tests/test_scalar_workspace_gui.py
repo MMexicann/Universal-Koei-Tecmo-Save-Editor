@@ -124,6 +124,10 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
         self.root.update()
         self.assertEqual(editor.fields.get_children(), ("gold",))
         platform = self.app.platform_choice.get()
+        # A real Ctrl+F starts in the active app. Windows need not activate a
+        # newly mapped test window; establish that keyboard precondition here.
+        self.root.focus_force()
+        self.root.update()
         self.app.focus_library_search()
         self.root.update()
         self.assertIs(self.root.focus_get(), editor.search_entry)

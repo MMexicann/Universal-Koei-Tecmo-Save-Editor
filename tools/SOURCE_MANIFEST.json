@@ -4468,8 +4468,8 @@
     },
     {
       "path": "tests/test_scalar_workspace_gui.py",
-      "bytes": 6842,
-      "sha256": "7dda7e0a6a46bfa1f4546bd05aa4cc455f17c1a1ee12f4eb86b5e5744b960448"
+      "bytes": 7058,
+      "sha256": "1e71a010c970e379c902deebcdd1cf69beda9e1d93958bf80bbcdad9bb7f2b9d"
     },
     {
       "path": "tests/test_scalar_workspace_navigation.py",

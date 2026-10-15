@@ -397,14 +397,19 @@ class Xbox360DW6ConversionTests(unittest.TestCase):
         from tests.test_conversion import write_copy
         for during in ('source-context', 'destination-readback'):
             with self.subTest(during=during), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary)
+                # Keep a noncanonical spelling so this exercises the same
+                # alias distinction as Windows short temporary-directory names.
+                alias = Path(temporary) / 'alias'
+                alias.mkdir()
+                root = alias / '..'
+                output = (root / 'output').resolve()
                 source = write_copy(root / 'source', 'dw6')
                 template = write_copy(root / 'template', na.GAME_ID, 1)
                 reviewed = c.prepare('dw6-to-' + na.GAME_ID + '-records', source, template)
                 original_read, touched = na.read_save, []
 
                 def raced_read(path, *args, **kwargs):
-                    if Path(path).parent == root / 'output' and not touched:
+                    if Path(path).parent.resolve() == output and not touched:
                         touched.append(True)
                         if during == 'source-context':
                             (template.parent / 'ORIGINAL.CON').write_bytes(context_fixture(na.GAME_ID, seed=2))
@@ -413,12 +418,14 @@ class Xbox360DW6ConversionTests(unittest.TestCase):
                     return original_read(path, *args, **kwargs)
 
                 with mock.patch.object(na, 'read_save', side_effect=raced_read):
-                    with self.assertRaises(SaveError):
-                        c.export(reviewed, root / 'output')
-                self.assertTrue(touched)
+                    try:
+                        with self.assertRaises(SaveError):
+                            c.export(reviewed, root / 'output')
+                    finally:
+                        self.assertEqual(touched, [True], 'The destination read-back race must actually be injected.')
                 self.assertFalse((root / 'output' / 'conversion.json').exists())
                 if during == 'destination-readback':
-                    # Failed export rollback must preserve the foreign context.
+                    # Failed export must preserve the foreign context.
                     self.assertEqual((root / 'output' / 'ORIGINAL.CON').read_bytes(), context_fixture(na.GAME_ID, seed=3))
 
 

@@ -3783,8 +3783,8 @@
     },
     {
       "path": "tests/test_dw6_xbox360_conversion.py",
-      "bytes": 23417,
-      "sha256": "844dceae61f3f10cf451e1a4e60adf8a4536d6b555ff23da65ed655f94e40c6f"
+      "bytes": 23833,
+      "sha256": "e382d7852c2613abfa18d5dd84977ccab662326cca919e6648113b6a1a8beac9"
     },
     {
       "path": "tests/test_dw7e_ps3.py",

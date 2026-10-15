@@ -10,7 +10,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.games.dw6 import equipment
+from koei_editor.games.dw6 import equipment, availability
 from koei_editor.games.dw6.dw6_metadata import WEAPON_NAMES, OFFICER_NAMES, ELEMENT_NAMES
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.shared.experimental_limits import within_numeric_limits
@@ -72,7 +72,8 @@ class Format:
     game_load_verified: bool = False
     note: str = ('Copied PFD-decrypted BLUS30110 APP.BIN with exact original PARAM.SFO. '
                  'Named one-way playable unlocks, existing horse speed/attack/jump/destruction and weapon stored damage bonus/element. '
-                 'Named weapon/horse skill toggles, horse element choices and existing own-pool weapon selection. Max disabled. Reimport and resign with Apollo. Story, ownership and officer growth are preserved.')
+                 'Named weapon/horse skill toggles, horse element choices and existing own-pool weapon selection. '
+                 'One-way stage and Musou availability unlocks. Max disabled. Reimport and resign with Apollo. Completion, ownership and officer growth are preserved.')
 
 
 FORMAT = Format()
@@ -179,7 +180,9 @@ def _fields(payload):
                                 1, 1, 'Unlocks', officer + 1, experimental=False))
     qualified_horses = {field.slot - 1 for field in fields if field.group == 'Horses'}
     return tuple(fields) + equipment.fields(payload, OFFICER_BASE, HORSE_BASE, 'big',
-                                            lambda horse: horse in qualified_horses)
+                                            lambda horse: horse in qualified_horses) + tuple(
+        Field(**spec, evidence='Official English DW6 native constructors, corroborated on complete native US PS3 exports')
+        for spec in availability.specs(payload, OFFICER_BASE))
 
 
 def fields_for(document):
@@ -195,6 +198,7 @@ def _pending(document, changes, mapping):
     pending = normalize_pending_values(document, changes, mapping)
     if any(mapping[key].group == 'Unlocks' and value != 1 for key, value in pending.items()):
         raise SaveError('Playable unlocks are one-way; relocking officers is unavailable.')
+    availability.validate(document.payload, pending, mapping, OFFICER_BASE)
     equipment.apply(document.payload, pending, mapping, 'big')
     return pending
 
@@ -249,6 +253,14 @@ def unlock_values(document):
             if field.group == 'Unlocks' and field.value(document.payload) == 0}
 
 
+def stage_unlock_values(document):
+    return availability.stage_values(fields_for(document), document.payload)
+
+
+def musou_unlock_values(document):
+    return availability.musou_values(fields_for(document), document.payload, OFFICER_BASE)
+
+
 def field_options(document, key):
     if key not in field_map(document):
         raise SaveError('Choose a qualified existing field.')
@@ -258,6 +270,10 @@ def field_options(document, key):
 
 
 def record_label(slot, group='Horses'):
+    if group == availability.STAGE_GROUP:
+        return f'Stage {slot}'
+    if group == availability.MUSOU_GROUP:
+        return OFFICER_NAMES[slot - 1]
     if group.startswith('Weapon'):
         return f'{OFFICER_NAMES[(slot - 1) // WEAPON_COUNT]} / weapon {(slot - 1) % WEAPON_COUNT + 1}'
     if group in ('Unlocks', 'Equipment'):
@@ -298,6 +314,8 @@ def inspection_rows(document):
 
 def field_hint(document, key):
     field = field_map(document)[key]
+    if field.group in availability.GROUPS:
+        return availability.hint(field.group)
     if isinstance(field, equipment.EquipmentField):
         return equipment.hint(field)
     if field.group == 'Unlocks':

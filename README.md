@@ -23,17 +23,18 @@ reviewed user guides in `_internal/guides/`; the Source ZIP contains the full do
 
 Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.1.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
-controls remain available. This update fixes backup/source-change and output
-read-back checks. [Evidence and precise remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
+controls remain available. New research has corroborated runtime fields and identified a proficiency-array
+candidate, but save positions and progression dependencies still need qualification. [Evidence and precise remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
 
 ## Save Converter
 
-Open **Save Converter** for **20 directed routes**:
+The changes below are **unreleased**; the published v2.5.1 app retains its 20 routes.
+The development Save Converter now offers **30 directed routes**:
 
-- **DW6 PC ↔ US PS3:** all 41 officer records and eight horses, including skill
-  masks, weapons, stored progression, playable flags, names and growth descriptors.
-  This is a **roster-and-horse migration**; story, challenges and suspended battles
-  remain from the destination template.
+- **DW6 PC, US PS3 and Japanese PS3:** six roster-and-horse routes, plus six
+  optional **progress** routes adding 45 stage records and 17 Musou availability/clear
+  records. Gallery, challenges and suspended battles remain from the destination
+  template. Japanese PS3 is conversion-only and needs original BLJM60041 metadata.
 - **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
   (12 routes). PS4 requires the supported zero-extension profile.
 - **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
@@ -43,7 +44,9 @@ then export to a new folder with backups and a hash receipt. Console export/decr
 and reimport/resigning use an external save manager. Converted game loading remains
 untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
 
-The **US DW6 PS3 editor** now includes named one-way playable officer unlocks,
+The **PC and US DW6 PS3 editors** add one-way Free Mode stage and named Musou
+availability unlocks under **More unlocks**. Musou modes require their playable
+officers; clear records and rewards stay separate. The US editor also includes named one-way playable officer unlocks,
 searchable officer/weapon/horse inspection, horse combat stats and existing weapon
 bonus/element controls. Original `PARAM.SFO` is required beside decrypted `APP.BIN`.
 Full DW6 story/battle conversion and Xbox 360 remain unavailable.
@@ -73,7 +76,7 @@ empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
 Queue reviewed conversions, save/load private plans and validate every job before
 exporting. Each copy gets its own new folder, backups and native read-back.
 Progress, stop-after-current-copy and verified partial-result reports cover up to
-32 jobs across all 20 routes. [Instructions](docs/BATCH_CONVERSION.md).
+32 jobs across all 30 development routes. [Instructions](docs/BATCH_CONVERSION.md).
 
 ## Compare Saves
 
@@ -139,8 +142,8 @@ Experimental editing applies to mapped numeric fields where their encoding permi
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
 | SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
-| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named playable unlocks, horse stats/elements, weapon bonuses, named equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
+| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
 | DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
 | WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
 | WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |

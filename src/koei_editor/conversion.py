@@ -22,11 +22,19 @@ from koei_editor.shared.save_safety import safe_path
 from koei_editor.games.dw8xl import converter as dw8_conversion
 from koei_editor.games.dw8xl import ps4_export as dw8_ps4
 from koei_editor.games.dw6 import converter as dw6_conversion
+from koei_editor.games.dw6 import progression_conversion as dw6_progression
 from koei_editor.games.dw6 import dw6_parser as dw6_pc
 from koei_editor.games.dw6_ps3 import parser as dw6_ps3
+from koei_editor.games.dw6_ps3 import japanese_export as dw6_ps3_jp
 from koei_editor.games.p5strikers_pc import converter as p5_conversion
 
 _FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion, 'dw6': dw6_conversion})
+_VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression})
+
+
+def _transform(route):
+    family = ENDPOINTS[route.source_id].family
+    return _VARIANTS[(family, route.variant)] if route.variant else _FAMILIES[family]
 
 
 @dataclass(frozen=True)
@@ -62,6 +70,9 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('dw6_ps3', 'dw6', 'DW6 · US PS3', 'APP.BIN', dw6_ps3,
              'PARAM.SFO', 4096,
              'PFD-decrypted BLUS30110 export. Reimport and resign with Apollo Save Tool.'),
+    Endpoint('dw6_ps3_jp', 'dw6', 'DW6 / Shin Sangoku Musou 5 · Japanese PS3', 'APP.BIN', dw6_ps3_jp,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLJM60041 export. Reimport and resign with Apollo Save Tool.', True),
 )})
 
 
@@ -69,30 +80,36 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
 class Route:
     source_id: str
     target_id: str
+    variant: str = ''
 
     @property
     def id(self):
-        return self.source_id + '-to-' + self.target_id
+        return self.source_id + '-to-' + self.target_id + ('-' + self.variant if self.variant else '')
 
     @property
     def label(self):
         label = ENDPOINTS[self.source_id].label + ' → ' + ENDPOINTS[self.target_id].label
         if self.transfer_scope == 'roster-and-horses':
             label += ' (roster and horses)'
+        elif getattr(_transform(self), 'ROUTE_LABEL', ''):
+            label += ' (' + _transform(self).ROUTE_LABEL + ')'
         return label
 
     @property
     def transfer_scope(self):
-        return _FAMILIES[ENDPOINTS[self.source_id].family].TRANSFER_SCOPE
+        return _transform(self).TRANSFER_SCOPE
 
     @property
     def scope_description(self):
-        return _FAMILIES[ENDPOINTS[self.source_id].family].SCOPE_DESCRIPTION
+        return _transform(self).SCOPE_DESCRIPTION
 
 
 ROUTES = tuple(Route(source.id, target.id) for source in ENDPOINTS.values()
                for target in ENDPOINTS.values()
                if source.family == target.family and source.id != target.id)
+ROUTES += tuple(Route(route.source_id, route.target_id, variant)
+                for route in ROUTES for family, variant in _VARIANTS
+                if ENDPOINTS[route.source_id].family == family)
 _ROUTES = MappingProxyType({route.id: route for route in ROUTES})
 
 
@@ -160,16 +177,18 @@ def _validate_snapshot(snapshot):
         raise SaveError('A source, template or console metadata changed. Reopen both copies.')
 
 
-def _gameplay(snapshot):
-    return _FAMILIES[ENDPOINTS[snapshot.endpoint_id].family].gameplay(snapshot.document)
+def _gameplay(snapshot, route=None):
+    transform = _transform(route) if route is not None else _FAMILIES[ENDPOINTS[snapshot.endpoint_id].family]
+    return transform.gameplay(snapshot.document)
 
 
-def _encode(source, template):
+def _encode(source, template, route=None):
     endpoint = ENDPOINTS[template.endpoint_id]
-    payload = _gameplay(source)
-    raw = _FAMILIES[endpoint.family].encode(source.document, template.document)
+    payload = _gameplay(source, route)
+    transform = _transform(route) if route is not None else _FAMILIES[endpoint.family]
+    raw = transform.encode(source.document, template.document)
     converted = endpoint.backend.decode(raw, template.endpoint_id)
-    if _gameplay(Snapshot(template.endpoint_id, converted)) != payload:
+    if _gameplay(Snapshot(template.endpoint_id, converted), route) != payload:
         raise SaveError('Destination reparse changed the transferred gameplay bytes.')
     return raw
 
@@ -178,8 +197,8 @@ def prepare(route_id, source_path, template_path):
     route = get_route(route_id)
     source = _read(route.source_id, source_path)
     template = _read(route.target_id, template_path)
-    raw = _encode(source, template)
-    payload = _gameplay(source)
+    raw = _encode(source, template, route)
+    payload = _gameplay(source, route)
     return Conversion(route, source, template, raw, hashlib.sha256(payload).hexdigest(), len(payload), _notes(route, source, template))
 
 
@@ -192,7 +211,7 @@ def _notes(route, source, template):
         notes.append(target.import_note)
     if target.companion:
         notes.append('Original destination-template metadata is copied unchanged. This is a gameplay export, not a signed console package.')
-    family = _FAMILIES[target.family]
+    family = _transform(route)
     notes.extend(family.NOTES)
     preview = getattr(family, 'preview_notes', None)
     if preview is not None:
@@ -208,6 +227,7 @@ def validate_review_snapshot(conversion):
     """
     if (type(conversion) is not Conversion or type(conversion.route) is not Route
             or type(conversion.route.source_id) is not str or type(conversion.route.target_id) is not str
+            or type(conversion.route.variant) is not str
             or get_route(conversion.route.id) != conversion.route):
         raise SaveError('Review a prepared conversion before exporting.')
     if (type(conversion.source) is not Snapshot or type(conversion.template) is not Snapshot
@@ -222,8 +242,8 @@ def validate_review_snapshot(conversion):
                 or (not endpoint.companion and snapshot.companion_raw)
                 or (endpoint.companion and not 0 < len(snapshot.companion_raw) <= endpoint.companion_limit)):
             raise SaveError('Conversion context does not match its frozen endpoint.')
-    payload = _gameplay(conversion.source)
-    if (conversion.raw != _encode(conversion.source, conversion.template)
+    payload = _gameplay(conversion.source, conversion.route)
+    if (conversion.raw != _encode(conversion.source, conversion.template, conversion.route)
             or conversion.gameplay_sha256 != hashlib.sha256(payload).hexdigest()
             or conversion.gameplay_bytes != len(payload) or conversion.notes != _notes(conversion.route, conversion.source, conversion.template)):
         raise SaveError('The prepared conversion was altered. Review it again.')
@@ -279,7 +299,7 @@ def export(conversion, output_dir):
         actual = _read(target.id, destination)
         if (actual.document.raw != conversion.raw
                 or actual.companion_raw != conversion.template.companion_raw
-                or _gameplay(actual) != _gameplay(conversion.source)):
+                or _gameplay(actual, conversion.route) != _gameplay(conversion.source, conversion.route)):
             raise SaveError('Saved conversion failed actual destination read-back.')
         _validate_conversion(conversion)
         data = (json.dumps(receipt, indent=2) + '\n').encode('utf-8')

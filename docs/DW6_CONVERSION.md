@@ -1,4 +1,12 @@
-# DW6 PC and original US PS3 roster migration
+# DW6 PC and original PS3 progress migration
+
+**Unreleased development, version unchanged at 2.5.1:** original Japanese PS3
+`BLJM60041` joins PC and US PS3 as a conversion-only endpoint. Six directions
+transfer roster/horses. Six additional routes ending in **`-progress`** also
+transfer all 45 persistent stage records and 17 Musou availability/clear records.
+The two scopes remain separate choices in the converter. Gallery, challenge
+boards, options, suspended battles and all other unmapped bytes stay from the
+destination template. This does not continue an active campaign or battle.
 
 Version 2.1.2 adds **PC ↔ US PS3 BLUS30110** transfer of all 41 officer records
 and eight complete horse records. It is explicitly a **partial progress
@@ -84,7 +92,8 @@ project.** Neither inspected native profile establishes an internal gameplay
 checksum; PS3 authentication is external. Full story and battle transfer needs
 its own typed serialization/dependency map. Public Xbox 360 save-set listings
 were found, but no independently qualified extracted original-game payload was
-obtained. Xbox 360, Japanese/EU PS3, Special and Empires routes remain unavailable.
+obtained. Xbox 360, EU PS3, Special and Empires routes remain unavailable.
+Japanese PS3 is now covered by the separate development profile described below.
 
 ## v2.4 review and remaining research
 
@@ -109,3 +118,53 @@ requires login; other historic mirrors currently lead to dead Megaupload links.
 No extracted original DW6 Xbox payload, native integrity map or successful
 cross-platform load control was obtained. Empires and Special evidence does not
 qualify this original game's route.
+
+## Unreleased native stage and Musou mapping
+
+The later [official English PC demo announcement](https://worthplaying.com/article/2008/10/4/news/55450-dynasty-warriors-6-pc-english-demo-available-now/)
+led to a complete installer preserved in the
+[public GameFront archive](https://web.archive.org/web/20151028095120/http://www.gamefront.com/files/11992788).
+Its SHA-256 is `f0e51dcdb488c0bfaf3b9eb3ab2c832238bba6ddcb79e40c5e4a31064ac5ecf0`.
+The extracted executable's MD5 matches the independently
+[published file identity](https://www.shouldiremoveit.com/DYNASTY-WARRIORS-6-Playable-Demo-132370-program.aspx),
+`0680523e58556d09bc1c9786d555502f`. Installer and game were never executed.
+Their bytes and private disassembly remain outside the repository.
+
+This demo's native reader VA `0x5D1A10` and writer `0x5D1A60` read/write exactly
+`0x33D18` (212,248) bytes. Constructor `0x5CF890` places 41 officers at `0xB58`,
+45 stage records at `0x2640`, 17 Musou records at `0x29C4`, and eight horses at
+`0x2A08`. Stage constructor `0x5CF6D0` initializes three u32s and separate bytes
+at +12, +13 and +16; Musou constructor `0x5CE3F0` initializes bytes +0 and +1.
+Initialization also uses the same first-17 officer indices for Musou availability
+and playable prerequisites. The demo's version footer differs from the native
+retail PC reference, so its framing and footer are never transplanted.
+
+| Array | PC | US/Japanese PS3 | Transform |
+| --- | --- | --- | --- |
+| Stages, 45 × 20 | `0x2640` | `0x2600` | Three u32s converted separately; the eight remaining flag/padding bytes copied without word swapping. |
+| Musou, 17 × 4 | `0x29C4` | `0x2984` | Availability byte, clear byte and two opaque padding bytes copied unchanged. |
+| Japanese complete file | — | 212,176 bytes | Exact original `BLJM60041-SAVEDATA` metadata required; every untransferred byte comes from this region's own template. |
+
+The complete native PC reference, both independent US PS3 references and the
+[Japanese reference 16605](https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16605)
+corroborate these arrays, individual counter values, byte flags, officer IDs and
+horse boundaries. Metadata, exact lengths and canonical identities distinguish
+profiles; regions are never relabelled or padded into one another.
+
+The `-progress` scope transfers **8,336 bytes** of canonical typed state. Existing
+roster-only routes retain their **7,368-byte** scope and preserve destination
+stage/Musou records. Review names changed stage/mode IDs and explains that locked
+or incomplete source entries also replace destination state. Extended receipt
+hashes and read-back checks cover the extended scope, preventing a review from
+being silently downgraded to roster-only validation.
+
+Generated checks use asymmetric words and flag/padding bytes, including native
+default stage time `0x4F1A0`, to catch an incorrect blanket endian swap. Private
+native checks exercise all six progress directions with each US reference:
+twelve actual forward/reverse export pairs, with complete original bytes restored
+and individual numeric/flag values compared independently. Four additional basic
+Japanese paths pass safe exports and exact reverses. These are format and copied-file
+checks; **actual game loading/re-saving remains unverified**.
+
+Reviewed provenance and layouts are packaged in `dw6_migration_evidence.json`.
+The Japanese endpoint does not add a scalar editor to the 94-profile inventory.

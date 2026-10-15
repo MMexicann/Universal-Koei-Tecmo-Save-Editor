@@ -20,7 +20,7 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
-    if endpoint_id in ('dw6', 'dw6_ps3'):
+    if endpoint_id in ('dw6', 'dw6_ps3', 'dw6_ps3_jp'):
         from tests.test_dw6_conversion import fixture as dw6_fixture
         return dw6_fixture(endpoint_id, variant)
     if endpoint_id.startswith('dw8xl'):
@@ -57,8 +57,11 @@ def write_copy(folder, endpoint_id, variant=0):
     if endpoint.companion:
         companion = folder / endpoint.companion
         companion.parent.mkdir(parents=True, exist_ok=True)
-        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3'):
-            metadata = ps3_context.PS3ContextTests.metadata('NPUB31449-SAVEDATA' if endpoint_id == 'dw8xl_ps3' else 'BLUS30110-SAVEDATA')
+        if endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp'):
+            metadata = ps3_context.PS3ContextTests.metadata({
+                'dw8xl_ps3': 'NPUB31449-SAVEDATA', 'dw6_ps3': 'BLUS30110-SAVEDATA',
+                'dw6_ps3_jp': 'BLJM60041-SAVEDATA',
+            }[endpoint_id])
         else:
             metadata = title_only_sfo()
             if endpoint_id == 'dw8xl_ps4':
@@ -72,7 +75,7 @@ class ConversionTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
-                self.assertEqual(endpoint.id, 'dw8xl_ps4')
+                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
                 continue
@@ -105,7 +108,7 @@ class ConversionTests(unittest.TestCase):
                 path, backups, receipt = c.export(conversion, output)
                 target = c.ENDPOINTS[route.target_id]
                 reopened = target.backend.read_save(path, route.target_id)
-                self.assertEqual(c._gameplay(c.Snapshot(route.target_id, reopened)), c._gameplay(conversion.source))
+                self.assertEqual(c._gameplay(c.Snapshot(route.target_id, reopened), route), c._gameplay(conversion.source, route))
                 self.assertEqual(source.read_bytes(), original)
                 self.assertEqual(template.read_bytes(), original_template)
                 self.assertEqual([p.read_bytes() for p in backups], [original, original_template])

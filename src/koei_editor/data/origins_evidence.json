@@ -147,7 +147,7 @@
         "maximum": 999,
         "maxable": false
       },
-      "qualification": "Existing formed level 1\u20135 only; event/reward/learned-art bytes preserved",
+      "qualification": "Existing formed level 1–5 only; event/reward/learned-art bytes preserved",
       "serializer_rva": "0xaeafa0",
       "confidence": "high"
     },
@@ -219,10 +219,32 @@
     }
   ],
   "unmapped_writes": [
+    "Old Coin inventory count, collection flags and reward claims",
     "Weapon proficiency and derived moveset/rank rewards",
     "Weapon trait levels",
     "Active campaign and route endings",
     "Gem and horse progression",
     "Bond conversations, events and rewards"
-  ]
+  ],
+  "request_research": {
+    "old_coins": {
+      "writable": false,
+      "runtime_member": "0x45a",
+      "runtime_width": 2,
+      "disk_offset_qualified": false,
+      "sources": [
+        "https://github.com/bbfox0703/Mydev-Cheat-Engine-Tables/blob/main/DYNASTY%20WARRIORS%20ORIGINS/DWORIGINS.CT",
+        "https://github.com/fusigi0930/game_script/blob/2423aae6d8ef8afce6dbd6c755e41a7b29983cdc/pc/cheat_engine_table/DWORIGINS.CT"
+      ],
+      "needed": "Native disk serialization, semantic getter/setter limits, collection and reward-claim relationships. Runtime adjacency to SP does not prove disk adjacency."
+    },
+    "proficiency": {
+      "writable": false,
+      "revision_29_candidate": "0x8055",
+      "candidate_status": "Pattern-only match on one complete public native slot; not an independently qualified disk mapping.",
+      "records": 50,
+      "packed_stride": 14,
+      "needed": "Disk positions for supported revisions; family IDs, thresholds, story/DLC gates, moveset/rank/reward/skill transitions and idempotent claimed-state handling."
+    }
+  }
 }

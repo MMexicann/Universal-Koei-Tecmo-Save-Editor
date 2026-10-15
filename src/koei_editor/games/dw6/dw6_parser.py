@@ -15,7 +15,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.verified_editor import Field
-from koei_editor.games.dw6 import equipment
+from koei_editor.games.dw6 import equipment, availability
 from koei_editor.games.dw6.dw6_metadata import OFFICER_NAMES, WEAPON_NAMES, ELEMENT_NAMES
 
 GAME_ID = 'dw6'
@@ -56,7 +56,8 @@ FORMAT = Format(GAME_ID, 'Dynasty Warriors 6 (PC)', SAVE_SIZE,
                 'Observed 212,248-byte native PC profile with canonical officer identities. '
                 'One-way playable unlocks, qualified existing horse combat stats and '
                 'individual element choices and manual stored damage bonuses on existing known weapons. '
-                'Named weapon/horse skill toggles, horse element choices and existing own-pool weapon selection. Officer growth and story remain read only. '
+                 'Named weapon/horse skill toggles, horse element choices and existing own-pool weapon selection. '
+                 'One-way stage and Musou availability unlocks; completion and officer growth remain preserved. '
                 'Genuine sample parsing is verified; edited game-load validation has not '
                 'been performed by this project.')
 
@@ -145,7 +146,8 @@ def _fields(payload):
     return tuple(field for field in _UNLOCK_FIELDS
                  if field.value(payload) in (0, 1)) + tuple(
         field for field in _HORSE_FIELDS if _horse_qualified(payload, field.slot - 1)) + tuple(elements) + equipment.fields(payload, OFFICER_BASE, HORSE_BASE, 'little',
-                                                        lambda horse: _horse_qualified(payload, horse))
+                                                        lambda horse: _horse_qualified(payload, horse)) + tuple(
+        Field(**spec) for spec in availability.specs(payload, OFFICER_BASE))
 
 
 def fields_for(document):
@@ -191,6 +193,7 @@ def changed_payload(document, changes):
         if field is None:
             raise SaveError('The requested record is not qualified for DW6 PC editing.')
         _validate_edit(field, value, field.value(document.payload))
+    availability.validate(document.payload, changes, mapped, OFFICER_BASE)
     raw = equipment.apply(document.payload, changes, mapped, 'little')
     _validate_raw(raw)
     return raw
@@ -228,16 +231,34 @@ def unlock_values(document):
             if field.group == 'Unlocks' and field.value(document.payload) == 0}
 
 
+def stage_unlock_values(document):
+    return availability.stage_values(fields_for(document), document.payload)
+
+
+def musou_unlock_values(document):
+    return availability.musou_values(fields_for(document), document.payload, OFFICER_BASE)
+
+
 def review(document, changes):
     changed_payload(document, changes)
     return [(field, field.value(document.payload), changes[field.id])
             for field in fields_for(document) if field.id in changes]
 
 
-def backup(document):
+def _check_source(document):
     validate_document(document)
-    return snapshot_backup(document.raw, document.source, GAME_ID,
-                           document.source.parent / 'WarriorsEditorBackups')
+    source = safe_path(document.source)
+    with source.open('rb') as stream:
+        if stream.read(SAVE_SIZE + 1) != document.raw:
+            raise SaveError('The opened DW6 PC copy changed. Reopen before saving or backing up.')
+    return source
+
+
+def backup(document):
+    source = _check_source(document)
+    result = snapshot_backup(document.raw, source, GAME_ID, source.parent / 'WarriorsEditorBackups')
+    _check_source(document)
+    return result
 
 
 def save_as(document, changes, destination):
@@ -246,14 +267,16 @@ def save_as(document, changes, destination):
         raise SaveError('Choose a new .dat destination.')
     if destination.exists():
         raise FileExistsError('Choose a new file; existing files are never replaced.')
-    validate_document(document)
-    with safe_path(document.source).open('rb') as stream:
-        if stream.read(SAVE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk. Reopen it before saving.')
+    _check_source(document)
     raw = serialize(document, changes)
     backup(document)
+    _check_source(document)
     atomic_new(raw, destination)
-    return decode(raw, GAME_ID, destination)
+    actual = read_save(destination)
+    _check_source(document)
+    if actual.raw != raw:
+        raise SaveError('The saved DW6 PC copy changed during actual destination read-back.')
+    return actual
 
 
 def restore(backup_path, destination, game_id=GAME_ID):
@@ -263,6 +286,10 @@ def restore(backup_path, destination, game_id=GAME_ID):
 
 
 def record_label(slot, group='Unlocks'):
+    if group == availability.STAGE_GROUP:
+        return f'Stage {slot}'
+    if group == availability.MUSOU_GROUP:
+        return OFFICER_NAMES[slot - 1]
     if group in ('Unlocks', 'Officers', 'Equipment') and 1 <= slot <= OFFICER_COUNT:
         return OFFICER_NAMES[slot - 1]
     if group in ('Weapon elements', 'Weapon bonuses', 'Weapon skills') and type(slot) is int and 1 <= slot <= OFFICER_COUNT * WEAPON_COUNT:
@@ -285,6 +312,8 @@ def field_options(document, field):
 def field_hint(document, field):
     key = field.id if isinstance(field, (Field, equipment.EquipmentField)) else field
     mapped = field_map(document)[key]
+    if mapped.group in availability.GROUPS:
+        return availability.hint(mapped.group)
     if isinstance(mapped, equipment.EquipmentField):
         return equipment.hint(mapped)
     if mapped.group == 'Unlocks':

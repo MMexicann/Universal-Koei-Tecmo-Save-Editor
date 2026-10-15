@@ -7,6 +7,11 @@ stats and weapon stored damage bonuses/elements, named weapon/horse skills, hors
 experimental numeric limits, automatic backups, restore and verified new-copy
 Save As apply. Max is disabled for this profile.
 
+Unreleased development also adds **Free Mode stage** and named **Musou mode
+availability** unlocks. Use **More unlocks** for all qualified stages or Musou
+modes. A Musou mode requires its playable officer; the combined action stages
+that prerequisite first. These actions do not set clears, endings or rewards.
+
 ## Native proof and sources
 
 - [Apollo BLUS30110 patch](https://github.com/bucanero/apollo-patches/blob/main/PS3/BLUS30110.savepatch)
@@ -58,7 +63,7 @@ Structural qualification does not detect arbitrary corruption of opaque bytes.
 | Equipped weapon | Officer +160 u32, zero-based index 0–7. Choices list only this officer's existing known-ID/known-element weapon slots; the opened index must also qualify. Empty and unknown records cannot be equipped or manufactured. |
 | Officers | Named stored level, EXP, kills, title, outfit, equipped slot and 64-bit skill-mask inspection; level/EXP/learned-tree progression remains read only. One-way playable-byte unlocks at +164 preserve all other bytes and are excluded from Max. |
 | Story, acquisition and rewards | Preserved. Playable unlocks are a separate content action; they do not mark story completion or grant skill nodes. |
-| Regional/platform scope | US BLUS30110 only. A separately inspected Japanese BLJM60041 export has a different length and is not accepted. PC/US PS3 roster-and-horse migration is offered separately; [its scope](DW6_CONVERSION.md) preserves destination story/battle state. |
+| Regional/platform scope | This editor remains US BLUS30110 only. A separate conversion-only Japanese BLJM60041 endpoint and optional stage/Musou progress routes are available in development; [exact scope](DW6_CONVERSION.md). |
 
 Writes change only the requested native field spans. The full original
 `PARAM.SFO` digest is bound to opening, backups, output and restore. Same-title
@@ -107,3 +112,33 @@ describes a skill-screen lock after premature full officer-tree unlocks. This is
 anecdotal game behavior, not a serialization map. Officer growth and learned-node
 editing therefore remain separate, read only; migration copies their complete
 existing relationship together.
+
+
+## Unreleased availability controls
+
+The [official English native constructor analysis](DW6_CONVERSION.md#unreleased-native-stage-and-musou-mapping)
+qualifies PC stage +16 and Musou +0 as separate byte flags; complete original PC
+and both US PS3 exports corroborate their arrays. The PS3 field positions are
+`0x2610 + 20*stage` (45 entries) and `0x2984 + 4*mode` (17 entries). PC uses
+`0x2650` and `0x29C4`. Musou indices correspond to the first seventeen canonical
+officer IDs, as also used by native initial-availability setup.
+
+Only originally canonical 0/1 flags are exposed; unknown variants stay opaque.
+Stage and Musou availability can be unlocked, with relocking refused. Musou
+availability requires the corresponding officer's final playable flag to be 1.
+The combined action stages playable prerequisites before mode flags; removing a
+prerequisite while its new mode is pending is rejected. Existing inconsistent
+states are preserved during unrelated edits. All these flags are excluded from
+Max and retain hard 0/1 limits in experimental mode.
+
+Availability writes touch one byte each. Stage clear/best-result records,
+Musou clear bytes, padding, gallery, rewards and suspended battles are preserved.
+The optional conversion progress scope is a separate action that replaces
+complete source records, including existing clear history.
+
+`test_dw6_availability.py` checks every boundary, one-way and dependency rules,
+batch order, unknown variants, unstage, protected clear bytes and actual copied
+outputs on both scalar adapters. `test_dw6_availability_gui.py` exercises the
+real retained workspaces, prerequisite errors, review, batch Undo and safe output.
+The PC backend also rechecks sources around backups and reads the actual saved
+destination; races reject without deleting another application's changed bytes.

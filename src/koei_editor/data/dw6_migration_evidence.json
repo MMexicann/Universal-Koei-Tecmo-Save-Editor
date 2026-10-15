@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "family": "dw6",
+  "status": "Unreleased development; application version remains 2.5.1",
+  "profiles": [
+    {"id": "dw6", "size": 212248, "byte_order": "little", "officers": "0xb58", "stages": "0x2640", "musou": "0x29c4", "horses": "0x2a08"},
+    {"id": "dw6_ps3", "size": 212240, "byte_order": "big", "directory": "BLUS30110-SAVEDATA", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8"},
+    {"id": "dw6_ps3_jp", "size": 212176, "byte_order": "big", "directory": "BLJM60041-SAVEDATA", "officers": "0xb18", "stages": "0x2600", "musou": "0x2984", "horses": "0x29c8", "conversion_only": true}
+  ],
+  "stages": {"count": 45, "stride": 20, "u32_offsets": [0, 4, 8], "byte_offsets": [12, 13, 16], "opaque_padding": [14, 15, 17, 18, 19]},
+  "musou": {"count": 17, "stride": 4, "byte_offsets": [0, 1], "opaque_padding": [2, 3]},
+  "scopes": [
+    {"id": "roster-and-horses", "bytes": 7368, "variant": ""},
+    {"id": "roster-stages-and-musou", "bytes": 8336, "variant": "progress"}
+  ],
+  "native_static_evidence": {
+    "source": "https://worthplaying.com/article/2008/10/4/news/55450-dynasty-warriors-6-pc-english-demo-available-now/",
+    "archive": "https://web.archive.org/web/20151028095120/http://www.gamefront.com/files/11992788",
+    "installer_sha256": "f0e51dcdb488c0bfaf3b9eb3ab2c832238bba6ddcb79e40c5e4a31064ac5ecf0",
+    "executable_sha256": "447ff4dedb4177665ce4fa5bd7c7edec029548402ddaa6c86420f20e6da5c727",
+    "executable_md5": "0680523e58556d09bc1c9786d555502f",
+    "reader_va": "0x5d1a10",
+    "writer_va": "0x5d1a60",
+    "constructed_arrays_va": "0x5cf890",
+    "stage_constructor_va": "0x5cf6d0",
+    "musou_constructor_va": "0x5ce3f0",
+    "qualification": "Static inspection only; exact retail PC byte count and array boundaries corroborated on independently acquired complete native PC and PS3 copies. Demo version footer differs from the retail reference and is never transplanted. No executable was run or redistributed."
+  },
+  "native_references": [
+    "https://savegame.pro/pc-dynasty-warriors-6-savegame/",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/34847",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16788",
+    "https://gamefaqs.gamespot.com/ps3/942167-dynasty-warriors-6/saves/16605"
+  ],
+  "game_load_verified": false,
+  "preserved_destination_state": ["Gallery", "Challenge boards", "Options", "Suspended battle", "All bytes outside the selected mapped arrays"],
+  "unavailable": ["Xbox 360", "EU PS3", "Special", "Empires", "Full active story/battle conversion", "Console signing"]
+}

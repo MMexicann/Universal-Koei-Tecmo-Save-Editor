@@ -55,6 +55,32 @@ implements asset/stage tools and supplies no missing save writer. Obtaining the
 official demo through an anonymous Steam session did not provide access; no
 account credentials, game execution or unverified executable source was used.
 
-The release improves the editor interface and closes observed backup/save race
-windows. Those changes do not satisfy the two requested gameplay features.
-Edited game loading and re-saving remain separate, outstanding validation.
+## Unreleased research follow-up
+
+Two independently published memory tables now agree on an **unsigned 16-bit
+Old Coin member at runtime main-record +`0x45A`**, alongside the already mapped
+Gold (+`0x384`) and Skill Points (+`0x458`). Sources are
+[BBfox's table](https://github.com/bbfox0703/Mydev-Cheat-Engine-Tables/tree/main/DYNASTY%20WARRIORS%20ORIGINS)
+and [fusigi0930's pinned table](https://github.com/fusigi0930/game_script/blob/2423aae6d8ef8afce6dbd6c755e41a7b29983cdc/pc/cheat_engine_table/DWORIGINS.CT).
+They were read as static text, never executed. This establishes a stronger
+runtime identity lead, **not a disk offset**. Neither table supplies the native
+main-record serialization sequence or collection/reward dependency rules.
+No trainer implementation is incorporated.
+
+The complete public revision-29 slot also contains a candidate fifty-record
+array at decrypted body `0x8055`, matching the native 14-byte XP/Battle Art shape
+and occupied/reserved record pattern. It is a **pattern-only candidate on one
+reference**, not an independently qualified map. The second table supplies
+additional runtime family-order clues, but these do not prove the serialized
+family indices or progression transitions. No candidate is exposed for editing,
+including in experimental mode.
+
+The [public save author's discussion](https://www.nexusmods.com/dynastywarriorsorigins/mods/28?tab=posts)
+reports missing Sword Combo 4 despite full proficiency. Replies suggest replaying
+level gains in-game; they are not native threshold/cap proof or a complete offline
+repair algorithm. This is an observed failure mode that a proper level control
+must address, rather than just storing a larger XP value.
+
+No new release or version change accompanies this research. The requested Old
+Coin and proficiency edits remain unfinished. Edited game loading and re-saving
+also remain separate, outstanding validation.

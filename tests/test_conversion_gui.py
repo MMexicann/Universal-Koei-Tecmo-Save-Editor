@@ -131,6 +131,21 @@ class ConversionGuiTests(unittest.TestCase):
         self.assertIs(self.app.select_game('dw6_ps3'), editor)
         self.assertEqual(len(editor.changes), 21)
 
+    def test_progress_scope_and_japanese_destination_are_reviewable_before_export(self):
+        source = fixtures.write_copy(self.folder / 'progress-source', 'dw6')
+        template = fixtures.write_copy(self.folder / 'progress-template', 'dw6_ps3_jp')
+        route = conversion.get_route('dw6-to-dw6_ps3_jp-progress')
+        self.gui.route.set(route.label)
+        self.gui.source.set(str(source))
+        self.gui.template.set(str(template))
+        self.assertIn('45 persistent stage', self.gui.scope.get())
+        self.assertIn('17 Musou', self.gui.scope.get())
+        self.gui.review()
+        self.wait()
+        self.assertEqual(self.gui.prepared.gameplay_bytes, 8336)
+        self.assertIn('Stage review:', self.gui.preview.get('1.0', 'end'))
+        self.assertIn('Musou history review:', self.gui.preview.get('1.0', 'end'))
+
 
 class ConversionCliTests(unittest.TestCase):
     def test_list_dry_run_export_and_failure_exit_codes(self):

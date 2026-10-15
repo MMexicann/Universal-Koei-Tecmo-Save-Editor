@@ -1,5 +1,5 @@
 """Named DW6 PC unlocks, horse stats and existing weapon element choices."""
-from tkinter import ttk
+from tkinter import Menu, ttk
 
 from koei_editor.games.dw6 import dw6_parser
 from koei_editor.shared.scalar_presentation import InspectionTable, ScalarPresentation
@@ -23,7 +23,7 @@ class Editor(ScalarEditor):
     backend = dw6_parser
     presentation_type = DW6Presentation
     subtitle = 'Windows PC save editor'
-    summary = 'Playable officer unlocks, existing horse combat stats, named weapon elements, manual stored damage bonuses, named equipment skills, horse elements and own-inventory weapon selection.'
+    summary = 'Playable officers, Free Mode stages and Musou availability; horse stats/elements, weapon bonuses/skills and own-inventory weapon selection. Completion and officer growth stay separate.'
 
     def __init__(self, root, parent=None, theme='Light', on_theme=None):
         super().__init__(root, parent, theme, on_theme)
@@ -34,12 +34,27 @@ class Editor(ScalarEditor):
                                         command=self.unlock_all, state='disabled')
         self.unlock_button.pack(side='left')
         self.edit_buttons.append(self.unlock_button)
-        ttk.Label(content, text='Content unlock action; story progression stays unchanged.',
+        self.more_unlocks = ttk.Menubutton(content, text='More unlocks', state='disabled')
+        menu = Menu(self.more_unlocks, tearoff=False)
+        menu.add_command(label='Unlock All Stages', command=self.unlock_stages)
+        menu.add_command(label='Unlock All Musou Modes', command=self.unlock_musou)
+        self.more_unlocks.configure(menu=menu)
+        self.more_unlocks.pack(side='left', padx=(8, 0))
+        self.edit_buttons.append(self.more_unlocks)
+        ttk.Label(content, text='Availability only; completion and battle history stay unchanged.',
                   style='Muted.TLabel').pack(side='left', padx=12)
 
     def unlock_all(self):
         if self.document is not None:
             self.stage_values(self.backend.unlock_values(self.document))
+
+    def unlock_stages(self):
+        if self.document is not None:
+            self.stage_values(self.backend.stage_unlock_values(self.document))
+
+    def unlock_musou(self):
+        if self.document is not None:
+            self.stage_values(self.backend.musou_unlock_values(self.document))
 
 
 def read_save(path):

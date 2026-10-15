@@ -12,6 +12,9 @@ library. Enter applies a value through normal validation; Escape in field search
 clears its filters without discarding edits. Review, Undo, backups and retained
 converter/comparison/batch workspaces remain available.
 
+The **Windows ZIP** now includes offline workspace, comparison, batch, conversion
+and DW6 guides alongside the existing documentation.
+
 **Origins copy safety** now rejects changed sources during backups and across
 serialization/output creation. Save As reparses the actual destination before
 accepting it. A failed post-write source check cleans up only an output that still

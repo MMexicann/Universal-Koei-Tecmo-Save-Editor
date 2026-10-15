@@ -163,8 +163,8 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 23294,
-      "sha256": "7cd5ec486e42adfd64bc1ceee40b42f33453ba76db3934a8bace9c52b95c0d60"
+      "bytes": 23414,
+      "sha256": "71af8af2c0b0c009d2ed6014e2b361debd284607c36c1eb7197606678c7e0682"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
@@ -608,8 +608,8 @@
     },
     {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 2793,
-      "sha256": "a075f76cbaf7687c325c9cbc84a7b7958a9c3f78312fd9d1febcdfcd4d52920a"
+      "bytes": 2929,
+      "sha256": "fe0df1328b38223b0dca4e629eb8e474f39615262f7936d1405ce496b20ca91f"
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
@@ -4848,8 +4848,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 30692,
-      "sha256": "f55837cd32d71be324d8b0978224c97c900de1e5f36b096d257cc117450a0eef"
+      "bytes": 30920,
+      "sha256": "22b693b6f355adc6c448801e02778da11ec3d749af0f81562a78be31c27965d7"
     },
     {
       "path": "tools/refresh_manifest.py",

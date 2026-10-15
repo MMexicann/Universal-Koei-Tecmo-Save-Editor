@@ -33,7 +33,9 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
 WINDOWS_DOCS = ('README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
-                'docs/EXPERIMENTAL_EDITING.md',
+                'docs/EXPERIMENTAL_EDITING.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
+                'docs/SAVE_CONVERSION.md', 'docs/SAVE_COMPARISON.md', 'docs/BATCH_CONVERSION.md',
+                'docs/DW6_CONVERSION.md', 'docs/DW6_PS3_FORMAT.md',
                 'docs/BUILDING.md', 'docs/ARCHITECTURE.md', 'docs/VALIDATION.md', 'docs/EXPANSION_COVERAGE.md',
                 'docs/DYNASTY_RESEARCH.md', 'docs/OROCHI_RESEARCH.md', 'docs/SAMURAI_RESEARCH.md',
                 'docs/PIRATE_ABYSS_RESEARCH.md', 'docs/STARS_WO4_RESEARCH.md', 'docs/NIOH3_RESEARCH.md',

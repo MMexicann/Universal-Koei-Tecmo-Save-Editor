@@ -7,6 +7,7 @@
 - Collapse editing guidance and advanced options by default; keep experimental acknowledgement and native limits intact.
 - Add contextual Ctrl+F, Enter to apply numeric input and Escape to clear field filters without discarding edits.
 - Reject changed Origins sources during backups and across Save As; reparse actual destination bytes and clean up only an unchanged output owned by the failed operation.
+- Bundle the new workspace/request-status and existing conversion, comparison, batch and DW6 guides in the Windows ZIP.
 - Document the still-unimplemented proficiency/Old Coin requests and additional-title edition/integrity blockers. Supported inventory remains 94 profiles; no new gameplay mapping is claimed.
 
 ## v2.4 — 2026-10-14

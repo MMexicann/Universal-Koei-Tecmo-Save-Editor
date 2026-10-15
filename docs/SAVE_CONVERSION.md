@@ -2,22 +2,29 @@
 
 The Save Converter is a separate workspace in the same Windows app. It transfers
 the documented gameplay scope between explicitly supported formats. DW6 offers
-four explicit partial migration scopes; DW8 XL and P5S transfer their complete
+four explicit partial migration scopes; DW7 XL adds a one-way qualified
+persistent-state transfer from PS3 to Definitive Edition PC. DW8 XL and P5S transfer their complete
 common gameplay. Existing
 editing sessions, themes and pending changes remain available. Conversion uses
 the copied on-disk save, so first save any editor changes into another copy.
 
 ## Supported routes
 
-**138 directed routes** are available in unreleased development source; the
-published v2.5.1 app has 20. The application version remains unchanged. Editor support alone does not establish a
-conversion route; each route shows its own transfer scope before review.
+**139 directed routes** are available in v2.5.2, including 120 DW6 routes.
+The expanded DW6 routes and new DW7 XL transfer are conversion previews; actual converted game loading
+remains unverified. Editor support alone does not establish a conversion route;
+each route shows its own transfer scope before review.
 
 | Family | Platforms and exact scope | Transfer |
 | --- | --- | --- |
 | Dynasty Warriors 6 | Original PC, US PS3 BLUS30110, European PS3 BLES00215, Japanese PS3 BLJM60041, NA Xbox 360 4B4F07E0 and EU Xbox 360 4B4F07E1; 30 directions for each of four scopes | **Basic:** 41 officers and eight horses (7,368 bytes). **Progress:** also 45 stage records and 17 Musou availability/clear records (8,336 bytes). **Campaigns:** also 20 complete Musou run slots (10,976 bytes). **Records:** also 40 music/170 movie availability bits and five complete challenge boards (11,203 bytes). All retain destination options and interim battles. European/Japanese PS3 and both Xbox endpoints are conversion-only. |
+| Dynasty Warriors 7 Xtreme Legends | US PS3 BLUS30873 or European PS3 BLES01496 → Definitive Edition PC; one direction, revision `0x11080200` | **50,138 canonical bytes:** qualified system/Story/Legend state, 92 officer records, 1,738 weapons, learned-seal state, 16 guardians, both stage-context structures and 80 challenge results. Destination PC settings/platform data retained; active suspensions and nonzero unidentified progress extensions rejected. [Exact map](DW7XL_CONVERSION.md). |
 | Dynasty Warriors 8 Xtreme Legends | PC common revision `0x131002F0`, US PS3 PSN `NPUB31449`, plaintext Vita, US PS4 `CUSA00397` zero-extension profile; 12 directions | All `0xB7F44` common gameplay bytes; native PC/PS3/Vita encryption/checksums rebuilt. PS4 has a zero native extension. |
 | Persona 5 Strikers | English PC, PS4 `CUSA19640`, Switch, revision `0x20012000`; six directions | Complete `0x1C` header and ten `0x88E36` slots, including names; destination reserved tail retained. |
+
+**DW7 XL PC-to-PS3, base DW7 and other console regions are unavailable.** The
+[DW7 XL guide](DW7XL_CONVERSION.md) explains input preparation and the qualified
+progression subset; equivalent 100% completion and PC achievements are unverified.
 
 **DW6 active battle transfer, other Xbox regions, Special and Empires are unavailable.** See the
 [DW6 typed mapping](DW6_CONVERSION.md). Modified DW8 PC signatures, nonzero PS4
@@ -81,6 +88,7 @@ python -m koei_editor --convert dw6-to-dw6_ps3-progress --source PcCopy/save.dat
 python -m koei_editor --convert dw6-to-dw6_ps3_eu-campaigns --source PcCopy/save.dat --template EuropeanPs3Copy/APP.BIN --dry-run
 python -m koei_editor --convert dw6-to-dw6_ps3_jp-records --source PcCopy/save.dat --template JapanesePs3Copy/APP.BIN --dry-run
 python -m koei_editor --convert dw6-to-dw6_xbox360_na-records --source PcCopy/save.dat --template XboxCopy/DW6_NA.dat --output-dir ConvertedXbox
+python -m koei_editor --convert dw7xl_ps3-to-dw7xl --source Ps3XlCopy/APP.BIN --template PcDefinitiveCopy/save.dat --dry-run
 python -m koei_editor --convert dw8xl-to-dw8xl_vita --source SourceCopy/save.dat --template VitaCopy/MainData00.dat --dry-run
 python -m koei_editor --convert dw8xl-to-dw8xl_vita --source SourceCopy/save.dat --template VitaCopy/MainData00.dat --output-dir ConvertedVita
 ```
@@ -147,7 +155,7 @@ Research/inspiration, inspected independently:
 
 ## Validation and remaining mappings
 
-`test_conversion.py` exercises all 138 development routes and reverse conversions with
+`test_conversion.py` exercises all 139 routes and every supported reverse with
 distinctive generated unknown bytes, template encryption/context preservation,
 checksums, corruption, foreign metadata, changed sources, forged plans,
 backup races, existing folders, actual destination read-back failures, opaque
@@ -175,6 +183,13 @@ pass native exports and reverses; each original Xbox reference also passes all
 four scopes through PC. Tests compare numeric values and the entire retained
 destination remainder. This establishes copied-file behavior, not actual Xbox
 loading, RSA validity or direct native PPC serializer proof.
+`test_dw7xl_conversion.py` independently checks the 50,138-byte typed scope,
+byte flags, complete retained destination remainder, dependency groups, both-input
+unknown-extension guards, inactive suspensions, seed/tail preservation and six
+actual exports across three distinct PC states and two original PS3 contexts.
+The PS3 contexts share one gameplay state; the two newer PC states may share a
+creator. Reverse conversion is refused. GUI, CLI and mixed-family batch checks
+exercise the one-way route. [Native proof and limits](DW7XL_CONVERSION.md).
 `test_dw8xl_ps4_conversion.py` covers zero-extension loss prevention, bounded
 metadata, backup races and every added PS4 direction. The full-file upstream
 PS4 reference passed all three outbound transforms and byte-exact reverses; its

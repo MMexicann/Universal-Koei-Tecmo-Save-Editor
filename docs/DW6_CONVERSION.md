@@ -1,6 +1,6 @@
 # DW6 PC, PS3 and Xbox 360 progress migration
 
-**Unreleased development, version unchanged at 2.5.1:** original Japanese PS3
+**v2.5.2 conversion preview:** original Japanese PS3
 `BLJM60041`, European PS3 `BLES00215`, North American Xbox 360 `4B4F07E0` and
 European Xbox 360 `4B4F07E1` join PC and US PS3 as conversion-only endpoints.
 Thirty directions transfer roster/horses. Thirty **`-progress`**
@@ -94,7 +94,7 @@ write only the proven flag byte, preserving its three opaque neighbors. Officer 
 project.** Neither inspected native profile establishes an internal gameplay
 checksum; PS3 authentication is external. Active battle transfer needs its own
 typed serialization/dependency map. Special and Empires remain unavailable.
-Japanese/European PS3 and NA/EU Xbox 360 use the separately qualified development
+Japanese/European PS3 and NA/EU Xbox 360 use the separately qualified conversion
 profiles below. Xbox outer-container integrity is distinct from native gameplay
 integrity and actual game loading.
 
@@ -121,7 +121,7 @@ login. Separately preserved public 2011 binary captures now provide native
 original-game evidence, described below; no login barrier was bypassed.
 Empires and Special evidence does not qualify this original game's route.
 
-## Unreleased native stage and Musou mapping
+## Native stage and Musou mapping
 
 The later [official English PC demo announcement](https://worthplaying.com/article/2008/10/4/news/55450-dynasty-warriors-6-pc-english-demo-available-now/)
 led to a complete installer preserved in the

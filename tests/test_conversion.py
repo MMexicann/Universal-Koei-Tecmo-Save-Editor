@@ -20,6 +20,9 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
+    if endpoint_id in ('dw7xl', 'dw7xl_ps3'):
+        from tests.test_dw7xl_conversion import fixture as dw7_fixture
+        return dw7_fixture(endpoint_id, variant)
     if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
         from tests.test_dw6_xbox360_conversion import raw_fixture
         return raw_fixture(variant)
@@ -63,11 +66,12 @@ def write_copy(folder, endpoint_id, variant=0):
         if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
             from tests.test_dw6_xbox360_conversion import context_fixture
             metadata = context_fixture(endpoint_id, fixture(endpoint_id, variant), variant)
-        elif endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu'):
+        elif endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu', 'dw7xl_ps3'):
             metadata = ps3_context.PS3ContextTests.metadata({
                 'dw8xl_ps3': 'NPUB31449-SAVEDATA', 'dw6_ps3': 'BLUS30110-SAVEDATA',
                 'dw6_ps3_jp': 'BLJM60041-SAVEDATA',
                 'dw6_ps3_eu': 'BLES00215-SAVEDATA',
+                'dw7xl_ps3': 'BLUS30873-SAVEDATA',
             }[endpoint_id])
         else:
             metadata = title_only_sfo()
@@ -83,7 +87,7 @@ class ConversionTests(unittest.TestCase):
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
                 self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
-                                            'dw6_xbox360_na', 'dw6_xbox360_eu'))
+                                            'dw6_xbox360_na', 'dw6_xbox360_eu', 'dw7xl_ps3'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
                 continue
@@ -94,6 +98,10 @@ class ConversionTests(unittest.TestCase):
         for route in c.ROUTES:
             self.assertNotEqual(route.source_id, route.target_id)
             self.assertEqual(c.ENDPOINTS[route.source_id].family, c.ENDPOINTS[route.target_id].family)
+        self.assertEqual([route.id for route in c.ROUTES if c.ENDPOINTS[route.source_id].family == 'dw7xl'],
+                         ['dw7xl_ps3-to-dw7xl'])
+        with self.assertRaises(SaveError):
+            c.get_route('dw7xl-to-dw7xl_ps3')
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -128,8 +136,14 @@ class ConversionTests(unittest.TestCase):
                 self.assertEqual(receipt['output_sha256'], hashlib.sha256(path.read_bytes()).hexdigest())
                 self.assertFalse(receipt['game_load_verified'])
                 self.assertNotIn(str(self.folder), json.dumps(receipt))
-                reverse = c.prepare(route.target_id + '-to-' + route.source_id, path, source)
-                self.assertEqual(reverse.raw, original)
+                reverse_id = route.target_id + '-to-' + route.source_id
+                if reverse_id in {item.id for item in c.ROUTES}:
+                    reverse = c.prepare(reverse_id, path, source)
+                    self.assertEqual(reverse.raw, original)
+                else:
+                    self.assertEqual(route.id, 'dw7xl_ps3-to-dw7xl')
+                    with self.assertRaises(SaveError):
+                        c.get_route(reverse_id)
 
     def test_readonly_prepare_has_no_backups_or_output(self):
         conversion = self.prepare()

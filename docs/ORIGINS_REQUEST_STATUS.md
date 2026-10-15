@@ -1,8 +1,8 @@
 # Origins: proficiency levels and Old Coins
 
-**Neither requested writer is implemented.** Development remains at version
-2.5.1 without a new release. The existing qualified Steam slot revisions 16, 17
-and 29 retain their documented editing scope. The development inspector adds a
+**Neither requested writer is implemented in v2.5.2.** The existing qualified
+Steam slot revisions 16, 17 and 29 retain their documented editing scope.
+The inspector adds a
 searchable, read-only **Proficiency** tab with stored XP and equipped Battle Art
 IDs. It does not calculate levels, grant weapon ownership or change progression.
 See [native format evidence](ORIGINS_FORMAT.md).

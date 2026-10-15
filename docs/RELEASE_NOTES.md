@@ -1,32 +1,77 @@
-# Universal Koei Tecmo Save Editor v2.5.1
+# Universal Koei Tecmo Save Editor v2.5.2
 
-Fixes the missing offline guides in the v2.5 Windows ZIP. The builder now collects
-seven explicitly reviewed guides into both Windows builds, and the portable ZIP
-exposes them under **`_internal/guides/`**:
+This patch adds **DW7 XL PS3 → Definitive Edition PC transfer**, a **DW6
+conversion preview**, Origins proficiency inspection and
+stronger backup/export checks. The library remains **94 game/platform profiles
+across 15 platforms**. Save Converter expands from 20 to **139 directed routes**.
 
-- Editor workspace and Origins request status.
-- Save Converter, Compare Saves and Batch Converter.
-- DW6 conversion scope and US PS3 format/controls.
+## New features
 
-Their exact bytes are bound to the source manifest and verified as runtime
-metadata. Missing, changed or unreviewed guide resources fail packaging. Tests
-inspect the actual generated Windows ZIP contents, including the guide bytes;
-repository/developer documents remain confined to the Source ZIP.
+- **DW7 XL PS3 → PC:** transfer qualified persistent progress from original US
+  BLUS30873 or European BLES01496 Xtreme Legends into a Definitive Edition PC
+  template. Includes Story/Legend state, officers, weapons, seals, guardians and
+  challenge records. One-way preview; PC settings/platform data stay in place.
+  Active suspensions and unidentified nonzero progression extensions are refused.
+- **DW6 conversion:** original PC, US/European/Japanese PS3 and North
+  American/European Xbox 360. Choose roster/horses; add persistent stage/Musou
+  records; add 20 stored Musou run slots; or also transfer gallery availability
+  and five challenge boards. These are four separate partial transfer scopes.
+- **DW6 PC/US PS3 editors:** one-way Free Mode stage and named Musou availability
+  unlocks, with playable-officer prerequisites. Clear records and rewards remain
+  separate.
+- **Origins inspection:** a searchable, read-only Proficiency tab shows stored XP
+  and equipped Battle Art IDs for recognized native records. Unfamiliar layouts
+  withhold this optional view without blocking existing qualified resource edits.
+- **Converter interface:** search by game, region, title ID or scope. Reviews
+  identify the records being replaced; changing the route clears stale reviews.
+  Batch Converter supports all 139 routes.
 
-The v2.5 public description has been corrected. Its original downloads and tag
-are unchanged. This patch carries forward the category sidebar, open-editor
-selector, pending-row highlighting, keyboard controls and Origins copy-safety
-fixes from v2.5.
+## Save-safety fixes
 
-**Origins proficiency levels and Old Coin editing remain unimplemented.** No new
-game profile or gameplay mapping is added. The library remains **94 profiles
-across 15 platforms**, with **20 scoped conversion routes**. The existing
-in-game validation limitations and console import/signing requirements remain.
+Backups verify the actual gameplay snapshot, manifest and original console
+context. Export rechecks gameplay, companion metadata, receipt and both inputs
+before reporting success. Failed exports and late-failed Origins saves retain
+completed files so another application's replacements cannot be deleted.
+**Do not import files from a failed operation, even if a receipt exists.**
 
-Publication requires the complete native Windows suite, both packaged startup
-checks, all exact-payload active Defender scans and actual public-download
-verification. Download **UniversalKoeiTecmoSaveEditor-v2.5.1.exe**, the complete
-**Windows ZIP**, or **Source ZIP**, with SHA256SUMS and Defender evidence.
+## Scope and remaining requests
 
-[Workspace guide](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.1/docs/EDITOR_WORKSPACE.md)
-and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.1/docs/ORIGINS_REQUEST_STATUS.md).
+**Origins proficiency-level and Old Coin editing are still not implemented.**
+The new view is inspection only; it does not calculate levels or grant moves,
+weapons, rewards or ownership.
+
+DW7 XL conversion does not guarantee equivalent 100% completion, PC achievements
+or missing DLC assets. Base DW7, other PS3 regions, old 2012 PC saves and reverse
+PC-to-PS3 conversion are unsupported.
+
+DW6 options, suspended battles and unmapped framing remain from the destination
+template. Finish suspended battles before making both copies. **Actual edited
+or converted game loading/re-saving remains unverified.** Other Xbox regions,
+DW6 Special and Empires are separate, unsupported conversion formats.
+
+Xbox endpoints require extracted `DW6_NA.dat` or `DW6_EU.dat` beside the unchanged
+original container named `ORIGINAL.CON`. Export retains that CON unchanged:
+**it still contains the old template gameplay**. Replace its embedded gameplay
+with the converted raw file in Horizon or an equivalent save manager, then
+rehash/resign externally. The editor does not rebuild STFS, verify RSA or sign
+console packages. PS3 decryption/reimport/resigning also remains external.
+
+## Validation and downloads
+
+Copied-file checks cover eleven DW6 PC/PS3 references, 81 original Xbox containers
+representing 40 distinct gameplay states, and nine Origins slots across revisions
+16, 17 and 29. DW7 XL adds three distinct PC states and two original regional PS3
+contexts containing one shared gameplay state, with independently inspected native
+PC and official PS3 update serializers. Procedural tests, native copied-file
+checks and actual game loading are distinct. Saves, account context, game binaries and private reports are not
+included.
+
+Publication requires the full native Windows suite, portable and standalone
+startup checks, and active Defender scans bound to every exact downloadable
+payload. Download **UniversalKoeiTecmoSaveEditor-v2.5.2.exe**, the complete
+**Windows ZIP**, or **Source ZIP**. SHA256SUMS and Defender evidence accompany
+the release.
+
+[Conversion workflow and limits](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.2/docs/SAVE_CONVERSION.md),
+[DW7 XL transfer instructions](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.2/docs/DW7XL_CONVERSION.md)
+and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.2/docs/ORIGINS_REQUEST_STATUS.md).

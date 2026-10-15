@@ -135,6 +135,11 @@ and [native review](STARS_WO4_RESEARCH.md).
 
 ## Dynasty Warriors 7 Xtreme Legends Definitive Edition PC
 
+A separate [v2.5.2 PS3 XL → PC conversion preview](DW7XL_CONVERSION.md) now
+transfers qualified existing persistent state with mixed-width native mapping.
+This is distinct from the individual editor controls below; converted in-game
+loading and equivalent completion remain unverified.
+
 Adds manual reduction of an existing owned, unlearned weapon's seal meter.
 Weapon records start at decoded `0x4E39`, stride 20; flags are word `+4`, meter
 word `+6`. Only exact original flags `1` and original meter 1..1000 qualify.

@@ -346,7 +346,7 @@ procedural tests also cover high and reserved values.
 
 ## Stored proficiency inspection
 
-The development Proficiency tab displays stored XP and equipped Battle Art IDs
+The v2.5.2 Proficiency tab displays stored XP and equipped Battle Art IDs
 without enabling writes. Both unmapped state bytes are preserved. Separate public initial,
 advanced and DLC slots corroborate a 50 × 14-byte array at body `0x7F8D` for
 revisions 16/17 and `0x8055` for revision 29, 174 bytes after the qualified weapon

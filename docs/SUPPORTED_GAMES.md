@@ -2,7 +2,7 @@
 
 Generated from `koei_editor.game_registry.GAMES`. Run `python -m tools.update_supported_games` after changing an adapter.
 
-Version 2.1.2 expands the Save Converter and original US DW6 PS3 editor; see [conversion routes and boundaries](SAVE_CONVERSION.md). Optional experimental numeric editing applies across the library. Supported maxima and encoding limits remain separate; see [experimental scope and warnings](EXPERIMENTAL_EDITING.md).
+The Save Converter has explicit platform/region routes and transfer scopes; see [conversion routes and boundaries](SAVE_CONVERSION.md). Optional experimental numeric editing applies across the library. Supported maxima and encoding limits remain separate; see [experimental scope and warnings](EXPERIMENTAL_EDITING.md).
 
 | Game / edition | Platform | Implemented scope |
 | --- | --- | --- |

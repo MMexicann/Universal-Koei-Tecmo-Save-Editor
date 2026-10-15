@@ -2,7 +2,8 @@
 
 Offsets are serialized PC payload positions, proven against native serialization
 and a freely shared genuine PC save. See DYNASTY_RESEARCH.md for evidence and
-coverage. No console conversion, guessed levels or story-unlock writes.
+coverage. Cross-platform transfer lives in the separate conversion module;
+this scalar adapter does not invent levels or story-unlock writes.
 """
 from dataclasses import dataclass
 from functools import lru_cache

@@ -39,6 +39,11 @@ Searchable inspection tables show equipment/guardian references, purchased
 skill masks and all 1,738 physical weapon records, including ownership flags
 and seal learning meters. These tables do not grant weapons or unlock seals.
 
+A separate [v2.5.2 conversion preview](DW7XL_CONVERSION.md) transfers qualified
+persistent state from original US/European PS3 XL into this PC profile. It does
+not add independent progression-edit controls or qualify converted game loading.
+Three distinct PC states and original regional PS3 context are now available.
+
 ### Independent executable evidence
 
 The supplied x86 `SM6EN.exe` contains the PC save path and filename. Its text
@@ -96,7 +101,8 @@ for named equipment, skill and title writes.
 
 - [DW7 XL save converter research](https://github.com/koko-tsuu/dw7xl_save_converter),
   inspected at commit `15aee59cc773cb401ddad3b4c9099a03629cf700`, supplies a
-  native PC fixture and console comparison. Its arithmetic was checked against
+  native PC fixture. Its anonymous console example is base DW7 and does not
+  qualify XL; its conversion is explicitly unfinished. Its PC arithmetic was checked against
   the actual native routines. Its full-word-only checksum helper omits a pair
   the native checksum includes; the editor follows the executable.
 - [Public Steam save-sharing discussion](https://steamcommunity.com/app/968790/discussions/0/595160389826986033/)

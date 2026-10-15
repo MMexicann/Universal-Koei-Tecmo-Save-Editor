@@ -15,12 +15,12 @@ python -m tools.build_windows
 python -m tools.build_windows --standalone
 ```
 
-The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v2.1/`**, a
+The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v2.5.2/`**, a
 portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
-**`dist-standalone/UniversalKoeiTecmoSaveEditor-v2.1.exe`**. That direct download
+**`dist-standalone/UniversalKoeiTecmoSaveEditor-v2.5.2.exe`**. That direct download
 needs no side files. Both modes use pinned Python 3.14.7 and `--noupx`, with the
-same 90 game/platform profiles, runtime metadata and required notices.
+same 94 game/platform profiles, runtime metadata and required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
 
@@ -140,7 +140,7 @@ startup and archives before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
-commit. Pushing a tag matching the application version, such as `v2.1`, also
+commit. Pushing a tag matching the application version, such as `v2.5.2`, also
 publishes after the native build and checks succeed. Existing releases are not replaced.
 
 The portable runtime loads from the adjacent `_internal` folder. Users extract
@@ -152,6 +152,13 @@ privileges to run.
 Release-marked main commits (`[release]` in the commit message) run the same native
 build and checks, then create a new matching tag at that tested commit. Existing
 tags and releases are never replaced.
+
+The normal automated preparation path uses a reviewed `[release]` commit on
+`codex/release-v<version>`. Its successful native build opens and normally merges
+a release PR at the matched head, then dispatches a fresh main build with
+`publish=true` and the exact merged SHA. That main build creates the matching
+tag and release only after its own checks pass. Do not pre-create the tag or
+dispatch a second publication while this path is running.
 
 ## Defender release gate
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "family": "dw6",
-  "status": "Unreleased development; application version remains 2.5.1",
+  "status": "v2.5.2 conversion preview; actual converted game loading remains unverified",
   "profiles": [
     {
       "id": "dw6",

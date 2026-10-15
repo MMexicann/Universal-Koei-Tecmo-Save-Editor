@@ -32,8 +32,12 @@ from koei_editor.games.dw6_ps3 import european_export as dw6_ps3_eu
 from koei_editor.games.dw6_xbox360 import north_american_export as dw6_xbox360_na
 from koei_editor.games.dw6_xbox360 import european_export as dw6_xbox360_eu
 from koei_editor.games.p5strikers_pc import converter as p5_conversion
+from koei_editor.games.dw7xl import conversion as dw7_conversion
+from koei_editor.games.dw7xl import dw7xl_parser as dw7_pc
+from koei_editor.games.dw7xl_ps3 import parser as dw7_ps3
 
-_FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion, 'dw6': dw6_conversion})
+_FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion,
+                            'dw6': dw6_conversion, 'dw7xl': dw7_conversion})
 _VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression,
                               ('dw6', 'campaigns'): dw6_campaigns,
                               ('dw6', 'records'): dw6_records})
@@ -93,6 +97,11 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
              'Original 4B4F07E1 extracted DW6_EU.dat with its unchanged package copied as ORIGINAL.CON. '
              'The copied CON is context only and still contains the old template gameplay. Replace its embedded '
              'DW6_EU.dat with the converted raw export, then rehash and resign a separate package using Horizon.', True),
+    Endpoint('dw7xl', 'dw7xl', 'DW7 XL Definitive Edition · PC', 'save.dat', dw7_pc),
+    Endpoint('dw7xl_ps3', 'dw7xl', 'DW7 Xtreme Legends · US/European PS3', 'APP.BIN', dw7_ps3,
+             'PARAM.SFO', 4096,
+             'PFD-decrypted BLUS30873 or BLES01496 export with its original PARAM.SFO. '
+             'One-way transfer to Definitive Edition PC; base DW7 and Empires are separate formats.', True),
 )})
 
 
@@ -124,9 +133,16 @@ class Route:
         return _transform(self).SCOPE_DESCRIPTION
 
 
+def _supported_direction(source, target):
+    if source.family != target.family or source.id == target.id:
+        return False
+    directions = getattr(_FAMILIES[source.family], 'SUPPORTED_DIRECTIONS', None)
+    return directions is None or (source.id, target.id) in directions
+
+
 ROUTES = tuple(Route(source.id, target.id) for source in ENDPOINTS.values()
                for target in ENDPOINTS.values()
-               if source.family == target.family and source.id != target.id)
+               if _supported_direction(source, target))
 ROUTES += tuple(Route(route.source_id, route.target_id, variant)
                 for route in ROUTES for family, variant in _VARIANTS
                 if ENDPOINTS[route.source_id].family == family)
@@ -225,7 +241,7 @@ def prepare(route_id, source_path, template_path):
 def _notes(route, source, template):
     target = ENDPOINTS[route.target_id]
     notes = [route.scope_description + '. Original copies remain unchanged.',
-             'Use the same game edition and compatible updates/DLC. Test loading a separate copy in-game.',
+             'Use the exact game editions listed by this route and compatible updates/DLC. Test loading a separate copy in-game.',
              'In-game conversion loading has not been validated by this project.']
     if target.import_note:
         notes.append(target.import_note)

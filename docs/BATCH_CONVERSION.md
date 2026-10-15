@@ -1,7 +1,7 @@
 # Batch Converter
 
 Batch Converter reviews up to **32 independent conversions** across the
-**138 development routes** (the published v2.5.1 app has 20). Every job needs its own explicit route, separate source
+**139 routes in v2.5.2**. Every job needs its own explicit route, separate source
 and destination-template copies, and a new output folder. It preserves each
 route's selected scope: DW6 has four partial scopes, from roster/horses through
 persistent records, Musou run slots, gallery and challenges; DW8 XL and

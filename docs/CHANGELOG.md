@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.5.2 — 2026-10-15
+
+- Expand Save Converter from 20 to 139 directed routes: four partial DW6 scopes across original PC, US/European/Japanese PS3 and NA/EU Xbox 360; one-way DW7 XL PS3 → Definitive Edition PC transfer; existing DW8 XL and P5S routes remain available.
+- Transfer 50,138 canonical bytes of qualified DW7 XL Story/Legend, officer, weapon/seal, guardian and challenge state. Retain PC settings/platform data; reject active suspensions and nonzero unidentified progression extensions. Original US/European PS3 metadata and a PC DE template are mandatory; actual game loading is unverified.
+- Add typed stage/Musou history, 20 stored Musou slots, 210 gallery availability bits and five complete challenge boards as separately reviewed DW6 transfer scopes. Retain destination options, suspended battles and unmapped framing.
+- Add PC/US PS3 one-way stage and named Musou availability unlocks with playable-officer prerequisites.
+- Add searchable route filtering and read-only Origins stored proficiency XP/Battle Art inspection. Proficiency-level and Old Coin writers remain unimplemented; the library stays at 94 profiles across 15 platforms.
+- Validate original Xbox CON integrity and context without rebuilding/signing it. Converted raw gameplay must be injected and rehashed/resigned externally; actual game loading remains unverified.
+- Verify actual backup snapshots and final export gameplay/context/receipt/input bytes. Retain incomplete outputs on failure to protect concurrent replacements; do not import failed output.
+
 ## v2.5.1 — 2026-10-15
 
 - Correct actual Windows guide bundling: collect seven reviewed guides as runtime metadata and validate their exact bytes in both builds.

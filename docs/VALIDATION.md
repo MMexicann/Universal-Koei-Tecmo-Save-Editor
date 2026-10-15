@@ -1,5 +1,30 @@
 # Universal development validation
 
+## v2.5.2 DW6 expansion, DW7 XL transfer and Origins inspection
+
+DW7 XL's one-way original US/European PS3 to Definitive Edition PC route is
+independently audited against a literal native map: 21,676 numeric members and
+185 byte spans transfer 50,138 canonical bytes. All 420,165 remaining payload
+bytes, destination revision and cipher seed stay unchanged. Six copied native
+pairings use three distinct PC states and two original PS3 regional contexts
+containing one shared gameplay state. Three test-created PS3 typed states derived
+from those native PC templates yield exact original PC files, including the
+checksum-uncovered final byte; these are not genuine matched platform pairs. Mutations
+of both inputs' unknown progress extensions and suspension flags fail closed.
+Native PC and official PS3 update serializers were inspected statically;
+no game code was executed. [Scope and format proof](DW7XL_CONVERSION.md).
+
+The combined candidate also checks all four DW6 scopes across eleven PC/PS3
+references and 81 original Xbox contexts representing 40 gameplay states.
+Nine Origins slots qualify guarded stored-XP/Battle Art inspection only;
+proficiency-level and Old Coin writers remain unimplemented. Backup/export
+regressions verify actual snapshots, companion metadata and final outputs.
+Failed writes retain completed files to protect concurrent replacements;
+never import a failed operation's output. Actual game loading/re-saving is
+unverified for these edits and conversions. Full source/native Windows tests,
+both packaged startups, active Defender scans and exact published-download
+verification remain mandatory. Eight reviewed user guides are bundled.
+
 ## v2.5.1 actual offline-guide packaging
 
 A check of the actual v2.5 public Windows ZIP found the seven advertised guide

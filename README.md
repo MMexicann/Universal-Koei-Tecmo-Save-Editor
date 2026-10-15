@@ -5,7 +5,7 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.5.1 development source** supports **94 game/platform profiles across 15 platforms**.
+**Version 2.5.2** supports **94 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
 
 ## Editor workspace
@@ -16,22 +16,22 @@ table scrolls horizontally; **Show editing guide** opens each game's guidance.
 **More options** contains experimental editing and the separate encoding-limit
 column. Ctrl+F searches fields in scalar editors and games in the library;
 Escape in the field search clears its filters without changing pending edits.
-[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the seven
+[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the eight
 reviewed user guides in `_internal/guides/`; the Source ZIP contains the full documentation.
 
 ## Origins request status
 
-Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.1.
+Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.2.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
-controls remain available. The development inspector shows stored proficiency XP
+controls remain available. The inspector shows stored proficiency XP
 and equipped Battle Art IDs, corroborated on nine public native slots. It does
 not calculate levels or change progression. Old Coin serialization and proficiency
 transition rules remain unresolved. [Evidence and remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
 
 ## Save Converter
 
-The changes below are **unreleased**; the published v2.5.1 app retains its 20 routes.
-The development Save Converter now offers **138 directed routes**:
+The Save Converter offers **139 directed routes**. The expanded DW6 routes and new DW7 XL transfer are
+conversion previews; actual converted game loading remains unverified:
 
 - **DW6 PC, US/European/Japanese PS3 and North American/European Xbox 360:** 30 roster-and-horse routes, 30
   **progress** routes adding 45 stage records and 17 Musou availability/clear
@@ -41,6 +41,12 @@ The development Save Converter now offers **138 directed routes**:
   template. European BLES00215 and Japanese BLJM60041 are conversion-only;
   each requires its own original metadata. Xbox endpoints are also conversion-only
   and require extracted gameplay beside its unchanged original `ORIGINAL.CON`.
+- **DW7 Xtreme Legends PS3 → Definitive Edition PC:** one-way US BLUS30873 /
+  European BLES01496 transfer of qualified Story/Legend progress, officers, weapons,
+  seals, guardians and challenge records. Original PS3 metadata and a PC template
+  are required. Settings and platform data stay from the PC template; suspended
+  battles and nonzero unqualified progression extensions are rejected.
+  [Exact scope and instructions](docs/DW7XL_CONVERSION.md).
 - **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
   (12 routes). PS4 requires the supported zero-extension profile.
 - **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
@@ -83,7 +89,7 @@ empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
 Queue reviewed conversions, save/load private plans and validate every job before
 exporting. Each copy gets its own new folder, backups and native read-back.
 Progress, stop-after-current-copy and verified partial-result reports cover up to
-32 jobs across all 138 development routes. [Instructions](docs/BATCH_CONVERSION.md).
+32 jobs across all 139 routes. [Instructions](docs/BATCH_CONVERSION.md).
 
 ## Compare Saves
 
@@ -121,7 +127,8 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists development source game/platform profiles for v2.4.
+The table below lists game/platform editor profiles for v2.5.2.
+Conversion-only endpoints are listed separately in the Save Converter guide.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 
 <!-- BEGIN SUPPORTED GAMES -->

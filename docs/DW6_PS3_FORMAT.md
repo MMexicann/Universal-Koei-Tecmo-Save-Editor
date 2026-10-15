@@ -7,7 +7,7 @@ stats and weapon stored damage bonuses/elements, named weapon/horse skills, hors
 experimental numeric limits, automatic backups, restore and verified new-copy
 Save As apply. Max is disabled for this profile.
 
-Unreleased development also adds **Free Mode stage** and named **Musou mode
+Version 2.5.2 adds **Free Mode stage** and named **Musou mode
 availability** unlocks. Use **More unlocks** for all qualified stages or Musou
 modes. A Musou mode requires its playable officer; the combined action stages
 that prerequisite first. These actions do not set clears, endings or rewards.
@@ -63,7 +63,7 @@ Structural qualification does not detect arbitrary corruption of opaque bytes.
 | Equipped weapon | Officer +160 u32, zero-based index 0–7. Choices list only this officer's existing known-ID/known-element weapon slots; the opened index must also qualify. Empty and unknown records cannot be equipped or manufactured. |
 | Officers | Named stored level, EXP, kills, title, outfit, equipped slot and 64-bit skill-mask inspection; level/EXP/learned-tree progression remains read only. One-way playable-byte unlocks at +164 preserve all other bytes and are excluded from Max. |
 | Story, acquisition and rewards | Preserved. Playable unlocks are a separate content action; they do not mark story completion or grant skill nodes. |
-| Regional/platform scope | This editor remains US BLUS30110 only. A separate conversion-only Japanese BLJM60041 endpoint and optional stage/Musou progress routes are available in development; [exact scope](DW6_CONVERSION.md). |
+| Regional/platform scope | This editor remains US BLUS30110 only. Separate conversion-only Japanese BLJM60041, European BLES00215 and NA/EU Xbox 360 endpoints offer four explicit partial migration scopes; [exact scope](DW6_CONVERSION.md). |
 
 Writes change only the requested native field spans. The full original
 `PARAM.SFO` digest is bound to opening, backups, output and restore. Same-title
@@ -114,9 +114,9 @@ editing therefore remain separate, read only; migration copies their complete
 existing relationship together.
 
 
-## Unreleased availability controls
+## v2.5.2 availability controls
 
-The [official English native constructor analysis](DW6_CONVERSION.md#unreleased-native-stage-and-musou-mapping)
+The [official English native constructor analysis](DW6_CONVERSION.md#native-stage-and-musou-mapping)
 qualifies PC stage +16 and Musou +0 as separate byte flags; complete original PC
 and both US PS3 exports corroborate their arrays. The PS3 field positions are
 `0x2610 + 20*stage` (45 entries) and `0x2984 + 4*mode` (17 entries). PC uses

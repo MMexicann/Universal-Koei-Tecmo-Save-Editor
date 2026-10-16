@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 import threading
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -192,6 +193,99 @@ class SaveLibraryTests(unittest.TestCase):
         with patch.object(parser, 'read_save', wraps=parser.read_save) as read:
             library.requalify(result, result.entries[0])
         self.assertEqual(read.call_count, 1)
+
+    @staticmethod
+    def stat_values(info, **overrides):
+        values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+        values.update(overrides)
+        return SimpleNamespace(**values)
+
+    def test_path_and_handle_ctime_can_differ_without_rejecting_untouched_copies(self):
+        self.copy('ordinary.bin')
+        original = os.fstat
+        def different_clock(descriptor):
+            info = original(descriptor)
+            # CPython on Windows uses birth time for path st_ctime but native
+            # change time for handle st_ctime. Deliberately make them unequal
+            # on every host so this compatibility regression stays active.
+            return self.stat_values(info, st_ctime_ns=info.st_ctime_ns + 123456789)
+        with patch.object(library.os, 'fstat', side_effect=different_clock), \
+                patch.object(parser, 'read_save', wraps=parser.read_save) as read:
+            result = self.scan()
+            self.assertEqual(result.qualified_count, 1)
+            document = library.requalify(result, result.entries[0])
+        self.assertEqual(read.call_count, 2)
+        self.assertEqual(document.raw, self.raw)
+
+    def test_same_api_handle_and_path_timestamp_changes_still_reject_reads(self):
+        path = self.copy('time-change.bin')
+        _, info = library._checked_path(path)
+        expected = library._identity(info)
+        original_read, original_fstat, original_lstat = os.read, os.fstat, Path.lstat
+        for changed_api in ('handle', 'path'):
+            with self.subTest(changed_api=changed_api):
+                reads = []
+                def read(descriptor, count):
+                    data = original_read(descriptor, count)
+                    reads.append(count)
+                    return data
+                def fstat(descriptor):
+                    value = original_fstat(descriptor)
+                    delta = 123456789 + (1 if reads and changed_api == 'handle' else 0)
+                    return self.stat_values(value, st_ctime_ns=value.st_ctime_ns + delta)
+                def lstat(candidate, *args, **kwargs):
+                    value = original_lstat(candidate, *args, **kwargs)
+                    if reads and changed_api == 'path' and candidate.name == path.name:
+                        return self.stat_values(value, st_ctime_ns=value.st_ctime_ns + 1)
+                    return value
+                with patch.object(library.os, 'read', side_effect=read), \
+                        patch.object(library.os, 'fstat', side_effect=fstat), \
+                        patch.object(Path, 'lstat', lstat):
+                    with self.assertRaisesRegex(SaveError, 'changed during'):
+                        library._capture(path, expected, library.ScanLimits().max_file_bytes, None)
+                self.assertTrue(reads, 'The timestamp must change after bounded reading begins.')
+        self.assertEqual(path.read_bytes(), self.raw)
+
+    def test_cross_api_handle_binding_rejects_other_files_before_reading(self):
+        path = self.copy('binding.bin')
+        _, info = library._checked_path(path)
+        expected = library._identity(info)
+        original = os.fstat
+        for changed_attribute in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns'):
+            with self.subTest(changed_attribute=changed_attribute):
+                def different_file(descriptor):
+                    value = original(descriptor)
+                    return self.stat_values(value,
+                        **{changed_attribute: getattr(value, changed_attribute) + 1})
+                with patch.object(library.os, 'fstat', side_effect=different_file), \
+                        patch.object(library.os, 'read') as read:
+                    with self.assertRaisesRegex(SaveError, 'changed before'):
+                        library._capture(path, expected, library.ScanLimits().max_file_bytes, None)
+                read.assert_not_called()
+
+    def test_same_bytes_path_replacement_during_read_cannot_pass_as_original(self):
+        path = self.copy('replacement.bin')
+        _, info = library._checked_path(path)
+        expected = library._identity(info)
+        original_read, original_lstat = os.read, Path.lstat
+        reads = []
+        def read(descriptor, count):
+            data = original_read(descriptor, count)
+            reads.append(count)
+            return data
+        def replacement(candidate, *args, **kwargs):
+            value = original_lstat(candidate, *args, **kwargs)
+            if reads and candidate.name == path.name:
+                # Model a different inode with identical bytes, size and times
+                # without depending on Windows delete-sharing privileges.
+                return self.stat_values(value, st_ino=value.st_ino + 1)
+            return value
+        with patch.object(library.os, 'read', side_effect=read), \
+                patch.object(Path, 'lstat', replacement):
+            with self.assertRaisesRegex(SaveError, 'changed during'):
+                library._capture(path, expected, library.ScanLimits().max_file_bytes, None)
+        self.assertTrue(reads)
+        self.assertEqual(path.read_bytes(), self.raw)
 
     def test_live_cloud_symlink_hardlink_and_directory_aliases_are_never_opened(self):
         path = self.copy()

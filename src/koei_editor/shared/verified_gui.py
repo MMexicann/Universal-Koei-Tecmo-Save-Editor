@@ -54,12 +54,26 @@ def _export_review(data, destination):
     try:
         # Frozen history does not require an unchanged source. Verify only the
         # actual new report, retaining any concurrently replaced output.
-        checked = safe_path(result)
+        # atomic_new returns a canonical path. A replacement must not select
+        # a different baseline by resolving a newly introduced alias.
+        checked = Path(result)
+        def ordinary(info):
+            return (stat.S_ISREG(info.st_mode) and info.st_nlink == 1
+                    and not (getattr(info, 'st_file_attributes', 0)
+                             & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400)))
+        path_opened = checked.lstat()
+        if not checked.is_absolute() or not ordinary(path_opened) or safe_path(checked) != checked:
+            raise SaveError('The newly created change review is no longer an ordinary matching file.')
         flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
         descriptor = os.open(checked, flags)
         def identity(info):
             return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
         opened = os.fstat(descriptor)
+        # CPython Windows path stat preserves creation time as st_ctime,
+        # while fstat can report FILE_BASIC_INFO.ChangeTime. Keep each full
+        # token within its own API; bind the APIs with their common identity.
+        if identity(opened)[:-1] != identity(path_opened)[:-1]:
+            raise SaveError('The newly created change review changed before read-back.')
         if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1 or opened.st_size != len(data):
             raise SaveError('The newly created change review is no longer an ordinary matching file.')
         offset = 0
@@ -72,7 +86,9 @@ def _export_review(data, destination):
             raise SaveError('The newly created change review changed during read-back.')
         os.close(descriptor)
         descriptor = None
-        if safe_path(result) != checked or identity(checked.stat()) != identity(opened):
+        final_path = checked.lstat()
+        if (not ordinary(final_path) or safe_path(result) != checked
+                or identity(final_path) != identity(path_opened)):
             raise SaveError('The newly created change review was replaced during read-back.')
     except Exception as error:
         raise SaveError('Change review verification did not finish after creation. '

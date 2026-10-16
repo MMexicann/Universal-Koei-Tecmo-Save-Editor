@@ -93,6 +93,14 @@ def _identity(info):
     return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
 
 
+def _handle_binding(info):
+    # On Windows, CPython's path stat/lstat preserves legacy creation-time
+    # st_ctime, while fstat exposes native change time. Compare ctime only
+    # within the same API, retaining volume/file identity and content metadata
+    # when binding an opened handle to its checked ordinary path.
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns)
+
+
 def _directory_identity(info):
     # Directory timestamps change when a new unrelated file is added. Its actual
     # identity must remain fixed, while each selected file has a full stat token.
@@ -135,11 +143,20 @@ def _check_cancel(cancel):
 
 def _capture(path, expected, limit, cancel):
     """Streaming fingerprint: no unbounded read and no buffered file snapshot."""
+    _, before = _checked_path(path)
+    if _identity(before) != expected:
+        raise SaveError('The selected file changed before its bounded read.')
     flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     descriptor = os.open(path, flags)
     try:
         info = os.fstat(descriptor)
-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or _identity(info) != expected:
+        handle_identity = _identity(info)
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                or _handle_binding(info) != _handle_binding(before)):
+            raise SaveError('The selected file changed before its bounded read.')
+        _, opened_path = _checked_path(path)
+        if (_identity(opened_path) != expected
+                or _handle_binding(opened_path) != _handle_binding(info)):
             raise SaveError('The selected file changed before its bounded read.')
         digest = hashlib.sha256()
         remaining = min(info.st_size, limit) + 1
@@ -152,7 +169,12 @@ def _capture(path, expected, limit, cancel):
             length += len(block)
             remaining -= len(block)
             digest.update(block)
-        if length != info.st_size or length > limit or _identity(os.fstat(descriptor)) != expected:
+        if (length != info.st_size or length > limit
+                or _identity(os.fstat(descriptor)) != handle_identity):
+            raise SaveError('The selected file changed during its bounded read.')
+        _, after = _checked_path(path)
+        if (_identity(after) != expected
+                or _handle_binding(after) != _handle_binding(info)):
             raise SaveError('The selected file changed during its bounded read.')
         return digest.hexdigest()
     finally:

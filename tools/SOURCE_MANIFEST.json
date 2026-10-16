@@ -913,8 +913,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 91882,
-      "sha256": "8e7bd96a85a59ab5180dc93fbf9dd842a708a247f8130651e6da83a472a0bf0c"
+      "bytes": 92508,
+      "sha256": "a865ffed79e6c601b1cc70ea727f7fcd541f8774437296e4ee576b8978969803"
     },
     {
       "path": "docs/WARRIORS_V26_DEPTH.md",
@@ -3588,8 +3588,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_library.py",
-      "bytes": 20472,
-      "sha256": "fbc9df3b6f3dc3e8f19d1c17c7207e0aa4beb48deddad070c4baad9056e61716"
+      "bytes": 21604,
+      "sha256": "03b963db26aab8b53b50482ab7f3b9d11b9b72b712f367e193c4c217e644549a"
     },
     {
       "path": "src/koei_editor/shared/save_library_gui.py",
@@ -3628,8 +3628,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 52775,
-      "sha256": "c60f7e6193a091b90240df258069d73dea95da29014e2fe182d03e2985f4aa1c"
+      "bytes": 53874,
+      "sha256": "4794981c5a2a807ceb1aa7f172b77bfdc976b960391bac4cd265aefdd44799ca"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4143,8 +4143,8 @@
     },
     {
       "path": "tests/test_field_pins_review_csv.py",
-      "bytes": 21051,
-      "sha256": "6b5e01f9fdd63513dad55782763042414ab40032b63364da203c3f9d9a07ef03"
+      "bytes": 27187,
+      "sha256": "c93457d8713d4ad6e22a0ae64d982515ff0727fd96d3b9c280fa20d6a9638b56"
     },
     {
       "path": "tests/test_fire_emblem_warriors.py",
@@ -4783,8 +4783,8 @@
     },
     {
       "path": "tests/test_save_library.py",
-      "bytes": 17191,
-      "sha256": "2c3a746bc23ffe3957812a65cf247a5ba538e0511ab16be73430b2698ac1814e"
+      "bytes": 22400,
+      "sha256": "2fa9184732ab60ffedbdbc504708fff56241294c6467c906a117dc6f693e8717"
     },
     {
       "path": "tests/test_save_library_application.py",
@@ -4798,8 +4798,8 @@
     },
     {
       "path": "tests/test_save_library_gui.py",
-      "bytes": 15250,
-      "sha256": "dd1fdc576117f57d705ca48d5f45a41ed87b11dbf69660505168894848375707"
+      "bytes": 15328,
+      "sha256": "03589eee5d2cd92195467abf27e381167e787fe24e1f409f297ac92a3257c9fb"
     },
     {
       "path": "tests/test_save_provider.py",

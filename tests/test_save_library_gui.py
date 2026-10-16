@@ -137,6 +137,7 @@ class SaveLibraryGuiTests(unittest.TestCase):
         self.workspace.scan()
         self.finish()
         self.select('first.bin')
+        self.assertEqual(self.workspace.selected_entry().status, 'qualified')
         queued = threading.Event()
         original_queue = self.workspace._results
         class NotifyingQueue:

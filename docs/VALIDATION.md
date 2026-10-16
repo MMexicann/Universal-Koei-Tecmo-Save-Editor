@@ -29,6 +29,14 @@ spreadsheet-safe labels. Failed operations preserve staged history and completed
 files as documented. Native read-only browser checks cover WO3 PC, supplied WO3
 PS3 and Nights of Azure 2 Switch, without changing original sources/context.
 
+Windows release testing caught incompatible `ctime` meanings in CPython 3.14:
+[path stat/lstat preserves creation time](https://github.com/python/cpython/blob/v3.14.7/Modules/posixmodule.c),
+while [handle fstat exposes native change time](https://github.com/python/cpython/blob/v3.14.7/Python/fileutils.c).
+Save Library and review-export checks now retain full before/after freshness
+within each API and bind the APIs using common file identity, size and modified
+time. Active regressions simulate valid differing clocks, independent timestamp
+changes, wrong handles and same-byte replacements without weakening copy guards.
+
 The complete source suite and required Windows build/startup/Defender/download
 gates must pass for publication. Edited/converted in-game load/re-save remains
 unverified; unresolved Origins and DW7 XL requests retain their documented limits.

@@ -4,6 +4,7 @@ from dataclasses import replace
 import io
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import tempfile
 import tkinter as tk
 from tkinter import ttk
@@ -112,6 +113,125 @@ class ReviewCsvEncodingTests(unittest.TestCase):
             self.assertIs(type(json.loads(row['opened_json'])), type(original[8]))
             self.assertEqual(json.loads(row['pending_json']), original[10])
             self.assertIs(type(json.loads(row['pending_json'])), type(original[10]))
+
+
+class ReviewExportVerificationTests(unittest.TestCase):
+    def setUp(self):
+        from koei_editor.shared import verified_gui
+        self.gui = verified_gui
+        area = tempfile.TemporaryDirectory()
+        self.addCleanup(area.cleanup)
+        self.folder = Path(area.name).resolve()
+        self.destination = self.folder / 'review.changes.json'
+        self.data = b'{"game_id":"origins","changes":[]}\n'
+
+    @staticmethod
+    def changed_stat(info, **changes):
+        names = ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns', 'st_mode', 'st_nlink')
+        return SimpleNamespace(**{**{name: getattr(info, name) for name in names}, **changes})
+
+    def test_valid_path_and_handle_ctime_semantics_may_differ(self):
+        original = self.gui.os.fstat
+        calls = []
+        def handle_stat(descriptor):
+            info = original(descriptor)
+            calls.append(info)
+            # Windows path stat uses legacy creation time, whereas CPython's
+            # handle stat can expose the later native ChangeTime as ctime.
+            return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 123456789)
+        with patch.object(self.gui.os, 'fstat', side_effect=handle_stat):
+            output = self.gui._export_review(self.data, self.destination)
+        self.assertGreaterEqual(len(calls), 2)
+        self.assertEqual(output.read_bytes(), self.data)
+
+    def test_handle_ctime_change_still_rejects_without_path_stat_change(self):
+        original = self.gui.os.fstat
+        calls = []
+        def handle_stat(descriptor):
+            info = original(descriptor)
+            calls.append(info)
+            return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 123456789 + int(len(calls) > 1))
+        with patch.object(self.gui.os, 'fstat', side_effect=handle_stat), self.assertRaisesRegex(ValueError, 'changed during read-back'):
+            self.gui._export_review(self.data, self.destination)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(self.destination.read_bytes(), self.data)
+
+    def test_path_ctime_change_still_rejects_without_handle_stat_change(self):
+        original, close = Path.lstat, self.gui.os.close
+        watched = (self.destination, self.destination.resolve())
+        closed, changed = [], []
+        def after_close(descriptor):
+            close(descriptor)
+            closed.append(True)
+        def path_stat(path, *args, **kwargs):
+            info = original(path, *args, **kwargs)
+            if path in watched and closed:
+                changed.append(True)
+                return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 1)
+            return info
+        with patch.object(Path, 'lstat', path_stat), patch.object(self.gui.os, 'close', side_effect=after_close), \
+                self.assertRaisesRegex(ValueError, 'replaced during read-back'):
+            self.gui._export_review(self.data, self.destination)
+        self.assertEqual(len(closed), 1)
+        self.assertTrue(changed)
+        self.assertEqual(self.destination.read_bytes(), self.data)
+
+    def test_common_handle_identity_still_binds_to_current_path(self):
+        original = self.gui.os.fstat
+        for attribute in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns'):
+            with self.subTest(attribute=attribute):
+                destination = self.folder / (attribute + '.changes.json')
+                calls = []
+                def changed(descriptor):
+                    info = original(descriptor)
+                    calls.append(True)
+                    return self.changed_stat(info, **{attribute: getattr(info, attribute) + 1})
+                with patch.object(self.gui.os, 'fstat', side_effect=changed), self.assertRaisesRegex(ValueError, 'changed before read-back'):
+                    self.gui._export_review(self.data, destination)
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(destination.read_bytes(), self.data)
+
+    def test_same_bytes_symlink_replacement_before_baseline_is_rejected_and_retained(self):
+        foreign = self.folder / 'foreign.changes.json'
+        foreign.write_bytes(self.data)
+        probe = self.folder / 'probe-link'
+        try:
+            probe.symlink_to(foreign)
+        except (OSError, NotImplementedError):
+            self.skipTest('This host cannot create symlinks')
+        probe.unlink()
+        atomic = self.gui.atomic_new
+        retained = self.folder / 'created-report-retained.json'
+        redirects = []
+        def redirected(data, path):
+            result = atomic(data, path)
+            self.gui.os.replace(result, retained)
+            result.symlink_to(foreign)
+            redirects.append(result)
+            return result
+        with patch.object(self.gui, 'atomic_new', side_effect=redirected), self.assertRaisesRegex(ValueError, 'retained; do not use'):
+            self.gui._export_review(self.data, self.destination)
+        self.assertEqual(len(redirects), 1)
+        self.assertTrue(self.destination.is_symlink())
+        self.assertEqual(self.destination.resolve(), foreign)
+        self.assertEqual(foreign.read_bytes(), self.data)
+        self.assertEqual(retained.read_bytes(), self.data)
+
+    def test_same_bytes_foreign_file_replacement_after_descriptor_close_is_retained(self):
+        close = self.gui.os.close
+        replacements = []
+        def replace_after_close(descriptor):
+            close(descriptor)
+            if not replacements:
+                replacement = self.folder / 'foreign.tmp'
+                replacement.write_bytes(self.data)
+                replacements.append(replacement.stat().st_ino)
+                self.gui.os.replace(replacement, self.destination)
+        with patch.object(self.gui.os, 'close', side_effect=replace_after_close), self.assertRaisesRegex(ValueError, 'replaced during read-back'):
+            self.gui._export_review(self.data, self.destination)
+        self.assertEqual(len(replacements), 1)
+        self.assertEqual(self.destination.stat().st_ino, replacements[0])
+        self.assertEqual(self.destination.read_bytes(), self.data)
 
 
 class PinnedReviewGuiTests(unittest.TestCase):

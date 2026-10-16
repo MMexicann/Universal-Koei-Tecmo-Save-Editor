@@ -7,13 +7,14 @@ from koei_editor.shared.appearance import Appearance, THEMES
 from koei_editor.game_registry import GAMES, ALL_ADAPTERS, get_game
 from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
+from koei_editor.shared.workspace_shell import WorkspaceAction, WorkspaceMenu
 import koei_editor.shared.preferences as preferences
 
 VERSION = '2.6'
 
 
 class Application(Appearance):
-    def __init__(self, root, preferences_path=None, persist_preferences=True):
+    def __init__(self, root, preferences_path=None, persist_preferences=True, vault_root=None):
         self.root = root
         self.preferences_path = preferences_path
         self._persist_theme = persist_preferences
@@ -27,6 +28,16 @@ class Application(Appearance):
         self.comparison = None
         self.batch = None
         self.save_library = None
+        self.save_doctor = None
+        self.compatible_presets = None
+        self.save_detection = None
+        self.save_vault = None
+        self.active_tool = None
+        self.tools_menu = None
+        self.vault_root = vault_root
+        self.vault_auto_capture = tk.BooleanVar(root, value=False)
+        self.vault_capture_status = tk.StringVar(root, value='Automatic Vault capture is off.')
+        self.vault_auto_capture.trace_add('write', self._capture_preference_changed)
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
@@ -36,14 +47,28 @@ class Application(Appearance):
         top.pack(fill='x')
         self.home_button = ttk.Button(top, text='‹ Game Library', command=self.show_library)
         self.home_button.pack(side='left')
-        self.converter_button = ttk.Button(top, text='Save Converter', command=self.show_converter)
-        self.converter_button.pack(side='left', padx=(10, 0))
-        self.compare_button = ttk.Button(top, text='Compare Saves', command=self.show_comparison)
-        self.compare_button.pack(side='left', padx=(10, 0))
-        self.batch_button = ttk.Button(top, text='Batch Converter', command=self.show_batch)
-        self.batch_button.pack(side='left', padx=(10, 0))
-        self.save_library_button = ttk.Button(top, text='Save Library', command=self.show_save_library)
-        self.save_library_button.pack(side='left', padx=(10, 0))
+        self.tools_button = ttk.Button(top, text='Tools ▾', width=11,
+                                       command=lambda: self.tools_menu.toggle(self.tools_button))
+        self.tools_button.pack(side='left', padx=(10, 0))
+        self.tools_menu = WorkspaceMenu(root, (
+            WorkspaceAction('save_library', 'Save Library', 'Find and open qualified copies for an exact game and platform.', self.show_save_library),
+            WorkspaceAction('save_detection', 'Find Steam Saves', 'Discover supported locations and import a separate working copy.', self.show_save_detection),
+            WorkspaceAction('save_doctor', 'Save Doctor', 'Diagnose a copied save and inspect its validation report.', self.show_save_doctor),
+            WorkspaceAction('save_vault', 'Save Vault', 'Organize validated snapshots, branches and backup history.', self.show_save_vault),
+            WorkspaceAction('compatible_presets', 'Reusable Edit Presets', 'Review mapped resource edits for compatible saves.', self.show_compatible_presets),
+            WorkspaceAction('comparison', 'Compare Saves', 'Compare verified mapped values in two separate save copies.', self.show_comparison),
+            WorkspaceAction('converter', 'Save Converter', 'Review a supported cross-save route and destination template.', self.show_converter),
+            WorkspaceAction('batch', 'Batch Converter', 'Queue reviewed conversion jobs and inspect their results.', self.show_batch),
+        ), auto_capture=self.vault_auto_capture, capture_status=self.vault_capture_status)
+        # Retain these public action widgets for keyboard and integration callers.
+        self.converter_button = self.tools_menu.buttons['converter']
+        self.compare_button = self.tools_menu.buttons['comparison']
+        self.batch_button = self.tools_menu.buttons['batch']
+        self.save_library_button = self.tools_menu.buttons['save_library']
+        self.save_doctor_button = self.tools_menu.buttons['save_doctor']
+        self.save_detection_button = self.tools_menu.buttons['save_detection']
+        self.save_vault_button = self.tools_menu.buttons['save_vault']
+        self.compatible_presets_button = self.tools_menu.buttons['compatible_presets']
         self.breadcrumb = tk.StringVar(root, value='Choose your game')
         self.theme_selector = ttk.Combobox(top, values=tuple(THEMES), textvariable=self.theme_name,
                                           state='readonly', width=7)
@@ -259,14 +284,10 @@ class Application(Appearance):
                        background=[('active', palette['hover'])])
         for _frame, editor in self.sessions.values():
             editor.theme_name.set(name)
-        if self.converter is not None:
-            self.converter.apply_theme(palette)
-        if self.comparison is not None:
-            self.comparison.apply_theme(palette)
-        if self.batch is not None:
-            self.batch.apply_theme(palette)
-        if self.save_library is not None:
-            self.save_library.apply_theme(palette)
+        for tool in self._tool_workspaces():
+            tool.apply_theme(palette)
+        if self.tools_menu is not None:
+            self.tools_menu.apply_theme(palette)
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
@@ -367,35 +388,42 @@ class Application(Appearance):
 
     def show_converter(self):
         from koei_editor.shared.conversion_gui import ConversionWorkspace
-        if self.converter is None:
-            self.converter = ConversionWorkspace(self.root, self.workspace, self.queue_conversion)
-        self.library.pack_forget()
-        self._hide_tools()
-        for frame, _editor in self.sessions.values():
-            frame.pack_forget()
-        self.active_game = None
-        self.converter.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Save Converter')
-        self.converter.apply_theme(THEMES[self.theme_name.get()])
+        return self._show_tool('converter', 'Save Converter',
+            lambda: ConversionWorkspace(self.root, self.workspace, self.queue_conversion))
 
     def show_comparison(self):
         from koei_editor.shared.comparison_gui import ComparisonWorkspace
-        if self.comparison is None:
-            self.comparison = ComparisonWorkspace(self.root, self.workspace)
+        return self._show_tool('comparison', 'Compare Saves',
+            lambda: ComparisonWorkspace(self.root, self.workspace))
+
+    def _show_tool(self, name, title, factory):
+        tool = getattr(self, name)
+        if tool is None:
+            tool = factory()
+            setattr(self, name, tool)
         self.library.pack_forget()
         self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.active_game = None
-        self.comparison.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Compare Saves')
-        self.comparison.apply_theme(THEMES[self.theme_name.get()])
+        self.active_tool = name
+        tool.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(title)
+        tool.apply_theme(THEMES[self.theme_name.get()])
+        on_show = getattr(tool, 'on_show', None)
+        if callable(on_show):
+            on_show()
+        return tool
 
     def _tool_workspaces(self):
-        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library')
+        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
+                                      'save_doctor', 'compatible_presets', 'save_detection', 'save_vault')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _hide_tools(self):
+        self.active_tool = None
+        if self.tools_menu is not None:
+            self.tools_menu.dismiss(restore_focus=False)
         for tool in self._tool_workspaces():
             tool.frame.pack_forget()
 
@@ -407,39 +435,70 @@ class Application(Appearance):
 
     def show_batch(self):
         batch = self._batch_workspace()
-        self.library.pack_forget()
-        self._hide_tools()
-        for frame, _editor in self.sessions.values():
-            frame.pack_forget()
-        self.active_game = None
-        batch.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Batch Converter')
-        batch.apply_theme(THEMES[self.theme_name.get()])
+        return self._show_tool('batch', 'Batch Converter', lambda: batch)
 
     def show_save_library(self):
         from koei_editor.shared.save_library_gui import SaveLibraryWorkspace
-        if self.save_library is None:
-            self.save_library = SaveLibraryWorkspace(self.root, self.workspace, self.open_saved_copy)
-        self.library.pack_forget()
-        self._hide_tools()
-        for frame, _editor in self.sessions.values():
-            frame.pack_forget()
-        self.active_game = None
-        self.save_library.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Save Library')
-        self.save_library.apply_theme(THEMES[self.theme_name.get()])
+        return self._show_tool('save_library', 'Save Library',
+            lambda: SaveLibraryWorkspace(self.root, self.workspace, self.open_saved_copy))
+
+    def show_save_doctor(self):
+        from koei_editor.shared.save_doctor_gui import SaveDoctorWorkspace
+        return self._show_tool('save_doctor', 'Save Doctor',
+            lambda: SaveDoctorWorkspace(self.root, self.workspace, on_open=self.open_saved_copy))
+
+    def show_save_detection(self):
+        from koei_editor.shared.save_detection_gui import SaveDetectionWorkspace
+        return self._show_tool('save_detection', 'Find Steam Saves',
+            lambda: SaveDetectionWorkspace(self.root, self.workspace, on_open=self.open_saved_copy))
+
+    def show_compatible_presets(self):
+        from koei_editor.shared.compatible_preset_gui import CompatiblePresetWorkspace
+        return self._show_tool('compatible_presets', 'Reusable Edit Presets',
+            lambda: CompatiblePresetWorkspace(self.root, self.workspace, session_provider=self.preset_sessions))
+
+    def show_save_vault(self):
+        from koei_editor.shared.save_vault_gui import SaveVaultWorkspace
+        return self._show_tool('save_vault', 'Save Vault',
+            lambda: SaveVaultWorkspace(self.root, self.workspace, on_open=self.open_saved_copy,
+                                       vault_root=self.vault_root, auto_capture=self.vault_auto_capture))
+
+    def preset_sessions(self):
+        """Supply live retained editors; the preset tool qualifies compatibility."""
+        ordered = ([self.active_game] if self.active_game in self.sessions else [])
+        ordered += [key for key in self._session_order if key not in ordered]
+        ordered += [key for key in self.sessions if key not in ordered]
+        return tuple((get_game(key).title + ' · ' + get_game(key).subtitle, self.sessions[key][1])
+                     for key in ordered if key in self.sessions)
+
+    def _capture_preference_changed(self, *_args):
+        self.vault_capture_status.set('Validated opened and saved copies will be captured for this session.'
+                                      if self.vault_auto_capture.get() else 'Automatic Vault capture is off.')
+
+    def capture_editor_backup(self, game_id, editor, event='opened'):
+        """Optional secondary protection never changes the editor's save outcome."""
+        if not self.vault_auto_capture.get():
+            return False
+        try:
+            from koei_editor.shared.save_vault import capture_editor_backup
+            captured = capture_editor_backup(game_id, editor, root=self.vault_root, event=event)
+        except Exception:
+            self.vault_capture_status.set('Vault capture failed. The editor backup and save operation are unchanged.')
+            return False
+        self.vault_capture_status.set('A validated save snapshot was captured in Save Vault.')
+        return captured
 
     def open_saved_copy(self, game_id, path):
         """Open a browser result through that profile's ordinary guarded editor."""
         from tkinter import messagebox
         try:
             game = get_game(game_id)
-            if game not in GAMES or game.scalar_backend is None:
-                raise ValueError('Choose an editable game/platform profile from Save Library.')
+            if game not in GAMES:
+                raise ValueError('Choose an editable game/platform profile for this save copy.')
             editor = self._session_editor(game)
             open_path = getattr(editor, 'open_path', None)
             if not callable(open_path):
-                raise ValueError('This editor cannot open a Save Library result.')
+                raise ValueError('This editor cannot open a utility result.')
             accepted = open_path(path)
         except Exception as error:
             messagebox.showerror('Cannot Open Save Copy', str(error), parent=self.root)
@@ -514,14 +573,10 @@ class Application(Appearance):
             editor = self.sessions[self.active_game][1]
             focus = getattr(editor, 'focus_field_search', None)
             return focus() if focus is not None else None
-        if self.converter is not None and self.converter.frame.winfo_manager():
-            return self.converter.focus_route_search()
-        if self.save_library is not None and self.save_library.frame.winfo_manager():
-            focus_search = getattr(self.save_library, 'focus_search', None)
-            return focus_search() if callable(focus_search) else 'break'
-        if ((self.comparison is not None and self.comparison.frame.winfo_manager())
-                or (self.batch is not None and self.batch.frame.winfo_manager())):
-            return
+        for tool in self._tool_workspaces():
+            if tool.frame.winfo_manager():
+                focus = getattr(tool, 'focus_search', None) or getattr(tool, 'focus_route_search', None)
+                return focus() if callable(focus) else 'break'
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
         self.library_search_entry.focus_set()
@@ -544,7 +599,8 @@ class Application(Appearance):
         Editor.show_contact(self)
 
     def close(self):
-        if any(tool.busy for tool in self._tool_workspaces()):
+        if any((pending() if callable(pending := getattr(tool, 'has_pending_work', None))
+                else getattr(tool, 'busy', False)) for tool in self._tool_workspaces()):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return
@@ -552,7 +608,8 @@ class Application(Appearance):
             for tool in self._tool_workspaces():
                 close = getattr(tool, 'close', None)
                 if callable(close):
-                    close()
+                    if close() is False:
+                        return
             self.root.destroy()
 
 

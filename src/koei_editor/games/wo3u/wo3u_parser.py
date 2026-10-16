@@ -77,6 +77,18 @@ class Field:
 
 
 @dataclass(frozen=True)
+class CompatibilityResetField(Field):
+    """Two deliberate states; no descriptor-dependent increase is inferred."""
+    @property
+    def experimental_maximum(self):
+        return None
+
+    def validate(self, value):
+        if type(value) is not int or value not in (0, self.maximum):
+            raise SaveError('Keep the opened compatibility or deliberately reset it to zero.')
+
+
+@dataclass(frozen=True)
 class Format:
     id: str
     title: str
@@ -223,6 +235,18 @@ def _fields_cached(payload, _experimental):
         slots = payload[offset + 2]
         if slots > 8:
             continue
+        compatibility = int.from_bytes(payload[offset + 20:offset + 24], 'little')
+        # Native weapon reset/serializer and independent setter/derived-attack
+        # paths prove this DWORD. Grade-specific upper bounds require external
+        # descriptors, so only the universally valid zero reset is exposed.
+        # 179,200 is the largest native setter ceiling across supported grades;
+        # unusual larger originals are opaque rather than silently normalized.
+        if 0 < compatibility <= 179200:
+            result.append(CompatibilityResetField(
+                f'weapon_{index}_compatibility_reset',
+                f'Weapon {index + 1} (ID {identity}): Compatibility reset',
+                offset + 20, 4, compatibility, 'Weapon compatibility', index + 1,
+                maxable=False))
         reinforcement = payload[offset + 3]
         # Native total attack adds this separate byte. Decreasing an ordinary
         # existing value cannot exceed a grade-specific reinforcement ceiling.
@@ -275,7 +299,7 @@ def record_label(slot, group='Officers'):
         return f'Mount loadout {slot}'
     if group in ('Upgrade stones', 'Equipment') and slot:
         return f'Officer {slot}'
-    if group == 'Weapons' and slot:
+    if group in ('Weapons', 'Weapon compatibility') and slot:
         return f'Officer {(slot - 1) // 16 + 1}, weapon {(slot - 1) % 16 + 1}'
     return f'Officer {slot}' if group == 'Officers' and slot else group
 
@@ -313,9 +337,28 @@ def field_options(document, key):
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested WO3 Ultimate Definitive field is not mapped.')
+    if isinstance(mapped[key], CompatibilityResetField):
+        return ((mapped[key].maximum, 'Keep opened compatibility'),
+                (0, 'Reset compatibility to zero'))
     if mapped[key].group == 'Mount equipment':
         return equipment.mount_options(document.payload)
     return equipment.options(document.payload) if '_equipped_item_' in key else ()
+
+
+def field_options_for_changes(document, changes, key):
+    """Use the final pending loadout without widening original ownership."""
+    payload = changed_payload(document, changes)
+    options = field_options(document, key)
+    field = field_map(document)[key]
+    if field.group != 'Equipment':
+        return options
+    base = OFFICER_BASE + (field.slot - 1) * OFFICER_STRIDE
+    count = equipment.qualified_slots(document.payload, base)
+    occupied_elsewhere = {payload[base + equipment.EQUIPPED_ITEM_OFFSET + index]
+                          for index in range(count)
+                          if base + equipment.EQUIPPED_ITEM_OFFSET + index != field.offset}
+    return tuple((value, label) for value, label in options
+                 if value == equipment.EMPTY_ITEM or value not in occupied_elsewhere)
 
 
 def serialize(document, changes):
@@ -450,8 +493,38 @@ def inspection_rows(document):
         rows.append({'group': 'Weapons', 'label': record_label(index + 1, 'Weapons'),
                      'value': f'Weapon ID {identity}; slots {document.payload[offset + 2]}; '
                               f'reinforcement {document.payload[offset + 3]}; '
-                              f'attributes: {attrs or "none"}; compatibility read only'})
+                              f'attributes: {attrs or "none"}; compatibility '
+                              f'{int.from_bytes(document.payload[offset + 20:offset + 24], "little"):,} '
+                              '(stored raw units)'})
     return tuple(rows)
+
+
+def item_inventory(document):
+    """Inspect ownership, stored ranks and existing references separately."""
+    validate_document(document)
+    payload = document.payload
+    mask = int.from_bytes(payload[equipment.ITEM_OWNERSHIP_OFFSET:
+                                  equipment.ITEM_OWNERSHIP_OFFSET + 8], 'little')
+    usages = {identity: [] for identity in range(equipment.ITEM_COUNT)}
+    for officer in range(OFFICER_COUNT):
+        base = OFFICER_BASE + officer * OFFICER_STRIDE
+        count = payload[base + equipment.ITEM_SLOT_COUNT_OFFSET]
+        if not 2 <= count <= 6:
+            continue
+        for slot in range(count):
+            identity = payload[base + equipment.EQUIPPED_ITEM_OFFSET + slot]
+            if identity < equipment.ITEM_COUNT:
+                usages[identity].append(f'Officer {officer + 1}, item slot {slot + 1}')
+    for index, offset in enumerate(equipment.MOUNT_LOADOUT_OFFSETS):
+        selector = payload[offset]
+        if selector < len(equipment.MOUNT_ITEM_IDS):
+            usages[equipment.MOUNT_ITEM_IDS[selector]].append(f'Mount loadout {index + 1}')
+    return tuple({'id': identity, 'owned': bool(mask & (1 << identity)),
+                  'kind': 'Mount' if identity in equipment.MOUNT_IDS else 'Ordinary item',
+                  'rank': int.from_bytes(payload[equipment.ITEM_RANK_OFFSET + 2 * identity:
+                                                 equipment.ITEM_RANK_OFFSET + 2 * identity + 2], 'little'),
+                  'references': tuple(usages[identity])}
+                 for identity in range(equipment.ITEM_COUNT))
 
 
 def field_hint(document, field):
@@ -460,6 +533,12 @@ def field_hint(document, field):
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested WO3 Ultimate Definitive field is not mapped.')
+    if isinstance(mapped[key], CompatibilityResetField):
+        return ("Deliberately reset this existing weapon's compatibility to zero, or keep "
+                'the opened value. The game derives the associated attack contribution; '
+                'weapon identity, grade, reinforcement, attributes and rewards stay unchanged. '
+                'The number is stored raw compatibility, not displayed stars. Arbitrary '
+                'increases and bulk Max are unavailable without the matching grade descriptors.')
     if mapped[key].group == 'Mount equipment':
         return ('Choose an originally owned mount item, or Unequipped. These are two '
                 'stored mount loadouts, separate from officers\' ordinary item slots. '

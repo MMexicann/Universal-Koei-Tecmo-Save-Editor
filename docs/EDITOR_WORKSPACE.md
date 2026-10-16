@@ -1,6 +1,6 @@
 # Editing workspace
 
-The portable Windows ZIP includes this guide and ten companion user guides
+The portable Windows ZIP includes this guide and thirteen companion user guides
 in `_internal/guides/`. The full developer documentation remains in the Source ZIP.
 
 Choose an exact game/platform in the library, then open a separate save copy.
@@ -29,7 +29,7 @@ not replace the selected native value or stage an edit. Selection guidance
 shows opened and current values; mixed bulk selections leave the value blank
 until an explicit assignment. **Review Changes** searches names, stable field
 IDs, records and raw/formatted values, and shows named choices where available.
-Filtering a review does not narrow its exported JSON: the complete reviewed
+Filtering a review does not narrow its exported JSON or CSV: the complete reviewed
 snapshot retains raw typed values and stays frozen if later edits change.
 
 **Export Review** writes a JSON change report, while **Save As...** writes an
@@ -37,6 +37,20 @@ edited game-save copy. The export dialog suggests a `.changes.json` filename.
 You can type a plain name, `.json` or a save-style name such as `APP.BIN`;
 the editor completes the review suffix automatically (`APP.BIN.changes.json`).
 An existing report is never overwritten; choose a new name to export again.
+
+**Edit Presets...** exports and previews reusable plans for this exact original
+save. Import merges with existing pending changes and applies as one Undo action;
+it never saves automatically. [Preset guide](EDIT_PRESETS.md).
+
+Pin selected fields from the category sidebar, then use **Pinned only** to focus
+on them. Pins are retained per exact game/platform and do not stage edits.
+Review Changes can also export a complete typed CSV snapshot or copy selected
+rows. [Pins and reviews](FIELD_PINS_AND_REVIEWS.md).
+
+**Save Library** scans a selected copied-save folder for one explicit scalar
+profile. Search and sort qualified copies or identify identical gameplay files,
+then open a freshly checked copy in its normal editor. Cancelling a pending-edit
+prompt preserves the editing session. [Browser guide](SAVE_LIBRARY.md).
 
 **More options** reveals experimental editing and the encoding-limit column.
 Hiding the panel does not turn an acknowledged experimental session off or

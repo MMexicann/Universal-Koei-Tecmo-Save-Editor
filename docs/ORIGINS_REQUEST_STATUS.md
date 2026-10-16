@@ -1,6 +1,6 @@
 # Origins: proficiency levels and Old Coins
 
-**Neither requested writer is implemented in v2.5.4.** The existing qualified
+**Neither requested writer is implemented in v2.6.** The existing qualified
 Steam slot revisions 16, 17 and 29 retain their documented editing scope.
 The inspector adds a
 searchable, read-only **Proficiency** tab with stored XP and equipped Battle Art

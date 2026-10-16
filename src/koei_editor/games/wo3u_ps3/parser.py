@@ -133,15 +133,27 @@ def _require_opened_context(document, destination=None):
         raise SaveError('Use the same unchanged export context for the destination.')
 
 
+def _require_opened_source(document):
+    validate_document(document)
+    _require_opened_context(document)
+    with safe_path(document.source).open('rb') as stream:
+        if stream.read(SAVE_SIZE + 1) != document.raw:
+            raise SaveError('The opened copy changed on disk. Reopen it before saving or backing up.')
+
+
 def prepare_copy_context(document, output_dir):
     """Keep opaque source metadata private beside shared self-test copies."""
-    validate_document(document)
+    _require_opened_source(document)
     raw = _context_raw(document.source)
     if not document.context_digest or hashlib.sha256(raw).hexdigest() != document.context_digest:
         raise SaveError('The opened export context changed. Reopen before copying.')
     destination = safe_path(Path(output_dir) / 'PARAM.SFO')
     _require_opened_context(document)
     atomic_new(raw, destination)
+    _require_opened_source(document)
+    with destination.open('rb') as stream:
+        if stream.read(MAX_SFO_SIZE + 1) != raw:
+            raise SaveError('The prepared original export context changed during actual read-back.')
 
 
 def seal(payload):
@@ -259,9 +271,12 @@ def review(document, changes):
 
 
 def backup(document):
-    validate_document(document)
-    return snapshot_backup(document.raw, document.source, GAME_ID,
-                           document.source.parent / 'UniversalEditorBackups')
+    _require_opened_source(document)
+    result = snapshot_backup(document.raw, document.source, GAME_ID,
+                             document.source.parent / 'UniversalEditorBackups')
+    # Retain a completed backup if the source/context changed during creation.
+    _require_opened_source(document)
+    return result
 
 
 def save_as(document, changes, destination):
@@ -272,29 +287,37 @@ def save_as(document, changes, destination):
     _require_opened_context(document, destination)
     if destination.exists():
         raise FileExistsError('Choose a new destination; existing files are never replaced.')
-    with safe_path(document.source).open('rb') as stream:
-        if stream.read(SAVE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk. Reopen it before saving.')
+    _require_opened_source(document)
     raw = serialize(document, changes)
     backup(document)
     _require_opened_context(document, destination)
-    with safe_path(document.source).open('rb') as stream:
-        if stream.read(SAVE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk. Reopen it before saving.')
+    _require_opened_source(document)
     atomic_new(raw, destination)
-    return read_save(destination)
+    reopened = read_save(destination)
+    _require_opened_source(document)
+    _require_opened_context(document, destination)
+    if reopened.raw != raw or reopened.context_digest != document.context_digest:
+        raise SaveError('The saved PS3 copy or export context changed during actual read-back.')
+    return reopened
 
 
 def restore(backup_path, destination, game_id=GAME_ID):
     get_format(game_id)
     destination = safe_path(destination)
     digest = _context(destination)
+    validated = []
     def validate_restore(raw):
         decode(raw, GAME_ID)
         if _context(destination) != digest:
             raise SaveError('The destination export context changed during restore.')
-    return restore_snapshot(backup_path, destination, GAME_ID, '.bin', SAVE_SIZE,
-                            validate_raw=validate_restore)
+        validated.append(raw)
+    result = restore_snapshot(backup_path, destination, GAME_ID, '.bin', SAVE_SIZE,
+                              validate_raw=validate_restore)
+    reopened = read_save(result)
+    if (not validated or reopened.raw != validated[-1]
+            or reopened.context_digest != digest or _context(result) != digest):
+        raise SaveError('The restored PS3 copy or export context changed during actual read-back.')
+    return result
 
 
 def record_label(slot, group='Officers'):

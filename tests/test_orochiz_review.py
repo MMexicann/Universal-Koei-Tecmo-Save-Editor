@@ -199,10 +199,10 @@ class OrochiZIndependentReviewTests(unittest.TestCase):
                         self.assertEqual(after[key], value)
                     else:
                         self.assertEqual(after[key], before[key])
-                for index in (0, 1, 3, 4):
-                    self.assertEqual(after['stats'][index], before['stats'][index])
-                if field.id != f"officer_{before['id']}_base_attack":
-                    self.assertEqual(after['stats'][2], before['stats'][2])
+                for index, stat in enumerate(('life', 'musou', 'attack', 'defense', 'speed')):
+                    expected = (value if field.id == f"officer_{before['id']}_base_{stat}"
+                                else before['stats'][index])
+                    self.assertEqual(after['stats'][index], expected)
             self.assertEqual(output[-16:], raw[-16:])
             self.assertEqual(field.value(output), value)
             count += 1

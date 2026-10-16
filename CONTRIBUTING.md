@@ -75,7 +75,7 @@ python -m tools.update_supported_games --check
 ```
 
 This regenerates the readable code index, supported-game document and README
-table from the registry. A passing consistency check does not substitute for
+summary from the registry. A passing consistency check does not substitute for
 format qualification or the adapter's required tests.
 
 Use `maxable=False` for fields that permit deliberate individual edits but should

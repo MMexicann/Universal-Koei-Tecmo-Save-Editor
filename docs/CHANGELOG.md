@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.6 — 2026-10-16
+
+- Add copied-save browsing with explicit profiles, bounded folder scans, identical-gameplay-file groups, cancellation and fresh normal-editor opening.
+- Add source-bound reviewed edit presets with complete previews, native validation and one-Undo Apply; add per-profile field pins and complete typed CSV review exports.
+- Add original EU PS3 Legends of Troy Kleos reductions with native record inspection. Library: 97 profiles, 15 platforms; routes remain 139. Keep Fatal Frame II PS2 inventory work unregistered pending retail linkage/dependency proof.
+- Add four independently bounded Orochi Z base-stat controls, WO3 Ultimate PC compatibility reset and clearer inventory/equipment choices; strengthen US PS3 copy/context races.
+- Move the long supported-games table off the landing page into an indexed platform catalog. Bundle fourteen user guides and retain existing editor/tool sessions.
+- Qualify copied native files and preserve exact unknown/context bytes. Edited/converted game loading remains untested; Origins proficiency/Old Coin writers and arbitrary DW7 XL weapon base-parameter editing remain unavailable.
+
 ## v2.5.4 — 2026-10-16
 
 - Fix scalar Review Changes exports that rejected plain names, `.json` names and save-style filenames with “Choose a .changes.json review file.” Complete the review suffix automatically and suggest a source-based filename.

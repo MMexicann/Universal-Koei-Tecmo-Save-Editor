@@ -50,7 +50,9 @@
     "https://barrelwisdom.com/firis/",
     "https://github.com/sterben-Dev10/SaveWizard-Resources",
     "https://savegame.pro/pc-atelier-ryza-ever-darkness-the-secret-hideout-savegame/",
-    "https://github.com/Rinnegatamante/rinCheat"
+    "https://github.com/Rinnegatamante/rinCheat",
+    "https://github.com/Mikompilation/MioPan/tree/b0f3bd4898fec100e0a3612d66004b1b0cbff044",
+    "https://github.com/bucanero/apollo-patches/blob/d396aa4f2452b02382c4e7066d712f6ce9116964/PS3/BLES01183.savepatch"
   ],
   "games": [
     {
@@ -220,7 +222,7 @@
       "title": "Warriors Orochi 3 Ultimate Definitive Edition",
       "platform": "Windows PC",
       "status": "Native Steam PC file editor",
-      "evidence": "Supplied executable serializer and genuine shared native PC save qualify packed revision, 145 playable officer stat records, growth points/gems, attribute orbs, crafting and existing weapon attribute slots/ranks. ASLR-dependent record markers and unknown bytes are preserved. Development expansion: Already promoted coherent officers have unallocated upgrade-stone controls; ordinary-item equipment uses original ownership/ranks, active slots and duplicate checks. Version 2.5.3 adds two native persisted mount-loadout selectors using only originally owned binary-rank mount IDs 28–31, with a separate ordinal mapping. The native menu, root state-copy bridge and serializer independently qualify both bytes. Two native sources and full copy/GUI workflows preserve ownership/ranks, ordinary equipment and all unrelated data. Decrease-only reinforcement remains bounded under experimental editing.",
+      "evidence": "Supplied executable serializer and genuine shared native PC save qualify packed revision, 145 playable officer stat records, growth points/gems, attribute orbs, crafting and existing weapon attribute slots/ranks. ASLR-dependent record markers and unknown bytes are preserved. Development expansion: Already promoted coherent officers have unallocated upgrade-stone controls; ordinary-item equipment uses original ownership/ranks, active slots and duplicate checks. Version 2.5.3 adds two native persisted mount-loadout selectors using only originally owned binary-rank mount IDs 28–31, with a separate ordinal mapping. The native menu, root state-copy bridge and serializer independently qualify both bytes. Two native sources and full copy/GUI workflows preserve ownership/ranks, ordinary equipment and all unrelated data. Decrease-only reinforcement remains bounded under experimental editing. Version 2.6 adds manual existing weapon compatibility reset to zero, corroborated by the native serializer and total-attack getter; arbitrary increases remain blocked. Two distinct native states qualify 526 surgical resets. A separate 64-record inventory distinguishes ownership, rank and equipped usage, and ordinary-item choices reflect the complete pending batch.",
       "needed": "Actual edited game loads, roster/material ID names, controlled promotion/progression/bonds/story rewards and remaining weapon descriptors.",
       "editing_verified": true
     },
@@ -491,7 +493,7 @@
       "platform": "Windows PC",
       "status": "Native PC weapon-fusion and stock-EXP editor",
       "editing_verified": true,
-      "evidence": "Genuine native revision-2 save qualifies exact layout and byte-sum integrity. Stock EXP, 96 independently bounded officer base-attack fields, existing weapon attack bonus, capacity and already-owned normal attribute ranks are mapped from native setters. Unknown attributes, alchemy, acquisition, level/EXP, proficiency and story are preserved. Existing own-pool equipped references and coherent progressed within-level EXP now have guarded manual writers.",
+      "evidence": "Genuine native revision-2 save qualifies exact layout and byte-sum integrity. Stock EXP, 96 independently bounded officer base-attack fields, existing weapon attack bonus, capacity and already-owned normal attribute ranks are mapped from native setters. Unknown attributes, alchemy, acquisition, level/EXP, proficiency and story are preserved. Existing own-pool equipped references and coherent progressed within-level EXP now have guarded manual writers. Version 2.6 adds independently bounded base Life, Musou, Defense and Speed alongside Attack. All 960 native initial/clamp words are independently checked; two distinct native gameplay states qualify 1,526 boundary serializations, preserving four unusual original stats.",
       "needed": "Edited game loading; matching named catalogs and controlled level/stat RNG, proficiency, alchemy, treasure and campaign dependencies."
     },
     {
@@ -1401,6 +1403,15 @@
       "status": "Native decrypted Leaf editor",
       "evidence": "Two independent complete public native exports independently PFD-decrypted and qualified against the exact BLUS30639 original metadata, observed eight-byte profile and 1,048,576-byte size. Published own-title Apollo writer corroborates the wallet mapping. Manual scalar writes preserve all other bytes. Full opaque PARAM.SFO binding, native read-back, staged Undo, review, backups and safe copied-file workflows are tested. Published/observed editing ceilings do not establish natural caps; Max disabled.",
       "needed": "Edited game-load/re-save validation and internal integrity qualification. Big-endian Leaf at 0xCCC8; separate stored EXP/dive-point inspection. Inventory, talk topics, endings, system gallery and growth dependencies require further qualification.",
+      "editing_verified": true
+    },
+    {
+      "id": "troy_ps3",
+      "title": "Warriors: Legends of Troy",
+      "platform": "PlayStation 3",
+      "status": "Original EU revision-38 populated PROFILE editor",
+      "evidence": "A title-specific chaoszage/Apollo persistent Kleos writer and complete CRC32 are independently corroborated by a 103435-byte native BLES01183-WLOT PROFILE with original PARAM.SFO. Original PS3 decryption exactly matches the separately bundled RPCS3 representation: one gameplay state, two representations. Existing Kleos reductions and 152 literal native music/item records only. Fifty surgical native exports preserve all unrelated bytes; complete original context retained.",
+      "needed": "Edited original-EU game load/re-save; additional independently acquired native states, other populated/early profile geometries and controlled purchase/action pairs for broader mechanics. PFD authentication remains external.",
       "editing_verified": true
     }
   ],

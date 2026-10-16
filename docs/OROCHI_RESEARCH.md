@@ -132,8 +132,9 @@ rank-one compatibility behavior, while the other binary IDs are inspected only.
 Zero ranks and dormant attributes are never activated. Reinforcement increases
 need the grade-specific ceilings, which are distinct from the native absolute
 99 clamp. Decreasing an already ordinary value cannot exceed its opened grade
-ceiling; the descriptor, grade, compatibility, costs and equipped references are
-preserved. The native total-attack getter reads reinforcement directly.
+ceiling; descriptor, grade, costs and equipped references are preserved.
+Version 2.6 separately offers an explicit compatibility reset to zero, with no
+arbitrary increases; see [the new qualification](WARRIORS_V26_DEPTH.md). The native total-attack getter reads reinforcement directly.
 
 The shared GUI provides search, grouped field controls, existing-weapon inspection,
 separate progression, resource and mount-loadout tables, staged batch Undo, Review Changes,
@@ -192,7 +193,7 @@ read only instead of becoming eligible when that mode is enabled.
 | Weapon ownership/types | Existing IDs inspected; no cloning, empty-record manufacture or guessed weapon names |
 | Weapon attribute slots | Safe existing-record expansion/reduction; reduction cannot hide owned attributes; expansion cannot activate dormant IDs |
 | Weapon attributes, elements and fusion | All existing native ranked IDs 0..25/32..45 writable through ten; binary/unknown/zero/dormant effects preserved. Attribute acquisition/swap and the full 58-name catalogue need native ID/name tables and fusion dependency pairs |
-| Weapon compatibility and reinforcement | Existing ordinary reinforcement decreases are writable. Increases need grade-specific caps. Compatibility is a preserved packed u32, distinct from reinforcement and descriptor attack; its progression clamp remains unqualified |
+| Weapon compatibility and reinforcement | Existing ordinary reinforcement decreases are writable. Increases need grade-specific caps. Compatibility is a separate packed u32: a deliberate reset to zero is qualified in v2.6; arbitrary increases require the missing descriptor-grade map |
 | Attribute-orb inventory | 58 balances editable; ID-to-name catalogue and natural clamps pending |
 | Crafting inventory/recipes | 295 balances editable; materials' names, receipt/new flags, recipe unlocks and natural clamps pending |
 | Equipped items and item enhancement | Qualified active ordinary-item selectors can choose original owned positive-rank items or empty; duplicates rejected. Enhancement/acquisition and slot-count changes require further dependency proof |
@@ -305,6 +306,7 @@ The adapter edits the following independently identified save-backed systems:
 | --- | --- |
 | Stock EXP / Growth Points | u32 `0x5E30`, 0..99,999; shared balance used for leveling and fusion, not the playtime counter at `0x5E2C` or individual officer EXP |
 | Officer base attack | u16 `0xC + id*0xDC + 8`, 96 records; individual initial floors 70..120 and per-officer natural ceilings 400..480, preserved in the interpreted limits module; separate from weapon and skill effects |
+| Base Life, Musou, Defense and Speed | Officer-relative u16 `+4`, `+6`, `+10`, `+12`; v2.6 uses independently qualified per-ID initial floors and growth ceilings, preserves unusual originals and separates battle/weapon effects. [Native tables and validation](WARRIORS_V26_DEPTH.md) |
 | EXP within current level | u32 officer `+0x10`; only already progressed stored levels 1..97 with EXP in that level's native band. Manual edits stay below the next threshold; excluded from bulk Max |
 | Equipped weapon choice | Byte officer `+1`, stored slots 0..7 displayed as 1..8; dropdown contains only qualified occupied records already in this officer's own pool. Original reference must qualify; excluded from bulk Max |
 | Existing weapon attack bonus | Officer `0xC + id*0xDC`, weapon `+0x14 + slot*0x18`, bonus byte `+7`, 0..20; identity/base weapon attack unchanged |

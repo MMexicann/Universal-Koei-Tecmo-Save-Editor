@@ -6,6 +6,12 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
+- [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
+- [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
+- [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
+
+- [v2.5.4 review-export filename fix](releases/v2.5.4.md)
 - [v2.5.3 equipment, new profiles and shared refinements](releases/v2.5.3.md)
 - [v2.5.2 changes and remaining request limits](releases/v2.5.2.md)
 - [Editor workspace: categories, open sessions and keyboard controls](EDITOR_WORKSPACE.md)
@@ -45,6 +51,10 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Reviewed bug fixes](BUG_REVIEW.md)
 
 ## Game formats and feature coverage
+
+- [Fatal Frame II original US PS2 research: writer deferred](FATAL_FRAME2_PS2_FORMAT.md)
+- [Warriors: Legends of Troy, original EU PS3](TROY_PS3_FORMAT.md)
+- [v2.6 Orochi Z base stats, WO3 compatibility and safer PS3 copies](WARRIORS_V26_DEPTH.md)
 
 - [Deception IV, Escha & Logy and Ar tonelico Qoga original PS3](PS3_NEW_FAMILIES.md)
 

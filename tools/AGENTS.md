@@ -11,4 +11,4 @@ player saves, game assets/binaries, private reports or personal paths.
 Build/check the standalone EXE on Windows before release; Linux checks are
 separate. Refresh reviewed manifest entries only after code/docs are stable.
 Use `python -m tools.update_supported_games` and `--check` for the registry-derived
-source index, README table and supported-game document.
+source index, README summary and supported-game document.

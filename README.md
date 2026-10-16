@@ -1,305 +1,86 @@
 # Universal Koei Tecmo Save Editor
 
-A free Windows save editor by **Mexican**, with a game library, shared Light/Dark
-themes, searchable records, backups, Undo and Review Changes. Switch between
-games while keeping each editing session open. Full-size illustrated cards show by
-default; the larger **Compact cards** toggle switches to a denser list.
+A free Windows save editor by **Mexican**. Edit supported character, inventory,
+equipment and progression fields, compare saves, and convert between selected
+platforms. Searchable editors share backups, Undo, change reviews and Light/Dark
+themes. No Python installation is needed for the Windows app.
 
-**Version 2.5.3** supports **96 game/platform profiles across 15 platforms**.
-No Python installation is needed for the Windows app.
-
-## New game and equipment controls
-
-**DW7 XL Definitive Edition PC:** select owned weapons already equipped by a
-playable officer in the opened copy, or replace/remove already learned seals in
-occupied slots. The native game stores base weapon attack, element and capacity
-in game data, so arbitrary edits to those parameters are **not available through
-the save**. [Weapon controls and exact limits](docs/DW7XL_WEAPONS.md).
-
-**DW7 XL original US/EU PS3:** a dedicated editor adds Gold, 65 officers’ stored
-stats and skill points, active equipped-weapon choices and existing unlearned
-seal-meter reductions. Keep the original `PARAM.SFO` beside decrypted `APP.BIN`;
-console reimport/resigning remains external. [PS3 guide](docs/DW7XL_PS3.md).
-
-**Nights of Azure 2, Switch:** reduce Libra in the qualified original English
-Chapter 1/7/Clear profiles, with synchronized native save preview and block
-hashes. Other chapters, languages and mechanics remain unqualified.
-[Exact input profiles](docs/NOA2_SWITCH_FORMAT.md).
-
-**WO3 Ultimate Definitive PC:** choose originally owned mounts for two stored
-loadouts; ownership and item ranks stay separate. All scalar editors gain
-searchable large choice lists and searchable reviews with named before/after
-values. Backup failures preserve completed snapshots and concurrent replacements
-across 24 affected format profiles. Edited and converted game loading remains untested.
-
-## Editor workspace
-
-Use the category sidebar to browse fields and see pending edits, or jump between
-open editors with the session selector. Edited rows are highlighted. The field
-table scrolls horizontally; **Show editing guide** opens each game's guidance.
-**More options** contains experimental editing and the separate encoding-limit
-column. Ctrl+F searches fields in scalar editors and games in the library;
-Escape in the field search clears its filters without changing pending edits.
-[Workspace guide](docs/EDITOR_WORKSPACE.md). The Windows ZIP includes the eleven
-reviewed user guides in `_internal/guides/`; the Source ZIP contains the full documentation.
-
-## Origins request status
-
-Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.3.
-The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
-controls remain available. The inspector shows stored proficiency XP
-and equipped Battle Art IDs, corroborated on nine public native slots. It does
-not calculate levels or change progression. Old Coin serialization and proficiency
-transition rules remain unresolved. [Evidence and remaining requirements](docs/ORIGINS_REQUEST_STATUS.md).
-
-## Save Converter
-
-The Save Converter offers **139 directed routes**. The expanded DW6 routes and new DW7 XL transfer are
-conversion previews; actual converted game loading remains unverified:
-
-- **DW6 PC, US/European/Japanese PS3 and North American/European Xbox 360:** 30 roster-and-horse routes, 30
-  **progress** routes adding 45 stage records and 17 Musou availability/clear
-  records, 30 **campaign-slot** routes also carrying all 20 stored Musou
-  run slots, and 30 **records** routes adding music/movie availability and five
-  challenge boards. Options and interim battles remain from the destination
-  template. European BLES00215 and Japanese BLJM60041 are conversion-only;
-  each requires its own original metadata. Xbox endpoints are also conversion-only
-  and require extracted gameplay beside its unchanged original `ORIGINAL.CON`.
-- **DW7 Xtreme Legends PS3 → Definitive Edition PC:** one-way US BLUS30873 /
-  European BLES01496 transfer of qualified Story/Legend progress, officers, weapons,
-  seals, guardians and challenge records. Original PS3 metadata and a PC template
-  are required. Settings and platform data stay from the PC template; suspended
-  battles and nonzero unqualified progression extensions are rejected.
-  [Exact scope and instructions](docs/DW7XL_CONVERSION.md).
-- **DW8 XL:** complete common gameplay between PC, US PS3 PSN, US PS4 and Vita
-  (12 routes). PS4 requires the supported zero-extension profile.
-- **Persona 5 Strikers:** English PC, PS4 and Switch (six routes).
-
-Search routes by game, region, title ID or scope. Choose separate source and destination-template copies, review the transfer scope,
-then export to a new folder with backups and a hash receipt. Console export/decryption
-and reimport/resigning use an external save manager. Converted game loading remains
-untested. [Routes and instructions](docs/SAVE_CONVERSION.md).
-
-The **PC and US DW6 PS3 editors** add one-way Free Mode stage and named Musou
-availability unlocks under **More unlocks**. Musou modes require their playable
-officers; clear records and rewards stay separate. The US editor also includes named one-way playable officer unlocks,
-searchable officer/weapon/horse inspection, horse combat stats and existing weapon
-bonus/element controls. Original `PARAM.SFO` is required beside decrypted `APP.BIN`.
-Xbox export needs external gameplay injection and rehash/resigning; the retained
-CON still contains the template gameplay. Active battle transfer remains unavailable.
-[DW6 mapping and limits](docs/DW6_CONVERSION.md).
-
-## Experimental editing
-
-Supported limits apply by default. Open a save copy, open **More options** and enable **Experimental:
-allow above supported limits** to enter larger numeric values. The editor shows
-the supported maximum and encoding limit, and warns that experimental values
-can break the save or game or be reset by the game.
-
-Max buttons keep supported limits. Unknown fields, IDs, choices, flags and required
-record structure remain protected. Backups, Undo and verified Save As stay available.
-See [experimental limits and exceptions](docs/EXPERIMENTAL_EDITING.md).
-
-## DW6 PC and PS3 equipment
-
-Both original PC and US PS3 editors add named weapon/horse skill toggles, horse
-elements and equipped-weapon selection from the officer's existing inventory.
-Skills respect the five-weapon/four-horse capacities and preserve unknown masks.
-Conversion review names the officer and horse records being replaced, including
-empty source slots. [Exact scope and controls](docs/DW6_PS3_FORMAT.md).
-
-## Batch Converter
-
-Queue reviewed conversions, save/load private plans and validate every job before
-exporting. Each copy gets its own new folder, backups and native read-back.
-Progress, stop-after-current-copy and verified partial-result reports cover up to
-32 jobs across all 139 routes. [Instructions](docs/BATCH_CONVERSION.md).
-
-## Compare Saves
-
-Compare two copies using their exact game/platform profile. View changed values,
-conditional records and other payload differences, search and page through the
-results, and export a private JSON report. Results remain when switching workspaces.
-The comparison reads 95 scalar profiles and verifies original files and metadata
-again before report export. [Instructions](docs/SAVE_COMPARISON.md).
-
-## Supported games
-
-Select the game and platform that match your save. Console editors open
-extracted or decrypted save exports: `.psu` for
-PlayStation 2, `APP.BIN` for Wii U and DW7/DW8 XL PS3, `DATA.BIN` for SW4 PS3, and `svdt`
-for Age of Calamity, `PLAYDATA` for original Bladestorm PS3, and `DATA.BIN` for
-Pirate Warriors PS3. Some PS3 profiles require the original `PARAM.SFO` beside
-the copied gameplay file and edited output. Export and reimport/resign PS3 saves
-with Apollo Save Tool; this editor does not rebuild `PARAM.PFD` or sign exports.
-
-Berserk and Meruru Plus Vita editors open decrypted exports with their original
-`sce_sys/param.sfo`. DW8 XL Vita opens the qualified plaintext `MainData00.dat` profile.
-Meruru Plus uses `USR-DATA0000`; Berserk uses `app0000.dat` or another supported
-slot. Export and reimport with a Vita save manager. Pokémon Conquest and Monster Rancher DS open raw
-Nintendo DS `.sav` exports. Gemfire NES/SNES and Nobunaga NES open raw battery
-exports; Bandit Kings Macintosh opens `.cim` data forks.
-Attack on Titan Vita uses `app0000.dat` with original `sce_sys/param.sfo`.
-
-Persona 5 Strikers PS4 opens a decrypted English `APP.BIN` export with its
-original `sce_sys/param.sfo`; reimport using your PS4 save manager.
-
-Samurai Warriors 5 and Warriors: Abyss need the original `steam_autocloud.vdf`
-beside the copied save and edited output. Copy the complete save folder first.
-
-Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
-packages require a separate extraction and reintegration workflow. Sigma 2 and
-Ninja Gaiden 2 Black use different formats.
-
-The table below lists game/platform editor profiles for v2.5.3.
-Conversion-only endpoints are listed separately in the Save Converter guide.
-Experimental editing applies to mapped numeric fields where their encoding permits it.
+**[Download for Windows](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest)**
+· **[Supported games](docs/SUPPORTED_GAMES.md)**
+· **[User guide](docs/EDITOR_WORKSPACE.md)**
+· **[What's new](docs/RELEASE_NOTES.md)**
 
 <!-- BEGIN SUPPORTED GAMES -->
-| Game / edition | Platform | Implemented scope |
-| --- | --- | --- |
-| DYNASTY WARRIORS 3 — Complete Edition Remastered | Windows PC | Character progression, equipment, companions and unlocks. |
-| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · PC | Windows PC | Resources, officer stats, weapon compatibility, affinity, attribute ranks and equipped weapon order. |
-| DYNASTY WARRIORS 7 — Xtreme Legends Definitive Edition · PC | Windows PC | Gold, officer stats, source-witnessed weapon loadouts, learned applied-seal replacement/removal and unlearned seal-meter reductions. |
-| DYNASTY WARRIORS 7 — Xtreme Legends · original US/EU PS3 | PlayStation 3 | Gold, 65 officers’ stored stats/skill points, owned active-weapon choices and existing unlearned seal-meter reductions. |
-| ONE PIECE: PIRATE WARRIORS 3 — Windows PC edition | Windows PC | Individual or bulk character stats, special bars and skill slots. |
-| ONE PIECE: PIRATE WARRIORS 4 — Windows PC · WW/JP/EA revision 15 | Windows PC | Beli, existing obtained coin quantities and searchable resource history. |
-| DYNASTY WARRIORS 4 HYPER — Native Windows PC edition | Windows PC | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, bodyguards and customization. |
-| ATELIER SOPHIE 2 — The Alchemist of the Mysterious Dream · PC | Windows PC | Item quality, battle-item refills, inventory inspection and alchemy EXP. |
-| ATELIER SOPHIE 2 — The Alchemist of the Mysterious Dream · PS4 CUSA28451 app 1.0 | PlayStation 4 | Named existing material-quality reductions and battle-item uses within capacity; searchable inventory, equipment, Party and alchemy records. |
-| ATELIER TOTORI — The Adventurer of Arland · original PS3 US/EU | PlayStation 3 | Cole reductions; searchable named character levels, EXP and serialized progression sections. |
-| ATELIER MERURU — The Apprentice of Arland · original US PS3 | PlayStation 3 | Cole reductions; searchable named character levels, EXP and serialized progression sections. |
-| ATELIER RORONA — The Alchemist of Arland · original US PS3 | PlayStation 3 | Cole reductions; searchable seven named character raw records and serialized systems. |
-| ATELIER SOPHIE — Original Steam PC · GAMEDATA slots | Windows PC | Cole, Tess tickets and existing basket/container quality; searchable inventory and alchemy progression. |
-| ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Steam PC | Windows PC | Ordinary item/equipment quality from 1–100 and qualified unspent skill-tree SP reductions; inventory inspection. |
-| NIGHTS OF AZURE 2 — Bride of the New Moon · original Switch English Chapter 1/7/Clear profiles | Nintendo Switch | Libra reductions with synchronized native save preview; read-only resource and checkpoint inspection. |
-| ATELIER MERURU PLUS — The Apprentice of Arland · US decrypted PCSE00296 | PlayStation Vita | Cole; 13 named characters’ base stats (attack/defense/speed), base HP/MP/LP increases and current-gauge reductions; searchable records. |
-| FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
-| DYNASTY WARRIORS 4 — Xtreme Legends · SLUS-20812 | PlayStation 2 | Character stats, weapon levels, items, owned harness/orb and occupied general-item equipment, and bodyguard growth. |
-| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
-| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes, owned ordinary-item equipment and two owned-mount loadouts. |
-| WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
-| SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
-| SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
-| SAMURAI WARRIORS 2 — Original Windows PC · save revision 2 | Windows PC | Money, stored officer growth, acquired skills, weapon bonuses and existing own-pool weapon selection. |
-| DYNASTY WARRIORS 6 — Native Windows PC edition | Windows PC | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
-| DYNASTY WARRIORS 6 — Original US PS3 · BLUS30110 · APP.BIN + PARAM.SFO | PlayStation 3 | Named officer, Free Mode stage and Musou availability unlocks; horse stats/elements, weapon bonuses, equipment skills and own-inventory weapon selection. |
-| DYNASTY WARRIORS 9 EMPIRES — Windows PC · SYSTEMDATA | Windows PC | Existing item quantities; searchable inventory and custom officer records. |
-| WARRIORS OROCHI Z — Native Windows PC edition | Windows PC | Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection. |
-| WARRIORS ALL-STARS — Windows PC · revision F4 | Windows PC | Gold, existing materials, owned Hero Card selection and searchable card records; separate lifetime earnings. |
-| HYRULE WARRIORS — Wii U · APP.BIN | Wii U | Rupees, existing materials and map cards, weapon stars and ordinary seal KO counters. |
-| HYRULE WARRIORS — Definitive Edition · zmha.bin | Nintendo Switch | Rupees, existing materials, weapon stars, ordinary seal KO counters and searchable records. |
-| HYRULE WARRIORS: AGE OF CALAMITY — Switch · svdt | Nintendo Switch | Rupees, discovered materials, trophies and reports; existing weapon protection and inspection. |
-| FIRE EMBLEM WARRIORS — Switch · scenario0/1/2 exports | Nintendo Switch | Gold, existing ordinary materials, generic weapon stars and ordinary seal KO counters; named inspection. |
-| DYNASTY WARRIORS 7 — US/EU · decrypted APP.BIN | PlayStation 3 | Gold and 62 officers’ health, attack, defense, power, speed and skill points. |
-| DYNASTY WARRIORS 7 EMPIRES — US · decrypted SYSTEM DATA.BIN | PlayStation 3 | Manual system bonus-point editing; campaign saves use a separate format. |
-| SAMURAI WARRIORS 4 — US · decrypted DATA.BIN | PlayStation 3 | Gold, eight gems and searchable weapon proficiency/EXP inspection. |
-| DYNASTY WARRIORS 8 EMPIRES — Windows PC · SystemSave.dat | Windows PC | Existing custom-horse appearance choices; searchable horse stats and ability records. |
-| WO LONG: FALLEN DYNASTY — Windows PC · USERDATA | Windows PC | Genuine Qi, copper, accolades, ordinary stack reductions, existing battle-set names and equipment inspection. |
-| PERSONA 5 STRIKERS — Windows PC · SAVEDATA.BIN | Windows PC | Money, Persona/BOND points and existing consumables, cooking supplies, incenses, remedies and selected skill cards. |
-| HYRULE WARRIORS LEGENDS — Nintendo 3DS · zmha.bin | Nintendo 3DS | Rupees, materials, map cards, weapon stars, ordinary seals, My Fairy names and existing fairy trust reductions. |
-| DECEPTION IV: BLOOD TIES — Original US PS3 PSN · NPUB31442 | PlayStation 3 | Warl editing and separate read-only ability experience; original decrypted DATA.BIN + PARAM.SFO. |
-| ATELIER ESCHA & LOGY — Original EU PS3 PSN · NPEB01945 | PlayStation 3 | Cole editing and separate named stored EXP inspection; original decrypted USR-DATA + PARAM.SFO. |
-| AR TONELICO QOGA — Knell of Ar Ciel · original US PS3 · BLUS30639 | PlayStation 3 | Leaf editing and separate stored growth/dive-point inspection; decrypted USR-DATA + PARAM.SFO. |
-| ATELIER AYESHA — The Alchemist of Dusk · PS3 US/Japanese export | PlayStation 3 | Cole, existing stack reductions and searchable inventory quality, properties and effects. |
-| DYNASTY WARRIORS 5 SPECIAL — Shin Sangokumusou 4 Special · Windows PC | Windows PC | Existing item ranks, stored officer attack/defense, weapon attack/weight and attributes; named records. |
-| FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold and existing material-stock reductions, owned Shez/Byleth name customization and searchable character/weapon records. |
-| DYNASTY WARRIORS 8 EMPIRES — US · decrypted SYSTEM APP.BIN | PlayStation 3 | Existing custom-horse appearance choices; searchable horse stats and ability records. |
-| WARRIORS OROCHI 3 ULTIMATE — US · decrypted APP.BIN · NPUB31505 | PlayStation 3 | Manual unallocated growth points and gems; searchable officer, weapon and inventory inspection. |
-| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, thirty-two named ordinary consumable reductions; separate equipment inspection. |
-| NINJA GAIDEN II — Original Xbox 360 / Xenia · extracted revision-6 story | Xbox 360 / Xenia | Yellow Essence, existing consumable and ammunition reductions; searchable inventory and separate Karma inspection. |
-| DYNASTY WARRIORS: GUNDAM — US/EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Learn skill flags and choose already learned equipped skills on six qualified level-30 pilots; progression inspection. |
-| DYNASTY WARRIORS: GUNDAM REBORN — EU/Japan · decrypted DATA.BIN + original PARAM.SFO | PlayStation 3 | Spendable money and existing Amuro/Kamille Team Point reductions; searchable pilot progression, earnings and material storage. |
-| DYNASTY WARRIORS: GUNDAM 3 — US · decrypted DATA.BIN + original PARAM.SFO | PlayStation 3 | Spendable money reductions; searchable Mobile Suit Laboratory EXP and license-bit storage. |
-| TRINITY: SOULS OF ZILL O'LL — US · decrypted PLAY.DAT + original PARAM.SFO | PlayStation 3 | Spendable money reductions; searchable SP storage and named Areus, Dagda and Selene stat words. |
-| NINJA GAIDEN BLACK — Original Xbox · SYSTEM.dat + original console EEPROM | Original Xbox | Restore numeric save-slot order; searchable thirty-slot time and list-position records. |
-| FIST OF THE NORTH STAR: KEN'S RAGE — US/EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Manual existing skill-point balances for eight base fighters; inspect progression resources. |
-| FIST OF THE NORTH STAR: KEN'S RAGE 2 — EU · decrypted DATA.BIN + PARAM.SFO | PlayStation 3 | Unlock locked music, movie and event gallery entries; preserve existing collection states. |
-| ROMANCE OF THE THREE KINGDOMS XIII — Original PC · revision 14 · TC | Windows PC | City gold, supplies, population, wounded troops, fealty, commerce, farming, culture and troop proficiencies. |
-| FIRE EMBLEM: THREE HOUSES — Switch · gameplay save-format v13/v23 | Nintendo Switch | Instruction motivation, existing learned ability loadouts, gold and ordinary convoy quantity/durability reductions. |
-| BERSERK AND THE BAND OF THE HAWK — EU PS Vita · decrypted PCSB01085 | PlayStation Vita | Gold deductions, eighteen named existing enhancement materials and searchable character status. |
-| DEAD OR ALIVE 5 — Original US/EU PS3 PSN · SAVE_SYS.DAT + PARAM.SFO | PlayStation 3 | Sixty-three individual costume unlock controls and searchable costume records. |
-| POKÉMON CONQUEST — US Nintendo DS · raw native save | Nintendo DS | Existing gallery Pokémon IV components and Speed IV; searchable gallery Pokémon records. |
-| ATELIER RYZA — Ever Darkness & the Secret Hideout · original Switch main game | Nintendo Switch | Existing ordinary item/equipment quality 1–100; searchable inventory, equipment and read-only trait slots. |
-| DYNASTY WARRIORS 8 — Xtreme Legends · US PS3 PSN NPUB31449 · APP.BIN + PARAM.SFO | PlayStation 3 | Gold, gems, facility/weapon materials, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
-| DRAGON QUEST BUILDERS 2 — Original Steam PC · CMNDAT.BIN | Windows PC | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
-| ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
-| DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
-| PERSONA 5 STRIKERS — English Nintendo Switch · savedata export | Nintendo Switch | Money, Persona points, unspent BOND points and existing named consumable, ingredient, incense, remedy and skill-card stacks. |
-| ROMANCE OF THE THREE KINGDOMS II — Original Chinese DOS · raw save copies | DOS PC | Owned-province gold and rice reductions; searchable province ownership, population and resource records. |
-| PERSONA 5 STRIKERS — English PS4 · decrypted APP.BIN + original sce_sys/param.sfo | PlayStation 4 | Money, Persona/BOND points and existing named consumables, ingredients, incenses, remedies and skill-card stacks. |
-| UNCHARTED WATERS: NEW HORIZONS — Original English DOS · KOUKAI2.DAT | DOS PC | Existing-slot gold and eight protagonist attributes; searchable campaign and sailor records. |
-| ROMANCE OF THE THREE KINGDOMS: LEGEND OF LIU BEI — Original Traditional Chinese DOS · MSAVE0–4.R3S | DOS PC | Existing allied troop reductions and within-level EXP; searchable character and carried-item records. |
-| ROMANCE OF THE THREE KINGDOMS III — Original Traditional Chinese DOS · SANGOKU3.SAV | DOS PC | Six existing officer abilities and owned-city resource/commerce reductions; searchable slots, cities and officers. |
-| NOBUNAGA'S AMBITION: TENSHOUKI — Original Japanese Windows Power-Up Kit · SAVEDAT.n6p | Windows PC | Existing district Gold, Rice, Horses and Firearms reductions; searchable generals, castles, clans, treasures and slots. |
-| PROJECT ZERO / FATAL FRAME — Original European PS2 · SLES-50821 PSU export | PlayStation 2 | Existing camera-point, base-upgrade tier and film-stock reductions; searchable slots, camera functions and inventory. |
-| ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
-| MONSTER RANCHER DS — US Nintendo DS · raw 32/64 KiB export | Nintendo DS | Existing matched monster stats and lifespan, breeder/ranch/monster names and gold reductions; searchable records. |
-| TECMO SUPER BOWL — NES · compatible original 28-team battery SRAM | NES | Team control, healthy player conditions and per-slot playbooks; searchable standings, conditions and injury records. |
-| WARRIORS OROCHI 4 — Original Windows PC · revision 20180720 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points, existing weapon elements and Skill Orb reductions; searchable records. |
-| WARRIORS OROCHI 4 ULTIMATE — Windows PC · revision 20200101 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons. |
-| SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts. |
-| WARRIORS: ABYSS — Windows PC · revision A4 gameplay slots | Windows PC | Karma Embers and searchable persistent recruitment records; preserves original Steam owner context. |
-| BANDIT KINGS OF ANCIENT CHINA — Original English Macintosh · SUI0/SUI1 data forks | Macintosh | Owned-prefecture Gold, Food, Metal and Fur reductions; existing hero Strength, Dexterity and Wisdom reductions. |
-| NOBUNAGA'S AMBITION — Original English NES · 17-fief battery profile | NES | Owned active fief Gold and Rice reductions with native additive checksum validation. |
-| GEMFIRE — NES · native structurally qualified battery records | NES | Player-owned province Gold, Food, Loyalty, Farming and Protection; searchable province records. |
-| GEMFIRE — SNES · native structurally qualified battery records | SNES | Player-owned province Gold, Food, Loyalty, Farming and Protection; searchable province records. |
-| BLADESTORM: THE HUNDRED YEARS’ WAR — Original EU BLES00113 · decrypted PLAYDATA + PARAM.SFO | PlayStation 3 | Money and existing positive book Skill Point reductions; searchable book records. |
-| ATELIER FIRIS — The Alchemist and the Mysterious Journey · original Steam PC | Windows PC | Cole deductions and qualified existing ordinary basket/container quality reductions; searchable inventory. |
-| BLUE REFLECTION: SECOND LIGHT — Original Steam PC · native tagged gameplay profile | Windows PC | Existing uniquely identified ordinary container quantity reductions; searchable inventory records. |
-| ATELIER RYZA — Ever Darkness & the Secret Hideout · original Steam PC | Windows PC | Qualified existing ordinary item/equipment quality reductions; searchable inventory and Party equipment. |
-| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · plaintext Vita revision 0x131002F0 | PlayStation Vita | Resources, 82 officers’ stored stats, weapon-action aptitudes and existing weapon attribute ranks. |
-| ONE PIECE: PIRATE WARRIORS — Original US PSN NPUB30836 · DATA.BIN + PARAM.SFO | PlayStation 3 | Thirteen named characters’ existing level-growth word reductions; searchable progression. |
-| ONE PIECE: PIRATE WARRIORS 2 — Original EU PSN NPEB01795 · DATA.BIN + PARAM.SFO | PlayStation 3 | Primary spendable Berry reductions; searchable secondary currency and progression. |
-| ONE PIECE: PIRATE WARRIORS 3 — Original EU PSN NPEB02211 · DATA.BIN + PARAM.SFO | PlayStation 3 | Existing progressed-character HP, Attack and Defense reductions; searchable progression and currency. |
-| DYNASTY WARRIORS 8 — Original US PSN NPUB31234 · plaintext APP.BIN + PARAM.SFO | PlayStation 3 | Gold and Ambition facility/weapon material reductions; searchable resources. |
-| ATTACK ON TITAN / A.O.T. WINGS OF FREEDOM — Original EU PCSB00898 · app0000.dat + sce_sys/param.sfo | PlayStation Vita | Money and existing positive numbered material-quantity reductions; searchable stored quantities. |
+**97 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
 <!-- END SUPPORTED GAMES -->
 
-## Download and use
+**Version 2.6.** Choose a supported edition below and keep a separate save copy.
 
-Download the **standalone EXE** from the
-[latest GitHub release](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest)
-and run it directly, or download the **Windows ZIP** and extract its app folder
-completely. In the ZIP version, keep `_internal` beside the launcher EXE.
-Neither download needs Python or administrator privileges. The Windows ZIP
-contains only the app folder; contributor guides and development documents are
-in the separate Source ZIP.
+## What you can do
 
-Version 2.0 remains withdrawn after a Microsoft Defender detection. Both Windows
-downloads require updated, active Defender scans before publication. The release
-includes a scan report identifying the tested files and signatures.
+- **Edit saves:** search fields and records, adjust values, inspect equipment,
+  review named before/after changes, and save a separate edited copy.
+- **Browse copied saves:** choose an exact game/platform and scan a folder.
+  Search, sort and filter qualified copies and identical gameplay files.
+  [Save Library](docs/SAVE_LIBRARY.md).
+- **Reuse edits:** export a reviewed edit preset and apply it to the same
+  byte-identical source after previewing the complete resulting changes.
+  [Edit Presets](docs/EDIT_PRESETS.md).
+- **Personalize the workspace:** pin frequently used fields, keep multiple game
+  sessions open, and export complete JSON or spreadsheet-friendly CSV reviews.
+  [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
+- **Compare saves:** inspect mapped changes and other payload differences across
+  96 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
+- **Convert saves:** 139 directed routes cover qualified DW6, DW7 XL, DW8 XL and
+  Persona 5 Strikers transfers. Review one copy or queue multiple conversions.
+  [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
 
-1. Make a separate copy of your save outside the game and Steam Cloud folders.
-2. Search the **Game Library**, filter by series or platform, and choose
-   **Open Editor**, then **Open Save Copy**. **Ctrl+F** searches all platforms.
-3. Edit values or use the available bulk actions. **Find fields** and
-   **Find records** help locate characters, equipment and inventory entries.
-   **Adjust Selected** adds or subtracts from selected numbers;
-   **Revert Selected** restores their opened values.
-4. Check **Review Changes**; use **Undo** to reverse an edit batch.
-5. Choose **Save As** to create an edited copy. Automatic backups and backup
-   restore are available.
+Editing scope varies by edition and save revision. Some newer profiles allow
+only conservative reductions or specific equipment choices; the supported-games
+list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
+expands only explicitly mapped numeric fields.
 
-Return to **Game Library** to switch games. Your sessions and Light/Dark theme
-are retained.
+## New in v2.6
 
-## Run from source
+- **Warriors: Legends of Troy, original EU PS3:** Kleos reductions and searchable
+  native music/item records for the qualified revision-38 populated profile.
+- **Orochi Z PC:** independently bounded base Life, Musou, Defense and Speed,
+  alongside the existing Attack controls.
+- **WO3 Ultimate PC:** deliberate weapon compatibility reset, clearer pending
+  equipment choices and a separate item inventory. PS3 copy/context checks are
+  stronger. [Details and qualification](docs/WARRIORS_V26_DEPTH.md).
 
-From the repository root with Python 3.10 or newer and Tkinter:
+## Quick start
 
-```powershell
+1. Download and extract the complete Windows ZIP, then run its EXE. Alternatively,
+   use the standalone EXE. Keep the ZIP's bundled files together.
+2. Make a separate copy of your save folder outside the live game/cloud location.
+   Choose its exact game, edition and platform, then **Open Save Copy**.
+3. Stage edits, check **Review Changes**, and choose **Save As...** to write a new
+   game-save copy. **Export Review** writes a report. Undo and automatic backups
+   are available.
+
+Console profiles require supported extracted/decrypted exports and any original
+companion metadata specified in their guide. Decryption, console reimport and
+resigning use external save tools. File-level validation is tested; **edited or
+converted game loading and re-saving remain unverified**.
+
+Origins proficiency-level and Old Coin writers remain unimplemented.
+[Request status](docs/ORIGINS_REQUEST_STATUS.md). DW7 XL PC weapon base attack,
+element and capacity live in game data; arbitrary save edits to those parameters
+remain unavailable. [Weapon scope](docs/DW7XL_WEAPONS.md).
+
+## Run from source and contribute
+
+With Python 3.10 or newer and Tkinter, run from the repository root:
+
+```text
 python -m pip install -e .
 python -m koei_editor
 ```
 
-## Contribute
+See [CONTRIBUTING.md](CONTRIBUTING.md), [build instructions](docs/BUILDING.md),
+and the [documentation index](docs/README.md). AI coding agents should read
+[AGENTS.md](AGENTS.md).
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) for development and new adapters.
-AI coding agents should read [AGENTS.md](AGENTS.md).
-The [documentation index](docs/README.md) includes build instructions and formats.
-
-## Contact
-
-Discord: `mexicannn`.
-[Mexican's Steam profile](https://steamcommunity.com/id/theonlyjuandeagingmexican/).
+Discord: `mexicannn` · [Mexican's Steam profile](https://steamcommunity.com/id/theonlyjuandeagingmexican/)

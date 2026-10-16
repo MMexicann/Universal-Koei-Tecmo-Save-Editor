@@ -1,6 +1,7 @@
 """Keep the source index, README and supported-game document synchronized."""
 from pathlib import Path
 import argparse
+import re
 
 from koei_editor.supported_games import SUPPORTED_GAMES, markdown_table
 
@@ -10,6 +11,29 @@ START = '<!-- BEGIN SUPPORTED GAMES -->'
 END = '<!-- END SUPPORTED GAMES -->'
 SOURCE_START = '# BEGIN GENERATED SUPPORTED GAME INDEX'
 SOURCE_END = '# END GENERATED SUPPORTED GAME INDEX'
+
+
+def platform_groups():
+    return {platform: tuple(game for game in SUPPORTED_GAMES if game.platform == platform)
+            for platform in dict.fromkeys(game.platform for game in SUPPORTED_GAMES)}
+
+
+def readme_summary():
+    return (f'**{len(SUPPORTED_GAMES)} game/platform profiles across '
+            f'{len(platform_groups())} platforms.** '
+            '[Browse the full supported-games list](docs/SUPPORTED_GAMES.md) '
+            'for editions, platforms and exact editing scope.\n')
+
+
+def platform_inventory():
+    groups = platform_groups()
+    lines = ['## Browse by platform', '', '| Platform | Profiles |', '| --- | ---: |']
+    for platform, games in groups.items():
+        anchor = re.sub(r'[^\w -]', '', platform.lower()).replace(' ', '-')
+        lines.append(f'| [{platform}](#{anchor}) | {len(games)} |')
+    for platform, games in groups.items():
+        lines.extend(['', f'## {platform}', '', markdown_table(games).rstrip()])
+    return '\n'.join(lines) + '\n'
 
 
 def replace_block(text, start, end, body):
@@ -34,7 +58,7 @@ def expected_files():
                      'Optional experimental numeric editing applies across the library. '
                      'Supported maxima and encoding limits remain separate; see '
                      '[experimental scope and warnings](EXPERIMENTAL_EDITING.md).\n\n'
-                     + markdown_table() + '\n'
+                     + platform_inventory() + '\n'
                      'Scope is specific to each edition and supported save revision. '
                      'File-level qualification and actual game loading are separate; '
                      'see [coverage and blockers](EXPANSION_COVERAGE.md) and '
@@ -43,7 +67,7 @@ def expected_files():
     text = readme.read_text(encoding='utf-8')
     if START not in text:
         text += '\n## Supported game/platform inventory\n\n' + START + '\n' + END + '\n'
-    yield readme, replace_block(text, START, END, markdown_table())
+    yield readme, replace_block(text, START, END, readme_summary())
 
 
 def main():

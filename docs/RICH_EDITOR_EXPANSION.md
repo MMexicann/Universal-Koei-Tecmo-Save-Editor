@@ -101,8 +101,9 @@ combined regression result and native Windows preview run.
 Wo Long enabled battle-set naming still lacks a positive eligible native sample;
 its edit path has static/schema, procedural and GUI evidence, and a native
 enabled rename pair is the specific missing input. DW7 unlearned seal-meter
-reduction now has one eligible record in a second private native PC copy, with
-file-level surgical reduction tests; a controlled learning action pair remains
-missing.
+reduction has an optional file-level surgical test for an eligible record in a
+second private native PC copy reported in PR #43. Maintainer review copies have
+no eligible positive meter, so the reported positive case is not independently
+reproduced. A controlled learning action pair remains missing.
 No edited save has been imported, loaded and re-saved in its game in this pass.
 Private fixtures, owner context and binaries remain outside Git and artifacts.

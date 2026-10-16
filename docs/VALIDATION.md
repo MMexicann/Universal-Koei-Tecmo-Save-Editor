@@ -1,5 +1,63 @@
 # Universal development validation
 
+## v2.6 new titles and shared tools
+
+Orochi Z native initial and growth tables independently establish all five saved
+base-stat bounds for 96 IDs. Two distinct gameplay states qualify 1,526 boundary
+serializations, with unusual originals preserved. Two distinct WO3 Ultimate PC
+states qualify 526 surgical compatibility resets. Native GUI/save/backup/restore
+checks preserve ownership, equipment and unrelated bytes.
+
+Fatal Frame II US PS2 research checks eight complete exports, 32 occupied
+instances and twelve distinct gameplay states. Private candidate assignments
+preserve container/checksum bytes, but that does not independently prove retail
+stock linkage or dependency rules. AI-assisted EU prototype leads and separate
+retail RAM stock labels are insufficient for that missing step. The proposed
+writer stays unregistered and outside the release. [Research](FATAL_FRAME2_PS2_FORMAT.md).
+
+Troy EU PS3 qualification independently decrypts the original representation
+and matches the supplied RPCS3 bytes: one native state, two representations. A
+separate bitwise CRC, complete table walk, exact original SFO, surgical native
+exports and real Tk backup/save/restore workflow corroborate the narrow profile.
+Ambiguous high wallet words remain opaque. [Exact scope](TROY_PS3_FORMAT.md).
+
+Save Library, presets, pins and CSV review regressions cover cancellation before
+Tk delivery, changed roots with retained file inodes, original-source/context
+freshness before and after native serialization, full-map validation, source-
+bound field-definition fingerprints, frozen complete exports, typed values and
+spreadsheet-safe labels. Failed operations preserve staged history and completed
+files as documented. Native read-only browser checks cover WO3 PC, supplied WO3
+PS3 and Nights of Azure 2 Switch, without changing original sources/context.
+
+Windows release testing caught incompatible `ctime` meanings in CPython 3.14:
+[path stat/lstat preserves creation time](https://github.com/python/cpython/blob/v3.14.7/Modules/posixmodule.c),
+while [handle fstat exposes native change time](https://github.com/python/cpython/blob/v3.14.7/Python/fileutils.c).
+Save Library and review-export checks now retain full before/after freshness
+within each API and bind the APIs using common file identity, size and modified
+time. Active regressions simulate valid differing clocks, independent timestamp
+changes, wrong handles and same-byte replacements without weakening copy guards.
+
+The complete source suite and required Windows build/startup/Defender/download
+gates must pass for publication. Edited/converted in-game load/re-save remains
+unverified; unresolved Origins and DW7 XL requests retain their documented limits.
+
+## v2.5.4 review-export filename fix
+
+A privately supplied decrypted WO3 Ultimate US PS3 export opens under the
+existing exact profile and has a byte-exact unchanged roundtrip. Before the
+fix, actual Tk review exports using a plain name, a `.json` name or `APP.BIN`
+all reproduce “Choose a .changes.json review file.” The exact review suffix
+works. After the fix, all four choices export the complete expected typed JSON
+review, and all five supplied save/context files retain their original hashes.
+Private saves, context, native reports and account data are excluded from Git
+and release assets.
+
+GUI regressions also cover Unicode/case variants, partial suffixes, directories
+whose names contain the suffix, cancellation, existing normalized destinations
+and a frozen WO3U review exported after Undo. Existing source files, pending
+edits and previously exported reports remain unchanged. This is report-export
+validation; gameplay mappings and in-game loading claims do not change.
+
 ## v2.5.3 weapons, new profiles and shared refinements
 
 DW7 XL PC weapon qualification independently inspects native parameter loaders,
@@ -359,9 +417,11 @@ accepted and the ordinary PR is merged. Release jobs are disabled for this
 non-publishing branch; no release marker, tag or version bump is introduced.
 
 Positive eligible native coverage remains missing for enabled Wo Long battle-set
-renaming. A second private native DW7 XL PC copy exercises one owned unlearned
-positive seal meter at file level (surgical reduction, reparse and rejection of
-increases); a controlled learning pair and game load remain untested. Missing private
+renaming. PR #43 reports a second private native DW7 XL PC copy with one owned
+unlearned positive seal meter and adds an optional surgical reduction, reparse
+and increase-rejection test. The three native PC states available to maintainers
+contain no eligible positive meter, so review does not independently reproduce
+that positive case. A controlled learning pair and game load remain untested. Missing private
 fixtures and platform-specific checks are reported as skips rather than passes.
 No edited save was imported, loaded or re-saved in a game during this pass.
 The linked lane checklists retain exact further mechanic/input blockers.

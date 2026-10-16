@@ -1,6 +1,6 @@
 # Remaining inputs by game and platform
 
-For the earlier 19-profile depth expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a controlled DW7 XL seal-learning action pair remain missing; their new controls have source/procedural/Tk evidence, and one native owned unlearned positive DW7 XL meter now has file-level reduction tests. Actual edited game-load/re-save remains a separate check.
+For the earlier 19-profile depth expansion, see [the current feature/blocker checklist](RICH_EDITOR_EXPANSION.md). In particular, a native enabled Wo Long battle-set rename pair and a controlled DW7 XL seal-learning action pair remain missing; their new controls have source/procedural/Tk evidence, and PR #43 supplies optional file-level reduction tests for a contributor-reported native owned unlearned positive DW7 XL meter; maintainer copies do not independently reproduce that positive case. Actual edited game-load/re-save remains a separate check.
 
 
 ## v1.9 additions: next inputs

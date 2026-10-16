@@ -134,7 +134,7 @@ GAMES = (
          '', '.dat', '#806126', 'koei_editor.games.origins.origins_game_editor', 'koei_editor.games.origins.origins_parser', True,
          'ORIGINS', scalar_backend='koei_editor.games.origins.origins_parser'),
     Game('wo3u', 'WARRIORS OROCHI 3 ULTIMATE', 'Definitive Edition · PC',
-         'Officer stats, growth points, upgrade stones, gems, crafting, weapon attributes, owned ordinary-item equipment and two owned-mount loadouts.',
+         'Officer stats, resources, weapon attributes, compatibility reset, owned ordinary-item equipment and two owned-mount loadouts.',
          '', '.bin', '#775c82', 'koei_editor.games.wo3u.wo3u_editor', 'koei_editor.games.wo3u.wo3u_parser', True, 'WO3',
          scalar_backend='koei_editor.games.wo3u.wo3u_parser'),
     Game('wo1', 'WARRIORS OROCHI', 'Original Windows PC · save revision 2',
@@ -166,7 +166,7 @@ GAMES = (
          '', '.bin', '#806126', 'koei_editor.games.dw9emp.dw9emp_editor', 'koei_editor.games.dw9emp.dw9emp_parser',
          False, 'IX E', True, scalar_backend='koei_editor.games.dw9emp.dw9emp_parser'),
     Game('orochiz', 'WARRIORS OROCHI Z', 'Native Windows PC edition',
-         'Stock EXP, officer base attack, existing weapon bonuses/attributes and own-pool equipment selection.',
+         'Stock EXP, five independently bounded officer base stats, existing weapon bonuses/attributes and own-pool equipment selection.',
          '', '.dat', '#775c82', 'koei_editor.games.orochiz.orochiz_editor', 'koei_editor.games.orochiz.orochiz_parser',
          True, 'OROCHI Z', True, scalar_backend='koei_editor.games.orochiz.orochiz_parser'),
     Game('stars', 'WARRIORS ALL-STARS', 'Windows PC · revision F4',
@@ -457,6 +457,12 @@ GAMES = (
          'Money and existing positive numbered material-quantity reductions; searchable stored quantities.',
          '', '.dat', '#805043', 'koei_editor.games.aot1_vita.editor', 'koei_editor.games.aot1_vita.parser',
          True, 'AOT', True, 'PlayStation Vita', scalar_backend='koei_editor.games.aot1_vita.parser'),
+    Game('troy_ps3', 'WARRIORS: LEGENDS OF TROY',
+         'Original EU PS3 · revision-38 populated PROFILE',
+         'Existing Kleos reductions; searchable native music and item status records.',
+         '', '', '#78634a', 'koei_editor.games.troy_ps3.editor',
+         'koei_editor.games.troy_ps3.parser', True, 'TROY', True, 'PlayStation 3',
+         scalar_backend='koei_editor.games.troy_ps3.parser'),
 )
 
 # Opaque research tools stay outside the gameplay library.

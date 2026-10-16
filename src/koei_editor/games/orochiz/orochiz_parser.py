@@ -1,4 +1,4 @@
-"""Native Orochi Z existing weapons, attack and bounded EXP.
+"""Native Orochi Z existing weapons, base growth stats and bounded EXP.
 
 Offsets come from the native serialized blocks and weapon-fusion mutation path;
 no console offsets, new weapon identities or story/reward flags are inferred.
@@ -13,7 +13,9 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import normalize_pending_values
 from koei_editor.games.orochiz import orochiz_codec as codec
 from koei_editor.games.orochiz.orochiz_limits import (
-    BASE_ATTACK_MINIMUMS, BASE_ATTACK_MAXIMUMS, LEVEL_EXP_THRESHOLDS)
+    BASE_ATTACK_MINIMUMS, BASE_ATTACK_MAXIMUMS, LEVEL_EXP_THRESHOLDS,
+    BASE_LIFE_MINIMUMS, BASE_LIFE_MAXIMUMS, BASE_MUSOU_MINIMUMS, BASE_MUSOU_MAXIMUMS,
+    BASE_DEFENSE_MINIMUMS, BASE_DEFENSE_MAXIMUMS, BASE_SPEED_MINIMUMS, BASE_SPEED_MAXIMUMS)
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.experimental_limits import within_numeric_limits
@@ -71,7 +73,7 @@ class Format:
 
 
 FORMAT = Format(GAME_ID, 'Warriors Orochi Z (PC)', SAVE_SIZE, (),
-                'Stock EXP, officer base attack and existing weapon attack bonus, attribute capacity and '
+                'Stock EXP, qualified officer base Life/Musou/Attack/Defense/Speed and existing weapon attack bonus, attribute capacity and '
                 'owned ranked attributes. Switch between qualified existing weapons in an officer\'s own pool. '
                 'Adjust EXP inside a progressed officer\'s current level; levels, proficiency, alchemy '
                 'abilities, unlocks and story records remain read only.')
@@ -157,6 +159,20 @@ def _mapped_fields(payload):
                             BASE_ATTACK_MAXIMUMS[officer], 'Officer attack', officer + 1,
                             BASE_ATTACK_MINIMUMS[officer]))
         start = OFFICER_BASE + officer * OFFICER_STRIDE
+        for key, label, relative, minima, maxima in (
+                ('life', 'Life', 4, BASE_LIFE_MINIMUMS, BASE_LIFE_MAXIMUMS),
+                ('musou', 'Musou', 6, BASE_MUSOU_MINIMUMS, BASE_MUSOU_MAXIMUMS),
+                ('defense', 'Defense', 10, BASE_DEFENSE_MINIMUMS, BASE_DEFENSE_MAXIMUMS),
+                ('speed', 'Speed', 12, BASE_SPEED_MINIMUMS, BASE_SPEED_MAXIMUMS)):
+            current = int.from_bytes(payload[start + relative:start + relative + 2], 'little')
+            # The native reset and independent increment paths establish these
+            # ID-specific domains. An unusual original is opaque, not repaired
+            # into a plausible stat or made eligible by experimental editing.
+            if minima[officer] <= current <= maxima[officer]:
+                fields.append(Field(f'officer_{officer}_base_{key}',
+                                    f'Officer {officer + 1}: Base {label}',
+                                    start + relative, 2, maxima[officer],
+                                    'Officer base stats', officer + 1, minima[officer]))
         level = payload[start]
         experience = int.from_bytes(payload[start + 16:start + 20], 'little')
         # Only already progressed records with coherent native EXP qualify.
@@ -330,7 +346,7 @@ def restore(backup_path, destination, game_id=GAME_ID):
 
 
 def record_label(slot, group='Resources'):
-    if group in ('Officer attack', 'Officer growth', 'Equipment') and type(slot) is int and 1 <= slot <= OFFICER_COUNT:
+    if group in ('Officer attack', 'Officer base stats', 'Officer growth', 'Equipment') and type(slot) is int and 1 <= slot <= OFFICER_COUNT:
         return f'Officer {slot}'
     if type(slot) is int and 1 <= slot <= OFFICER_COUNT * WEAPON_COUNT:
         officer, weapon = divmod(slot - 1, WEAPON_COUNT)
@@ -375,9 +391,11 @@ def field_hint(document, field):
     value = mapping[key]
     if key == 'stock_exp':
         return 'Shared stock EXP / Growth Points. Used by leveling and weapon fusion; cap 99,999.'
-    if key.endswith('_base_attack'):
-        return (f'Stored base attack, range {value.minimum}..{value.maximum} for this officer. '
-                'Weapon and skill effects are separate; level and EXP remain unchanged.')
+    if '_base_' in key:
+        return (f'Independent saved base growth stat, range {value.minimum}..{value.maximum} '
+                'for this officer. The native per-officer growth clamp supplies the bounds. '
+                'Weapon, team-skill and battle effects are separate; level, EXP, proficiency, '
+                'skills and rewards remain unchanged. This does not run a level-up transaction.')
     if key.endswith('_exp_within_level'):
         return (f'EXP within the opened level, {value.minimum:,}..{value.maximum:,}. '
                 'The next level threshold is excluded. Level, growth stats, rewards, '

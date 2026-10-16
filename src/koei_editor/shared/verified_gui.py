@@ -1,16 +1,103 @@
 """Shared scalar save editor with retained independent sessions."""
+import csv
+import io
 import json
+import os
+import stat
+import unicodedata
 from dataclasses import replace
+from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from koei_editor.shared.appearance import Appearance, THEMES
+from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new
+from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.preferences import normalize_pins
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared.scalar_presentation import ScalarPresentation
 from koei_editor.shared.table_tools import attach_sorting, sort_table, copy_selected
 from koei_editor.shared.experimental_limits import (
     EXPERIMENTAL_WARNING, above_supported, experimental_maximum, experimental_operation)
 import koei_editor.shared.verified_editor as backend
+
+
+def _review_csv(records):
+    """Encode a frozen scalar review as safe, typed UTF-8 spreadsheet rows."""
+    stream = io.StringIO(newline='')
+    writer = csv.writer(stream)
+    writer.writerow(('game_id', 'source_sha256', 'experimental', 'field_id',
+                     'group', 'record', 'label', 'opened_type', 'opened_json',
+                     'pending_type', 'pending_json'))
+    def text_cell(value):
+        # Spreadsheet applications may ignore leading spaces/control characters
+        # before interpreting a label as a formula. Only labels are escaped;
+        # native values use reversible JSON, with genuine integers unquoted.
+        start = 0
+        while start < len(value) and (value[start].isspace()
+                or unicodedata.category(value[start]) in ('Cc', 'Cf')):
+            start += 1
+        return "'" + value if value[start:].startswith(('=', '+', '-', '@')) else value
+    for values in records:
+        line = [text_cell(str(value)) for value in values[:8]]
+        line += [values[8] if type(values[8]) is int else json.dumps(values[8], ensure_ascii=False),
+                 text_cell(values[9]),
+                 values[10] if type(values[10]) is int else json.dumps(values[10], ensure_ascii=False)]
+        writer.writerow(line)
+    return stream.getvalue().encode('utf-8-sig')
+
+
+def _export_review(data, destination):
+    """Create a report and verify its actual bounded bytes; never roll back files."""
+    result = atomic_new(data, destination)
+    descriptor = None
+    try:
+        # Frozen history does not require an unchanged source. Verify only the
+        # actual new report, retaining any concurrently replaced output.
+        # atomic_new returns a canonical path. A replacement must not select
+        # a different baseline by resolving a newly introduced alias.
+        checked = Path(result)
+        def ordinary(info):
+            return (stat.S_ISREG(info.st_mode) and info.st_nlink == 1
+                    and not (getattr(info, 'st_file_attributes', 0)
+                             & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400)))
+        path_opened = checked.lstat()
+        if not checked.is_absolute() or not ordinary(path_opened) or safe_path(checked) != checked:
+            raise SaveError('The newly created change review is no longer an ordinary matching file.')
+        flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
+        descriptor = os.open(checked, flags)
+        def identity(info):
+            return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        opened = os.fstat(descriptor)
+        # CPython Windows path stat preserves creation time as st_ctime,
+        # while fstat can report FILE_BASIC_INFO.ChangeTime. Keep each full
+        # token within its own API; bind the APIs with their common identity.
+        if identity(opened)[:-1] != identity(path_opened)[:-1]:
+            raise SaveError('The newly created change review changed before read-back.')
+        if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1 or opened.st_size != len(data):
+            raise SaveError('The newly created change review is no longer an ordinary matching file.')
+        offset = 0
+        while offset < len(data):
+            block = os.read(descriptor, min(65536, len(data) - offset))
+            if not block or block != data[offset:offset + len(block)]:
+                raise SaveError('The newly created change review changed during read-back.')
+            offset += len(block)
+        if os.read(descriptor, 1) or identity(os.fstat(descriptor)) != identity(opened):
+            raise SaveError('The newly created change review changed during read-back.')
+        os.close(descriptor)
+        descriptor = None
+        final_path = checked.lstat()
+        if (not ordinary(final_path) or safe_path(result) != checked
+                or identity(final_path) != identity(path_opened)):
+            raise SaveError('The newly created change review was replaced during read-back.')
+    except Exception as error:
+        raise SaveError('Change review verification did not finish after creation. '
+                        'The file was retained; do not use it. Choose a new destination.\n\n'
+                        + str(error)) from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    return result
 
 
 class Editor(Appearance):
@@ -31,6 +118,8 @@ class Editor(Appearance):
         self.theme_name = tk.StringVar(root, value=theme)
         self.document, self.backup = None, None
         self.changes, self.history = {}, []
+        self.pinned_fields = frozenset()
+        self._on_pins = None
         self.experimental_mode = tk.BooleanVar(root, value=False)
         self.apply_theme(theme)
         host = parent if parent is not None else root
@@ -49,7 +138,8 @@ class Editor(Appearance):
         ttk.Button(bar, text='Open Save Copy', command=self.open, style='Primary.TButton').pack(side='left')
         self.save_buttons = []
         for label, callback in (('Save As...', self.save_as), ('Backup Save', self.make_backup),
-                                ('Review Changes', self.review), ('Undo', self.undo)):
+                                ('Review Changes', self.review), ('Undo', self.undo),
+                                ('Edit Presets...', self.show_presets)):
             button = ttk.Button(bar, text=label, command=callback, state='disabled')
             button.pack(side='left', padx=(8, 0))
             self.save_buttons.append(button)
@@ -66,6 +156,10 @@ class Editor(Appearance):
         ttk.Button(filter_bar, text='Clear', command=lambda: self.search.set('')).pack(side='left', padx=(8, 0))
         self.pending_only = tk.BooleanVar(root, value=False)
         ttk.Checkbutton(filter_bar, text='Pending only', variable=self.pending_only,
+                        command=self.refresh).pack(side='left', padx=(12, 0))
+        self.pinned_only = tk.BooleanVar(root, value=False)
+        self.pin_count = tk.StringVar(root, value='Pinned only (0)')
+        ttk.Checkbutton(filter_bar, textvariable=self.pin_count, variable=self.pinned_only,
                         command=self.refresh).pack(side='left', padx=(12, 0))
         navigation = ttk.Frame(host, padding=(18, 6, 18, 0))
         navigation.pack(fill='x')
@@ -172,6 +266,10 @@ class Editor(Appearance):
         category_scroll.grid(row=1, column=1, sticky='ns')
         self.categories.configure(yscrollcommand=category_scroll.set)
         self.categories.bind('<<TreeviewSelect>>', self.choose_category)
+        pin_tools = ttk.Frame(category_frame)
+        pin_tools.grid(row=2, column=0, columnspan=2, sticky='ew', pady=(6, 0))
+        ttk.Button(pin_tools, text='Pin selected', command=self.pin_selected).pack(fill='x')
+        ttk.Button(pin_tools, text='Unpin selected', command=self.unpin_selected).pack(fill='x', pady=(4, 0))
         self._category_groups = {}
         self._updating_categories = False
         table_frame = ttk.Frame(frame)
@@ -225,9 +323,55 @@ class Editor(Appearance):
         self.group.set('All fields')
         self.record.set('All records')
         self.pending_only.set(False)
+        self.pinned_only.set(False)
         self.search.set('')
         self.refresh()
         return 'break'
+
+    def configure_pins(self, field_ids=(), on_change=None):
+        """Inject exact-game navigation preferences without touching staged edits.
+
+        The application supplies persistence; standalone editors can use the
+        same callback. IDs absent from a particular save remain remembered.
+        A false callback result reports optional settings storage failure.
+        """
+        pins = frozenset(normalize_pins(field_ids))
+        if on_change is not None and not callable(on_change):
+            raise TypeError('The pin persistence callback must be callable.')
+        self.pinned_fields, self._on_pins = pins, on_change
+        self.refresh()
+
+    def _set_selected_pins(self, remove=False):
+        if self.document is None:
+            return
+        selected = set(self.fields.selection()).intersection(self.fields.get_children())
+        if not selected:
+            self.status.set('Select visible fields to pin or unpin.')
+            return
+        candidate = self.pinned_fields.difference(selected) if remove else self.pinned_fields.union(selected)
+        try:
+            pins = frozenset(normalize_pins(candidate))
+        except ValueError as error:
+            messagebox.showerror('Cannot Pin Fields', str(error))
+            return
+        if pins == self.pinned_fields:
+            return
+        self.pinned_fields = pins
+        stored = True
+        if self._on_pins is not None:
+            try:
+                stored = self._on_pins(tuple(sorted(pins))) is not False
+            except Exception:
+                stored = False
+        self.refresh()
+        self.status.set('Field pins updated. Pins never change save values.' if stored else
+                        'Pins updated for this session; preferences could not be saved.')
+
+    def pin_selected(self):
+        self._set_selected_pins()
+
+    def unpin_selected(self):
+        self._set_selected_pins(remove=True)
 
     def choose_category(self, _event=None):
         if self._updating_categories:
@@ -288,15 +432,19 @@ class Editor(Appearance):
         path = filedialog.askopenfilename(title='Open a Separate Save Copy',
                                           filetypes=[(self.layout.title + ' save copy', '*' + self.save_extension)])
         if not path:
-            return
+            return False
+        return self.open_path(path)
+
+    def open_path(self, path):
+        """Open an explicitly selected copy through the normal guarded workflow."""
         try:
             document = self.adapter.read_save(path, self.game_id)
             if not self.dirty_ok():
-                return
+                return False
             backup = self.adapter.backup(document)
         except Exception as error:
             messagebox.showerror('Cannot Open Save', str(error))
-            return
+            return False
         self.document, self.backup = document, backup
         self.adapter = replace(self.adapter, experimental=False)
         self.experimental_mode.set(False)
@@ -311,6 +459,11 @@ class Editor(Appearance):
         self.update_filename('Opened copy: ')
         self.status.set('Opened save copy. Automatic backup: ' + backup.name)
         self.refresh()
+        return True
+
+    def show_presets(self):
+        from koei_editor.shared.preset_gui import open_presets
+        return open_presets(self)
 
     @property
     def experimental(self):
@@ -329,6 +482,8 @@ class Editor(Appearance):
         if self.document is None:
             return
         fields = self.adapter.fields_for(self.document)
+        available_pins = self.pinned_fields.intersection(field.id for field in fields)
+        self.pin_count.set(f'Pinned only ({len(available_pins):,})')
         groups = ('All fields',) + tuple(dict.fromkeys(field.group for field in fields))
         self.group_selector.configure(values=groups)
         if self.group.get() not in groups:
@@ -354,6 +509,8 @@ class Editor(Appearance):
                 continue
             if self.pending_only.get() and field.id not in self.changes:
                 continue
+            if self.pinned_only.get() and field.id not in self.pinned_fields:
+                continue
             original = field.value(self.document.payload)
             record = self.record_name(field)
             opened = self.display_value(field, original, changes={})
@@ -363,7 +520,7 @@ class Editor(Appearance):
             if any(token not in searchable for token in tokens):
                 continue
             self.fields.insert('', 'end', iid=field.id, tags=('pending',) if field.id in self.changes else (),
-                               values=(record, field.label, opened, pending,
+                               values=(record, ('* ' if field.id in self.pinned_fields else '') + field.label, opened, pending,
                                        f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
                                         else f'{field.maximum:,}',
                                         self.storage_display(field)))
@@ -673,7 +830,8 @@ class Editor(Appearance):
         document = self.document
         pending = dict(self.changes)
         try:
-            rows = self.adapter.review(document, pending)
+            rows = tuple(self.adapter.review(document, pending))
+            source_sha256, game_id = document.sha256, self.game_id
         except Exception as error:
             messagebox.showerror('Cannot Review Changes', str(error))
             return
@@ -707,8 +865,12 @@ class Editor(Appearance):
         label_width = 300
         value_widths = [140, 140]
         records = []
+        # Freeze both native values and human labels now. Later edits, opening
+        # another copy and filtering this window must not alter either export.
+        csv_records = []
         for field, before, after in rows:
-            label = field.label + (f' / {self.record_name(field)}' if field.slot else '')
+            record = self.record_name(field)
+            label = field.label + (f' / {record}' if field.slot else '')
             label_width = max(label_width, label_font.measure(label) + 24)
             displayed = (label, self.display_value(field, before, changes={}),
                          self.display_value(field, after, changes=pending))
@@ -717,6 +879,9 @@ class Editor(Appearance):
             identity = tree.insert('', 'end', values=displayed)
             records.append((identity, (' '.join(displayed)
                                        + f' {field.id} {field.group} {before} {after}').casefold()))
+            csv_records.append((game_id, source_sha256, bool(experimental_count),
+                                field.id, field.group, record, field.label,
+                                type(before).__name__, before, type(after).__name__, after))
         def filter_rows(*_args):
             tokens = query.get().casefold().split()
             visible = 0
@@ -748,21 +913,47 @@ class Editor(Appearance):
         horizontal = ttk.Scrollbar(body, orient='horizontal', command=tree.xview)
         horizontal.grid(row=1, column=0, sticky='ew')
         tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
-        def export():
-            path = filedialog.asksaveasfilename(title='Export Change Review', defaultextension='.changes.json')
+        footer = ttk.Frame(dialog)
+        footer.pack(side='bottom', fill='x', before=body)
+        ttk.Label(dialog, text='Exports include all changes from when this review opened. '
+                  'Copy Selected copies the visible selection. Use Save As... in the editor '
+                  'to save an edited game file.', wraplength=950).pack(
+                      side='bottom', anchor='w', before=body, padx=15, pady=(8, 0))
+        def export(csv_format=False):
+            extension = '.changes.csv' if csv_format else '.changes.json'
+            path = filedialog.asksaveasfilename(
+                parent=dialog, title='Export Change Review', defaultextension=extension,
+                initialdir=document.source.parent, initialfile=document.source.stem + extension,
+                filetypes=[('Change review (CSV)' if csv_format else 'Change review (JSON)', '*' + extension)],
+                confirmoverwrite=False)
             if path:
-                report = {'game_id': self.game_id, 'source_sha256': document.sha256,
+                report = {'game_id': game_id, 'source_sha256': source_sha256,
                           'experimental': bool(experimental_count),
                           'changes': [{'field': field.id, 'before': before, 'after': after}
                                       for field, before, after in rows]}
                 try:
-                    if not path.lower().endswith('.changes.json'):
-                        raise ValueError('Choose a .changes.json review file.')
-                    atomic_new(json.dumps(report, indent=2).encode(), path)
+                    destination = Path(path)
+                    name = destination.name
+                    if not name.lower().endswith(extension):
+                        suffix = '.csv' if csv_format else '.json'
+                        if name.lower().endswith(suffix):
+                            name = name[:-len(suffix)]
+                        if not name.lower().endswith('.changes'):
+                            name += '.changes'
+                        destination = destination.with_name(name + suffix)
+                    if csv_format:
+                        data = _review_csv(csv_records)
+                    else:
+                        data = json.dumps(report, indent=2).encode('utf-8')
+                    destination = _export_review(data, destination)
+                    self.status.set('Change review exported: ' + destination.name)
                 except Exception as error:
                     messagebox.showerror('Cannot Export Review', str(error))
-        ttk.Button(dialog, text='Export Review...', command=export).pack(side='left', padx=15, pady=12)
-        ttk.Button(dialog, text='Close', command=dialog.destroy).pack(side='right', padx=15)
+        ttk.Button(dialog, text='Export Review...', command=export).pack(in_=footer, side='left', padx=15, pady=12)
+        ttk.Button(dialog, text='Export CSV...', command=lambda: export(True)).pack(in_=footer, side='left', pady=12)
+        ttk.Button(dialog, text='Copy Selected', command=lambda: copy_selected(tree)).pack(
+            in_=footer, side='left', padx=15, pady=12)
+        ttk.Button(dialog, text='Close', command=dialog.destroy).pack(in_=footer, side='right', padx=15)
         self.apply_theme(self.theme_name.get())
 
     def save_changes(self):

@@ -51,6 +51,19 @@ class SupportedInventoryTests(unittest.TestCase):
             self.assertEqual(result.exception.code, 2)
             self.assertEqual(path.read_text(encoding='utf-8'), original)
 
+    def test_landing_page_stays_short_and_full_inventory_has_every_profile(self):
+        generated = {path.name: text for path, text in update_supported_games.expected_files()}
+        landing = generated['README.md']
+        self.assertIn(update_supported_games.readme_summary().strip(), landing)
+        self.assertNotIn('| Game / edition |', landing)
+        self.assertLess(len(landing.splitlines()), 130)
+        document = generated['SUPPORTED_GAMES.md']
+        groups = update_supported_games.platform_groups()
+        self.assertEqual(sum(map(len, groups.values())), len(GAMES))
+        self.assertEqual(document.count('| Game / edition |'), len(groups))
+        for game in SUPPORTED_GAMES:
+            self.assertEqual(document.count('| ' + game.title + ' — ' + game.edition + ' |'), 1)
+
     def test_installed_package_lists_games_without_display_from_other_directory(self):
         with tempfile.TemporaryDirectory() as folder:
             result = subprocess.run([sys.executable, '-m', 'koei_editor', '--list-games'],

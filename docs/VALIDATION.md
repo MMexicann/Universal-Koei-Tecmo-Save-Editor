@@ -417,8 +417,11 @@ accepted and the ordinary PR is merged. Release jobs are disabled for this
 non-publishing branch; no release marker, tag or version bump is introduced.
 
 Positive eligible native coverage remains missing for enabled Wo Long battle-set
-renaming and owned unlearned DW7 seal meters. Native files validate their older
-controls but do not exercise those new positive edit cases. Missing private
+renaming. PR #43 reports a second private native DW7 XL PC copy with one owned
+unlearned positive seal meter and adds an optional surgical reduction, reparse
+and increase-rejection test. The three native PC states available to maintainers
+contain no eligible positive meter, so review does not independently reproduce
+that positive case. A controlled learning pair and game load remain untested. Missing private
 fixtures and platform-specific checks are reported as skips rather than passes.
 No edited save was imported, loaded or re-saved in a game during this pass.
 The linked lane checklists retain exact further mechanic/input blockers.

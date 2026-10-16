@@ -313,8 +313,8 @@
     },
     {
       "path": "docs/DYNASTY_RESEARCH.md",
-      "bytes": 22039,
-      "sha256": "dd4daadf6b681bfc9203d64e59c9dc519e726668a14d73269d7215d8e1cc033a"
+      "bytes": 22726,
+      "sha256": "11c3ff29405e263256718e2fd1e6d40b4b111f3f8069ff463f9a4559af0a46e0"
     },
     {
       "path": "docs/EDITOR_WORKSPACE.md",
@@ -648,8 +648,8 @@
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
-      "bytes": 48422,
-      "sha256": "881c3ff466019d7ca1aab22c3694ad07036014147d166a1111b2f2c6b4ffb2d7"
+      "bytes": 48609,
+      "sha256": "c5e3b38241a678c29cbc6599c04cdb90e4e6f8a7fd764a30ab645997418a258b"
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
@@ -658,8 +658,8 @@
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
-      "bytes": 7518,
-      "sha256": "8ea5f1af53655975cb2465784144b712bb12ef33fdeb5849b94e8b73639edc26"
+      "bytes": 7664,
+      "sha256": "47c5a0c43117eaf2b1737875729f280b14c5c9f22afd3f6d61eaf216cfa12550"
     },
     {
       "path": "docs/RORONA_DX_FORMAT.md",
@@ -913,8 +913,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 92508,
-      "sha256": "a865ffed79e6c601b1cc70ea727f7fcd541f8774437296e4ee576b8978969803"
+      "bytes": 92764,
+      "sha256": "94b6e4eb41718141b8b9442a84c8a7e4418b6000c87f2c0022f146f52ea75b54"
     },
     {
       "path": "docs/WARRIORS_V26_DEPTH.md",
@@ -3958,8 +3958,8 @@
     },
     {
       "path": "tests/test_dw7xl_learning.py",
-      "bytes": 3524,
-      "sha256": "1b89400b19b17e71549c293355737a5e52198672a6082bd15d6114fd841f54e8"
+      "bytes": 5139,
+      "sha256": "02cf46966bbacaaec02548b8455053f6f0471bbba62627dc25457da86cde4174"
     },
     {
       "path": "tests/test_dw7xl_loadouts.py",

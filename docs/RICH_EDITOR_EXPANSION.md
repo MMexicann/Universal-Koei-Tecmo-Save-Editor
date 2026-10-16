@@ -98,10 +98,12 @@ Review, backup, save and restore workflows. Focused checks and validation bounda
 [VALIDATION.md](VALIDATION.md); the integration pull request records the final
 combined regression result and native Windows preview run.
 
-Two additions still lack a positive eligible native sample: Wo Long enabled
-battle-set naming and DW7 unlearned seal-meter reduction. Native copies qualify
-their existing profiles but contain no such eligible records; their new edit
-paths have static/schema, procedural and GUI evidence. A native enabled rename
-pair or owned unlearned positive-meter pair is the specific missing input.
+Wo Long enabled battle-set naming still lacks a positive eligible native sample;
+its edit path has static/schema, procedural and GUI evidence, and a native
+enabled rename pair is the specific missing input. DW7 unlearned seal-meter
+reduction has an optional file-level surgical test for an eligible record in a
+second private native PC copy reported in PR #43. Maintainer review copies have
+no eligible positive meter, so the reported positive case is not independently
+reproduced. A controlled learning action pair remains missing.
 No edited save has been imported, loaded and re-saved in its game in this pass.
 Private fixtures, owner context and binaries remain outside Git and artifacts.

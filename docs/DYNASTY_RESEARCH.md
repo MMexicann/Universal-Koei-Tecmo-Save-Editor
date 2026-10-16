@@ -26,6 +26,12 @@ Qualified owned, unlearned weapon records additionally permit manual seal-meter
 reduction to 0..the opened meter, excluded from Max. See the
 [existing-editor depth review](OROCHI_DYNASTY_DEPTH.md) for native negative-operation
 proof and the genuine complete fixture's absence of eligible unlearned records.
+A second, independently supplied private native PC copy contains one eligible
+owned unlearned positive meter. With `DW7XL_SAVE_COPY`, the learning tests
+reduce it to zero and to one below the opened meter: only that 16-bit word
+changes, the seed and preceding flags are retained, the native checksum reparses
+and increases are rejected. This is a single native state, not a controlled
+learning action pair, and the edited copy has not been loaded in the game.
 Officer identity names are not inferred from an unverified roster order.
 
 The GUI retains Undo, Review Changes, copied-source backups, immutable source

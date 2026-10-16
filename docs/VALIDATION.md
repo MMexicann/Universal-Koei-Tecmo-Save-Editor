@@ -359,8 +359,9 @@ accepted and the ordinary PR is merged. Release jobs are disabled for this
 non-publishing branch; no release marker, tag or version bump is introduced.
 
 Positive eligible native coverage remains missing for enabled Wo Long battle-set
-renaming and owned unlearned DW7 seal meters. Native files validate their older
-controls but do not exercise those new positive edit cases. Missing private
+renaming. A second private native DW7 XL PC copy exercises one owned unlearned
+positive seal meter at file level (surgical reduction, reparse and rejection of
+increases); a controlled learning pair and game load remain untested. Missing private
 fixtures and platform-specific checks are reported as skips rather than passes.
 No edited save was imported, loaded or re-saved in a game during this pass.
 The linked lane checklists retain exact further mechanic/input blockers.

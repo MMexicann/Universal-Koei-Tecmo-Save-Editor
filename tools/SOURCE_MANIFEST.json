@@ -628,8 +628,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13813,
-      "sha256": "25f6171796156aa6b593eb9642331ef8b77051370e637caecd78d66260c917be"
+      "bytes": 13908,
+      "sha256": "1d7fc9b6d547c5a4c2e0c779d0bcce4cfc0c0d321cd1cb2bade821d6089c7855"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -760,6 +760,11 @@
       "path": "docs/SAVE_LIBRARY.md",
       "bytes": 6106,
       "sha256": "2ee6452b6a4de518e1deadbdd30f1a281c785e050f3e0d409005ab0301fb6fe8"
+    },
+    {
+      "path": "docs/SAVE_VAULT.md",
+      "bytes": 5388,
+      "sha256": "020efb1b36c4ee39b72800ddd3a2f111500559a59952b508de1cb692bc7e74cd"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -3602,6 +3607,16 @@
       "sha256": "4acbf81fdc14caebeb9f0c9e0f55c48b035d056ba7ac2e0b136c7927017ff8f3"
     },
     {
+      "path": "src/koei_editor/shared/save_vault.py",
+      "bytes": 31778,
+      "sha256": "36e367180aaf7582421edec5a33ddc0d8e5d04a9e89f16e1c2183e74b7040a68"
+    },
+    {
+      "path": "src/koei_editor/shared/save_vault_gui.py",
+      "bytes": 18279,
+      "sha256": "8c15a65bf29ffd1fb246193b6c5a2db2a14be919cc51dbef8005b20657a8f666"
+    },
+    {
       "path": "src/koei_editor/shared/scalar_presentation.py",
       "bytes": 1557,
       "sha256": "b063af34c3433ae2a3b213a58f71abebd495c718609acc0f4a7ea009553cb2c0"
@@ -4810,6 +4825,16 @@
       "path": "tests/test_save_variants.py",
       "bytes": 16469,
       "sha256": "0eb4c315896ea76a6b1eab21b585ca4ffec2d51b59a61ebed53b2682e4bba8aa"
+    },
+    {
+      "path": "tests/test_save_vault.py",
+      "bytes": 15952,
+      "sha256": "73b0ac6e130053d73c5872ce05bb399c802590cb916a3efda0dedfe2bcd5eefd"
+    },
+    {
+      "path": "tests/test_save_vault_gui.py",
+      "bytes": 7400,
+      "sha256": "18c9854c0a9ba049cd12b87206702716b2f6ab84f7e52cb107022802ce838e45"
     },
     {
       "path": "tests/test_scalar_bulk_actions.py",

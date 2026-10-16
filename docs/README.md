@@ -8,6 +8,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
+- [Save Vault: private collections, branches, history and safe restored copies](SAVE_VAULT.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
 

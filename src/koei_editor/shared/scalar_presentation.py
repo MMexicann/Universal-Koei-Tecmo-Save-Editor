@@ -31,6 +31,11 @@ class ScalarPresentation:
         return (f'Edit range: {field.minimum:,} to {field.maximum:,}. '
                 'Max preserves higher existing values.')
 
+    def dashboard(self, document):
+        """Project opened values only; game presentations may add verified context."""
+        from koei_editor.shared.progression_generic import generic_dashboard
+        return generic_dashboard(document, self.backend, self)
+
     def inspection_tables(self, document):
         if hasattr(self.backend, 'inspection_rows'):
             rows = tuple((row['group'], row['label'], row['value'])

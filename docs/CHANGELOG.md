@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.7 — 2026-10-16
+
+- Add graphical read-only progression dashboards with responsive searchable cards, section navigation, record details, bounded paging and full Light/Dark vector rendering.
+- Add rich opened-snapshot views for DW8 XL PC, WO3 Ultimate PC, Origins and DW3 Remastered; retain all mapped fields in generic dashboards for other scalar profiles.
+- Navigate directly to existing mapped editing fields while preserving pending changes, Undo, backups and save protections. Cache opened projections and refresh after qualified document replacement.
+- Display progress only with verified semantics and denominators; preserve unusual values and keep XP, stats, ownership, equipment and story completion distinct. No new game/platform mappings or conversion routes are claimed.
+- Review Sanrenan’s PR #43 and qualify its contributor-reported positive native DW7 XL seal-meter evidence separately from reproducible maintainer coverage.
+
 ## v2.6 — 2026-10-16
 
 - Add copied-save browsing with explicit profiles, bounded folder scans, identical-gameplay-file groups, cancellation and fresh normal-editor opening.

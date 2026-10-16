@@ -468,6 +468,8 @@ class PinnedReviewGuiTests(unittest.TestCase):
             buttons['Edit Presets...'].invoke()
         opened.assert_called_once_with(self.editor)
         self.assertEqual((self.editor.changes, self.editor.history), original)
+        self.editor.workspace_tabs.select(self.editor.edit_page)
+        self.root.update()
         self.assertGreater(self.editor.fields.winfo_height(), 220)
 
     def test_copy_selected_uses_filtered_frozen_display_without_staging(self):

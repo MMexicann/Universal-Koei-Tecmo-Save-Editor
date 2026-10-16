@@ -30,6 +30,8 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
         )
         self.root.geometry("1080x820")
         self.editor = self.app.select_game("origins")
+        # These tests exercise editing controls, which now have their own tab.
+        self.editor.workspace_tabs.select(self.editor.edit_page)
         self.source = self.folder / "SLOT0000.dat"
         self.source.write_bytes(fixture())
         with (
@@ -319,6 +321,7 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
         source = self.folder / 'mounts.dat'
         source.write_bytes(raw)
         editor = self.app.select_game('sw4ii')
+        editor.workspace_tabs.select(editor.edit_page)
         with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
             editor.open()
         editor.group.set('Mount equipment')

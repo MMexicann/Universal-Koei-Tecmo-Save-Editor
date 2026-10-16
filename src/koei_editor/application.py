@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.6'
+VERSION = '2.7'
 
 
 class Application(Appearance):
@@ -259,6 +259,12 @@ class Application(Appearance):
                        background=[('active', palette['hover'])])
         for _frame, editor in self.sessions.values():
             editor.theme_name.set(name)
+            # Canvas items keep their own colors outside ttk's shared styles.
+            # Repaint retained dashboards without calling editor.apply_theme,
+            # whose application callback would recurse into this method.
+            theme_dashboard = getattr(editor, 'theme_dashboard', None)
+            if callable(theme_dashboard):
+                theme_dashboard(name)
         if self.converter is not None:
             self.converter.apply_theme(palette)
         if self.comparison is not None:
@@ -556,6 +562,50 @@ class Application(Appearance):
             self.root.destroy()
 
 
+def _smoke_progression_views(app):
+    """Exercise populated vector graphics without reading or editing a save.
+
+    These explicit renderer samples exist only during --smoke-test. They have
+    no mapped field links and make no claim about any game's progression.
+    """
+    from koei_editor.shared.progression import (
+        DashboardCard, DashboardMetric, DashboardSection, ProgressionDashboard,
+    )
+    sample = ProgressionDashboard('Internal renderer smoke sample', (
+        DashboardSection('smoke-section', 'Renderer sample', (
+            DashboardCard('smoke-progress', 'Sample progress', metrics=(
+                DashboardMetric('sample-count', 'Synthetic renderer units', '5 / 10',
+                                current=5, total=10),)),
+            DashboardCard('smoke-value', 'Sample value', metrics=(
+                DashboardMetric('sample-value', 'Synthetic text', 'Read only'),)),
+        )),
+    ), note='Internal graphics sample only; no save or game data.')
+    views = []
+    for _frame, editor in app.sessions.values():
+        view = getattr(editor, 'dashboard_view', None)
+        if view is None:
+            continue
+        views.append((view, view.dashboard))
+        view.set_dashboard(sample)
+        view.section.set('smoke-section')
+        if not view.select_card('smoke-value') or not view.select_card('smoke-progress'):
+            raise RuntimeError('A progression renderer could not select its sample cards.')
+        if not view.canvas.find_withtag('progress-track') or not view.canvas.find_withtag('progress-fill'):
+            raise RuntimeError('A populated progression renderer did not draw its sample progress bar.')
+        if editor.document is not None or editor.changes or editor.history:
+            raise RuntimeError('Rendering a progression sample changed an empty editor session.')
+    if not views:
+        raise RuntimeError('No progression dashboards were initialized.')
+    for name in ('Dark', 'Light'):
+        app.apply_theme(name)
+        app.root.update_idletasks()
+        if any(view.palette != THEMES[name] for view, _snapshot in views):
+            raise RuntimeError('A retained progression renderer missed an appearance change.')
+    for view, snapshot in views:
+        view.set_dashboard(snapshot)
+    return len(views)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Universal Koei Tecmo Save Editor')
     parser.add_argument('--game', choices=[game.id for game in ALL_ADAPTERS], help='Open a registered editor or research tool.')
@@ -715,6 +765,7 @@ def main():
             root.update_idletasks()
             if editor.document is not None or editor.changes:
                 raise RuntimeError('A fresh editor unexpectedly contains save data.')
+        dashboards = _smoke_progression_views(app)
         app.apply_theme('Dark')
         app.show_converter()
         app.show_comparison()
@@ -725,7 +776,8 @@ def main():
         app.apply_theme('Light')
         root.update_idletasks()
         root.destroy()
-        print('Platform library, all registered interfaces, themes and switching initialized successfully.')
+        print(f'Platform library, all registered interfaces, {dashboards} populated progression dashboards, '
+              'themes and switching initialized successfully.')
     else:
         if arguments.game:
             app.select_game(arguments.game)

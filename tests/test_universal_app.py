@@ -79,7 +79,7 @@ class UniversalGuiTests(unittest.TestCase):
         self.assertIsNot(dw3.changes, origins.changes)
         self.assertIsNone(dw3.document)
         self.assertIsNone(origins.document)
-        self.assertEqual(set(dw3.tabs), {'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks',
+        self.assertEqual(set(dw3.tabs), {'Dashboard', 'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks',
                                          'Collections', 'Musou Saves'})
         self.assertFalse(origins.fields.get_children())
 
@@ -523,6 +523,7 @@ class UniversalGuiTests(unittest.TestCase):
         from tests.test_dw4hyper_format import procedural_raw
         import koei_editor.games.dw4hyper.dw4hyper_parser as dw4hyper_parser
         editor = self.app.select_game('dw4hyper')
+        editor.workspace_tabs.select(editor.edit_page)
         editor.document = dw4hyper_parser.decode(procedural_raw())
         editor.refresh()
         editor.fields.selection_set('officer_0_attack')
@@ -862,6 +863,7 @@ class UniversalGuiTests(unittest.TestCase):
         self.root.deiconify()
         for game_id in ('dw8xl', 'pw3', 'dw4hyper', 'dw4xl_ps2', 'atelier_sophie2', 'origins'):
             editor = self.app.select_game(game_id)
+            editor.workspace_tabs.select(editor.edit_page)
             self.root.update()
             frame = self.app.sessions[game_id][0]
             texts = widget_texts(frame, mapped_only=True)
@@ -893,6 +895,7 @@ class UniversalGuiTests(unittest.TestCase):
         for game_id, raw, special in (('dw4hyper', procedural_raw(), '36001'),
                                       ('dw4xl_ps2', procedural_psu(), '36002')):
             editor = self.app.select_game(game_id)
+            editor.workspace_tabs.select(editor.edit_page)
             editor.document = editor.backend.decode(raw, game_id)
             editor.refresh()
             for key, expected in (('officer_0_attack', '255'),

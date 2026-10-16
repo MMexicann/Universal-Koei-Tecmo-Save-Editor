@@ -628,8 +628,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13813,
-      "sha256": "25f6171796156aa6b593eb9642331ef8b77051370e637caecd78d66260c917be"
+      "bytes": 13896,
+      "sha256": "ae91d28dfe28f60bef3ce70cced4b5e61d69fb167a04392bb95ca277628a3c8b"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -750,6 +750,11 @@
       "path": "docs/SAVE_CONVERSION.md",
       "bytes": 16742,
       "sha256": "1d6377cc3097600863d5161572343f04f733db24316c571a54b21fa20232c21f"
+    },
+    {
+      "path": "docs/SAVE_DETECTION.md",
+      "bytes": 7659,
+      "sha256": "883410a30c76305a06e3eee593dab802f0c18682c1fb3628c0a854c1ffaaae3f"
     },
     {
       "path": "docs/SAVE_FORMAT.md",
@@ -3587,6 +3592,21 @@
       "sha256": "079c45d949df50bc7a98b26fa88e8ef7e13acfcb26d5686f4f4f948b48587397"
     },
     {
+      "path": "src/koei_editor/shared/save_detection.py",
+      "bytes": 26744,
+      "sha256": "37b3517ea22226d0e2a149ed532b29d9194691c3bb29a2ca69fa977ea4a57ce0"
+    },
+    {
+      "path": "src/koei_editor/shared/save_detection_catalog.py",
+      "bytes": 1873,
+      "sha256": "e9821cb515264f6dbd686649f72dcaebb71d20ef8591309ddae57e27b7d41ac7"
+    },
+    {
+      "path": "src/koei_editor/shared/save_detection_gui.py",
+      "bytes": 14708,
+      "sha256": "3c3fc978dec5bb831e1116ab0e52b11e57e715bbf58a6954c24d1b57d95cc6b8"
+    },
+    {
       "path": "src/koei_editor/shared/save_library.py",
       "bytes": 21604,
       "sha256": "03b963db26aab8b53b50482ab7f3b9d11b9b72b712f367e193c4c217e644549a"
@@ -4780,6 +4800,16 @@
       "path": "tests/test_save_comparison.py",
       "bytes": 8958,
       "sha256": "278cf5c547adf469f07feb06b2c61c718343b04941e0294828efeff27c7e6721"
+    },
+    {
+      "path": "tests/test_save_detection.py",
+      "bytes": 13516,
+      "sha256": "fc4a402e8922e35a7b899019174f39048d082c0564cf02b5107f811a888e60f4"
+    },
+    {
+      "path": "tests/test_save_detection_gui.py",
+      "bytes": 5250,
+      "sha256": "d879a1999338977eab044272ad6d7054c70814789980a2fa12f5cd929819d75d"
     },
     {
       "path": "tests/test_save_library.py",

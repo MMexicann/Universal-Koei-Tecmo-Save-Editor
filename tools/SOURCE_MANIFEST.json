@@ -4668,8 +4668,8 @@
     },
     {
       "path": "tests/test_progression_view_gui.py",
-      "bytes": 12184,
-      "sha256": "134ef78ae01966f594b529ac5fdfd81ae472a47921067b7287c0d88515bb94ec"
+      "bytes": 12379,
+      "sha256": "3141813bd233cb63248e6c3958d045557227aa7c9f7b4f8a562624433626fe39"
     },
     {
       "path": "tests/test_progression_workspace.py",

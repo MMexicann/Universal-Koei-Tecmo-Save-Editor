@@ -100,7 +100,11 @@ interpret ownership, or include companion/player bytes in public outputs. In-mem
 Optional backend `record_label`, `field_hint` and `inspection_rows` hooks supply
 data for the standard inspector. Richer read-only views subclass
 `ScalarPresentation` in [scalar_presentation.py](src/koei_editor/shared/scalar_presentation.py), returning
-`InspectionTable` objects and field guidance. The game's editor declares its
+`InspectionTable` objects and field guidance. Presentations may also return an immutable `ProgressionDashboard` from their
+`dashboard(document)` hook. Keep projections read only, based on the opened
+snapshot and verified mappings. Explicit game-mechanic denominators alone
+justify progress bars; edit limits and storage ceilings do not. The default
+projection retains every mapped scalar field. The game's editor declares its
 `presentation_type`, summary and subtitle. Keep game-specific presentation in
 adapter modules; adding a game should require no shared GUI or CLI ID branches.
 

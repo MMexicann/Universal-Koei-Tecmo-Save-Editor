@@ -146,6 +146,20 @@ class Editor(Appearance):
         ttk.Button(bar, text='Restore Backup...', command=self.restore).pack(side='left', padx=8)
         self.filename = tk.StringVar(root, value=f'Open a separate {self.save_extension or "save"} copy to begin.')
         ttk.Label(host, textvariable=self.filename, padding=(18, 8), wraplength=1000).pack(anchor='w')
+        self.workspace_tabs = ttk.Notebook(host)
+        self.workspace_tabs.pack(fill='both', expand=True, padx=12, pady=(0, 8))
+        self.dashboard_page = ttk.Frame(self.workspace_tabs)
+        self.edit_page = ttk.Frame(self.workspace_tabs)
+        self.workspace_tabs.add(self.dashboard_page, text='Progression Dashboard')
+        self.workspace_tabs.add(self.edit_page, text='Edit Fields')
+        from koei_editor.shared.progression import ProgressionDashboard
+        from koei_editor.shared.progression_view import ProgressionView
+        self._dashboard_document = None
+        self.dashboard_view = ProgressionView(self.dashboard_page,
+            ProgressionDashboard(self.layout.title, note='Open a save copy to explore its verified values.'),
+            on_navigate=self.navigate_dashboard_field, theme=theme)
+        self.dashboard_view.pack(fill='both', expand=True)
+        host = self.edit_page
         filter_bar = ttk.Frame(host, padding=(18, 0))
         filter_bar.pack(fill='x')
         ttk.Label(filter_bar, text='Find fields').pack(side='left', padx=(0, 8))
@@ -301,6 +315,7 @@ class Editor(Appearance):
             root.protocol('WM_DELETE_WINDOW', self.close)
 
     def focus_field_search(self, _event=None):
+        self.workspace_tabs.select(self.edit_page)
         self.search_entry.focus_set()
         self.search_entry.selection_range(0, 'end')
         return 'break'
@@ -418,8 +433,46 @@ class Editor(Appearance):
     def apply_theme(self, name):
         super().apply_theme(name)
         self._style_pending_rows()
+        self.theme_dashboard(name)
         if self.on_theme is not None:
             self.on_theme(name)
+
+    def theme_dashboard(self, name):
+        if hasattr(self, 'dashboard_view'):
+            self.dashboard_view.apply_theme(name)
+
+    def navigate_dashboard_field(self, field_id):
+        """Reveal an exact mapped field without changing pending save values."""
+        if self.document is None or field_id not in self.adapter.field_map(self.document):
+            return False
+        self.workspace_tabs.select(self.edit_page)
+        self.clear_field_filters()
+        if not self.fields.exists(field_id):
+            return False
+        self.fields.selection_set(field_id)
+        self.fields.focus(field_id)
+        self.fields.see(field_id)
+        self.selected()
+        self.fields.focus_set()
+        return True
+
+    def _refresh_dashboard(self):
+        if self.document is self._dashboard_document:
+            return
+        from koei_editor.shared.progression import ProgressionDashboard
+        if self.document is None:
+            dashboard = ProgressionDashboard(self.layout.title,
+                note='Open a save copy to explore its verified values.')
+        else:
+            try:
+                dashboard = self.presentation.dashboard(self.document)
+            except Exception:
+                # A presentation failure must not interrupt qualification, backups
+                # or the existing editor. Never substitute invented game values.
+                dashboard = ProgressionDashboard(self.layout.title,
+                    note='This dashboard could not be displayed. Verified values remain available in Edit Fields and Inspect Data.')
+        self.dashboard_view.set_dashboard(dashboard)
+        self._dashboard_document = self.document
 
     def dirty_ok(self):
         return not self.changes or messagebox.askyesno('Pending Edits', 'Discard pending edits and continue?')
@@ -471,6 +524,7 @@ class Editor(Appearance):
 
     @experimental_operation
     def refresh(self):
+        self._refresh_dashboard()
         selected = self.fields.selection()
         focus = self.fields.focus()
         position = self.fields.yview()[0]

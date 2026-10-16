@@ -7,6 +7,10 @@ from koei_editor.shared.scalar_presentation import ScalarPresentation, Inspectio
 class WO3Presentation(ScalarPresentation):
     extra_groups = ('Weapons', 'Equipment', 'Mount equipment', 'Upgrade stones', 'Weapon compatibility')
 
+    def dashboard(self, document):
+        from koei_editor.games.wo3u.dashboard import dashboard
+        return dashboard(self.backend, document)
+
     def inspection_tables(self, document):
         rows = self.backend.inspection_rows(document)
         progression = tuple((row['label'], row['value']) for row in rows

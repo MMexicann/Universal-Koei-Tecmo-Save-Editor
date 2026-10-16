@@ -1,6 +1,6 @@
 # Editing workspace
 
-The portable Windows ZIP includes this guide and thirteen companion user guides
+The portable Windows ZIP includes this guide and fourteen companion user guides
 in `_internal/guides/`. The full developer documentation remains in the Source ZIP.
 
 Choose an exact game/platform in the library, then open a separate save copy.
@@ -11,6 +11,10 @@ The **Open editors** selector resumes an existing session. Entries include the
 edition/platform and a live pending-edit count. Choosing an entry does not open
 a different file or discard changes. Game Library still provides platform,
 series and name/feature search, with the existing illustrated/compact layouts.
+
+**Progression Dashboard** opens first and shows verified opened-save cards.
+Use **Edit Fields** for the existing editing controls. Dashboard field links reveal
+the matching editable field without staging edits. [Coverage and use](PROGRESSION_DASHBOARDS.md).
 
 The scalar editor's **Categories** sidebar shows the number of editable fields
 in each category. `*n` marks its pending edits. A category chooses the same

@@ -18,7 +18,7 @@ import koei_editor.games.dw3.bodyguard_customization as customization
 import koei_editor.games.dw3.collection_editor as collections
 import koei_editor.games.dw3.musou_slots as musou_slots
 
-VERSION = '2.1'
+VERSION = '2.7'
 DISCORD_USERNAME = 'mexicannn'
 STEAM_PROFILE = 'https://steamcommunity.com/id/theonlyjuandeagingmexican/'
 NAMES = read_json('officer_names.json')
@@ -157,10 +157,11 @@ class Editor(Appearance):
         self.notebook = ttk.Notebook(outer, height=360)
         self.notebook.pack(fill='both', expand=True)
         self.tabs = {}
-        for name in ('Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves'):
+        for name in ('Dashboard', 'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves'):
             tab = ttk.Frame(self.notebook, padding=12)
             self.notebook.add(tab, text=name)
             self.tabs[name] = tab
+        self.build_dashboard()
         self.build_officers()
         self.build_items()
         self.build_weapons()
@@ -210,11 +211,114 @@ class Editor(Appearance):
 
     def apply_theme(self, name):
         super().apply_theme(name)
+        self.theme_dashboard(name)
         if self.on_theme is not None:
             self.on_theme(name)
 
+    def theme_dashboard(self, name):
+        view = getattr(self, 'dashboard_view', None)
+        if view is not None:
+            view.apply_theme(name)
+
+    def build_dashboard(self):
+        from koei_editor.shared.progression import ProgressionDashboard
+        from koei_editor.shared.progression_view import ProgressionView
+        self._dashboard_document = None
+        self.dashboard_view = ProgressionView(
+            self.tabs['Dashboard'], ProgressionDashboard(
+                'Dynasty Warriors 3 Remastered', note='Open a copied save to explore verified progression.'),
+            on_navigate=self.navigate_dashboard, theme=self.theme_name.get())
+        self.dashboard_view.pack(fill='both', expand=True)
+
+    def refresh_dashboard(self):
+        from koei_editor.shared.progression import ProgressionDashboard
+        if self.document is None:
+            self.dashboard_view.set_dashboard(ProgressionDashboard(
+                'Dynasty Warriors 3 Remastered', note='Open a copied save to explore verified progression.'))
+            self._dashboard_document = None
+            return
+        if self.document is self._dashboard_document:
+            return
+        from koei_editor.games.dw3.progression_dashboard import dashboard
+        try:
+            data = dashboard(self.document)
+        except Exception:
+            data = ProgressionDashboard('Dynasty Warriors 3 Remastered',
+                                        note='Dashboard unavailable for this layout. Existing editing forms remain available.')
+        self.dashboard_view.set_dashboard(data)
+        self._dashboard_document = self.document
+
+    @experimental_session
+    def navigate_dashboard(self, field_id):
+        """Select the existing editing form without applying or clearing edits."""
+        if self.document is None or not isinstance(field_id, str):
+            return False
+        try:
+            category, index_text, field = field_id.split(':')
+            index = int(index_text)
+        except (ValueError, TypeError):
+            return False
+        if category == 'officer' and field in self.inputs and index in self.officer_indices():
+            self.notebook.select(self.tabs['Officers'])
+            self.current_officer = index
+            self.officer_filter.set('')
+            self.refresh_officers()
+            self.officer_entries[field].focus_set()
+        elif category == 'weapon' and field == 'Skills':
+            if not any(row['data_id'] == index for row in weapon_editor.states(self.document, list(self.changes.values()))):
+                return False
+            self.notebook.select(self.tabs['Weapons'])
+            self.weapon_filter.set('')
+            self.refresh_weapons()
+            key = next((key for key, row in self.weapon_rows.items() if row['data_id'] == index), None)
+            if key is not None:
+                self.weapons.selection_set(key)
+                self.weapons.focus(key)
+                self.weapons.see(key)
+                self.select_weapon()
+        elif category == 'item' and field == 'Value' and index in dict(self.item_rows()):
+            self.notebook.select(self.tabs['Items'])
+            self.current_item = index
+            self.item_filter.set('')
+            self.refresh_items()
+            self.item_entry.focus_set()
+        elif category == 'progression' and index == 0 and field == 'HuanglongElixirs':
+            self.notebook.select(self.tabs['Unlocks'])
+            self.elixir_entry.focus_set()
+        elif category == 'story' and field == 'MusouCleared':
+            name = next((name for name, identity in self.story_officer_choices.items() if identity == index), None)
+            if name is None or index not in self.officer_indices():
+                return False
+            self.notebook.select(self.tabs['Unlocks'])
+            self.story_officer.set(name)
+            self.refresh_story_status()
+            self.story_officer_box.focus_set()
+        elif category == 'collection':
+            key = f'{field}:{index}'
+            if field not in ('music', 'movies') or not any(
+                    row['id'] == index for row in collections.DATA[field]['rows']):
+                return False
+            self.notebook.select(self.tabs['Collections'])
+            self.collection_filter.set('')
+            self.refresh_collections()
+            if not self.collection_tree.exists(key):
+                return False
+            self.collection_tree.selection_set(key)
+            self.collection_tree.focus(key)
+            self.collection_tree.see(key)
+        else:
+            return False
+        return True
+
     @experimental_session
     def set_loaded(self, loaded):
+        if not loaded:
+            from koei_editor.shared.progression import ProgressionDashboard
+            self.dashboard_view.set_dashboard(ProgressionDashboard(
+                'Dynasty Warriors 3 Remastered', note='Open a copied save to explore verified progression.'))
+            self._dashboard_document = None
+        elif self.document is not None:
+            self.refresh_dashboard()
         for button in self.buttons: button.configure(state='normal' if loaded else 'disabled')
         self.max_items_button.configure(state='normal' if loaded and ITEM_CAPS else 'disabled')
         self.guard_bonus_button.configure(state='normal' if loaded and self.guard_weapon_slot is not None and self.guard_bonus_editable else 'disabled')
@@ -319,12 +423,15 @@ class Editor(Appearance):
         self.selected = tk.StringVar(value='Select an officer')
         ttk.Label(right, textvariable=self.selected, font=(self.font_family, 11, 'bold')).pack(anchor='w', pady=(0, 12))
         self.inputs = {}
+        self.officer_entries = {}
         for field, label in LABELS.items():
             cap = CAPS.get(field)
             ttk.Label(right, text=f'{label} (supported max {cap:,})' if cap is not None else f'{label} (view only)').pack(anchor='w')
             variable = tk.StringVar()
             self.inputs[field] = variable
-            ttk.Entry(right, textvariable=variable, width=24, state='normal' if cap is not None else 'readonly').pack(anchor='w', pady=(3, 8))
+            entry = ttk.Entry(right, textvariable=variable, width=24, state='normal' if cap is not None else 'readonly')
+            entry.pack(anchor='w', pady=(3, 8))
+            self.officer_entries[field] = entry
         for text, command in [('Apply Officer Changes', self.apply_officer), ('Max Selected Officer', self.max_selected), ('Max All Officers', self.max_all), ('99,999 Merit for All', self.merit_all)]: self.action(right, text, command)
         ttk.Label(right, text='Experimental storage maximum: 2,147,483,647.', wraplength=220).pack(anchor='w', pady=6)
         ttk.Label(right, text='Apply your entries before selecting another officer.\n\nChanges stay in the editor until you save. Story completion is separate.', wraplength=200).pack(anchor='w', pady=10)
@@ -1209,6 +1316,7 @@ class Editor(Appearance):
 
     @experimental_session
     def refresh(self):
+        self.refresh_dashboard()
         if self.document is None: return
         self.refresh_officers(); self.refresh_items(); self.refresh_weapons(); self.refresh_bodyguards()
         self.refresh_story_status()

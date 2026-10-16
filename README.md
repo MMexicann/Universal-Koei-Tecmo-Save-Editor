@@ -14,9 +14,12 @@ themes. No Python installation is needed for the Windows app.
 **97 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
 <!-- END SUPPORTED GAMES -->
 
-**Version 2.6.** Choose a supported edition below and keep a separate save copy.
+**Version 2.7.** Choose a supported edition below and keep a separate save copy.
 
 ## What you can do
+
+- **Explore progression:** browse read-only cards for verified opened-save values,
+  equipment and mapped collections. [Dashboards](docs/PROGRESSION_DASHBOARDS.md).
 
 - **Edit saves:** search fields and records, adjust values, inspect equipment,
   review named before/after changes, and save a separate edited copy.
@@ -40,15 +43,16 @@ only conservative reductions or specific equipment choices; the supported-games
 list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
 expands only explicitly mapped numeric fields.
 
-## New in v2.6
+## New in v2.7
 
-- **Warriors: Legends of Troy, original EU PS3:** Kleos reductions and searchable
-  native music/item records for the qualified revision-38 populated profile.
-- **Orochi Z PC:** independently bounded base Life, Musou, Defense and Speed,
-  alongside the existing Attack controls.
-- **WO3 Ultimate PC:** deliberate weapon compatibility reset, clearer pending
-  equipment choices and a separate item inventory. PS3 copy/context checks are
-  stronger. [Details and qualification](docs/WARRIORS_V26_DEPTH.md).
+- **Graphical progression dashboards:** searchable character, equipment, resource
+  and completion cards with responsive layouts, verified progress bars and full
+  Light/Dark appearance.
+- **Rich game views:** DW8 XL, WO3 Ultimate, Origins and DW3 Remastered, plus
+  mapped-value dashboards for all other scalar profiles. Follow a value directly
+  to its editable field; browsing never changes a save.
+- Progress and completion are shown only where mappings establish their meaning.
+  [Dashboard guide and exact coverage](docs/PROGRESSION_DASHBOARDS.md).
 
 ## Quick start
 

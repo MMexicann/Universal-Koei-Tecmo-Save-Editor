@@ -5,6 +5,10 @@ from koei_editor.shared.scalar_presentation import InspectionTable, ScalarPresen
 
 
 class OriginsPresentation(ScalarPresentation):
+    def dashboard(self, document):
+        from koei_editor.games.origins.origins_dashboard import dashboard
+        return dashboard(self.backend, document)
+
     def inspection_tables(self, document):
         self.backend.validate_document(document)
         weapons = tuple(

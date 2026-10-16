@@ -1419,3 +1419,33 @@ adapters. `tools.package_release --verify-only` verifies all **417 public source
 files** at unchanged v1.6, and `tools.build_windows --print-config` includes the
 qualified Three Houses editor/parser imports. No native Windows executable or
 release artifact is produced by these checks.
+
+
+## v2.7 progression dashboard qualification
+
+The dashboard layer projects qualified opened documents into immutable display
+objects and uses the existing editors for field navigation. It changes no native
+parser, writer, game registration or conversion route. Read-only views retain
+unknown/unusual values, distinguish physical records and saved references from
+ownership, and never infer overall story completion or proficiency levels.
+
+Focused tests exercise real Canvas clicks, selection/filter/page consistency,
+responsive layouts, long text, explicit-denominator bars, retained themes and Tk
+timer destruction. Integration checks cover stable-field navigation through
+hidden filters, unchanged pending edits/Undo, source/backups, failed-open retention,
+presentation failure fallback and dashboard replacement after Save As. DW3 has
+equivalent tagged-document lifecycle and navigation checks. Packaged startup
+smoke tests render clearly identified internal samples without opening any save.
+
+Private file-level audits cover one DW8 XL PC copy, two distinct WO3 Ultimate PC
+states and nine Origins slots across revisions 16, 17 and 29. Mapped field links
+resolve and original source hashes plus exact no-edit serialization are retained.
+DW3 dashboard validation uses generated tagged-schema fixtures; no independent
+native DW3 copy was available in this pass. These tests do not establish edited
+or converted game loading/re-saving. Origins proficiency-level/Old Coin writers
+and arbitrary DW7 XL weapon base-parameter editing remain unavailable.
+
+The official release workflow requires complete source/Windows coverage, actual
+portable and standalone startup, active updated Defender scans of exact payloads,
+and artifact integrity before publication. Individual optional native tests skip
+when their private inputs are absent; release CI does not contain player saves.

@@ -4,10 +4,16 @@ from koei_editor.shared.verified_gui import Editor as ScalarEditor
 from koei_editor.shared.musou_presentations import DW8Presentation
 
 
+class DW8XLPresentation(DW8Presentation):
+    def dashboard(self, document):
+        from koei_editor.games.dw8xl.dashboard import dashboard
+        return dashboard(self.backend, document)
+
+
 class Editor(ScalarEditor):
     game_id = 'dw8xl'
     summary = 'Resources, officer stats, weapon compatibility and attribute ranks.'
-    presentation_type = DW8Presentation
+    presentation_type = DW8XLPresentation
 
 
 def read_save(path):

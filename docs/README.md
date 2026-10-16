@@ -6,6 +6,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [v2.7 graphical progression dashboards](releases/v2.7.md)
+- [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)

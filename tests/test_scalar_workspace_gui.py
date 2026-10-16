@@ -208,11 +208,12 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
         # The review describes the state when it opened. Filtering and later
         # staging must never silently narrow or rewrite its exported review.
         editor.stage_values({'gold': 999})
+        chosen = self.folder / 'frozen.json'
         destination = self.folder / 'frozen.changes.json'
         export = next(child for child in dialog.winfo_children()
                       if isinstance(child, ttk.Button) and child.cget('text') == 'Export Review...')
         with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename',
-                   return_value=str(destination)):
+                   return_value=str(chosen)):
             export.invoke()
         report = json.loads(destination.read_text())
         self.assertEqual({item['field']: item['after'] for item in report['changes']},
@@ -220,6 +221,85 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
         dialog.review_query.set('')
         self.assertEqual(len(tree.get_children()), 2)
         self.assertEqual(self.source.read_bytes(), fixture())
+
+    def test_review_export_normalizes_names_and_preserves_selected_files(self):
+        self.editor.stage_values({'gold': 1234})
+        self.editor.review()
+        dialog = next(child for child in self.root.winfo_children()
+                      if isinstance(child, tk.Toplevel) and child.title() == 'Review Changes')
+        export = next(child for child in dialog.winfo_children()
+                      if isinstance(child, ttk.Button) and child.cget('text') == 'Export Review...')
+        cases = (('plain', 'plain.changes.json'),
+                 ('review.json', 'review.changes.json'),
+                 ('partial.changes', 'partial.changes.json'),
+                 ('APP.BIN', 'APP.BIN.changes.json'),
+                 ('ready.changes.json', 'ready.changes.json'),
+                 ('upper.CHANGES.JSON', 'upper.CHANGES.JSON'),
+                 ('upper-json.JSON', 'upper-json.changes.json'),
+                 ('武器 review', '武器 review.changes.json'),
+                 ('folder.changes.json/nested', 'folder.changes.json/nested.changes.json'))
+        for selected_name, expected_name in cases:
+            with self.subTest(filename=selected_name):
+                selected, expected = self.folder / selected_name, self.folder / expected_name
+                if selected != expected:
+                    selected.parent.mkdir(parents=True, exist_ok=True)
+                    selected.write_bytes(b'Existing file must stay unchanged.\x00')
+                with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename',
+                           return_value=str(selected)) as choose, \
+                     patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                    export.invoke()
+                errors.assert_not_called()
+                report = json.loads(expected.read_text(encoding='utf-8'))
+                self.assertEqual(report['game_id'], 'origins')
+                self.assertEqual(report['source_sha256'], self.editor.document.sha256)
+                self.assertEqual(report['changes'], [{'field': 'gold', 'before': 3456, 'after': 1234}])
+                if selected != expected:
+                    self.assertEqual(selected.read_bytes(), b'Existing file must stay unchanged.\x00')
+                self.assertIn(expected.name, self.editor.status.get())
+                options = choose.call_args.kwargs
+                self.assertIs(options['parent'], dialog)
+                self.assertEqual(options['initialfile'], 'SLOT0000.changes.json')
+                self.assertEqual(Path(options['initialdir']), self.source.parent)
+                self.assertFalse(options['confirmoverwrite'])
+                self.assertEqual(self.editor.changes, {'gold': 1234})
+        self.assertEqual(self.source.read_bytes(), fixture())
+
+    def test_review_export_never_replaces_the_normalized_destination(self):
+        self.editor.stage_values({'gold': 1234})
+        self.editor.review()
+        dialog = next(child for child in self.root.winfo_children()
+                      if isinstance(child, tk.Toplevel) and child.title() == 'Review Changes')
+        export = next(child for child in dialog.winfo_children()
+                      if isinstance(child, ttk.Button) and child.cget('text') == 'Export Review...')
+        destination = self.folder / 'existing.changes.json'
+        destination.write_bytes(b'Keep the existing report exactly.\x00')
+        for name in ('existing', 'existing.json', 'existing.changes.json'):
+            with self.subTest(filename=name), \
+                 patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename',
+                       return_value=str(self.folder / name)), \
+                 patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                export.invoke()
+                errors.assert_called_once()
+                self.assertEqual(errors.call_args.args[0], 'Cannot Export Review')
+                self.assertIn('existing files are never replaced', errors.call_args.args[1])
+                self.assertEqual(destination.read_bytes(), b'Keep the existing report exactly.\x00')
+                self.assertEqual(self.editor.changes, {'gold': 1234})
+        self.assertEqual(self.source.read_bytes(), fixture())
+
+    def test_review_export_cancel_preserves_pending_changes_and_files(self):
+        self.editor.stage_values({'gold': 1234})
+        self.editor.review()
+        dialog = next(child for child in self.root.winfo_children()
+                      if isinstance(child, tk.Toplevel) and child.title() == 'Review Changes')
+        export = next(child for child in dialog.winfo_children()
+                      if isinstance(child, ttk.Button) and child.cget('text') == 'Export Review...')
+        before = {path: path.read_bytes() for path in self.folder.rglob('*') if path.is_file()}
+        with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename', return_value=''), \
+             patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+            export.invoke()
+        errors.assert_not_called()
+        self.assertEqual({path: path.read_bytes() for path in self.folder.rglob('*') if path.is_file()}, before)
+        self.assertEqual(self.editor.changes, {'gold': 1234})
 
     def test_inventory_choice_search_preserves_native_reference_and_undo(self):
         from koei_editor.games.sw4ii import sw4ii_parser as backend

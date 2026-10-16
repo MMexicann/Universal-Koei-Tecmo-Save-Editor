@@ -5,8 +5,12 @@ themes, searchable records, backups, Undo and Review Changes. Switch between
 games while keeping each editing session open. Full-size illustrated cards show by
 default; the larger **Compact cards** toggle switches to a denser list.
 
-**Version 2.5.3** supports **96 game/platform profiles across 15 platforms**.
+**Version 2.5.4** supports **96 game/platform profiles across 15 platforms**.
 No Python installation is needed for the Windows app.
+
+**Review export fix:** plain filenames, `.json` names and save-style names now
+automatically become `.changes.json` reports. Existing files stay untouched.
+Use **Save As...** to write an edited game-save copy. [Details](docs/releases/v2.5.4.md).
 
 ## New game and equipment controls
 
@@ -45,7 +49,7 @@ reviewed user guides in `_internal/guides/`; the Source ZIP contains the full do
 
 ## Origins request status
 
-Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.3.
+Weapon proficiency levels and Old Coin editing are **not implemented** in v2.5.4.
 The existing Gold, Skill Point, bond, peace, reinforcement and battle-history
 controls remain available. The inspector shows stored proficiency XP
 and equipped Battle Art IDs, corroborated on nine public native slots. It does
@@ -151,7 +155,7 @@ Ninja Gaiden II opens extracted Xbox 360/Xenia story `.dat` copies; CON/STFS
 packages require a separate extraction and reintegration workflow. Sigma 2 and
 Ninja Gaiden 2 Black use different formats.
 
-The table below lists game/platform editor profiles for v2.5.3.
+The table below lists game/platform editor profiles for v2.5.4.
 Conversion-only endpoints are listed separately in the Save Converter guide.
 Experimental editing applies to mapped numeric fields where their encoding permits it.
 

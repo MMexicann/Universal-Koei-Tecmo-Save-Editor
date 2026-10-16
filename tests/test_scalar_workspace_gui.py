@@ -259,7 +259,7 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
                 options = choose.call_args.kwargs
                 self.assertIs(options['parent'], dialog)
                 self.assertEqual(options['initialfile'], 'SLOT0000.changes.json')
-                self.assertEqual(Path(options['initialdir']), self.source.parent)
+                self.assertTrue(Path(options['initialdir']).samefile(self.source.parent))
                 self.assertFalse(options['confirmoverwrite'])
                 self.assertEqual(self.editor.changes, {'gold': 1234})
         self.assertEqual(self.source.read_bytes(), fixture())

@@ -717,9 +717,18 @@ class Editor(Appearance):
         return not self.changes or messagebox.askyesno('Unsaved Changes', 'Discard the pending changes? They have not been written to a file.')
 
     def open(self):
-        if not self.dirty_ok(): return
+        if not self.dirty_ok(): return False
         path = filedialog.askopenfilename(title='Open a Save Copy', filetypes=[('Game save', '*.sav')])
-        if not path: return
+        if not path: return False
+        return self._open_path(path)
+
+    def open_path(self, path):
+        """Open an explicitly chosen copy through the existing guarded workflow."""
+        if not self.dirty_ok():
+            return False
+        return self._open_path(path)
+
+    def _open_path(self, path):
         state_names=('document','backup','changes','history','current_officer','current_item',
                      'current_bodyguard','current_guard_item','current_guard_weapon','guard_weapon_slot',
                      'current_weapon_data_id','weapon_rows')
@@ -743,6 +752,7 @@ class Editor(Appearance):
             self.set_loaded(True)
             self.refresh()
             self.status.set('Save copy opened. An untouched backup is ready.')
+            return True
         except Exception as error:
             for name,value in previous.items():setattr(self,name,value)
             self.experimental_mode.set(previous_experimental)
@@ -757,6 +767,7 @@ class Editor(Appearance):
             except Exception:self.set_loaded(False)
             self.status.set(previous_status)
             messagebox.showerror('Cannot Open Save', str(error))
+            return False
 
     def update_paths(self):
         self.filename.set(f'Opened copy: {self.document.source.name}')

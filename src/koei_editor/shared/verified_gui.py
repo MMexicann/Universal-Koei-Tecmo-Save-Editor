@@ -118,6 +118,7 @@ class Editor(Appearance):
         self.theme_name = tk.StringVar(root, value=theme)
         self.document, self.backup = None, None
         self.changes, self.history = {}, []
+        self.on_snapshot = None
         self.pinned_fields = frozenset()
         self._on_pins = None
         self.experimental_mode = tk.BooleanVar(root, value=False)
@@ -459,7 +460,19 @@ class Editor(Appearance):
         self.update_filename('Opened copy: ')
         self.status.set('Opened save copy. Automatic backup: ' + backup.name)
         self.refresh()
+        self._notify_snapshot('opened')
         return True
+
+    def _notify_snapshot(self, event):
+        """Optional local management observes only completed native operations."""
+        callback = self.on_snapshot
+        if callable(callback):
+            try:
+                callback(event)
+            except Exception:
+                # A completed guarded open/save/backup must remain successful
+                # when an optional management integration is unavailable.
+                self.status.set(self.status.get() + ' Optional snapshot capture did not finish.')
 
     def show_presets(self):
         from koei_editor.shared.preset_gui import open_presets
@@ -986,12 +999,14 @@ class Editor(Appearance):
         self.update_filename('Opened edited copy: ')
         self.refresh()
         self.status.set('Edited copy saved. Original snapshot backed up.')
+        self._notify_snapshot('saved')
 
     def make_backup(self):
         if self.document:
             try:
                 self.backup = self.adapter.backup(self.document)
                 self.status.set('Opened bytes backed up: ' + self.backup.name)
+                self._notify_snapshot('backup')
             except Exception as error:
                 messagebox.showerror('Backup Failed', str(error))
 

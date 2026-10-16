@@ -342,6 +342,8 @@ class Application(Appearance):
             frame = ttk.Frame(self.workspace)
             try:
                 editor = game.create_editor(self.root, frame, self.theme_name.get(), self.apply_theme)
+                if hasattr(editor, 'on_snapshot'):
+                    editor.on_snapshot = lambda event: self.capture_editor_backup(game_id, editor, event)
                 configure_pins = getattr(editor, 'configure_pins', None)
                 if callable(configure_pins):
                     on_change = (lambda ids: preferences.save_pins(game_id, ids, self.preferences_path)

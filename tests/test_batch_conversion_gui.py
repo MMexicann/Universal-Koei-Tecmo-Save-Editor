@@ -51,9 +51,7 @@ class BatchGuiTests(unittest.TestCase):
             app.author_label,
             app.theme_selector,
             app.home_button,
-            app.converter_button,
-            app.compare_button,
-            app.batch_button,
+            app.tools_button,
         ):
             self.assertTrue(control.winfo_ismapped())
             self.assertGreater(control.winfo_width(), 10)
@@ -65,6 +63,14 @@ class BatchGuiTests(unittest.TestCase):
             app.breadcrumb_label.winfo_x() + app.breadcrumb_label.winfo_width(),
             app.author_label.winfo_x(),
         )
+        app.tools_menu.show(app.tools_button)
+        self.root.update()
+        for control in (app.converter_button, app.compare_button, app.batch_button,
+                        app.save_library_button):
+            self.assertTrue(control.winfo_ismapped())
+            self.assertGreater(control.winfo_width(), 10)
+            self.assertLessEqual(control.winfo_rootx() + control.winfo_width(),
+                                 self.root.winfo_rootx() + self.root.winfo_width())
 
     def test_review_export_progress_private_report_and_retry_existing_report(self):
         workspace = BatchWorkspace(self.root, self.root)

@@ -6,6 +6,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Tools palette, retained workspaces and optional Vault capture](TOOLS_WORKSPACE.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)

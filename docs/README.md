@@ -6,6 +6,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [v2.5.4 review-export filename fix](releases/v2.5.4.md)
 - [v2.5.3 equipment, new profiles and shared refinements](releases/v2.5.3.md)
 - [v2.5.2 changes and remaining request limits](releases/v2.5.2.md)
 - [Editor workspace: categories, open sessions and keyboard controls](EDITOR_WORKSPACE.md)

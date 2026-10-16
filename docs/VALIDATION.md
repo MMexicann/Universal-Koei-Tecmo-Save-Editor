@@ -1,5 +1,22 @@
 # Universal development validation
 
+## v2.5.4 review-export filename fix
+
+A privately supplied decrypted WO3 Ultimate US PS3 export opens under the
+existing exact profile and has a byte-exact unchanged roundtrip. Before the
+fix, actual Tk review exports using a plain name, a `.json` name or `APP.BIN`
+all reproduce “Choose a .changes.json review file.” The exact review suffix
+works. After the fix, all four choices export the complete expected typed JSON
+review, and all five supplied save/context files retain their original hashes.
+Private saves, context, native reports and account data are excluded from Git
+and release assets.
+
+GUI regressions also cover Unicode/case variants, partial suffixes, directories
+whose names contain the suffix, cancellation, existing normalized destinations
+and a frozen WO3U review exported after Undo. Existing source files, pending
+edits and previously exported reports remain unchanged. This is report-export
+validation; gameplay mappings and in-game loading claims do not change.
+
 ## v2.5.3 weapons, new profiles and shared refinements
 
 DW7 XL PC weapon qualification independently inspects native parameter loaders,

@@ -32,6 +32,12 @@ IDs, records and raw/formatted values, and shows named choices where available.
 Filtering a review does not narrow its exported JSON: the complete reviewed
 snapshot retains raw typed values and stays frozen if later edits change.
 
+**Export Review** writes a JSON change report, while **Save As...** writes an
+edited game-save copy. The export dialog suggests a `.changes.json` filename.
+You can type a plain name, `.json` or a save-style name such as `APP.BIN`;
+the editor completes the review suffix automatically (`APP.BIN.changes.json`).
+An existing report is never overwritten; choose a new name to export again.
+
 **More options** reveals experimental editing and the encoding-limit column.
 Hiding the panel does not turn an acknowledged experimental session off or
 change pending values. An active experimental warning stays visible below the

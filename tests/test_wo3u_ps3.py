@@ -1,5 +1,6 @@
 """Procedural contracts and optional genuine US PS3 export qualification."""
 from dataclasses import replace
+import json
 import os
 from pathlib import Path
 import struct
@@ -195,6 +196,7 @@ class WO3UltimatePS3Tests(unittest.TestCase):
 
     def test_tk_controls_review_undo_inspection_theme_save_restore(self):
         import tkinter as tk
+        from tkinter import ttk
         from unittest.mock import patch
         from koei_editor.games.wo3u_ps3.editor import Editor
         try:
@@ -227,6 +229,22 @@ class WO3UltimatePS3Tests(unittest.TestCase):
             editor.review()
             editor.undo()
             self.assertEqual(editor.changes, {})
+            dialog = next(child for child in root.winfo_children()
+                          if isinstance(child, tk.Toplevel) and child.title() == 'Review Changes')
+            export = next(child for child in dialog.winfo_children()
+                          if isinstance(child, ttk.Button) and child.cget('text') == 'Export Review...')
+            with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename', return_value=str(source)), \
+                 patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                export.invoke()
+            errors.assert_not_called()
+            report = json.loads(source.with_name(source.name + '.changes.json').read_text())
+            self.assertEqual(report['game_id'], parser.GAME_ID)
+            self.assertEqual(report['source_sha256'], editor.document.sha256)
+            self.assertEqual(report['changes'], [{'field': 'gems',
+                              'before': parser.field_map(editor.document)['gems'].value(raw), 'after': 456}])
+            self.assertEqual(editor.changes, {})
+            self.assertEqual(source.read_bytes(), raw)
+            self.assertEqual(source.with_name('PARAM.SFO').read_bytes(), context)
             editor.max_visible()
             self.assertEqual(editor.changes, {})
             self.assertTrue(parser.inspection_rows(editor.document))

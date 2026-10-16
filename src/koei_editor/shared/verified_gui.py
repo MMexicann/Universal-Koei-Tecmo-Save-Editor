@@ -1,6 +1,7 @@
 """Shared scalar save editor with retained independent sessions."""
 import json
 from dataclasses import replace
+from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from koei_editor.shared.appearance import Appearance, THEMES
@@ -748,17 +749,29 @@ class Editor(Appearance):
         horizontal = ttk.Scrollbar(body, orient='horizontal', command=tree.xview)
         horizontal.grid(row=1, column=0, sticky='ew')
         tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        ttk.Label(dialog, text='Export Review writes a JSON report. Use Save As... in the editor '
+                  'to save an edited game file.', wraplength=950).pack(anchor='w', padx=15, pady=(8, 0))
         def export():
-            path = filedialog.asksaveasfilename(title='Export Change Review', defaultextension='.changes.json')
+            path = filedialog.asksaveasfilename(
+                parent=dialog, title='Export Change Review', defaultextension='.changes.json',
+                initialdir=document.source.parent, initialfile=document.source.stem + '.changes.json',
+                filetypes=[('Change review (JSON)', '*.changes.json')], confirmoverwrite=False)
             if path:
                 report = {'game_id': self.game_id, 'source_sha256': document.sha256,
                           'experimental': bool(experimental_count),
                           'changes': [{'field': field.id, 'before': before, 'after': after}
                                       for field, before, after in rows]}
                 try:
-                    if not path.lower().endswith('.changes.json'):
-                        raise ValueError('Choose a .changes.json review file.')
-                    atomic_new(json.dumps(report, indent=2).encode(), path)
+                    destination = Path(path)
+                    name = destination.name
+                    if not name.lower().endswith('.changes.json'):
+                        if name.lower().endswith('.json'):
+                            name = name[:-5]
+                        if not name.lower().endswith('.changes'):
+                            name += '.changes'
+                        destination = destination.with_name(name + '.json')
+                    destination = atomic_new(json.dumps(report, indent=2).encode('utf-8'), destination)
+                    self.status.set('Change review exported: ' + destination.name)
                 except Exception as error:
                     messagebox.showerror('Cannot Export Review', str(error))
         ttk.Button(dialog, text='Export Review...', command=export).pack(side='left', padx=15, pady=12)

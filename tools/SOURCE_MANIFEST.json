@@ -1,5 +1,5 @@
 {
-  "version": "2.5.3",
+  "version": "2.5.4",
   "files": [
     {
       "path": ".gitattributes",
@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 29721,
-      "sha256": "62176d02e257a6dd6d4d80e80b390473cb31cd0af71ed84e9ef1c6b5f36926c4"
+      "bytes": 29968,
+      "sha256": "121c963af24bf5627932b3f7f4680fe477e83a5a76a1f0e2149dc999c43f0c1f"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -159,12 +159,12 @@
     {
       "path": "docs/BUILDING.md",
       "bytes": 9406,
-      "sha256": "72c0fb2dd8a2e8fdfd0c418a18b37c3663c12124114ff5577fcda4fe43e923b0"
+      "sha256": "85b94af223f29c87b636ffafb3c66861539aedc281eaf5df915fe4529cf48189"
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 26769,
-      "sha256": "9065a62cd73ffabe95db59c7fd9a08ea94cff686da95fd9aacd4bdb90507a3cc"
+      "bytes": 27451,
+      "sha256": "01abaa11f003305df51e249c27112fd0ed58eda672798c321a1a40f2d887b747"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
@@ -318,8 +318,8 @@
     },
     {
       "path": "docs/EDITOR_WORKSPACE.md",
-      "bytes": 3380,
-      "sha256": "823f63e44e577a353727859f065b98badc114daf58e2b020d28abbdf1ec16403"
+      "bytes": 3767,
+      "sha256": "88ee04a5a6421fe591d02d8a031f26b3a60557f500f167ff580120490d520acb"
     },
     {
       "path": "docs/EXISTING_EDITORS.md",
@@ -509,7 +509,7 @@
     {
       "path": "docs/ORIGINS_REQUEST_STATUS.md",
       "bytes": 6427,
-      "sha256": "ef0c824e4b2cbb6c97a39a7ea2077cbc8d05401e78ed35f6f5ce7e4abb131495"
+      "sha256": "fea697f77c16e7a1dfbce376bf2640b60f8a41a5f0124c6dc41d8707298b26b5"
     },
     {
       "path": "docs/OROCHI_DYNASTY_DEPTH.md",
@@ -613,8 +613,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13202,
-      "sha256": "bbd03cd1af29e59f1b3a4cd47a03f86ea894561b3b1b53f87e8da1f09bc9578d"
+      "bytes": 13260,
+      "sha256": "234fad5c11e47f852127d5e02fd98546b43bf7940536427952d68ad6b54f53b1"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -628,8 +628,8 @@
     },
     {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 4677,
-      "sha256": "eaf8c68958ce5eea5e5caf98f1fd429ab137ed893e52b1214c0b05a9670fbfb1"
+      "bytes": 1614,
+      "sha256": "84f8111d27ee43fb54b243a7f6813c6ca303e4d951bc71bfdf06a46c25233885"
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
@@ -888,8 +888,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 88803,
-      "sha256": "7ad794a1fb4727dd64c5b13c522a9b61a514e41e9ac40530e5d642ec6b47c0ff"
+      "bytes": 89793,
+      "sha256": "814b2d9faaed46eae047d8fce1fbcfe0ad161e454a375aef86e53b692574b775"
     },
     {
       "path": "docs/WEAPON_ATTRIBUTES_FIX.md",
@@ -992,6 +992,11 @@
       "sha256": "eaf8c68958ce5eea5e5caf98f1fd429ab137ed893e52b1214c0b05a9670fbfb1"
     },
     {
+      "path": "docs/releases/v2.5.4.md",
+      "bytes": 1614,
+      "sha256": "84f8111d27ee43fb54b243a7f6813c6ca303e4d951bc71bfdf06a46c25233885"
+    },
+    {
       "path": "docs/releases/v2.5.md",
       "bytes": 3029,
       "sha256": "7c582c24da32cd8defa9bf0b762cc21cbf01ab6f6d514fc85882d8a6d3809462"
@@ -1044,7 +1049,7 @@
     {
       "path": "pyproject.toml",
       "bytes": 678,
-      "sha256": "87368675db91d193a92a4f42c24e95b9df4b3b416e5cbda6969a78d4dbfcafc3"
+      "sha256": "35ac706ab36b417859d1e6402dc0c680fc18219506ecb6f913c163f0867cd114"
     },
     {
       "path": "src/koei_editor/AGENTS.md",
@@ -1069,7 +1074,7 @@
     {
       "path": "src/koei_editor/application.py",
       "bytes": 36001,
-      "sha256": "f27cfa0015dc53ccab5bf6545b96aebd3ba00ed8d3c936dfdd45dad45d79bc16"
+      "sha256": "47f734d27f62b2b1db7101ababbbed9ef06485ffc0fa1ef4acedcd3e84fbceaf"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3553,8 +3558,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 43590,
-      "sha256": "42aff1a6393399bb65653ce2247b381ced6542821d3897765088dc4b3259456d"
+      "bytes": 44463,
+      "sha256": "300e061f7dfa97b3af63af4a8ee852e61fb92ef22c93a4474943ddf6a88310df"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4703,8 +4708,8 @@
     },
     {
       "path": "tests/test_scalar_workspace_gui.py",
-      "bytes": 12651,
-      "sha256": "d678fc2dd2996985adc5e5003d060eace5f4233d3607b3c088eb637829dc1ed7"
+      "bytes": 17971,
+      "sha256": "badbd28bdb97aaaa59cac6d2b936e66fe20621d9abed3c05345d8f2b47a4c9ac"
     },
     {
       "path": "tests/test_scalar_workspace_navigation.py",
@@ -5003,8 +5008,8 @@
     },
     {
       "path": "tests/test_wo3u_ps3.py",
-      "bytes": 12869,
-      "sha256": "24dd65c747a7c5fe40ab0b62233ba6ded309321ca7091ee3374152a4f08393c2"
+      "bytes": 14128,
+      "sha256": "6e9ce421574915dd45786d118512bbefac461ca9d6451994985d7e2b86785c05"
     },
     {
       "path": "tests/test_wo3u_review.py",
@@ -5079,7 +5084,7 @@
     {
       "path": "tools/build_windows.py",
       "bytes": 2851,
-      "sha256": "023e1c72334dfe4dfc6249991c21d46d988ddbacec722a82d24c868b239db0c5"
+      "sha256": "42f2cc2259369827f77e26080eab8da98371638fdd320391827db935851f0022"
     },
     {
       "path": "tools/inspect_candidate.py",

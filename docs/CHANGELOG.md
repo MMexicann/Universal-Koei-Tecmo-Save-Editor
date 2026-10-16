@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.5.4 — 2026-10-16
+
+- Fix scalar Review Changes exports that rejected plain names, `.json` names and save-style filenames with “Choose a .changes.json review file.” Complete the review suffix automatically and suggest a source-based filename.
+- Keep report exports separate from edited game saves, preserve existing files and show the completed export filename. Explain that Save As writes the edited game file.
+- Reproduce and verify the fix with a supplied decrypted WO3 Ultimate US PS3 export; preserve all original save/context files. Add filename, cancellation, existing-report and frozen-review regressions. Gameplay mappings and supported inventory are unchanged.
+
 ## v2.5.3 — 2026-10-15
 
 - Add source-witnessed DW7 XL PC weapon loadouts and learned applied-seal replacement/removal in occupied slots, with duplicate, smith-learning and suspension guards. Base attack/element/capacity live in external game parameters; arbitrary edits remain unavailable.

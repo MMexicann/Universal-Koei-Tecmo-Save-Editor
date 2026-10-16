@@ -1,76 +1,28 @@
-# Universal Koei Tecmo Save Editor v2.5.3
+# Universal Koei Tecmo Save Editor v2.5.4
 
-This update adds DW7 XL PC weapon loadouts and learned applied-seal controls,
-a dedicated original US/EU PS3 XL editor, Nights of Azure 2 Switch Libra
-reductions, WO3 Ultimate mount loadouts and shared interface/backup fixes.
-The library now has **96 game/platform profiles across 15 platforms**;
-Save Converter retains **139 directed routes**.
+Fix **Cannot Export Review: Choose a .changes.json review file.** when exporting
+Review Changes from WO3 Ultimate or another scalar editor.
 
-## DW7 XL weapon request
+The export dialog now suggests a source-based review filename and completes the
+`.changes.json` suffix automatically. Plain names, `.json` names, partial
+`.changes` suffixes and save-style names work. Choosing `APP.BIN` exports a
+separate `APP.BIN.changes.json` report; it preserves `APP.BIN`. Existing report
+files are never overwritten, and the status shows the actual exported filename.
 
-Select an owned weapon already equipped by a playable officer in the opened
-PC save, or replace/remove an already learned ordinary seal in an occupied
-position. Native rules protect distinct weapon slots, duplicate seals,
-smith-learning reservations, unknown records and suspended battles.
+**Export Review** writes a JSON report of the reviewed changes. **Save As...**
+in the editor writes an edited game-save copy. Filtering the review or changing
+pending edits afterward still leaves its complete exported snapshot frozen.
 
-**Arbitrary base weapon attack and element editing is not implemented.** The
-native game loads attack, element, element level and seal capacity from separate
-game parameters. Selecting a different existing variant uses that variant's
-attributes; it does not rewrite the original variant. Empty seal slots remain
-read only because saved empty positions do not establish native capacity.
+The exact error was reproduced and the fix verified with the supplied decrypted
+WO3 Ultimate US PS3 export. All original save and context files remained
+unchanged. Regression coverage includes filename variants, cancellation,
+existing reports, source preservation and export after Undo.
 
-## New profiles and existing-game refinements
+No gameplay mapping or support scope changes: 96 game/platform profiles across
+15 platforms and 139 directed conversion routes. This fix does not establish
+in-game loading or add the previously unimplemented Origins writers or arbitrary
+DW7 XL weapon attack/element edits.
 
-- **DW7 XL original US/EU PS3:** Gold, 65 playable officers' stored stats and
-  skill points with independently proven native bounds and Max; existing owned
-  active-weapon choices; unlearned seal-meter reductions. Requires PFD-decrypted
-  `APP.BIN` and its complete original `PARAM.SFO`. Suspended battles are read only.
-  Console decryption, reimport and signing remain external.
-- **Nights of Azure 2 Switch:** reduce Libra in the qualified original English
-  Chapter 1, Chapter 7 and Clear profiles. Synchronize the labelled save preview
-  and current native block hashes; preserve chapter checkpoints and inactive
-  retained data. Max/increases, other chapters/languages and other mechanics
-  remain unavailable.
-- **WO3 Ultimate Definitive PC:** select originally owned mounts for two native
-  stored loadouts. Ownership, item ranks and battle actors stay separate.
-  Experimental mode can no longer bypass decrease-only reinforcement bounds.
-- **DW7 XL experimental stats:** respect native signed-short getter limits,
-  preserving unusual opened values and the usual default gameplay bounds.
-
-## Shared interface and save integrity
-
-Large choice dropdowns are searchable. Selection feedback distinguishes opened,
-current and mixed values. Review Changes searches records, names, field IDs and
-raw/formatted values, and displays named enum choices. Filtered reviews still
-export their complete frozen snapshot with raw typed values.
-
-Backup failures across **24 affected format profiles** retain completed
-snapshots, manifests and companion files, protecting concurrent replacements.
-DW3 failed commits also retain prepared change reports. **A retained file or
-report does not establish success; do not import output from a failed operation.**
-
-## Validation and remaining limits
-
-Native copied-file checks include three distinct DW7 XL PC states, original
-US/EU PS3 contexts sharing one gameplay state, two WO3 Ultimate native sources
-and three Nights of Azure 2 states. Two Nights of Azure archives do not establish
-independent publishers, and a modified early-game sample does not prove a natural
-currency cap. Tests cover surgical writes, unrelated-byte/seed preservation,
-original-source protection, native read-back, GUI, backup and restore workflows.
-
-**Edited or converted game loading and re-saving remain untested.** The existing
-DW7 XL PS3-to-PC route remains a conversion preview; equivalent 100% completion,
-PC achievements and DLC entitlements are not guaranteed. Origins proficiency
-level and Old Coin writers remain **unimplemented**.
-
-Publication requires the complete native Windows test suite, portable and
-standalone build/startup checks, active Defender scans of the exact payloads and
-matching checksums. Download the standalone EXE, complete Windows ZIP or Source
-ZIP; SHA256SUMS and Defender evidence accompany the release. Eleven reviewed
-offline guides are bundled in both Windows forms.
-
-[DW7 XL PC weapons](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/DW7XL_WEAPONS.md),
-[DW7 XL PS3 editor](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/DW7XL_PS3.md),
-[Nights of Azure 2 scope](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/NOA2_SWITCH_FORMAT.md),
-[conversion limits](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/SAVE_CONVERSION.md)
-and [Origins request status](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/v2.5.3/docs/ORIGINS_REQUEST_STATUS.md).
+The Windows standalone EXE and complete portable ZIP include the updated offline
+workspace guide. Publication requires full Windows tests, both packaged startup
+checks, active Defender scans and checksums of the exact downloadable payloads.

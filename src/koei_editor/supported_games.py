@@ -107,6 +107,7 @@ from .game_registry import GAMES
 # pw3_ps3: ONE PIECE: PIRATE WARRIORS 3 / Original EU PSN NPEB02211 · DATA.BIN + PARAM.SFO [PlayStation 3]
 # dw8_ps3: DYNASTY WARRIORS 8 / Original US PSN NPUB31234 · plaintext APP.BIN + PARAM.SFO [PlayStation 3]
 # aot1_vita: ATTACK ON TITAN / A.O.T. WINGS OF FREEDOM / Original EU PCSB00898 · app0000.dat + sce_sys/param.sfo [PlayStation Vita]
+# troy_ps3: WARRIORS: LEGENDS OF TROY / Original EU PS3 · revision-38 populated PROFILE [PlayStation 3]
 # END GENERATED SUPPORTED GAME INDEX
 
 
@@ -127,13 +128,13 @@ SUPPORTED_GAMES = tuple(
 )
 
 
-def markdown_table() -> str:
-    """Render the same supported inventory for contributors and the README."""
+def markdown_table(games=None) -> str:
+    """Render the supported inventory, optionally restricted to one platform."""
     lines = [
         '| Game / edition | Platform | Implemented scope |',
         '| --- | --- | --- |',
     ]
-    for game in SUPPORTED_GAMES:
+    for game in SUPPORTED_GAMES if games is None else games:
         title = f'{game.title} — {game.edition}' if game.edition else game.title
         values = (title, game.platform, game.features)
         lines.append('| ' + ' | '.join(value.replace('|', r'\|') for value in values) + ' |')

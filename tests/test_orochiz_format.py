@@ -68,7 +68,10 @@ class OrochiZFormatTests(unittest.TestCase):
 
     def test_exact_mapping_existing_only_and_rank_display_conversion(self):
         fields = backend.field_map(self.document)
-        self.assertEqual(len(fields), 103)
+        # The distinctive procedural bytes happen to contain two ordinary
+        # additional base stats. The legacy weapon/attack domain stays intact.
+        self.assertEqual(len([field for field in fields.values()
+                              if field.group != 'Officer base stats']), 103)
         self.assertEqual(fields['officer_0_weapon_0_attribute_0_level'].value(self.document.payload), 3)
         self.assertEqual(fields['officer_0_weapon_0_attribute_14_level'].value(self.document.payload), 20)
         for key in ('officer_0_weapon_0_attribute_5_level', 'officer_0_weapon_1_attack_bonus',
@@ -177,7 +180,7 @@ class OrochiZFormatTests(unittest.TestCase):
         destination = self.folder / 'edited.dat'
         updated = backend.save_as(self.document, {'stock_exp': 1000}, destination)
         # Windows may expand an 8.3 temporary-folder spelling when resolving it.
-        self.assertEqual(updated.source, destination.resolve())
+        self.assertTrue(updated.source.samefile(destination))
         self.assertEqual(backend.field_map(updated)['stock_exp'].value(updated.payload), 1000)
         self.assertEqual(self.source.read_bytes(), self.document.raw)
         restored = backend.restore(snapshot, self.folder / 'restored.dat')
@@ -211,14 +214,17 @@ class OrochiZFormatTests(unittest.TestCase):
         from koei_editor.games.orochiz.orochiz_editor import OrochiZPresentation
         tables = OrochiZPresentation(backend, backend.GAME_ID).inspection_tables(self.document)
         self.assertEqual([len(table.rows) for table in tables], [96, 768])
-        changed_doc = backend.decode(backend.serialize(self.document, backend.maximums(self.document, {})))
+        maximum = backend.maximums(self.document, {})
+        changed_doc = backend.decode(backend.serialize(self.document, maximum))
         for before, after in zip(backend.officers(self.document), backend.officers(changed_doc)):
             self.assertEqual(before['exp'], after['exp'])
             self.assertEqual(before['stored_level'], after['stored_level'])
             self.assertEqual(before['proficiency'], after['proficiency'])
             self.assertEqual(before['equipped_slot'], after['equipped_slot'])
-            self.assertEqual(before['stats'][:2] + before['stats'][3:],
-                             after['stats'][:2] + after['stats'][3:])
+            for index, key in enumerate(('life', 'musou', 'attack', 'defense', 'speed')):
+                field_id = f"officer_{before['id']}_base_{key}"
+                expected = maximum.get(field_id, before['stats'][index])
+                self.assertEqual(after['stats'][index], expected)
 
     @unittest.skipUnless(os.environ.get('OROCHIZ_NATIVE_SAVE'), 'Private genuine native fixture not supplied')
     def test_independent_genuine_native_roundtrip_every_qualified_field(self):
@@ -250,8 +256,10 @@ class OrochiZFormatTests(unittest.TestCase):
         for before, after in zip(backend.officers(doc), backend.officers(backend.decode(max_raw))):
             self.assertEqual({key: value for key, value in before.items() if key != 'stats'},
                              {key: value for key, value in after.items() if key != 'stats'})
-            self.assertEqual(before['stats'][:2] + before['stats'][3:],
-                             after['stats'][:2] + after['stats'][3:])
+            for index, key in enumerate(('life', 'musou', 'attack', 'defense', 'speed')):
+                field_id = f"officer_{before['id']}_base_{key}"
+                expected = maximum.get(field_id, before['stats'][index])
+                self.assertEqual(after['stats'][index], expected)
         for row in backend.weapons(doc):
             if row['id'] == backend.EMPTY_WEAPON:
                 start = backend._weapon_offset(row['officer'], row['slot'])

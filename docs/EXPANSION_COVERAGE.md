@@ -1,5 +1,11 @@
 # Expansion coverage and remaining inputs
 
+The v2.6 update has **97 game/platform profiles across 15 platforms**, with
+Legends of Troy EU PS3 Kleos reductions and broader save-management tools.
+Fatal Frame II PS2 stock editing remains unregistered pending independent
+retail save-linkage/dependency proof. [Current inventory](SUPPORTED_GAMES.md) ·
+[v2.6 changes](releases/v2.6.md).
+
 This checklist records the implemented scope of this expansion and the evidence
 still required for deeper editing. The linked game checklists contain native
 addresses, format details, sources, test commands and individual mechanic

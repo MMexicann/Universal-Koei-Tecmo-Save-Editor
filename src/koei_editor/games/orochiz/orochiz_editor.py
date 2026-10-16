@@ -18,12 +18,12 @@ class OrochiZPresentation(ScalarPresentation):
                                    for identity in range(15) if row['mask'] & (1 << identity)),
                          f"0x{row['alchemy']:04X}") for row in backend.weapons(document))
         return (InspectionTable('Officer progression',
-                                ('Officer ID', 'Stored level + 1', 'EXP', 'Stored stats (1/2)',
-                                 'Base attack', 'Stored stats (4/5)',
+                                ('Officer ID', 'Stored level + 1', 'EXP', 'Base Life / Musou',
+                                 'Base attack', 'Base Defense / Speed',
                                  'Stored proficiency', 'Equipped slot + 1'), officers,
                                 'Read only. Search by officer ID. Qualified existing weapons can be selected '
-                                'in Equipment. Officer growth adjusts EXP within the opened level; '
-                                'level and proficiency remain unchanged.'),
+                                'in Equipment. Qualified base stats have independent per-officer bounds. '
+                                'Level and proficiency remain unchanged.'),
                 InspectionTable('Weapon inventory',
                                 ('Officer ID', 'Slot', 'Weapon ID', 'Status', 'Attack bonus',
                                  'Attribute slots', 'Owned attributes', 'Attribute ID:level',
@@ -38,7 +38,7 @@ class Editor(ScalarEditor):
     backend = backend
     presentation_type = OrochiZPresentation
     subtitle = 'Windows PC save.dat editor'
-    summary = 'Stock EXP, base attack, EXP within current levels, existing weapon properties and equipment choices.'
+    summary = 'Stock EXP, base Life/Musou/Attack/Defense/Speed, EXP within current levels, existing weapons and equipment.'
 
 
 def read_save(path):

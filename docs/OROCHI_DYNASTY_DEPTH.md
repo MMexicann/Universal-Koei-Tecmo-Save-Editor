@@ -17,7 +17,9 @@ independently proved edit that leaves its dependencies intact.
 ## Warriors Orochi 3 Ultimate Definitive Edition PC
 
 The existing adapter already edits resources and qualified weapon capacity,
-reinforcement and existing attribute ranks, and inspects compatibility.
+reinforcement and existing attribute ranks. Version 2.6 also offers a deliberate
+compatibility reset to zero, a separate 64-record item inventory and pending-aware
+item choices. [Current qualification](WARRIORS_V26_DEPTH.md).
 The following systems now include the v2.5.3 mount refinement:
 
 | New control | Qualification and bounds | Independent evidence |
@@ -125,8 +127,9 @@ catalog is imported.
 Reviewed stock EXP, level-associated EXP, base attack, proficiency, fusion,
 alchemy, equipped weapons and rewards. Existing controls already cover stock
 EXP, independently proved base attack and within-level EXP, and qualified owned
-weapon selection, capacity, attack bonus and existing attribute ranks. No
-additional safe field was proved during this pass. Level transitions require
+weapon selection, capacity, attack bonus and existing attribute ranks. The v2.6 follow-up adds independently bounded base Life, Musou, Defense and Speed
+using each officer's native initial/growth tables. Unusual originals stay opaque.
+[New fields and distinct-state validation](WARRIORS_V26_DEPTH.md). Level transitions require
 native growth/RNG and stat rewards; proficiency thresholds 10/20/25/35/45 can
 grant costumes and wallpapers. Alchemy changes material consumption and class
 bits. None is reduced to an isolated counter write.

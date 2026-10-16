@@ -9,7 +9,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
-VERSION = '2.5.4'
+VERSION = '2.6'
 
 
 class Application(Appearance):
@@ -26,6 +26,7 @@ class Application(Appearance):
         self.converter = None
         self.comparison = None
         self.batch = None
+        self.save_library = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
@@ -41,6 +42,8 @@ class Application(Appearance):
         self.compare_button.pack(side='left', padx=(10, 0))
         self.batch_button = ttk.Button(top, text='Batch Converter', command=self.show_batch)
         self.batch_button.pack(side='left', padx=(10, 0))
+        self.save_library_button = ttk.Button(top, text='Save Library', command=self.show_save_library)
+        self.save_library_button.pack(side='left', padx=(10, 0))
         self.breadcrumb = tk.StringVar(root, value='Choose your game')
         self.theme_selector = ttk.Combobox(top, values=tuple(THEMES), textvariable=self.theme_name,
                                           state='readonly', width=7)
@@ -262,6 +265,8 @@ class Application(Appearance):
             self.comparison.apply_theme(palette)
         if self.batch is not None:
             self.batch.apply_theme(palette)
+        if self.save_library is not None:
+            self.save_library.apply_theme(palette)
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
@@ -309,15 +314,18 @@ class Application(Appearance):
         elif bottom + 12 > visible_bottom:
             canvas.yview_moveto((bottom + 12 - canvas.winfo_height()) / content.winfo_height())
 
-    def select_game(self, game_id):
-        game = get_game(game_id)
-        if game in GAMES:
-            self.platform_choice.set(game.platform)
-            self.show_platform()
+    def _session_editor(self, game):
+        """Create a retained editor without changing the visible workspace."""
+        game_id = game.id
         if game_id not in self.sessions:
             frame = ttk.Frame(self.workspace)
             try:
                 editor = game.create_editor(self.root, frame, self.theme_name.get(), self.apply_theme)
+                configure_pins = getattr(editor, 'configure_pins', None)
+                if callable(configure_pins):
+                    on_change = (lambda ids: preferences.save_pins(game_id, ids, self.preferences_path)
+                                 ) if self._persist_theme else None
+                    configure_pins(preferences.load_pins(game_id, self.preferences_path), on_change)
             except Exception:
                 frame.destroy()
                 raise
@@ -325,6 +333,15 @@ class Application(Appearance):
             status = getattr(editor, 'status', None)
             if hasattr(status, 'trace_add'):
                 status.trace_add('write', lambda *_args: self.refresh_sessions())
+            self.refresh_sessions()
+        return self.sessions[game_id][1]
+
+    def select_game(self, game_id):
+        game = get_game(game_id)
+        if game in GAMES:
+            self.platform_choice.set(game.platform)
+            self.show_platform()
+        self._session_editor(game)
         if hasattr(self, '_session_order'):
             self._session_order = [game_id] + [key for key in self._session_order if key != game_id]
         self.library.pack_forget()
@@ -375,7 +392,8 @@ class Application(Appearance):
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def _tool_workspaces(self):
-        return tuple(tool for tool in (self.converter, self.comparison, self.batch) if tool is not None)
+        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library')
+                     if (tool := getattr(self, name, None)) is not None)
 
     def _hide_tools(self):
         for tool in self._tool_workspaces():
@@ -397,6 +415,39 @@ class Application(Appearance):
         batch.frame.pack(fill='both', expand=True)
         self.breadcrumb.set('Batch Converter')
         batch.apply_theme(THEMES[self.theme_name.get()])
+
+    def show_save_library(self):
+        from koei_editor.shared.save_library_gui import SaveLibraryWorkspace
+        if self.save_library is None:
+            self.save_library = SaveLibraryWorkspace(self.root, self.workspace, self.open_saved_copy)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        self.save_library.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set('Save Library')
+        self.save_library.apply_theme(THEMES[self.theme_name.get()])
+
+    def open_saved_copy(self, game_id, path):
+        """Open a browser result through that profile's ordinary guarded editor."""
+        from tkinter import messagebox
+        try:
+            game = get_game(game_id)
+            if game not in GAMES or game.scalar_backend is None:
+                raise ValueError('Choose an editable game/platform profile from Save Library.')
+            editor = self._session_editor(game)
+            open_path = getattr(editor, 'open_path', None)
+            if not callable(open_path):
+                raise ValueError('This editor cannot open a Save Library result.')
+            accepted = open_path(path)
+        except Exception as error:
+            messagebox.showerror('Cannot Open Save Copy', str(error), parent=self.root)
+            return False
+        if accepted:
+            self.select_game(game_id)
+            return True
+        return False
 
     def queue_conversion(self, prepared):
         if self._batch_workspace().add_review(prepared):
@@ -465,6 +516,9 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.converter is not None and self.converter.frame.winfo_manager():
             return self.converter.focus_route_search()
+        if self.save_library is not None and self.save_library.frame.winfo_manager():
+            focus_search = getattr(self.save_library, 'focus_search', None)
+            return focus_search() if callable(focus_search) else 'break'
         if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
@@ -490,13 +544,15 @@ class Application(Appearance):
         Editor.show_contact(self)
 
     def close(self):
-        if ((self.converter is not None and self.converter.busy)
-                or (self.comparison is not None and self.comparison.busy)
-                or (self.batch is not None and self.batch.busy)):
+        if any(tool.busy for tool in self._tool_workspaces()):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return
         if all(editor.dirty_ok() for _frame, editor in self.sessions.values()):
+            for tool in self._tool_workspaces():
+                close = getattr(tool, 'close', None)
+                if callable(close):
+                    close()
             self.root.destroy()
 
 
@@ -513,6 +569,8 @@ def main():
     tests.add_argument('--batch-convert', metavar='PLAN', help='Review or export an explicit JSON conversion queue.')
     parser.add_argument('--batch-report', help='Optional new .json summary for --batch-convert.')
     tests.add_argument('--compare', nargs=2, metavar=('FIRST', 'SECOND'), help='Compare two copied saves using an explicit --game profile; no gameplay files are written.')
+    tests.add_argument('--scan-saves', metavar='FOLDER', help='Inspect a copied-save folder using an explicit --game profile; print a path-free read-only JSON summary.')
+    parser.add_argument('--recursive', action='store_true', help='Include subfolders within the fixed Save Library depth limit; requires --scan-saves.')
     parser.add_argument('--comparison-report', help='Optional new .json report for --compare.')
     tests.add_argument('--list-conversions', action='store_true', help='Print supported platform conversion routes.')
     parser.add_argument('--source', help='Separate source save copy for conversion.')
@@ -520,6 +578,34 @@ def main():
     parser.add_argument('--output-dir', help='New folder for the converted save and local receipt.')
     parser.add_argument('--dry-run', action='store_true', help='Validate and review conversion without writing files or backups.')
     arguments = parser.parse_args()
+    if arguments.recursive and arguments.scan_saves is None:
+        parser.error('--recursive requires --scan-saves.')
+    if arguments.scan_saves is not None:
+        from koei_editor.shared import save_library
+        import json
+        if (not arguments.game or arguments.scan_saves == '' or arguments.smoke_test
+                or arguments.list_games or arguments.dry_run
+                or any(value is not None for value in (arguments.source, arguments.template,
+                    arguments.output_dir, arguments.batch_report, arguments.comparison_report))):
+            parser.error('--scan-saves requires a separate --game profile and copied folder; other workflow options do not apply.')
+        try:
+            save_library.adapter_for(arguments.game)
+        except (ValueError, TypeError):
+            parser.error('Save Library requires a registered scalar game/platform profile; the separate DW3 and research workflows are unsupported.')
+        try:
+            scanned = save_library.scan(arguments.game, arguments.scan_saves, recursive=arguments.recursive)
+            report = save_library.report(scanned)
+        except (OSError, ValueError, TypeError):
+            # Native and filesystem exception messages can contain private local
+            # filenames or original context. The public summary omits them too.
+            parser.exit(1, 'Save Library scan failed. Check the copied folder and selected profile.\n')
+        print(json.dumps(report, indent=2, ensure_ascii=True))
+        if report['stop_reason'] != 'complete':
+            parser.exit(3)
+        if (not report['statuses']['qualified']
+                or report['statuses']['qualified'] != report['candidate_files']):
+            parser.exit(1)
+        return
     if arguments.batch_convert:
         from koei_editor.shared import batch_conversion
         import json
@@ -633,6 +719,7 @@ def main():
         app.show_converter()
         app.show_comparison()
         app.show_batch()
+        app.show_save_library()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

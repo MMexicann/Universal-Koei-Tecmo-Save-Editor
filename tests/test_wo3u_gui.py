@@ -71,7 +71,7 @@ class WO3GuiTests(unittest.TestCase):
         editor.show_inspector()
         tables = editor.presentation.inspection_tables(editor.document)
         self.assertEqual([table.title for table in tables],
-                         ['Progression', 'Weapons', 'Resources', 'Mount loadouts'])
+                         ['Progression', 'Weapons', 'Resources', 'Item inventory', 'Mount loadouts'])
         self.assertTrue(any('Verity' in str(row) for row in tables[1].rows))
         editor.apply_theme('Dark')
         editor.apply_theme('Light')

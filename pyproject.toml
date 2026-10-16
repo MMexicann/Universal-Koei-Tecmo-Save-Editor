@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "universal-koei-tecmo-save-editor"
-version = "2.5.4"
-description = "Mexican's Windows save editor for 96 Koei Tecmo game/platform profiles, with 139 scoped platform conversion routes, native save comparison, reviewed conversion queues, backups and Undo."
+version = "2.6"
+description = "Mexican's Windows save editor for 97 Koei Tecmo game/platform profiles, with copied-save browsing, reviewed edit presets, comparison, 139 scoped conversion routes, backups and Undo."
 requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}

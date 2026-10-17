@@ -7,69 +7,90 @@ from tkinter import filedialog, messagebox, ttk
 
 from koei_editor.shared import save_comparison as backend
 from koei_editor.shared.appearance import ui_font
+from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 STATUS_LABELS = {'value_changed': 'Value changed', 'definition_changed': 'Record definition changed',
                  'available_in_first': 'Available in first', 'available_in_second': 'Available in second'}
 
 
 class ComparisonWorkspace:
-    def __init__(self, root, parent):
+    def __init__(self, root, parent, *, scrollable=True):
         self.root, self.frame = root, ttk.Frame(parent, padding=(28, 16))
+        self.paging = ttk.Frame(self.frame)
+        self.paging.pack(side='bottom', fill='x', pady=(8, 0))
+        # Research Lab supplies its own viewport around this entire form.
+        self._comparison_viewport = ScrollablePanel(self.frame) if scrollable else None
+        if self._comparison_viewport is not None:
+            self.viewport = self._comparison_viewport
+            self.viewport.frame.pack(fill='both', expand=True)
+        body = self._comparison_viewport.content if scrollable else self.frame
+        self._comparison_body = body
         self.busy, self.prepared, self._revision = False, None, 0
         self.page, self.page_size = 0, 250
         self._results = queue.SimpleQueue()
         self._games = {game.title + ' · ' + game.subtitle + ' [' + game.platform + ']': game.id
                        for game in backend.COMPARABLE_GAMES}
-        ttk.Label(self.frame, text='COMPARE SAVES', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
-        ttk.Label(self.frame, text='See what changed between two copies of the same game/platform.',
+        ttk.Label(body, text='COMPARE SAVES', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
+        ttk.Label(body, text='See what changed between two copies of the same game/platform.',
                   style='Muted.TLabel', wraplength=980).pack(anchor='w', pady=(4, 14))
-        form = ttk.Frame(self.frame); form.pack(fill='x'); form.columnconfigure(1, weight=1)
+        form = ttk.Frame(body); form.pack(fill='x'); form.columnconfigure(1, weight=1)
         self.game = tk.StringVar(root, value=next(iter(self._games)))
         self.first, self.second = tk.StringVar(root), tk.StringVar(root)
         self.controls=[]
         ttk.Label(form, text='Game and platform').grid(row=0, column=0, sticky='w', padx=(0,14))
-        self.selector = ttk.Combobox(form, textvariable=self.game, values=tuple(self._games), state='readonly')
+        self.selector = ttk.Combobox(form, textvariable=self.game, values=tuple(self._games), state='readonly',width=1)
         self.selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=8); self.controls.append(self.selector)
         for row, label, variable in ((1,'First copy',self.first),(2,'Second copy',self.second)):
             ttk.Label(form,text=label).grid(row=row,column=0,sticky='w',padx=(0,14))
-            entry=ttk.Entry(form,textvariable=variable);entry.grid(row=row,column=1,sticky='ew',pady=8)
+            entry=ttk.Entry(form,textvariable=variable,width=1);entry.grid(row=row,column=1,sticky='ew',pady=8)
             button=ttk.Button(form,text='Browse…',command=lambda v=variable:self.browse(v))
             button.grid(row=row,column=2,padx=(10,0));self.controls.extend((entry,button))
-        ttk.Label(self.frame,text='Keep each copy’s required original console metadata beside it. '
+        ttk.Label(body,text='Keep each copy’s required original console metadata beside it. '
                   'The comparison reads mapped fields and counts other payload differences.',
                   style='Muted.TLabel',wraplength=980).pack(anchor='w',pady=(8,12))
-        actions=ttk.Frame(self.frame);actions.pack(fill='x')
+        actions=ttk.Frame(body);actions.pack(fill='x')
         self.compare_button=ttk.Button(actions,text='Compare copies',command=self.compare)
         self.compare_button.pack(side='left');self.controls.append(self.compare_button)
         self.export_button=ttk.Button(actions,text='Export report…',command=self.export,state='disabled')
         self.export_button.pack(side='left',padx=10)
         self.status=tk.StringVar(root,value='Choose two separate copied saves and their exact profile.')
-        ttk.Label(self.frame,textvariable=self.status,wraplength=980).pack(anchor='w',pady=(14,8))
-        search=ttk.Frame(self.frame);search.pack(fill='x',pady=(4,8))
+        ttk.Label(body,textvariable=self.status,wraplength=980).pack(anchor='w',pady=(14,8))
+        search=ttk.Frame(body);search.pack(fill='x',pady=(4,8))
         ttk.Label(search,text='Find differences').pack(side='left',padx=(0,12))
-        self.search=tk.StringVar(root);ttk.Entry(search,textvariable=self.search).pack(side='left',fill='x',expand=True)
+        self.search=tk.StringVar(root);ttk.Entry(search,textvariable=self.search,width=1).pack(side='left',fill='x',expand=True)
         self.filter=tk.StringVar(root,value='All differences')
         ttk.Combobox(search,textvariable=self.filter,values=('All differences','Value changed','Record definition changed','Available in first','Available in second'),state='readonly',width=24).pack(side='left',padx=10)
-        table=ttk.Frame(self.frame);table.pack(fill='both',expand=True)
+        table=ttk.Frame(body);table.pack(fill='both',expand=True)
         self.table=ttk.Treeview(table,columns=('record','field','first','second','status'),show='headings',height=15)
         for key,title,width in (('record','Record',200),('field','Field',240),('first','First copy',130),
                                 ('second','Second copy',130),('status','Difference',200)):
             self.table.heading(key,text=title);self.table.column(key,width=width,minwidth=80)
         scrollbar=ttk.Scrollbar(table,orient='vertical',command=self.table.yview)
-        self.table.configure(yscrollcommand=scrollbar.set);scrollbar.pack(side='right',fill='y')
+        horizontal=ttk.Scrollbar(table,orient='horizontal',command=self.table.xview)
+        self.table.configure(yscrollcommand=scrollbar.set,xscrollcommand=horizontal.set)
+        scrollbar.pack(side='right',fill='y');horizontal.pack(side='bottom',fill='x')
         self.table.pack(fill='both',expand=True)
-        ttk.Label(self.frame,text='Fields align by this profile’s field IDs. Conditional records may differ. '
+        ttk.Label(body,text='Fields align by this profile’s field IDs. Conditional records may differ. '
                   'A comparison report does not authorize additional gameplay edits.',
                   style='Muted.TLabel',wraplength=980).pack(anchor='w',pady=(12,0))
         for variable in (self.game,self.first,self.second):variable.trace_add('write',self.invalidate)
         for variable in (self.search,self.filter):variable.trace_add('write',self.refilter)
-        paging=ttk.Frame(self.frame);paging.pack(fill='x',pady=(8,0))
-        self.previous=ttk.Button(paging,text='Previous',command=lambda:self.change_page(-1),state='disabled');self.previous.pack(side='left')
-        self.next=ttk.Button(paging,text='Next',command=lambda:self.change_page(1),state='disabled');self.next.pack(side='left',padx=10)
-        self.page_info=tk.StringVar(root,value='No comparison yet');ttk.Label(paging,textvariable=self.page_info).pack(side='left')
+        paging=self.paging
+        self.previous=ttk.Button(paging,text='Previous',command=lambda:self.change_page(-1),state='disabled');self.previous.grid(row=0,column=0,sticky='w')
+        self.next=ttk.Button(paging,text='Next',command=lambda:self.change_page(1),state='disabled');self.next.grid(row=0,column=1,sticky='w',padx=10)
+        self.page_info=tk.StringVar(root,value='No comparison yet');ttk.Label(paging,textvariable=self.page_info,wraplength=700).grid(row=1,column=0,columnspan=3,sticky='w')
+
+        body.bind('<Configure>',self._resize_guidance,add='+')
+
+    def _resize_guidance(self, event):
+        for widget in self._comparison_body.winfo_children():
+            if isinstance(widget, ttk.Label):
+                widget.configure(wraplength=max(1, event.width - 8))
+
 
     def apply_theme(self, palette):
-        pass  # All comparison widgets use the application's shared ttk styles.
+        if self._comparison_viewport is not None:
+            self._comparison_viewport.apply_theme(palette)
 
     def invalidate(self,*_args):
         self._revision+=1;self.prepared=None;self.page=0;self.export_button.configure(state='disabled');self.refresh()

@@ -7,6 +7,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from koei_editor import conversion
 from koei_editor.shared.appearance import ui_font
+from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 
 class ConversionWorkspace:
@@ -15,19 +16,26 @@ class ConversionWorkspace:
         self.on_queue = on_queue
         self.queue_button = None
         self.frame = ttk.Frame(parent, padding=(28, 16))
+        self.actions = ttk.Frame(self.frame)
+        self.actions.pack(side='bottom', fill='x', pady=(8, 0))
+        for column in range(2):
+            self.actions.columnconfigure(column, weight=1)
+        self.viewport = ScrollablePanel(self.frame)
+        self.viewport.frame.pack(fill='both', expand=True)
+        body = self.viewport.content
         self.prepared = None
         self.busy = False
         self._revision = 0
         self._results = queue.SimpleQueue()
         self._labels = {route.label: route.id for route in conversion.ROUTES}
         font_family = ui_font(root)
-        ttk.Label(self.frame, text='SAVE CONVERTER', font=(font_family, 23, 'bold')).pack(anchor='w')
-        ttk.Label(self.frame, text='Move a copied save to another platform',
+        ttk.Label(body, text='SAVE CONVERTER', font=(font_family, 23, 'bold')).pack(anchor='w')
+        ttk.Label(body, text='Move a copied save to another platform',
                   style='Muted.TLabel').pack(anchor='w', pady=(2, 14))
-        ttk.Label(self.frame, text='Choose the exact game editions and transfer scope supported by your copies. '
+        ttk.Label(body, text='Choose the exact game editions and transfer scope supported by your copies. '
                   'Each route lists what will move and what stays in the destination template.',
                   wraplength=980).pack(anchor='w', pady=(0, 12))
-        form = ttk.Frame(self.frame)
+        form = ttk.Frame(body)
         form.pack(fill='x')
         form.columnconfigure(1, weight=1)
         self.route_search = tk.StringVar(root)
@@ -37,45 +45,45 @@ class ConversionWorkspace:
         self.template = tk.StringVar(root)
         self.controls = []
         ttk.Label(form, text='Find route').grid(row=0, column=0, sticky='w', padx=(0, 14), pady=8)
-        self.search_entry = ttk.Entry(form, textvariable=self.route_search)
+        self.search_entry = ttk.Entry(form, textvariable=self.route_search, width=1)
         self.search_entry.grid(row=0, column=1, sticky='ew', pady=8)
         ttk.Label(form, textvariable=self.route_count, style='Muted.TLabel').grid(
             row=0, column=2, sticky='w', padx=(10, 0))
         self.search_entry.bind('<Escape>', lambda _event: self.route_search.set(''))
         self.controls.append(self.search_entry)
         ttk.Label(form, text='Conversion').grid(row=1, column=0, sticky='w', padx=(0, 14), pady=8)
-        self.route_selector = ttk.Combobox(form, textvariable=self.route, values=tuple(self._labels), state='readonly')
+        self.route_selector = ttk.Combobox(form, textvariable=self.route, values=tuple(self._labels), state='readonly', width=1)
         self.route_selector.grid(row=1, column=1, columnspan=2, sticky='ew', pady=8)
         self.controls.append(self.route_selector)
         self.scope = tk.StringVar(root)
-        ttk.Label(form, textvariable=self.scope, wraplength=820, style='Muted.TLabel').grid(
-            row=2, column=1, columnspan=2, sticky='w')
+        self.scope_label = ttk.Label(form, textvariable=self.scope, wraplength=500, style='Muted.TLabel')
+        self.scope_label.grid(row=2, column=1, columnspan=2, sticky='ew')
+        self.scope_label.bind('<Configure>', lambda event: self.scope_label.configure(wraplength=max(1, event.width)))
         for row, label, variable, kind in ((3, 'Source copy', self.source, 'source'),
                                            (4, 'Destination template', self.template, 'template')):
             ttk.Label(form, text=label).grid(row=row, column=0, sticky='w', padx=(0, 14), pady=8)
-            entry = ttk.Entry(form, textvariable=variable)
+            entry = ttk.Entry(form, textvariable=variable, width=1)
             entry.grid(row=row, column=1, sticky='ew', pady=8)
             button = ttk.Button(form, text='Browse…', command=lambda k=kind: self.browse(k))
             button.grid(row=row, column=2, padx=(10, 0), pady=8)
             self.controls.extend((entry, button))
-        ttk.Label(self.frame, text='First create a save in the destination game and copy/export its save folder. '
+        ttk.Label(body, text='First create a save in the destination game and copy/export its save folder. '
                   'The template supplies the destination encryption and original console metadata. '
                   'For PS3, keep PARAM.SFO beside APP.BIN; for PS4, keep sce_sys/param.sfo. '
                   'Console inputs must already be exported/decrypted.',
                   style='Muted.TLabel', wraplength=980).pack(anchor='w', pady=(10, 14))
-        buttons = ttk.Frame(self.frame)
-        buttons.pack(fill='x')
+        buttons = self.actions
         self.review_button = ttk.Button(buttons, text='Review conversion', command=self.review)
-        self.review_button.pack(side='left')
+        self.review_button.grid(row=0, column=0, sticky='ew', padx=(0, 8), pady=3)
         self.export_button = ttk.Button(buttons, text='Export to new folder…', command=self.export, state='disabled')
-        self.export_button.pack(side='left', padx=10)
+        self.export_button.grid(row=0, column=1, sticky='ew', pady=3)
         self.controls.append(self.review_button)
         if on_queue is not None:
             self.queue_button = ttk.Button(buttons, text='Add reviewed job to batch…', command=self.queue_review, state='disabled')
-            self.queue_button.pack(side='left', padx=10)
+            self.queue_button.grid(row=1, column=0, columnspan=2, sticky='ew', pady=3)
         self.status = tk.StringVar(root, value='Choose separate source and destination-template copies, then review.')
-        ttk.Label(self.frame, textvariable=self.status, wraplength=980).pack(anchor='w', pady=(14, 8))
-        self.preview = tk.Text(self.frame, height=15, wrap='word', relief='flat', padx=14, pady=12,
+        ttk.Label(body, textvariable=self.status, wraplength=980).pack(anchor='w', pady=(14, 8))
+        self.preview = tk.Text(body, height=15, width=1, wrap='word', relief='flat', padx=14, pady=12,
                                state='disabled', font=(font_family, 10))
         self.preview.pack(fill='both', expand=True)
         for variable in (self.route, self.source, self.template):
@@ -83,6 +91,14 @@ class ConversionWorkspace:
         self.route_search.trace_add('write', self._filter_routes)
         self._filter_routes()
         self.invalidate()
+
+        body.bind('<Configure>',self._resize_guidance,add='+')
+
+    def _resize_guidance(self, event):
+        for widget in self.viewport.content.winfo_children():
+            if isinstance(widget, ttk.Label):
+                widget.configure(wraplength=max(1, event.width - 8))
+
 
     def _filter_routes(self, *_args):
         terms = self.route_search.get().casefold().split()
@@ -129,6 +145,7 @@ class ConversionWorkspace:
         return 'break'
 
     def apply_theme(self, palette):
+        self.viewport.apply_theme(palette)
         self.preview.configure(background=palette['surface'], foreground=palette['text'],
                                insertbackground=palette['text'])
 

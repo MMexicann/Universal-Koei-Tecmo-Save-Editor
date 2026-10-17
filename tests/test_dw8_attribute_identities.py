@@ -69,8 +69,7 @@ class DW8AttributeIdentityTests(unittest.TestCase):
 
     def test_duplicate_guard_checks_complete_batch_and_unstage_dependencies(self):
         first, second = 'weapon_0_attribute_0_identity', 'weapon_0_attribute_1_identity'
-        for action in (lambda: backend.stage(self.document, {}, first, 2),
-                       lambda: backend.serialize(self.document, {first: 2}),
+        for action in (lambda: backend.serialize(self.document, {first: 2}),
                        lambda: backend.review(self.document, {first: 2}),
                        lambda: backend.maximums(self.document, {first: 2})):
             with self.assertRaises(SaveError):
@@ -85,6 +84,110 @@ class DW8AttributeIdentityTests(unittest.TestCase):
         adapter = get_game('dw8xl').get_scalar_adapter()
         with self.assertRaises(SaveError):
             adapter.stage(self.document, swapped, first, 7)
+
+    def test_occupied_identity_choice_swaps_atomically_from_either_side(self):
+        first, second = 'weapon_0_attribute_0_identity', 'weapon_0_attribute_1_identity'
+        expected = {first: 2, second: 7}
+        adapter = get_game('dw8xl').get_scalar_adapter()
+        for requested in ({first: 2, second: 7}, {second: 7, first: 2}):
+            pending = {}
+            for key, value in requested.items():
+                previous = dict(pending)
+                pending = adapter.stage(self.document, pending, key, value)
+                self.assertEqual(pending, expected)
+                self.assertEqual(previous, {} if len(previous) == 0 else expected)
+            reopened = adapter.decode(adapter.serialize(self.document, pending))
+            self.assertEqual(backend.weapon(reopened, 1)['attributes'][:2], ((2, 4), (7, 3)))
+            touched = {i for i, (old, new) in enumerate(zip(self.document.payload, reopened.payload)) if old != new}
+            self.assertEqual(touched, {backend.DW8_WEAPON_BASE + 6, backend.DW8_WEAPON_BASE + 7})
+        pending = backend.stage(self.document, {}, first, 41)
+        before = dict(pending)
+        pending = backend.stage(self.document, pending, second, 41)
+        self.assertEqual(pending, {first: 2, second: 41})
+        self.assertEqual(before, {first: 41})
+        # Complete-map validation precedes any proposed swap/repair.
+        for invalid in ({first: 2}, {first: 41, 'unknown': 1}):
+            with self.assertRaises(SaveError):
+                adapter.stage(self.document, invalid, second, 7)
+            self.assertEqual(invalid, {first: 2} if len(invalid) == 1 else {first: 41, 'unknown': 1})
+        experimental = get_game('dw8xl').get_scalar_adapter(experimental=True)
+        high_rank = {'weapon_0_attribute_1_rank': 11}
+        with self.assertRaises(SaveError):
+            experimental.stage(self.document, high_rank, first, 2)
+        self.assertEqual(high_rank, {'weapon_0_attribute_1_rank': 11})
+
+    def test_palette_only_weapon_is_usable_and_protected_peer_never_swapped(self):
+        payload = bytearray(self.document.payload)
+        # Leave only the two eligible IDs already on the first weapon.
+        payload[backend.DW8_WEAPON_BASE + backend.DW8_WEAPON_STRIDE + 6] = 7
+        def reopen(data):
+            inner = backend.byte_cipher(bytes(data), self.document.format.inner_seed)
+            raw = (struct.pack('<HH', backend.word_sum(inner), self.document.seed)
+                   + backend.word_cipher(inner, self.document.seed)
+                   + bytes(((sum(data) & 255) ^ (backend.mix_word(self.document.seed) & 255),)))
+            return backend.decode(raw, 'dw8xl')
+        document = reopen(payload)
+        first, second = 'weapon_0_attribute_0_identity', 'weapon_0_attribute_1_identity'
+        self.assertEqual(tuple(value for value, _ in backend.field_options(document, first)), (2, 7))
+        self.assertEqual(backend.stage(document, {}, first, 2), {first: 2, second: 7})
+        # The peer has a known identity but an unusual original rank.
+        payload[backend.DW8_WEAPON_BASE + backend.DW8_WEAPON_STRIDE + 6] = 2
+        for rank in (0, 11):
+            payload[backend.DW8_WEAPON_BASE + 13] = rank
+            protected = reopen(payload)
+            self.assertNotIn(second, backend.field_map(protected))
+            self.assertIn(2, backend.field_map(protected)[first].allowed_ids)
+            with self.assertRaises(SaveError):
+                backend.stage(protected, {}, first, 2)
+            self.assertEqual(backend.serialize(protected, {}), protected.raw)
+
+    def test_gui_swap_batch_review_atomic_revert_and_undo(self):
+        try:
+            root = tk.Tk()
+        except tk.TclError as error:
+            self.skipTest(str(error))
+        self.addCleanup(root.destroy)
+        root.withdraw()
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'source.dat'
+            source.write_bytes(self.document.raw)
+            editor = get_game('dw8xl').create_editor(root, root)
+            with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
+                editor.open()
+            first, second = 'weapon_0_attribute_0_identity', 'weapon_0_attribute_1_identity'
+            pair = {first: 2, second: 7}
+            for assignments in (pair, {second: 7, first: 2}, {first: 2}):
+                with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                    editor.stage_values(assignments)
+                    errors.assert_not_called()
+                self.assertEqual(editor.changes, pair)
+                self.assertEqual(len(editor.history), 1)
+                self.assertEqual({field.id for field, _, _ in editor.adapter.review(editor.document, editor.changes)},
+                                 {first, second})
+                editor.review()
+                editor.undo()
+                self.assertEqual(editor.changes, {})
+            editor.stage_values(pair)
+            with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                editor.stage_values({first: 7, second: 2})
+                errors.assert_called_once()  # Restore the dependent pair together with Revert.
+            self.assertEqual(editor.changes, pair)
+            editor.group.set('Weapon attribute identities')
+            editor.refresh()
+            editor.fields.selection_set((first, second))
+            with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                editor.revert_selected()
+                errors.assert_not_called()
+            self.assertEqual(editor.changes, {})
+            editor.undo()
+            self.assertEqual(editor.changes, pair)
+            editor.undo()
+            self.assertEqual(editor.changes, {})
+            with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+                editor.stage_values({first: 2, second: 2})
+                errors.assert_called_once()
+            self.assertEqual(editor.changes, {})
+            self.assertEqual(source.read_bytes(), self.document.raw)
 
     def test_replacements_require_a_normal_final_rank_even_in_experimental_mode(self):
         adapter = get_game('dw8xl').get_scalar_adapter(experimental=True)

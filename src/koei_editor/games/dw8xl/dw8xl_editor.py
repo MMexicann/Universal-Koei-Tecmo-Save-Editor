@@ -15,7 +15,10 @@ class DW8XLPresentation(DW8Presentation):
     def field_hint(self, document, field):
         if field.group == 'Weapon attribute identities':
             return ('Replace this existing ranked attribute using a verified ranked ID '
-                    'present in the opened weapon pool. Duplicate IDs on one weapon are rejected. '
+                    'present in the opened weapon pool. Choosing an ID in another eligible ranked slot '
+                    'swaps both identities together; ranks stay at their original positions. '
+                    'Restore both identity slots together with Revert Selected, or Undo the swap. '
+                    'Unknown/unranked slots cannot be swapped. Duplicate final IDs are rejected. '
                     'The paired rank and other properties are retained; rank edits may be staged separately. '
                     'Empty, unranked, unknown and unusual slots are preserved. Max excludes identity choices. '
                     'This edits a property directly; it does not spend gems or sacrifice a weapon. '

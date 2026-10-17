@@ -438,7 +438,14 @@ def stage(document, changes, key, value):
         result.pop(key, None)
     else:
         fields[key].validate(value)
-        result[key] = value
+        if document.format.id == 'dw8xl':
+            from koei_editor.games.dw8xl.attributes import AttributeIdentityField, stage_swap
+            if isinstance(fields[key], AttributeIdentityField):
+                result = stage_swap(document.payload, changes, key, value, fields)
+            else:
+                result[key] = value
+        else:
+            result[key] = value
     _pending_fields(document, result)
     return result
 

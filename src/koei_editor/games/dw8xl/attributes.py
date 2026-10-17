@@ -71,3 +71,32 @@ def validate_pending(payload, changes, fields, weapon_base, weapon_stride):
         populated = [identity for identity in identities if identity != 255]
         if len(populated) != len(set(populated)):
             raise SaveError(f'Weapon slot {slot:04} cannot contain duplicate attribute identities.')
+
+
+def stage_swap(payload, changes, key, value, fields):
+    """Expand a deliberate occupied-ID choice into two visible identity edits.
+
+    The caller validates the complete pending map before and after this helper.
+    Original assignments retain the normal unstage path, including rejection
+    of a partial restoration that would leave duplicate identities.
+    """
+    field = fields[key]
+    current = changes.get(key, field.value(payload))
+    if current == value:
+        return dict(changes)
+    result = dict(changes)
+    for peer_key, peer in fields.items():
+        if (peer_key == key or not isinstance(peer, AttributeIdentityField)
+                or peer.slot != field.slot
+                or changes.get(peer_key, peer.value(payload)) != value):
+            continue
+        # Only an originally qualified ranked slot may receive the displaced
+        # identity. Unknown/unranked/empty slots have no such field.
+        peer.validate(current)
+        if current == peer.value(payload):
+            result.pop(peer_key, None)
+        else:
+            result[peer_key] = current
+        break
+    result[key] = value
+    return result

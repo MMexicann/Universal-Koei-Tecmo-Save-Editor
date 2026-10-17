@@ -326,8 +326,11 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertTrue(self.app.language_selector.winfo_ismapped())
         self.assertFalse(self.app.shell_controls_button.winfo_ismapped())
         self.assertIs(self.app.select_game('origins'), editor)
+        # Qualify the tall layout even on runners with a smaller native workarea.
+        self.root.maxsize(1800, 1400)
         self.root.geometry('1180x930')
         self.root.update()
+        self.assertGreaterEqual(self.root.winfo_height(), 900)
         self.assertTrue(self.app.navigation.winfo_ismapped())
         self.assertFalse(self.app.shell_controls_button.winfo_ismapped())
         self.assertEqual((editor.changes, editor.history), (pending, history))

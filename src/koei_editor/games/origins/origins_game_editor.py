@@ -20,6 +20,9 @@ class Editor(ScalarEditor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Keep the native-action row within the compact standalone workspace.
+        self.tools_bar.configure(padding=(18, 0))
+        self.bulk_bar.configure(padding=(18, 0))
         tools = ttk.Frame(self.edit_page, padding=(18, 0, 18, 0))
         tools.pack(fill='x', before=self.bulk_bar)
         self.peace_button = ttk.Button(tools, text='Set Peace %...',

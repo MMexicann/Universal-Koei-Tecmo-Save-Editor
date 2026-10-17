@@ -2458,8 +2458,8 @@
     },
     {
       "path": "src/koei_editor/games/origins/origins_game_editor.py",
-      "bytes": 3600,
-      "sha256": "dabf7031261ba16780d22f5c75a644679081a232fec56813104570b04c898d47"
+      "bytes": 3777,
+      "sha256": "72b733bbaf58d53bcb4c2c6a25c00088e5ba53772bd8aae928a6d724e5164e9f"
     },
     {
       "path": "src/koei_editor/games/origins/origins_gui.py",

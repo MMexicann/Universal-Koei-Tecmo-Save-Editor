@@ -124,10 +124,11 @@ class Editor(Appearance):
         self.experimental_mode = tk.BooleanVar(root, value=False)
         self.apply_theme(theme)
         host = parent if parent is not None else root
-        header = ttk.Frame(host, padding=(18, 10))
+        header = self.header = ttk.Frame(host, padding=(18, 10))
         header.pack(fill='x')
         ttk.Label(header, text=self.layout.title, font=(self.font_family, 18, 'bold')).pack(anchor='w')
-        ttk.Label(header, text=self.subtitle, style='Muted.TLabel').pack(anchor='w', pady=(5, 0))
+        self.subtitle_label = ttk.Label(header, text=self.subtitle, style='Muted.TLabel')
+        self.subtitle_label.pack(anchor='w', pady=(5, 0))
         summary = self.summary or 'Edit save values and review changes.'
         self.details_visible = tk.BooleanVar(root, value=False)
         self.details_toggle = ttk.Checkbutton(header, text='Show editing guide',
@@ -146,7 +147,8 @@ class Editor(Appearance):
             self.save_buttons.append(button)
         ttk.Button(bar, text='Restore Backup...', command=self.restore).pack(side='left', padx=8)
         self.filename = tk.StringVar(root, value=f'Open a separate {self.save_extension or "save"} copy to begin.')
-        ttk.Label(host, textvariable=self.filename, padding=(18, 8), wraplength=1000).pack(anchor='w')
+        self.filename_label = ttk.Label(host, textvariable=self.filename, padding=(18, 8), wraplength=1000)
+        self.filename_label.pack(anchor='w')
         self.workspace_tabs = ttk.Notebook(host)
         self.workspace_tabs.pack(fill='both', expand=True, padx=12, pady=(0, 8))
         self.dashboard_page = ttk.Frame(self.workspace_tabs)
@@ -312,10 +314,24 @@ class Editor(Appearance):
         attach_sorting(self.fields)
         self.fields.bind('<<TreeviewSelect>>', self.selected)
         self.search.trace_add('write', lambda *_args: self.refresh())
+        self._compact_header_spacing = False
+        self.header.master.bind('<Configure>', self._layout_header_spacing, add='+')
         if parent is None:
             root.bind('<Control-f>', self.focus_field_search, add='+')
             root.title(self.layout.title + ' — Save Editor')
             root.protocol('WM_DELETE_WINDOW', self.close)
+
+    def _layout_header_spacing(self, _event=None):
+        if _event is not None and _event.widget is not self.header.master:
+            return
+        compact = self.root.winfo_height() < 800
+        if compact == self._compact_header_spacing:
+            return
+        self._compact_header_spacing = compact
+        self.header.configure(padding=(18, 2 if compact else 10))
+        self.subtitle_label.pack_configure(pady=(0 if compact else 5, 0))
+        self.details_toggle.pack_configure(pady=(0 if compact else 5, 0))
+        self.filename_label.configure(padding=(18, 2 if compact else 8))
 
     def focus_field_search(self, _event=None):
         self.workspace_tabs.select(self.edit_page)

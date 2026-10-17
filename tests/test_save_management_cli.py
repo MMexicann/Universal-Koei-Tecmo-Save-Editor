@@ -158,6 +158,18 @@ class SaveManagementCliTests(unittest.TestCase):
         self.assertTrue(json.loads(result.stdout)['success'])
         self.assertEqual(self.source.read_bytes(), self.raw)
 
+    def test_doctor_json_is_portable_to_ascii_windows_redirection(self):
+        buffer = io.BytesIO()
+        output = io.TextIOWrapper(buffer, encoding='ascii')
+        with patch.object(sys, 'argv', ['koei-editor', '--game', 'wo1', '--save-doctor', str(self.source)]), \
+                patch.object(application.tk, 'Tk', side_effect=AssertionError('Headless command created Tk')), \
+                redirect_stdout(output):
+            application.main()
+        output.flush()
+        self.assertTrue(json.loads(buffer.getvalue())['success'])
+        self.assertIn(b'\\u00b7', buffer.getvalue())
+        output.detach()
+
 
 if __name__ == '__main__':
     unittest.main()

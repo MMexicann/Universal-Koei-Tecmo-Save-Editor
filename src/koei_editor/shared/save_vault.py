@@ -119,26 +119,68 @@ def _ordinary(path, *, directory=False, missing=False, companion=False):
     path = Path(path).absolute()
     # Only an exact captured Steam owner sidecar may use this private exception.
     # Its parent still receives the complete live/cloud-folder safety policy.
-    if companion and path.name.casefold() == 'steam_autocloud.vdf':
-        safe_path(path.parent / '.vault-context-copy')
-    else:
-        safe_path(path)
+    def canonical():
+        if companion and path.name.casefold() == 'steam_autocloud.vdf':
+            return safe_path(path.parent / '.vault-context-copy').parent / path.name
+        return safe_path(path)
+    canonical()  # Reject live/cloud paths before any filesystem inspection.
+    lexical_parent = None
     for item in (*reversed(path.parents), path):
         try:
             info = item.lstat()
         except FileNotFoundError:
             if missing and item == path:
-                return path, None
+                info = None
+                break
             raise
         if _linked(info):
             raise SaveError('Save Vault rejects symbolic links, junctions and reparse paths.')
-    if directory:
-        valid = stat.S_ISDIR(info.st_mode)
+        if item == path.parent:
+            lexical_parent = info
+    if info is not None:
+        valid = (stat.S_ISDIR(info.st_mode) if directory else
+                 stat.S_ISREG(info.st_mode) and info.st_nlink == 1)
+        if not valid:
+            raise SaveError('Save Vault requires ordinary separate, unaliased files and directories.')
+    # Windows short and long names can refer to the same ordinary directory.
+    # Containment and future operations must use the canonical spelling, AFTER
+    # checking the supplied lexical path for links/reparse points. Bind both
+    # spellings to the same filesystem identity rather than trusting the string.
+    resolved = canonical()
+    resolved_info = None
+    for item in (*reversed(resolved.parents), resolved):
+        try:
+            current = item.lstat()
+        except FileNotFoundError:
+            if info is None and item == resolved:
+                break
+            raise
+        if _linked(current):
+            raise SaveError('Save Vault rejects symbolic links, junctions and reparse paths.')
+        if item == resolved.parent and info is None:
+            if ((current.st_dev, current.st_ino) !=
+                    (lexical_parent.st_dev, lexical_parent.st_ino)):
+                raise SaveError('The canonical destination parent changed identity.')
+        if item == resolved:
+            resolved_info = current
+    if info is None:
+        if resolved_info is not None:
+            raise SaveError('The destination appeared while its canonical path was checked.')
     else:
-        valid = stat.S_ISREG(info.st_mode) and info.st_nlink == 1
-    if not valid:
-        raise SaveError('Save Vault requires ordinary separate, unaliased files and directories.')
-    return path, info
+        token = (lambda value: (value.st_dev, value.st_ino)) if directory else _identity
+        if resolved_info is None or token(resolved_info) != token(info):
+            raise SaveError('The canonical vault path changed filesystem identity.')
+    return resolved, resolved_info
+
+
+def _directory_identity(path):
+    _, info = _ordinary(path, directory=True)
+    return info.st_dev, info.st_ino
+
+
+def _check_directory_identity(path, expected):
+    if _directory_identity(path) != expected:
+        raise SaveError('The destination directory changed identity.')
 
 
 def _read(path, limit, *, companion=False):
@@ -187,8 +229,7 @@ def _new(raw, path, *, companion=False):
         os.fsync(stream.fileno())
     if _read(temporary, len(raw))[0] != raw:
         raise SaveError('The temporary vault copy failed integrity verification.')
-    if _ordinary(parent, directory=True)[1].st_ino != parent_info.st_ino:
-        raise SaveError('The destination directory changed identity.')
+    _check_directory_identity(parent, (parent_info.st_dev, parent_info.st_ino))
     if os.name == 'nt':
         os.rename(temporary, path)
     else:
@@ -243,7 +284,8 @@ def _profile_path(game_id, path):
     safe_path(path)
     if game.scalar_backend:
         backend = game.get_scalar_adapter().backend
-        guard = getattr(backend, '_copy_path', None) or getattr(backend, '_path', None)
+        guard = (getattr(backend, '_copy_path', None) or getattr(backend, '_path', None)
+                 or getattr(backend, '_destination', None))
         if guard is not None:
             try:
                 signature(guard).bind(path)
@@ -298,6 +340,22 @@ class SaveVault:
         payload = {'schema_version': 1, 'snapshots': [], 'branches': {}}
         _new(_json({'payload': payload, 'sha256': _digest(_json(payload))}), root / 'index.json')
         return cls(root)
+
+    def _contains(self, path):
+        if path.is_relative_to(self.root):
+            return True
+        if len(path.parents) > 128:
+            raise SaveError('The vault containment path exceeds its bounded parent depth.')
+        # Windows extended-length/device spellings can survive resolve().
+        # Physical ancestor identity closes containment for every spelling of
+        # the same ordinary directory without following links or junctions.
+        for parent in path.parents:
+            info = parent.lstat()
+            if _linked(info):
+                raise SaveError('Save Vault rejects linked containment paths.')
+            if (info.st_dev, info.st_ino) == self._root_identity:
+                return True
+        return False
 
     def _check_roots(self):
         for path, expected in ((self.root, self._root_identity),
@@ -509,13 +567,16 @@ class SaveVault:
 
     @staticmethod
     def _materialize(bundle, directory):
+        identity = _directory_identity(directory)
         for name, raw in bundle.items():
+            _check_directory_identity(directory, identity)
             target = directory / name
             if '/' in name:
                 if not target.parent.exists():
                     target.parent.mkdir(mode=0o700)
                 _ordinary(target.parent, directory=True)
             _new(raw, target, companion=True)
+            _check_directory_identity(directory, identity)
 
     def snapshot(self, game_id, source, *, branch='main', label='', parent_id=None):
         branch, label = _branch(branch), _label(label)
@@ -523,7 +584,7 @@ class SaveVault:
         source, source_info = _ordinary(source)
         _relative(source.name)
         source_parent = _ordinary(source.parent, directory=True)[1]
-        if source.is_relative_to(self.root):
+        if self._contains(source):
             raise SaveError('Snapshot an independent save copy outside the vault.')
         with self._locked():
             snapshots, branches = self._load()
@@ -547,6 +608,9 @@ class SaveVault:
             names = _context_names(source, document)
             if len(names) + 1 > MAX_FILES:
                 raise SaveError('The original context exceeds the companion file bound.')
+            bundle_names = (source.name, *names)
+            if len({name.casefold() for name in bundle_names}) != len(bundle_names):
+                raise SaveError('Save and companion names must be distinct on case-insensitive filesystems.')
             bundle, tokens = {source.name: raw}, {source.name: token}
             for name in names:
                 _relative(name)
@@ -632,7 +696,7 @@ class SaveVault:
         destination, info = _ordinary(destination, directory=True, missing=True)
         if info is not None:
             raise FileExistsError('Restore requires a new dedicated destination directory.')
-        if destination.is_relative_to(self.root):
+        if self._contains(destination):
             raise SaveError('Restore to a separate copied-save folder outside the vault.')
         with self._locked():
             snapshots, _ = self._load()
@@ -640,13 +704,18 @@ class SaveVault:
             bundle, _ = self._bundle(snapshot)
             _profile_path(snapshot.game_id, destination / snapshot.filename)
             destination.mkdir(mode=0o700)
+            destination_identity = _directory_identity(destination)
             self._materialize(bundle, destination)
+            _check_directory_identity(destination, destination_identity)
             path = destination / snapshot.filename
             _qualify(snapshot.game_id, path, bundle[snapshot.filename])
+            _check_directory_identity(destination, destination_identity)
             for name, raw in bundle.items():
+                _check_directory_identity(destination, destination_identity)
                 if _read(destination / name, MAX_FILE_BYTES, companion=True)[0] != raw:
                     raise SaveError('The restored copy changed during native read-back.')
             self._check_bundle_entries(destination, bundle)
+            _check_directory_identity(destination, destination_identity)
             return path
 
     def relabel(self, snapshot_id, label):

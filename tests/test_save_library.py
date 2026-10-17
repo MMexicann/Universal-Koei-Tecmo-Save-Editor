@@ -99,7 +99,7 @@ class SaveLibraryTests(unittest.TestCase):
         self.assertEqual((result.entries[0].status, result.admitted_bytes), ('oversized', 0))
         for limits in (library.ScanLimits(max_files=501), library.ScanLimits(max_entries=True),
                        library.ScanLimits(max_depth=4), library.ScanLimits(max_total_bytes=0),
-                       library.ScanLimits(max_file_bytes=32 * 1024 * 1024 + 1), {}):
+                       library.ScanLimits(max_file_bytes=64 * 1024 * 1024 + 1), {}):
             with self.assertRaises(SaveError):
                 self.scan(limits=limits)
         with self.assertRaises(SaveError):
@@ -498,3 +498,33 @@ class SaveLibraryTests(unittest.TestCase):
             failed = library.requalify_many(result, result.entries)
         self.assertEqual([entry.status for entry in failed.entries], ['not_qualified'] * 2)
         self.assertNotIn('private-account-token', repr(failed))
+
+
+    def test_complete_supported_fatal_frame_system_save_fits_bounded_default_scan(self):
+        from koei_editor.games.fatal_frame2_remake import codec, parser as ff2_parser
+        from tests.test_fatal_frame2_remake import procedural_raw
+
+        limits = library.ScanLimits()
+        self.assertEqual(limits.max_file_bytes, 64 * 1024 * 1024)
+        self.assertEqual(limits.max_total_bytes, 128 * 1024 * 1024)
+        limits.validate()
+        raw = procedural_raw()
+        self.assertEqual(len(raw), codec.SYSTEM_SIZE)
+        self.assertGreater(len(raw), 32 * 1024 * 1024)
+        path = self.folder / 'SYSTEM.bin'
+        path.write_bytes(raw)
+        # One real procedural envelope and one source file exercise the native
+        # parser/checksums; no fabricated qualified entry or parser mock.
+        result = library.scan(ff2_parser.GAME_ID, self.folder)
+        self.assertEqual((result.stop_reason, result.qualified_count), ('complete', 1))
+        self.assertEqual(result.admitted_bytes, codec.SYSTEM_SIZE)
+        entry, = result.entries
+        self.assertEqual(entry.status, 'qualified')
+        self.assertEqual(entry.mapped_fields, 1)
+        self.assertEqual(library.requalify(result, entry).raw, raw)
+        # Callers retain the option to lower the bound, and oversized files
+        # must remain excluded before any native read/qualification begins.
+        with patch.object(ff2_parser, 'read_save', side_effect=AssertionError('Oversized save reached parser')):
+            smaller = library.scan(ff2_parser.GAME_ID, self.folder,
+                                   limits=library.ScanLimits(max_file_bytes=32 * 1024 * 1024))
+        self.assertEqual((smaller.entries[0].status, smaller.admitted_bytes), ('oversized', 0))

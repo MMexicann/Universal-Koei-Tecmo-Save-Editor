@@ -49,7 +49,7 @@ def handle(parser, args):
             result = inspect_save(args.game, args.save_doctor, expected_sha256=args.expected_sha256)
         except (OSError, ValueError, TypeError):
             parser.exit(1, 'Save Doctor could not inspect this copy. Check the selected profile and input.\n')
-        print(result.to_json())
+        print(json.dumps(result.to_dict(), indent=2, ensure_ascii=True))
         if result.status not in ('qualified', 'warning'):
             parser.exit(1)
         return True

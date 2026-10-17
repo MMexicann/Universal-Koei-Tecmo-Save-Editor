@@ -42,6 +42,8 @@ class DiscoveryTests(unittest.TestCase):
 
     def scan(self, **kwargs):
         kwargs.setdefault('home', self.home)
+        kwargs.setdefault('local_app_data', self.home / 'AppData/Local')
+        kwargs.setdefault('roaming_app_data', self.home / 'AppData/Roaming')
         kwargs.setdefault('steam_roots', (self.steam,))
         return discovery.discover_saves(**kwargs)
 

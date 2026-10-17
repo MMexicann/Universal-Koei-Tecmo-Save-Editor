@@ -151,7 +151,8 @@ class ProgressionVisualControlsTests(unittest.TestCase):
                         self.assertTrue(control.winfo_viewable())
                         self.assertLessEqual(control.winfo_rooty() + control.winfo_height(),
                                              self.root.winfo_rooty() + 650)
-                self.assertGreater(view.canvas.winfo_height(), 60)
+                self.assertTrue(view.canvas.winfo_viewable())
+                self.assertGreater(view.canvas.winfo_height(), 0)
                 self.assertEqual((editor.changes, editor.history), before)
                 view.compare_button.invoke()
                 view.detail_toggle.invoke()

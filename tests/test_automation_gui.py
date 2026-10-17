@@ -240,3 +240,115 @@ class WorkflowGuiTests(unittest.TestCase):
         notice.assert_called_once()
         builder.busy = False
         self.assertTrue(self.root.winfo_exists())
+
+    def test_real_application_builder_controls_fit_or_scroll_into_view_at_minimum_and_large_sizes(self):
+        app = Application(self.root, preferences_path=self.folder / 'preferences.json',
+                          persist_preferences=False)
+        app.show_workflow_builder()
+        builder = app.workflow_builder
+        self.addCleanup(builder.close)
+        self.root.deiconify()
+
+        def inside(widget, boundary):
+            self.assertTrue(widget.winfo_ismapped(), str(widget))
+            self.assertGreater(widget.winfo_width(), 1, str(widget))
+            self.assertGreater(widget.winfo_height(), 1, str(widget))
+            for coordinate, extent in (('x', 'width'), ('y', 'height')):
+                start = getattr(widget, 'winfo_root' + coordinate)()
+                lower = getattr(boundary, 'winfo_root' + coordinate)()
+                self.assertGreaterEqual(start, lower, (str(widget), coordinate))
+                self.assertLessEqual(start + getattr(widget, 'winfo_' + extent)(),
+                                     lower + getattr(boundary, 'winfo_' + extent)(),
+                                     (str(widget), coordinate))
+
+        for geometry in ('780x680', '1180x930', '780x680'):
+            with self.subTest(geometry=geometry):
+                self.root.geometry(geometry)
+                for _ in range(3):
+                    self.root.update()
+                self.assertEqual((self.root.winfo_width(), self.root.winfo_height()),
+                                 tuple(map(int, geometry.split('x'))))
+                self.assertEqual(self.root.minsize(), (780, 680))
+                inside(builder.canvas, self.root)
+                inside(builder.scrollbar, self.root)
+                footer = [control for control in builder.controls if control.master is builder.actions]
+                self.assertEqual(len(footer), 7)
+                for control in footer:
+                    inside(control, builder.actions)
+                    inside(control, self.root)
+                builder.canvas.yview_moveto(0)
+                self.root.update()
+                # Top selectors are truly inside the viewport, not merely
+                # mapped in an off-canvas window or clipped by another row.
+                inside(builder.game_choice, builder.canvas)
+                for control in builder.controls + [builder.table, builder.summary]:
+                    if control.master is builder.actions:
+                        continue
+                    control.focus_force()
+                    self.root.update()
+                    self.assertIs(self.root.focus_get(), control)
+                    inside(control, builder.canvas)
+                    inside(control, control.master)
+                if geometry == '780x680':
+                    self.assertGreater(builder.canvas.yview()[0], 0)
+                    self.assertGreater(builder.content.winfo_height(), builder.canvas.winfo_height())
+                # Scrolling up from the review area restores the source row.
+                builder.canvas.yview_moveto(0)
+                self.root.update()
+                inside(builder.game_choice, builder.canvas)
+                # Wheel scrolling stays scoped to this builder rather than
+                # capturing input from retained workspaces elsewhere.
+                # The canvas also provides a wheel target outside child controls.
+                builder.canvas.event_generate('<MouseWheel>', delta=-120)
+                self.root.update()
+                if builder.content.winfo_height() > builder.canvas.winfo_height():
+                    self.assertGreater(builder.canvas.yview()[0], 0)
+                builder.game_choice.focus_force()
+                self.root.update()
+                inside(builder.game_choice, builder.canvas)
+
+    def test_real_application_minimum_builder_can_add_preview_and_export_from_visible_controls(self):
+        app = Application(self.root, preferences_path=self.folder / 'preferences.json',
+                          persist_preferences=False)
+        app.show_workflow_builder()
+        builder = app.workflow_builder
+        self.addCleanup(builder.close)
+        self.root.deiconify()
+        self.root.geometry('780x680')
+        self.root.update()
+        builder.game.set(next(label for label, game in builder.games.items() if game.id == 'dw4hyper'))
+        builder.set_source(self.adapter, self.adapter.read_save(self.source))
+        builder.search.set('officer_0_attack')
+        builder.field.set(next(label for label, key in builder._field_labels.items() if key == 'officer_0_attack'))
+        builder.value.set('123')
+        buttons = {control.cget('text'): control for control in builder.controls
+                   if control.winfo_class() == 'TButton'}
+        add = buttons['New set group']
+        add.focus_force()
+        self.root.update()
+        self.assertGreaterEqual(add.winfo_rooty(), builder.canvas.winfo_rooty())
+        self.assertLessEqual(add.winfo_rooty() + add.winfo_height(),
+                             builder.canvas.winfo_rooty() + builder.canvas.winfo_height())
+        add.invoke()
+        self.assertEqual(builder.operations, [automation.Operation('set', (('officer_0_attack', 123),))])
+
+        def finish_builder():
+            deadline = time.monotonic() + 20
+            while builder.busy and time.monotonic() < deadline:
+                self.root.update()
+                time.sleep(0.01)
+            self.assertFalse(builder.busy)
+
+        destination = self.folder / 'minimum.workflow.json'
+        with patch('koei_editor.shared.automation_gui.messagebox.showerror') as error:
+            buttons['Preview reference'].invoke()
+            finish_builder()
+            self.assertIn('review_token', builder.summary.get('1.0', 'end'))
+            with patch('koei_editor.shared.automation_gui.filedialog.asksaveasfilename',
+                       return_value=str(destination)):
+                buttons['Export workflow…'].invoke()
+                finish_builder()
+        error.assert_not_called()
+        self.assertEqual(automation.load(destination).operations, tuple(builder.operations))
+        self.assertEqual(self.source.read_bytes(), self.raw)
+        self.assertEqual(set(self.folder.iterdir()), {self.source, destination})

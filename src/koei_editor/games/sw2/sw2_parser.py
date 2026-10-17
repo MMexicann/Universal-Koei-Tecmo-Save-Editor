@@ -299,8 +299,12 @@ def field_options(document, field):
     if mapped is None:
         raise SaveError('Choose a qualified original SW2 PC field.')
     if mapped.group == 'Equipment':
-        return tuple((slot, f'Existing own-pool weapon {slot + 1}')
+        base = OFFICER_BASE + (mapped.slot - 1) * OFFICER_STRIDE + WEAPON_RELATIVE_BASE
+        return tuple((slot, f'Weapon {slot + 1} (ID {document.payload[base + slot * WEAPON_STRIDE]}; '
+                            f'{document.payload[base + slot * WEAPON_STRIDE + 18]} bonuses)')
                      for slot in _weapon_choices(document.payload, mapped.slot - 1))
+    if mapped.group == 'Acquired skills':
+        return tuple((rank, f'Rank {rank}') for rank in range(1, 4))
     return ()
 
 

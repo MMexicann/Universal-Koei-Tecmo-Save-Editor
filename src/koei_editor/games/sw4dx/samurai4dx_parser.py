@@ -314,6 +314,34 @@ def restore(backup_path, destination, game_id=GAME_ID):
                             validate_raw=lambda raw: decode(raw, game_id))
 
 
+def field_options(document, field):
+    """Native choices from qualified opened records, without creating items."""
+    key = field.id if isinstance(field, Field) else field
+    mapped = field_map(document).get(key)
+    if mapped is None:
+        raise SaveError('Choose a mapped Samurai Warriors 4 DX field.')
+    if mapped.group == 'Equipment':
+        owner = mapped.slot - 1
+        choices = []
+        for slot in range(WEAPON_SLOTS):
+            base = WEAPON_BASE + (owner * WEAPON_SLOTS + slot) * WEAPON_STRIDE
+            identity = int.from_bytes(document.payload[base:base + 2], 'little')
+            if identity >= 180:
+                continue
+            skills = [SKILL_NAMES[sid] for sid in document.payload[base + 10:base + 18]
+                      if sid < len(SKILL_NAMES)]
+            label = f'Weapon {slot + 1} (ID {identity})'
+            if skills:
+                label += ': ' + ', '.join(skills)
+            choices.append((slot, label))
+        return tuple(choices)
+    if mapped.storage == 'skill-active':
+        return ((0, 'Locked'), (1, 'Active'))
+    if mapped.storage == 'officer-unlock':
+        return ((1, 'Playable (native new-character badge)'),)
+    return ()
+
+
 def field_hint(document, field):
     key = field.id if isinstance(field, Field) else field
     mapped = field_map(document)[key]

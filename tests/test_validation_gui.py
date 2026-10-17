@@ -104,6 +104,21 @@ class ValidationGuiTests(unittest.TestCase):
             panel.export()
         self.assertIs(panel.record, record)
 
+    def test_resolution_loop_import_uses_normal_error_and_preserves_preview(self):
+        panel = ValidationPanel(self.root, self.root)
+        record = panel.record
+        preview = panel.preview.get('1.0', 'end')
+        with patch('koei_editor.shared.validation_gui.filedialog.askopenfilename', return_value='private-loop.json'), \
+                patch('koei_editor.shared.validation_toolkit._checked_path',
+                      side_effect=RuntimeError('private resolution context')), \
+                patch('koei_editor.shared.validation_gui.messagebox.showerror') as error:
+            panel.load()
+        error.assert_called_once()
+        self.assertEqual(panel.status.get(), panel.text['error'])
+        self.assertNotIn('private', str(error.call_args))
+        self.assertIs(panel.record, record)
+        self.assertEqual(panel.preview.get('1.0', 'end'), preview)
+
     def test_import_preview_export_and_existing_destination_preservation(self):
         panel = ValidationPanel(self.root, self.root, language='de')
         record = ValidationRecord.create('dw8xl', revision=15, provenance='genuine_file')

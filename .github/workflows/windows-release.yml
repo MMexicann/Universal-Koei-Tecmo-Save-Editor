@@ -9,7 +9,7 @@ permissions:
 jobs:
   diagnose:
     runs-on: windows-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     defaults:
       run:
         shell: pwsh
@@ -31,7 +31,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Locked dependency installation failed.' }
           python -m pip install -e . --no-build-isolation
           if ($LASTEXITCODE -ne 0) { throw 'Source package installation failed.' }
-      - name: Run four independent bounded layout diagnostics
+      - name: Run four regressions and three complete native GUI modules
         run: |
           @'
           from pathlib import Path
@@ -72,30 +72,36 @@ jobs:
           faulthandler.cancel_dump_traceback_later()
           result = program.result
           print('DIAGNOSTIC result:', result.testsRun, 'tests;', len(result.skipped), 'skips', flush=True)
-          raise SystemExit(0 if result.wasSuccessful() and result.testsRun == 1 and not result.skipped else 1)
+          expected = sys.argv[2]
+          count_ok = result.testsRun > 0 if expected == 'positive' else result.testsRun == int(expected)
+          raise SystemExit(0 if result.wasSuccessful() and count_ok and not result.skipped else 1)
           ''', encoding='utf-8')
           tests = [
-              'tests.test_application_shell.ApplicationShellTests.test_compact_editor_header_retains_controls_pending_state_and_library_navigation',
-              'tests.test_application_shell.ApplicationShellTests.test_embedded_file_actions_keep_their_full_width_at_each_text_size',
-              'tests.test_scalar_workspace_gui.ScalarWorkspaceGuiTests.test_compact_layout_advanced_toggle_and_horizontal_scrolling',
-              'tests.test_scalar_workspace_gui.ScalarWorkspaceGuiTests.test_inventory_choice_search_preserves_native_reference_and_undo',
+              ('tests.test_application_shell.ApplicationShellTests.test_compact_editor_header_retains_controls_pending_state_and_library_navigation', 90, '1'),
+              ('tests.test_application_shell.ApplicationShellTests.test_embedded_file_actions_keep_their_full_width_at_each_text_size', 90, '1'),
+              ('tests.test_scalar_workspace_gui.ScalarWorkspaceGuiTests.test_compact_layout_advanced_toggle_and_horizontal_scrolling', 90, '1'),
+              ('tests.test_scalar_workspace_gui.ScalarWorkspaceGuiTests.test_inventory_choice_search_preserves_native_reference_and_undo', 90, '1'),
+              ('tests.test_application_shell', 180, 'positive'),
+              ('tests.test_scalar_workspace_gui', 180, 'positive'),
+              ('tests.test_validation_toolkit', 180, 'positive'),
           ]
           records = []
-          for index, name in enumerate(tests):
+          for index, (name, limit, expected) in enumerate(tests):
               log = output / f'{index}-{name.rsplit(".", 1)[-1]}.log'
               started = time.monotonic()
               timed_out = False
-              print(f'===== START {name} (90 second limit) =====', flush=True)
+              print(f'===== START {name} ({limit} second limit) =====', flush=True)
               with log.open('wb') as stream:
-                  process = subprocess.Popen([sys.executable, '-u', '-c', child.read_text(encoding='utf-8'), name], stdout=stream, stderr=subprocess.STDOUT)
+                  process = subprocess.Popen([sys.executable, '-u', '-c', child.read_text(encoding='utf-8'), name, expected], stdout=stream, stderr=subprocess.STDOUT)
                   try:
-                      code = process.wait(timeout=90)
+                      code = process.wait(timeout=limit)
                   except subprocess.TimeoutExpired:
                       timed_out = True
                       process.kill()
                       code = process.wait(timeout=10)
               print(log.read_text(encoding='utf-8', errors='replace'), flush=True)
               record = {'test': name, 'returncode': code, 'timeout': timed_out,
+                        'limit_seconds': limit, 'expected_count': expected,
                         'duration_seconds': time.monotonic() - started, 'log': log.name}
               records.append(record)
               (output / 'summary.json').write_text(json.dumps(records, indent=2), encoding='utf-8')

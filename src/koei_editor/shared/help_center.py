@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from koei_editor.shared.compatibility_center import compatibility_entries, search_compatibility
-from koei_editor.shared.help_content import help_articles, search_articles, preparation_guide
+from koei_editor.shared.help_content import Article, help_articles, search_articles, preparation_guide
 
 
 class HelpCenter:
@@ -176,7 +176,14 @@ class HelpCenter:
         self._show_guide()
 
     def _show_guide(self, _event=None):
-        self._set_text(self.guide_detail, preparation_guide(self.guide_platform.get(), self.language))
+        text = preparation_guide(self.guide_platform.get(), self.language)
+        panel = self._panels.get('plugins')
+        if panel is not None:
+            from koei_editor.shared.plugin_gui import contribution_text
+            for item in panel.catalog.search(kind='workflows', locale=self.language):
+                if self.guide_platform.get() in item.platforms:
+                    text += '\n\nCommunity plugin · ' + contribution_text(item)
+        self._set_text(self.guide_detail, text)
 
     def show_tab(self, name):
         self.notebook.select(self.tabs.get(name, self.tabs['help']))
@@ -194,7 +201,8 @@ class HelpCenter:
             return
         if name == 'plugins':
             from koei_editor.shared.plugin_gui import PluginPanel
-            panel = PluginPanel(self.root, self.tabs[name], language=self.language)
+            panel = PluginPanel(self.root, self.tabs[name], language=self.language,
+                                on_change=self._plugins_changed)
         else:
             from koei_editor.shared.validation_gui import ValidationPanel, FeedbackPanel
             panel_type = ValidationPanel if name == 'validation' else FeedbackPanel
@@ -203,6 +211,38 @@ class HelpCenter:
         panel.frame.pack(fill='both', expand=True)
         if self._palette is not None:
             panel.apply_theme(self._palette)
+
+    def _plugins_changed(self, _catalog=None):
+        self.articles = help_articles(self.language)
+        panel = self._panels.get('plugins')
+        if panel is not None:
+            self.articles += tuple(Article(item.id, 'Community plugin · ' + item.title, item.body)
+                                   for item in panel.catalog.search(kind='help', locale=self.language))
+        self._filter_help()
+        self._show_guide()
+
+    def plugin_commands(self):
+        panel = self._panels.get('plugins')
+        if panel is None:
+            return ()
+        return tuple((item.id, item.title, 'Community plugin · ' + ', '.join(item.game_ids))
+                     for item in panel.catalog.search(kind='commands', locale=self.language))
+
+    def open_plugin_command(self, command_id):
+        from koei_editor.shared.community_plugins import PluginError
+        from koei_editor.shared.plugin_gui import contribution_text
+        panel = self._panels.get('plugins')
+        if panel is None:
+            return False
+        try:
+            item = panel.catalog.resolve_command(command_id)
+        except PluginError:
+            return False
+        if item.locale != self.language:
+            return False
+        self.show_tab('plugins')
+        panel._show('Community plugin\n\n' + contribution_text(item))
+        return True
 
     def apply_theme(self, palette):
         self._palette = palette
@@ -231,8 +271,7 @@ class HelpCenter:
         for column, title in zip(self.matrix['columns'], headings):
             self.matrix.heading(column, text=title)
         self.article_list.heading('title', text='Thema' if de else 'Topic')
-        self.articles = help_articles(self.language)
-        self._filter_help()
+        self._plugins_changed()
         self._filter_compatibility()
         self._show_guide()
         for panel in self._panels.values():

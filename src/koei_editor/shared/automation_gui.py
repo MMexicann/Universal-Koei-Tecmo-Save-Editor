@@ -27,79 +27,189 @@ class WorkflowWorkspace:
         self._closed = False
         self._fields = {}
         self.games = {f'{game.title} [{game.id}]': game for game in GAMES if game.scalar_backend}
-        ttk.Label(self.frame, text='WORKFLOW BUILDER', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
-        ttk.Label(self.frame, text='Build reusable edits and checks using verified native fields. '
-                  'Preview each copied save before exporting a workflow.', wraplength=980).pack(anchor='w', pady=(6, 12))
-        row = ttk.Frame(self.frame)
-        row.pack(fill='x')
+        # Reserve actions before the expanding viewport. The shell may leave
+        # considerably less height than this form's natural requested size.
+        self.actions = ttk.Frame(self.frame)
+        self.actions.pack(side='bottom', fill='x', pady=(8, 0))
+        viewport = ttk.Frame(self.frame)
+        viewport.pack(fill='both', expand=True)
+        self.canvas = tk.Canvas(viewport, highlightthickness=0, borderwidth=0)
+        self.scrollbar = ttk.Scrollbar(viewport, orient='vertical', command=self.canvas.yview)
+        self.scrollbar.pack(side='right', fill='y')
+        self.canvas.pack(side='left', fill='both', expand=True)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.content = ttk.Frame(self.canvas, padding=(0, 0, 8, 0))
+        self._content_window = self.canvas.create_window((0, 0), window=self.content, anchor='nw')
+        self._button_rows = {}
+        self._button_layouts = {}
+        self._button_frames = {}
+        self._guidance_labels = []
+        body = self.content
+        ttk.Label(body, text='WORKFLOW BUILDER', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
+        description = ttk.Label(body, text='Build reusable edits and checks using verified native fields. '
+                                'Preview each copied save before exporting a workflow.', wraplength=700)
+        description.pack(anchor='w', pady=(6, 12))
+        self._guidance_labels.append(description)
         self.game = tk.StringVar(root)
-        self.game_choice = ttk.Combobox(row, textvariable=self.game, values=tuple(self.games), state='readonly', width=52)
-        self.game_choice.pack(side='left')
+        self.game_choice = ttk.Combobox(body, textvariable=self.game, values=tuple(self.games),
+                                        state='readonly', width=1)
+        self.game_choice.pack(fill='x')
         self.game_choice.bind('<<ComboboxSelected>>', self.reset_source)
         self.controls = [self.game_choice]
-        self._button(row, 'Open reference copy…', self.open_source)
-        self._button(row, 'Load workflow…', self.load)
+        source_actions = ttk.Frame(body)
+        source_actions.pack(fill='x', pady=(4, 0))
+        self._button(source_actions, 'Open reference copy…', self.open_source)
+        self._button(source_actions, 'Load workflow…', self.load)
         self.name = tk.StringVar(root, value='My workflow')
-        naming = ttk.Frame(self.frame)
+        naming = ttk.Frame(body)
         naming.pack(fill='x', pady=10)
         ttk.Label(naming, text='Workflow name').pack(side='left', padx=(0, 10))
-        self.name_entry = ttk.Entry(naming, textvariable=self.name)
+        self.name_entry = ttk.Entry(naming, textvariable=self.name, width=1)
         self.name_entry.pack(side='left', fill='x', expand=True)
         self.controls.append(self.name_entry)
         self.source_label = tk.StringVar(root, value='Choose an exact game/platform, then a separate reference copy.')
-        ttk.Label(self.frame, textvariable=self.source_label, wraplength=980).pack(anchor='w')
-        entry = ttk.Frame(self.frame)
+        source_label = ttk.Label(body, textvariable=self.source_label, wraplength=700)
+        source_label.pack(anchor='w')
+        self._guidance_labels.append(source_label)
+        entry = ttk.Frame(body)
         entry.pack(fill='x', pady=(12, 4))
         self.search = tk.StringVar(root)
         ttk.Label(entry, text='Find field').pack(side='left')
-        self.search_entry = ttk.Entry(entry, textvariable=self.search, width=25)
-        self.search_entry.pack(side='left', padx=8)
+        self.search_entry = ttk.Entry(entry, textvariable=self.search, width=1)
+        self.search_entry.pack(side='left', fill='x', expand=True, padx=(8, 0))
         self.search.trace_add('write', lambda *_: self.filter_fields())
         self.field = tk.StringVar(root)
-        self.field_choice = ttk.Combobox(entry, textvariable=self.field, state='readonly', width=60)
-        self.field_choice.pack(side='left', fill='x', expand=True)
+        self.field_choice = ttk.Combobox(body, textvariable=self.field, state='readonly', width=1)
+        self.field_choice.pack(fill='x')
         self.field_choice.bind('<<ComboboxSelected>>', self.select_field)
         self.controls += [self.search_entry, self.field_choice]
-        editing = ttk.Frame(self.frame)
-        editing.pack(fill='x', pady=(4, 12))
+        editing = ttk.Frame(body)
+        editing.pack(fill='x', pady=(8, 4))
         ttk.Label(editing, text='Value').pack(side='left')
         self.value = tk.StringVar(root)
-        self.value_entry = ttk.Entry(editing, textvariable=self.value, width=24)
-        self.value_entry.pack(side='left', padx=8)
+        self.value_entry = ttk.Entry(editing, textvariable=self.value, width=1)
+        self.value_entry.pack(side='left', fill='x', expand=True, padx=(8, 0))
         self.controls.append(self.value_entry)
-        self._button(editing, 'New set group', lambda: self.add_operation('set'))
-        self._button(editing, 'Add to selected set', self.extend_set)
-        self._button(editing, 'Assert current value', lambda: self.add_operation('assert'))
-        self.table = ttk.Treeview(self.frame, columns=('operation', 'values'), show='headings', height=8, selectmode='browse')
+        edit_actions = ttk.Frame(body)
+        edit_actions.pack(fill='x', pady=(0, 8))
+        self._button(edit_actions, 'New set group', lambda: self.add_operation('set'))
+        self._button(edit_actions, 'Add to selected set', self.extend_set)
+        self._button(edit_actions, 'Assert current value', lambda: self.add_operation('assert'))
+        table_frame = ttk.Frame(body)
+        table_frame.pack(fill='both', expand=True)
+        table_frame.rowconfigure(0, weight=1)
+        table_frame.columnconfigure(0, weight=1)
+        self.table = ttk.Treeview(table_frame, columns=('operation', 'values'), show='headings', height=8, selectmode='browse')
         self.table.heading('operation', text='Operation')
         self.table.heading('values', text='Verified field assignments / expected values')
         self.table.column('operation', width=100, stretch=False)
         self.table.column('values', width=700)
-        scroll = ttk.Scrollbar(self.frame, orient='vertical', command=self.table.yview)
-        self.table.configure(yscrollcommand=scroll.set)
-        scroll.pack(side='right', fill='y')
-        self.table.pack(fill='both', expand=True)
-        actions = ttk.Frame(self.frame)
-        actions.pack(fill='x', pady=10)
-        self._button(actions, 'Move up', lambda: self.move(-1))
-        self._button(actions, 'Move down', lambda: self.move(1))
-        self._button(actions, 'Remove operation', self.remove)
-        self._button(actions, 'Preview reference', self.preview_reference)
-        self._button(actions, 'Preview other copies…', self.preview_copies)
-        self._button(actions, 'Export workflow…', self.export)
-        batch_actions = ttk.Frame(self.frame)
-        batch_actions.pack(fill='x', pady=(0, 8))
-        self._button(batch_actions, 'Export batch plan…', self.export_batch)
-        self.summary = tk.Text(self.frame, height=7, wrap='word', state='disabled')
-        self.summary.pack(fill='x')
+        scroll = ttk.Scrollbar(table_frame, orient='vertical', command=self.table.yview)
+        horizontal = ttk.Scrollbar(table_frame, orient='horizontal', command=self.table.xview)
+        self.table.configure(yscrollcommand=scroll.set, xscrollcommand=horizontal.set)
+        self.table.grid(row=0, column=0, sticky='nsew')
+        scroll.grid(row=0, column=1, sticky='ns')
+        horizontal.grid(row=1, column=0, sticky='ew')
+        self._button(self.actions, 'Move up', lambda: self.move(-1))
+        self._button(self.actions, 'Move down', lambda: self.move(1))
+        self._button(self.actions, 'Remove operation', self.remove)
+        self._button(self.actions, 'Preview reference', self.preview_reference)
+        self._button(self.actions, 'Preview other copies…', self.preview_copies)
+        self._button(self.actions, 'Export workflow…', self.export)
+        self._button(self.actions, 'Export batch plan…', self.export_batch)
+        self.summary = tk.Text(body, height=7, width=1, wrap='word', state='disabled')
+        self.summary.pack(fill='x', pady=(10, 0))
         self.status = tk.StringVar(root, value='Set groups validate together. Assertions check values at their position in the sequence.')
-        ttk.Label(self.frame, textvariable=self.status, wraplength=980).pack(anchor='w', pady=8)
+        status = ttk.Label(body, textvariable=self.status, wraplength=700)
+        status.pack(anchor='w', pady=8)
+        self._guidance_labels.append(status)
+        self.canvas.bind('<Configure>', self._resize_body)
+        self.content.bind('<Configure>', self._resize_body)
+        self._bind_viewport_controls(body)
+        self.canvas.bind('<MouseWheel>', self._scroll_body)
+        self.canvas.bind('<Button-4>', self._scroll_body)
+        self.canvas.bind('<Button-5>', self._scroll_body)
 
     def _button(self, parent, text, command):
         button = ttk.Button(parent, text=text, command=command)
-        button.pack(side='left', padx=(8, 0))
         self.controls.append(button)
+        if parent not in self._button_rows:
+            self._button_rows[parent] = []
+            self._button_frames[parent] = []
+            parent.bind('<Configure>', lambda _event, row=parent: self._layout_buttons(row))
+        self._button_rows[parent].append(button)
+        self._layout_buttons(parent)
         return button
+
+    def _layout_buttons(self, parent):
+        width = parent.winfo_width()
+        row = column = used = 0
+        layout = []
+        for button in self._button_rows[parent]:
+            required = button.winfo_reqwidth() + 8
+            if column and used + required > width:
+                row += 1
+                column = used = 0
+            layout.append((button, row, column))
+            column += 1
+            used += required
+        if self._button_layouts.get(parent) != layout:
+            frames = self._button_frames[parent]
+            while len(frames) <= row:
+                frames.append(ttk.Frame(parent))
+            for button in self._button_rows[parent]:
+                button.pack_forget()
+            for index, line in enumerate(frames):
+                if index <= row:
+                    line.pack(fill='x')
+                else:
+                    line.pack_forget()
+            # Independent row frames prevent grid column widths from making
+            # one wrapped row exceed the measured available width of another.
+            for button, row, _column in layout:
+                button.pack(in_=frames[row], side='left', padx=(0, 8), pady=3)
+            self._button_layouts[parent] = layout
+
+    def _resize_body(self, _event=None):
+        width = self.canvas.winfo_width()
+        if width <= 1:
+            return
+        for label in self._guidance_labels:
+            label.configure(wraplength=max(1, width - 8))
+        self.canvas.itemconfigure(self._content_window, width=width,
+                                  height=max(self.content.winfo_reqheight(), self.canvas.winfo_height()))
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+
+    def _bind_viewport_controls(self, parent):
+        for widget in parent.winfo_children():
+            widget.bind('<FocusIn>', lambda _event, target=widget: self._reveal(target), add='+')
+            # Keep native field menus, operation scrolling and review-text
+            # scrolling local to those widgets; other controls scroll the form.
+            if not isinstance(widget, (ttk.Combobox, ttk.Treeview, tk.Text)):
+                widget.bind('<MouseWheel>', self._scroll_body, add='+')
+                widget.bind('<Button-4>', self._scroll_body, add='+')
+                widget.bind('<Button-5>', self._scroll_body, add='+')
+            self._bind_viewport_controls(widget)
+
+    def _scroll_body(self, event):
+        if getattr(event, 'num', None) in (4, 5):
+            units = -1 if event.num == 4 else 1
+        else:
+            delta = getattr(event, 'delta', 0)
+            units = (-1 if delta > 0 else 1) * max(1, abs(delta) // 120)
+        self.canvas.yview_scroll(units * 3, 'units')
+        return 'break'
+
+    def _reveal(self, widget):
+        top = widget.winfo_rooty() - self.content.winfo_rooty()
+        bottom = top + widget.winfo_height()
+        start = self.canvas.canvasy(0)
+        height = self.canvas.winfo_height()
+        extent = max(1, self.content.winfo_height())
+        if top < start:
+            self.canvas.yview_moveto(top / extent)
+        elif bottom > start + height:
+            self.canvas.yview_moveto((bottom - height) / extent)
 
     def _run(self, work, done):
         if self.busy or self._closed:
@@ -366,6 +476,9 @@ class WorkflowWorkspace:
             messagebox.showerror('Batch plan export', str(error), parent=self.root)
 
     def apply_theme(self, palette):
+        self.canvas.configure(background=palette['background'])
+        for row in self._button_rows:
+            self._layout_buttons(row)
         self.summary.configure(background=palette['background'], foreground=palette['text'])
 
     def close(self):

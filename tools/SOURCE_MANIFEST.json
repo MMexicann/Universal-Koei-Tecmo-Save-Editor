@@ -3623,8 +3623,8 @@
     },
     {
       "path": "src/koei_editor/shared/automation_gui.py",
-      "bytes": 18792,
-      "sha256": "6ba92bdad52b5da4b663242a1e9aa56f791f8cd3d6135ae82d7a54cd00646379"
+      "bytes": 24448,
+      "sha256": "85c1dcc3338ee4412828823953253cd35518f078b50f21febad70b9ebb0df40e"
     },
     {
       "path": "src/koei_editor/shared/automation_journal.py",
@@ -3968,8 +3968,8 @@
     },
     {
       "path": "tests/test_automation_gui.py",
-      "bytes": 12169,
-      "sha256": "886dd63e64410eda943ad94756916e22724f2ec82116cc5bc27e8705653fe910"
+      "bytes": 18447,
+      "sha256": "d1b934929d6ecb94be5154f03ea30443d5f8a32737bcbfb05e7bda4c6c1176e6"
     },
     {
       "path": "tests/test_automation_journal.py",

@@ -3613,8 +3613,8 @@
     },
     {
       "path": "src/koei_editor/shared/progression_view.py",
-      "bytes": 43642,
-      "sha256": "d14f5c3cf585783fedacd695d6d2ee975e2def8d6bfb5a57c19506f5c30c7583"
+      "bytes": 43672,
+      "sha256": "20c32d296e4aa2fe90761135b92077f234747886bd4f7af780e31be1ba89428e"
     },
     {
       "path": "src/koei_editor/shared/ps3_copy.py",
@@ -4693,8 +4693,8 @@
     },
     {
       "path": "tests/test_progression_visual_controls.py",
-      "bytes": 7930,
-      "sha256": "948cc8110175d7d8c1f526426e281fb5dc3ec61755ab66a35d845ba117bec7a7"
+      "bytes": 8650,
+      "sha256": "c2d22f82bbac42ccdfd705c3664f9b19697d80ddaf1fc8e96e631df87198c291"
     },
     {
       "path": "tests/test_progression_workspace.py",

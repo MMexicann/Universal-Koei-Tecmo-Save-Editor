@@ -45,6 +45,19 @@ class ProgressionVisualControlsTests(unittest.TestCase):
     def visible_ids(self):
         return tuple(card.id for card in self.view._filtered_cards)
 
+    def test_large_incomplete_range_is_not_promoted_to_target_by_float_rounding(self):
+        almost = Metric('near', 'Mapped count', str(10 ** 20 - 1),
+                        current=10 ** 20 - 1, total=10 ** 20)
+        self.assertEqual(almost.fraction, 1.0)
+        snapshot = Dashboard('Exact endpoints', (Section('s', 'Ranges',
+            (Card('near', 'Almost full', metrics=(almost,)),)),))
+        self.view.set_dashboard(snapshot)
+        self.assertEqual(self.view._overview_counts[-1], 0)
+        self.view.range_filter.set('Ranges complete')
+        self.assertEqual(self.visible_ids(), ())
+        self.view.range_filter.set('Ranges in progress')
+        self.assertEqual(self.visible_ids(), ('near',))
+
     def test_completed_filter_requires_every_mapped_range_without_promoting_unknown_values(self):
         expected = {
             'With verified ranges': ('complete', 'mixed', 'partial'),

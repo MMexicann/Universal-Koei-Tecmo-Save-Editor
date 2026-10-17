@@ -28,9 +28,9 @@ def _matches_range_filter(card, choice):
     if choice == "With verified ranges":
         return bool(ranges)
     if choice == "Ranges in progress":
-        return any(metric.fraction < 1 for metric in ranges)
+        return any(metric.current < metric.total for metric in ranges)
     if choice == "Ranges complete":
-        return bool(ranges) and all(metric.fraction == 1 for metric in ranges)
+        return bool(ranges) and all(metric.current == metric.total for metric in ranges)
     if choice == "No verified range":
         return not ranges
     return True
@@ -324,7 +324,7 @@ class ProgressionView(ttk.Frame):
         self._filtered_cards = tuple(cards)
         ranges = tuple(metric for card in cards for metric in _ranges(card))
         self._overview_counts = (len(cards), sum(len(card.metrics) for card in cards),
-                                 len(ranges), sum(metric.fraction == 1 for metric in ranges))
+                                 len(ranges), sum(metric.current == metric.total for metric in ranges))
         self._draw_overview()
         self._page = min(self._page, max(0, (len(cards) - 1) // PAGE_SIZE))
         selected_index = next((i for i, card in enumerate(cards) if card.id == self._selected_id), None)

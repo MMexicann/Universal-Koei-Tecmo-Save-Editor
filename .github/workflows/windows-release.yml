@@ -59,7 +59,8 @@ jobs:
               if root is not None:
                   print('DIAGNOSTIC Tk:', root.tk.call('package', 'provide', 'Tk'),
                         'scaling:', root.tk.call('tk', 'scaling'),
-                        'root:', root.winfo_geometry(), 'minimum:', root.minsize(), flush=True)
+                        'root:', root.winfo_geometry(), 'minimum:', root.minsize(),
+                        'maximum:', root.maxsize(), 'screen:', (root.winfo_screenwidth(), root.winfo_screenheight()), flush=True)
                   font = tkinter.font.nametofont('TkDefaultFont', root=root)
                   print('DIAGNOSTIC native font:', font.actual(), 'metrics:', font.metrics(), flush=True)
                   editor = getattr(test, 'editor', None)

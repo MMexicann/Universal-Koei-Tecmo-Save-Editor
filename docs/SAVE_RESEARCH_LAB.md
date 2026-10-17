@@ -45,6 +45,10 @@ files are never replaced. The lab never stages edits, calls a native save writer
 repairs integrity, creates backups, or changes save bytes. A source change makes
 export fail and requires a new comparison.
 
+If validation fails after a report has been created, the completed report remains
+on disk and the error is reported. This avoids deleting a destination that another
+process may have replaced; review that report before using or sharing it.
+
 `tests/test_research_lab.py` covers procedural qualified native comparisons,
 exact numeric correlation, encoding ambiguity and invalid requests, bounded
 annotations and research reports, forged snapshots, stale metadata, output races

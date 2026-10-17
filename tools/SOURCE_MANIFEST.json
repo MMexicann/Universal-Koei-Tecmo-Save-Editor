@@ -4948,8 +4948,8 @@
     },
     {
       "path": "tests/test_parallel_runner.py",
-      "bytes": 17584,
-      "sha256": "d6b4d920eff10895496bb3940a211d5a31b94b0240035bf1475ea0aa907c4cdc"
+      "bytes": 22713,
+      "sha256": "d9458c609bf250921ae6d703320b2d2d638bdbe119f8b8c5cb9a0629cb2df081"
     },
     {
       "path": "tests/test_pc_content_mapping.py",
@@ -5773,8 +5773,8 @@
     },
     {
       "path": "tools/run_tests.py",
-      "bytes": 24119,
-      "sha256": "7034528726d8faa09299448655361c5a81242822c88e208b7165e0d199b99cff"
+      "bytes": 25327,
+      "sha256": "07d19a3849e4a181148f9d2768680e542a077b48bf92def3d130dc814289cffc"
     },
     {
       "path": "tools/scan_release.ps1",

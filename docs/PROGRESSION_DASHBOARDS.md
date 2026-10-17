@@ -15,6 +15,27 @@ pending edits. Use Edit Fields and Review Changes for staged values. Save As
 refreshes the snapshot from the validated destination copy. Switching sessions,
 themes, searches and cards never writes a game save.
 
+## Standalone HTML reports
+
+Choose **HTML report…** from the dashboard, select the sections to include and
+optionally select up to four records for comparison. Save to a new `.html` file;
+existing reports and saves are never replaced. The exported report contains only
+the included display snapshot and its evidence notes, without adding save bytes,
+source paths, account metadata or staged changes. Review displayed values before
+sharing a report, particularly profiles with user-defined record names.
+
+Open the file in a browser. Search, section and range filters, sorting, paged
+cards, expanded metric details and record comparisons work offline. Choose System,
+Light or Dark appearance in the report. Comparisons show values side by side;
+missing mappings are labelled and unrelated metrics are not summed. Reports keep
+all explicitly included records embedded while rendering at most 24 cards per
+page. Printing uses the currently displayed page and selected comparison.
+
+The four priority profiles include scoped snapshot overviews. Equipment records
+show saved character references where those references are mapped; physical pool
+assignment, ownership and equipped state retain their separate meanings. Distinct
+weapon-ID counts describe the current inventory, not catalogue completion.
+
 ## What the graphics mean
 
 Progress bars require an explicit verified denominator. A storage ceiling or an

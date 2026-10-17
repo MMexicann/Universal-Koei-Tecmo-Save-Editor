@@ -42,7 +42,8 @@ RUNTIME_GUIDES = ('docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
                   'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/FIELD_PINS_AND_REVIEWS.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
-WINDOWS_DOCS = ('README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
+WINDOWS_DOCS = ('docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
                 'docs/PROGRESSION_DASHBOARDS.md',
                 'docs/EXPERIMENTAL_EDITING.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
                 'docs/SAVE_CONVERSION.md', 'docs/SAVE_COMPARISON.md', 'docs/BATCH_CONVERSION.md',

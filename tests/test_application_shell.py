@@ -14,6 +14,12 @@ from koei_editor.shared import shell_preferences as settings
 
 
 class ShellPreferencesTests(unittest.TestCase):
+    def test_longest_valid_namespaced_plugin_command_can_be_favorited(self):
+        command = 'plugin:' + 'a.' + 'a' * 78 + ':' + 'b' * 80
+        value = settings.toggle_favorite(settings.ShellPreferences(), command)
+        self.assertEqual(value.favorites, (command,))
+        self.assertEqual(settings.toggle_favorite(value, command).favorites, ())
+
     def test_settings_roundtrip_preserves_legacy_preferences_and_contains_no_paths(self):
         with tempfile.TemporaryDirectory() as directory:
             legacy = Path(directory) / 'preferences.json'
@@ -91,6 +97,45 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(self.root.focus_get(), self.app.library_search_entry)
         self.assertFalse(self.app.sessions)
 
+    def test_integrated_tool_commands_dispatch_exact_routes_and_remain_recent(self):
+        calls = []
+        routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
+                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder'}
+        for key, method in routes.items():
+            setattr(self.app, method, lambda tool=key: calls.append(tool))
+        self.app.open_command_palette()
+        for key in routes:
+            command_id = 'tool:' + key
+            entries = self.app.command_entries()
+            self.assertIn(command_id, {entry.id for entry in entries})
+            self.app.command_palette.query.set(self.app.tr(key))
+            self.assertIn(command_id, {entry.id for entry in self.app.command_palette.matches})
+            self.app.execute_command(command_id)
+            self.assertEqual(calls[-1], key)
+            self.assertEqual(self.app.shell_settings.recent[0], command_id)
+        self.app.command_palette.close()
+        self.assertFalse(self.app.sessions)
+
+    def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
+        for key in ('editing_presets', 'research_lab', 'workflow_builder'):
+            with self.subTest(workspace=key):
+                self.app.show_library()
+                self.app.library.pack_forget()
+                frame = tk.Frame(self.app.workspace)
+                frame.pack(fill='both', expand=True)
+                marker = object()
+                from types import SimpleNamespace
+                tool = SimpleNamespace(frame=frame, pending=marker)
+                setattr(self.app, key, tool)
+                self.app.breadcrumb.set(self.app.tr(key))
+                self.app.language_choice.set('Deutsch')
+                self.app.change_language()
+                self.root.update()
+                self.assertEqual(self.app.breadcrumb.get(), self.app.tr(key))
+                self.assertEqual(frame.winfo_manager(), 'pack')
+                self.assertIs(tool.pending, marker)
+                setattr(self.app, key, None)
+                frame.destroy()
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):
         editor = self.app.select_game('dw7xl')
         self.app.show_library()
@@ -184,6 +229,51 @@ class ApplicationShellTests(unittest.TestCase):
         self.app.library_search.set('dw7xl')
         self.app.open_library_match()
         self.assertEqual(self.app.active_game, 'dw7xl')
+
+    def test_real_help_workspace_and_late_panels_follow_text_size_and_locale(self):
+        from tkinter import font
+        self.app.text_size_choice.set('140%')
+        self.app.change_text_size()
+        self.app.show_help('compatibility')
+        center = self.app.help_center
+        self.assertEqual(len(center.matrix.get_children()), len(self.app.library_games))
+        self.assertEqual(font.Font(self.root, font=center.compatibility_detail.cget('font')).actual('size'), 14)
+        self.app.show_help('validation')
+        panel = center._panels['validation']
+        record = panel.record
+        self.assertEqual(font.Font(self.root, font=panel.preview.cget('font')).actual('size'), 14)
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.assertIs(panel.record, record)
+        self.assertEqual(panel.language, 'de')
+        self.app.show_library()
+        self.app.execute_command('tool:validation')
+        self.assertIs(self.app.help_center, center)
+        self.assertIs(panel.record, record)
+
+    def test_real_approved_plugin_appears_in_palette_and_disable_revokes_dispatch(self):
+        from tests.test_help_center_integration import integration_manifest
+        self.app.show_help('plugins')
+        panel = self.app.help_center._panels['plugins']
+        directory = Path(self.directory.name) / 'plugins'
+        directory.mkdir()
+        (directory / 'integration.plugin.json').write_text(json.dumps(integration_manifest()))
+        self.assertTrue(panel.load_directory(directory))
+        self.assertFalse(any(entry.category == 'plugin' for entry in self.app.command_entries()))
+        panel.reviewed.set(True)
+        panel.enable_selected()
+        entry = next(entry for entry in self.app.command_entries() if entry.category == 'plugin')
+        self.app.open_command_palette()
+        palette = self.app.command_palette
+        palette.query.set(entry.id)
+        self.assertEqual(len(palette.matches), 1)
+        palette.activate()
+        self.assertIn('EnglishCommunityMarker', panel.preview.get('1.0', 'end'))
+        panel.tree.selection_set('0')
+        panel._select()
+        panel.disable_selected()
+        self.assertNotIn(entry.id, {item.id for item in self.app.command_entries()})
+        self.assertIsNone(self.app.execute_command(entry.id))
 
 
 if __name__ == '__main__':

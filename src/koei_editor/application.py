@@ -252,8 +252,10 @@ class Application(Appearance):
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
-            visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library')
-                            if getattr(self, key) is not None and getattr(self, key).frame.winfo_manager()), None)
+            visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
+                                            'editing_presets', 'research_lab', 'workflow_builder')
+                            if getattr(self, key, None) is not None
+                            and getattr(self, key).frame.winfo_manager()), None)
             self.breadcrumb.set(self.tr(visible or ('help' if self.help_center is not None
                                                    and self.help_center.frame.winfo_manager() else 'choose')))
         if self.help_center is not None:
@@ -307,12 +309,21 @@ class Application(Appearance):
         for tab in ('help', 'compatibility', 'workflows', 'feedback', 'validation', 'plugins'):
             self.help_menu.add_command(label=self.tr(tab), command=lambda name=tab: self.show_help(name))
 
+    def _optional_tool_routes(self):
+        """Discover retained tools supplied by the parallel integration PRs."""
+        return {key: method for key, name in (
+            ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
+            ('research_lab', 'show_research_lab'), ('workflow_builder', 'show_workflow_builder'))
+                if callable(method := getattr(self, name, None))}
+
     def command_entries(self):
         entries = [CommandEntry('game:' + game.id, game.title + ' · ' + game.subtitle,
                                 'game', game.platform, game.id + ' ' + game.description)
                    for game in self.library_games]
         for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
                     'help', 'compatibility', 'workflows', 'feedback', 'validation', 'plugins'):
+            entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+        for key in self._optional_tool_routes():
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         for key in ('theme_light', 'theme_dark', 'search_fields'):
             entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
@@ -360,7 +371,12 @@ class Application(Appearance):
             methods = {'library': self.show_library, 'converter': self.show_converter,
                        'comparison': self.show_comparison, 'batch': self.show_batch,
                        'save_library': self.show_save_library}
-            return methods[key]() if key in methods else self.show_help(key)
+            methods.update(self._optional_tool_routes())
+            if key in methods:
+                result = methods[key]()
+                self._remember_workspace(command_id)
+                return result
+            return self.show_help(key)
         if key in ('theme_light', 'theme_dark'):
             return self.apply_theme('Light' if key == 'theme_light' else 'Dark')
         if key == 'search_fields':

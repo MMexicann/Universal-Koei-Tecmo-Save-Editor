@@ -261,13 +261,39 @@ def _context_names(path, document):
     # Original spelling matters to case-sensitive hosts. Enumerate at most a
     # fixed number of neighboring entries; never scan unrelated game folders.
     count = 0
+    spellings = {}
+    requested = {name.casefold() for name in names if '/' not in name}
     with os.scandir(path.parent) as entries:
         for entry in entries:
             count += 1
             if count > 4096:
                 raise SaveError('The copied-save directory exceeds the context scan bound.')
-            if entry.name.casefold() == 'steam_autocloud.vdf':
+            folded = entry.name.casefold()
+            if folded in requested:
+                spellings.setdefault(folded, []).append(entry.name)
+            if folded == 'steam_autocloud.vdf':
                 names.add(entry.name)
+    original_names = names
+    names = set()
+    for name in original_names:
+        actual = spellings.get(name.casefold(), ()) if '/' not in name else ()
+        if not actual:
+            names.add(name)
+            continue
+        names.update(actual)
+        # Retain the real directory-entry spelling exactly once when Windows
+        # accepts a static conventional name as an alias of the same file.
+        # Distinct casefold-colliding entries remain distinct and are rejected
+        # by admission; links/hardlinks still pass through the ordinary guards.
+        if len(actual) == 1 and name != actual[0]:
+            try:
+                original_info = (path.parent / name).lstat()
+            except FileNotFoundError:
+                continue
+            actual_info = (path.parent / actual[0]).lstat()
+            if ((original_info.st_dev, original_info.st_ino) !=
+                    (actual_info.st_dev, actual_info.st_ino)):
+                names.add(name)
     return tuple(sorted(name for name in names if name != path.name and
                         ((path.parent / name).exists() or (path.parent / name).is_symlink())))
 

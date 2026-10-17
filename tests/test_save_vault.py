@@ -562,6 +562,56 @@ class SaveVaultTests(unittest.TestCase):
         restored = self.store.restore(record.id, self.folder / 'safe-dqb2-copy')
         self.assertEqual(restored.read_bytes(), raw)
 
+    def test_same_file_case_aliases_preserve_actual_original_companion_spelling(self):
+        from types import SimpleNamespace
+        actual = self.source.parent / 'EEPROM.BIN'
+        actual.write_bytes(b'original opaque EEPROM context')
+        lower = self.source.parent / 'eeprom.bin'
+        original_exists, original_lstat = Path.exists, Path.lstat
+        def aliased_exists(path):
+            return original_exists(actual if path == lower else path)
+        def aliased_lstat(path, *args, **kwargs):
+            return original_lstat(actual if path == lower else path, *args, **kwargs)
+        document = SimpleNamespace(context=SimpleNamespace(basename=actual.name))
+        with patch.object(Path, 'exists', aliased_exists), patch.object(Path, 'lstat', aliased_lstat):
+            names = vault._context_names(self.source, document)
+        self.assertIn(actual.name, names)
+        self.assertNotIn(lower.name, names)
+        self.assertEqual(sum(name.casefold() == lower.name for name in names), 1)
+
+    def test_uppercase_xbox_eeprom_native_snapshot_restore_retains_exact_companion(self):
+        from koei_editor.games.ninja_gaiden_black_xbox import parser as xbox
+        from tests.test_ninja_gaiden_black_xbox import procedural
+        source = procedural(self.folder / 'xbox-copy')
+        original = source.parent / 'eeprom.bin'
+        intermediate = source.parent / 'original-context-rename.tmp'
+        actual = source.parent / 'EEPROM.BIN'
+        original.rename(intermediate)
+        intermediate.rename(actual)
+        expected = actual.read_bytes()
+        self.assertEqual(xbox.read_save(source).context.basename, actual.name)
+        record = self.store.snapshot(xbox.GAME_ID, source, branch='xbox')
+        context_names = tuple(item.relative_path for item in record.files if item.relative_path != record.filename)
+        self.assertEqual(context_names, (actual.name,))
+        self.assertTrue(self.store.verify(record.id)[0].valid)
+        restored = self.store.restore(record.id, self.folder / 'xbox-restored')
+        self.assertEqual(restored.read_bytes(), source.read_bytes())
+        self.assertEqual((restored.parent / actual.name).read_bytes(), expected)
+        self.assertEqual(xbox.read_save(restored).context.basename, actual.name)
+
+    def test_distinct_casefold_context_files_remain_rejected(self):
+        baseline = self.snapshot()
+        lower = self.source.parent / 'steam_autocloud.vdf'
+        upper = self.source.parent / 'STEAM_AUTOCLOUD.VDF'
+        lower.write_bytes(b'first original context')
+        upper.write_bytes(b'distinct original context')
+        if lower.samefile(upper):
+            self.skipTest('The filesystem aliases case variants instead of storing distinct files.')
+        with self.assertRaisesRegex(SaveError, 'case-insensitive'):
+            self.snapshot()
+        self.assertEqual(self.store.list_snapshots(), (baseline,))
+        self.assertTrue(self.store.verify(baseline.id)[0].valid)
+
     def test_casefold_context_collisions_are_rejected_without_poisoning_history(self):
         baseline = self.snapshot()
         names = ('steam_autocloud.vdf', 'STEAM_AUTOCLOUD.VDF')

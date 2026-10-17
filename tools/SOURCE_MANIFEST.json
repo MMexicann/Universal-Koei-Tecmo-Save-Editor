@@ -1528,8 +1528,8 @@
     },
     {
       "path": "src/koei_editor/games/dw3/progression_dashboard.py",
-      "bytes": 9151,
-      "sha256": "6078db31e42a4c87d1512f6584a7a1a0651cd582aa2a55dd4e9705fe98e3fad8"
+      "bytes": 12367,
+      "sha256": "bab5be3a50db5c25ec401a9bd863d953a8c1226b6263940141889d28b2bb6f29"
     },
     {
       "path": "src/koei_editor/games/dw3/progression_editor.py",
@@ -1863,8 +1863,8 @@
     },
     {
       "path": "src/koei_editor/games/dw8xl/dashboard.py",
-      "bytes": 7052,
-      "sha256": "9591f93a5f6670344cf934ee1ee9fa8579c02c9f00a85494d36ad068e22406ef"
+      "bytes": 9515,
+      "sha256": "521feb1b402fa0569dcac2fb3bb5d530325de684e96617f036bbdde314c53263"
     },
     {
       "path": "src/koei_editor/games/dw8xl/dw8xl_editor.py",
@@ -2378,8 +2378,8 @@
     },
     {
       "path": "src/koei_editor/games/origins/origins_dashboard.py",
-      "bytes": 6031,
-      "sha256": "0cc2a491ff64081a085edc2a62ee80b0cfe81c6a45b0022d5f0b7d120023d44d"
+      "bytes": 8610,
+      "sha256": "0e4a8a82f8cab569e4cd9f6574df5fbc5816d47db272e7620d147602e85d9c51"
     },
     {
       "path": "src/koei_editor/games/origins/origins_editor.py",
@@ -3113,8 +3113,8 @@
     },
     {
       "path": "src/koei_editor/games/wo3u/dashboard.py",
-      "bytes": 9460,
-      "sha256": "39daf4591ef8e12dc41ca221cb34d1b63bdda8ca16ad929d349411a8d819dd1f"
+      "bytes": 11886,
+      "sha256": "0f0476b566d69a5fb5e409f8ceb07206b8f31c4c9779cf35da8c9414fb84a14d"
     },
     {
       "path": "src/koei_editor/games/wo3u/wo3u_editor.py",
@@ -4235,6 +4235,11 @@
       "path": "tests/test_firis_pc.py",
       "bytes": 8607,
       "sha256": "09e53bcd571519ae49a3c1e959e2bfa223455dfcf4554cabdba60dda8ce0026e"
+    },
+    {
+      "path": "tests/test_game_dashboard_context.py",
+      "bytes": 5565,
+      "sha256": "dc8dc7f4b140c69f35b6ee309a7409dad0918ca2676ce7e6ba162e84ed00c591"
     },
     {
       "path": "tests/test_gemfire_battery.py",

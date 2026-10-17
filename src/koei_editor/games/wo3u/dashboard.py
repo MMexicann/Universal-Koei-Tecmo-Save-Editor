@@ -29,6 +29,8 @@ def dashboard(backend, document):
         field = fields[key]
         return _metric(key, label or field.label, field.value(payload), field_id=key)
 
+    inventory = backend.item_inventory(document)
+    items_by_id = {row['id']: row for row in inventory}
     characters, internal = [], []
     for index in range(backend.SERIALIZED_OFFICER_COUNT):
         base = backend.OFFICER_BASE + index * backend.OFFICER_STRIDE
@@ -58,20 +60,30 @@ def dashboard(backend, document):
                 metrics.append(_metric(
                     f'item_{item_slot}', f'Item reference {item_slot + 1}', value,
                     field_id=link(key), note='Stored reference; ownership and rank appear separately in Equipment.'))
+                item = items_by_id.get(identity)
+                if item is not None:
+                    metrics.append(_metric(
+                        f'item_{item_slot}_state', f'Item {item_slot + 1} inventory state',
+                        f'{"Owned" if item["owned"] else "Not owned"} · stored rank {item["rank"]}',
+                        note='Ownership is read from the saved mask, independently from the equipped reference.'))
         card = DashboardCard(
             f'officer_{index + 1}', f'Officer {index + 1}' if playable else f'Internal record {index + 1}',
             f'Level {level} · {payload[base + 62]} promotions' if playable else 'Read-only serialized record',
-            tuple(metrics), section='Characters' if playable else 'Internal records')
+            tuple(metrics), section='Characters' if playable else 'Internal records',
+            search_text=f'officer {index + 1} promotions {payload[base + 62]}')
         (characters if playable else internal).append(card)
 
-    weapon_cards = []
+    weapon_cards, weapon_ids = [], set()
     for index in range(backend.WEAPON_COUNT):
         base = backend.WEAPON_BASE + index * backend.WEAPON_STRIDE
         identity = number(base, 2)
         if identity == 65535:
             continue
+        weapon_ids.add(identity)
         owner, local_slot = index // 16 + 1, index % 16 + 1
         metrics = [_metric('identity', 'Weapon ID', identity),
+                   _metric('officer-record', 'Officer weapon-pool record', owner,
+                           note='Physical pool assignment; does not establish recruitment or equipped status.'),
                    _metric('slots', 'Stored attribute slots', payload[base + 2],
                                    field_id=link(f'weapon_{index}_slots')),
                    _metric('reinforcement', 'Reinforcement', payload[base + 3],
@@ -91,16 +103,17 @@ def dashboard(backend, document):
         weapon_cards.append(DashboardCard(
             f'weapon_{index + 1}', f'Officer {owner} · Weapon {local_slot}',
             f'Weapon ID {identity}', tuple(metrics), section='Equipment',
-            search_text=' '.join(metric.label for metric in metrics)))
+            search_text=f'officer {owner} reinforcement {payload[base + 3]} ' +
+                        ' '.join(metric.label for metric in metrics)))
 
-    inventory = backend.item_inventory(document)
     item_cards = tuple(DashboardCard(
         f'item_{row["id"]}', f'{row["kind"]} ID {row["id"]}',
         'Owned' if row['owned'] else 'Not owned',
         (_metric('owned', 'Ownership flag', 'Owned' if row['owned'] else 'Not owned'),
          _metric('rank', 'Stored rank', row['rank']),
          _metric('references', 'Equipped references', '; '.join(row['references']) or 'None')),
-        section='Equipment', search_text=' '.join(row['references'])) for row in inventory)
+        section='Equipment', search_text=f'{row["kind"]} {"owned" if row["owned"] else "unowned"} ' +
+                                        ' '.join(row['references'])) for row in inventory)
     mount_cards = []
     for index, offset in enumerate(equipment.MOUNT_LOADOUT_OFFSETS):
         selector = payload[offset]
@@ -140,9 +153,27 @@ def dashboard(backend, document):
         (_metric('completion', 'Game completion', 'Not mapped',
                          note='Stored levels, promotions and physical records do not establish story or unlock completion.'),),
         section='Completion'))
+    levels = [payload[backend.OFFICER_BASE + index * backend.OFFICER_STRIDE + 17] + 1
+              for index in range(backend.OFFICER_COUNT)]
+    overview = (
+        DashboardCard('officer-snapshot', 'Officer snapshot', 'Mapped records · recruitment unavailable',
+                      (_metric('records', 'Mapped officer records', len(characters)),
+                       _metric('levels', 'Stored level range', f'{min(levels)}–{max(levels)}'),
+                       _metric('internal', 'Separate internal records', len(internal))), section='Overview'),
+        DashboardCard('weapon-snapshot', 'Weapon pools', 'Populated physical records',
+                      (_metric('weapons', 'Populated weapon records', len(weapon_cards)),
+                       _metric('identities', 'Distinct weapon IDs', len(weapon_ids))),
+                      section='Overview'),
+        DashboardCard('item-snapshot', 'Item collection', 'Verified ownership flags',
+                      tuple(_metric(f'owned-{kind}', f'Owned {kind.lower()} records',
+                                    sum(row['owned'] for row in inventory if row['kind'] == kind))
+                            for kind in ('Ordinary item', 'Mount')), section='Overview'),
+    )
     return ProgressionDashboard(
         'Warriors Orochi 3 Ultimate · Progression',
-        (DashboardSection('characters', 'Characters', tuple(characters),
+        (DashboardSection('overview', 'Overview', overview,
+                          'Snapshot totals keep officer records, weapon pools, item ownership and story completion separate.'),
+         DashboardSection('characters', 'Characters', tuple(characters),
                           '145 mapped officer records; numbered identities do not imply character unlocks.'),
          DashboardSection('equipment', 'Equipment', tuple(mount_cards) + tuple(weapon_cards) + item_cards,
                           'Weapons, ordinary items and mount references are distinct from acquisition and ranks.'),

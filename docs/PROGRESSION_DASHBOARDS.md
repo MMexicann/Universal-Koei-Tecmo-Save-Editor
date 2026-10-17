@@ -10,6 +10,19 @@ show the full metrics beyond the card preview. Follow a linked value to reveal
 its mapped editable field. Navigation clears field filters that would hide that
 field, but preserves pending edits, Undo history and the original file.
 
+Use the range-status filter to find records with full or unfinished **mapped
+metric ranges**, or records without a mapped range. These describe individual
+metrics, not whether an officer, weapon or game is complete. Sort by name or
+mapped range; pin a record to compare matching, unambiguous metrics with another
+record. Values with different units remain separate. The summary ribbon counts
+matching records and mapped ranges without inventing an overall completion score.
+Light and Dark themes repaint the cards, charts and comparison inspector.
+
+Arrow keys move between cards, Return opens the selected record's fields, and the
+record selector provides direct keyboard selection. On short windows, choose
+**Filters / report** to reveal the additional controls. The inspector pages
+fields separately from the inventory so large records stay accessible.
+
 The dashboard is read only and shows the **opened snapshot**, not a preview of
 pending edits. Use Edit Fields and Review Changes for staged values. Save As
 refreshes the snapshot from the validated destination copy. Switching sessions,

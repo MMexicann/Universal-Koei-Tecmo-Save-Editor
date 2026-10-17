@@ -593,8 +593,8 @@
     },
     {
       "path": "docs/PROGRESSION_DASHBOARDS.md",
-      "bytes": 4456,
-      "sha256": "ad8e3c48f6634c65090098db7acf2e870bf4acb591331d016b056acdf5ebf8eb"
+      "bytes": 5312,
+      "sha256": "cfce8bfefd4ada85bd4207d184c6919cf6493635b549e738cc7fc63298cf9c92"
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
@@ -3613,8 +3613,8 @@
     },
     {
       "path": "src/koei_editor/shared/progression_view.py",
-      "bytes": 30885,
-      "sha256": "5f318a5fb039d6e3a41841d0e16b48f8675c11ac383d4fe6d6b018a0fcf6e907"
+      "bytes": 43642,
+      "sha256": "d14f5c3cf585783fedacd695d6d2ee975e2def8d6bfb5a57c19506f5c30c7583"
     },
     {
       "path": "src/koei_editor/shared/ps3_copy.py",
@@ -4657,6 +4657,11 @@
       "sha256": "6aea8730f95ea08a6dce42693af3768835289b6cda99d525d4889e1c1bfb7298"
     },
     {
+      "path": "tests/test_progression_card_rendering.py",
+      "bytes": 2584,
+      "sha256": "41ea8c70fd60931b71a2eb88b4e60f5229c25a45dbf59c5106fd8dbfc0d87025"
+    },
+    {
       "path": "tests/test_progression_contract.py",
       "bytes": 2366,
       "sha256": "b40e913d76f1cd50502ccd2f7e8b0b5e02980425fa44092f392228555f524b2f"
@@ -4685,6 +4690,11 @@
       "path": "tests/test_progression_view_gui.py",
       "bytes": 12379,
       "sha256": "3141813bd233cb63248e6c3958d045557227aa7c9f7b4f8a562624433626fe39"
+    },
+    {
+      "path": "tests/test_progression_visual_controls.py",
+      "bytes": 7930,
+      "sha256": "948cc8110175d7d8c1f526426e281fb5dc3ec61755ab66a35d845ba117bec7a7"
     },
     {
       "path": "tests/test_progression_workspace.py",

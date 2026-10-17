@@ -168,9 +168,18 @@ class _Panel:
         old_frame = self.frame
         parent, root = old_frame.master, self.root
         manager, palette = old_frame.winfo_manager(), self._palette
-        layout = getattr(old_frame, manager + '_info')() if manager else None
+        notebook = parent if manager == 'notebook' else None
+        if notebook is not None:
+            position, layout = notebook.index(old_frame), notebook.tab(old_frame)
+            selected = notebook.select() == str(old_frame)
+        else:
+            layout = getattr(old_frame, manager + '_info')() if manager else None
         self.__init__(root, parent, language=language)
-        if manager:
+        if notebook is not None:
+            notebook.insert(position, self.frame, **layout)
+            if selected:
+                notebook.select(self.frame)
+        elif manager:
             getattr(self.frame, manager)(**layout)
         if palette is not None:
             self.apply_theme(palette)

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
@@ -17,6 +18,40 @@ class ValidationGuiTests(unittest.TestCase):
         self.root = tk.Tk()
         self.root.withdraw()
         self.addCleanup(self.root.destroy)
+
+    def test_notebook_locale_changes_preserve_tab_position_options_selection_and_state(self):
+        for panel_type in (ValidationPanel, FeedbackPanel):
+            with self.subTest(panel=panel_type.__name__):
+                notebook = ttk.Notebook(self.root)
+                notebook.pack()
+                first = ttk.Frame(notebook)
+                notebook.add(first, text='First')
+                panel = panel_type(self.root, notebook)
+                notebook.add(panel.frame, text='Toolkit', padding=6, sticky='nsew')
+                notebook.select(panel.frame)
+                padding = notebook.tab(panel.frame, 'padding')
+                if panel_type is ValidationPanel:
+                    panel.revision.set('15')
+                    panel.provenance.set(panel.text['sources'][2])
+                    panel.record = panel.record.record_step(STEPS[0], 'passed')
+                    expected = panel.record
+                else:
+                    panel.category.set(panel.text['categories'][3])
+                    expected = panel.report['category']
+                for language in ('de', 'en'):
+                    previous = panel.frame
+                    panel.set_language(language)
+                    self.assertEqual(len(notebook.tabs()), 2)
+                    self.assertEqual(notebook.index(panel.frame), 1)
+                    self.assertEqual(notebook.select(), str(panel.frame))
+                    self.assertEqual(notebook.tab(panel.frame, 'text'), 'Toolkit')
+                    self.assertEqual(notebook.tab(panel.frame, 'padding'), padding)
+                    self.assertFalse(previous.winfo_exists())
+                    if panel_type is ValidationPanel:
+                        self.assertEqual(panel.record, expected)
+                    else:
+                        self.assertEqual(panel.report['category'], expected)
+                notebook.destroy()
 
     def test_out_of_order_click_shows_generic_error_and_keeps_report_unverified(self):
         panel = ValidationPanel(self.root, self.root)

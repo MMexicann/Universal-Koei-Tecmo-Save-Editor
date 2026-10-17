@@ -1,5 +1,7 @@
 """Independent regressions for evidence-aware visual filtering and comparisons."""
 from dataclasses import replace
+from pathlib import Path
+import tempfile
 import tkinter as tk
 import unittest
 from unittest.mock import Mock
@@ -117,6 +119,43 @@ class ProgressionVisualControlsTests(unittest.TestCase):
         self.assertIsNone(self.view._pinned_card)
         self.assertFalse(self.view._comparison_entries)
         self.navigate.assert_not_called()
+
+    def test_comparison_and_navigation_remain_reachable_in_compact_application(self):
+        from koei_editor.application import Application
+        from tests.test_origins_parser import fixture
+        self.view.destroy()
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            source = folder / 'copy.dat'
+            raw = fixture()
+            source.write_bytes(raw)
+            app = Application(self.root, preferences_path=folder / 'prefs.json', persist_preferences=False)
+            self.root.minsize(650, 500)
+            editor = app.select_game('origins')
+            self.assertTrue(editor.open_path(source))
+            editor.stage_values({'gold': 4567})
+            before = editor.changes, list(editor.history)
+            editor.workspace_tabs.select(editor.dashboard_page)
+            view = editor.dashboard_view
+            view.section.set('characters')
+            for theme in ('Light', 'Dark'):
+                app.apply_theme(theme)
+                self.root.geometry('800x650')
+                self.root.update()
+                view.compare_button.invoke()
+                self.root.update()
+                self.assertIsNotNone(view._pinned_card)
+                self.assertTrue(view._comparison_entries)
+                for control in (view.next, view.compare_button, view.detail_toggle):
+                    with self.subTest(theme=theme, control=control):
+                        self.assertTrue(control.winfo_viewable())
+                        self.assertLessEqual(control.winfo_rooty() + control.winfo_height(),
+                                             self.root.winfo_rooty() + 650)
+                self.assertGreater(view.canvas.winfo_height(), 60)
+                self.assertEqual((editor.changes, editor.history), before)
+                view.compare_button.invoke()
+                view.detail_toggle.invoke()
+            self.assertEqual(source.read_bytes(), raw)
 
 
 if __name__ == '__main__':

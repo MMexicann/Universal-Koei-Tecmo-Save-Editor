@@ -275,14 +275,8 @@ class Application(Appearance):
             theme_dashboard = getattr(editor, 'theme_dashboard', None)
             if callable(theme_dashboard):
                 theme_dashboard(name)
-        if self.converter is not None:
-            self.converter.apply_theme(palette)
-        if self.comparison is not None:
-            self.comparison.apply_theme(palette)
-        if self.batch is not None:
-            self.batch.apply_theme(palette)
-        if self.save_library is not None:
-            self.save_library.apply_theme(palette)
+        for tool in self._tool_workspaces():
+            tool.apply_theme(palette)
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]

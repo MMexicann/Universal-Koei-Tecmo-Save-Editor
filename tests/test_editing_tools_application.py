@@ -46,8 +46,12 @@ class EditingToolsApplicationTests(unittest.TestCase):
         self.root.update()
         self.assertTrue(research.frame.winfo_ismapped())
         self.assertFalse(presets.frame.winfo_ismapped())
-        for theme in ('Dark', 'Light'):
-            self.app.apply_theme(theme)
+        with patch.object(research, 'apply_theme', wraps=research.apply_theme) as research_theme, \
+                patch.object(presets, 'apply_theme', wraps=presets.apply_theme) as preset_theme:
+            for theme in ('Dark', 'Light'):
+                self.app.apply_theme(theme)
+            self.assertEqual(research_theme.call_count, 2)
+            self.assertEqual(preset_theme.call_count, 2)
         self.app.show_library()
         self.app.show_research_lab()
         self.assertIs(self.app.research_lab, research)

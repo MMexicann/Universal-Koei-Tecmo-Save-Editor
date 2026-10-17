@@ -22,9 +22,11 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import safe_path, reserved_windows_path
 from koei_editor.shared.save_library import _identity, _handle_binding, _linked, _snapshot_digest
 
-MAX_FILE_BYTES = 32 * 1024 * 1024
+# Fatal Frame II remake system saves are 61,851,984 bytes. These fixed
+# ceilings admit every registered native profile without caller-raised limits.
+MAX_FILE_BYTES = 64 * 1024 * 1024
 MAX_CONTEXT_BYTES = 2 * 1024 * 1024
-MAX_BUNDLE_BYTES = 40 * 1024 * 1024
+MAX_BUNDLE_BYTES = 72 * 1024 * 1024
 MAX_STORAGE_BYTES = 1024 * 1024 * 1024
 MAX_SNAPSHOTS = 500
 MAX_INDEX_BYTES = 2 * 1024 * 1024

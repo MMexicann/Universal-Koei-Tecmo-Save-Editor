@@ -31,6 +31,111 @@ class SaveVaultTests(unittest.TestCase):
     def snapshot(self, **kwargs):
         return self.store.snapshot(parser.GAME_ID, self.source, **kwargs)
 
+    def test_canonical_filesystem_aliases_cannot_bypass_vault_containment(self):
+        record = self.snapshot()
+        alias = self.folder / 'modeled-short-vault-name'
+        original_lstat = Path.lstat
+        original_safe_path = vault.safe_path
+        def physical(path):
+            path = Path(path).absolute()
+            return self.store.root / path.relative_to(alias) if path.is_relative_to(alias) else path
+        def aliased_lstat(path, *args, **kwargs):
+            return original_lstat(physical(path), *args, **kwargs)
+        def aliased_safe_path(path):
+            return original_safe_path(physical(path))
+        # Model the OS resolving two ordinary spellings to the same inode,
+        # without introducing a symlink or weakening the existing link tests.
+        with patch.object(Path, 'lstat', aliased_lstat), patch.object(vault, 'safe_path', side_effect=aliased_safe_path):
+            reopened = vault.SaveVault(alias)
+            self.assertTrue(reopened.root.samefile(self.store.root))
+            source = alias / 'objects' / record.id / record.filename
+            destination = alias / 'new-restore'
+            with patch.object(vault, '_read', side_effect=AssertionError('Containment must reject before reading or writing')):
+                with self.assertRaisesRegex(SaveError, 'outside the vault'):
+                    self.store.snapshot(parser.GAME_ID, source)
+                with self.assertRaisesRegex(SaveError, 'outside the vault'):
+                    self.store.restore(record.id, destination)
+            self.assertFalse((self.store.root / 'new-restore').exists())
+
+    def test_physical_ancestor_identity_blocks_nonlexical_vault_containment(self):
+        record = self.snapshot()
+        alias = self.folder / 'modeled-device-vault-name'
+        original_lstat = Path.lstat
+        def physical_lstat(path, *args, **kwargs):
+            path = Path(path).absolute()
+            if path.is_relative_to(alias):
+                path = self.store.root / path.relative_to(alias)
+            return original_lstat(path, *args, **kwargs)
+        # Model an ordinary OS device spelling that resolve() retains. The
+        # identity check must still find the vault among its physical ancestors.
+        with patch.object(Path, 'lstat', physical_lstat):
+            self.assertTrue(self.store._contains(alias / 'objects' / record.id / record.filename))
+            self.assertTrue(self.store._contains(alias / 'new-restore'))
+            self.assertFalse(self.store._contains(self.source))
+        too_deep = self.folder.joinpath(*(['nested'] * 129), 'copy.bin')
+        with patch.object(Path, 'lstat', side_effect=AssertionError('Depth must be bounded before filesystem inspection')):
+            with self.assertRaisesRegex(SaveError, 'bounded parent depth'):
+                self.store._contains(too_deep)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows extended-length filesystem paths require Windows.')
+    def test_windows_extended_prefix_cannot_bypass_vault_containment(self):
+        record = self.snapshot()
+        canonical = str(self.store.root.resolve())
+        if canonical.startswith('\\\\?\\'):
+            extended = Path(canonical)
+        elif canonical.startswith('\\\\'):
+            extended = Path('\\\\?\\UNC\\' + canonical[2:])
+        else:
+            extended = Path('\\\\?\\' + canonical)
+        self.assertTrue(extended.samefile(self.store.root))
+        reopened = vault.SaveVault(extended)
+        self.assertTrue(reopened.root.samefile(self.store.root))
+        for operation in (lambda: self.store.snapshot(parser.GAME_ID, extended / 'objects' / record.id / record.filename),
+                          lambda: reopened.snapshot(parser.GAME_ID, self.store.objects / record.id / record.filename),
+                          lambda: self.store.restore(record.id, extended / 'new-restore'),
+                          lambda: reopened.restore(record.id, self.store.root / 'new-restore')):
+            with self.assertRaisesRegex(SaveError, 'outside the vault'):
+                operation()
+        self.assertFalse((self.store.root / 'new-restore').exists())
+
+    def test_canonical_path_must_match_the_checked_lexical_file_identity(self):
+        record = self.snapshot()
+        original_safe_path = vault.safe_path
+        other = self.store.objects / record.id / record.filename
+        def changed_resolution(path):
+            return other if Path(path).absolute() == self.source.absolute() else original_safe_path(path)
+        with patch.object(vault, 'safe_path', side_effect=changed_resolution):
+            with self.assertRaisesRegex(SaveError, 'canonical vault path changed filesystem identity'):
+                vault._ordinary(self.source)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows short/long filesystem aliases require Windows.')
+    def test_real_windows_short_path_aliases_cannot_restore_or_snapshot_inside_vault(self):
+        import ctypes
+        record = self.snapshot()
+        get_short = ctypes.WinDLL('kernel32', use_last_error=True).GetShortPathNameW
+        get_short.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
+        get_short.restype = ctypes.c_uint32
+        canonical = str(self.store.root.resolve())
+        needed = get_short(canonical, None, 0)
+        if not needed:
+            self.skipTest('Windows cannot provide an 8.3 alias on this filesystem.')
+        buffer = ctypes.create_unicode_buffer(needed)
+        if not get_short(canonical, buffer, needed):
+            self.skipTest('Windows cannot provide an 8.3 alias on this filesystem.')
+        short = Path(buffer.value)
+        if os.path.normcase(str(short)) == os.path.normcase(canonical):
+            self.skipTest('8.3 short-name creation is unavailable for the temporary filesystem path.')
+        self.assertTrue(short.samefile(self.store.root))
+        reopened = vault.SaveVault(short)
+        self.assertTrue(reopened.root.samefile(self.store.root))
+        for operation in (lambda: self.store.snapshot(parser.GAME_ID, short / 'objects' / record.id / record.filename),
+                          lambda: reopened.snapshot(parser.GAME_ID, self.store.objects / record.id / record.filename),
+                          lambda: self.store.restore(record.id, short / 'new-restore'),
+                          lambda: reopened.restore(record.id, self.store.root / 'new-restore')):
+            with self.assertRaisesRegex(SaveError, 'outside the vault'):
+                operation()
+        self.assertFalse((self.store.root / 'new-restore').exists())
+
     def test_native_roundtrip_preserves_complete_original_companion_and_reopen_history(self):
         record = self.snapshot(label='Before battle')
         self.assertEqual(record.filename, self.source.name)

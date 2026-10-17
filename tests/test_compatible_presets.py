@@ -388,6 +388,42 @@ class PresetLibraryTests(unittest.TestCase):
             with self.assertRaises(SaveError):
                 self.library.save(self.preset)
 
+    def test_directory_entry_limit_stops_streaming_enumeration_and_closes_scanner(self):
+        entry = self.library.save(self.preset)
+        folder = self.library.directory
+
+        class StreamingScan:
+            closed = False
+            requested = 0
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                self.closed = True
+
+            def __iter__(self):
+                return self
+
+            def __next__(self):
+                self.requested += 1
+                if self.requested > 3:
+                    raise AssertionError('The scan enumerated beyond its directory-entry limit')
+                child = entry.path if self.requested == 1 else folder / f'unrelated-{self.requested}'
+                return SimpleNamespace(path=str(child))
+
+        scanner = StreamingScan()
+        with patch.object(library_backend, 'MAX_ENTRIES', 2), \
+                patch.object(library_backend.os, 'scandir', return_value=scanner) as scan, \
+                patch.object(library_backend.os, 'listdir', side_effect=AssertionError('Eager directory listing')):
+            snapshot = self.library.scan()
+        scan.assert_called_once_with(self.library.directory)
+        self.assertEqual(scanner.requested, 3, 'Only one overflow entry is needed to detect a partial scan')
+        self.assertTrue(scanner.closed, 'An early limit must release the directory handle')
+        self.assertEqual(snapshot.entries, (entry,))
+        self.assertFalse(snapshot.complete)
+        self.assertTrue(any('directory-entry' in issue for issue in snapshot.issues))
+
     def test_metadata_byte_admission_limit_retains_existing_normal_export(self):
         entry = self.library.save(self.preset)
         with patch.object(library_backend, 'MAX_SCAN_BYTES', len(presets.dumps(self.preset)) + 1):

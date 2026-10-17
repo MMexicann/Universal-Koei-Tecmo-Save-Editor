@@ -98,38 +98,42 @@ class PresetLibrary:
         if not path.exists():
             return LibrarySnapshot(())
         entries, issues, complete, scanned_bytes = [], [], True, 0
-        for index, child in enumerate(path.iterdir()):
-            if index >= MAX_ENTRIES:
-                issues.append('The directory-entry scan limit was reached; remaining metadata was excluded.')
-                complete = False
-                break
-            if not _NAME.fullmatch(child.name):
-                continue
-            if len(entries) >= MAX_PRESETS:
-                issues.append(f'The {MAX_PRESETS}-preset scan limit was reached; remaining metadata was excluded.')
-                complete = False
-                break
-            try:
-                if child.is_symlink():
-                    raise SaveError('Linked preset metadata is excluded.')
-                size = child.lstat().st_size
-                if not 0 < size <= compatible_presets.MAX_BYTES:
-                    raise SaveError('Preset metadata is outside its file-size bound.')
-                # Reserve the entire bounded read, including its overflow
-                # sentinel, even if parsing fails or the file changes.
-                if scanned_bytes + size + 1 > MAX_SCAN_BYTES:
-                    issues.append('The total preset-byte scan limit was reached; remaining metadata was excluded.')
+        # Path.iterdir() eagerly lists the directory on supported Python versions.
+        # Stream entries so the limit also bounds enumeration and its memory.
+        with os.scandir(path) as children:
+            for index, child_entry in enumerate(children):
+                if index >= MAX_ENTRIES:
+                    issues.append('The directory-entry scan limit was reached; remaining metadata was excluded.')
                     complete = False
                     break
-                scanned_bytes += size + 1
-                raw = compatible_presets.read_bytes(child, maximum=size)
-                identity = hashlib.sha256(raw).hexdigest()
-                if child.name != identity + compatible_presets.SUFFIX:
-                    raise SaveError('Preset content does not match its local library identity.')
-                preset = compatible_presets.loads(raw)
-                entries.append(LibraryEntry(identity, preset, child))
-            except (OSError, ValueError, SaveError):
-                issues.append(child.name + ': invalid or changed preset metadata; excluded')
+                child = Path(child_entry.path)
+                if not _NAME.fullmatch(child.name):
+                    continue
+                if len(entries) >= MAX_PRESETS:
+                    issues.append(f'The {MAX_PRESETS}-preset scan limit was reached; remaining metadata was excluded.')
+                    complete = False
+                    break
+                try:
+                    if child.is_symlink():
+                        raise SaveError('Linked preset metadata is excluded.')
+                    size = child.lstat().st_size
+                    if not 0 < size <= compatible_presets.MAX_BYTES:
+                        raise SaveError('Preset metadata is outside its file-size bound.')
+                    # Reserve the entire bounded read, including its overflow
+                    # sentinel, even if parsing fails or the file changes.
+                    if scanned_bytes + size + 1 > MAX_SCAN_BYTES:
+                        issues.append('The total preset-byte scan limit was reached; remaining metadata was excluded.')
+                        complete = False
+                        break
+                    scanned_bytes += size + 1
+                    raw = compatible_presets.read_bytes(child, maximum=size)
+                    identity = hashlib.sha256(raw).hexdigest()
+                    if child.name != identity + compatible_presets.SUFFIX:
+                        raise SaveError('Preset content does not match its local library identity.')
+                    preset = compatible_presets.loads(raw)
+                    entries.append(LibraryEntry(identity, preset, child))
+                except (OSError, ValueError, SaveError):
+                    issues.append(child.name + ': invalid or changed preset metadata; excluded')
         return LibrarySnapshot(tuple(sorted(entries, key=lambda entry: (entry.preset.name.casefold(), entry.id))),
                                tuple(issues), complete, scanned_bytes)
 

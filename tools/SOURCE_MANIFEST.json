@@ -668,8 +668,8 @@
     },
     {
       "path": "docs/REUSABLE_PRESETS.md",
-      "bytes": 5273,
-      "sha256": "c5f0dda9562ac48442691ab0ee555224b7d6dc638cdfd0f26f5958e0ee9d1d6a"
+      "bytes": 5532,
+      "sha256": "c9edd6da0f4e8c8c6826ae2a61553b581afc373cd373d7f05f6029f0f1445c84"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -3563,8 +3563,8 @@
     },
     {
       "path": "src/koei_editor/shared/compatible_presets.py",
-      "bytes": 16603,
-      "sha256": "de7d76d7637f236a35bd3b17820659fd57bbe82f82de9842ff52f3cb9a8c8299"
+      "bytes": 16784,
+      "sha256": "8eb68974489062a683b50bda6f5283a8153eef3b9a521f5593845806eada8099"
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",
@@ -3618,8 +3618,8 @@
     },
     {
       "path": "src/koei_editor/shared/preset_library.py",
-      "bytes": 5050,
-      "sha256": "fbd51c77556b29fba2b8834e01b00062071911a7401715cc024ca95191d91410"
+      "bytes": 8254,
+      "sha256": "a76d72df611f1af94aa84874be50bc62845d8cf5e58e4d36b664a12e012188e9"
     },
     {
       "path": "src/koei_editor/shared/preset_portability.py",
@@ -3858,8 +3858,8 @@
     },
     {
       "path": "tests/test_compatible_presets.py",
-      "bytes": 19548,
-      "sha256": "7687772fd9972a3c200da360c659b3591fca73cad092f304cc157669a5bb85d9"
+      "bytes": 23996,
+      "sha256": "27d3989dc92fc19a34653db12946f741943192b075c5e58f480d205b4f1c81a0"
     },
     {
       "path": "tests/test_compatible_presets_gui.py",

@@ -5,15 +5,17 @@ revision lengths, serializer offsets, limits and the intentionally unknown data.
 """
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 from functools import lru_cache
 import hashlib
 from pathlib import Path
+import re
 import struct
 from types import MappingProxyType
 
 import koei_editor.games.origins.origins_codec as codec
 from koei_editor.games.origins.origins_progression import progression_specs
-from koei_editor.games.origins.origins_weapons import weapon_specs, weapon_inspection_rows, weapon_hint, validate_weapon_changes
+from koei_editor.games.origins.origins_weapons import weapon_specs, weapon_records, weapon_inspection_rows, weapon_hint, validate_weapon_changes
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import safe_path
@@ -309,7 +311,11 @@ def field_hint(document, key):
         return (pool + ' unspent Skill Points: 0–999. Learned skills and derived '
                 'abilities are preserved. The DLC has a separate point pool.')
     if key.startswith('weapon_'):
-        return weapon_hint()
+        field = field_map(document)[key]
+        record = next(record for record in weapon_records(document.payload, document.revision)
+                      if record.index + 1 == field.slot)
+        return (f'Inventory slot {field.slot}; weapon catalogue ID {record.weapon_id}; '
+                f'stored instance ID {record.instance_id}. ' + weapon_hint())
     if key.startswith('peace_'):
         opened = field_map(document)[key].value(document.payload) / 100
         return (f'Opened provincial peace: {opened:g}%. Enter 0–10,000 points; '
@@ -327,6 +333,62 @@ def field_hint(document, key):
                 'does not finish the active campaign, establish endings, grant '
                 'rewards or change story event flags.')
     return 'Gold: 0–999,999. Native merchant balance; lifetime statistics and story data are preserved.'
+
+
+def field_options(document, key):
+    """Verified native choices; opened history remains monotonic after saving."""
+    fields = field_map(document)
+    if type(key) is not str or key not in fields:
+        raise SaveError('The requested Origins field is not mapped.')
+    if key.startswith('battle_history_'):
+        return tuple((value, label) for value, label in (
+            (0, 'Incomplete'), (1, 'Cleared (replay history only)'))
+                     if value >= fields[key].minimum)
+    if key.startswith('bond_') and key.endswith('_level') and not experimental_enabled():
+        return tuple((level, f'Bond level {level}') for level in range(1, 6))
+    return ()
+
+
+def peace_percent_values(document, changes, keys, percent):
+    """Return exact point assignments for selected, qualified peace counters.
+
+    Native UI divides the stored uint16 by 100; two decimal percentage places
+    therefore represent the complete supported precision. No rounding occurs.
+    Native setter RVA 0xa9e1e0 leaves reward-claim flags separate.
+    """
+    fields = field_map(document)
+    _validate_pending(document, fields, changes)
+    if type(percent) not in (str, int):
+        raise SaveError('Enter a peace percentage from 0 to 100 with at most two decimal places.')
+    text = str(percent).strip()
+    if not re.fullmatch(r'[0-9]{1,3}(?:[.][0-9]{1,2})?', text):
+        raise SaveError('Enter a peace percentage from 0 to 100 with at most two decimal places.')
+    points = int(Decimal(text) * 100)
+    if points > 10000:
+        raise SaveError('Provincial peace must be from 0% to 100%.')
+    keys = tuple(keys)
+    if not keys or any(type(key) is not str or key not in fields or
+                       not key.startswith('peace_') for key in keys):
+        raise SaveError('Select only qualified provincial peace fields.')
+    return {key: points for key in keys}
+
+
+def bond_training_values(document, changes, keys):
+    """Raise selected training counters to the native count condition only.
+
+    Completion predicate RVA 0x124f720 tests >=3 trainings in addition to bond,
+    event and learned-art conditions. This action never changes those records
+    or claims rewards. Native training setter RVA 0xaaff60 caps at 999.
+    """
+    fields = field_map(document)
+    _validate_pending(document, fields, changes)
+    keys = tuple(keys)
+    if not keys or any(type(key) is not str or key not in fields or
+                       not key.startswith('bond_') or not key.endswith('_training')
+                       for key in keys):
+        raise SaveError('Select only qualified existing-bond training counters.')
+    return {key: max(3, fields[key].value(document.payload),
+                     changes.get(key, fields[key].value(document.payload))) for key in keys}
 
 
 def inspection_rows(document):

@@ -355,6 +355,37 @@ class SaveVaultTests(unittest.TestCase):
                 self.store.restore(record.id, self.folder / 'rejected')
         self.assertFalse((self.folder / 'rejected').exists())
 
+    def test_largest_registered_fatal_frame2_system_native_roundtrip(self):
+        from koei_editor.games.fatal_frame2_remake import codec, parser as fatal_frame
+        from tests.test_fatal_frame2_remake import procedural_raw
+        source = self.folder / 'ff2-system-copy.bin'
+        raw = procedural_raw(True)
+        self.assertEqual(len(raw), codec.SYSTEM_SIZE)
+        self.assertGreater(len(raw), 32 * 1024 * 1024)
+        self.assertLessEqual(len(raw), vault.MAX_FILE_BYTES)
+        source.write_bytes(raw)
+        record = self.store.snapshot(fatal_frame.GAME_ID, source, branch='fatal-frame-system')
+        self.assertEqual(record.size_bytes, codec.SYSTEM_SIZE)
+        self.assertTrue(self.store.verify(record.id)[0].valid)
+        restored = self.store.restore(record.id, self.folder / 'ff2-system-restored')
+        self.assertEqual(restored.read_bytes(), raw)
+        reopened = fatal_frame.read_save(restored)
+        field, = fatal_frame.fields_for(reopened)
+        self.assertEqual(field.value(reopened.payload), 123456)
+        self.assertEqual(reopened.raw, raw)
+        # Large native files receive exactly the same integrity gate as smaller
+        # profiles; accepting their size never bypasses snapshot SHA256 checks.
+        stored = self.store.objects / record.id / record.filename
+        with stored.open('r+b') as stream:
+            stream.seek(-1, os.SEEK_END)
+            stream.write(bytes((raw[-1] ^ 1,)))
+        self.assertFalse(self.store.verify(record.id)[0].valid)
+        destination = self.folder / 'ff2-system-corrupt-restore'
+        with self.assertRaisesRegex(SaveError, 'checksum'):
+            self.store.restore(record.id, destination)
+        self.assertFalse(destination.exists())
+        self.assertEqual(source.read_bytes(), raw)
+
     def test_native_emulator_live_policy_blocks_restore_before_any_write(self):
         from koei_editor.games.nobunaga_ambition_nes import parser as nes
         from tests.test_nobunaga_ambition_nes import procedural_raw

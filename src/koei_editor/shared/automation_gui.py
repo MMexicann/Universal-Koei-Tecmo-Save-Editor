@@ -256,9 +256,15 @@ class WorkflowWorkspace:
                      for index, path in enumerate(paths))
         return workflow, jobs
 
-    def _review(self, report):
+    @staticmethod
+    def _preview_report(batch):
+        # Preview requalifies every native source. Keep that work and potentially
+        # large JSON formatting on the worker, before the Tk callback runs.
         import json
-        self._show(json.dumps(report, indent=2, ensure_ascii=False))
+        return json.dumps(automation.preview(batch), indent=2, ensure_ascii=False)
+
+    def _review(self, report):
+        self._show(report)
         self.status.set('Preview passed; no saves or backups were written. Export this workflow for reviewed batch execution with --automation.')
 
     def _prepare_batch(self, workflow, jobs):
@@ -270,7 +276,7 @@ class WorkflowWorkspace:
             return
         try:
             _workflow, jobs = self._prepare((self.document.source,) if self.document else ())
-            self._run(lambda: automation.preview(self._prepare_batch(_workflow, jobs)), self._review)
+            self._run(lambda: self._preview_report(self._prepare_batch(_workflow, jobs)), self._review)
         except (ValueError, TypeError) as error:
             messagebox.showerror('Workflow preview', str(error), parent=self.root)
 
@@ -282,7 +288,7 @@ class WorkflowWorkspace:
             return
         try:
             workflow, jobs = self._prepare(paths)
-            self._run(lambda: automation.preview(self._prepare_batch(workflow, jobs)), self._review)
+            self._run(lambda: self._preview_report(self._prepare_batch(workflow, jobs)), self._review)
         except (ValueError, TypeError) as error:
             messagebox.showerror('Workflow preview', str(error), parent=self.root)
 
@@ -299,7 +305,7 @@ class WorkflowWorkspace:
             def work():
                 batch = self._prepare_batch(workflow, jobs)
                 atomic_new(automation.dumps(workflow), destination)
-                return automation.preview(batch)
+                return self._preview_report(batch)
             self._run(work, lambda report: (self._review(report), self.status.set('Validated workflow exported. Existing files are never replaced.')))
         except (ValueError, TypeError, OSError) as error:
             messagebox.showerror('Workflow export', str(error), parent=self.root)
@@ -353,7 +359,7 @@ class WorkflowWorkspace:
                         'jobs': [{'id': job.spec.id, 'source': str(job.spec.source),
                                   'destination': str(job.spec.destination)} for job in batch.jobs]}
                 atomic_new((json.dumps(data, indent=2, ensure_ascii=True) + '\n').encode('utf-8'), plan_path)
-                return automation.preview(batch)
+                return self._preview_report(batch)
             self._run(work, lambda report: (self._review(report), self.status.set(
                 'Validated batch plan exported. Keep it private: it contains local paths. Run --automation preview before apply.')))
         except (ValueError, TypeError, OSError) as error:

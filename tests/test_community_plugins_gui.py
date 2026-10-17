@@ -85,6 +85,42 @@ class CommunityPluginGuiTests(unittest.TestCase):
         self.assertNotEqual(old_digest, self.panel.catalog.entries[0].candidate.sha256)
         self.assertFalse(self.panel.reviewed.get())
 
+    def test_command_content_cannot_leave_another_candidates_approval_controls_active(self):
+        value = json.loads(self.path.read_bytes())
+        value['id'] = 'community.other'
+        value['title'] = 'A different disabled candidate'
+        (self.folder / 'other.plugin.json').write_text(json.dumps(value), encoding='utf-8')
+        self.load()
+        self.approve()
+        target = self.panel.catalog.resolve_command('community.copy-guide:open-guide-en')
+        self.panel.tree.selection_set('1')
+        self.root.update()
+        self.panel.review_check.invoke()
+        self.assertEqual(self.panel._selected, 1)
+        self.assertEqual(str(self.panel.enable_button['state']), 'normal')
+        self.panel.show_content(target)
+        self.root.update()
+        self.assertEqual(self.panel.tree.selection(), ())
+        self.assertIsNone(self.panel._selected)
+        self.assertFalse(self.panel.reviewed.get())
+        for control in (self.panel.review_check, self.panel.enable_button, self.panel.disable_button):
+            self.assertEqual(str(control['state']), 'disabled')
+        self.assertIn(target.title, self.panel.preview.get('1.0', 'end'))
+        self.assertIn('Community declaration', self.panel.preview.get('1.0', 'end'))
+        self.panel.enable_selected()
+        self.assertTrue(self.panel.catalog.entries[0].enabled)
+        self.assertFalse(self.panel.catalog.entries[1].enabled)
+
+    def test_queued_deselection_clears_review_and_disables_approval(self):
+        self.load()
+        self.panel.review_check.invoke()
+        self.assertTrue(self.panel.reviewed.get())
+        self.panel.tree.selection_remove(*self.panel.tree.selection())
+        self.root.update()
+        self.assertIsNone(self.panel._selected)
+        self.assertFalse(self.panel.reviewed.get())
+        self.assertEqual(str(self.panel.enable_button['state']), 'disabled')
+
     def test_rejected_manifest_cannot_be_approved_and_errors_are_safe(self):
         self.path.write_text('{"module":"os.system"}')
         self.load()

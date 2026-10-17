@@ -13,6 +13,7 @@ class HelpCenter:
         self.frame = ttk.Frame(parent, padding=16)
         self.busy = False
         self._panels = {}
+        self._panel_mounts = {}
         self._palette = None
         self._text_size = 10
         self._font_family = 'Helvetica'
@@ -209,16 +210,21 @@ class HelpCenter:
     def _ensure_panel(self, name):
         if name in self._panels or name not in ('validation', 'feedback', 'plugins'):
             return
+        from koei_editor.shared.scrollable_panel import ScrollablePanel
+        mount = ScrollablePanel(self.tabs[name])
+        mount.frame.pack(fill='both', expand=True)
+        self._panel_mounts[name] = mount
         if name == 'plugins':
             from koei_editor.shared.plugin_gui import PluginPanel
-            panel = PluginPanel(self.root, self.tabs[name], language=self.language,
+            panel = PluginPanel(self.root, mount.content, language=self.language,
                                 on_change=self._plugins_changed)
         else:
             from koei_editor.shared.validation_gui import ValidationPanel, FeedbackPanel
             panel_type = ValidationPanel if name == 'validation' else FeedbackPanel
-            panel = panel_type(self.root, self.tabs[name], language=self.language)
+            panel = panel_type(self.root, mount.content, language=self.language)
         self._panels[name] = panel
         panel.frame.pack(fill='both', expand=True)
+        mount.refresh()
         if self._palette is not None:
             panel.apply_theme(self._palette)
         self.set_text_size(self._text_size, self._font_family)
@@ -227,7 +233,9 @@ class HelpCenter:
         self.articles = help_articles(self.language)
         panel = self._panels.get('plugins')
         if panel is not None:
-            self.articles += tuple(Article(item.id, 'Community plugin · ' + item.title, item.body)
+            from koei_editor.shared.plugin_gui import contribution_text
+            self.articles += tuple(Article(item.id, 'Community plugin · ' + item.title,
+                                          contribution_text(item))
                                    for item in panel.catalog.search(kind='help', locale=self.language))
         self._filter_help()
         self._show_guide()
@@ -241,7 +249,6 @@ class HelpCenter:
 
     def open_plugin_command(self, command_id):
         from koei_editor.shared.community_plugins import PluginError
-        from koei_editor.shared.plugin_gui import contribution_text
         panel = self._panels.get('plugins')
         if panel is None:
             return False
@@ -252,7 +259,8 @@ class HelpCenter:
         if item.locale != self.language:
             return False
         self.show_tab('plugins')
-        panel._show('Community plugin\n\n' + contribution_text(item))
+        panel.show_content(item)
+        panel.preview.focus_set()
         return True
 
     def apply_theme(self, palette):
@@ -263,6 +271,8 @@ class HelpCenter:
                              selectforeground='#ffffff')
         for panel in self._panels.values():
             panel.apply_theme(palette)
+        for mount in self._panel_mounts.values():
+            mount.apply_theme(palette)
 
     def set_text_size(self, size, family):
         self._text_size, self._font_family = size, family
@@ -272,6 +282,10 @@ class HelpCenter:
             pending.extend(widget.winfo_children())
             if isinstance(widget, tk.Text):
                 widget.configure(font=(family, size))
+        for mount in self._panel_mounts.values():
+            # Localization may rebuild a panel's descendants while retaining
+            # its frame mount; attach focus/scroll bindings to the new controls.
+            mount.refresh()
 
     def set_language(self, language):
         """Relabel in place so unfinished validation and plugin approvals survive."""

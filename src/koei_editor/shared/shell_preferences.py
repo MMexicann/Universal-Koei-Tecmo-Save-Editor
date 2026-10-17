@@ -11,7 +11,7 @@ from koei_editor.shared.preferences import preference_path
 MAX_BYTES = 32768
 MAX_FAVORITES = 128
 MAX_RECENT = 20
-_ID = re.compile(r'(?:(?:game|tool|command):[a-z][a-z0-9_-]{0,63}|plugin:[a-z][a-z0-9_.:-]{0,159})\Z')
+_ID = re.compile(r'(?:(?:game|tool|command):[a-z][a-z0-9_-]{0,63}|plugin:[a-z][a-z0-9_.:-]{0,160})\Z')
 
 
 @dataclass(frozen=True)

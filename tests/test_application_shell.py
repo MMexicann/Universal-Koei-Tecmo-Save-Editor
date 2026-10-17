@@ -14,6 +14,12 @@ from koei_editor.shared import shell_preferences as settings
 
 
 class ShellPreferencesTests(unittest.TestCase):
+    def test_longest_valid_namespaced_plugin_command_can_be_favorited(self):
+        command = 'plugin:' + 'a.' + 'a' * 78 + ':' + 'b' * 80
+        value = settings.toggle_favorite(settings.ShellPreferences(), command)
+        self.assertEqual(value.favorites, (command,))
+        self.assertEqual(settings.toggle_favorite(value, command).favorites, ())
+
     def test_settings_roundtrip_preserves_legacy_preferences_and_contains_no_paths(self):
         with tempfile.TemporaryDirectory() as directory:
             legacy = Path(directory) / 'preferences.json'
@@ -224,6 +230,8 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(len(palette.matches), 1)
         palette.activate()
         self.assertIn('EnglishCommunityMarker', panel.preview.get('1.0', 'end'))
+        panel.tree.selection_set('0')
+        panel._select()
         panel.disable_selected()
         self.assertNotIn(entry.id, {item.id for item in self.app.command_entries()})
         self.assertIsNone(self.app.execute_command(entry.id))

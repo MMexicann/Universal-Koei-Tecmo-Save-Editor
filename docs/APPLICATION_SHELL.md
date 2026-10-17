@@ -54,7 +54,7 @@ To add a shell command, define its label in both catalogs in
 `shared/localization.py`, add its entry in `Application.command_entries`, and
 resolve its stable ID explicitly in `execute_command`. Use `game:`, `tool:` or
 `command:` IDs followed by a lowercase identifier. Plugin IDs can also contain
-namespacing punctuation, bounded to 160 characters. Never include save paths or
+namespacing punctuation, bounded to 161 characters. Never include save paths or
 dynamic gameplay values in an identity.
 
 Library searches reuse the immutable `LibraryCatalog` index. Changes in one Tk

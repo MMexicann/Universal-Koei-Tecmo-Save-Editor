@@ -1128,8 +1128,8 @@
     },
     {
       "path": "src/koei_editor/automation_cli.py",
-      "bytes": 8254,
-      "sha256": "b5fa041f20b52a7acf8ba6146e80f7cb27f38b61c8464daaa923b4dc6263a99e"
+      "bytes": 8765,
+      "sha256": "c409fc4155c7962d475dac235bd24e1c6c41fc7a8851a881543213a6db84f5d8"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3548,8 +3548,8 @@
     },
     {
       "path": "src/koei_editor/shared/automation_gui.py",
-      "bytes": 18108,
-      "sha256": "1b5a00952626c93a4080617dad60fd52396630471ea89257bf319a3eba9d0a51"
+      "bytes": 18492,
+      "sha256": "caffc413ef9e4b868ec9bd58bf7037cbac8a1c49291ee199c8f0697451a744f6"
     },
     {
       "path": "src/koei_editor/shared/automation_journal.py",
@@ -3748,13 +3748,13 @@
     },
     {
       "path": "tests/test_automation.py",
-      "bytes": 22873,
-      "sha256": "7e779c59302da0692fd1c496a45a4f8e5c80dc84739e8ca14097a47015382ba7"
+      "bytes": 24220,
+      "sha256": "30b35c0bedb67bb679adeae53130563d2b4880a307e84b0acdffcfe0e057049f"
     },
     {
       "path": "tests/test_automation_gui.py",
-      "bytes": 7942,
-      "sha256": "94dc485a8ef6ebee133cbbe53a468333c5f8525b129e781055ceaa6f844fe6aa"
+      "bytes": 8996,
+      "sha256": "af1a74e818e10f65525dc44e49653c43fcc2794c1162030daaddc0a42a707d9f"
     },
     {
       "path": "tests/test_automation_journal.py",

@@ -130,6 +130,12 @@ def _run(arguments):
         for path in (job.spec.source, job.spec.destination):
             if journal_folder == path or journal_folder in path.parents or path in journal_folder.parents:
                 raise SaveError('Keep the journal folder separate from all batch input and output files.')
+        # Native safe writers create their automatic snapshots in these shared
+        # roots. Journal metadata must never share that namespace, including
+        # a backup-root symlink resolving to the proposed journal directory.
+        for name in ('WarriorsEditorBackups', 'UniversalEditorBackups', 'OriginsEditorBackups'):
+            if journal_folder == safe_path(job.spec.source.parent / name):
+                raise SaveError('Keep the journal folder separate from native automatic backup folders.')
     jobs = tuple(JournalJob(job.spec.id, job.adapter.game_id, job.document.sha256,
                             job.serialized_sha256, job.profile_sha256) for job in batch.jobs)
     journal = RunJournal.create(journal_folder, batch.review_token, jobs)

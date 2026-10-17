@@ -1,7 +1,7 @@
 """Procedural metadata fixtures; no game files, personal paths or account data."""
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import tempfile
 import threading
 import types
@@ -99,6 +99,22 @@ class DiscoveryTests(unittest.TestCase):
                    '"AppState" { "appid" "999999" "installdir" "Game" }')
         self.assertFalse(self.scan().installed_games)
         self.assertIn('manifest_identity_mismatch_skipped', self.scan().issues)
+
+    def test_installation_discovery_does_not_require_removed_pathlib_api(self):
+        self.installation()
+        with mock.patch.object(PureWindowsPath, 'is_reserved', create=True,
+                               side_effect=AttributeError('Removed in Python 3.15')):
+            result = self.scan()
+        self.assertEqual([item.game_id for item in result.installed_games], ['atelier_sophie'])
+
+    def test_reserved_windows_installation_names_are_rejected(self):
+        for name in ('CON', 'LPT\u00b9.txt', 'Game.', 'bad?name'):
+            with self.subTest(name=name):
+                self.write('steamapps/appmanifest_527270.acf',
+                           f'"AppState" {{ "appid" "527270" "installdir" "{name}" }}')
+                result = self.scan()
+                self.assertFalse(result.installed_games)
+                self.assertIn('invalid_install_directory_skipped', result.issues)
 
     def test_unrelated_apps_and_other_editions_never_matched_by_names(self):
         self.installation('999999', name='Atelier Sophie')
@@ -249,11 +265,81 @@ class DiscoveryTests(unittest.TestCase):
         result = self.scan(documents=docs, local_app_data=local)
         self.assertEqual({item.game_id for item in result.locations}, {'wo1', 'origins'})
 
+    def test_windows_known_documents_default_and_explicit_overrides(self):
+        redirected = self.folder / 'redirected-documents'
+        candidate = redirected / 'KOEI/WARRIORS OROCHI/Savedata'
+        candidate.mkdir(parents=True)
+        windows = types.SimpleNamespace(**vars(os))
+        windows.name = 'nt'
+        defaults = dict(steam_roots=(), local_app_data=self.home / 'AppData/Local',
+                        roaming_app_data=self.home / 'AppData/Roaming')
+        with mock.patch.object(discovery, 'os', windows), \
+                mock.patch.object(Path, 'home', return_value=self.home), \
+                mock.patch.object(discovery, '_windows_documents', return_value=redirected) as known, \
+                mock.patch.object(windows, 'open', side_effect=AssertionError('No gameplay reads')):
+            result = discovery.discover_saves(**defaults)
+            self.assertEqual([(item.game_id, item.path) for item in result.locations], [('wo1', candidate)])
+            known.assert_called_once_with()
+            known.reset_mock()
+            self.assertFalse(discovery.discover_saves(documents=self.home / 'Documents', **defaults).locations)
+            self.assertFalse(discovery.discover_saves(home=self.home, **defaults).locations)
+            known.assert_not_called()
+            cancel = threading.Event()
+            cancel.set()
+            known.side_effect = AssertionError('Cancelled discovery must not query native folders')
+            self.assertEqual(discovery.discover_saves(cancel=cancel, **defaults).stop_reason, 'cancelled')
+
+    def test_windows_known_documents_unavailable_falls_back_and_links_remain_rejected(self):
+        candidate = self.home / 'Documents/KOEI/WARRIORS OROCHI/Savedata'
+        candidate.mkdir(parents=True)
+        windows = types.SimpleNamespace(**vars(os))
+        windows.name = 'nt'
+        defaults = dict(steam_roots=(), local_app_data=self.home / 'AppData/Local',
+                        roaming_app_data=self.home / 'AppData/Roaming')
+        with mock.patch.object(discovery, 'os', windows), \
+                mock.patch.object(Path, 'home', return_value=self.home), \
+                mock.patch.object(discovery, '_windows_documents', return_value=None):
+            self.assertEqual(discovery.discover_saves(**defaults).locations[0].path, candidate)
+        alias = self.folder / 'documents-alias'
+        self.link(alias, self.home / 'Documents')
+        with mock.patch.object(discovery, 'os', windows), \
+                mock.patch.object(Path, 'home', return_value=self.home), \
+                mock.patch.object(discovery, '_windows_documents', return_value=alias):
+            result = discovery.discover_saves(**defaults)
+        self.assertFalse(result.locations)
+        self.assertIn('linked_or_nonordinary_path_skipped', result.issues)
+
+    def test_windows_known_documents_native_call_frees_allocated_path(self):
+        import ctypes
+        target = self.folder / 'redirected-documents'
+        storage = ctypes.create_unicode_buffer(str(target))
+        def resolve(folder_id, flags, token, output):
+            self.assertEqual(ctypes.string_at(folder_id, 16).hex(), 'd09ad3fd8f23af46adb46c85480369c7')
+            self.assertEqual(flags, 0)
+            self.assertIsNone(token)
+            ctypes.cast(output, ctypes.POINTER(ctypes.c_void_p))[0] = ctypes.addressof(storage)
+            return 0
+        shell = types.SimpleNamespace(SHGetKnownFolderPath=mock.Mock(side_effect=resolve))
+        ole = types.SimpleNamespace(CoTaskMemFree=mock.Mock())
+        with mock.patch.object(ctypes, 'WinDLL', create=True, side_effect=[shell, ole]):
+            self.assertEqual(discovery._windows_documents(), target)
+        self.assertEqual(ole.CoTaskMemFree.call_args.args[0].value, ctypes.addressof(storage))
+        def failed_resolve(*args):
+            resolve(*args)
+            return -2147024894
+        shell.SHGetKnownFolderPath.side_effect = failed_resolve
+        ole.CoTaskMemFree.reset_mock()
+        with mock.patch.object(ctypes, 'WinDLL', create=True, side_effect=[shell, ole]):
+            self.assertIsNone(discovery._windows_documents())
+        self.assertEqual(ole.CoTaskMemFree.call_args.args[0].value, ctypes.addressof(storage))
+        with mock.patch.object(ctypes, 'WinDLL', create=True, side_effect=OSError('Unavailable shell')):
+            self.assertIsNone(discovery._windows_documents())
+
     def test_proton_location_is_scoped_to_manifest_app(self):
         self.installation('363150')
-        expected = self.steam / 'steamapps/compatdata/363150/pfx/drive_c' / 'users' / 'steamuser' / 'Documents/KoeiTecmo/SAN13'
+        expected = self.steam / 'steamapps/compatdata/363150/pfx/drive_c' / 'users' / 'steamuser' / 'Documents/KoeiTecmo/San13'
         expected.mkdir(parents=True)
-        unrelated = self.steam / 'steamapps/compatdata/999999/pfx/drive_c' / 'users' / 'steamuser' / 'Documents/KoeiTecmo/SAN13'
+        unrelated = self.steam / 'steamapps/compatdata/999999/pfx/drive_c' / 'users' / 'steamuser' / 'Documents/KoeiTecmo/San13'
         unrelated.mkdir(parents=True)
         result = self.scan()
         self.assertEqual(len(result.locations), 1)

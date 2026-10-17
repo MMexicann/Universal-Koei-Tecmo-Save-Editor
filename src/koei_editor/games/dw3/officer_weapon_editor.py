@@ -317,7 +317,10 @@ def copy_bonus_changes(document,source_data_id,target_data_ids,changes=()):
                 if (skill['id'] in NORMAL_ITEMS and
                         skill['value'] not in allowed_values(target,skill['id']) and skill!=saved[index]):
                     raise SaveError('A source-only or above-limit weapon roll cannot be copied to this destination.')
-            skills=validate_skills(target,source['skills'])
+            # Saved-slot exceptions belong to the opened layout. A pending
+            # reduction must not prevent copying that exact layout back to
+            # unstage it; retain pending acquisition context for new uniques.
+            skills=validate_skills(_base_state(document,data_id,changes),source['skills'])
         except SaveError as error:
             raise SaveError(f'Weapon copy {data_id}: {error}') from error
         # Return equal assignments as well: the normal staging path removes

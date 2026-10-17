@@ -1523,8 +1523,8 @@
     },
     {
       "path": "src/koei_editor/games/dw3/officer_weapon_editor.py",
-      "bytes": 21879,
-      "sha256": "8061b6615f89aa6c39956eb3f27ca7c52ce6da661699057b6aa8474ac4f41b09"
+      "bytes": 22138,
+      "sha256": "e58a4882504fb75d06801752dba4a4213a9f40b9f8a65872581f26ec6704aa5e"
     },
     {
       "path": "src/koei_editor/games/dw3/progression_dashboard.py",
@@ -3903,8 +3903,8 @@
     },
     {
       "path": "tests/test_dw3_targeted_expansion.py",
-      "bytes": 17576,
-      "sha256": "8069277cc3dd8f264ea3dc60a0b68c00722a11ef0daa9335bf05b227c7465f35"
+      "bytes": 19713,
+      "sha256": "fdc8bad0c094430bfa7ff89c35bee8d94b9a0fddf1cb4d2322f9c3e84ba92f72"
     },
     {
       "path": "tests/test_dw4hyper_format.py",

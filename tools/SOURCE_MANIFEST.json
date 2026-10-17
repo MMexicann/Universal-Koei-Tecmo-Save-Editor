@@ -3638,8 +3638,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_discovery.py",
-      "bytes": 19775,
-      "sha256": "ff6886d7e917fa33849d6b99623b9f529a5caf0a434dafbe6eebe61a64b89a49"
+      "bytes": 22476,
+      "sha256": "b58230dab065275b505334867bec03d6cce12fed9a8178eef6c826cde4478cff"
     },
     {
       "path": "src/koei_editor/shared/save_doctor.py",
@@ -4883,8 +4883,8 @@
     },
     {
       "path": "tests/test_save_discovery.py",
-      "bytes": 17879,
-      "sha256": "87efe0abf71d6eb386d01c214e9643336d3220a15aa035e30a37c908f55de838"
+      "bytes": 23643,
+      "sha256": "3b1e077d0b7061778369a28eb82aab9206c7736788d8d45250d401d572f322a0"
     },
     {
       "path": "tests/test_save_doctor.py",

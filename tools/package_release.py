@@ -37,7 +37,8 @@ RUNTIME_GUIDES = ('docs/PROGRESSION_DASHBOARDS.md', 'docs/EDITOR_WORKSPACE.md', 
                   'docs/BATCH_CONVERSION.md', 'docs/DW6_CONVERSION.md', 'docs/DW6_PS3_FORMAT.md',
                   'docs/DW7XL_CONVERSION.md', 'docs/DW7XL_WEAPONS.md',
                   'docs/DW7XL_PS3.md', 'docs/NOA2_SWITCH_FORMAT.md',
-                  'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/FIELD_PINS_AND_REVIEWS.md')
+                  'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
+                  'docs/FIELD_PINS_AND_REVIEWS.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
 WINDOWS_DOCS = ('README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
@@ -46,7 +47,8 @@ WINDOWS_DOCS = ('README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_N
                 'docs/SAVE_CONVERSION.md', 'docs/SAVE_COMPARISON.md', 'docs/BATCH_CONVERSION.md',
                 'docs/DW6_CONVERSION.md', 'docs/DW6_PS3_FORMAT.md', 'docs/DW7XL_CONVERSION.md',
                 'docs/DW7XL_WEAPONS.md', 'docs/DW7XL_PS3.md', 'docs/NOA2_SWITCH_FORMAT.md',
-                'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/FIELD_PINS_AND_REVIEWS.md',
+                'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
+                'docs/FIELD_PINS_AND_REVIEWS.md',
                 'docs/FATAL_FRAME2_PS2_FORMAT.md', 'docs/TROY_PS3_FORMAT.md', 'docs/WARRIORS_V26_DEPTH.md',
                 'docs/BUILDING.md', 'docs/ARCHITECTURE.md', 'docs/VALIDATION.md', 'docs/EXPANSION_COVERAGE.md',
                 'docs/DYNASTY_RESEARCH.md', 'docs/OROCHI_RESEARCH.md', 'docs/SAMURAI_RESEARCH.md',

@@ -441,6 +441,27 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(self.root.minsize(), (650, 500))
         self.assertEqual(self.root.winfo_height(), 820)
 
+    def test_editor_fit_does_not_reenter_while_processing_queued_geometry_work(self):
+        editor = self.app.select_game('origins')
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        original_fit = self.app._fit_editor_actions
+        depth, maximum = 0, 0
+        def track_fit():
+            nonlocal depth, maximum
+            depth += 1
+            maximum = max(maximum, depth)
+            try:
+                original_fit()
+            finally:
+                depth -= 1
+        with patch.object(self.app, '_fit_editor_actions', track_fit):
+            self.app._schedule_editor_width()
+            self.root.after_idle(self.app._schedule_editor_width)
+            self.root.update()
+        self.assertEqual(maximum, 1)
+        self.assertGreater(editor.fields.winfo_height(), 220)
+
     def test_height_fit_converges_across_full_header_boundary_and_cancels_callbacks(self):
         self._use_native_scaling(2.0)
         editor = self.app.select_game('origins')

@@ -4,13 +4,20 @@ Source setup and contribution rules live in [CONTRIBUTING.md](../CONTRIBUTING.md
 and [AGENTS.md](../AGENTS.md). The application overview is in the
 [repository README](../README.md).
 
+The application's **Editing and Research** menu opens reusable presets and the
+Save Research Lab. For selective transfer, open the destination save in its editor
+first, then choose **Transfer from Save Copy...** from that menu.
+
 ## Development and releases
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
+- [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
+- [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
+- [Bulk edit validation and exact field navigation](EDITING_WORKFLOWS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
 
 - [v2.5.4 review-export filename fix](releases/v2.5.4.md)
@@ -23,6 +30,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Additional title qualification and source-only inspection](EXPANSION_CANDIDATES.md)
 
 - [Compare Saves: workspace, reports and interpretation](SAVE_COMPARISON.md)
+- [Save Research Lab: decoded differences, candidate hypotheses and Codex exports](SAVE_RESEARCH_LAB.md)
 
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
 - [DW7 XL PS3 to Definitive Edition PC: transfer scope and native proof](DW7XL_CONVERSION.md)

@@ -317,14 +317,19 @@
       "sha256": "11c3ff29405e263256718e2fd1e6d40b4b111f3f8069ff463f9a4559af0a46e0"
     },
     {
+      "path": "docs/EDITING_WORKFLOWS.md",
+      "bytes": 1059,
+      "sha256": "2aba3aafb2c0874a9abb82ffe21fc26100d9996ae76ab109e5efb3476f4b0ad0"
+    },
+    {
       "path": "docs/EDITOR_WORKSPACE.md",
       "bytes": 4863,
       "sha256": "d3c95d7adb248b33c2995fcc7b7d1f272df63e0fad73aa7fea2dd1c03db51631"
     },
     {
       "path": "docs/EDIT_PRESETS.md",
-      "bytes": 4901,
-      "sha256": "c23f478c3aa15e08478f7aa01aaf97ec0d8e6a9ed4b74bdf6e4c070ff32cb568"
+      "bytes": 5111,
+      "sha256": "faa187fae89686578f293ae5a63c44979e3aff9c398cdb02a49e012832a72168"
     },
     {
       "path": "docs/EXISTING_EDITORS.md",
@@ -633,8 +638,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13943,
-      "sha256": "e3a8086e8913d9c3a05b60e420db62c4c958f9bd1d5e52909a4560c160245885"
+      "bytes": 14537,
+      "sha256": "a9c4fe0fac290c931d94d867b3f6fb84a6c31d0db047812f35cfa0d1baf96b7f"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -660,6 +665,11 @@
       "path": "docs/REPOSITORY_METADATA.md",
       "bytes": 1636,
       "sha256": "5fcdd902c9a0a45b58ad79de78c00e4e168e54a2dc89b4f0b5b40db507c0f853"
+    },
+    {
+      "path": "docs/REUSABLE_PRESETS.md",
+      "bytes": 5273,
+      "sha256": "c5f0dda9562ac48442691ab0ee555224b7d6dc638cdfd0f26f5958e0ee9d1d6a"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -765,6 +775,16 @@
       "path": "docs/SAVE_LIBRARY.md",
       "bytes": 6106,
       "sha256": "2ee6452b6a4de518e1deadbdd30f1a281c785e050f3e0d409005ab0301fb6fe8"
+    },
+    {
+      "path": "docs/SAVE_RESEARCH_LAB.md",
+      "bytes": 3460,
+      "sha256": "e239a91e20f4d3a06823ff2f6cde79d15529830da3ce52c149905bed83c553c7"
+    },
+    {
+      "path": "docs/SAVE_TRANSFER.md",
+      "bytes": 5057,
+      "sha256": "fda0cb78e0bfd1a6ed23b1055f24796fc8ac4f6dcf162c8569fe806bb7d25c68"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -1118,8 +1138,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 43672,
-      "sha256": "dd802d03ab3622b1a808c5e3f5c11c3be16ee4d0b0f2a389a9ee72a59b485cc8"
+      "bytes": 46914,
+      "sha256": "efd5af843cc2734ef72c297b9cc8de02e1e2bbd29e2602cfbb53a787d8a8d25a"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3547,6 +3567,16 @@
       "sha256": "7fc0df7bdccc1e971b056fcfec60ba5cee0966754b9f77ced4aee98508d5b006"
     },
     {
+      "path": "src/koei_editor/shared/compatible_preset_gui.py",
+      "bytes": 36088,
+      "sha256": "3d0a606d2a0131b8fdf8a2cacfb59190879a25d2dc2b28aa82054f5c2040dfea"
+    },
+    {
+      "path": "src/koei_editor/shared/compatible_presets.py",
+      "bytes": 16603,
+      "sha256": "de7d76d7637f236a35bd3b17820659fd57bbe82f82de9842ff52f3cb9a8c8299"
+    },
+    {
       "path": "src/koei_editor/shared/conversion_gui.py",
       "bytes": 12974,
       "sha256": "0d551e57894d2f580aaef72271c5b686f0a1200a8de1fca42337fdcb003040e2"
@@ -3558,8 +3588,8 @@
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
-      "bytes": 16007,
-      "sha256": "f127bf9aab499d4442f0f635fdb0a1fdfb2400054d76e29a6f6f6ef83de43bb0"
+      "bytes": 17702,
+      "sha256": "d9f577e1af04af4fa6a7c33a2fbc5fe18ec6d43e86352a186a183fc7d27e6559"
     },
     {
       "path": "src/koei_editor/shared/experimental_limits.py",
@@ -3597,6 +3627,16 @@
       "sha256": "39a25528f9880d5181b954287a0f03a6069f3ee94a46908a5d4427aac7693bf2"
     },
     {
+      "path": "src/koei_editor/shared/preset_library.py",
+      "bytes": 4940,
+      "sha256": "968538b3c8e473ac5e9736d1abd0f033d84e28d2244366218796057a6498fd85"
+    },
+    {
+      "path": "src/koei_editor/shared/preset_portability.py",
+      "bytes": 3875,
+      "sha256": "75e6c218101ec4e54c8f4a1ea9c31c2c2bffb825ca87515c219d076215596431"
+    },
+    {
       "path": "src/koei_editor/shared/progression.py",
       "bytes": 2403,
       "sha256": "cef00681edc387b0926f09f2cc62614e4220123ee26ca2cfd0e419a8e4493dce"
@@ -3627,6 +3667,16 @@
       "sha256": "897917d9825f5a1f46ab1f41ae8931155293d14ebfcde3fe77ebf152cb649ccb"
     },
     {
+      "path": "src/koei_editor/shared/research_lab.py",
+      "bytes": 13289,
+      "sha256": "69b37464d910cee0de0fce7628a95c4d9c04e4662ae80b4688ba23f9d287c429"
+    },
+    {
+      "path": "src/koei_editor/shared/research_lab_gui.py",
+      "bytes": 19305,
+      "sha256": "f78c57e4ae0e9d36cd42105d522c94f3878ce5bee4e20208e949acd29e4cc3ad"
+    },
+    {
       "path": "src/koei_editor/shared/save_comparison.py",
       "bytes": 8208,
       "sha256": "079c45d949df50bc7a98b26fa88e8ef7e13acfcb26d5686f4f4f948b48587397"
@@ -3645,6 +3695,11 @@
       "path": "src/koei_editor/shared/save_safety.py",
       "bytes": 3288,
       "sha256": "4acbf81fdc14caebeb9f0c9e0f55c48b035d056ba7ac2e0b136c7927017ff8f3"
+    },
+    {
+      "path": "src/koei_editor/shared/save_transfer.py",
+      "bytes": 9830,
+      "sha256": "365728213eacffe82f11c4e5a0a7e7dadd3d7ab72252605d8e384d6c4c825872"
     },
     {
       "path": "src/koei_editor/shared/scalar_presentation.py",
@@ -3667,14 +3722,19 @@
       "sha256": "f1d15aeb006e41d86fc43a3a9b8c3536207f81530e9e3a94f0bd88da6da0f9df"
     },
     {
+      "path": "src/koei_editor/shared/transfer_gui.py",
+      "bytes": 12716,
+      "sha256": "b0b5503076c252a15b10904febf88d77b6d4e85ec2868c8b6718d951a26c25b9"
+    },
+    {
       "path": "src/koei_editor/shared/verified_editor.py",
       "bytes": 21795,
       "sha256": "aa506166ce7cbe91dfa4f54dd14ddd11855c36b2d8c7d5966ec2295b9dff3b77"
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 56586,
-      "sha256": "8284ae9bb592f34432f55aad829c51da140a675e87718ed8b26fae1c95bc3506"
+      "bytes": 60231,
+      "sha256": "d8407f38a752b005947be779dbbd1ac66f18d6d8340bce803bd28a237e13a267"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -3825,6 +3885,16 @@
       "path": "tests/test_compatibility_v034.py",
       "bytes": 11541,
       "sha256": "8aea46a98f76daeb10a06bc74f718e9e80dd10ce3372a44246283caffa120d80"
+    },
+    {
+      "path": "tests/test_compatible_presets.py",
+      "bytes": 18905,
+      "sha256": "f4514e160d6583640183b935a7f20cbb148689114520d155d2da616b913d09bb"
+    },
+    {
+      "path": "tests/test_compatible_presets_gui.py",
+      "bytes": 16210,
+      "sha256": "72ffc6383e5ff11c784304972fdf8a9193d0fccb2e7a098485a0db96edecdcbc"
     },
     {
       "path": "tests/test_console_context_regressions.py",
@@ -4113,13 +4183,18 @@
     },
     {
       "path": "tests/test_edit_presets.py",
-      "bytes": 23409,
-      "sha256": "38d737a13cb184255a470079c028ee23996b3b4686ae37275179f564c665ff8e"
+      "bytes": 24783,
+      "sha256": "57c242ed98d38df1ed3f585c2d5155142cb5027192d861f369d3c6837a28121f"
     },
     {
       "path": "tests/test_edit_presets_gui.py",
       "bytes": 14853,
       "sha256": "c4295f8541120ab4bfa4d0e85622590ad4b6dff9b5c1f5aeaac06c361ebd5d7a"
+    },
+    {
+      "path": "tests/test_editing_tools_application.py",
+      "bytes": 4274,
+      "sha256": "140bb717e4ffaac12d36f85c2c458321127185fadd1aef80fac41ea250de0a7e"
     },
     {
       "path": "tests/test_editor.py",
@@ -4732,6 +4807,16 @@
       "sha256": "67a6388776f081e120dd52e4b5bbbdf8a7ceb72f38b31588b4e6842e6b067770"
     },
     {
+      "path": "tests/test_research_lab.py",
+      "bytes": 9725,
+      "sha256": "ee918d296baff7fc486c6d964265a02f0390892434ed7e6af45f9d9a5e427936"
+    },
+    {
+      "path": "tests/test_research_lab_gui.py",
+      "bytes": 8411,
+      "sha256": "554ae4fa8ee4db5656f6d27bdd954c0671b97b8e1159aff0643b54e56f1a14c4"
+    },
+    {
       "path": "tests/test_retro_profile_review.py",
       "bytes": 6143,
       "sha256": "873bedcc96a68b502c912c2282837ab58e694df20fee014588e758bc3270fef5"
@@ -4877,6 +4962,11 @@
       "sha256": "5133faa3d2e1dafbba5566f25e4869f387ee6efe3c85faae65e09c84b2608d47"
     },
     {
+      "path": "tests/test_save_transfer.py",
+      "bytes": 11344,
+      "sha256": "1a64788e1094051acb821679aabde6e4d25afcd0204bcd61339af595b159edd4"
+    },
+    {
       "path": "tests/test_save_variants.py",
       "bytes": 16469,
       "sha256": "0eb4c315896ea76a6b1eab21b585ca4ffec2d51b59a61ebed53b2682e4bba8aa"
@@ -4885,6 +4975,11 @@
       "path": "tests/test_scalar_bulk_actions.py",
       "bytes": 8470,
       "sha256": "865775858bf145b9ef84619e850c3a6fc39b40b56fe787a731f892566608521b"
+    },
+    {
+      "path": "tests/test_scalar_edit_safety.py",
+      "bytes": 4633,
+      "sha256": "bc5b1adf48327d7d088c483e096c54b1bab95a31d9c79b7ad6671b4d5b257023"
     },
     {
       "path": "tests/test_scalar_workspace_gui.py",
@@ -5080,6 +5175,11 @@
       "path": "tests/test_totori_dx_ps4_candidate.py",
       "bytes": 10480,
       "sha256": "daf9e1746cf5f43b45f36e7d6d98786ffd7ea7f5d7d4676553d53cd9193da01d"
+    },
+    {
+      "path": "tests/test_transfer_gui.py",
+      "bytes": 6639,
+      "sha256": "9d08a2dc6f60661de5621f2cfa0c149413babb85c6617a3c242e91f56d63bc7a"
     },
     {
       "path": "tests/test_trinity_ps3.py",

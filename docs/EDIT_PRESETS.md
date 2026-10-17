@@ -1,5 +1,9 @@
 # Reviewed edit presets
 
+For selected fixed-resource assignments on a different compatible save, see
+[Reusable editing presets](REUSABLE_PRESETS.md). The source-bound format and
+workflow described here remain available and unchanged.
+
 **Edit Presets** lets you keep named plans for an original save, such as different
 officer builds or resource choices. Export your staged fields once, then import
 the plan when you reopen that original copy. Importing a plan stages edits only;

@@ -123,6 +123,8 @@ class HelpCenterIntegrationTests(unittest.TestCase):
         self.assertIn('EnglishWorkflowMarker', self.center.guide_detail.get('1.0', 'end'))
         self.assertTrue(self.center.open_plugin_command(commands[0][0]))
         self.assertIn('EnglishCommunityMarker', panel.preview.get('1.0', 'end'))
+        panel.tree.selection_set('0')
+        panel._select()
         panel.disable_selected()
         self.assertEqual(self.center.plugin_commands(), ())
         self.assertFalse(self.center.article_list.get_children())

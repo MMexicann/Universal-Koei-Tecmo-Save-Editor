@@ -185,6 +185,9 @@ class PluginPanel:
     def _select(self, _event=None):
         selection = self.tree.selection()
         if not selection:
+            self._selected = None
+            self.reviewed.set(False)
+            self._buttons()
             return
         index = int(selection[0])
         self._selected = index
@@ -211,6 +214,20 @@ class PluginPanel:
         self.preview.delete('1.0', 'end')
         self.preview.insert('1.0', content)
         self.preview.configure(state='disabled')
+
+    def show_content(self, item):
+        """Show inert command content without retaining manifest approval controls.
+
+        A command may belong to a different plugin from the selected candidate.
+        Its text must never replace a manifest preview while approval still
+        refers to that candidate. Queued selection events also see no selection.
+        """
+        self.tree.selection_remove(*self.tree.selection())
+        self._selected = None
+        self.reviewed.set(False)
+        self._buttons()
+        self._show(_LABELS[self.language]['community'] + '\n\n' + contribution_text(item))
+        self.preview.yview_moveto(0)
 
     def _buttons(self):
         entry = self.catalog.entries[self._selected] if self._selected is not None else None

@@ -69,7 +69,7 @@
     {
       "path": "docs/APPLICATION_SHELL.md",
       "bytes": 4051,
-      "sha256": "8c288f161b66317747ad89f3b77e4c68c61843b6f2fd2a45b00917e7580edc38"
+      "sha256": "8ced8904b01f655336909a59f74405b38e90b30c6426c2305aa9a523ad8fd0f2"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -3613,8 +3613,8 @@
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
-      "bytes": 16133,
-      "sha256": "b226efa22f8c92be7af5be080180f643557e02b9b3b712882e41ac5d2842f334"
+      "bytes": 16780,
+      "sha256": "169b1b43f7fee7033a523c4d9f63ec05ba1479a2ed240fffa1f07b9c6dcd8b54"
     },
     {
       "path": "src/koei_editor/shared/help_content.py",
@@ -3648,8 +3648,8 @@
     },
     {
       "path": "src/koei_editor/shared/plugin_gui.py",
-      "bytes": 12668,
-      "sha256": "dfcb9a8792f338242a1b8a3ea6279f559d0b0757690e989cdb4b6b9467ceacaa"
+      "bytes": 13410,
+      "sha256": "63956c839fb75065e9d97f7c6467ff255450c3289d11ac093922c7c99a9d5363"
     },
     {
       "path": "src/koei_editor/shared/preferences.py",
@@ -3717,9 +3717,14 @@
       "sha256": "c121d3fc32ad8bdc1b52fb267a95f398acb7883da2683fc9132feabfa04eb6c7"
     },
     {
+      "path": "src/koei_editor/shared/scrollable_panel.py",
+      "bytes": 5250,
+      "sha256": "75d811ee71e1a630ab9ba0a7816bc3273ca2bb0cefbd1df583a9cae350881497"
+    },
+    {
       "path": "src/koei_editor/shared/shell_preferences.py",
       "bytes": 4055,
-      "sha256": "6b53cbb46e81e9c27612d235b96c631f622ea697f7cfe63c17487cc6ee65ba31"
+      "sha256": "3e923fc4089084a7330cc24962786ba012dac512e6976048f523c4e59e4ba21e"
     },
     {
       "path": "src/koei_editor/shared/steam_owner.py",
@@ -3793,8 +3798,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 11529,
-      "sha256": "10fda049d8bcf1139f3b38490a50cd30a8529a2916a6c8fb3bb4b62cb9f92bad"
+      "bytes": 14213,
+      "sha256": "3d57c84afc7ed3863c8d52c00535e22e89d802eb12177236cefe409fe8e4e44c"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -3908,8 +3913,8 @@
     },
     {
       "path": "tests/test_community_plugins_gui.py",
-      "bytes": 5325,
-      "sha256": "1d843cc01793d0e699a7bbae3968a84a822119b0d436a1d6bd3d3623ff2441de"
+      "bytes": 7207,
+      "sha256": "5205a5d1fa4ec7673e050f0aeb6e7b75c973eb296b78ff8ccc1585176e64defa"
     },
     {
       "path": "tests/test_companion_backup_retention.py",
@@ -4388,8 +4393,13 @@
     },
     {
       "path": "tests/test_help_center_integration.py",
-      "bytes": 9246,
-      "sha256": "b1abd246a6fb9609bd0d22822cf1a8038a0eebce17d2882dbcbc0b302d5249ba"
+      "bytes": 9308,
+      "sha256": "2299c078127ef01c2f59ab6f08facdf731e37d74ae4c669f3604e1f729605e67"
+    },
+    {
+      "path": "tests/test_help_panel_scrolling.py",
+      "bytes": 4055,
+      "sha256": "dc136b8feb7ec8330457e6cabfbceaa21e00bdf995e81dcc1ca6238cf1c57ef4"
     },
     {
       "path": "tests/test_hyrule_audit.py",
@@ -5438,8 +5448,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32576,
-      "sha256": "950a205e04fecfe69d8523f1f3d153439a1303e6666f9b14bd6e61ae90f8a89a"
+      "bytes": 32560,
+      "sha256": "a21fe12da0d1f3112ad69567eecdee0d8b49d6874a1d61911fd2f6548b3d4297"
     },
     {
       "path": "tools/refresh_manifest.py",

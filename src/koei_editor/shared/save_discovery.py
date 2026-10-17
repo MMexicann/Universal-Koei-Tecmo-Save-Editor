@@ -26,6 +26,19 @@ class SteamMapping:
 # Reviewed original-PC app identities, not filename guesses or new support.
 # A mapped installation still may contain a foreign/unsupported save revision.
 STEAM_MAPPINGS = (
+    SteamMapping('278080', 'dw8xl', 'docs/DW8_ORIGINAL_PC_SCOPE.md'),
+    SteamMapping('968790', 'dw7xl', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('322520', 'dw8e', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('1341200', 'dw9emp', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('331600', 'pw3', 'docs/PW3_COVERAGE.md'),
+    SteamMapping('2384580', 'origins', 'docs/ORIGINS_REQUEST_STATUS.md'),
+    SteamMapping('2719200', 'samurai4dx', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('1591530', 'samurai5_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('1879330', 'wo3u', 'docs/OROCHI_RESEARCH.md'),
+    SteamMapping('831560', 'wo4_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('610190', 'stars', 'docs/STARS_WO4_RESEARCH.md'),
+    SteamMapping('1382330', 'p5strikers_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
+    SteamMapping('3178350', 'abyss_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
     SteamMapping('527270', 'atelier_sophie', 'docs/SOPHIE_PC_FORMAT.md'),
     SteamMapping('527290', 'atelier_firis_pc', 'docs/FIRIS_PC_FORMAT.md'),
     SteamMapping('1121560', 'atelier_ryza_pc', 'docs/RYZA_PC_FORMAT.md'),
@@ -44,6 +57,28 @@ class NativeMapping:
 
 
 NATIVE_MAPPINGS = (
+    NativeMapping('dw4hyper', 'documents', 'KOEI/Dynasty Warriors 4 Hyper/Savedata',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('dw5special', 'documents', 'KOEI/Shin Sangokumusou 4 Special/Savedata',
+                  'docs/DW5_SPECIAL.md'),
+    NativeMapping('dw6', 'documents', 'KOEI/Dynasty Warriors 6/Savedata',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('dw7xl', 'documents', 'KoeiTecmo/Dynasty Warriors 7 DX/Savedata',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('dw8e', 'documents', 'KoeiTecmo/Dynasty Warriors 8 Empires/Savedata',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('dw9emp', 'documents', 'KoeiTecmo/Dynasty Warriors 9 Empires',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('sw4ii', 'documents', 'KoeiTecmo/SAMURAI WARRIORS 4-II/Savedata',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('wo3u', 'documents', 'KoeiTecmo/WARRIORS OROCHI 3 Ultimate/SAVEDATA',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('stars', 'documents', 'KoeiTecmo/WARRIORS ALL-STARS/Savedata',
+                  'docs/STARS_WO4_RESEARCH.md'),
+    NativeMapping('pw4', 'local_app_data', 'BANDAI NAMCO Entertainment/One Piece Pirate Warriors 4/Saved/SaveGames',
+                  'docs/PC_RESEARCH_RETRY.md'),
+    NativeMapping('p5strikers_pc', 'roaming_app_data', 'SEGA/Steam/P5S',
+                  'docs/PC_RESEARCH_RETRY.md'),
     NativeMapping('pw3', 'documents', 'One Piece Pirate Warriors 3/SAVEDATA',
                   'docs/KOEI_FORMATS.md'),
     NativeMapping('wo1', 'documents', 'KOEI/WARRIORS OROCHI/Savedata',
@@ -357,8 +392,9 @@ class _Scanner:
             self.locations.append(SaveLocation(game_id, path, source=source, evidence=evidence))
             self.seen_locations.add(key)
 
-    def native(self, documents, local_app_data, *, game_id=None, proton=False):
-        bases = dict(documents=documents, local_app_data=local_app_data)
+    def native(self, documents, local_app_data, roaming_app_data, *, game_id=None, proton=False):
+        bases = dict(documents=documents, local_app_data=local_app_data,
+                     roaming_app_data=roaming_app_data)
         for mapping in NATIVE_MAPPINGS:
             self.check()
             base = bases[mapping.base]
@@ -408,7 +444,7 @@ class _Scanner:
             self.installed.append(InstalledGame(mapping.game_id, mapping.app_id, installation,
                                                evidence=mapping.evidence))
             user = root / f'steamapps/compatdata/{mapping.app_id}/pfx/drive_c' / 'users' / 'steamuser'
-            self.native(user / 'Documents', user / 'AppData/Local',
+            self.native(user / 'Documents', user / 'AppData/Local', user / 'AppData/Roaming',
                         game_id=mapping.game_id, proton=True)
         # App-scoped remote directories are candidates even when an installation
         # was removed. Never enumerate remote contents or read Cloud metadata.
@@ -420,31 +456,37 @@ class _Scanner:
                                   'steam_userdata', mapping.evidence)
 
 
+def _windows_roots():
+    paths = []
+    for variable in ('PROGRAMFILES(X86)', 'PROGRAMFILES', 'LOCALAPPDATA'):
+        if os.environ.get(variable):
+            paths.append(Path(os.environ[variable]) / 'Steam')
+    # Read only the Steam installation keys. Never inspect account/login data.
+    try:
+        import winreg
+        for hive, key, value in ((winreg.HKEY_CURRENT_USER, r'Software\Valve\Steam', 'SteamPath'),
+                                 (winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Valve\Steam', 'InstallPath')):
+            try:
+                with winreg.OpenKey(hive, key, 0, winreg.KEY_READ) as handle:
+                    path, kind = winreg.QueryValueEx(handle, value)
+                if kind == winreg.REG_SZ and isinstance(path, str) and path:
+                    paths.append(Path(path))
+            except OSError:
+                pass
+    except ImportError:
+        pass
+    return paths
+
+
 def _default_roots(home):
     paths = [home / '.local/share/Steam', home / '.steam/steam', home / '.steam/root']
     if os.name == 'nt':
-        for variable in ('PROGRAMFILES(X86)', 'PROGRAMFILES', 'LOCALAPPDATA'):
-            if os.environ.get(variable):
-                paths.append(Path(os.environ[variable]) / 'Steam')
-        # Read only the Steam installation keys. Never inspect account/login data.
-        try:
-            import winreg
-            for hive, key, value in ((winreg.HKEY_CURRENT_USER, r'Software\Valve\Steam', 'SteamPath'),
-                                     (winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Valve\Steam', 'InstallPath')):
-                try:
-                    with winreg.OpenKey(hive, key, 0, winreg.KEY_READ) as handle:
-                        path, kind = winreg.QueryValueEx(handle, value)
-                    if kind == winreg.REG_SZ and isinstance(path, str) and path:
-                        paths.append(Path(path))
-                except OSError:
-                    pass
-        except ImportError:
-            pass
+        paths.extend(_windows_roots())
     return paths
 
 
 def discover_saves(*, steam_roots=None, home=None, documents=None, local_app_data=None,
-                   limits=DiscoveryLimits(), cancel=None):
+                   roaming_app_data=None, limits=DiscoveryLimits(), cancel=None):
     """Discover metadata in fixed known locations, without modifying any files.
 
     Explicit ``steam_roots=()`` disables Steam discovery. Missing paths are normal.
@@ -458,6 +500,8 @@ def discover_saves(*, steam_roots=None, home=None, documents=None, local_app_dat
     documents = home / 'Documents' if documents is None else Path(documents)
     if local_app_data is None:
         local_app_data = Path(os.environ['LOCALAPPDATA']) if os.name == 'nt' and os.environ.get('LOCALAPPDATA') else home / 'AppData/Local'
+    if roaming_app_data is None:
+        roaming_app_data = Path(os.environ['APPDATA']) if os.name == 'nt' and os.environ.get('APPDATA') else home / 'AppData/Roaming'
     scanner = _Scanner(limits, cancel)
     registered = {game.id for game in GAMES}
     mapped = tuple(sorted({item.game_id for item in (*STEAM_MAPPINGS, *NATIVE_MAPPINGS)} & registered))
@@ -466,7 +510,7 @@ def discover_saves(*, steam_roots=None, home=None, documents=None, local_app_dat
         raise SaveError('A discovery mapping is not a registered game/platform.')
     try:
         scanner.check()
-        scanner.native(documents, local_app_data)
+        scanner.native(documents, local_app_data, roaming_app_data)
         roots = _default_roots(home) if steam_roots is None else steam_roots
         for index, root in enumerate(roots):
             scanner.check()

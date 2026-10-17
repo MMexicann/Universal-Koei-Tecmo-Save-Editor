@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import tempfile
 import threading
+import types
 import unittest
 from unittest import mock
 
@@ -106,6 +107,33 @@ class DiscoveryTests(unittest.TestCase):
         self.assertFalse(result.locations)
         self.assertEqual(result.metadata_bytes, 0)
 
+    def test_all_reviewed_steam_mappings_detect_exact_registered_pc_profiles(self):
+        registered = {game.id: game for game in GAMES}
+        for mapping in discovery.STEAM_MAPPINGS:
+            self.installation(mapping.app_id, name='Game-' + mapping.app_id)
+            self.remote(mapping.app_id)
+            self.assertEqual(registered[mapping.game_id].platform, 'Windows PC')
+            self.assertTrue(Path(mapping.evidence).is_file())
+        result = self.scan()
+        expected = {(item.game_id, item.app_id) for item in discovery.STEAM_MAPPINGS}
+        self.assertGreaterEqual(len(expected), 19)
+        self.assertEqual({(item.game_id, item.app_id) for item in result.installed_games}, expected)
+        self.assertEqual({item.game_id for item in result.locations}, {item[0] for item in expected})
+        self.assertEqual(result.stop_reason, 'complete')
+
+    def test_research_only_and_console_pc_store_ids_are_excluded(self):
+        # Existing console support and PC research documents do not qualify a
+        # corresponding installed Windows profile or justify parser fallback.
+        excluded = ('936160', '936190', '936180', '502280', '449800', '601050',
+                    '730310', '595740', '410850', '574050', '1902690', '1716120')
+        for app_id in excluded:
+            self.installation(app_id, name='Unregistered-' + app_id)
+            self.remote(app_id)
+        result = self.scan()
+        self.assertFalse(result.installed_games)
+        self.assertFalse(result.locations)
+        self.assertEqual(result.metadata_bytes, 0)
+
     def test_malformed_vdf_does_not_hide_other_valid_metadata(self):
         self.write('steamapps/libraryfolders.vdf', '"libraryfolders" {')
         self.installation()
@@ -156,14 +184,60 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_native_documents_and_local_data_locations(self):
         expected = []
+        bases = dict(documents=self.home / 'Documents', local_app_data=self.home / 'AppData/Local',
+                     roaming_app_data=self.home / 'AppData/Roaming')
         for item in discovery.NATIVE_MAPPINGS:
-            base = self.home / ('Documents' if item.base == 'documents' else 'AppData/Local')
+            base = bases[item.base]
             path = base / item.relative
             path.mkdir(parents=True, exist_ok=True)
             expected.append((item.game_id, path))
         result = self.scan(steam_roots=())
         self.assertEqual([(item.game_id, item.path) for item in result.locations], expected)
         self.assertTrue(all(item.source == 'reviewed_native_location' for item in result.locations))
+
+    def test_roaming_account_scoped_parent_is_reported_without_listing_or_reading_accounts(self):
+        roaming = self.folder / 'redirected-roaming'
+        account = roaming / 'SEGA/Steam/P5S/private-account'
+        account.mkdir(parents=True)
+        (account / 'SAVEDATA.BIN').write_bytes(b'private gameplay bytes')
+        with mock.patch.object(discovery.os, 'scandir', side_effect=AssertionError('No account traversal')), \
+                mock.patch.object(discovery.os, 'open', side_effect=AssertionError('No gameplay reads')):
+            result = self.scan(steam_roots=(), roaming_app_data=roaming)
+        self.assertEqual([(item.game_id, item.path) for item in result.locations],
+                         [('p5strikers_pc', roaming / 'SEGA/Steam/P5S')])
+        self.assertNotIn('private-account', json.dumps(discovery.report(result)))
+
+    def test_windows_installation_defaults_use_only_readonly_registry_keys_and_environment(self):
+        registry = types.SimpleNamespace(HKEY_CURRENT_USER=1, HKEY_LOCAL_MACHINE=2,
+                                         KEY_READ=0x20019, REG_SZ=1)
+        handle = mock.MagicMock()
+        handle.__enter__.return_value = handle
+        registry.OpenKey = mock.Mock(return_value=handle)
+        registry.QueryValueEx = mock.Mock(side_effect=[(str(self.steam), 1),
+                                                       (str(self.folder / 'machine-steam'), 1)])
+        environment = {'PROGRAMFILES(X86)': str(self.folder / 'program-files-x86'),
+                       'PROGRAMFILES': str(self.folder / 'program-files'),
+                       'LOCALAPPDATA': str(self.folder / 'local-data')}
+        with mock.patch.dict('sys.modules', {'winreg': registry}), \
+                mock.patch.dict(os.environ, environment, clear=True):
+            roots = discovery._windows_roots()
+        self.assertEqual(roots, [Path(environment[name]) / 'Steam' for name in environment]
+                         + [self.steam, self.folder / 'machine-steam'])
+        self.assertEqual(registry.OpenKey.call_args_list,
+                         [mock.call(1, r'Software\Valve\Steam', 0, registry.KEY_READ),
+                          mock.call(2, r'SOFTWARE\WOW6432Node\Valve\Steam', 0, registry.KEY_READ)])
+        self.assertEqual(registry.QueryValueEx.call_args_list,
+                         [mock.call(handle, 'SteamPath'), mock.call(handle, 'InstallPath')])
+
+    def test_windows_missing_registry_and_wrong_value_types_are_safe(self):
+        registry = types.SimpleNamespace(HKEY_CURRENT_USER=1, HKEY_LOCAL_MACHINE=2,
+                                         KEY_READ=1, REG_SZ=1)
+        handle = mock.MagicMock()
+        registry.OpenKey = mock.Mock(side_effect=[handle, OSError('Missing machine installation')])
+        registry.QueryValueEx = mock.Mock(return_value=(str(self.steam), 7))
+        with mock.patch.dict('sys.modules', {'winreg': registry}), \
+                mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(discovery._windows_roots(), [])
 
     def test_explicit_redirected_documents_and_local_data(self):
         docs = self.folder / 'redirected-documents'
@@ -183,6 +257,23 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(len(result.locations), 1)
         self.assertEqual(result.locations[0].path, expected)
         self.assertEqual(result.locations[0].source, 'proton_reviewed_location')
+
+    def test_all_reviewed_proton_documents_local_and_roaming_mappings(self):
+        expected = set()
+        for steam in discovery.STEAM_MAPPINGS:
+            self.installation(steam.app_id, name='Proton-' + steam.app_id)
+            user = self.steam / f'steamapps/compatdata/{steam.app_id}/pfx/drive_c' / 'users' / 'steamuser'
+            bases = dict(documents=user / 'Documents', local_app_data=user / 'AppData/Local',
+                         roaming_app_data=user / 'AppData/Roaming')
+            for mapping in discovery.NATIVE_MAPPINGS:
+                if mapping.game_id == steam.game_id:
+                    path = bases[mapping.base] / mapping.relative
+                    path.mkdir(parents=True)
+                    expected.add((mapping.game_id, path))
+        result = self.scan()
+        self.assertGreaterEqual(len(expected), 10)
+        self.assertEqual({(item.game_id, item.path) for item in result.locations}, expected)
+        self.assertTrue(all(item.source == 'proton_reviewed_location' for item in result.locations))
 
     def test_discovery_never_opens_gameplay_or_cloud_account_files(self):
         self.installation()

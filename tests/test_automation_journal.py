@@ -3,6 +3,7 @@
 from dataclasses import replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -278,6 +279,53 @@ class AutomationJournalTests(unittest.TestCase):
             (self.path / path.name).write_bytes(path.read_bytes())
         with self.assertRaises(SaveError):
             run.intent("first")
+
+    @unittest.skipUnless(hasattr(os, 'mkfifo') and hasattr(os, 'O_NONBLOCK'),
+                         'POSIX FIFO replacement requires nonblocking descriptor support')
+    def test_regular_event_replaced_by_fifo_rejects_before_read_without_waiting_for_writer(self):
+        run = self.create()
+        path = self.path / '000000.json'
+        original_open, original_fdopen = os.open, os.fdopen
+        descriptors, reads = [], []
+
+        def replace_before_open(candidate, flags, *args, **kwargs):
+            if Path(candidate) == path:
+                path.unlink()
+                os.mkfifo(path)
+                # Fail promptly on a regression instead of hanging the suite
+                # while the blocking open waits for a nonexistent FIFO writer.
+                self.assertTrue(flags & os.O_NONBLOCK)
+            descriptor = original_open(candidate, flags, *args, **kwargs)
+            descriptors.append(descriptor)
+            return descriptor
+
+        class UnreadableStream:
+            def __init__(self, descriptor, mode):
+                self.stream = original_fdopen(descriptor, mode)
+
+            def __enter__(self):
+                self.stream.__enter__()
+                return self
+
+            def __exit__(self, *args):
+                return self.stream.__exit__(*args)
+
+            def fileno(self):
+                return self.stream.fileno()
+
+            def read(self, *_args):
+                reads.append(True)
+                raise AssertionError('Nonregular descriptors must be rejected before reading.')
+
+        with (patch.object(journal.os, 'open', side_effect=replace_before_open),
+              patch.object(journal.os, 'fdopen', UnreadableStream)):
+            with self.assertRaises(SaveError):
+                run.inspect(lambda _key: self.fail('Invalid metadata must not reach the native verifier.'))
+        self.assertEqual(reads, [])
+        self.assertEqual(len(descriptors), 1)
+        with self.assertRaises(OSError):
+            os.fstat(descriptors[0])
+        self.assertTrue(path.exists())  # Interrupted metadata is retained.
 
     def test_concurrent_append_is_detected_and_original_events_remain(self):
         first = self.create()

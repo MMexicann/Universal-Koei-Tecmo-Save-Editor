@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import re
 import shutil
 from types import SimpleNamespace
 import unittest
@@ -246,6 +247,12 @@ class PackagingTests(unittest.TestCase):
             for source in release.RUNTIME_GUIDES:
                 target = 'UniversalKoeiTecmoSaveEditor-v1.0/_internal/guides/' + source.removeprefix('docs/')
                 self.assertEqual(archive.read(target), self.sources[source])
+            # Follow the shipped guide's local links so a new workflow guide
+            # cannot be documented yet omitted from the actual archive.
+            text = (PROJECT / 'docs/EDIT_PRESETS.md').read_text(encoding='utf-8')
+            for linked in re.findall(r'\]\(([^():]+\.md)\)', text):
+                target = 'UniversalKoeiTecmoSaveEditor-v1.0/_internal/guides/' + linked
+                self.assertIn(target, archive.namelist(), f'Missing linked user guide: {linked}')
             self.assertFalse(any('/src/' in name or '/AGENTS.md' in name for name in archive.namelist()))
 
     def test_missing_changed_and_unreviewed_guides_fail_runtime_validation(self):

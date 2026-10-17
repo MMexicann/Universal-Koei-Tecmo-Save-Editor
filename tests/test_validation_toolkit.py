@@ -169,14 +169,16 @@ class ValidationToolkitTests(unittest.TestCase):
                 second.symlink_to(first)
             except (OSError, NotImplementedError) as error:
                 self.skipTest(f'Symbolic links unavailable: {type(error).__name__}')
+            # Windows may return native extended-length target spellings.
+            # Compare the exact captured tokens to detect mutation portably.
+            original_targets = first.readlink(), second.readlink()
             with patch.object(toolkit.os, 'open', side_effect=AssertionError('Linked sources must not be opened')):
                 for source in (first, second):
                     with self.subTest(source=source.name), self.assertRaises(ReportError) as caught:
                         ValidationRecord.load(source)
                     self.assertNotIn(folder, str(caught.exception))
                     self.assertNotIn('private-', str(caught.exception))
-            self.assertEqual(first.readlink(), second)
-            self.assertEqual(second.readlink(), first)
+            self.assertEqual((first.readlink(), second.readlink()), original_targets)
 
     def test_path_resolution_runtime_error_uses_the_bounded_report_error_contract(self):
         with patch.object(toolkit, '_checked_path', side_effect=RuntimeError('private resolution context')), \

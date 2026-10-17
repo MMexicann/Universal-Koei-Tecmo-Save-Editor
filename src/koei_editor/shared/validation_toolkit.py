@@ -6,10 +6,12 @@ to in-game evidence by this workflow.
 """
 from dataclasses import dataclass, replace
 import json
+import os
+import stat
 
 from koei_editor.game_registry import GAMES
 from koei_editor.shared.copy_storage import atomic_new
-from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.save_library import _checked_path, _handle_binding, _identity
 
 
 MAX_REPORT_BYTES = 16384
@@ -75,9 +77,27 @@ def strict_json(data):
 
 
 def read_report(path):
-    """Read at most the limit plus one byte; never return a path in report data."""
-    with safe_path(path).open('rb') as stream:
-        return stream.read(MAX_REPORT_BYTES + 1)
+    """Read a bounded, unchanged ordinary file; special/linked sources fail closed."""
+    try:
+        source, before = _checked_path(path)
+        if not 0 < before.st_size <= MAX_REPORT_BYTES:
+            raise ReportError('Report source exceeds the bounded size limit.')
+        flags = (os.O_RDONLY | getattr(os, 'O_BINARY', 0)
+                 | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+        descriptor = os.open(source, flags)
+        with os.fdopen(descriptor, 'rb') as stream:
+            opened = os.fstat(stream.fileno())
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1
+                    or _handle_binding(opened) != _handle_binding(before)):
+                raise ReportError('Report source changed before reading.')
+            raw = stream.read(MAX_REPORT_BYTES + 1)
+            _, after = _checked_path(source)
+            if (len(raw) != before.st_size or _identity(after) != _identity(before)
+                    or _identity(os.fstat(stream.fileno())) != _identity(opened)):
+                raise ReportError('Report source changed during reading.')
+            return raw
+    except (OSError, ValueError) as error:
+        raise ReportError('Report requires an unchanged ordinary, bounded local file.') from error
 
 
 @dataclass(frozen=True)

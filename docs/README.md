@@ -32,6 +32,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
+- [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)

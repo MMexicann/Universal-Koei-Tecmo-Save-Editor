@@ -16,6 +16,7 @@ PACKAGE_ROOT = 'src/koei_editor'
 ROOT_FILES = {'.gitignore', '.gitattributes', 'LICENSE', 'README.md', 'AGENTS.md', 'pyproject.toml', 'launch.pyw', 'CONTRIBUTING.md'}
 TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_release.py',
               'tools/scan_release.ps1', 'tools/benchmark_application.py',
+              'tools/check_community_plugins.py', 'tools/community_plugin_template/example.plugin.json',
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
               'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
               'tools/requirements/build.txt', 'tools/requirements/dev.txt'}

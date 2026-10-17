@@ -75,8 +75,11 @@ destination editor's existing acknowledgement and normal save confirmation.
 
 Named presets are atomic, immutable JSON documents under the application's
 configuration directory in `editing-presets`. Content hashes identify them;
-changed or invalid metadata is excluded. The library supports 256 documents and
-bounded scans. It stores your chosen values, so share exported presets only when
+changed or invalid metadata is excluded. The library supports 256 documents,
+serializes concurrent additions, and limits each scan to 1,024 directory entries
+and 32 MiB of candidate metadata, including invalid files. A partial scan keeps
+the entries it could read and reports excluded metadata; new additions require a
+complete scan within those limits. It stores your chosen values, so share exported presets only when
 you intend to share those values and the name you supplied.
 
 Procedural tests and copied-native checks establish file-level behavior.

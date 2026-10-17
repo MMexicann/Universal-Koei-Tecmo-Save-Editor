@@ -4,6 +4,10 @@ Source setup and contribution rules live in [CONTRIBUTING.md](../CONTRIBUTING.md
 and [AGENTS.md](../AGENTS.md). The application overview is in the
 [repository README](../README.md).
 
+The application's **Editing and Research** menu opens reusable presets and the
+Save Research Lab. For selective transfer, open the destination save in its editor
+first, then choose **Transfer from Save Copy...** from that menu.
+
 ## Development and releases
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)

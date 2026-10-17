@@ -827,6 +827,8 @@ def main():
         app.show_comparison()
         app.show_batch()
         app.show_save_library()
+        app.show_editing_presets()
+        app.show_research_lab()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

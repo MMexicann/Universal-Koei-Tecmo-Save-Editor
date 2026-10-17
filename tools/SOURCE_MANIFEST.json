@@ -638,8 +638,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14308,
-      "sha256": "6ee81691f12f8b39c1ab32db354762ba642f0be03ffc506092620beda4c0968d"
+      "bytes": 14537,
+      "sha256": "a9c4fe0fac290c931d94d867b3f6fb84a6c31d0db047812f35cfa0d1baf96b7f"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -1138,8 +1138,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 46847,
-      "sha256": "ecee326affaf7ad065843f89b6064926d9208ac6ccba75f773f98e570f9b2ce4"
+      "bytes": 46914,
+      "sha256": "efd5af843cc2734ef72c297b9cc8de02e1e2bbd29e2602cfbb53a787d8a8d25a"
     },
     {
       "path": "src/koei_editor/conversion.py",

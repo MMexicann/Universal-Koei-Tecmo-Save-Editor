@@ -326,8 +326,11 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertTrue(self.app.language_selector.winfo_ismapped())
         self.assertFalse(self.app.shell_controls_button.winfo_ismapped())
         self.assertIs(self.app.select_game('origins'), editor)
+        # Qualify the tall layout even on runners with a smaller native workarea.
+        self.root.maxsize(1800, 1400)
         self.root.geometry('1180x930')
         self.root.update()
+        self.assertGreaterEqual(self.root.winfo_height(), 900)
         self.assertTrue(self.app.navigation.winfo_ismapped())
         self.assertFalse(self.app.shell_controls_button.winfo_ismapped())
         self.assertEqual((editor.changes, editor.history), (pending, history))
@@ -433,13 +436,64 @@ class ApplicationShellTests(unittest.TestCase):
     def test_native_scaling_height_guard_preserves_explicit_embedding_minimum(self):
         self._use_native_scaling(1.8)
         self.root.minsize(650, 500)
+        self.root.update()
+        original_height = self.root.winfo_height()
         editor = self.app.select_game('origins')
         editor.workspace_tabs.select(editor.edit_page)
         self.root.update()
         editor.workspace_tabs.select(editor.dashboard_page)
         self.root.update()
         self.assertEqual(self.root.minsize(), (650, 500))
-        self.assertEqual(self.root.winfo_height(), 820)
+        self.assertEqual(self.root.winfo_height(), original_height)
+
+    def test_compact_editor_fits_native_workarea_without_changing_fonts_or_pending_edits(self):
+        from tests.test_origins_parser import fixture
+        self._use_native_scaling(1.333005)
+        self.root.maxsize(1028, 729)
+        self.root.geometry('1080x820')
+        source = Path(self.directory.name) / 'copy.dat'
+        source.write_bytes(fixture())
+        editor = self.app.select_game('origins')
+        self.assertTrue(editor.open_path(source))
+        editor.stage_values({'gold': 4321})
+        editor.workspace_tabs.select(editor.dashboard_page)
+        self.root.update()
+        self.assertEqual(tuple(map(int, editor.header.cget('padding'))), (18, 2))
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        pending, history = dict(editor.changes), list(editor.history)
+        self.assertLessEqual(self.root.winfo_height(), 729)
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        self.assertTrue(editor.details_toggle.winfo_viewable())
+        self.assertEqual(self.app.shell_settings.text_size, 100)
+        editor.workspace_tabs.select(editor.dashboard_page)
+        self.root.maxsize(1800, 1400)
+        self.root.geometry('1180x930')
+        self.root.update()
+        self.assertEqual(tuple(map(int, editor.header.cget('padding'))), (18, 10))
+        self.assertEqual((editor.changes, editor.history), (pending, history))
+        self.assertEqual(source.read_bytes(), fixture())
+
+    def test_editor_fit_does_not_reenter_while_processing_queued_geometry_work(self):
+        editor = self.app.select_game('origins')
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        original_fit = self.app._fit_editor_actions
+        depth, maximum = 0, 0
+        def track_fit():
+            nonlocal depth, maximum
+            depth += 1
+            maximum = max(maximum, depth)
+            try:
+                original_fit()
+            finally:
+                depth -= 1
+        with patch.object(self.app, '_fit_editor_actions', track_fit):
+            self.app._schedule_editor_width()
+            self.root.after_idle(self.app._schedule_editor_width)
+            self.root.update()
+        self.assertEqual(maximum, 1)
+        self.assertGreater(editor.fields.winfo_height(), 220)
 
     def test_height_fit_converges_across_full_header_boundary_and_cancels_callbacks(self):
         self._use_native_scaling(2.0)

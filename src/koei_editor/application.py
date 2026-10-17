@@ -303,10 +303,20 @@ class Application(Appearance):
 
     def _schedule_editor_width(self, _event=None):
         if self._editor_width_after is None:
-            self._editor_width_after = self.root.after_idle(self._fit_editor_actions)
+            self._editor_width_after = self.root.after_idle(self._defer_editor_fit)
+
+    def _defer_editor_fit(self):
+        # Finish native style/geometry idle work before measuring, without
+        # recursively draining the event loop from inside a layout callback.
+        self._editor_width_after = self.root.after(0, self._fit_editor_actions)
 
     def _fit_editor_actions(self):
-        self._editor_width_after = None
+        try:
+            self._measure_editor_actions()
+        finally:
+            self._editor_width_after = None
+
+    def _measure_editor_actions(self):
         # Embedding bypasses the standalone editors' minimum sizes. Reserve
         # measured file-action and viewport space without overriding an explicit
         # caller-selected minimum (including compact dashboard qualification).
@@ -319,9 +329,6 @@ class Application(Appearance):
             buttons = getattr(editor, 'save_buttons', ()) or getattr(editor, 'buttons', ())
             if buttons:
                 row = buttons[0].master
-                # Font changes invalidate the packed row's requested width;
-                # let Tk finish that geometry before measuring this frame.
-                row.update_idletasks()
                 width = row.winfo_reqwidth()
                 ancestor = row.master
                 while ancestor is not self.root:
@@ -334,19 +341,39 @@ class Application(Appearance):
                 width = max(780, width)
             fields = getattr(editor, 'fields', None)
             dashboard = getattr(getattr(editor, 'dashboard_view', None), 'canvas', None)
+            # Native resize events update actual ancestor/viewport sizes at
+            # different times. Requested sizes describe one consistent layout
+            # and avoid feeding partially applied resizes into the minimum.
             if fields is not None and fields.winfo_viewable():
                 # Seven styled rows plus their native heading remain usable
                 # when platform DPI increases the surrounding controls.
                 row_height = int(self.style.lookup(fields.cget('style') or 'Treeview', 'rowheight') or 29)
                 viewport_height = max(224, fields.winfo_reqheight()
                                       + (7 - int(fields.cget('height'))) * row_height)
-                height = max(height, self.root.winfo_height() - fields.winfo_height() + viewport_height)
+                height = max(height, self._viewport_minimum_height(fields, viewport_height))
             elif dashboard is not None and dashboard.winfo_viewable():
-                height = max(height, self.root.winfo_height() - dashboard.winfo_height() + 150)
+                height = max(height, self._viewport_minimum_height(dashboard, 150))
         minimum = (width, height)
         if minimum != self._owned_minimum:
             self._owned_minimum = minimum
             self.root.minsize(*minimum)
+
+    def _viewport_minimum_height(self, viewport, height):
+        child = viewport
+        while child is not self.root:
+            parent = child.master
+            allocated = child.winfo_reqheight()
+            if isinstance(parent, ttk.Notebook):
+                allocated = max(parent.nametowidget(tab).winfo_reqheight()
+                                for tab in parent.tabs() if parent.tab(tab, 'state') != 'hidden')
+            elif child.winfo_manager() == 'grid':
+                # Parallel scrolling panes can shrink with the viewport; their
+                # larger requested rows must not become fixed toolbar space.
+                allocated = max(widget.winfo_reqheight()
+                                for widget in parent.grid_slaves(row=child.grid_info()['row']))
+            height += parent.winfo_reqheight() - allocated
+            child = parent
+        return height
 
     def _schedule_navigation(self, _event=None):
         if self._navigation_after is None:

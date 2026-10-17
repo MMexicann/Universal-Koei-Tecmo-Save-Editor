@@ -93,8 +93,13 @@
     },
     {
       "path": "docs/AUTOMATION.md",
-      "bytes": 9210,
-      "sha256": "49e4ae887bcf247b42e75ea1f0dc544f42c77e7019ab1ed444e67012218a0256"
+      "bytes": 9531,
+      "sha256": "53b3145e2e122fe40d42672b6c06519b6328ccf80de1b144f1d4b908da331927"
+    },
+    {
+      "path": "docs/AUTOMATION_BENCHMARKS.md",
+      "bytes": 7349,
+      "sha256": "cb6b21a486ef25d7d6e303aca685f8ca36f5a5fe52fcf865241b10cd034d1691"
     },
     {
       "path": "docs/AYESHA_PS3_FORMAT.md",
@@ -638,8 +643,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14024,
-      "sha256": "d2e54cab00ce9a81d308b94af64377a2408e878adbc847462e10a87b2330cd66"
+      "bytes": 14120,
+      "sha256": "9c2ddac93ef9e006548d359987aba69aba709894d2b03a60243e49941d5feff8"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -3762,6 +3767,11 @@
       "sha256": "1b3995e57505fbe744bcb6b595f6ca0d96cead33823b8e0d0505974910275aaa"
     },
     {
+      "path": "tests/test_automation_properties.py",
+      "bytes": 12845,
+      "sha256": "1b2d5324670a4c21aeba6a411e0c45647f4107ccb0910409c33ebe6a58fb03be"
+    },
+    {
       "path": "tests/test_ayesha_ps3.py",
       "bytes": 8347,
       "sha256": "d191ddbbb70c271392cfb03157ed36b4cf388da607b21407f331f20f282925d1"
@@ -5327,6 +5337,11 @@
       "sha256": "40b8dbffbe88cc911c1002295185a04acd891dc81ee8f63548e4d9acdc2f1cc8"
     },
     {
+      "path": "tools/benchmark_automation.py",
+      "bytes": 10867,
+      "sha256": "ee9782666fbedd13890c631a9a1221ad5850f7240d1e12f3e008dff943a96a2c"
+    },
+    {
       "path": "tools/build_windows.py",
       "bytes": 2849,
       "sha256": "2f444269b9bc2f3cf1272d2cd6701668ad49150f09d5e2630fc867a82144b6f8"
@@ -5338,8 +5353,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32139,
-      "sha256": "d284ac2882c511a1947bf85cf5f2e1c71e5649452bc5f75b57f613ac12e46cc6"
+      "bytes": 32172,
+      "sha256": "cfd5adf440653fd85d5b3aff6601ca21ea332641a2a195e50747d2dc954204aa"
     },
     {
       "path": "tools/refresh_manifest.py",

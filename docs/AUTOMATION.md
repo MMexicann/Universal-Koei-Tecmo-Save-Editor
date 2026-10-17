@@ -172,3 +172,8 @@ offsets, shell commands or unvalidated converter selections. Existing
 workflows with their own reviewed routes. Public generated fixtures
 exercise invariants; they do not establish genuine-file qualification or edited
 in-game load/re-save success.
+
+Run the [seeded regression properties and repeatable automation benchmarks](AUTOMATION_BENCHMARKS.md)
+when integrating or optimizing these APIs. The benchmark separates preparation,
+validated serialization, safe batch application and existing conversion exports
+and emits JSON timing reports without player-save inputs.

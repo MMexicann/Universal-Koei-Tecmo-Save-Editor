@@ -27,9 +27,19 @@ class Application(Appearance):
         self.comparison = None
         self.batch = None
         self.save_library = None
+        self.editing_presets = None
+        self.research_lab = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
+        self.tools_menu_bar = tk.Menu(root)
+        self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
+        self.editing_tools_menu.add_command(label='Reusable Editing Presets...', command=self.show_editing_presets)
+        self.editing_tools_menu.add_command(label='Transfer from Save Copy...', command=self.show_transfer)
+        self.editing_tools_menu.add_separator()
+        self.editing_tools_menu.add_command(label='Save Research Lab', command=self.show_research_lab)
+        self.tools_menu_bar.add_cascade(label='Editing and Research', menu=self.editing_tools_menu)
+        root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
         root.option_add('*Font', (self.font_family, 10))
         top = ttk.Frame(root, padding=(18, 10))
@@ -398,8 +408,54 @@ class Application(Appearance):
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def _tool_workspaces(self):
-        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library')
+        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
+                                       'editing_presets', 'research_lab')
                      if (tool := getattr(self, name, None)) is not None)
+
+    def _opened_scalar_editors(self):
+        return tuple((get_game(key).title + ' · ' + get_game(key).subtitle, editor)
+                     for key, (_frame, editor) in self.sessions.items()
+                     if getattr(editor, 'document', None) is not None and hasattr(editor, 'adapter'))
+
+    def show_editing_presets(self):
+        from koei_editor.shared.compatible_preset_gui import CompatiblePresetWorkspace
+        if self.editing_presets is None:
+            self.editing_presets = CompatiblePresetWorkspace(self.root, self.workspace,
+                                                             self._opened_scalar_editors)
+        self.editing_presets.on_show()
+        self._show_editing_tool(self.editing_presets, 'Reusable Editing Presets')
+        return self.editing_presets
+
+    def show_transfer(self):
+        from tkinter import messagebox
+        if self.active_game is None:
+            messagebox.showinfo('Selective Save Transfer', 'Open the destination save in its exact editor first.',
+                                parent=self.root)
+            return None
+        editor = self.sessions[self.active_game][1]
+        if getattr(editor, 'document', None) is None or not hasattr(editor, 'adapter'):
+            messagebox.showinfo('Selective Save Transfer', 'Open a qualified scalar save copy in the destination editor.',
+                                parent=self.root)
+            return None
+        from koei_editor.shared.transfer_gui import open_transfer
+        return open_transfer(editor)
+
+    def show_research_lab(self):
+        from koei_editor.shared.research_lab_gui import ResearchLabWorkspace
+        if self.research_lab is None:
+            self.research_lab = ResearchLabWorkspace(self.root, self.workspace)
+        self._show_editing_tool(self.research_lab, 'Save Research Lab')
+        return self.research_lab
+
+    def _show_editing_tool(self, tool, title):
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        tool.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(title)
+        tool.apply_theme(THEMES[self.theme_name.get()])
 
     def _hide_tools(self):
         for tool in self._tool_workspaces():
@@ -520,6 +576,10 @@ class Application(Appearance):
             editor = self.sessions[self.active_game][1]
             focus = getattr(editor, 'focus_field_search', None)
             return focus() if focus is not None else None
+        for tool in (self.editing_presets, self.research_lab):
+            if tool is not None and tool.frame.winfo_manager():
+                focus = getattr(tool, 'focus_search', None)
+                return focus() if callable(focus) else 'break'
         if self.converter is not None and self.converter.frame.winfo_manager():
             return self.converter.focus_route_search()
         if self.save_library is not None and self.save_library.frame.winfo_manager():
@@ -550,11 +610,13 @@ class Application(Appearance):
         Editor.show_contact(self)
 
     def close(self):
-        if any(tool.busy for tool in self._tool_workspaces()):
+        if any(getattr(tool, 'busy', False) for tool in self._tool_workspaces()):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return
-        if all(editor.dirty_ok() for _frame, editor in self.sessions.values()):
+        tools = self._tool_workspaces()
+        if (all(editor.dirty_ok() for _frame, editor in self.sessions.values())
+                and all(tool.dirty_ok() for tool in tools if callable(getattr(tool, 'dirty_ok', None)))):
             for tool in self._tool_workspaces():
                 close = getattr(tool, 'close', None)
                 if callable(close):

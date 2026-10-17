@@ -1,7 +1,8 @@
 # Selective save-to-save transfer
 
-Open the destination save copy in its explicit editor, choose **Save Transfer**,
-then open a separate source copy. Select individual fields in **Select values**,
+Open the destination save copy in its explicit editor, choose **Editing and
+Research → Transfer from Save Copy...**, then open a separate source copy.
+Select individual fields in **Select values**,
 choose **Preview Selected Values**, and inspect **Complete preview**. The preview
 includes existing edits outside the selection. **Apply Reviewed Transfer** stages
 the complete result as one Undo action; **Save As** writes a separate edited copy

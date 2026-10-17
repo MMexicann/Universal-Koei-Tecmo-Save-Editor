@@ -36,12 +36,13 @@ class ScanLimits:
     max_files: int = 500
     max_entries: int = 5000
     max_depth: int = 3
-    max_file_bytes: int = 32 * 1024 * 1024
+    # Includes the supported 61,851,984-byte Fatal Frame II system envelope.
+    max_file_bytes: int = 64 * 1024 * 1024
     max_total_bytes: int = 128 * 1024 * 1024
 
     def validate(self):
         for name, maximum in (('max_files', 500), ('max_entries', 5000),
-                ('max_depth', 3), ('max_file_bytes', 32 * 1024 * 1024),
+                ('max_depth', 3), ('max_file_bytes', 64 * 1024 * 1024),
                 ('max_total_bytes', 128 * 1024 * 1024)):
             value = getattr(self, name)
             if type(value) is not int or not (0 if name == 'max_depth' else 1) <= value <= maximum:

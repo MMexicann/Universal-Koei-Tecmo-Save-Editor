@@ -13,12 +13,17 @@ from koei_editor.shared.preset_library import PresetLibrary
 class CompatiblePresetWorkspace:
     """Retained workspace; injected existing sessions own every save operation."""
 
+    busy = False
+
     def __init__(self, root, parent, session_provider=None):
         self.root = root
         self.session_provider = session_provider or (lambda: ())
         self.library = PresetLibrary()
         self.entries = ()
         self._sessions = {}
+        self._copy_sessions = {}
+        self._copy_sequence = 0
+        self._theme_name = 'Light'
         self._entry = self._plan = self._target = None
         self._closed = False
         self._populating = False
@@ -63,6 +68,7 @@ class CompatiblePresetWorkspace:
         self.bulk_button = ttk.Button(actions, text='Apply to multiple editors...', command=self.bulk_dialog,
                                       state='disabled')
         self.bulk_button.pack(side='left', padx=8)
+        ttk.Button(actions, text='Open target copies...', command=self.open_target_dialog).pack(side='left')
         body = ttk.Panedwindow(self.frame, orient='horizontal')
         body.grid(row=3, column=0, sticky='nsew')
         left = ttk.Frame(body)
@@ -143,6 +149,10 @@ class CompatiblePresetWorkspace:
         # All controls use the application's active ttk palette; field values
         # and staging state are deliberately independent of visual appearance.
         self.frame.configure(style='TFrame')
+        from koei_editor.shared.appearance import THEMES
+        self._theme_name = next((name for name, value in THEMES.items() if value == palette), self._theme_name)
+        for _label, editor, _window in self._copy_sessions.values():
+            editor.apply_theme(self._theme_name)
 
     def focus_search(self, _event=None):
         self.search_entry.focus_set()
@@ -152,6 +162,9 @@ class CompatiblePresetWorkspace:
     def close(self):
         self._plan = None
         self._closed = True
+        for _label, _editor, window in tuple(self._copy_sessions.values()):
+            window.destroy()
+        self._copy_sessions.clear()
 
     def on_show(self):
         self._closed = False
@@ -159,7 +172,10 @@ class CompatiblePresetWorkspace:
         self.refresh_library()
 
     def has_pending_work(self):
-        return False  # Draft creation is modal; saved presets and previews are not pending game edits.
+        return any(editor.changes for _label, editor, _window in self._copy_sessions.values())
+
+    def dirty_ok(self):
+        return all(editor.dirty_ok() for _label, editor, _window in tuple(self._copy_sessions.values()))
 
     def _error(self, title, error):
         self.status.set(str(error))
@@ -174,6 +190,8 @@ class CompatiblePresetWorkspace:
                 supplied = tuple(supplied.items())
             elif hasattr(supplied, 'adapter'):
                 supplied = ((supplied.layout.title, supplied),)
+            supplied = tuple(supplied) + tuple((label, editor) for label, editor, _window
+                                               in self._copy_sessions.values())
             sessions = {}
             for index, item in enumerate(supplied):
                 label, editor = item
@@ -455,6 +473,79 @@ class CompatiblePresetWorkspace:
         except Exception as error:
             return self._error('Cannot Open Source-bound Presets', error)
 
+    def open_target_dialog(self):
+        try:
+            game_id = self._entry.preset.game_id if self._entry else self._editor().adapter.game_id
+            from koei_editor.game_registry import get_game
+            game = get_game(game_id)
+            paths = filedialog.askopenfilenames(parent=self.root, title='Open Separate Target Save Copies',
+                                               filetypes=[(game.title + ' save copies', '*' + game.extension)])
+            if not paths:
+                return False
+            opened = self.open_target_paths(game_id, tuple(paths))
+            self.status.set(f'{len(opened)} target copies opened with their normal editors, backups and Save As.')
+            return True
+        except Exception as error:
+            return self._error('Cannot Open Target Copies', error)
+
+    def open_target_paths(self, game_id, paths):
+        from koei_editor.game_registry import get_game
+        from koei_editor.shared.save_safety import safe_path
+        if type(paths) not in (tuple, list) or not 0 < len(paths) <= presets.MAX_TARGETS:
+            raise SaveError(f'Open between 1 and {presets.MAX_TARGETS} separate copies at a time.')
+        if len(self._copy_sessions) + len(paths) > presets.MAX_TARGETS:
+            raise SaveError(f'Close target windows before opening more than {presets.MAX_TARGETS} copies.')
+        game = get_game(game_id)
+        if game.scalar_backend is None:
+            raise SaveError('Reusable presets require a qualified scalar editor.')
+        resolved = tuple(safe_path(path) for path in paths)
+        known = {safe_path(editor.document.source) for editor in self._sessions.values()
+                 if editor.document is not None}
+        if len(set(resolved)) != len(resolved) or known.intersection(resolved):
+            raise SaveError('A selected save copy is already open. Choose distinct separate copies.')
+        opened = []
+        try:
+            for path in resolved:
+                window = tk.Toplevel(self.root)
+                window.title('Preset target · ' + game.title + ' · ' + path.name)
+                window.geometry('1180x820')
+                try:
+                    editor = game.create_editor(window, window, theme=self._theme_name)
+                    if not editor.open_path(path):
+                        raise SaveError('The target copy could not be opened by its qualified editor.')
+                    preset_portability.policy(editor.adapter, editor.document)
+                except Exception:
+                    window.destroy()
+                    raise
+                self._copy_sequence += 1
+                key = self._copy_sequence
+                label = f'Target copy {key}: {game.title} · {path.name}'
+                self._copy_sessions[key] = (label, editor, window)
+                window.protocol('WM_DELETE_WINDOW', lambda identity=key: self.close_target(identity))
+                window.bind('<Destroy>', lambda event, identity=key, target=window:
+                            self._target_destroyed(identity) if event.widget is target else None, add='+')
+                opened.append(editor)
+        except Exception as error:
+            self.refresh_sessions()
+            raise SaveError(f'Opened {len(opened)} target copies; those windows were retained. {error}') from error
+        self.refresh_sessions()
+        return tuple(opened)
+
+    def _target_destroyed(self, key):
+        self._copy_sessions.pop(key, None)
+        if not self._closed:
+            self.refresh_sessions()
+
+    def close_target(self, key):
+        session = self._copy_sessions.get(key)
+        if session is None:
+            return True
+        _label, editor, window = session
+        if not editor.dirty_ok():
+            return False
+        window.destroy()
+        return True
+
     def bulk_dialog(self):
         try:
             if self._entry is None:
@@ -513,7 +604,11 @@ class BulkPresetDialog:
 
     def chosen_targets(self):
         items = tuple(self.sessions.items())
-        return tuple(items[int(identity)] for identity in self.targets.selection())
+        chosen = tuple(items[int(identity)] for identity in self.targets.selection())
+        current = tuple(self.workspace._sessions.values())
+        if any(not any(editor is opened for opened in current) for _label, editor in chosen):
+            raise SaveError('A target editor was closed. Reopen the bulk preview and select current copies.')
+        return chosen
 
     def prepare(self):
         self.invalidate()

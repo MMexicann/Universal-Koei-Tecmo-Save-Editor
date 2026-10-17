@@ -663,8 +663,8 @@
     },
     {
       "path": "docs/REUSABLE_PRESETS.md",
-      "bytes": 4926,
-      "sha256": "e5246afd0d0c6cb03b4ffeedbe3094d53a39737387634c80213fa3bb773ac0ef"
+      "bytes": 5273,
+      "sha256": "c5f0dda9562ac48442691ab0ee555224b7d6dc638cdfd0f26f5958e0ee9d1d6a"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -3558,8 +3558,8 @@
     },
     {
       "path": "src/koei_editor/shared/compatible_preset_gui.py",
-      "bytes": 31045,
-      "sha256": "3a16254d6fbc2bdae93bb65b225edfc08a3c986fb717f8da3f0560804e01dc26"
+      "bytes": 36088,
+      "sha256": "3d0a606d2a0131b8fdf8a2cacfb59190879a25d2dc2b28aa82054f5c2040dfea"
     },
     {
       "path": "src/koei_editor/shared/compatible_presets.py",
@@ -3873,8 +3873,8 @@
     },
     {
       "path": "tests/test_compatible_presets_gui.py",
-      "bytes": 11875,
-      "sha256": "e83ea142914770339d269d605dc3103d21ea9efdff2ba231a8ccf7a5cc29bde0"
+      "bytes": 14761,
+      "sha256": "9a179360427189dd908302c5c38cf069a35f865eba14ac380f9f52e8f3df68f4"
     },
     {
       "path": "tests/test_console_context_regressions.py",

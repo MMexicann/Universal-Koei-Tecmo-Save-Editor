@@ -3608,8 +3608,8 @@
     },
     {
       "path": "src/koei_editor/shared/progression_report.py",
-      "bytes": 25185,
-      "sha256": "29ccc743eb8d3ff207d95180599682a6f7210fd6f6f22c0ae8d712f7ef4d004c"
+      "bytes": 25366,
+      "sha256": "fe93b164af33190f8ef4182d4dfb381e3b6ecc0b63ec3c5c0f7d5434bc16725a"
     },
     {
       "path": "src/koei_editor/shared/progression_view.py",
@@ -4678,8 +4678,8 @@
     },
     {
       "path": "tests/test_progression_report_security.py",
-      "bytes": 6962,
-      "sha256": "418a025a5933526ec94c8263018ccf3e492cabadca300fc798e46570aa9cbac5"
+      "bytes": 7895,
+      "sha256": "ec5598864c9beea4cc2e101127c7d8362cf7c4e6e3ddf9aec08321f54da6ddcf"
     },
     {
       "path": "tests/test_progression_v034.py",

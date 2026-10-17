@@ -57,6 +57,22 @@ def report_snapshot():
 
 
 class ProgressionReportSecurityTests(unittest.TestCase):
+    def test_exact_endpoints_survive_float_ratio_rounding_and_underflow(self):
+        metrics = (
+            Metric('near', 'Large count', str(10 ** 20 - 1), current=10 ** 20 - 1, total=10 ** 20),
+            Metric('tiny', 'Small range', '1e-308', current=1e-308, total=1e308),
+            Metric('full', 'Full range', '1', current=1, total=1.0),
+            Metric('zero', 'Zero range', '0', current=0.0, total=10),
+        )
+        snapshot = Dashboard('Exact ranges', (Section('s', 'Ranges', (Card('c', 'Ranges', metrics=metrics),)),))
+        rendered = ParsedReport(render_report(snapshot)).data['cards'][0]['metrics']
+        self.assertEqual(rendered[0]['fraction'], 1.0)
+        self.assertFalse(rendered[0]['atTarget'])
+        self.assertEqual(rendered[1]['fraction'], 0.0)
+        self.assertFalse(rendered[1]['atZero'])
+        self.assertTrue(rendered[2]['atTarget'])
+        self.assertTrue(rendered[3]['atZero'])
+
     def test_template_markers_in_presentation_text_are_preserved_literally(self):
         title = '__TITLE__ __NOTE__ __STYLE__ __SCRIPT__ __DATA__'
         result = render_report(Dashboard(title, note=title))

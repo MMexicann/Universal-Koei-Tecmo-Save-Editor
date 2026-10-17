@@ -592,8 +592,11 @@ class SaveVault:
             raise SaveError('The snapshot contains unindexed or missing storage files.')
 
     @staticmethod
-    def _materialize(bundle, directory):
-        identity = _directory_identity(directory)
+    def _materialize(bundle, directory, *, expected_identity=None):
+        # Restore owns an identity captured immediately after mkdir. Do not
+        # rebind it to a replacement directory before the first private write.
+        identity = (_directory_identity(directory) if expected_identity is None
+                    else expected_identity)
         for name, raw in bundle.items():
             _check_directory_identity(directory, identity)
             target = directory / name
@@ -734,7 +737,7 @@ class SaveVault:
             _profile_path(snapshot.game_id, destination / snapshot.filename)
             destination.mkdir(mode=0o700)
             destination_identity = _directory_identity(destination)
-            self._materialize(bundle, destination)
+            self._materialize(bundle, destination, expected_identity=destination_identity)
             _check_directory_identity(destination, destination_identity)
             path = destination / snapshot.filename
             _qualify(snapshot.game_id, path, bundle[snapshot.filename])

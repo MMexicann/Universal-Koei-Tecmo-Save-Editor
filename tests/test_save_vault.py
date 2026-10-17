@@ -566,8 +566,8 @@ class SaveVaultTests(unittest.TestCase):
         destination = self.folder / 'restored'
         moved = self.folder / 'original-restored'
         original = self.store._materialize
-        def replacing(bundle, directory):
-            original(bundle, directory)
+        def replacing(bundle, directory, **kwargs):
+            original(bundle, directory, **kwargs)
             directory.rename(moved)
             directory.mkdir()
             for item in moved.iterdir():
@@ -578,6 +578,38 @@ class SaveVaultTests(unittest.TestCase):
         self.assertEqual((destination / self.source.name).read_bytes(), self.raw)
         self.assertEqual((destination / self.metadata.name).read_bytes(), self.context)
         self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_restore_rejects_directory_replaced_before_materialization_without_private_writes(self):
+        record = self.snapshot()
+        destination = self.folder / 'restored'
+        moved = self.folder / 'original-restored'
+        index = self.store.root / 'index.json'
+        original_index = index.read_bytes()
+        original_objects = {path.relative_to(self.store.objects): path.read_bytes()
+                            for path in self.store.objects.rglob('*') if path.is_file()}
+        original = self.store._materialize
+
+        def replacing(bundle, directory, **kwargs):
+            directory.rename(moved)
+            directory.mkdir()
+            (directory / 'replacement-marker').write_bytes(b'preserve replacement')
+            return original(bundle, directory, **kwargs)
+
+        with patch.object(self.store, '_materialize', side_effect=replacing), \
+                patch.object(vault, '_new', side_effect=AssertionError('Reject before private writes')) as writes:
+            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+                self.store.restore(record.id, destination)
+        writes.assert_not_called()
+        self.assertEqual(tuple(moved.iterdir()), ())
+        self.assertEqual({path.name: path.read_bytes() for path in destination.iterdir()},
+                         {'replacement-marker': b'preserve replacement'})
+        self.assertEqual(self.source.read_bytes(), self.raw)
+        self.assertEqual(self.metadata.read_bytes(), self.context)
+        self.assertEqual(index.read_bytes(), original_index)
+        self.assertEqual(original_objects, {path.relative_to(self.store.objects): path.read_bytes()
+                                           for path in self.store.objects.rglob('*') if path.is_file()})
+        self.assertEqual(self.store.list_snapshots(), (record,))
+        self.assertTrue(self.store.verify(record.id)[0].valid)
 
     def test_restore_stops_between_files_when_created_directory_is_replaced(self):
         record = self.snapshot()

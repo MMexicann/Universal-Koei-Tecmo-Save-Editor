@@ -3848,8 +3848,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_vault.py",
-      "bytes": 39426,
-      "sha256": "baffd09036446d68f9cc8ebf198e3fbe2ae9e12d535549e58369c46fe164dd5e"
+      "bytes": 39722,
+      "sha256": "ca067abac38baece134e32a0ea4992049ac25fa5caeb73b9f035ac4613e0e662"
     },
     {
       "path": "src/koei_editor/shared/scalar_presentation.py",
@@ -5283,8 +5283,8 @@
     },
     {
       "path": "tests/test_save_vault.py",
-      "bytes": 44162,
-      "sha256": "cc98a098b640484fc368be30176ca1403e7d6f7364c7565b1246bba9a236756f"
+      "bytes": 46093,
+      "sha256": "7067f596fc1b28267258a3578e40e7fb509d5d3978c3465b99630bb4b3f17cd0"
     },
     {
       "path": "tests/test_scalar_bulk_actions.py",

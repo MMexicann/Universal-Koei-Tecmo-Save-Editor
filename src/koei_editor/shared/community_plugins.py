@@ -88,10 +88,12 @@ def _keys(value, required):
 def _text(value, limit=160, *, multiline=False):
     if type(value) is not str or not value.strip() or len(value) > limit:
         raise PluginError('Text must be nonempty and within its length limit.')
-    # Avoid invisible directional overrides, embedded NULs and control injection.
-    if any(unicodedata.category(char).startswith('C') and not (multiline and char in '\n\t')
+    # Single-line metadata must not insert Unicode line/paragraph boundaries in
+    # the review preview. Multiline contribution text remains inert plain text.
+    if any((unicodedata.category(char).startswith('C') and not (multiline and char in '\n\t'))
+           or (not multiline and unicodedata.category(char) in ('Zl', 'Zp'))
            for char in value):
-        raise PluginError('Text contains unsupported control characters.')
+        raise PluginError('Text contains unsupported controls or line separators.')
     return value
 
 

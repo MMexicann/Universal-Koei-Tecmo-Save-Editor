@@ -14,11 +14,12 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.preferences import normalize_pins
-from koei_editor.shared.adapter_contract import BoundScalarAdapter
+from koei_editor.shared.adapter_contract import BoundScalarAdapter, validate_pending_values
 from koei_editor.shared.scalar_presentation import ScalarPresentation
 from koei_editor.shared.table_tools import attach_sorting, sort_table, copy_selected
 from koei_editor.shared.experimental_limits import (
-    EXPERIMENTAL_WARNING, above_supported, experimental_maximum, experimental_operation)
+    EXPERIMENTAL_WARNING, above_supported, experimental_maximum, experimental_operation,
+    experimental_limits)
 import koei_editor.shared.verified_editor as backend
 
 
@@ -167,6 +168,7 @@ class Editor(Appearance):
         self.search_entry = ttk.Entry(filter_bar, textvariable=self.search, width=40)
         self.search_entry.pack(side='left', fill='x', expand=True)
         self.search_entry.bind('<Escape>', lambda _event: self.clear_field_filters())
+        self.search_entry.bind('<Return>', self.select_field_match)
         ttk.Button(filter_bar, text='Clear', command=lambda: self.search.set('')).pack(side='left', padx=(8, 0))
         self.pending_only = tk.BooleanVar(root, value=False)
         ttk.Checkbutton(filter_bar, text='Pending only', variable=self.pending_only,
@@ -190,6 +192,7 @@ class Editor(Appearance):
         self.options_toggle = ttk.Checkbutton(navigation, text='More options',
             variable=self.options_visible, command=self.toggle_options)
         self.options_toggle.pack(side='right')
+        ttk.Button(navigation, text='Next pending', command=self.next_pending_field).pack(side='right', padx=8)
         self.options_panel = ttk.Frame(host, padding=(18, 5))
         risk_bar = self.options_panel
         self.experimental_toggle = ttk.Checkbutton(
@@ -319,6 +322,36 @@ class Editor(Appearance):
         self.search_entry.focus_set()
         self.search_entry.selection_range(0, 'end')
         return 'break'
+
+    def select_field_match(self, _event=None):
+        """Enter reveals an exact field ID even when category filters hide it."""
+        if self.document is None:
+            return 'break'
+        identity = self.search.get().strip()
+        if identity in self.adapter.field_map(self.document):
+            self.navigate_dashboard_field(identity)
+        else:
+            visible = self.fields.get_children()
+            if len(visible) == 1:
+                self.fields.selection_set(visible[0])
+                self.fields.focus(visible[0])
+                self.fields.see(visible[0])
+                self.selected()
+            else:
+                self.status.set(f'{len(visible):,} matching fields. Enter an exact field ID or narrow the search.')
+        return 'break'
+
+    def next_pending_field(self):
+        """Cycle through the complete pending map, including hidden edits."""
+        if self.document is None or not self.changes:
+            self.status.set('No pending edits to navigate.')
+            return
+        keys = tuple(field.id for field in self.adapter.fields_for(self.document)
+                     if field.id in self.changes)
+        current = self.fields.focus()
+        index = (keys.index(current) + 1) % len(keys) if current in keys else 0
+        self.navigate_dashboard_field(keys[index])
+        self.status.set(f'Pending edit {index + 1:,} of {len(keys):,}: {keys[index]}')
 
     def toggle_details(self):
         if self.details_visible.get():
@@ -778,14 +811,38 @@ class Editor(Appearance):
 
     def stage_values(self, values):
         if self.document is None:
-            return
+            return False
         try:
+            values = dict(values)
+            fields = self.adapter.field_map(self.document)
+            failures = []
+            for key, value in values.items():
+                try:
+                    with experimental_limits(self.adapter.experimental):
+                        validate_pending_values(self.document, {key: value}, fields)
+                except SaveError as error:
+                    label = f'{fields[key].label} [{key}]' if key in fields else str(key)
+                    failures.append(f'{label}: {error}')
+            if failures:
+                shown = '\n'.join(failures[:12])
+                remaining = f'\n...and {len(failures) - 12:,} more.' if len(failures) > 12 else ''
+                raise SaveError(f'{len(failures):,} selected values failed validation.\n{shown}{remaining}')
             result = dict(self.changes)
             for key, value in values.items():
                 result = self.adapter.stage(self.document, result, key, value)
+            # Native staging can update another reference as a side effect.
+            # Every explicitly requested assignment must survive the full batch.
+            for key, value in values.items():
+                actual = result.get(key, fields[key].value(self.document.payload))
+                if type(actual) is not type(value) or actual != value:
+                    raise SaveError(f'{fields[key].label} [{key}] was changed by another selected assignment. '
+                                    'Review the dependent fields and apply a compatible selection.')
             self._accept_pending(result)
         except Exception as error:
+            self.status.set('Edit was not staged. ' + str(error))
             messagebox.showerror('Cannot Stage Edit', str(error))
+            return False
+        return True
 
     def _accept_pending(self, result):
         # Native dependencies apply to the final batch, including side effects
@@ -793,9 +850,21 @@ class Editor(Appearance):
         # entire action before changing the pending map or its Undo history.
         self.adapter.changed_payload(self.document, result)
         if result != self.changes:
+            previous = dict(self.changes)
+            history = [dict(snapshot) for snapshot in self.history]
             self.history.append(dict(self.changes))
-            self.changes = result
-            self.refresh()
+            self.changes = dict(result)
+            try:
+                self.refresh()
+            except Exception:
+                self.changes = previous
+                self.history[:] = history
+                try:
+                    self.refresh()
+                except Exception:
+                    pass
+                self.status.set('Edit was not staged. Previous pending edits and Undo history were retained.')
+                raise
         self.status.set(f'{len(self.changes)} pending field edits. Review changes before saving a new copy.')
 
     def apply_selected(self):

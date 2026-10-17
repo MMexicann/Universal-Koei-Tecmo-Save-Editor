@@ -123,6 +123,31 @@ class ManifestTests(unittest.TestCase):
             with self.assertRaises(plugins.PluginError):
                 self.validate(item)
 
+    def test_unicode_line_and_paragraph_separators_cannot_spoof_metadata_boundaries(self):
+        for separator in ('\u2028', '\u2029'):
+            mutations = (
+                lambda item: item.update(author='Contributor' + separator + 'SHA-256: forged'),
+                lambda item: item.update(title='Guide' + separator + 'API: trusted'),
+                lambda item: item['contributions'][0].update(title='Help' + separator + 'Author: host'),
+                lambda item: item['contributions'][1].update(platforms=['PC' + separator + 'Verified']),
+            )
+            for index, mutate in enumerate(mutations):
+                with self.subTest(separator=hex(ord(separator)), field=index):
+                    item = manifest()
+                    mutate(item)
+                    with self.assertRaises(plugins.PluginError):
+                        self.validate(item)
+
+    def test_multiline_contributions_preserve_explicit_plain_text_boundaries(self):
+        item = manifest()
+        item['description'] = 'Community guidance\nSecond paragraph'
+        item['contributions'][0]['body'] = 'First\u2028Second\u2029Third\nFourth\tIndented'
+        item['contributions'][1]['steps'] = ['First\u2028Second\u2029Third']
+        validated = self.validate(item)
+        self.assertEqual(validated.description, item['description'])
+        self.assertEqual(validated.contributions[0].body, item['contributions'][0]['body'])
+        self.assertEqual(validated.contributions[1].steps, tuple(item['contributions'][1]['steps']))
+
 
 class DiscoveryApprovalTests(unittest.TestCase):
     def setUp(self):

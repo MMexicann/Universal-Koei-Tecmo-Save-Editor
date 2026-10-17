@@ -99,7 +99,7 @@ class SaveManagementCliTests(unittest.TestCase):
         self.assertEqual((code, errors), (0, ''))
         code, output, errors = self.invoke('--vault-operation', 'list', '--vault-path', self.vault, '--vault-branch', 'alternate')
         self.assertEqual((code, errors), (0, ''))
-        self.assertEqual(json.loads(output)[0]['label'], 'After')
+        self.assertEqual(next(item for item in json.loads(output) if item['id'] == second)['label'], 'After')
         code, output, errors = self.invoke('--vault-operation', 'delete', '--vault-path', self.vault, '--snapshot-id', second)
         self.assertEqual((code, errors), (0, ''))
         self.assertEqual(len(SaveVault(self.vault).list_snapshots()), 1)

@@ -100,7 +100,8 @@ def handle(parser, args):
         elif operation == 'compare':
             result = _plain(vault.compare(args.snapshot_id, args.other_snapshot))
         elif operation == 'branch':
-            result = _plain(vault.branch(args.vault_branch, args.snapshot_id))
+            vault.branch(args.vault_branch, args.snapshot_id)
+            result = {'branched': True, 'branch': args.vault_branch, 'snapshot_id': args.snapshot_id}
         elif operation == 'label':
             result = _plain(vault.relabel(args.snapshot_id, args.snapshot_label))
         else:

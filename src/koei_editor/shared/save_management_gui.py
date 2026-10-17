@@ -151,6 +151,11 @@ class SaveManagementWindow:
                   'Snapshots preserve local backups; live saves and existing destinations stay protected.',
                   wraplength=850, style='Muted.TLabel').pack(anchor='w')
         self.vault_output = self._output(self.vault_tab)
+        self.vault_path.trace_add('write', self._vault_changed)
+
+    def _vault_changed(self, *_args):
+        self.history.delete(*self.history.get_children())
+        self._set_output(self.vault_output, 'Load this vault to view its history.')
 
     def show(self, *, game_id=None, paths=()):
         if self._closed:
@@ -257,6 +262,8 @@ class SaveManagementWindow:
             reports = tuple(report.to_dict() for report in self.doctor_reports)
             encoded = (json.dumps(reports, indent=2, ensure_ascii=True) + '\n').encode('utf-8')
             def export():
+                if Path(path).suffix.lower() != '.json':
+                    raise ValueError('Choose a new .json diagnostic report.')
                 _checked_path(Path(path).absolute().parent, directory=True)
                 destination = safe_path(path)
                 return atomic_new(encoded, destination)
@@ -373,7 +380,7 @@ class SaveManagementWindow:
             name = self.branch_name.get().strip()
             if not name:
                 raise ValueError('Enter a new branch name first.')
-            self._vault_action(lambda vault: vault.branch(name, snapshot_id))
+            self._vault_action(lambda vault: (vault.branch(name, snapshot_id), {'branched': True, 'branch': name})[1])
         self._invoke(prepare)
 
     def relabel(self):

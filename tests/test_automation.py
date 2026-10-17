@@ -319,6 +319,48 @@ class AutomationTests(unittest.TestCase):
         self.assertEqual(result['operation_index'], 1)
         self.assertNotIn(str(self.folder), json.dumps(result))
 
+    def test_bounded_malformed_workflow_documents_never_reach_native_writer(self):
+        raw = engine.dumps(self.workflow)
+        malformed = [b'', b'\xff', b'null', b'[]', b'1', b'"workflow"',
+                     b'[' * 1200 + b']' * 1200,
+                     raw.replace(b'"version": 1', b'"version": NaN'),
+                     raw.replace(b'"version": 1', b'"version": Infinity')]
+        mutations = [
+            {'operations': None}, {'operations': []}, {'operations': {}},
+            {'operations': [None]}, {'operations': [True]}, {'operations': [[]]},
+            {'operations': [{'op': 'set', 'values': []}]},
+            {'operations': [{'op': 'set', 'values': {}}]},
+            {'operations': [{'op': 'assert', 'field': 'x', 'value': None}]},
+            {'operations': [{'op': 'assert', 'field': 'x', 'value': 0, 'extra': 'execute'}]},
+            {'operations': [{'op': 'set', 'values': {'x': 1.5}}]},
+            {'operations': [{'op': 'set', 'values': {'x': 1 << 64}}]},
+            {'operations': [{'op': 'set', 'values': {'x': 'a' * 4097}}]},
+            {'game_id': '../another_parser'}, {'game_id': True}, {'name': 1}]
+        for update in mutations:
+            data = json.loads(raw)
+            data.update(update)
+            malformed.append(json.dumps(data).encode())
+        for document in malformed:
+            with self.subTest(document=document[:80]), self.assertRaises(SaveError):
+                engine.loads(document)
+        with patch.object(engine, 'MAX_BYTES', len(raw) - 1), self.assertRaises(SaveError):
+            engine.loads(raw)
+        self.assertFalse(any(spec.destination.exists() for spec in self.specs))
+
+    def test_later_source_change_after_first_native_save_stops_remaining_jobs(self):
+        batch = engine.prepare(self.workflow, self.specs)
+        original = BoundScalarAdapter.save_as
+        def save_then_external_change(adapter, document, pending, destination):
+            result = original(adapter, document, pending, destination)
+            self.sources[-1].write_bytes(b'changed by another process')
+            return result
+        with patch.object(BoundScalarAdapter, 'save_as', save_then_external_change):
+            result = engine.apply(batch, batch.review_token)
+        self.assertEqual([row['status'] for row in result['jobs']],
+                         ['completed', 'failed', 'not_started'])
+        self.assertTrue(self.specs[0].destination.exists())
+        self.assertFalse(self.specs[1].destination.exists())
+
 
 if __name__ == '__main__':
     unittest.main()

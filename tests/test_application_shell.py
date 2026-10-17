@@ -218,6 +218,73 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), self.root.winfo_rootx() + self.root.winfo_width())
         self.assertEqual(self.app._library_columns[self.app.platform_choice.get()], 2)
 
+    def test_compact_editor_header_retains_controls_pending_state_and_library_navigation(self):
+        from tests.test_origins_parser import fixture
+        source = Path(self.directory.name) / 'copy.dat'
+        source.write_bytes(fixture())
+        editor = self.app.select_game('origins')
+        self.assertTrue(editor.open_path(source))
+        editor.stage_values({'gold': 4321})
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        pending, history = dict(editor.changes), list(editor.history)
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        self.assertLess(self.app._shell_top.winfo_height(), 70)
+        self.assertFalse(self.app.navigation.winfo_ismapped())
+        self.app.shell_controls_button.focus_force()
+        self.root.update()
+        self.app.shell_controls_button.event_generate('<KeyPress-space>')
+        self.app.shell_controls_button.event_generate('<KeyRelease-space>')
+        self.root.update()
+        for widget in (*self.app._navigation_buttons, self.app.theme_selector,
+                       self.app.language_selector, self.app.text_size_selector):
+            self.assertTrue(widget.winfo_viewable())
+        self.app.shell_controls_button.invoke()
+        self.root.update()
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        self.app.compact_home_button.invoke()
+        self.root.update()
+        self.assertIsNone(self.app.active_game)
+        self.assertTrue(self.app.navigation.winfo_ismapped())
+        self.assertTrue(self.app.language_selector.winfo_ismapped())
+        self.assertFalse(self.app.shell_controls_button.winfo_ismapped())
+        self.assertIs(self.app.select_game('origins'), editor)
+        self.root.geometry('1180x930')
+        self.root.update()
+        self.assertTrue(self.app.navigation.winfo_ismapped())
+        self.assertFalse(self.app.shell_controls_button.winfo_ismapped())
+        self.assertEqual((editor.changes, editor.history), (pending, history))
+        self.assertEqual(source.read_bytes(), fixture())
+
+    def test_compact_editor_navigation_fits_both_languages_themes_and_larger_text(self):
+        self.app.select_game('origins')
+        self.root.minsize(650, 500)
+        self.root.geometry('800x650')
+        self.app.text_size_choice.set('140%')
+        self.app.change_text_size()
+        for language in ('English', 'Deutsch'):
+            self.app.language_choice.set(language)
+            self.app.change_language()
+            for theme in ('Light', 'Dark'):
+                self.app.apply_theme(theme)
+                self.root.update()
+                for widget in (self.app.command_button, self.app.compact_home_button,
+                               self.app.shell_controls_button):
+                    self.assertTrue(widget.winfo_viewable())
+                    self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
+                    self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                         self.root.winfo_rootx() + 800)
+                self.app.shell_controls_button.invoke()
+                self.root.update()
+                for widget in (*self.app._navigation_buttons, self.app.theme_selector,
+                               self.app.language_selector, self.app.text_size_selector,
+                               self.app.shell_controls_button):
+                    self.assertTrue(widget.winfo_viewable())
+                    self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                         self.root.winfo_rootx() + 800)
+                self.app.shell_controls_button.invoke()
+                self.root.update()
+
     def test_search_bursts_coalesce_and_enter_flushes_latest_query(self):
         with patch.object(self.app, 'show_platform', wraps=self.app.show_platform) as show:
             for text in ('d', 'dw', 'dw7', 'dw7xl'):

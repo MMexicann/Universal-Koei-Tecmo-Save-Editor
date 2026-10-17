@@ -29,6 +29,7 @@ class Application(Appearance):
         self._translated_widgets = []
         self._search_after = None
         self._navigation_after = None
+        self._shell_controls_expanded = False
         initial_theme = preferences.load_theme(preferences_path)
         self.style = ttk.Style(root)
         self.style.theme_use('clam')
@@ -102,8 +103,14 @@ class Application(Appearance):
         self.breadcrumb_label.pack(side='left', fill='x', expand=True)
         self.author_label = ttk.Label(location, text='Made by Mexican', style='Muted.TLabel')
         self.author_label.pack(side='right')
+        self.compact_home_button = ttk.Button(top, command=self.show_library)
+        self.shell_controls_button = ttk.Button(top, command=self._toggle_shell_controls)
+        self.breadcrumb.trace_add('write', lambda *_args: self._schedule_navigation())
         self._rebuild_help_menu()
         top.bind('<Configure>', self._schedule_navigation)
+        root.bind('<Configure>', lambda event: self._schedule_navigation()
+                  if event.widget is root else None, add='+')
+        root.bind('<Destroy>', self._cancel_navigation, add='+')
         self.session_bar = ttk.Frame(root, padding=(18, 0, 18, 8))
         self.session_caption = tk.StringVar(root, value='Open editors')
         ttk.Label(self.session_bar, textvariable=self.session_caption, style='Muted.TLabel').pack(side='left', padx=(0, 10))
@@ -285,16 +292,51 @@ class Application(Appearance):
         if self._navigation_after is None:
             self._navigation_after = self.root.after_idle(self._layout_navigation)
 
+    def _toggle_shell_controls(self):
+        self._shell_controls_expanded = not self._shell_controls_expanded
+        self._layout_navigation()
+
+    def _cancel_navigation(self, event):
+        if event.widget is self.root and self._navigation_after is not None:
+            self.root.after_cancel(self._navigation_after)
+            self._navigation_after = None
+
     def _layout_navigation(self):
+        if self._navigation_after is not None:
+            self.root.after_cancel(self._navigation_after)
         self._navigation_after = None
+        compact = (hasattr(self, 'shell_controls_button') and self.active_game is not None
+                   and self.root.winfo_height() < 900)
+        self.command_button.configure(text=self.tr('commands_short' if compact else 'commands'))
         if hasattr(self, '_shell_location'):
-            needed = self.command_button.winfo_reqwidth() + self._shell_settings_frame.winfo_reqwidth() + 16
-            stacked = self._shell_top.winfo_width() < needed
-            self.command_button.grid_configure(columnspan=2 if stacked else 1)
-            self._shell_settings_frame.grid_configure(row=1 if stacked else 0, column=0 if stacked else 1,
-                                                      columnspan=2 if stacked else 1, pady=(6, 0) if stacked else 0)
-            self.navigation.grid_configure(row=2 if stacked else 1)
-            self._shell_location.grid_configure(row=3 if stacked else 2)
+            self._shell_top.configure(padding=(18, 2) if compact else (18, 10))
+            if compact:
+                self.command_button.grid_configure(columnspan=1)
+                self.compact_home_button.configure(text=self.tr('library_short'))
+                self.compact_home_button.grid(row=0, column=1, padx=(0, 8))
+                self.shell_controls_button.configure(text=self.tr(
+                    'hide_shell_controls' if self._shell_controls_expanded else 'shell_controls'))
+                self.shell_controls_button.grid(row=0, column=2, sticky='e')
+                if not self._shell_controls_expanded:
+                    # Global controls stay one click away while the opened
+                    # editor receives the available height for its records.
+                    for widget in (self._shell_settings_frame, self.navigation, self._shell_location):
+                        widget.grid_remove()
+                    return
+                self._shell_settings_frame.grid(row=1, column=0, columnspan=3, sticky='e', pady=(6, 0))
+                self.navigation.grid(row=2, column=0, columnspan=3, sticky='ew', pady=(6, 0))
+                self._shell_location.grid(row=3, column=0, columnspan=3, sticky='ew', pady=(8, 0))
+            else:
+                self.compact_home_button.grid_remove()
+                self.shell_controls_button.grid_remove()
+                needed = self.command_button.winfo_reqwidth() + self._shell_settings_frame.winfo_reqwidth() + 16
+                stacked = self._shell_top.winfo_width() < needed
+                self.command_button.grid_configure(columnspan=2 if stacked else 1)
+                self._shell_settings_frame.grid(row=1 if stacked else 0, column=0 if stacked else 1,
+                                               columnspan=2 if stacked else 1, sticky='e',
+                                               pady=(6, 0) if stacked else 0)
+                self.navigation.grid(row=2 if stacked else 1, columnspan=2, pady=(10, 0))
+                self._shell_location.grid(row=3 if stacked else 2, columnspan=2)
         available = max(1, self.navigation.winfo_width())
         requested = sum(button.winfo_reqwidth() + 8 for button in self._navigation_buttons)
         columns = 3 if available < requested else 6

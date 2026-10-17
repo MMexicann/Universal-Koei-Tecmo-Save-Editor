@@ -3553,8 +3553,8 @@
     },
     {
       "path": "src/koei_editor/shared/automation_journal.py",
-      "bytes": 13803,
-      "sha256": "9ca28eb9818f5e062c4a46c8c61635f3afc44f2baf35c43b83c5fd736851cbce"
+      "bytes": 14550,
+      "sha256": "864d6446aed19c29bf11aa81c4d956ae0c4edd98108f73fc12fb60b6eae619ad"
     },
     {
       "path": "src/koei_editor/shared/batch_conversion.py",
@@ -3763,8 +3763,8 @@
     },
     {
       "path": "tests/test_automation_journal.py",
-      "bytes": 16922,
-      "sha256": "1c9060e2f6b722b12a9a90e431360a9934001748ada62b9dd76f6c03bf0b093e"
+      "bytes": 18996,
+      "sha256": "3fd31301d1ececf73a923de34b331a95a766724d55ea5317dd67b0f1ea7e4bde"
     },
     {
       "path": "tests/test_ayesha_ps3.py",

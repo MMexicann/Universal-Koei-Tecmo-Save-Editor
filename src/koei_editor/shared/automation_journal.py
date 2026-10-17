@@ -163,6 +163,9 @@ class RunJournal:
                 or self._directory_identity not in (None, identity)):
             raise SaveError(_ERROR)
         self._directory_identity = identity
+        # Identity alone does not change when another executor appends an event.
+        # Ignore access time: enumerating a directory can update it ourselves.
+        return identity, info.st_mtime_ns, info.st_ctime_ns
 
     def _read(self, path):
         # Reject aliases, nonregular files, replacement during reads and bounds
@@ -202,7 +205,7 @@ class RunJournal:
 
     def _load(self):
         try:
-            self._check_directory()
+            generation = self._check_directory()
             paths = []
             with os.scandir(self._folder) as entries:
                 for entry in entries:
@@ -241,7 +244,17 @@ class RunJournal:
                     else:
                         raise SaveError(_ERROR)
                 previous = digest
-            self._check_directory()
+            if self._check_directory() != generation:
+                raise SaveError(_ERROR)
+            # A valid append always creates the next numbered event. Check the
+            # chain head independently of timestamp granularity, including an
+            # append after the final directory stat but before this check.
+            try:
+                (self._folder / f"{len(paths):06d}.json").lstat()
+            except FileNotFoundError:
+                pass
+            else:
+                raise SaveError(_ERROR)
             return states, len(paths), previous
         except SaveError:
             raise
@@ -306,7 +319,8 @@ class RunJournal:
         item makes the entire run unsafe to resume. Interrupted verified outputs
         are recovered results, never pending work.
         """
-        states, _, _ = self._load()
+        snapshot = self._load()
+        states = snapshot[0]
         items = []
         for job in self._jobs:
             try:
@@ -323,6 +337,6 @@ class RunJournal:
             items.append(RecoveryItem(job.id, status))
         # Detect concurrent changes during native verification. The caller must
         # still revalidate immediately before applying pending jobs.
-        if self._load()[0] != states:
+        if self._load() != snapshot:
             raise SaveError(_ERROR)
         return RecoveryReport(tuple(items))

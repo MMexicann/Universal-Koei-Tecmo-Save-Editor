@@ -341,6 +341,44 @@ class AutomationJournalTests(unittest.TestCase):
             first.inspect(verify)
         self.assertTrue((self.path / "000001.json").exists())
 
+    def test_final_scan_append_cannot_return_stale_pending_jobs(self):
+        for label, before_stat, frozen_generation in (
+            ('before-final-directory-stat', True, False),
+            ('after-final-directory-stat', False, False),
+            ('unchanged-directory-timestamps', True, True),
+        ):
+            with self.subTest(race=label):
+                folder = self.folder / label
+                first = journal.RunJournal.create(folder, self.token, self.jobs)
+                second = journal.RunJournal.open(folder, self.token, self.jobs)
+                original_check = first._check_directory
+                initial_generation = original_check()
+                checks = 0
+
+                def append_after_scan():
+                    nonlocal checks
+                    checks += 1
+                    # inspect loads once before verification and once after it;
+                    # the fourth guard follows the exhausted final scandir.
+                    if checks == 4 and before_stat:
+                        second.intent('first')
+                    generation = original_check()
+                    if checks == 4 and not before_stat:
+                        second.intent('first')
+                    return initial_generation if frozen_generation else generation
+
+                with patch.object(first, '_check_directory', side_effect=append_after_scan):
+                    with self.assertRaises(SaveError):
+                        first.inspect(lambda _key: 'absent')
+                self.assertEqual(checks, 4)
+                self.assertEqual(sorted(path.name for path in folder.iterdir()),
+                                 ['000000.json', '000001.json'])
+                events = {path.name: path.read_bytes() for path in folder.iterdir()}
+                report = second.inspect(lambda _key: 'absent')
+                self.assertFalse(report.safe_to_resume)
+                self.assertEqual(report.jobs[0].status, 'blocked')
+                self.assertEqual(events, {path.name: path.read_bytes() for path in folder.iterdir()})
+
     def test_verifier_exceptions_are_redacted(self):
         run = self.create()
         def verify(_):

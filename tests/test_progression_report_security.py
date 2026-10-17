@@ -140,7 +140,7 @@ class ProgressionReportSecurityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             destination = Path(directory) / 'progression.html'
             result = export_report(report_snapshot(), destination, section_ids=('shown',), theme='Dark')
-            self.assertEqual(result, destination)
+            self.assertEqual(result, destination.resolve())
             original = destination.read_bytes()
             self.assertEqual(ParsedReport(original.decode('utf-8')).data['theme'], 'Dark')
             with self.assertRaises(FileExistsError):

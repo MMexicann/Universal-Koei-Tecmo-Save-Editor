@@ -30,7 +30,8 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'verified_limits.json', 'item_limits.json', 'native_enums.json',
                 'bodyguard_growth.json', 'bodyguard_items.json', 'bodyguard_weapons.json',
                 'weapon_bonus_rules.json', 'progression_routes.json', 'collection_unlocks.json',
-                'origins_evidence.json', 'dw6_migration_evidence.json', 'support_catalog.json')
+                'origins_evidence.json', 'dw6_migration_evidence.json', 'support_catalog.json',
+                'save_discovery.json')
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
 RUNTIME_GUIDES = ('docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',

@@ -27,7 +27,9 @@ sharing a report, particularly profiles with user-defined record names.
 Open the file in a browser. Search, section and range filters, sorting, paged
 cards, expanded metric details and record comparisons work offline. Choose System,
 Light or Dark appearance in the report. Comparisons show values side by side;
-missing mappings are labelled and unrelated metrics are not summed. Reports keep
+missing mappings are labelled and unrelated metrics are not summed. If any selected
+record repeats a metric label and unit, that comparison row is marked ambiguous;
+inspect its individual record values instead of inferring matching fields. Reports keep
 all explicitly included records embedded while rendering at most 24 cards per
 page. Printing uses the currently displayed page and selected comparison.
 

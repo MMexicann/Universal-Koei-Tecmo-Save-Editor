@@ -2,6 +2,9 @@
 from html.parser import HTMLParser
 import json
 from pathlib import Path
+import re
+import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -10,6 +13,7 @@ from koei_editor.shared.progression import (
     DashboardSection as Section, ProgressionDashboard as Dashboard,
 )
 from koei_editor.shared.progression_report import export_report, render_report
+from koei_editor.shared import progression_report
 
 
 class ParsedReport(HTMLParser):
@@ -57,6 +61,34 @@ def report_snapshot():
 
 
 class ProgressionReportSecurityTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'JavaScript comparison check requires optional Node.js')
+    def test_report_comparison_rejects_ambiguous_labels_and_keeps_record_values(self):
+        first = Card('first', 'First', metrics=(Metric('a', 'Attack', '10'),
+                    Metric('b', 'Attack', '20'), Metric('hp', 'Health', '30', unit='%')))
+        second = Card('second', 'Second', metrics=(Metric('c', 'Attack', '40'),
+                     Metric('hp', 'Health', '50')))
+        snapshot = Dashboard('Duplicates', (Section('s', 'Records', (first, second)),))
+        cards = ParsedReport(render_report(snapshot, comparison_ids=('first', 'second'))).data['cards']
+        self.assertEqual([m['value'] for m in cards[0]['metrics']], ['10', '20', '30'])
+        function = re.search(r'(function comparisonRows.*?)(?=\nfunction renderComparison)',
+                             progression_report._SCRIPT, re.S).group(1)
+        program = function + '\nconsole.log(JSON.stringify(comparisonRows(JSON.parse(process.argv[1]))));'
+        def rows(selected):
+            result = subprocess.run([shutil.which('node'), '-e', program, json.dumps(selected)],
+                                    check=True, capture_output=True, text=True, timeout=10)
+            return json.loads(result.stdout)
+        for selected in (cards, list(reversed(cards))):
+            actual = rows(selected)
+            attack = next(row for row in actual if row['label'] == 'Attack')
+            self.assertTrue(attack['ambiguous'])
+            self.assertEqual(attack['cells'], [{'status': 'ambiguous'}] * 2)
+            for health in (row for row in actual if row['label'] == 'Health'):
+                self.assertFalse(health['ambiguous'])
+                self.assertEqual(sorted(cell['status'] for cell in health['cells']), ['mapped', 'missing'])
+        unique = next(row for row in rows(cards[1:]) if row['label'] == 'Attack')
+        self.assertFalse(unique['ambiguous'])
+        self.assertEqual(unique['cells'][0]['metric']['value'], '40')
+
     def test_exact_endpoints_survive_float_ratio_rounding_and_underflow(self):
         metrics = (
             Metric('near', 'Large count', str(10 ** 20 - 1), current=10 ** 20 - 1, total=10 ** 20),

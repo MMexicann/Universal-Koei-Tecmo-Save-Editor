@@ -298,18 +298,19 @@ class Application(Appearance):
         self._schedule_navigation()
         self._schedule_editor_width()
 
-    def _schedule_editor_width(self):
+    def _schedule_editor_width(self, _event=None):
         if self._editor_width_after is None:
             self._editor_width_after = self.root.after_idle(self._fit_editor_actions)
 
     def _fit_editor_actions(self):
         self._editor_width_after = None
         # Embedding bypasses the standalone editors' minimum sizes. Reserve
-        # the measured file-action width without overriding an explicit
+        # measured file-action and viewport space without overriding an explicit
         # caller-selected minimum (including compact dashboard qualification).
         if self.root.minsize() != self._owned_minimum:
             return
         width = 780
+        height = 680
         if self.active_game is not None:
             editor = self.sessions[self.active_game][1]
             buttons = getattr(editor, 'save_buttons', ()) or getattr(editor, 'buttons', ())
@@ -328,8 +329,21 @@ class Application(Appearance):
                             width += padding[0] + (padding[2] if len(padding) > 2 else padding[0])
                     ancestor = ancestor.master
                 width = max(780, width)
-        self._owned_minimum = (width, 680)
-        self.root.minsize(*self._owned_minimum)
+            fields = getattr(editor, 'fields', None)
+            dashboard = getattr(getattr(editor, 'dashboard_view', None), 'canvas', None)
+            if fields is not None and fields.winfo_viewable():
+                # Seven styled rows plus their native heading remain usable
+                # when platform DPI increases the surrounding controls.
+                row_height = int(self.style.lookup(fields.cget('style') or 'Treeview', 'rowheight') or 29)
+                viewport_height = max(224, fields.winfo_reqheight()
+                                      + (7 - int(fields.cget('height'))) * row_height)
+                height = max(height, self.root.winfo_height() - fields.winfo_height() + viewport_height)
+            elif dashboard is not None and dashboard.winfo_viewable():
+                height = max(height, self.root.winfo_height() - dashboard.winfo_height() + 150)
+        minimum = (width, height)
+        if minimum != self._owned_minimum:
+            self._owned_minimum = minimum
+            self.root.minsize(*minimum)
 
     def _schedule_navigation(self, _event=None):
         if self._navigation_after is None:
@@ -355,6 +369,7 @@ class Application(Appearance):
         if self._navigation_after is not None:
             self.root.after_cancel(self._navigation_after)
         self._navigation_after = None
+        self._schedule_editor_width()
         compact = (hasattr(self, 'shell_controls_button') and self.active_game is not None
                    and self.root.winfo_height() < 900)
         self._compact_editor_shell = compact
@@ -720,6 +735,10 @@ class Application(Appearance):
                 frame.destroy()
                 raise
             self.sessions[game_id] = frame, editor
+            for viewport in (getattr(editor, 'fields', None),
+                             getattr(getattr(editor, 'dashboard_view', None), 'canvas', None)):
+                if viewport is not None:
+                    viewport.bind('<Configure>', self._schedule_editor_width, add='+')
             status = getattr(editor, 'status', None)
             if hasattr(status, 'trace_add'):
                 status.trace_add('write', lambda *_args: self.refresh_sessions())

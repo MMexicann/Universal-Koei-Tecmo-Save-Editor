@@ -79,8 +79,20 @@ class ApplicationShellTests(unittest.TestCase):
 
     def tearDown(self):
         if hasattr(self, 'root'):
-            self.root.destroy()
+            if self.root is not None:
+                if hasattr(self, '_original_scaling'):
+                    self.root.tk.call('tk', 'scaling', self._original_scaling)
+                self.root.destroy()
             self.directory.cleanup()
+
+    def _use_native_scaling(self, scaling):
+        self._original_scaling = self.root.tk.call('tk', 'scaling')
+        self.root.destroy()
+        self.root = tk.Tk()
+        self.root.tk.call('tk', 'scaling', scaling)
+        self.app = Application(self.root, preferences_path=self.path, persist_preferences=False)
+        self.root.geometry('1080x820')
+        self.root.update()
 
     def test_active_editor_uses_one_header_row_and_restores_full_navigation(self):
         editor = self.app.select_game('dw7xl')
@@ -387,6 +399,67 @@ class ApplicationShellTests(unittest.TestCase):
         self.root.update()
         self.assertEqual(self.root.minsize(), (650, 500))
         self.assertEqual(self.root.winfo_width(), 800)
+
+    def test_native_scaling_reserves_field_and_dashboard_viewports_without_changing_preferences(self):
+        from tests.test_origins_parser import fixture
+        self._use_native_scaling(1.8)
+        source = Path(self.directory.name) / 'copy.dat'
+        source.write_bytes(fixture())
+        editor = self.app.select_game('origins')
+        self.assertTrue(editor.open_path(source))
+        editor.stage_values({'gold': 4321})
+        pending, history = dict(editor.changes), list(editor.history)
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        minimum = self.root.minsize()
+        for _ in range(3):
+            self.root.update()
+            self.assertEqual(self.root.minsize(), minimum)
+        editor.workspace_tabs.select(editor.dashboard_page)
+        self.root.update()
+        self.assertGreater(editor.dashboard_view.canvas.winfo_height(), 100)
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        self.assertEqual(self.app.shell_settings.text_size, 100)
+        self.assertAlmostEqual(float(self.root.tk.call('tk', 'scaling')), 1.8, delta=0.02)
+        self.assertEqual((editor.changes, editor.history), (pending, history))
+        self.assertEqual(source.read_bytes(), fixture())
+        self.app.show_library()
+        self.root.update()
+        self.assertEqual(self.root.minsize(), (780, 680))
+
+    def test_native_scaling_height_guard_preserves_explicit_embedding_minimum(self):
+        self._use_native_scaling(1.8)
+        self.root.minsize(650, 500)
+        editor = self.app.select_game('origins')
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        editor.workspace_tabs.select(editor.dashboard_page)
+        self.root.update()
+        self.assertEqual(self.root.minsize(), (650, 500))
+        self.assertEqual(self.root.winfo_height(), 820)
+
+    def test_height_fit_converges_across_full_header_boundary_and_cancels_callbacks(self):
+        self._use_native_scaling(2.0)
+        editor = self.app.select_game('origins')
+        editor.workspace_tabs.select(editor.edit_page)
+        self.root.update()
+        self.assertGreaterEqual(self.root.winfo_height(), 900)
+        self.assertTrue(self.app.navigation.winfo_viewable())
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        minimum = self.root.minsize()
+        for _ in range(3):
+            self.root.update()
+            self.assertEqual(self.root.minsize(), minimum)
+        self.app._schedule_editor_width()
+        self.app._schedule_navigation()
+        self.root.tk.call('tk', 'scaling', self._original_scaling)
+        self.root.destroy()
+        self.root = None
+        self.assertIsNone(self.app._editor_width_after)
+        self.assertIsNone(self.app._navigation_after)
 
     def test_help_search_shortcut_targets_the_visible_tab_and_preserves_drafts(self):
         self.app.show_help('help')

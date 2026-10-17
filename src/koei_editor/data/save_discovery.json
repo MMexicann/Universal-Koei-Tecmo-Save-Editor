@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "steam": [
+    {
+      "app_id": "278080",
+      "game_id": "dw8xl",
+      "evidence": "docs/DW8_ORIGINAL_PC_SCOPE.md"
+    },
+    {
+      "app_id": "968790",
+      "game_id": "dw7xl",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "322520",
+      "game_id": "dw8e",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "1341200",
+      "game_id": "dw9emp",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "331600",
+      "game_id": "pw3",
+      "evidence": "docs/PW3_COVERAGE.md"
+    },
+    {
+      "app_id": "2384580",
+      "game_id": "origins",
+      "evidence": "docs/ORIGINS_REQUEST_STATUS.md"
+    },
+    {
+      "app_id": "2719200",
+      "game_id": "samurai4dx",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "1591530",
+      "game_id": "samurai5_pc",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "1879330",
+      "game_id": "wo3u",
+      "evidence": "docs/OROCHI_RESEARCH.md"
+    },
+    {
+      "app_id": "831560",
+      "game_id": "wo4_pc",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "610190",
+      "game_id": "stars",
+      "evidence": "docs/STARS_WO4_RESEARCH.md"
+    },
+    {
+      "app_id": "1382330",
+      "game_id": "p5strikers_pc",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "3178350",
+      "game_id": "abyss_pc",
+      "evidence": "docs/PC_EDITOR_ATTEMPTS.md"
+    },
+    {
+      "app_id": "527270",
+      "game_id": "atelier_sophie",
+      "evidence": "docs/SOPHIE_PC_FORMAT.md"
+    },
+    {
+      "app_id": "527290",
+      "game_id": "atelier_firis_pc",
+      "evidence": "docs/FIRIS_PC_FORMAT.md"
+    },
+    {
+      "app_id": "1121560",
+      "game_id": "atelier_ryza_pc",
+      "evidence": "docs/RYZA_PC_FORMAT.md"
+    },
+    {
+      "app_id": "1423600",
+      "game_id": "blue_reflection_second_light_pc",
+      "evidence": "docs/BRSL_PC_FORMAT.md"
+    },
+    {
+      "app_id": "348470",
+      "game_id": "sw4ii",
+      "evidence": "docs/SW4II_FORMAT.md"
+    },
+    {
+      "app_id": "363150",
+      "game_id": "rotk13_pc",
+      "evidence": "docs/ROTK13_FORMAT.md"
+    }
+  ],
+  "native": [
+    {
+      "game_id": "dw4hyper",
+      "base": "documents",
+      "relative": "KOEI/Dynasty Warriors 4 Hyper/Savedata",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "dw5special",
+      "base": "documents",
+      "relative": "KOEI/Shin Sangokumusou 4 Special/Savedata",
+      "evidence": "docs/DW5_SPECIAL.md"
+    },
+    {
+      "game_id": "dw6",
+      "base": "documents",
+      "relative": "KOEI/Dynasty Warriors 6/Savedata",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "dw7xl",
+      "base": "documents",
+      "relative": "KoeiTecmo/Dynasty Warriors 7 DX/Savedata",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "dw8e",
+      "base": "documents",
+      "relative": "KoeiTecmo/Dynasty Warriors 8 Empires/Savedata",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "dw9emp",
+      "base": "documents",
+      "relative": "KoeiTecmo/Dynasty Warriors 9 Empires",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "sw4ii",
+      "base": "documents",
+      "relative": "KoeiTecmo/SAMURAI WARRIORS 4-II/Savedata",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "wo3u",
+      "base": "documents",
+      "relative": "KoeiTecmo/WARRIORS OROCHI 3 Ultimate/SAVEDATA",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "stars",
+      "base": "documents",
+      "relative": "KoeiTecmo/WARRIORS ALL-STARS/Savedata",
+      "evidence": "docs/STARS_WO4_RESEARCH.md"
+    },
+    {
+      "game_id": "pw4",
+      "base": "local_app_data",
+      "relative": "BANDAI NAMCO Entertainment/One Piece Pirate Warriors 4/Saved/SaveGames",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "p5strikers_pc",
+      "base": "roaming_app_data",
+      "relative": "SEGA/Steam/P5S",
+      "evidence": "docs/PC_RESEARCH_RETRY.md"
+    },
+    {
+      "game_id": "pw3",
+      "base": "documents",
+      "relative": "One Piece Pirate Warriors 3/SAVEDATA",
+      "evidence": "docs/KOEI_FORMATS.md"
+    },
+    {
+      "game_id": "wo1",
+      "base": "documents",
+      "relative": "KOEI/WARRIORS OROCHI/Savedata",
+      "evidence": "docs/WO1_PC_FORMAT.md"
+    },
+    {
+      "game_id": "rotk13_pc",
+      "base": "documents",
+      "relative": "KoeiTecmo/San13",
+      "evidence": "docs/ROTK13_FORMAT.md"
+    },
+    {
+      "game_id": "origins",
+      "base": "local_app_data",
+      "relative": "KoeiTecmo/Dynasty Warriors Origins/Savedata",
+      "evidence": "docs/ORIGINS_FORMAT.md"
+    }
+  ]
+}

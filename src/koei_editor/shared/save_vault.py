@@ -119,26 +119,58 @@ def _ordinary(path, *, directory=False, missing=False, companion=False):
     path = Path(path).absolute()
     # Only an exact captured Steam owner sidecar may use this private exception.
     # Its parent still receives the complete live/cloud-folder safety policy.
-    if companion and path.name.casefold() == 'steam_autocloud.vdf':
-        safe_path(path.parent / '.vault-context-copy')
-    else:
-        safe_path(path)
+    def canonical():
+        if companion and path.name.casefold() == 'steam_autocloud.vdf':
+            return safe_path(path.parent / '.vault-context-copy').parent / path.name
+        return safe_path(path)
+    canonical()  # Reject live/cloud paths before any filesystem inspection.
+    lexical_parent = None
     for item in (*reversed(path.parents), path):
         try:
             info = item.lstat()
         except FileNotFoundError:
             if missing and item == path:
-                return path, None
+                info = None
+                break
             raise
         if _linked(info):
             raise SaveError('Save Vault rejects symbolic links, junctions and reparse paths.')
-    if directory:
-        valid = stat.S_ISDIR(info.st_mode)
+        if item == path.parent:
+            lexical_parent = info
+    if info is not None:
+        valid = (stat.S_ISDIR(info.st_mode) if directory else
+                 stat.S_ISREG(info.st_mode) and info.st_nlink == 1)
+        if not valid:
+            raise SaveError('Save Vault requires ordinary separate, unaliased files and directories.')
+    # Windows short and long names can refer to the same ordinary directory.
+    # Containment and future operations must use the canonical spelling, AFTER
+    # checking the supplied lexical path for links/reparse points. Bind both
+    # spellings to the same filesystem identity rather than trusting the string.
+    resolved = canonical()
+    resolved_info = None
+    for item in (*reversed(resolved.parents), resolved):
+        try:
+            current = item.lstat()
+        except FileNotFoundError:
+            if info is None and item == resolved:
+                break
+            raise
+        if _linked(current):
+            raise SaveError('Save Vault rejects symbolic links, junctions and reparse paths.')
+        if item == resolved.parent and info is None:
+            if ((current.st_dev, current.st_ino) !=
+                    (lexical_parent.st_dev, lexical_parent.st_ino)):
+                raise SaveError('The canonical destination parent changed identity.')
+        if item == resolved:
+            resolved_info = current
+    if info is None:
+        if resolved_info is not None:
+            raise SaveError('The destination appeared while its canonical path was checked.')
     else:
-        valid = stat.S_ISREG(info.st_mode) and info.st_nlink == 1
-    if not valid:
-        raise SaveError('Save Vault requires ordinary separate, unaliased files and directories.')
-    return path, info
+        token = (lambda value: (value.st_dev, value.st_ino)) if directory else _identity
+        if resolved_info is None or token(resolved_info) != token(info):
+            raise SaveError('The canonical vault path changed filesystem identity.')
+    return resolved, resolved_info
 
 
 def _read(path, limit, *, companion=False):

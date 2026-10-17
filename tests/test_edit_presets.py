@@ -113,6 +113,24 @@ def fixture_backend():
 
 
 class EditPresetTests(unittest.TestCase):
+    def test_explicit_assignment_preview_keeps_opened_reversion_and_unrelated_edits(self):
+        plan = presets.prepare_assignments(self.adapter, self.document,
+                                          {'gold': 25, 'nickname': 'Changed'}, {'gold': 50}, 'Revert gold')
+        self.assertEqual(tuple((edit.field, edit.value) for edit in plan.preset.edits), (('gold', 50),))
+        self.assertEqual(dict(plan.result), {'nickname': 'Changed'})
+        self.assertEqual({row.field.id for row in plan.rows}, {'gold', 'nickname'})
+        self.assertEqual(presets.confirm(plan, self.adapter, self.document,
+                                       {'gold': 25, 'nickname': 'Changed'}), {'nickname': 'Changed'})
+
+    def test_explicit_assignment_preview_validates_final_dependencies_and_types(self):
+        for assignments in ({}, {'unknown': 2}, {'gold': True}, {'left': 20}):
+            with self.subTest(assignments=assignments), self.assertRaises(SaveError):
+                presets.prepare_assignments(self.adapter, self.document, {}, assignments)
+        # A swap may pass as a complete native map even when a sequential
+        # staging operation would temporarily collide with the other hand.
+        plan = presets.prepare_assignments(self.adapter, self.document, {}, {'left': 20, 'right': 10})
+        self.assertEqual(dict(plan.result), {'left': 20, 'right': 10})
+
     def setUp(self):
         self.area = tempfile.TemporaryDirectory()
         self.addCleanup(self.area.cleanup)

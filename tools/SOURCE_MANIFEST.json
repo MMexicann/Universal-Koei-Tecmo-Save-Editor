@@ -317,6 +317,11 @@
       "sha256": "11c3ff29405e263256718e2fd1e6d40b4b111f3f8069ff463f9a4559af0a46e0"
     },
     {
+      "path": "docs/EDITING_WORKFLOWS.md",
+      "bytes": 1059,
+      "sha256": "2aba3aafb2c0874a9abb82ffe21fc26100d9996ae76ab109e5efb3476f4b0ad0"
+    },
+    {
       "path": "docs/EDITOR_WORKSPACE.md",
       "bytes": 4863,
       "sha256": "d3c95d7adb248b33c2995fcc7b7d1f272df63e0fad73aa7fea2dd1c03db51631"
@@ -638,8 +643,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13998,
-      "sha256": "4d5bba65e72bc05bec6a0b469677680c4ed30c9f40defc95d47726d716401b8f"
+      "bytes": 14072,
+      "sha256": "8bc23655962f27f5a2c0453c3b52663dbdbe04b371bb387154536386a03dbce0"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -3678,8 +3683,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 56586,
-      "sha256": "8284ae9bb592f34432f55aad829c51da140a675e87718ed8b26fae1c95bc3506"
+      "bytes": 60231,
+      "sha256": "d8407f38a752b005947be779dbbd1ac66f18d6d8340bce803bd28a237e13a267"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4900,6 +4905,11 @@
       "path": "tests/test_scalar_bulk_actions.py",
       "bytes": 8470,
       "sha256": "865775858bf145b9ef84619e850c3a6fc39b40b56fe787a731f892566608521b"
+    },
+    {
+      "path": "tests/test_scalar_edit_safety.py",
+      "bytes": 4633,
+      "sha256": "bc5b1adf48327d7d088c483e096c54b1bab95a31d9c79b7ad6671b4d5b257023"
     },
     {
       "path": "tests/test_scalar_workspace_gui.py",

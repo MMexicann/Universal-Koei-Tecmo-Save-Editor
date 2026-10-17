@@ -232,12 +232,18 @@ def _definition_value(value, depth=0):
     raise SaveError('This scalar profile does not expose stable preset field definitions.')
 
 
-def _profile_hash(adapter, document):
+def field_definitions_sha256(adapter, document, field_ids=None):
     # Metadata is identity, never an instruction to patch offsets. Include all
     # declared frozen field data, not only common scalar attributes: bit shifts,
     # endian/storage encodings, mirrors and enumerations affect native meaning.
     # Class identity also distinguishes subclasses with different validators.
     fields = adapter.field_map(document)
+    if field_ids is not None:
+        if (type(field_ids) not in (tuple, list, set, frozenset)
+                or any(type(key) is not str or key not in fields for key in field_ids)
+                or len(field_ids) != len(set(field_ids))):
+            raise SaveError('Choose distinct mapped fields for their native definition identity.')
+        fields = {key: fields[key] for key in field_ids}
     definitions = []
     shared = {'offset', 'size', 'group', 'slot', 'label', 'kind', 'encoding',
               'minimum', 'maximum', 'maxable', 'experimental_maximum',
@@ -253,6 +259,10 @@ def _profile_hash(adapter, document):
         definitions.append(definition)
     raw = json.dumps(definitions, ensure_ascii=True, separators=(',', ':'), allow_nan=False).encode('ascii')
     return hashlib.sha256(raw).hexdigest()
+
+
+def _profile_hash(adapter, document):
+    return field_definitions_sha256(adapter, document)
 
 
 def _pending(adapter, document, changes):
@@ -320,6 +330,28 @@ def prepare(adapter, document, changes, preset):
     # and complete original context after the entire frozen plan is prepared.
     validate_source(adapter, document)
     return plan
+
+
+def prepare_assignments(adapter, document, changes, assignments, name='Selected edits'):
+    """Preview explicit assignments, including exact opened-value reversions.
+
+    Unlike a saved snapshot of staged edits, an assignment equal to its opened
+    value must remain present long enough to remove an existing pending edit.
+    The normal complete-map serializer and source-bound confirmation apply.
+    """
+    validate_source(adapter, document)
+    chosen = _snapshot(assignments)
+    if not chosen:
+        raise SaveError('Select at least one field assignment to preview.')
+    fields = adapter.field_map(document)
+    if any(type(key) is not str or key not in fields for key in chosen):
+        raise SaveError('Choose only mapped fields from this opened save.')
+    for value in chosen.values():
+        _scalar(value)
+    preset = EditPreset(name, adapter.game_id, document.sha256, _profile_hash(adapter, document),
+                        any(above_supported(fields[key], value) for key, value in chosen.items()),
+                        tuple(PresetEdit(key, value) for key, value in sorted(chosen.items())))
+    return prepare(adapter, document, changes, preset)
 
 
 def confirm(plan, adapter, document, changes):

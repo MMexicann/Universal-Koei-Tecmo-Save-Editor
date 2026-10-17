@@ -13,7 +13,7 @@ from koei_editor.shared.validation_toolkit import ReportError, ValidationRecord
 
 class CommunityFeedbackTests(unittest.TestCase):
     def test_empty_report_does_not_collect_environment_machine_or_save_details(self):
-        with patch.dict('os.environ', {'HOME': '/home/alice', 'TOKEN': 'secret-token'}):
+        with patch.dict('os.environ', {'HOME': '/private/example', 'TOKEN': 'secret-token'}):
             report = build_bug_report()
         content = review_json(report)
         self.assertEqual(report['diagnostics'], {})
@@ -33,12 +33,12 @@ class CommunityFeedbackTests(unittest.TestCase):
     def test_unknown_keys_rejected_without_echo(self):
         for key in ('path', 'account_id', 'environment', 'stack', 'save_contents', 'notes', 'email', 'hostname'):
             with self.subTest(key=key), self.assertRaises(ReportError) as caught:
-                build_bug_report(diagnostics={key: '/home/alice/private.sav'})
+                build_bug_report(diagnostics={key: '/private/example/private.sav'})
             self.assertNotIn('alice', str(caught.exception))
 
     def test_allowed_keys_reject_private_or_wrong_type_values(self):
         for key in ('os_family', 'ui_scale', 'theme'):
-            for value in ('/home/alice/private.sav', {'secret': 'data'}, ['windows'], True, 150, None):
+            for value in ('/private/example/private.sav', {'secret': 'data'}, ['windows'], True, 150, None):
                 with self.subTest(key=key, value=value), self.assertRaises(ReportError):
                     build_bug_report(diagnostics={key: value})
         for diagnostics in ([], (), 'alice', True):
@@ -48,7 +48,7 @@ class CommunityFeedbackTests(unittest.TestCase):
     def test_controlled_symptoms_cannot_carry_exception_text(self):
         for key in ('category', 'error_code', 'locale', 'game_id'):
             with self.subTest(key=key), self.assertRaises(ReportError):
-                build_bug_report(**{key: 'PermissionError /home/alice/private.sav'})
+                build_bug_report(**{key: 'PermissionError /private/example/private.sav'})
 
     def test_validation_requires_matching_explicit_profile(self):
         validation = ValidationRecord.create('dw8xl', provenance='genuine_file')
@@ -62,7 +62,7 @@ class CommunityFeedbackTests(unittest.TestCase):
         self.assertEqual(report['validation']['attestation'], 'user_reported_unverified')
 
     def test_mutating_reviewed_dict_cannot_bypass_export_allowlist(self):
-        for mutation in ({'path': '/home/alice/private.sav'}, {'platform': 'PlayStation 3'},
+        for mutation in ({'path': '/private/example/private.sav'}, {'platform': 'PlayStation 3'},
                          {'diagnostics': {'notes': 'secret'}}, {'transmission': 'upload'},
                          {'schema_version': True}, {'app_version': '2.8'}):
             report = build_bug_report()

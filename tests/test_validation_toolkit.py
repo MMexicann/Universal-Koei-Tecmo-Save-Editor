@@ -85,7 +85,7 @@ class ValidationToolkitTests(unittest.TestCase):
                 ValidationRecord('dw8xl', outcomes=outcomes)
 
     def test_unknown_and_private_identifiers_are_rejected_without_echo(self):
-        for game_id in (None, True, [], '../private/alice.sav', 'C:\\Users\\alice\\save.dat', 'x' * 200):
+        for game_id in (None, True, [], '../private/alice.sav', 'C:\\SaveCopies\\example\\save.dat', 'x' * 200):
             with self.subTest(game_id=game_id), self.assertRaises(ReportError) as caught:
                 ValidationRecord.create(game_id)
             self.assertNotIn('alice', str(caught.exception))
@@ -99,10 +99,10 @@ class ValidationToolkitTests(unittest.TestCase):
 
     def test_strict_schema_rejects_unknown_keys_and_changed_claims(self):
         baseline = complete_record().to_dict()
-        cases = [dict(baseline, path='/home/alice/private.sav'),
+        cases = [dict(baseline, path='/private/example/private.sav'),
                  dict(baseline, schema_version=True), dict(baseline, schema_version=2),
                  dict(baseline, app_version='2.8'), dict(baseline, platform='PlayStation 3'),
-                 dict(baseline, profile_scope='/home/alice/private.sav'),
+                 dict(baseline, profile_scope='/private/example/private.sav'),
                  dict(baseline, attestation='independently_verified'),
                  dict(baseline, provenance='genuine'), dict(baseline, steps={}),
                  dict(baseline, steps=dict(baseline['steps'], notes='alice'))]

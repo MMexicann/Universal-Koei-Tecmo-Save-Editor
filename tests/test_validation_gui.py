@@ -41,7 +41,7 @@ class ValidationGuiTests(unittest.TestCase):
 
     def test_invalid_revision_discards_previous_preview_and_cannot_export(self):
         panel = ValidationPanel(self.root, self.root)
-        panel.revision.set('/home/alice/secret.sav')
+        panel.revision.set('/private/example/secret.sav')
         self.assertIsNone(panel.record)
         self.assertEqual(panel.preview.get('1.0', 'end').strip(), '')
         self.assertNotIn('alice', panel.status.get())

@@ -1,4 +1,8 @@
 """Procedural metadata fixtures; no game files, personal paths or account data."""
+from dataclasses import asdict
+import copy
+import hashlib
+import io
 import json
 import os
 from pathlib import Path, PureWindowsPath
@@ -12,6 +16,151 @@ from koei_editor.game_registry import GAMES
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared import save_discovery as discovery
 from koei_editor.shared.save_safety import safe_path
+
+
+class DiscoveryMetadataTests(unittest.TestCase):
+    @staticmethod
+    def metadata():
+        return {'schema_version': 1,
+                'steam': [asdict(item) for item in discovery.STEAM_MAPPINGS],
+                'native': [asdict(item) for item in discovery.NATIVE_MAPPINGS]}
+
+    def test_reviewed_mapping_records_are_identical_to_pre_migration_baseline(self):
+        value = self.metadata()
+        canonical = json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(),
+                         '09aa0eb4dc44122fd63f6824a010d026be942e3c6d6a4d61a548255c866a3c60')
+        self.assertEqual((len(value['steam']), len(value['native'])), (19, 15))
+        self.assertEqual(discovery._load_mappings(),
+                         (discovery.STEAM_MAPPINGS, discovery.NATIVE_MAPPINGS))
+        self.assertIsInstance(discovery.STEAM_MAPPINGS, tuple)
+        self.assertIsInstance(discovery.NATIVE_MAPPINGS, tuple)
+        self.assertTrue(all(type(item) is discovery.SteamMapping for item in discovery.STEAM_MAPPINGS))
+        self.assertTrue(all(type(item) is discovery.NativeMapping for item in discovery.NATIVE_MAPPINGS))
+
+    def test_packaged_metadata_is_bounded_and_independent_of_working_directory(self):
+        class TrackingStream(io.BytesIO):
+            reads = []
+            def read(self, limit=-1):
+                self.reads.append(limit)
+                return super().read(limit)
+        raw = json.dumps(self.metadata()).encode()
+        stream = TrackingStream(raw)
+        resource = mock.Mock()
+        resource.open.return_value = stream
+        with mock.patch.object(discovery, 'data_file', return_value=resource) as packaged:
+            mappings = discovery._load_mappings()
+        packaged.assert_called_once_with('save_discovery.json')
+        resource.open.assert_called_once_with('rb')
+        self.assertEqual(stream.reads, [discovery._MAX_MAPPING_BYTES + 1])
+        self.assertTrue(stream.closed)
+        self.assertEqual(mappings, (discovery.STEAM_MAPPINGS, discovery.NATIVE_MAPPINGS))
+        # Package resources resolve without looking for a checkout-relative file.
+        with tempfile.TemporaryDirectory() as directory:
+            original = Path.cwd()
+            try:
+                os.chdir(directory)
+                self.assertEqual(discovery._load_mappings(), mappings)
+            finally:
+                os.chdir(original)
+
+    def test_invalid_schema_counts_types_and_ambiguous_apps_fail_closed(self):
+        values = (None, [], {}, {'schema_version': 1},
+                  dict(self.metadata(), schema_version=True),
+                  dict(self.metadata(), schema_version=2),
+                  dict(self.metadata(), unexpected='private-value'),
+                  dict(self.metadata(), steam=[]),
+                  dict(self.metadata(), native={}),
+                  dict(self.metadata(), steam=self.metadata()['steam'] * 129))
+        for value in values:
+            with self.subTest(value=str(value)[:50]), self.assertRaises(SaveError):
+                discovery._parse_mappings(json.dumps(value).encode())
+        for field, replacement in (('app_id', '001'), ('app_id', '../527270'),
+                                   ('app_id', 527270), ('app_id', '１２３'),
+                                   ('game_id', 'unregistered'), ('game_id', 'dw8xl_ps3'),
+                                   ('evidence', 'private-folder/format.md'),
+                                   ('evidence', 'docs/../format.md'),
+                                   ('evidence', 'docs/format.txt')):
+            value = self.metadata()
+            value['steam'][0][field] = replacement
+            with self.subTest(field=field, replacement=replacement), self.assertRaises(SaveError):
+                discovery._parse_mappings(json.dumps(value).encode())
+        value = self.metadata()
+        value['steam'].append(copy.deepcopy(value['steam'][0]))
+        with self.assertRaises(SaveError):
+            discovery._parse_mappings(json.dumps(value).encode())
+        value = self.metadata()
+        value['steam'][0]['extra'] = 'private-value'
+        with self.assertRaises(SaveError):
+            discovery._parse_mappings(json.dumps(value).encode())
+
+    def test_absolute_traversing_and_windows_alias_native_paths_are_rejected(self):
+        for path in ('/outside', 'C:/outside', '../outside', 'folder/../outside',
+                     'folder/./save', 'folder//save', 'folder\\save', 'folder/save/',
+                     'folder/NUL', 'folder/Save.', 'folder/save:stream', 'folder/bad?name',
+                     'folder/\0save', 'folder/\ud800', 'x' * 513, 123, None):
+            value = self.metadata()
+            value['native'][0]['relative'] = path
+            with self.subTest(path=path), self.assertRaises(SaveError):
+                discovery._parse_mappings(json.dumps(value).encode())
+        value = self.metadata()
+        value['native'][0]['base'] = 'arbitrary_base'
+        with self.assertRaises(SaveError):
+            discovery._parse_mappings(json.dumps(value).encode())
+        value = self.metadata()
+        duplicate = copy.deepcopy(value['native'][0])
+        duplicate['relative'] = duplicate['relative'].swapcase()
+        value['native'].append(duplicate)
+        with self.assertRaises(SaveError):
+            discovery._parse_mappings(json.dumps(value).encode())
+
+    def test_malformed_duplicate_oversized_and_missing_resource_errors_are_redacted(self):
+        for raw in (b'{"schema_version":1,"schema_version":1}', b'{', b'\xff', b'\0',
+                    b'x' * (discovery._MAX_MAPPING_BYTES + 1)):
+            with self.subTest(raw=raw[:30]), self.assertRaises(SaveError) as error:
+                discovery._parse_mappings(raw)
+            self.assertEqual(str(error.exception), 'Bundled save discovery metadata is invalid or unsupported.')
+        with mock.patch.object(discovery, 'data_file', side_effect=FileNotFoundError('private-path')):
+            with self.assertRaises(SaveError) as error:
+                discovery._load_mappings()
+        self.assertNotIn('private-path', str(error.exception))
+        resource = mock.Mock()
+        resource.open.return_value = io.BytesIO(b'x' * (discovery._MAX_MAPPING_BYTES + 1))
+        with mock.patch.object(discovery, 'data_file', return_value=resource), self.assertRaises(SaveError):
+            discovery._load_mappings()
+
+    def test_windows_build_and_archive_runtime_allowlists_include_reviewed_data(self):
+        from tools.build_windows import DATA
+        from tools.package_release import RUNTIME_DATA
+        self.assertEqual(RUNTIME_DATA.count('save_discovery.json'), 1)
+        self.assertIn(('src/koei_editor/data/save_discovery.json', 'koei_editor/data'), DATA)
+
+    def test_embedded_discovery_metadata_cannot_be_missing_or_changed_in_archives(self):
+        from tests.test_package_release import PackagingTests
+        from tools import package_release
+        fixture = PackagingTests()
+        fixture.setUp()
+        self.addCleanup(fixture.tearDown)
+        relative = 'koei_editor/data/save_discovery.json'
+        raw = discovery.data_file('save_discovery.json').read_bytes()
+        fixture.add_sources({'src/' + relative: raw})
+        fixture.write_manifest()
+        archive, blobs, _ = fixture.archive_fixture()
+        package_release.verify_executable(fixture.root, lambda _: archive)
+        self.assertEqual(blobs[relative], raw)
+        blobs[relative] = b'{}'
+        with self.assertRaisesRegex(ValueError, 'differs from manifest'):
+            package_release.verify_executable(fixture.root, lambda _: archive)
+        blobs[relative] = raw
+        del archive.toc[relative]
+        external = fixture.runtime / '_internal' / relative
+        external.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing from executable'):
+            package_release.verify_executable(fixture.root, lambda _: archive)
+        external.write_bytes(raw)
+        standalone, standalone_blobs, _ = fixture.standalone_archive_fixture()
+        package_release.verify_standalone(fixture.root, lambda _: standalone)
+        self.assertEqual(standalone_blobs[relative], raw)
 
 
 class VdfTests(unittest.TestCase):

@@ -1187,6 +1187,11 @@
       "sha256": "12736651fb476d951c87b72acd1226ff85d45b5d005325b4278d164514984da4"
     },
     {
+      "path": "src/koei_editor/data/save_discovery.json",
+      "bytes": 4834,
+      "sha256": "238cf71e4a02e1d640db2c4a79c670687144d6b7958be7a33bd209deba924b29"
+    },
+    {
       "path": "src/koei_editor/data/support_catalog.json",
       "bytes": 126105,
       "sha256": "b1aa38e2b63d987f7ac9987733e0b739139afae153ad55d8473bb24bba2ec7c8"
@@ -3633,8 +3638,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_discovery.py",
-      "bytes": 24262,
-      "sha256": "012b674251846276a2bbfe0dea4baeb5d30bae622d1598690949fe74b40b56dd"
+      "bytes": 25275,
+      "sha256": "070f1940ff2ce411ede6d561594267674326bb2b84e7ff7eba7d3b64c23d70eb"
     },
     {
       "path": "src/koei_editor/shared/save_library.py",
@@ -4858,8 +4863,8 @@
     },
     {
       "path": "tests/test_save_discovery.py",
-      "bytes": 29122,
-      "sha256": "9cc6e4cb10db008a3487da20d4efcfb0f5b2bc645e064e50d9c98afca7137013"
+      "bytes": 37393,
+      "sha256": "2e1c592e6a50f0e3e9ffb764e830d65c40b13814c89dc9106cd58dcf2df8b923"
     },
     {
       "path": "tests/test_save_library.py",
@@ -5308,8 +5313,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32139,
-      "sha256": "d284ac2882c511a1947bf85cf5f2e1c71e5649452bc5f75b57f613ac12e46cc6"
+      "bytes": 32178,
+      "sha256": "af254d4b5fdd15599267804d3634d86c1d6ba2d3852997f5631c6502c55ee1b5"
     },
     {
       "path": "tools/refresh_manifest.py",

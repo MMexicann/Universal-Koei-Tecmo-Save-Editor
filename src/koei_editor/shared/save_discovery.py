@@ -7,6 +7,7 @@ using the existing copied-save workflow. Paths are private local UI data;
 ``report`` deliberately excludes them and all Steam account identifiers.
 """
 from dataclasses import dataclass, field
+import json
 import os
 from pathlib import Path
 import re
@@ -14,6 +15,7 @@ import stat
 
 from koei_editor.game_registry import GAMES
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.resources import data_file
 from koei_editor.shared.save_safety import reserved_windows_path
 
 
@@ -24,31 +26,6 @@ class SteamMapping:
     evidence: str
 
 
-# Reviewed original-PC app identities, not filename guesses or new support.
-# A mapped installation still may contain a foreign/unsupported save revision.
-STEAM_MAPPINGS = (
-    SteamMapping('278080', 'dw8xl', 'docs/DW8_ORIGINAL_PC_SCOPE.md'),
-    SteamMapping('968790', 'dw7xl', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('322520', 'dw8e', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('1341200', 'dw9emp', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('331600', 'pw3', 'docs/PW3_COVERAGE.md'),
-    SteamMapping('2384580', 'origins', 'docs/ORIGINS_REQUEST_STATUS.md'),
-    SteamMapping('2719200', 'samurai4dx', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('1591530', 'samurai5_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('1879330', 'wo3u', 'docs/OROCHI_RESEARCH.md'),
-    SteamMapping('831560', 'wo4_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('610190', 'stars', 'docs/STARS_WO4_RESEARCH.md'),
-    SteamMapping('1382330', 'p5strikers_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('3178350', 'abyss_pc', 'docs/PC_EDITOR_ATTEMPTS.md'),
-    SteamMapping('527270', 'atelier_sophie', 'docs/SOPHIE_PC_FORMAT.md'),
-    SteamMapping('527290', 'atelier_firis_pc', 'docs/FIRIS_PC_FORMAT.md'),
-    SteamMapping('1121560', 'atelier_ryza_pc', 'docs/RYZA_PC_FORMAT.md'),
-    SteamMapping('1423600', 'blue_reflection_second_light_pc', 'docs/BRSL_PC_FORMAT.md'),
-    SteamMapping('348470', 'sw4ii', 'docs/SW4II_FORMAT.md'),
-    SteamMapping('363150', 'rotk13_pc', 'docs/ROTK13_FORMAT.md'),
-)
-
-
 @dataclass(frozen=True)
 class NativeMapping:
     game_id: str
@@ -57,38 +34,89 @@ class NativeMapping:
     evidence: str
 
 
-NATIVE_MAPPINGS = (
-    NativeMapping('dw4hyper', 'documents', 'KOEI/Dynasty Warriors 4 Hyper/Savedata',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('dw5special', 'documents', 'KOEI/Shin Sangokumusou 4 Special/Savedata',
-                  'docs/DW5_SPECIAL.md'),
-    NativeMapping('dw6', 'documents', 'KOEI/Dynasty Warriors 6/Savedata',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('dw7xl', 'documents', 'KoeiTecmo/Dynasty Warriors 7 DX/Savedata',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('dw8e', 'documents', 'KoeiTecmo/Dynasty Warriors 8 Empires/Savedata',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('dw9emp', 'documents', 'KoeiTecmo/Dynasty Warriors 9 Empires',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('sw4ii', 'documents', 'KoeiTecmo/SAMURAI WARRIORS 4-II/Savedata',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('wo3u', 'documents', 'KoeiTecmo/WARRIORS OROCHI 3 Ultimate/SAVEDATA',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('stars', 'documents', 'KoeiTecmo/WARRIORS ALL-STARS/Savedata',
-                  'docs/STARS_WO4_RESEARCH.md'),
-    NativeMapping('pw4', 'local_app_data', 'BANDAI NAMCO Entertainment/One Piece Pirate Warriors 4/Saved/SaveGames',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('p5strikers_pc', 'roaming_app_data', 'SEGA/Steam/P5S',
-                  'docs/PC_RESEARCH_RETRY.md'),
-    NativeMapping('pw3', 'documents', 'One Piece Pirate Warriors 3/SAVEDATA',
-                  'docs/KOEI_FORMATS.md'),
-    NativeMapping('wo1', 'documents', 'KOEI/WARRIORS OROCHI/Savedata',
-                  'docs/WO1_PC_FORMAT.md'),
-    NativeMapping('rotk13_pc', 'documents', 'KoeiTecmo/San13',
-                  'docs/ROTK13_FORMAT.md'),
-    NativeMapping('origins', 'local_app_data', 'KoeiTecmo/Dynasty Warriors Origins/Savedata',
-                  'docs/ORIGINS_FORMAT.md'),
-)
+_MAX_MAPPING_BYTES = 64 * 1024
+_MAX_MAPPING_RECORDS = 128
+
+
+def _unique_mapping_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('Duplicate discovery metadata key.')
+        result[key] = value
+    return result
+
+
+def _mapping_path(value):
+    """Require canonical portable relative paths without Windows aliases."""
+    return (type(value) is str and 0 < len(value) <= 512
+            and not any(part in ('', '.', '..') for part in value.split('/'))
+            and not any(0xD800 <= ord(character) <= 0xDFFF for character in value)
+            and '\\' not in value and ':' not in value and not reserved_windows_path(value))
+
+
+def _parse_mappings(raw):
+    """Validate reviewed package metadata without accessing mapped locations."""
+    try:
+        if type(raw) is not bytes or not 0 < len(raw) <= _MAX_MAPPING_BYTES:
+            raise ValueError('Discovery metadata exceeds its fixed byte limit.')
+        value = json.loads(raw.decode('utf-8'), object_pairs_hook=_unique_mapping_object)
+        if (type(value) is not dict or set(value) != {'schema_version', 'steam', 'native'}
+                or type(value['schema_version']) is not int or value['schema_version'] != 1):
+            raise ValueError('Unsupported discovery metadata schema.')
+        registered = {game.id for game in GAMES if game.platform == 'Windows PC'}
+        steam, native = [], []
+        seen_apps, seen_native = set(), set()
+        for name, fields in (('steam', {'app_id', 'game_id', 'evidence'}),
+                             ('native', {'game_id', 'base', 'relative', 'evidence'})):
+            records = value[name]
+            if type(records) is not list or not 1 <= len(records) <= _MAX_MAPPING_RECORDS:
+                raise ValueError('Invalid discovery metadata record limit.')
+            for item in records:
+                if type(item) is not dict or set(item) != fields:
+                    raise ValueError('Unexpected discovery metadata fields.')
+                if type(item['game_id']) is not str or item['game_id'] not in registered:
+                    raise ValueError('Discovery metadata must name a registered Windows profile.')
+                evidence = item['evidence']
+                if (not _mapping_path(evidence) or not evidence.startswith('docs/')
+                        or not evidence.endswith('.md')):
+                    raise ValueError('Discovery metadata requires a relative documentation reference.')
+                if name == 'steam':
+                    app = item['app_id']
+                    if (type(app) is not str or not re.fullmatch(r'[1-9][0-9]{0,9}', app)
+                            or app in seen_apps):
+                        raise ValueError('Invalid or ambiguous discovery Steam app identity.')
+                    seen_apps.add(app)
+                    steam.append(SteamMapping(**item))
+                else:
+                    if (item['base'] not in ('documents', 'local_app_data', 'roaming_app_data')
+                            or not _mapping_path(item['relative'])):
+                        raise ValueError('Invalid discovery native location.')
+                    identity = (item['game_id'], item['base'], item['relative'].casefold())
+                    if identity in seen_native:
+                        raise ValueError('Duplicate discovery native location.')
+                    seen_native.add(identity)
+                    native.append(NativeMapping(**item))
+        return tuple(steam), tuple(native)
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        # Never include package metadata values in a user-facing error.
+        raise SaveError('Bundled save discovery metadata is invalid or unsupported.') from None
+
+
+def _load_mappings():
+    try:
+        # data_file uses importlib.resources for installed and frozen packages.
+        # Fixed-size binary reads also bound malformed resource replacements.
+        with data_file('save_discovery.json').open('rb') as stream:
+            raw = stream.read(_MAX_MAPPING_BYTES + 1)
+    except (OSError, ValueError):
+        raise SaveError('Bundled save discovery metadata could not be read.') from None
+    return _parse_mappings(raw)
+
+
+# Immutable public constants retain their existing dataclass/API shape. These
+# reviewed records identify candidates, never native-save support or a parser.
+STEAM_MAPPINGS, NATIVE_MAPPINGS = _load_mappings()
 
 
 @dataclass(frozen=True)

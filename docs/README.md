@@ -24,6 +24,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Additional title qualification and source-only inspection](EXPANSION_CANDIDATES.md)
 
 - [Compare Saves: workspace, reports and interpretation](SAVE_COMPARISON.md)
+- [Save Research Lab: decoded differences, candidate hypotheses and Codex exports](SAVE_RESEARCH_LAB.md)
 
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
 - [DW7 XL PS3 to Definitive Edition PC: transfer scope and native proof](DW7XL_CONVERSION.md)

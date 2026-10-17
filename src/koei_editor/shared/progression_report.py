@@ -8,6 +8,7 @@ records in one snapshot and do not infer completion or calculate unlike totals.
 import html
 import json
 from pathlib import Path
+import re
 
 from koei_editor.shared.copy_storage import atomic_new
 
@@ -54,10 +55,11 @@ def render_report(dashboard, *, section_ids=None, comparison_ids=(), theme="auto
     encoded = json.dumps(data, ensure_ascii=True, allow_nan=False)
     for char, replacement in (("&", "\\u0026"), ("<", "\\u003c"), (">", "\\u003e")):
         encoded = encoded.replace(char, replacement)
-    result = (_HTML.replace("__TITLE__", html.escape(dashboard.title))
-              .replace("__NOTE__", html.escape(dashboard.note))
-              .replace("__STYLE__", _STYLE).replace("__SCRIPT__", _SCRIPT)
-              .replace("__DATA__", encoded))
+    parts = {"TITLE": html.escape(dashboard.title), "NOTE": html.escape(dashboard.note),
+             "STYLE": _STYLE, "SCRIPT": _SCRIPT, "DATA": encoded}
+    # Substitute once: presentation strings that resemble a template token
+    # must remain literal display text rather than triggering another expansion.
+    result = re.sub(r"__(TITLE|NOTE|STYLE|SCRIPT|DATA)__", lambda m: parts[m[1]], _HTML)
     if len(result.encode("utf-8")) > MAX_REPORT_BYTES:
         raise ValueError("Report exceeds 64 MiB; include fewer sections.")
     return result

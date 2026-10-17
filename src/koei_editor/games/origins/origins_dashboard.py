@@ -22,7 +22,9 @@ def dashboard(backend, document):
                       for identity in ('gold', 'skill_points', 'dlc_skill_points') if identity in fields)
     character_cards = [Card('protagonist', 'Protagonist',
                            'Verified resources; protagonist level and combat stats are not mapped.',
-                           resources)]
+                           (Metric('level', 'Character level', 'Not mapped',
+                                   note='Resource balances and weapon proficiency do not establish protagonist level.'),
+                            *resources))]
     for index in range(101):
         identity = f'bond_{index}_level'
         if identity not in fields:
@@ -34,20 +36,30 @@ def dashboard(backend, document):
             metrics.append(metric(training, 'Training count',
                                   note='Three trainings satisfy the count condition; conversations and arts are separate.'))
         character_cards.append(Card(f'bond-{index}', BOND_NAMES.get(index, f'Bond ID {index}'),
-                                    'Existing bond', tuple(metrics)))
+                                    'Existing bond', tuple(metrics),
+                                    search_text=f'bond {index} training'))
 
     weapons = []
-    for record in weapon_records(document.payload, document.revision):
+    inventory = weapon_records(document.payload, document.revision)
+    copies = {}
+    for record in inventory:
+        copies[record.weapon_id] = copies.get(record.weapon_id, 0) + 1
+    for record in inventory:
         identity = f'weapon_{record.index:04d}_upgrade'
-        upgrade = (metric(identity, 'Reinforcement', total=99) if identity in fields else
+        upgrade = (metric(identity, 'Reinforcement', total=99,
+                          note='Native reforging cap +99; separate from proficiency, collection and achievement flags.') if identity in fields else
                    Metric('reinforcement', 'Reinforcement', str(record.upgrade),
                           note='Inspection only; this upgrade is not qualified for editing.'))
         traits = tuple(Metric(f'trait-{index}', f'Trait slot {index + 1}',
                               f'ID {trait} · level {level}')
                        for index, (trait, level) in enumerate(zip(record.traits, record.trait_levels)))
         weapons.append(Card(f'weapon-{record.index}', f'Weapon ID {record.weapon_id}',
-                            f'Inventory slot {record.index + 1}', (upgrade, *traits),
-                            section='Equipment'))
+                            f'Inventory slot {record.index + 1} · reinforcement +{record.upgrade}',
+                            (upgrade, Metric('copies', 'Inventory copies with this ID', str(copies[record.weapon_id]),
+                                             note='Copies in occupied mapped inventory records; not a weapon catalogue completion count.'),
+                             *traits), section='Equipment',
+                            search_text=f'weapon {record.weapon_id} slot {record.index + 1} traits ' +
+                                        ' '.join(map(str, record.traits))))
 
     proficiency = tuple(Card(
         f'family-{record.index}', record.family, 'Stored proficiency · ownership is not inferred',
@@ -55,7 +67,8 @@ def dashboard(backend, document):
                 note='Level thresholds and reward dependencies are not mapped.'),
          *(Metric(f'art-{index}', f'Equipped Battle Art {index + 1}',
                   'Empty' if art is None else f'ID {art}')
-           for index, art in enumerate(record.battle_arts))), section='Proficiency')
+           for index, art in enumerate(record.battle_arts))), section='Proficiency',
+        search_text=f'family {record.index} {record.family} battle arts')
         for record in proficiency_records(document))
 
     completion = []
@@ -77,7 +90,26 @@ def dashboard(backend, document):
                                        note='Denominator covers only the recognized mapped battle records.'),
                                 *history), section='Completion'))
 
+    overview = [Card('equipment-snapshot', 'Weapon inventory', 'Occupied mapped inventory records', (
+        Metric('copies', 'Weapon copies', str(len(inventory))),
+        Metric('identities', 'Distinct weapon IDs', str(len(copies))),
+        Metric('reinforcement', 'Highest stored reinforcement',
+               f'+{max(record.upgrade for record in inventory)}' if inventory else 'No occupied records',
+               note='Stored value only; no collection, proficiency or achievement state is inferred.'),
+    ), section='Overview'), Card('progression-scope', 'Character progression', 'Verified inspection scope', (
+        Metric('bonds', 'Mapped bond records', str(len(character_cards) - 1)),
+        Metric('proficiencies', 'Recognized proficiency families', str(len(proficiency)) if proficiency else 'Unavailable',
+               note='Existing records do not establish weapon ownership; XP thresholds and reward dependencies remain unmapped.'),
+        Metric('campaign', 'Campaign completion', 'Not mapped',
+               note='Battle replay flags and provincial peace are independent from campaign endings.'),
+    ), section='Overview')]
+    if history:
+        overview.append(Card('battle-snapshot', 'Mapped battle history', 'Verified replay clear flags',
+                             (completion[-1].metrics[0],), section='Overview'))
+
     return ProgressionDashboard('Dynasty Warriors: Origins', (
+        Section('overview', 'Overview', tuple(overview),
+                'Snapshot counts and scoped history only; no overall completion percentage.'),
         Section('characters', 'Characters', tuple(character_cards)),
         Section('equipment', 'Equipment', tuple(weapons),
                 'Existing occupied inventory only. Numeric IDs are retained where names are not mapped; equipped weapon references are not mapped.'),

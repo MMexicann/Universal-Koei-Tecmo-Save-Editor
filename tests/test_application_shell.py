@@ -81,6 +81,45 @@ class ApplicationShellTests(unittest.TestCase):
             self.root.destroy()
             self.directory.cleanup()
 
+    def test_active_editor_uses_one_header_row_and_restores_full_navigation(self):
+        editor = self.app.select_game('dw7xl')
+        self.root.geometry('800x680')
+        self.root.update()
+        self.assertLessEqual(self.app._shell_top.winfo_height(), 60)
+        self.assertFalse(self.app.theme_selector.winfo_ismapped())
+        for widget in (self.app.home_button, self.app.help_button, self.app.command_button,
+                       self.app.session_selector):
+            self.assertTrue(widget.winfo_ismapped())
+        self.app.show_library()
+        self.root.update()
+        self.assertTrue(self.app.theme_selector.winfo_ismapped())
+        self.assertTrue(self.app.converter_button.winfo_ismapped())
+        self.app.select_game('dw7xl')
+        self.app.show_help()
+        self.root.update()
+        self.assertTrue(self.app.language_selector.winfo_ismapped())
+        self.assertIs(self.app.sessions['dw7xl'][1], editor)
+
+    def test_compact_header_palette_keeps_language_text_size_and_appearance_available(self):
+        editor = self.app.select_game('dw7xl')
+        self.root.geometry('780x680')
+        for command in ('language_de', 'text_size_140', 'theme_dark'):
+            self.assertIn('command:' + command, {entry.id for entry in self.app.command_entries()})
+            self.app.execute_command('command:' + command)
+        self.root.update()
+        self.assertEqual(self.app.language, 'de')
+        self.assertEqual(self.app.shell_settings.text_size, 140)
+        self.assertEqual(self.app.theme_name.get(), 'Dark')
+        self.assertLessEqual(self.app._shell_top.winfo_height(), 70)
+        self.assertEqual(self.app.active_game, 'dw7xl')
+        self.assertIs(self.app.sessions['dw7xl'][1], editor)
+        self.assertFalse(editor.changes)
+        for widget in (self.app.home_button, self.app.help_button, self.app.command_button,
+                       self.app.session_selector):
+            self.assertTrue(widget.winfo_ismapped())
+            self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                 self.root.winfo_rootx() + self.root.winfo_width())
+
     def test_palette_keyboard_search_open_and_escape_restore_focus(self):
         self.app.library_search_entry.focus_force()
         self.root.update()

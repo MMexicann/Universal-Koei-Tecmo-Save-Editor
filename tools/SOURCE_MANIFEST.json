@@ -68,8 +68,8 @@
     },
     {
       "path": "docs/APPLICATION_SHELL.md",
-      "bytes": 4051,
-      "sha256": "8ced8904b01f655336909a59f74405b38e90b30c6426c2305aa9a523ad8fd0f2"
+      "bytes": 4368,
+      "sha256": "d7489df63e004dcea7935f3138db98d7935618b0377b92daed1e12feb37e086b"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -325,6 +325,11 @@
       "path": "docs/DYNASTY_RESEARCH.md",
       "bytes": 22726,
       "sha256": "11c3ff29405e263256718e2fd1e6d40b4b111f3f8069ff463f9a4559af0a46e0"
+    },
+    {
+      "path": "docs/EDITING_WORKFLOWS.md",
+      "bytes": 1059,
+      "sha256": "2aba3aafb2c0874a9abb82ffe21fc26100d9996ae76ab109e5efb3476f4b0ad0"
     },
     {
       "path": "docs/EDITOR_WORKSPACE.md",
@@ -653,8 +658,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14303,
-      "sha256": "8066701036aafe18bf7508b52cc6a5928dc94c090db2e6fc3950d4f15c691a89"
+      "bytes": 14377,
+      "sha256": "056580b64e8ce22d5108870abf4af1429b7b6c0124eeed0448e8ceb28f27467f"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1143,8 +1148,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 58613,
-      "sha256": "845a63a99a9b6db768e7ad34f10cfb5510df72c35550000eb1ab0f9c572d157b"
+      "bytes": 62217,
+      "sha256": "737d8f8918c48243df08f4b188ebeaab326e6da5775e2be3d945c422817dff9c"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3633,8 +3638,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 4802,
-      "sha256": "8e646fb96c3a831a877c38a640e6d6b8bbe54bd29390007f59059186ea051b7c"
+      "bytes": 5276,
+      "sha256": "511ee859978a7bb51f311cc5a4714d38a3aa2a996eb2239a36111e09808329d7"
     },
     {
       "path": "src/koei_editor/shared/musou_presentations.py",
@@ -3758,8 +3763,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 56586,
-      "sha256": "8284ae9bb592f34432f55aad829c51da140a675e87718ed8b26fae1c95bc3506"
+      "bytes": 60231,
+      "sha256": "d8407f38a752b005947be779dbbd1ac66f18d6d8340bce803bd28a237e13a267"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -3798,8 +3803,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 14213,
-      "sha256": "3d57c84afc7ed3863c8d52c00535e22e89d802eb12177236cefe409fe8e4e44c"
+      "bytes": 16354,
+      "sha256": "cd5b4f7a78447b83bf3d7a59517bbbebb0d256447d3bd93a0656f913230004e6"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5015,6 +5020,11 @@
       "path": "tests/test_scalar_bulk_actions.py",
       "bytes": 8470,
       "sha256": "865775858bf145b9ef84619e850c3a6fc39b40b56fe787a731f892566608521b"
+    },
+    {
+      "path": "tests/test_scalar_edit_safety.py",
+      "bytes": 4633,
+      "sha256": "bc5b1adf48327d7d088c483e096c54b1bab95a31d9c79b7ad6671b4d5b257023"
     },
     {
       "path": "tests/test_scalar_workspace_gui.py",

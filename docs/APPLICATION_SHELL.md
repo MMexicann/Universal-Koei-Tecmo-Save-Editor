@@ -19,7 +19,11 @@ changes. Navigation never opens a file automatically.
   the Help Center. Its menu includes compatibility, preparation guides, feedback,
   real-game validation and plugin documentation.
 
-The header wraps navigation into two rows when space is limited. Library cards
+Game editors use a compact single-row header with Home, Help, Ctrl+K and the
+existing session selector, preserving vertical space for fields and dashboards.
+Language and text size remain available through Ctrl+K commands in this mode.
+The library, global tools and Help restore the full navigation and settings.
+The full header wraps navigation into two rows when space is limited. Library cards
 reduce their column count as the window narrows. Language and
 text size controls remain visible. English and German cover shell labels and
 commands; game names, original technical evidence and game editor contents are

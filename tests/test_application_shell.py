@@ -1,0 +1,163 @@
+"""Shell navigation never edits saves and persists only bounded command IDs."""
+from dataclasses import replace
+import json
+from pathlib import Path
+import tempfile
+import tkinter as tk
+import unittest
+from unittest.mock import patch
+
+from koei_editor.application import Application, VERSION
+from koei_editor.shared.command_palette import CommandEntry, search_commands
+from koei_editor.shared.localization import CATALOGS, translate
+from koei_editor.shared import shell_preferences as settings
+
+
+class ShellPreferencesTests(unittest.TestCase):
+    def test_settings_roundtrip_preserves_legacy_preferences_and_contains_no_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            legacy = Path(directory) / 'preferences.json'
+            legacy.write_text('{"schema":1,"theme":"Dark"}')
+            value = settings.ShellPreferences('de', 140, ('game:dw3',), ('tool:comparison',))
+            self.assertTrue(settings.save(value, settings.shell_path(legacy)))
+            self.assertEqual(settings.load(settings.shell_path(legacy)), value)
+            self.assertEqual(legacy.read_text(), '{"schema":1,"theme":"Dark"}')
+            self.assertFalse(settings.save(replace(value, recent=('game:/private/save.dat',)), settings.shell_path(legacy)))
+            self.assertEqual(settings.load(settings.shell_path(legacy)), value)
+
+    def test_invalid_duplicate_or_oversized_data_falls_back(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'shell.json'
+            for raw in ('{"schema":1,"schema":1}', 'x' * (settings.MAX_BYTES + 1),
+                        json.dumps({'schema': True, 'language': 'de', 'text_size': 100,
+                                    'favorites': [], 'recent': []})):
+                path.write_text(raw)
+                self.assertEqual(settings.load(path), settings.ShellPreferences())
+
+    def test_recents_are_bounded_unique_and_workspace_only(self):
+        value = settings.ShellPreferences()
+        for index in range(40):
+            value = settings.remember(value, f'game:profile_{index}')
+        value = settings.remember(value, 'game:profile_24')
+        self.assertEqual(len(value.recent), settings.MAX_RECENT)
+        self.assertEqual(value.recent[0], 'game:profile_24')
+        self.assertEqual(settings.remember(value, 'command:save_copy'), value)
+        self.assertEqual(settings.remember(value, 'C:/private/save.dat'), value)
+
+    def test_catalogs_have_identical_keys_and_english_fallback(self):
+        self.assertEqual(set(CATALOGS['en']), set(CATALOGS['de']))
+        self.assertEqual(translate('choose', 'fr'), 'Choose your game')
+
+    def test_search_matches_platforms_accents_favorites_and_stable_order(self):
+        entries = (CommandEntry('game:a', 'Sophie', 'game', 'Windows PC'),
+                   CommandEntry('tool:b', 'Vergleichen', 'tool'),
+                   CommandEntry('game:c', 'Sophie', 'game', 'PlayStation 4'))
+        self.assertEqual(search_commands(entries, 'sóphie pc'), (entries[0],))
+        self.assertEqual(search_commands(entries, favorites=('game:c',), recent=('tool:b',)),
+                         (entries[2], entries[1], entries[0]))
+        self.assertFalse(search_commands(entries, 'missing'))
+
+
+class ApplicationShellTests(unittest.TestCase):
+    def setUp(self):
+        try:
+            self.root = tk.Tk()
+        except tk.TclError as error:
+            self.skipTest(str(error))
+        self.directory = tempfile.TemporaryDirectory()
+        self.path = Path(self.directory.name) / 'preferences.json'
+        self.app = Application(self.root, preferences_path=self.path, persist_preferences=False)
+        self.root.geometry('1080x820')
+        self.root.update()
+
+    def tearDown(self):
+        if hasattr(self, 'root'):
+            self.root.destroy()
+            self.directory.cleanup()
+
+    def test_palette_keyboard_search_open_and_escape_restore_focus(self):
+        self.app.library_search_entry.focus_force()
+        self.root.update()
+        self.root.event_generate('<Control-k>')
+        self.root.update()
+        palette = self.app.command_palette
+        self.assertIsNotNone(palette)
+        self.assertFalse(self.app.sessions)
+        palette.query.set('dw7xl windows')
+        self.assertEqual([entry.id for entry in palette.matches], ['game:dw7xl'])
+        palette.window.event_generate('<Escape>')
+        self.root.update()
+        self.assertFalse(palette.window.winfo_exists())
+        self.assertEqual(self.root.focus_get(), self.app.library_search_entry)
+        self.assertFalse(self.app.sessions)
+
+    def test_palette_executes_exact_profile_and_keeps_editor_state(self):
+        editor = self.app.select_game('dw7xl')
+        self.app.show_library()
+        self.app.open_command_palette()
+        palette = self.app.command_palette
+        palette.query.set('dw7xl windows')
+        palette.activate()
+        self.assertEqual(self.app.active_game, 'dw7xl')
+        self.assertIs(self.app.sessions['dw7xl'][1], editor)
+        self.assertIsNone(editor.document)
+        self.assertFalse(editor.changes)
+        self.assertEqual(self.app.shell_settings.recent[0], 'game:dw7xl')
+
+    def test_favorites_and_recents_are_searchable_without_paths(self):
+        self.app._toggle_favorite('game:dw3')
+        self.app._remember_workspace('tool:comparison')
+        self.assertEqual([entry.id for entry in search_commands(self.app.command_entries(), 'favorites')], ['game:dw3'])
+        self.assertEqual([entry.id for entry in search_commands(self.app.command_entries(), 'recent')], ['tool:comparison'])
+        self.app.execute_command('tool:arbitrary_import')
+        self.assertFalse(self.app.sessions)
+        self.assertFalse(self.path.exists())
+        self.assertFalse(self.app.shell_preferences_path.exists())
+
+    def test_palette_respects_safety_dialog_grab(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.grab_set()
+        self.app.open_command_palette()
+        self.assertIsNone(self.app.command_palette)
+        self.assertEqual(self.root.grab_current(), dialog)
+        dialog.destroy()
+
+    def test_german_shell_and_text_size_do_not_replace_retained_editor(self):
+        editor = self.app.select_game('dw7xl')
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.assertEqual(self.app.home_button.cget('text'), '‹ Spielebibliothek')
+        self.app.text_size_choice.set('140%')
+        self.app.change_text_size()
+        self.assertEqual(self.app.shell_settings.text_size, 140)
+        self.assertIs(self.app.sessions['dw7xl'][1], editor)
+        self.assertIsNone(editor.document)
+        self.assertEqual(VERSION, '2.7')
+
+    def test_navigation_wraps_and_stays_reachable_at_small_size(self):
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.app.text_size_choice.set('140%')
+        self.app.change_text_size()
+        self.root.geometry('780x680')
+        self.root.update()
+        for widget in (*self.app._navigation_buttons, self.app.language_selector, self.app.text_size_selector):
+            self.assertTrue(widget.winfo_ismapped())
+            self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
+            self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), self.root.winfo_rootx() + self.root.winfo_width())
+
+    def test_search_bursts_coalesce_and_enter_flushes_latest_query(self):
+        with patch.object(self.app, 'show_platform', wraps=self.app.show_platform) as show:
+            for text in ('d', 'dw', 'dw7', 'dw7xl'):
+                self.app.library_search.set(text)
+            self.assertEqual(show.call_count, 0)
+            self.root.update()
+            self.assertEqual(show.call_count, 1)
+        self.app.platform_choice.set('Windows PC')
+        self.app.library_search.set('dw7xl')
+        self.app.open_library_match()
+        self.assertEqual(self.app.active_game, 'dw7xl')
+
+
+if __name__ == '__main__':
+    unittest.main()

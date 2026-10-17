@@ -1,10 +1,12 @@
 """Reusable metadata cannot bypass exact-profile native edit protections."""
 from dataclasses import replace
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
 from pathlib import Path
 import tempfile
+import threading
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -16,6 +18,7 @@ from koei_editor.shared import compatible_presets as presets, edit_presets, pres
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared import verified_editor as dw8
 from koei_editor.shared.preset_library import PresetLibrary
+from koei_editor.shared import preset_library as library_backend
 from tests.test_edit_presets import fixture_backend
 from tests.test_origins_parser import fixture as origins_fixture
 from tests.test_verified_editors import synthetic_raw
@@ -341,6 +344,122 @@ class PresetLibraryTests(unittest.TestCase):
             self.library.save(self.preset)
         self.assertTrue(entry.path.is_symlink())
         self.assertFalse(target.exists(), 'Saving preset metadata followed a dangling library link')
+
+    def test_two_library_instances_cannot_admit_two_presets_into_the_last_slot(self):
+        entered, release = threading.Event(), threading.Event()
+        original = library_backend.atomic_new
+        def paused(raw, destination):
+            if threading.current_thread() is not threading.main_thread():
+                entered.set()
+                if not release.wait(5):
+                    raise RuntimeError('Concurrent admission test did not release its writer')
+            return original(raw, destination)
+        second = PresetLibrary(self.library.directory)
+        with patch.object(library_backend, 'MAX_PRESETS', 1), \
+                patch.object(library_backend, 'atomic_new', side_effect=paused), ThreadPoolExecutor(1) as pool:
+            pending = pool.submit(self.library.save, self.preset)
+            try:
+                self.assertTrue(entered.wait(5))
+                with self.assertRaises(SaveError):
+                    second.save(replace(self.preset, name='Competing admission'))
+            finally:
+                release.set()
+                first = pending.result(timeout=5)
+            self.assertEqual(self.library.scan().entries, (first,))
+        # The persistent lock is released after success; normal imports still work.
+        second.save(replace(self.preset, name='Next admission'))
+        self.assertEqual(len(self.library.scan().entries), 2)
+
+    def test_invalid_metadata_consumes_one_aggregate_scan_budget(self):
+        self.library.directory.mkdir()
+        body = b'!' * 128
+        for index in range(8):
+            (self.library.directory / (f'{index:064x}' + presets.SUFFIX)).write_bytes(body)
+        original = presets.read_bytes
+        with patch.object(library_backend, 'MAX_SCAN_BYTES', 3 * (len(body) + 1)), \
+                patch.object(presets, 'read_bytes', wraps=original) as reads:
+            snapshot = self.library.scan()
+            self.assertFalse(snapshot.complete)
+            self.assertEqual(snapshot.entries, ())
+            self.assertEqual(reads.call_count, 3)
+            self.assertLessEqual(sum(call.kwargs['maximum'] + 1 for call in reads.call_args_list),
+                                 library_backend.MAX_SCAN_BYTES)
+            self.assertTrue(any('total preset-byte' in issue for issue in snapshot.issues))
+            with self.assertRaises(SaveError):
+                self.library.save(self.preset)
+
+    def test_directory_entry_limit_stops_streaming_enumeration_and_closes_scanner(self):
+        entry = self.library.save(self.preset)
+        folder = self.library.directory
+
+        class StreamingScan:
+            closed = False
+            requested = 0
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                self.closed = True
+
+            def __iter__(self):
+                return self
+
+            def __next__(self):
+                self.requested += 1
+                if self.requested > 3:
+                    raise AssertionError('The scan enumerated beyond its directory-entry limit')
+                child = entry.path if self.requested == 1 else folder / f'unrelated-{self.requested}'
+                return SimpleNamespace(path=str(child))
+
+        scanner = StreamingScan()
+        with patch.object(library_backend, 'MAX_ENTRIES', 2), \
+                patch.object(library_backend.os, 'scandir', return_value=scanner) as scan, \
+                patch.object(library_backend.os, 'listdir', side_effect=AssertionError('Eager directory listing')):
+            snapshot = self.library.scan()
+        scan.assert_called_once_with(self.library.directory)
+        self.assertEqual(scanner.requested, 3, 'Only one overflow entry is needed to detect a partial scan')
+        self.assertTrue(scanner.closed, 'An early limit must release the directory handle')
+        self.assertEqual(snapshot.entries, (entry,))
+        self.assertFalse(snapshot.complete)
+        self.assertTrue(any('directory-entry' in issue for issue in snapshot.issues))
+
+    def test_metadata_byte_admission_limit_retains_existing_normal_export(self):
+        entry = self.library.save(self.preset)
+        with patch.object(library_backend, 'MAX_SCAN_BYTES', len(presets.dumps(self.preset)) + 1):
+            with self.assertRaises(SaveError):
+                self.library.save(replace(self.preset, name='Cannot fit'))
+            destination = self.library.export(entry, self.folder / 'export-still-works')
+            self.assertEqual(presets.load(destination), self.preset)
+
+    def test_externally_oversubscribed_library_returns_bounded_entries_and_issues(self):
+        self.library.save(self.preset)
+        another = replace(self.preset, name='External metadata')
+        raw = presets.dumps(another)
+        (self.library.directory / (hashlib.sha256(raw).hexdigest() + presets.SUFFIX)).write_bytes(raw)
+        with patch.object(library_backend, 'MAX_PRESETS', 1):
+            snapshot = self.library.scan()
+            self.assertEqual(len(snapshot.entries), 1)
+            self.assertFalse(snapshot.complete)
+            self.assertTrue(snapshot.issues)
+
+    @unittest.skipUnless(hasattr(os, 'mkfifo'), 'FIFO unavailable')
+    def test_admission_lock_rejects_fifo_without_opening_a_stream(self):
+        self.library.directory.mkdir()
+        os.mkfifo(self.library.directory / '.preset-admission.lock')
+        with self.assertRaises(SaveError):
+            self.library.save(self.preset)
+
+    def test_linked_admission_lock_cannot_create_an_external_target(self):
+        self.library.directory.mkdir()
+        target = self.folder / 'external-lock-target'
+        try:
+            (self.library.directory / '.preset-admission.lock').symlink_to(target)
+        except OSError as error:
+            self.skipTest(f'Symlink unavailable: {error}')
+        with self.assertRaises(SaveError):
+            self.library.save(self.preset)
+        self.assertFalse(target.exists())
 
 
 if __name__ == '__main__':

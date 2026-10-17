@@ -668,8 +668,8 @@
     },
     {
       "path": "docs/REUSABLE_PRESETS.md",
-      "bytes": 5273,
-      "sha256": "c5f0dda9562ac48442691ab0ee555224b7d6dc638cdfd0f26f5958e0ee9d1d6a"
+      "bytes": 5532,
+      "sha256": "c9edd6da0f4e8c8c6826ae2a61553b581afc373cd373d7f05f6029f0f1445c84"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -1543,8 +1543,8 @@
     },
     {
       "path": "src/koei_editor/games/dw3/progression_dashboard.py",
-      "bytes": 9151,
-      "sha256": "6078db31e42a4c87d1512f6584a7a1a0651cd582aa2a55dd4e9705fe98e3fad8"
+      "bytes": 12367,
+      "sha256": "bab5be3a50db5c25ec401a9bd863d953a8c1226b6263940141889d28b2bb6f29"
     },
     {
       "path": "src/koei_editor/games/dw3/progression_editor.py",
@@ -1873,8 +1873,8 @@
     },
     {
       "path": "src/koei_editor/games/dw8xl/dashboard.py",
-      "bytes": 6642,
-      "sha256": "c163156aea6874465664f4604bdc06bbfe45d65c3fc741a0428af52eac96f486"
+      "bytes": 9105,
+      "sha256": "68abe4007b033f1777ee6b70aaaed7a1dae65bb221158fa1184b24e742967a86"
     },
     {
       "path": "src/koei_editor/games/dw8xl/dw8xl_editor.py",
@@ -2388,8 +2388,8 @@
     },
     {
       "path": "src/koei_editor/games/origins/origins_dashboard.py",
-      "bytes": 6031,
-      "sha256": "0cc2a491ff64081a085edc2a62ee80b0cfe81c6a45b0022d5f0b7d120023d44d"
+      "bytes": 8610,
+      "sha256": "0e4a8a82f8cab569e4cd9f6574df5fbc5816d47db272e7620d147602e85d9c51"
     },
     {
       "path": "src/koei_editor/games/origins/origins_editor.py",
@@ -3118,8 +3118,8 @@
     },
     {
       "path": "src/koei_editor/games/wo3u/dashboard.py",
-      "bytes": 9408,
-      "sha256": "d026628f72e46067305846a8bf49ff42f9c710461711dc072052d6bce2c53568"
+      "bytes": 11834,
+      "sha256": "78abe72fa7e402bd8d91943303c547e709934ba0af4055b7867864f1b4512898"
     },
     {
       "path": "src/koei_editor/games/wo3u/wo3u_editor.py",
@@ -3573,8 +3573,8 @@
     },
     {
       "path": "src/koei_editor/shared/compatible_presets.py",
-      "bytes": 16603,
-      "sha256": "de7d76d7637f236a35bd3b17820659fd57bbe82f82de9842ff52f3cb9a8c8299"
+      "bytes": 16784,
+      "sha256": "8eb68974489062a683b50bda6f5283a8153eef3b9a521f5593845806eada8099"
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",
@@ -3628,8 +3628,8 @@
     },
     {
       "path": "src/koei_editor/shared/preset_library.py",
-      "bytes": 5050,
-      "sha256": "fbd51c77556b29fba2b8834e01b00062071911a7401715cc024ca95191d91410"
+      "bytes": 8633,
+      "sha256": "a7ca5154b4d008daea7aa150fdf0b3234dd82ad634949ce7d7412e57ad3114fa"
     },
     {
       "path": "src/koei_editor/shared/preset_portability.py",
@@ -3680,6 +3680,11 @@
       "path": "src/koei_editor/shared/save_comparison.py",
       "bytes": 8208,
       "sha256": "079c45d949df50bc7a98b26fa88e8ef7e13acfcb26d5686f4f4f948b48587397"
+    },
+    {
+      "path": "src/koei_editor/shared/save_doctor.py",
+      "bytes": 13934,
+      "sha256": "49f6d84a69e19ec4206033dc941670d538db45b89c783ed27b2250c890a29727"
     },
     {
       "path": "src/koei_editor/shared/save_library.py",
@@ -3888,8 +3893,8 @@
     },
     {
       "path": "tests/test_compatible_presets.py",
-      "bytes": 19548,
-      "sha256": "7687772fd9972a3c200da360c659b3591fca73cad092f304cc157669a5bb85d9"
+      "bytes": 25614,
+      "sha256": "87b15d8398ce223bcd1ea164e553acd4167bce83720a4f1012134b85445e4094"
     },
     {
       "path": "tests/test_compatible_presets_gui.py",
@@ -4280,6 +4285,11 @@
       "path": "tests/test_firis_pc.py",
       "bytes": 8607,
       "sha256": "09e53bcd571519ae49a3c1e959e2bfa223455dfcf4554cabdba60dda8ce0026e"
+    },
+    {
+      "path": "tests/test_game_dashboard_context.py",
+      "bytes": 5565,
+      "sha256": "dc8dc7f4b140c69f35b6ee309a7409dad0918ca2676ce7e6ba162e84ed00c591"
     },
     {
       "path": "tests/test_gemfire_battery.py",
@@ -4930,6 +4940,11 @@
       "path": "tests/test_save_comparison.py",
       "bytes": 8958,
       "sha256": "278cf5c547adf469f07feb06b2c61c718343b04941e0294828efeff27c7e6721"
+    },
+    {
+      "path": "tests/test_save_doctor.py",
+      "bytes": 17339,
+      "sha256": "ff3ef28cf70726beac4ca14e626e8bb2ed457c8d452baab3e42b4e938c9988c7"
     },
     {
       "path": "tests/test_save_library.py",

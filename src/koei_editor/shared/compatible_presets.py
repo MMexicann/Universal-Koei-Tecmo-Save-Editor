@@ -133,8 +133,10 @@ def loads(raw):
                                     data['policy_sha256'], data['experimental'], tuple(edits)))
 
 
-def read_bytes(path):
+def read_bytes(path, *, maximum=MAX_BYTES):
     """Bounded ordinary-file read, with per-API change tokens on Windows."""
+    if type(maximum) is not int or not 0 < maximum <= MAX_BYTES:
+        raise SaveError('Choose a positive reusable preset read limit within the file-size bound.')
     path = safe_path(path)
     before = path.lstat()
     def ordinary(info):
@@ -143,7 +145,7 @@ def read_bytes(path):
                 & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400))
     def token(info):
         return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
-    if not ordinary(before) or not 0 < before.st_size <= MAX_BYTES:
+    if not ordinary(before) or not 0 < before.st_size <= maximum:
         raise SaveError('Choose a bounded ordinary reusable preset file.')
     flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     descriptor = os.open(path, flags)
@@ -151,7 +153,7 @@ def read_bytes(path):
         opened = os.fstat(descriptor)
         if not ordinary(opened) or token(opened)[:-1] != token(before)[:-1]:
             raise SaveError('The reusable preset changed before reading.')
-        chunks, remaining = [], MAX_BYTES + 1
+        chunks, remaining = [], maximum + 1
         while remaining:
             block = os.read(descriptor, min(65536, remaining))
             if not block:
@@ -161,7 +163,7 @@ def read_bytes(path):
         if token(os.fstat(descriptor)) != token(opened) or token(path.lstat()) != token(before):
             raise SaveError('The reusable preset changed while reading.')
         raw = b''.join(chunks)
-        if len(raw) != opened.st_size or len(raw) > MAX_BYTES:
+        if len(raw) != opened.st_size or len(raw) > maximum:
             raise SaveError('The reusable preset changed size while reading.')
         return raw
     finally:

@@ -4678,8 +4678,8 @@
     },
     {
       "path": "tests/test_progression_report_security.py",
-      "bytes": 7895,
-      "sha256": "ec5598864c9beea4cc2e101127c7d8362cf7c4e6e3ddf9aec08321f54da6ddcf"
+      "bytes": 7905,
+      "sha256": "484b000456021af42357c2f16ad91ee3da59a26096efd7b1348d22e7304c1bbd"
     },
     {
       "path": "tests/test_progression_v034.py",

@@ -506,6 +506,93 @@ class SaveVaultTests(unittest.TestCase):
         self.assertFalse(destination.exists())
         self.assertTrue(self.store.verify(record.id)[0].valid)
 
+    def test_restore_binds_created_directory_and_preserves_files_after_replacement(self):
+        record = self.snapshot()
+        destination = self.folder / 'restored'
+        moved = self.folder / 'original-restored'
+        original = self.store._materialize
+        def replacing(bundle, directory):
+            original(bundle, directory)
+            directory.rename(moved)
+            directory.mkdir()
+            for item in moved.iterdir():
+                item.rename(directory / item.name)
+        with patch.object(self.store, '_materialize', side_effect=replacing):
+            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+                self.store.restore(record.id, destination)
+        self.assertEqual((destination / self.source.name).read_bytes(), self.raw)
+        self.assertEqual((destination / self.metadata.name).read_bytes(), self.context)
+        self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_restore_stops_between_files_when_created_directory_is_replaced(self):
+        record = self.snapshot()
+        destination = self.folder / 'restored'
+        moved = self.folder / 'original-restored'
+        original = vault._new
+        completed = []
+        def replacing(raw, path, **kwargs):
+            result = original(raw, path, **kwargs)
+            if Path(path).parent.samefile(destination):
+                completed.append(Path(path).name)
+                destination.rename(moved)
+                destination.mkdir()
+            return result
+        with patch.object(vault, '_new', side_effect=replacing):
+            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+                self.store.restore(record.id, destination)
+        self.assertEqual(len(completed), 1)
+        self.assertEqual(tuple(destination.iterdir()), ())
+        self.assertEqual((moved / completed[0]).read_bytes(), self.raw)
+        self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_switch_dqb2_live_destination_is_rejected_before_directory_creation(self):
+        from tests.test_dqb2_switch import fixture as dqb2_fixture
+        source = self.folder / 'CMNDAT.BIN'
+        raw = dqb2_fixture()
+        source.write_bytes(raw)
+        record = self.store.snapshot('dqb2_switch', source, branch='dqb2')
+        live = self.folder / 'Documents' / 'My Games' / 'DRAGON QUEST BUILDERS II' / 'Steam'
+        live.mkdir(parents=True)
+        destination = live / 'restored'
+        with self.assertRaisesRegex(SaveError, 'live Dragon Quest Builders 2'):
+            self.store.restore(record.id, destination)
+        self.assertFalse(destination.exists())
+        self.assertEqual(tuple(live.iterdir()), ())
+        self.assertEqual(source.read_bytes(), raw)
+        restored = self.store.restore(record.id, self.folder / 'safe-dqb2-copy')
+        self.assertEqual(restored.read_bytes(), raw)
+
+    def test_casefold_context_collisions_are_rejected_without_poisoning_history(self):
+        baseline = self.snapshot()
+        names = ('steam_autocloud.vdf', 'STEAM_AUTOCLOUD.VDF')
+        for name in names:
+            (self.source.parent / name).write_bytes(b'opaque context')
+        # Windows aliases these spellings; exercise the same discovered-name
+        # collision on every host instead of skipping its admission guard.
+        with patch.object(vault, '_context_names', return_value=('PARAM.SFO', *names)):
+            with self.assertRaisesRegex(SaveError, 'case-insensitive'):
+                self.snapshot()
+        self.assertEqual(self.store.list_snapshots(), (baseline,))
+        self.assertEqual(tuple(self.store.objects.iterdir()), (self.store.objects / baseline.id,))
+        self.assertTrue(self.store.verify(baseline.id)[0].valid)
+
+    def test_normalized_paths_cannot_bypass_outside_vault_boundaries(self):
+        record = self.snapshot()
+        sibling = self.folder / 'sibling'
+        sibling.mkdir()
+        alias_root = sibling / '..' / self.store.root.name
+        destination = alias_root / 'objects' / 'not-an-id'
+        with self.assertRaisesRegex(SaveError, 'outside the vault'):
+            self.store.restore(record.id, destination)
+        self.assertFalse(destination.exists())
+        source = alias_root / 'objects' / record.id / record.filename
+        with self.assertRaisesRegex(SaveError, 'outside the vault'):
+            self.store.snapshot(parser.GAME_ID, source)
+        reopened = vault.SaveVault(alias_root)
+        self.assertEqual(reopened.root, self.store.root)
+        self.assertEqual(reopened.list_snapshots(), (record,))
+        self.assertTrue(reopened.verify(record.id)[0].valid)
+
     def test_dw3_bespoke_tagged_document_roundtrip_remains_byte_exact(self):
         from tests.test_elixirs_v11 import synthetic_reset_save
         from koei_editor.games.dw3.save_parser import read_save

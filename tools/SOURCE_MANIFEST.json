@@ -4418,8 +4418,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 14277,
-      "sha256": "33dda7f6c425907a3fc5435faf4de5636d461b943564474501f222cb664df9da"
+      "bytes": 14671,
+      "sha256": "ccf7e3d171549081e614cab52836411b75e14695af03ba5dc249d377b7f92a2d"
     },
     {
       "path": "tests/test_editor.py",

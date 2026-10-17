@@ -161,17 +161,23 @@ class EditingToolsApplicationTests(unittest.TestCase):
                     plan, selection = presets._plan, presets.assignments.selection()
                     self.root.geometry('780x680'); self.root.update(); self.root.update()
                     self.assertEqual((self.root.winfo_width(), self.root.winfo_height()), (780, 680))
-                    for widget in children(presets.frame):
-                        if isinstance(widget, ttk.Button) and selected(widget):
-                            reachable(widget)
+                    self.assertTrue(presets.frame.winfo_ismapped())
+                    buttons = [widget for widget in children(presets.frame)
+                               if isinstance(widget, ttk.Button) and selected(widget)]
+                    self.assertGreaterEqual(len(buttons), 12)
+                    for widget in buttons:
+                        reachable(widget)
                     self.assertIs(presets._plan, plan)
                     self.assertEqual(presets.assignments.selection(), selection)
                     self.app.show_research_lab(); self.root.update()
+                    self.assertTrue(research.frame.winfo_ismapped())
                     for tab in research.tabs.tabs():
                         research.tabs.select(tab); self.root.update()
-                        for widget in children(research.frame):
-                            if isinstance(widget, (ttk.Button, ttk.Checkbutton)) and selected(widget):
-                                reachable(widget)
+                        buttons = [widget for widget in children(research.frame)
+                                   if isinstance(widget, (ttk.Button, ttk.Checkbutton)) and selected(widget)]
+                        self.assertGreaterEqual(len(buttons), 6)
+                        for widget in buttons:
+                            reachable(widget)
                     self.assertIs(research.prepared, comparison)
                     self.assertEqual(research.annotations, notes)
                     self.assertEqual(research.action.get(), 'Retain controlled-action notes')

@@ -29,6 +29,7 @@ class Application(Appearance):
         self.save_library = None
         self.editing_presets = None
         self.research_lab = None
+        self.workflow_builder = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(1080, 820)
@@ -123,6 +124,8 @@ class Application(Appearance):
         footer_buttons.pack(fill='x', pady=(12, 0))
         self.contact_button = ttk.Button(footer_buttons, text='Contact Mexican', command=self.contact)
         self.contact_button.pack(side='left')
+        self.workflow_button = ttk.Button(footer_buttons, text='Workflow Builder', command=self.show_workflow_builder)
+        self.workflow_button.pack(side='left', padx=10)
         cards = ttk.Frame(self.library)
         cards.pack(fill='both', expand=True)
         self.platform_frames = {platform: ttk.Frame(cards) for platform in (ALL_PLATFORMS,) + platforms}
@@ -403,7 +406,7 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab')
+                                       'editing_presets', 'research_lab', 'workflow_builder')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -484,6 +487,19 @@ class Application(Appearance):
         self.save_library.frame.pack(fill='both', expand=True)
         self.breadcrumb.set('Save Library')
         self.save_library.apply_theme(THEMES[self.theme_name.get()])
+
+    def show_workflow_builder(self):
+        from koei_editor.shared.automation_gui import WorkflowWorkspace
+        if self.workflow_builder is None:
+            self.workflow_builder = WorkflowWorkspace(self.root, self.workspace)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        self.workflow_builder.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set('Workflow Builder')
+        self.workflow_builder.apply_theme(THEMES[self.theme_name.get()])
 
     def open_saved_copy(self, game_id, path):
         """Open a browser result through that profile's ordinary guarded editor."""
@@ -579,6 +595,10 @@ class Application(Appearance):
         if self.save_library is not None and self.save_library.frame.winfo_manager():
             focus_search = getattr(self.save_library, 'focus_search', None)
             return focus_search() if callable(focus_search) else 'break'
+        if self.workflow_builder is not None and self.workflow_builder.frame.winfo_manager():
+            self.workflow_builder.search_entry.focus_set()
+            self.workflow_builder.search_entry.selection_range(0, 'end')
+            return 'break'
         if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
@@ -666,7 +686,11 @@ def _smoke_progression_views(app):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--automation':
+        from koei_editor.automation_cli import main as automation_main
+        raise SystemExit(automation_main(sys.argv[2:]))
     parser = argparse.ArgumentParser(description='Universal Koei Tecmo Save Editor')
+    parser.epilog = 'Use --automation --help for reviewed batch editing and workflow commands.'
     parser.add_argument('--game', choices=[game.id for game in ALL_ADAPTERS], help='Open a registered editor or research tool.')
     parser.add_argument('--smoke-test', action='store_true', help='Initialize all registered interfaces and check switching.')
     parser.add_argument('--list-games', action='store_true', help='Print supported games, platforms and features.')

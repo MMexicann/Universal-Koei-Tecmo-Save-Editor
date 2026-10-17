@@ -19,6 +19,8 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
 - [Bulk edit validation and exact field navigation](EDITING_WORKFLOWS.md)
+- [Reviewed automation, Workflow Builder, batch CLI and recovery](AUTOMATION.md)
+- [Seeded automation regression properties and repeatable benchmarks](AUTOMATION_BENCHMARKS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
 
 - [v2.5.4 review-export filename fix](releases/v2.5.4.md)

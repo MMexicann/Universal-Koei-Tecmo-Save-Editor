@@ -638,8 +638,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14116,
-      "sha256": "08c93dcd499d8d3fc359553b6ff82d416777537bcb4096a4750d8c0a6728370f"
+      "bytes": 14221,
+      "sha256": "1ce7d61072bc6f10a828aa187dead982de76c85b4012111150430bbda716e6d0"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -775,6 +775,11 @@
       "path": "docs/SAVE_LIBRARY.md",
       "bytes": 6106,
       "sha256": "2ee6452b6a4de518e1deadbdd30f1a281c785e050f3e0d409005ab0301fb6fe8"
+    },
+    {
+      "path": "docs/SAVE_RESEARCH_LAB.md",
+      "bytes": 3700,
+      "sha256": "cb9d31f3e56da7589c610d5857f1bb0cfbd0b8572bd0a333da87f123be20bf13"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -3657,6 +3662,16 @@
       "sha256": "897917d9825f5a1f46ab1f41ae8931155293d14ebfcde3fe77ebf152cb649ccb"
     },
     {
+      "path": "src/koei_editor/shared/research_lab.py",
+      "bytes": 13739,
+      "sha256": "5ae3c3c5db16accd04fbdaa2e03493ec1b9dace36b3990a10488984796ce06a8"
+    },
+    {
+      "path": "src/koei_editor/shared/research_lab_gui.py",
+      "bytes": 19305,
+      "sha256": "f78c57e4ae0e9d36cd42105d522c94f3878ce5bee4e20208e949acd29e4cc3ad"
+    },
+    {
       "path": "src/koei_editor/shared/save_comparison.py",
       "bytes": 8208,
       "sha256": "079c45d949df50bc7a98b26fa88e8ef7e13acfcb26d5686f4f4f948b48587397"
@@ -4780,6 +4795,16 @@
       "path": "tests/test_release_preparation.py",
       "bytes": 15757,
       "sha256": "67a6388776f081e120dd52e4b5bbbdf8a7ceb72f38b31588b4e6842e6b067770"
+    },
+    {
+      "path": "tests/test_research_lab.py",
+      "bytes": 11618,
+      "sha256": "1ba039018f47115a2d43b12473e0aa1eeb1f6baa6b41ff69987055770ebfa132"
+    },
+    {
+      "path": "tests/test_research_lab_gui.py",
+      "bytes": 8411,
+      "sha256": "554ae4fa8ee4db5656f6d27bdd954c0671b97b8e1159aff0643b54e56f1a14c4"
     },
     {
       "path": "tests/test_retro_profile_review.py",

@@ -532,7 +532,7 @@ class SaveVaultTests(unittest.TestCase):
         completed = []
         def replacing(raw, path, **kwargs):
             result = original(raw, path, **kwargs)
-            if Path(path).parent == destination:
+            if Path(path).parent.samefile(destination):
                 completed.append(Path(path).name)
                 destination.rename(moved)
                 destination.mkdir()

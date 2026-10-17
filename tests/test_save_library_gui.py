@@ -492,47 +492,58 @@ class SaveLibraryGuiTests(unittest.TestCase):
                            *(label for label in workspace._wrapped_labels if label.master is workspace.header.content))
         pinned_controls = (*workspace.select_matches_button.master.winfo_children(), workspace.previous,
                            workspace.next, workspace.page_label, workspace.detail_label, workspace.guidance_label)
-        for width, height in ((1080, 820), (780, 680), (1180, 930), (780, 680)):
-            with self.subTest(width=width, height=height):
-                self.root.geometry(f'{width}x{height}')
-                self.root.update()
-                self.assertIs(workspace.prepared, inventory)
-                self.assertEqual(workspace.selected_entries(), selected)
-                self.assertEqual((workspace.search.get(), workspace.filter.get(), workspace.sort.get()),
-                                 ('bin qualified', 'Qualified', 'Newest first'))
-                self.assertEqual(int(workspace.folder_filter.grid_info()['row']), int(width == 780))
-                self.assertEqual(int(workspace.sort_selector.grid_info()['row']), int(width == 780))
-                self.assertGreaterEqual(workspace.table.winfo_height(), 100)
-                self.assertTrue(workspace.horizontal_scrollbar.winfo_ismapped())
-                self.assertLessEqual(workspace.table.winfo_rooty() + workspace.table.winfo_height(),
-                                     workspace.footer.winfo_rooty())
-                for widget in pinned_controls:
-                    self.assertTrue(widget.winfo_ismapped())
-                    self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
-                    self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
-                    self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
-                    self.assertGreaterEqual(widget.winfo_rooty(), self.root.winfo_rooty())
-                    self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
-                                         self.root.winfo_rootx() + self.root.winfo_width())
-                    self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
-                                         self.root.winfo_rooty() + self.root.winfo_height())
-                canvas = workspace.header.canvas
-                if width == 780:
-                    self.assertLess(canvas.yview()[1] - canvas.yview()[0], 1)
-                else:
-                    self.assertEqual(canvas.yview(), (0.0, 1.0))
-                for widget in header_controls:
-                    workspace.header.reveal(widget)
+        for language, text_size in (('English', '100%'), ('English', '120%'), ('English', '140%'),
+                                    ('Deutsch', '140%'), ('English', '100%')):
+            app.language_choice.set(language)
+            app.change_language()
+            app.text_size_choice.set(text_size)
+            app.change_text_size()
+            for width, height in ((1080, 820), (780, 680), (1180, 930), (780, 680)):
+                with self.subTest(language=language, text_size=text_size, width=width, height=height):
+                    self.root.geometry(f'{width}x{height}')
                     self.root.update()
-                    self.assertTrue(widget.winfo_ismapped())
-                    self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
-                    self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
-                    self.assertGreaterEqual(widget.winfo_rootx(), canvas.winfo_rootx())
-                    self.assertGreaterEqual(widget.winfo_rooty(), canvas.winfo_rooty())
-                    self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
-                                         canvas.winfo_rootx() + canvas.winfo_width())
-                    self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
-                                         canvas.winfo_rooty() + canvas.winfo_height())
+                    self.assertIs(workspace.prepared, inventory)
+                    self.assertEqual(workspace.selected_entries(), selected)
+                    self.assertEqual((workspace.search.get(), workspace.filter.get(), workspace.sort.get()),
+                                     ('bin qualified', 'Qualified', 'Newest first'))
+                    self.assertEqual(int(workspace.folder_filter.grid_info()['row']), int(workspace._narrow_filters))
+                    self.assertEqual(int(workspace.sort_selector.grid_info()['row']), int(workspace._narrow_filters))
+                    for buttons in (workspace._header_actions, workspace._batch_actions):
+                        required = sum(button.winfo_reqwidth() for button in buttons) + 8 * (len(buttons) - 1)
+                        wrapped = required > buttons[0].master.winfo_width()
+                        self.assertEqual({int(button.grid_info()['row']) for button in buttons},
+                                         {0, 1} if wrapped else {0})
+                    self.assertGreaterEqual(workspace.table.winfo_height(), 100)
+                    self.assertTrue(workspace.horizontal_scrollbar.winfo_ismapped())
+                    self.assertLessEqual(workspace.table.winfo_rooty() + workspace.table.winfo_height(),
+                                         workspace.footer.winfo_rooty())
+                    for widget in pinned_controls:
+                        self.assertTrue(widget.winfo_ismapped())
+                        self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
+                        self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
+                        self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
+                        self.assertGreaterEqual(widget.winfo_rooty(), self.root.winfo_rooty())
+                        self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                             self.root.winfo_rootx() + self.root.winfo_width())
+                        self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
+                                             self.root.winfo_rooty() + self.root.winfo_height())
+                    canvas = workspace.header.canvas
+                    if width == 780:
+                        self.assertLess(canvas.yview()[1] - canvas.yview()[0], 1)
+                    elif text_size == '100%':
+                        self.assertEqual(canvas.yview(), (0.0, 1.0))
+                    for widget in header_controls:
+                        workspace.header.reveal(widget)
+                        self.root.update()
+                        self.assertTrue(widget.winfo_ismapped())
+                        self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
+                        self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
+                        self.assertGreaterEqual(widget.winfo_rootx(), canvas.winfo_rootx())
+                        self.assertGreaterEqual(widget.winfo_rooty(), canvas.winfo_rooty())
+                        self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                             canvas.winfo_rootx() + canvas.winfo_width())
+                        self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
+                                             canvas.winfo_rooty() + canvas.winfo_height())
         # Keyboard focus reveals a lower form control without a direct reveal.
         workspace.header.canvas.yview_moveto(0)
         self.root.focus_force()

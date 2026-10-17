@@ -32,6 +32,7 @@ class SaveLibraryWorkspace:
         self._games = {game.title + ' · ' + game.subtitle + ' [' + game.platform + ']': game.id
                        for game in backend.LIBRARY_GAMES}
         self.controls = []
+        self._action_columns = {}
         self.header = ScrollablePanel(self.frame)
         self.header.frame.pack(fill='x')
         self.header.frame.grid_propagate(False)
@@ -62,18 +63,16 @@ class SaveLibraryWorkspace:
                                 style='Muted.TLabel', wraplength=1000)
         context_note.pack(anchor='w', pady=(4, 6))
         self._wrapped_labels.append(context_note)
-        actions = ttk.Frame(self.header.content)
+        self.header_actions_frame = actions = ttk.Frame(self.header.content)
         actions.pack(fill='x')
         self.scan_button = ttk.Button(actions, text='Scan copied folder', command=self.scan)
-        self.scan_button.pack(side='left')
         self.controls.append(self.scan_button)
         self.cancel_button = ttk.Button(actions, text='Cancel scan', command=self.cancel, state='disabled')
-        self.cancel_button.pack(side='left', padx=10)
         self.open_button = ttk.Button(actions, text='Open selected copy', command=self.open_selected, state='disabled')
-        self.open_button.pack(side='left')
         self.management_button = ttk.Button(actions, text='Save Doctor / Detection / Vault', command=self.show_management)
-        self.management_button.pack(side='left', padx=10)
         self.controls.append(self.management_button)
+        self._header_actions = (self.scan_button, self.cancel_button, self.open_button, self.management_button)
+        self._arrange_actions(actions, self._header_actions)
         self.status = tk.StringVar(root, value='Choose an exact game/platform and a folder containing separate save copies.')
         status_label = ttk.Label(self.header.content, textvariable=self.status, wraplength=1000)
         status_label.pack(anchor='w', pady=(6, 4))
@@ -102,17 +101,15 @@ class SaveLibraryWorkspace:
         self.detail = tk.StringVar(root, value='Select a result to see its validation summary.')
         self.detail_label = ttk.Label(self.footer, textvariable=self.detail, wraplength=1000)
         self.detail_label.pack(anchor='w', pady=(6, 2))
-        batch = ttk.Frame(self.footer)
+        self.batch_actions_frame = batch = ttk.Frame(self.footer)
         batch.pack(fill='x', pady=2)
         self.select_matches_button = ttk.Button(batch, text='Select qualified matches', command=self.select_matches)
-        self.select_matches_button.pack(side='left')
         self.clear_button = ttk.Button(batch, text='Clear selection', command=self.clear_selection)
-        self.clear_button.pack(side='left', padx=8)
         self.recheck_button = ttk.Button(batch, text='Recheck selected', command=self.recheck_selected, state='disabled')
-        self.recheck_button.pack(side='left')
         self.manage_button = ttk.Button(batch, text='Manage selected copies', command=self.manage_selected, state='disabled')
-        self.manage_button.pack(side='left', padx=8)
         self.controls.extend((self.select_matches_button, self.clear_button))
+        self._batch_actions = (self.select_matches_button, self.clear_button, self.recheck_button, self.manage_button)
+        self._arrange_actions(batch, self._batch_actions)
         paging = ttk.Frame(self.footer)
         paging.pack(fill='x', pady=(2, 4))
         self.previous = ttk.Button(paging, text='Previous', command=lambda: self.change_page(-1), state='disabled')
@@ -156,7 +153,20 @@ class SaveLibraryWorkspace:
         self.header.canvas.bind('<Configure>', self._schedule_layout, add='+')
         self.header.content.bind('<Configure>', self._schedule_layout, add='+')
         self.footer.bind('<Configure>', self._schedule_layout, add='+')
+        for button in (*self._header_actions, *self._batch_actions):
+            button.bind('<Configure>', self._schedule_layout, add='+')
         self._schedule_layout()
+
+    def _arrange_actions(self, frame, buttons):
+        required = sum(button.winfo_reqwidth() for button in buttons) + 8 * (len(buttons) - 1)
+        columns = 2 if required > frame.winfo_width() else 4
+        if self._action_columns.get(frame) == columns:
+            return
+        self._action_columns[frame] = columns
+        for index, button in enumerate(buttons):
+            button.grid(row=index // columns, column=index % columns, sticky='w',
+                        padx=(0, 8) if index % columns < columns - 1 else 0,
+                        pady=(0, 4) if index + columns < len(buttons) else 0)
 
     def _arrange_filters(self, narrow):
         if narrow == self._narrow_filters:
@@ -181,6 +191,8 @@ class SaveLibraryWorkspace:
             return
         header_width = max(120, self.header.canvas.winfo_width())
         self._arrange_filters(header_width < 850)
+        self._arrange_actions(self.header_actions_frame, self._header_actions)
+        self._arrange_actions(self.batch_actions_frame, self._batch_actions)
         footer_width = max(120, self.frame.winfo_width() - 56)
         for label in self._wrapped_labels:
             width = header_width if label.master is self.header.content else footer_width

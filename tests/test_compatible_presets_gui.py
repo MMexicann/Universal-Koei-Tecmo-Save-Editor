@@ -221,6 +221,57 @@ class CompatiblePresetGuiTests(unittest.TestCase):
         self.assert_sources_preserved()
         dialog.window.destroy()
 
+    def test_independent_target_windows_bulk_apply_save_as_and_close_safety(self):
+        paths = tuple(self.folder / name for name in ('third.dat', 'fourth.dat'))
+        originals = {}
+        for index, path in enumerate(paths):
+            originals[path] = fixture(gold=8000 + index)
+            path.write_bytes(originals[path])
+        from koei_editor.shared.appearance import THEMES
+        self.workspace.apply_theme(THEMES['Dark'])
+        with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+            copies = self.workspace.open_target_paths('origins', paths)
+            errors.assert_not_called()
+        self.assertEqual(len(copies), 2)
+        self.assertEqual(len(self.workspace._sessions), 4)
+        self.assertTrue(all(editor.theme_name.get() == 'Dark' for editor in copies))
+        dialog = self.workspace.bulk_dialog()
+        dialog.targets.selection_set(('2', '3'))
+        self.root.update()
+        self.assertTrue(dialog.prepare())
+        self.assertTrue(dialog.apply())
+        dialog.window.destroy()
+        self.assertTrue(self.workspace.has_pending_work())
+        self.assertFalse(self.workspace.busy)
+        with patch('koei_editor.shared.verified_gui.messagebox.askyesno', return_value=False):
+            self.assertFalse(self.workspace.dirty_ok())
+            self.assertFalse(self.workspace.close_target(1))
+        self.assertEqual(len(self.workspace._copy_sessions), 2)
+        output = self.folder / 'third-edited.dat'
+        with patch('koei_editor.shared.verified_gui.filedialog.asksaveasfilename', return_value=str(output)):
+            copies[0].save_as()
+        reopened = copies[0].adapter.read_save(output)
+        self.assertEqual(copies[0].adapter.field_map(reopened)['gold'].value(reopened.payload), 12345)
+        self.assertTrue(self.workspace.close_target(1))
+        copies[1].undo()
+        self.assertFalse(self.workspace.has_pending_work())
+        self.assertTrue(self.workspace.close_target(2))
+        self.assertEqual(self.workspace._copy_sessions, {})
+        self.assertEqual(len(self.workspace._sessions), 2)
+        self.assertEqual({path: path.read_bytes() for path in paths}, originals)
+
+    def test_target_open_rejects_duplicate_and_foreign_copies(self):
+        with self.assertRaisesRegex(Exception, 'already open'):
+            self.workspace.open_target_paths('origins', (self.source.document.source,))
+        foreign = self.folder / 'foreign.dat'
+        foreign.write_bytes(b'foreign native format')
+        with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+            with self.assertRaisesRegex(Exception, 'could not be opened'):
+                self.workspace.open_target_paths('origins', (foreign,))
+            errors.assert_called_once()
+        self.assertEqual(self.workspace._copy_sessions, {})
+        self.assert_sources_preserved()
+
 
 if __name__ == '__main__':
     unittest.main()

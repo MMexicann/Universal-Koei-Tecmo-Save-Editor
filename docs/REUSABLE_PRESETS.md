@@ -13,8 +13,11 @@ save automatically. The original **Edit Presets** dialog and source-bound
    **Create from staged edits**. The selection lists qualified resources and
    explains why other fields are excluded. Select resources, enter a name and
    save the local preset.
-3. Open another compatible save copy and refresh the target editor list. Choose
-   that destination editor. Presets require the same exact game/platform and
+3. Use **Open target copies** to open one or more separate copies for the
+   selected preset's exact profile, each in its normal editor window with
+   automatic backup, Review Changes, Undo and Save As. Alternatively, open another
+   copy in the existing application editor and refresh the target list. Choose
+   the destination editor. Presets require the same exact game/platform and
    native revision, not the same source-file hash.
 4. Choose a named preset and select the assignments to use. **Preview selected**
    shows the entire resulting pending map, including unrelated or hidden edits
@@ -24,7 +27,9 @@ save automatically. The original **Edit Presets** dialog and source-bound
    you want to create a separate game-save copy.
 
 **Apply to multiple editors** opens an explicit target list for the selected
-preset assignments. Select up to 32 distinct opened copies and preview every
+preset assignments. **Open target copies** provides independent windows even
+when the application already has an editor for that profile. Select up to 32
+distinct opened copies and preview every
 target's complete result. All selected targets must qualify; an incompatible or
 stale target stops the whole batch. Apply stages all reviewed results together.
 A staging failure restores every target's pending values and Undo history.

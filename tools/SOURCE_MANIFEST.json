@@ -633,8 +633,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14042,
-      "sha256": "31906beeb0dbb5adf63ecc47f86cdb511695eafd6cb021d48366be7c41358e04"
+      "bytes": 14129,
+      "sha256": "aaac218a871243b36a888605f254821455398653b54e49d57eff414822c66d0f"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -770,6 +770,11 @@
       "path": "docs/SAVE_LIBRARY.md",
       "bytes": 6106,
       "sha256": "2ee6452b6a4de518e1deadbdd30f1a281c785e050f3e0d409005ab0301fb6fe8"
+    },
+    {
+      "path": "docs/SAVE_TRANSFER.md",
+      "bytes": 5057,
+      "sha256": "fda0cb78e0bfd1a6ed23b1055f24796fc8ac4f6dcf162c8569fe806bb7d25c68"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -3672,6 +3677,11 @@
       "sha256": "4acbf81fdc14caebeb9f0c9e0f55c48b035d056ba7ac2e0b136c7927017ff8f3"
     },
     {
+      "path": "src/koei_editor/shared/save_transfer.py",
+      "bytes": 9830,
+      "sha256": "365728213eacffe82f11c4e5a0a7e7dadd3d7ab72252605d8e384d6c4c825872"
+    },
+    {
       "path": "src/koei_editor/shared/scalar_presentation.py",
       "bytes": 1820,
       "sha256": "c121d3fc32ad8bdc1b52fb267a95f398acb7883da2683fc9132feabfa04eb6c7"
@@ -3690,6 +3700,11 @@
       "path": "src/koei_editor/shared/table_tools.py",
       "bytes": 1933,
       "sha256": "f1d15aeb006e41d86fc43a3a9b8c3536207f81530e9e3a94f0bd88da6da0f9df"
+    },
+    {
+      "path": "src/koei_editor/shared/transfer_gui.py",
+      "bytes": 12716,
+      "sha256": "b0b5503076c252a15b10904febf88d77b6d4e85ec2868c8b6718d951a26c25b9"
     },
     {
       "path": "src/koei_editor/shared/verified_editor.py",
@@ -4912,6 +4927,11 @@
       "sha256": "5133faa3d2e1dafbba5566f25e4869f387ee6efe3c85faae65e09c84b2608d47"
     },
     {
+      "path": "tests/test_save_transfer.py",
+      "bytes": 11344,
+      "sha256": "1a64788e1094051acb821679aabde6e4d25afcd0204bcd61339af595b159edd4"
+    },
+    {
       "path": "tests/test_save_variants.py",
       "bytes": 16469,
       "sha256": "0eb4c315896ea76a6b1eab21b585ca4ffec2d51b59a61ebed53b2682e4bba8aa"
@@ -5115,6 +5135,11 @@
       "path": "tests/test_totori_dx_ps4_candidate.py",
       "bytes": 10480,
       "sha256": "daf9e1746cf5f43b45f36e7d6d98786ffd7ea7f5d7d4676553d53cd9193da01d"
+    },
+    {
+      "path": "tests/test_transfer_gui.py",
+      "bytes": 6639,
+      "sha256": "9d08a2dc6f60661de5621f2cfa0c149413babb85c6617a3c242e91f56d63bc7a"
     },
     {
       "path": "tests/test_trinity_ps3.py",

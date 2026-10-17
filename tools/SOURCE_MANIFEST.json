@@ -3798,8 +3798,8 @@
     },
     {
       "path": "src/koei_editor/shared/research_lab_gui.py",
-      "bytes": 19145,
-      "sha256": "204a8000296eca326842207313ee6d4330db0cd2ba04c3ef9dd1aa86693109fa"
+      "bytes": 19163,
+      "sha256": "3cfb3704e1d7f6794701bd090cbcfdd0a534d5687f9589b18c4631d33aebca87"
     },
     {
       "path": "src/koei_editor/shared/save_comparison.py",

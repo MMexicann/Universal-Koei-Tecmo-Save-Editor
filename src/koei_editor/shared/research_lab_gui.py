@@ -17,7 +17,7 @@ class _SourcesChanged(lab.SaveError):
 class ResearchLabWorkspace(ComparisonWorkspace):
     def __init__(self, root, parent):
         self.viewport = ScrollablePanel(parent)
-        super().__init__(root, self.viewport.content)
+        super().__init__(root, self.viewport.content, scrollable=False)
         content = self.frame
         content.pack(fill='both', expand=True)
         for child in self.frame.winfo_children():

@@ -108,6 +108,42 @@ class WorkflowGuiTests(unittest.TestCase):
         self.assertEqual(len(self.workspace.operations), 1)
         self.assertIn('failed', self.workspace.status.get())
 
+    def test_batch_plan_export_needs_no_json_editing_and_preserves_copies(self):
+        field = next(iter(self.workspace._fields.values()))
+        self.field(field.id, field.value(self.workspace.document.payload))
+        self.workspace.add_operation('assert')
+        other = self.folder / 'second.dat'
+        other.write_bytes(self.raw)
+        output = self.folder / 'results'
+        output.mkdir()
+        plan = self.folder / 'reviewed.batch.json'
+        with (
+            patch('koei_editor.shared.automation_gui.filedialog.askopenfilenames',
+                  return_value=(str(self.source), str(other))),
+            patch('koei_editor.shared.automation_gui.filedialog.askdirectory', return_value=str(output)),
+            patch('koei_editor.shared.automation_gui.filedialog.asksaveasfilename', return_value=str(plan)),
+        ):
+            self.workspace.export_batch()
+            self.finish()
+        workflow, specs = automation.load_batch(plan)
+        self.assertEqual(len(specs), 2)
+        self.assertTrue(automation.preview(automation.prepare(workflow, specs))['success'])
+        self.assertEqual(tuple(output.iterdir()), ())
+        self.assertEqual(other.read_bytes(), self.raw)
+        self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_valid_source_replacement_requires_reopening_reference(self):
+        field = next(field for field in self.workspace._fields.values()
+                     if field.minimum != field.value(self.workspace.document.payload))
+        self.field(field.id, field.minimum)
+        self.workspace.add_operation('set')
+        self.source.write_bytes(self.adapter.serialize(self.workspace.document, {field.id: field.minimum}))
+        with patch('koei_editor.shared.automation_gui.messagebox.showerror') as error:
+            self.workspace.preview_reference()
+            self.finish()
+        error.assert_called_once()
+        self.assertIn('failed', self.workspace.status.get())
+
     def test_application_retains_builder_and_respects_busy_close(self):
         app = Application(self.root, persist_preferences=False)
         app.show_workflow_builder()

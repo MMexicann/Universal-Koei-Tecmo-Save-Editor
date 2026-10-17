@@ -140,6 +140,21 @@ intent is evidence of an attempted write, even when no destination exists; it
 must never be silently replayed. Unknown, replaced or damaged outputs remain
 blocked. Preserve the journal, source copies, backups and partial outputs.
 
+```powershell
+python -m koei_editor --automation recover 'D:\Plans\gold.batch.json' `
+  --journal 'D:\RunLogs\gold-run-001'
+```
+
+This read-only command reconstructs the original review, requalifies current
+sources and parses any completed destinations through their native adapters.
+It reports `pending`, `completed`, `recovered` or `blocked`; a recovered output
+has the exact reviewed digest but lacks a completion event. It never follows
+paths from a journal, deletes partial files, or automatically resumes a write.
+For genuinely unstarted jobs, create a fresh plan and new destinations, preview
+again, then apply with a new journal. Keep the original run evidence intact.
+Source-bound preset runs can be inspected through an equivalent explicit batch
+plan; the original source/profile and assignment group must remain identical.
+
 ## Developer integration
 
 Use `koei_editor.shared.automation.Workflow`, `Operation`, `JobSpec`, `prepare`,

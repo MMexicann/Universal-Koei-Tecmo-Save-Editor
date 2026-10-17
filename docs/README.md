@@ -10,6 +10,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
+- [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)

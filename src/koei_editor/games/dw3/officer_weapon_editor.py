@@ -288,6 +288,45 @@ def max_existing_skills(document,data_id,changes=()):
     return result
 
 
+def copy_bonus_changes(document,source_data_id,target_data_ids,changes=()):
+    """Copy a verified bonus layout to existing owned copies, atomically.
+
+    This is a direct edit using the same native transfer outcomes as the
+    individual slot controls, not material-consuming fusion. Every destination
+    applies its own rank, stock-value exceptions and saved-slot preservation
+    rules. Source-only unique rolls and experimental high rolls cannot become
+    transferable merely because they are already present on the source.
+    Identity, elements, hit flags, inventory and first-acquisition snapshots
+    are not copied. A view-only source or destination refuses the whole batch.
+    """
+    changes=list(changes)
+    source=state(document,source_data_id,changes)
+    if not source['editable']:raise SaveError(source['reason'])
+    result=[];seen=set()
+    for data_id in target_data_ids:
+        if type(data_id) is not int or data_id in seen:
+            raise SaveError('Choose distinct integer destination inventory references.')
+        seen.add(data_id)
+        if data_id==source_data_id:
+            raise SaveError('Choose a different destination weapon copy.')
+        target=state(document,data_id,changes)
+        if not target['editable']:raise SaveError(target['reason'])
+        try:
+            saved=original_skills(document,data_id)
+            for index,skill in enumerate(source['skills']):
+                if (skill['id'] in NORMAL_ITEMS and
+                        skill['value'] not in allowed_values(target,skill['id']) and skill!=saved[index]):
+                    raise SaveError('A source-only or above-limit weapon roll cannot be copied to this destination.')
+            skills=validate_skills(target,source['skills'])
+        except SaveError as error:
+            raise SaveError(f'Weapon copy {data_id}: {error}') from error
+        # Return equal assignments as well: the normal staging path removes
+        # an earlier pending layout when the copied layout matches opened data.
+        result.append(Change('weapon_roll',data_id,'Skills',skills))
+    if not seen:raise SaveError('Choose at least one destination weapon copy.')
+    return result
+
+
 def max_item_value(document,item_id,changes=()):
     """Normal-drop maximum without decreasing an owned saved/pending roll."""
     if type(item_id) is not int or item_id not in ITEM_CAPS or item_id>=len(document.records('EquipItemDataArray')):

@@ -74,16 +74,34 @@ def collection_state(document, changes=()):
     return result
 
 
-def unlock_music_changes(document):
-    spec = DATA['music']
+def unlock_entry_changes(document, gallery, indices):
+    """Unlock explicitly selected authored entries; never touch placeholders.
+
+    Validate the complete selection before returning any changes. Native
+    acknowledgement arrays are deliberately independent of availability.
+    """
+    if not isinstance(gallery, str) or gallery not in DATA:
+        raise SaveError('Choose the music or movies gallery.')
+    spec = DATA[gallery]
     _array(document, spec)
-    return [Change('collection', row['id'], spec['field'], True) for row in spec['rows']]
+    result = []
+    seen = set()
+    for index in indices:
+        if type(index) is not int or index in seen or _entry(spec, index) is None:
+            raise SaveError('Choose distinct supported gallery entry IDs.')
+        seen.add(index)
+        result.append(Change('collection', index, spec['field'], True))
+    if not seen:
+        raise SaveError('Choose at least one gallery entry.')
+    return result
+
+
+def unlock_music_changes(document):
+    return unlock_entry_changes(document, 'music', [row['id'] for row in DATA['music']['rows']])
 
 
 def unlock_movie_changes(document):
-    spec = DATA['movies']
-    _array(document, spec)  # Refuse actions on an unsupported save layout.
-    return [Change('collection', row['id'], spec['field'], True) for row in spec['rows']]
+    return unlock_entry_changes(document, 'movies', [row['id'] for row in DATA['movies']['rows']])
 
 
 def original_value(document, change):

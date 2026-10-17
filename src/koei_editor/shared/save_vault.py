@@ -331,6 +331,22 @@ class SaveVault:
         _new(_json({'payload': payload, 'sha256': _digest(_json(payload))}), root / 'index.json')
         return cls(root)
 
+    def _contains(self, path):
+        if path.is_relative_to(self.root):
+            return True
+        if len(path.parents) > 128:
+            raise SaveError('The vault containment path exceeds its bounded parent depth.')
+        # Windows extended-length/device spellings can survive resolve().
+        # Physical ancestor identity closes containment for every spelling of
+        # the same ordinary directory without following links or junctions.
+        for parent in path.parents:
+            info = parent.lstat()
+            if _linked(info):
+                raise SaveError('Save Vault rejects linked containment paths.')
+            if (info.st_dev, info.st_ino) == self._root_identity:
+                return True
+        return False
+
     def _check_roots(self):
         for path, expected in ((self.root, self._root_identity),
                                (self.objects, self._objects_identity)):
@@ -555,7 +571,7 @@ class SaveVault:
         source, source_info = _ordinary(source)
         _relative(source.name)
         source_parent = _ordinary(source.parent, directory=True)[1]
-        if source.is_relative_to(self.root):
+        if self._contains(source):
             raise SaveError('Snapshot an independent save copy outside the vault.')
         with self._locked():
             snapshots, branches = self._load()
@@ -664,7 +680,7 @@ class SaveVault:
         destination, info = _ordinary(destination, directory=True, missing=True)
         if info is not None:
             raise FileExistsError('Restore requires a new dedicated destination directory.')
-        if destination.is_relative_to(self.root):
+        if self._contains(destination):
             raise SaveError('Restore to a separate copied-save folder outside the vault.')
         with self._locked():
             snapshots, _ = self._load()

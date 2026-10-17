@@ -57,6 +57,47 @@ class SaveVaultTests(unittest.TestCase):
                     self.store.restore(record.id, destination)
             self.assertFalse((self.store.root / 'new-restore').exists())
 
+    def test_physical_ancestor_identity_blocks_nonlexical_vault_containment(self):
+        record = self.snapshot()
+        alias = self.folder / 'modeled-device-vault-name'
+        original_lstat = Path.lstat
+        def physical_lstat(path, *args, **kwargs):
+            path = Path(path).absolute()
+            if path.is_relative_to(alias):
+                path = self.store.root / path.relative_to(alias)
+            return original_lstat(path, *args, **kwargs)
+        # Model an ordinary OS device spelling that resolve() retains. The
+        # identity check must still find the vault among its physical ancestors.
+        with patch.object(Path, 'lstat', physical_lstat):
+            self.assertTrue(self.store._contains(alias / 'objects' / record.id / record.filename))
+            self.assertTrue(self.store._contains(alias / 'new-restore'))
+            self.assertFalse(self.store._contains(self.source))
+        too_deep = self.folder.joinpath(*(['nested'] * 129), 'copy.bin')
+        with patch.object(Path, 'lstat', side_effect=AssertionError('Depth must be bounded before filesystem inspection')):
+            with self.assertRaisesRegex(SaveError, 'bounded parent depth'):
+                self.store._contains(too_deep)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows extended-length filesystem paths require Windows.')
+    def test_windows_extended_prefix_cannot_bypass_vault_containment(self):
+        record = self.snapshot()
+        canonical = str(self.store.root.resolve())
+        if canonical.startswith('\\\\?\\'):
+            extended = Path(canonical)
+        elif canonical.startswith('\\\\'):
+            extended = Path('\\\\?\\UNC\\' + canonical[2:])
+        else:
+            extended = Path('\\\\?\\' + canonical)
+        self.assertTrue(extended.samefile(self.store.root))
+        reopened = vault.SaveVault(extended)
+        self.assertTrue(reopened.root.samefile(self.store.root))
+        for operation in (lambda: self.store.snapshot(parser.GAME_ID, extended / 'objects' / record.id / record.filename),
+                          lambda: reopened.snapshot(parser.GAME_ID, self.store.objects / record.id / record.filename),
+                          lambda: self.store.restore(record.id, extended / 'new-restore'),
+                          lambda: reopened.restore(record.id, self.store.root / 'new-restore')):
+            with self.assertRaisesRegex(SaveError, 'outside the vault'):
+                operation()
+        self.assertFalse((self.store.root / 'new-restore').exists())
+
     def test_canonical_path_must_match_the_checked_lexical_file_identity(self):
         record = self.snapshot()
         original_safe_path = vault.safe_path

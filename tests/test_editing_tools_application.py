@@ -72,6 +72,71 @@ class EditingToolsApplicationTests(unittest.TestCase):
         self.assertEqual((editor.changes, editor.history), ({}, []))
         dialog.close()
 
+    def test_opening_retained_tools_uses_already_selected_language_and_keeps_edits(self):
+        editor = self.open_destination()
+        editor.stage_values({'gold': 12345})
+        before = (dict(editor.changes), [dict(item) for item in editor.history])
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        retained = {}
+        for _repeat in range(2):
+            for key in ('editing_presets', 'research_lab', 'workflow_builder'):
+                with self.subTest(workspace=key, repeat=_repeat):
+                    getattr(self.app, 'show_' + key)()
+                    self.root.update()
+                    tool = getattr(self.app, key)
+                    self.assertEqual(self.app.breadcrumb.get(), self.app.tr(key))
+                    self.assertTrue(tool.frame.winfo_ismapped())
+                    if key in retained:
+                        self.assertIs(tool, retained[key])
+                    retained[key] = tool
+                    self.assertEqual((editor.changes, editor.history), before)
+                    self.assertEqual(editor.document.source.read_bytes(), editor.document.raw)
+        self.assertIs(self.app.select_game('origins'), editor)
+        self.app.workflow_builder.close()
+
+    def test_real_palette_routes_retain_workspaces_and_never_change_staged_edits(self):
+        editor = self.open_destination()
+        editor.stage_values({'gold': 12345})
+        before = (dict(editor.changes), [dict(item) for item in editor.history])
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        retained = {}
+        for _repeat in range(2):
+            for key in ('editing_presets', 'research_lab', 'workflow_builder', 'transfer'):
+                with self.subTest(command=key, repeat=_repeat):
+                    if key == 'transfer':
+                        self.app.select_game('origins')
+                    prior_windows = set(self.root.winfo_children())
+                    self.app.open_command_palette()
+                    palette = self.app.command_palette
+                    command_id = 'tool:' + key
+                    palette.query.set(self.app.tr(key))
+                    self.root.update()
+                    self.assertIn(command_id, {entry.id for entry in palette.matches})
+                    palette.results.selection_set(command_id)
+                    palette.activate()
+                    self.root.update()
+                    self.assertFalse(palette.window.winfo_exists())
+                    if key == 'transfer':
+                        dialogs = [window for window in self.root.winfo_children()
+                                   if window not in prior_windows and isinstance(window, tk.Toplevel)]
+                        self.assertEqual(len(dialogs), 1)
+                        self.assertEqual(dialogs[0].title(), 'Selective Save-to-Save Transfer')
+                        dialogs[0].destroy()
+                    else:
+                        tool = getattr(self.app, key)
+                        self.assertTrue(tool.frame.winfo_ismapped())
+                        self.assertEqual(self.app.breadcrumb.get(), self.app.tr(key))
+                        if key in retained:
+                            self.assertIs(tool, retained[key])
+                        retained[key] = tool
+                    self.assertEqual(self.app.shell_settings.recent[0], command_id)
+                    self.assertEqual((editor.changes, editor.history), before)
+                    self.assertEqual(editor.document.source.read_bytes(), editor.document.raw)
+        self.assertIs(self.app.select_game('origins'), editor)
+        self.app.workflow_builder.close()
+
     def test_root_close_respects_busy_research_and_target_editor_dirty_guard(self):
         research = self.app.show_research_lab()
         research.busy = True

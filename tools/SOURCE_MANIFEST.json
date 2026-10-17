@@ -1183,8 +1183,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 63411,
-      "sha256": "707453cd072e957287f943a1fb918fcfcfa6787fcf77702e25b54a24bf3245e7"
+      "bytes": 63424,
+      "sha256": "671bc1d5f31e6741c61fe2199527df6ad0c0ea905fda393a8349998136cf3f35"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4413,8 +4413,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 4274,
-      "sha256": "140bb717e4ffaac12d36f85c2c458321127185fadd1aef80fac41ea250de0a7e"
+      "bytes": 7963,
+      "sha256": "65db600bbaf91628ae91402b4090003611afb9fc5aa129c513e3f644867b5c92"
     },
     {
       "path": "tests/test_editor.py",

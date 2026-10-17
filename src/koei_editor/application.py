@@ -672,7 +672,7 @@ class Application(Appearance):
             self.editing_presets = CompatiblePresetWorkspace(self.root, self.workspace,
                                                              self._opened_scalar_editors)
         self.editing_presets.on_show()
-        self._show_editing_tool(self.editing_presets, 'Reusable Editing Presets')
+        self._show_editing_tool(self.editing_presets, self.tr('editing_presets'))
         return self.editing_presets
 
     def show_transfer(self):
@@ -693,7 +693,7 @@ class Application(Appearance):
         from koei_editor.shared.research_lab_gui import ResearchLabWorkspace
         if self.research_lab is None:
             self.research_lab = ResearchLabWorkspace(self.root, self.workspace)
-        self._show_editing_tool(self.research_lab, 'Save Research Lab')
+        self._show_editing_tool(self.research_lab, self.tr('research_lab'))
         return self.research_lab
 
     def _show_editing_tool(self, tool, title):
@@ -752,7 +752,7 @@ class Application(Appearance):
             frame.pack_forget()
         self.active_game = None
         self.workflow_builder.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Workflow Builder')
+        self.breadcrumb.set(self.tr('workflow_builder'))
         self.workflow_builder.apply_theme(THEMES[self.theme_name.get()])
 
     def open_saved_copy(self, game_id, path):

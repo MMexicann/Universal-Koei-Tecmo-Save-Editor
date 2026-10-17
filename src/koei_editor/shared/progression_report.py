@@ -82,8 +82,11 @@ def show_report_dialog(master, dashboard, theme=None):
     """Choose included sections and up to four records, then export HTML."""
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
+    from koei_editor.shared.appearance import THEMES
 
     window = tk.Toplevel(master)
+    palette = theme if isinstance(theme, dict) else THEMES.get(theme, THEMES["Light"])
+    window.configure(background=palette["background"])
     window.title("Progression HTML report")
     window.geometry("720x600")
     window.minsize(520, 440)
@@ -109,6 +112,10 @@ def show_report_dialog(master, dashboard, theme=None):
     query = tk.StringVar(window)
     ttk.Entry(frame, textvariable=query).grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 6))
     record_list = tk.Listbox(frame, selectmode="extended", exportselection=False)
+    for widget in (section_list, record_list):
+        widget.configure(background=palette["surface"], foreground=palette["text"],
+                         selectbackground=palette["accent"], selectforeground="#ffffff",
+                         highlightbackground=palette["border"], highlightcolor=palette["tab_text"])
     record_list.grid(row=1, column=0, sticky="nsew")
     scroll = ttk.Scrollbar(frame, command=record_list.yview)
     scroll.grid(row=1, column=1, sticky="ns")
@@ -140,7 +147,9 @@ def show_report_dialog(master, dashboard, theme=None):
     actions = ttk.Frame(window, padding=(20, 0, 20, 18))
     actions.grid(row=5, column=0, sticky="ew")
     actions.columnconfigure(1, weight=1)
-    appearance = tk.StringVar(window, "Auto")
+    initial_theme = theme if isinstance(theme, str) and theme in THEMES else next(
+        (name for name, colors in THEMES.items() if colors == theme), "Auto")
+    appearance = tk.StringVar(window, initial_theme)
     ttk.Combobox(actions, textvariable=appearance, values=("Auto", "Light", "Dark"),
                  state="readonly", width=8).grid(row=0, column=0)
 

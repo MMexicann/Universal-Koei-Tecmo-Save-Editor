@@ -593,8 +593,8 @@
     },
     {
       "path": "docs/PROGRESSION_DASHBOARDS.md",
-      "bytes": 3158,
-      "sha256": "022b0bbe3cc631e88e47c2612461d2d9547f6b6421a575d7884e99d6071107cc"
+      "bytes": 4456,
+      "sha256": "ad8e3c48f6634c65090098db7acf2e870bf4acb591331d016b056acdf5ebf8eb"
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
@@ -3607,6 +3607,11 @@
       "sha256": "47851d4e26d3c19acc0a0286890a29a66f3fa8afd5e46b668b74906f90b42ab2"
     },
     {
+      "path": "src/koei_editor/shared/progression_report.py",
+      "bytes": 25185,
+      "sha256": "29ccc743eb8d3ff207d95180599682a6f7210fd6f6f22c0ae8d712f7ef4d004c"
+    },
+    {
       "path": "src/koei_editor/shared/progression_view.py",
       "bytes": 30885,
       "sha256": "5f318a5fb039d6e3a41841d0e16b48f8675c11ac383d4fe6d6b018a0fcf6e907"
@@ -4660,6 +4665,16 @@
       "path": "tests/test_progression_generic.py",
       "bytes": 8142,
       "sha256": "3b8ece683651a97de77882cc869de4e167e65768361a951317637fbe46f0a2fb"
+    },
+    {
+      "path": "tests/test_progression_report_dialog.py",
+      "bytes": 2757,
+      "sha256": "9d5b297b331f173c65b2deeb15570cbf718b96cde873ae8aa82c8dde328e797c"
+    },
+    {
+      "path": "tests/test_progression_report_security.py",
+      "bytes": 6962,
+      "sha256": "418a025a5933526ec94c8263018ccf3e492cabadca300fc798e46570aa9cbac5"
     },
     {
       "path": "tests/test_progression_v034.py",

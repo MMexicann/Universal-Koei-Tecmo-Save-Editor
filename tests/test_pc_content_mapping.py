@@ -31,8 +31,26 @@ class PCContentMappingTests(unittest.TestCase):
         self.document = with_payload(original, payload)
 
     def test_only_existing_supported_ranked_attributes_are_editable(self):
-        keys = {key for key in backend.field_map(self.document) if key.startswith('weapon_') and '_attribute_' in key}
-        self.assertEqual(keys, {f'weapon_{slot}_attribute_{attribute}_rank' for slot in (0,2) for attribute in (0,4,5)})
+        keys = {key for key in backend.field_map(self.document)
+                if key.startswith('weapon_') and '_attribute_' in key}
+        ranks = {f'weapon_{slot}_attribute_{attribute}_rank'
+                 for slot in (0, 2) for attribute in (0, 4, 5)}
+        identities = {f'weapon_{slot}_attribute_{attribute}_identity'
+                      for slot in (0, 2) for attribute in (0, 4)}
+        self.assertEqual({key for key in keys if key.endswith('_rank')}, ranks)
+        self.assertEqual({key for key in keys if key.endswith('_identity')}, identities)
+        self.assertEqual(keys, ranks | identities)
+        # Identity replacement requires an original ordinary ranked slot; the
+        # existing rank editor separately preserves/permits edits of rank 25.
+        protected = {f'weapon_{slot}_attribute_{attribute}_identity'
+                     for slot in (1, 3, 4) for attribute in range(6)}
+        protected.update(f'weapon_{slot}_attribute_{attribute}_identity'
+                         for slot in (0, 2) for attribute in (1, 2, 3, 5))
+        for key in protected:
+            self.assertNotIn(key, backend.field_map(self.document))
+            with self.subTest(protected_identity=key), self.assertRaises(SaveError):
+                backend.serialize(self.document, {key: 7})
+        self.assertEqual(backend.limit_values(self.document, {}, identities), {})
         self.assertIn('Velocity',backend.field_map(self.document)['weapon_0_attribute_0_rank'].label)
         self.assertIn('Comet',backend.field_map(self.document)['weapon_0_attribute_4_rank'].label)
         for key in ('weapon_1_attribute_0_rank','weapon_3_attribute_0_rank','weapon_4_attribute_0_rank',

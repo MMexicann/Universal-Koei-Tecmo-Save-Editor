@@ -618,8 +618,11 @@ class SaveVault:
                 raise SaveError('The vault reached its snapshot limit.')
             if branch not in branches and len(branches) >= MAX_SNAPSHOTS:
                 raise SaveError('The vault reached its branch limit.')
+            head_id = branches.get(branch)
+            if head_id is not None and self._find(snapshots, head_id).game_id != game_id:
+                raise SaveError('Use a separate branch for this game/platform profile.')
             if parent_id is None:
-                parent_id = branches.get(branch)
+                parent_id = head_id
             if parent_id is not None and self._find(snapshots, parent_id).game_id != game_id:
                 raise SaveError('Use a separate branch for this game/platform profile.')
             raw, token = _read(source, MAX_FILE_BYTES)

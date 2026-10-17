@@ -1,7 +1,9 @@
 """Application entries reach retained editing tools through existing save sessions."""
 from pathlib import Path
 import tempfile
+import time
 import tkinter as tk
+from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
@@ -71,6 +73,110 @@ class EditingToolsApplicationTests(unittest.TestCase):
         self.assertIs(dialog.editor, editor)
         self.assertEqual((editor.changes, editor.history), ({}, []))
         dialog.close()
+
+    def test_presets_and_populated_research_actions_remain_reachable_at_actual_minimum(self):
+        from koei_editor.games.deception4_ps3 import parser
+        from koei_editor.shared import compatible_presets
+        from koei_editor.shared.preset_library import PresetLibrary
+        from tests.test_ps3_new_families import fixture as research_fixture
+        from tests import test_ps3_expansion
+
+        editor = self.open_destination()
+        editor.stage_values({'gold': 12345})
+        before = (dict(editor.changes), [dict(item) for item in editor.history], editor.document.raw)
+        presets = self.app.show_editing_presets()
+        presets.library = PresetLibrary(self.folder / 'presets')
+        entry = presets.library.save(compatible_presets.create(editor.adapter, editor.document,
+                                      {'gold': 67890}, 'Minimum-window preview'))
+        research = self.app.show_research_lab()
+        first, second = self.folder / 'first.bin', self.folder / 'second.bin'
+        first_raw = research_fixture(parser)
+        second_raw = parser.serialize(parser.decode(first_raw), {'warl': 32})
+        first.write_bytes(first_raw); second.write_bytes(second_raw)
+        (self.folder / 'PARAM.SFO').write_bytes(test_ps3_expansion.PS3ContextTests.metadata('NPUB31442-GAMEDATA-10'))
+        research.game.set(next(label for label, game in research._games.items() if game == parser.GAME_ID))
+        research.first.set(str(first)); research.second.set(str(second)); research.compare()
+        deadline = time.monotonic() + 10
+        while research.busy and time.monotonic() < deadline:
+            self.root.update(); time.sleep(.01)
+        self.assertFalse(research.busy)
+        self.assertIsNotNone(research.prepared)
+        comparison = research.prepared
+        research.offset.set('0x20'); research.span.set('4')
+        research.note_title.set('Retain observation'); research.note_observation.set('Controlled purchase')
+        research.action.set('Retain controlled-action notes'); research.add_annotation()
+        notes = research.annotations
+
+        def children(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from children(child)
+
+        def selected(widget):
+            child = widget
+            while child is not self.root:
+                parent = child.master
+                if not child.winfo_manager() or (isinstance(parent, ttk.Notebook) and parent.select() != str(child)):
+                    return False
+                child = parent
+            return True
+
+        def reachable(widget):
+            widget.focus_force()
+            self.root.update()
+            # Disabled actions are not keyboard targets yet, but must remain
+            # reachable when their existing state guards enable them.
+            ancestor = widget.master
+            while ancestor is not self.root:
+                if isinstance(ancestor, tk.Canvas):
+                    bounds = tuple(map(float, ancestor.tk.splitlist(ancestor.cget('scrollregion'))))
+                    top = widget.winfo_rooty() - ancestor.winfo_rooty() + ancestor.canvasy(0)
+                    if len(bounds) == 4:
+                        ancestor.yview_moveto(max(0, top - 8) / max(1, bounds[3] - bounds[1]))
+                        self.root.update()
+                ancestor = ancestor.master
+            self.assertTrue(widget.winfo_ismapped(), widget.cget('text'))
+            self.assertGreater(widget.winfo_width(), 1, widget.cget('text'))
+            x, y = widget.winfo_rootx(), widget.winfo_rooty()
+            right, bottom = x + widget.winfo_width(), y + widget.winfo_height()
+            ancestor = widget.master
+            while ancestor is not None:
+                message = f'{widget.cget("text")} clipped by {ancestor.winfo_class()}'
+                self.assertGreaterEqual(x, ancestor.winfo_rootx(), message)
+                self.assertGreaterEqual(y, ancestor.winfo_rooty(), message)
+                self.assertLessEqual(right, ancestor.winfo_rootx() + ancestor.winfo_width(), message)
+                self.assertLessEqual(bottom, ancestor.winfo_rooty() + ancestor.winfo_height(), message)
+                ancestor = ancestor.master
+
+        for language in ('English', 'Deutsch'):
+            for size in (100, 140):
+                with self.subTest(language=language, text_size=size):
+                    self.app.language_choice.set(language); self.app.change_language()
+                    self.app.text_size_choice.set(str(size) + '%'); self.app.change_text_size()
+                    self.app.show_editing_presets()
+                    presets.refresh_library(entry.id)
+                    self.root.update()
+                    self.assertTrue(presets.prepare_preview())
+                    self.root.update()
+                    plan, selection = presets._plan, presets.assignments.selection()
+                    self.root.geometry('780x680'); self.root.update(); self.root.update()
+                    self.assertEqual((self.root.winfo_width(), self.root.winfo_height()), (780, 680))
+                    for widget in children(presets.frame):
+                        if isinstance(widget, ttk.Button) and selected(widget):
+                            reachable(widget)
+                    self.assertIs(presets._plan, plan)
+                    self.assertEqual(presets.assignments.selection(), selection)
+                    self.app.show_research_lab(); self.root.update()
+                    for tab in research.tabs.tabs():
+                        research.tabs.select(tab); self.root.update()
+                        for widget in children(research.frame):
+                            if isinstance(widget, (ttk.Button, ttk.Checkbutton)) and selected(widget):
+                                reachable(widget)
+                    self.assertIs(research.prepared, comparison)
+                    self.assertEqual(research.annotations, notes)
+                    self.assertEqual(research.action.get(), 'Retain controlled-action notes')
+                    self.assertEqual((editor.changes, editor.history, editor.document.source.read_bytes()), before)
+                    self.assertEqual((first.read_bytes(), second.read_bytes()), (first_raw, second_raw))
 
     def test_opening_retained_tools_uses_already_selected_language_and_keeps_edits(self):
         editor = self.open_destination()

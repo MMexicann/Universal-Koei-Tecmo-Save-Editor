@@ -8,6 +8,7 @@ from koei_editor.shared import compatible_presets as presets
 from koei_editor.shared import edit_presets, preset_portability
 from koei_editor.shared.appearance import ui_font
 from koei_editor.shared.preset_library import PresetLibrary
+from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 
 class CompatiblePresetWorkspace:
@@ -27,7 +28,10 @@ class CompatiblePresetWorkspace:
         self._entry = self._plan = self._target = None
         self._closed = False
         self._populating = False
-        self.frame = ttk.Frame(parent, padding=(24, 16))
+        self.viewport = ScrollablePanel(parent)
+        self.frame = ttk.Frame(self.viewport.content, padding=(24, 16))
+        self.frame.pack(fill='both', expand=True)
+        self.content = self.frame
         self.frame.columnconfigure(0, weight=1)
         self.frame.rowconfigure(3, weight=1)
         self.search = tk.StringVar(root)
@@ -36,6 +40,7 @@ class CompatiblePresetWorkspace:
         self.summary = tk.StringVar(root, value='Reusable resources across compatible save copies')
         self.count = tk.StringVar(root, value='No preset selected')
         self._build()
+        self.frame = self.viewport.frame
         self.search.trace_add('write', self.filter_library)
         self.target.trace_add('write', self._target_changed)
         self.refresh_sessions()
@@ -60,15 +65,15 @@ class CompatiblePresetWorkspace:
         self.search_entry.bind('<Escape>', lambda _event: self.search.set(''))
         actions = ttk.Frame(self.frame)
         actions.grid(row=2, column=0, sticky='ew', pady=12)
-        ttk.Button(actions, text='Create from staged edits...', command=self.create_dialog).pack(side='left')
-        ttk.Button(actions, text='Import...', command=self.import_dialog).pack(side='left', padx=8)
+        ttk.Button(actions, text='Create from staged edits...', command=self.create_dialog).grid(row=0, column=0, sticky='w', pady=3)
+        ttk.Button(actions, text='Import...', command=self.import_dialog).grid(row=0, column=1, sticky='w', padx=8, pady=3)
         self.export_button = ttk.Button(actions, text='Export selected...', command=self.export_dialog, state='disabled')
-        self.export_button.pack(side='left')
-        ttk.Button(actions, text='Source-bound presets...', command=self.open_source_presets).pack(side='right')
+        self.export_button.grid(row=1, column=0, sticky='w', pady=3)
+        ttk.Button(actions, text='Source-bound presets...', command=self.open_source_presets).grid(row=1, column=1, sticky='w', padx=8, pady=3)
         self.bulk_button = ttk.Button(actions, text='Apply to multiple editors...', command=self.bulk_dialog,
                                       state='disabled')
-        self.bulk_button.pack(side='left', padx=8)
-        ttk.Button(actions, text='Open target copies...', command=self.open_target_dialog).pack(side='left')
+        self.bulk_button.grid(row=2, column=0, sticky='w', pady=3)
+        ttk.Button(actions, text='Open target copies...', command=self.open_target_dialog).grid(row=2, column=1, sticky='w', padx=8, pady=3)
         body = ttk.Panedwindow(self.frame, orient='horizontal')
         body.grid(row=3, column=0, sticky='nsew')
         left = ttk.Frame(body)
@@ -106,12 +111,12 @@ class CompatiblePresetWorkspace:
                                    ('Field / record', 'Opened', 'Currently staged', 'After apply', 'Effect'))
         controls = ttk.Frame(right)
         controls.grid(row=3, column=0, sticky='ew', pady=(10, 0))
-        ttk.Button(controls, text='Select all', command=self.select_all).pack(side='left')
-        ttk.Button(controls, text='Select none', command=lambda: self.assignments.selection_remove(*self.assignments.selection())).pack(side='left', padx=8)
+        ttk.Button(controls, text='Select all', command=self.select_all).grid(row=0, column=0, sticky='w', pady=3)
+        ttk.Button(controls, text='Select none', command=lambda: self.assignments.selection_remove(*self.assignments.selection())).grid(row=0, column=1, sticky='w', padx=8, pady=3)
         self.preview_button = ttk.Button(controls, text='Preview selected', command=self.prepare_preview, state='disabled')
-        self.preview_button.pack(side='left')
+        self.preview_button.grid(row=1, column=0, columnspan=2, sticky='w', pady=3)
         self.apply_button = ttk.Button(controls, text='Apply reviewed selection', command=self.apply_preview, state='disabled')
-        self.apply_button.pack(side='right', padx=(10, 0))
+        self.apply_button.grid(row=2, column=0, columnspan=2, sticky='w', pady=3)
         body.add(right, weight=4)
         footer = ttk.Frame(self.frame)
         footer.grid(row=4, column=0, sticky='ew', pady=(12, 0))
@@ -140,7 +145,7 @@ class CompatiblePresetWorkspace:
         return table
 
     def _resize(self, event):
-        if event.widget is self.frame:
+        if event.widget is self.content:
             width = max(160, event.width - 48)
             self.status_label.configure(wraplength=width)
             self.guidance.configure(wraplength=width)
@@ -149,12 +154,14 @@ class CompatiblePresetWorkspace:
         # All controls use the application's active ttk palette; field values
         # and staging state are deliberately independent of visual appearance.
         self.frame.configure(style='TFrame')
+        self.viewport.apply_theme(palette)
         from koei_editor.shared.appearance import THEMES
         self._theme_name = next((name for name, value in THEMES.items() if value == palette), self._theme_name)
         for _label, editor, _window in self._copy_sessions.values():
             editor.apply_theme(self._theme_name)
 
     def focus_search(self, _event=None):
+        self.viewport.reveal(self.search_entry)
         self.search_entry.focus_set()
         self.search_entry.selection_range(0, 'end')
         return 'break'

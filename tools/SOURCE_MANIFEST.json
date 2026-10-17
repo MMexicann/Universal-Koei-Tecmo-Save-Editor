@@ -3668,8 +3668,8 @@
     },
     {
       "path": "src/koei_editor/shared/compatible_preset_gui.py",
-      "bytes": 36088,
-      "sha256": "3d0a606d2a0131b8fdf8a2cacfb59190879a25d2dc2b28aa82054f5c2040dfea"
+      "bytes": 36693,
+      "sha256": "e113325da985095610a1b619e8a02e3de0ed52ce6327272f024bddc4054ab205"
     },
     {
       "path": "src/koei_editor/shared/compatible_presets.py",
@@ -3798,8 +3798,8 @@
     },
     {
       "path": "src/koei_editor/shared/research_lab_gui.py",
-      "bytes": 19305,
-      "sha256": "f78c57e4ae0e9d36cd42105d522c94f3878ce5bee4e20208e949acd29e4cc3ad"
+      "bytes": 19145,
+      "sha256": "204a8000296eca326842207313ee6d4330db0cd2ba04c3ef9dd1aa86693109fa"
     },
     {
       "path": "src/koei_editor/shared/save_comparison.py",
@@ -4418,8 +4418,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 7963,
-      "sha256": "65db600bbaf91628ae91402b4090003611afb9fc5aa129c513e3f644867b5c92"
+      "bytes": 14277,
+      "sha256": "33dda7f6c425907a3fc5435faf4de5636d461b943564474501f222cb664df9da"
     },
     {
       "path": "tests/test_editor.py",

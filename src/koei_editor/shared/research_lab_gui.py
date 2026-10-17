@@ -7,6 +7,7 @@ from tkinter import filedialog, messagebox, ttk
 from koei_editor.shared import research_lab as lab
 from koei_editor.shared import save_comparison
 from koei_editor.shared.comparison_gui import ComparisonWorkspace
+from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 
 class _SourcesChanged(lab.SaveError):
@@ -15,16 +16,10 @@ class _SourcesChanged(lab.SaveError):
 
 class ResearchLabWorkspace(ComparisonWorkspace):
     def __init__(self, root, parent):
-        outer = ttk.Frame(parent)
-        canvas = tk.Canvas(outer, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(outer, orient='vertical', command=canvas.yview)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side='right', fill='y'); canvas.pack(fill='both', expand=True)
-        super().__init__(root, canvas)
+        self.viewport = ScrollablePanel(parent)
+        super().__init__(root, self.viewport.content)
         content = self.frame
-        window = canvas.create_window((0, 0), window=content, anchor='nw')
-        content.bind('<Configure>', lambda _event: canvas.configure(scrollregion=canvas.bbox('all')))
-        canvas.bind('<Configure>', lambda event: canvas.itemconfigure(window, width=event.width))
+        content.pack(fill='both', expand=True)
         for child in self.frame.winfo_children():
             if isinstance(child, ttk.Label) and child.cget('text') == 'COMPARE SAVES':
                 child.configure(text='SAVE RESEARCH LAB')
@@ -65,15 +60,16 @@ class ResearchLabWorkspace(ComparisonWorkspace):
         self.byteorder, self.widths = tk.StringVar(root, value='little'), tk.StringVar(root, value='1,2,4,8')
         self.alignment = tk.StringVar(root, value='1')
         self.signed = tk.BooleanVar(root, value=False)
-        for title, variable, width in (('Before', self.observed_before, 12), ('After', self.observed_after, 12),
-                                       ('Widths', self.widths, 9), ('Alignment', self.alignment, 5)):
-            ttk.Label(candidate_form, text=title).pack(side='left', padx=(0, 6))
-            ttk.Entry(candidate_form, textvariable=variable, width=width).pack(side='left', padx=(0, 10))
+        for index, (title, variable, width) in enumerate((('Before', self.observed_before, 12), ('After', self.observed_after, 12),
+                                       ('Widths', self.widths, 9), ('Alignment', self.alignment, 5))):
+            row, column = index // 2, (index % 2) * 2
+            ttk.Label(candidate_form, text=title).grid(row=row, column=column, sticky='w', padx=(0, 6), pady=3)
+            ttk.Entry(candidate_form, textvariable=variable, width=width).grid(row=row, column=column + 1, sticky='w', padx=(0, 10), pady=3)
         ttk.Combobox(candidate_form, textvariable=self.byteorder, values=('little', 'big'),
-                     state='readonly', width=7).pack(side='left')
-        ttk.Checkbutton(candidate_form, text='Signed', variable=self.signed).pack(side='left', padx=8)
+                     state='readonly', width=7).grid(row=2, column=0, sticky='w', pady=3)
+        ttk.Checkbutton(candidate_form, text='Signed', variable=self.signed).grid(row=2, column=1, sticky='w', padx=8, pady=3)
         self.find_button = ttk.Button(candidate_form, text='Find candidates', command=self.find_candidates)
-        self.find_button.pack(side='left'); self.controls.append(self.find_button)
+        self.find_button.grid(row=2, column=2, columnspan=2, sticky='w', pady=3); self.controls.append(self.find_button)
         self.candidate_status = tk.StringVar(root, value='Searches both qualified decoded payloads; no edit action is available.')
         ttk.Label(candidates_tab, textvariable=self.candidate_status).pack(anchor='w')
         self.candidates = self._tree(candidates_tab, ('offset', 'width', 'before', 'after', 'mapped'),
@@ -96,7 +92,7 @@ class ResearchLabWorkspace(ComparisonWorkspace):
         ttk.Label(self.frame, text='Read-only. Export contains decoded byte excerpts, scalar values and notes. '
                   'Review private research before sharing it with Codex or others.',
                   style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=6)
-        self.content, self.canvas, self.frame = content, canvas, outer
+        self.content, self.canvas, self.frame = content, self.viewport.canvas, self.viewport.frame
 
     def apply_theme(self, palette):
         self.canvas.configure(background=ttk.Style(self.root).lookup('TFrame', 'background'))

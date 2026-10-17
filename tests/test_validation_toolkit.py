@@ -161,6 +161,30 @@ class ValidationToolkitTests(unittest.TestCase):
                     with self.assertRaises(ReportError):
                         ValidationRecord.load(source)
 
+    def test_cyclic_report_links_fail_privately_before_opening(self):
+        with tempfile.TemporaryDirectory() as folder:
+            first, second = Path(folder) / 'private-first.json', Path(folder) / 'private-second.json'
+            try:
+                first.symlink_to(second)
+                second.symlink_to(first)
+            except (OSError, NotImplementedError) as error:
+                self.skipTest(f'Symbolic links unavailable: {type(error).__name__}')
+            with patch.object(toolkit.os, 'open', side_effect=AssertionError('Linked sources must not be opened')):
+                for source in (first, second):
+                    with self.subTest(source=source.name), self.assertRaises(ReportError) as caught:
+                        ValidationRecord.load(source)
+                    self.assertNotIn(folder, str(caught.exception))
+                    self.assertNotIn('private-', str(caught.exception))
+            self.assertEqual(first.readlink(), second)
+            self.assertEqual(second.readlink(), first)
+
+    def test_path_resolution_runtime_error_uses_the_bounded_report_error_contract(self):
+        with patch.object(toolkit, '_checked_path', side_effect=RuntimeError('private resolution context')), \
+                patch.object(toolkit.os, 'open', side_effect=AssertionError('Failed paths must not be opened')):
+            with self.assertRaises(ReportError) as caught:
+                ValidationRecord.load('unread.json')
+        self.assertNotIn('private', str(caught.exception))
+
     def test_report_reader_rejects_file_replacement_and_linked_sources(self):
         with tempfile.TemporaryDirectory() as folder:
             source = Path(folder) / 'report.json'

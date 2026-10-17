@@ -96,7 +96,7 @@ def read_report(path):
                     or _identity(os.fstat(stream.fileno())) != _identity(opened)):
                 raise ReportError('Report source changed during reading.')
             return raw
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, RuntimeError) as error:
         raise ReportError('Report requires an unchanged ordinary, bounded local file.') from error
 
 

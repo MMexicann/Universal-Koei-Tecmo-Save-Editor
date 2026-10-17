@@ -155,6 +155,19 @@ class TargetedWeaponTests(unittest.TestCase):
         changes = weapons.copy_bonus_changes(document, 0, [1])
         self.assertEqual(writer.serialize(document, changes)[0], document.encrypted)
 
+    def test_copy_restores_opened_high_destination_after_a_pending_reduction(self):
+        profile = [{'id': 0, 'value': 1000}]
+        document = weapon_document(source=profile, target=profile)
+        reduced = weapons.original_skills(document, 1)
+        reduced[0]['value'] = 1
+        pending = [Change('weapon_roll', 1, 'Skills', reduced)]
+        for enabled in (False, True):
+            with self.subTest(experimental=enabled), experimental_limits(enabled=enabled):
+                copied = weapons.copy_bonus_changes(document, 0, [1], pending)
+                self.assertEqual(copied[0].value, weapons.original_skills(document, 1))
+                self.assertEqual(writer.serialize(document, copied)[0], document.encrypted)
+                self.assertEqual(pending[0].value[0]['value'], 1)
+
     def test_filtered_elements_preserve_bonus_layouts_and_all_other_flag_bits(self):
         document = weapon_document(invalid_last=True)
         changes = weapons.element_changes(document, [0, 1], weapons.ELEMENTS['Lightning'])
@@ -263,6 +276,31 @@ class TargetedWorkflowTests(unittest.TestCase):
         editor.weapon_element.set('Lightning')
         editor.apply_visible_weapon_elements()
         self.assertEqual(set(editor.changes), {('weapon_element', 0, 'Elements')})
+
+    def test_copying_opened_high_layout_unstages_reduction_and_keeps_undo(self):
+        profile = [{'id': 0, 'value': 1000}]
+        self.load(weapon_document(source=profile, target=profile))
+        editor = self.editor
+        reduced = weapons.original_skills(editor.document, 1)
+        reduced[0]['value'] = 1
+        for enabled in (False, True):
+            with self.subTest(experimental=enabled):
+                editor.experimental_mode.set(enabled)
+                editor.stage_many([Change('weapon_roll', 1, 'Skills', reduced)])
+                pending = dict(editor.changes)
+                editor.weapons.selection_set('WeaponDataArray:1')
+                editor.select_weapon()
+                editor.weapon_bonus_source.set(next(label for label, data_id in
+                    editor.weapon_bonus_sources.items() if data_id == 0))
+                with patch.object(gui.messagebox, 'showerror') as error:
+                    editor.copy_weapon_bonuses()
+                error.assert_not_called()
+                self.assertEqual(editor.changes, {})
+                self.assertEqual(writer.serialize(editor.document)[0], editor.document.encrypted)
+                editor.undo()
+                self.assertEqual(editor.changes, pending)
+                editor.undo()
+                self.assertEqual(editor.changes, {})
 
     def test_selected_gallery_entries_remain_selected_after_staging_and_undo(self):
         self.load(gallery_document())

@@ -98,7 +98,7 @@ class ThreeHousesFormatTests(unittest.TestCase):
         for field in p.fields_for(self.document):
             with self.subTest(field=field.id):
                 original = field.value(self.document.payload)
-                target = max(field.minimum, original - 1)
+                target = 'Editor' if field.kind == 'text' else max(field.minimum, original - 1)
                 pending = p.stage(self.document, {}, field.id, target)
                 self.assertEqual(p.stage(self.document, pending, field.id, original), {})
                 encoded = p.serialize(self.document, pending)
@@ -285,7 +285,7 @@ class ThreeHousesFormatTests(unittest.TestCase):
         self.assertEqual(raw, sealed(raw))
         for field in p.fields_for(document):
             original = field.value(document.payload)
-            target = max(field.minimum, original - 1)
+            target = 'Editor' if field.kind == 'text' else max(field.minimum, original - 1)
             if field.group == 'Motivation':
                 target = 0 if original else 25
             elif field.group == 'Existing ability loadout':

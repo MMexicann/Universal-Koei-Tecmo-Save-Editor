@@ -12,7 +12,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.games.three_houses import codec
+from koei_editor.games.three_houses import codec, names
 from koei_editor.games.three_houses.equipment import ORDINARY_EQUIPMENT
 from koei_editor.shared.copy_storage import atomic_new, restore_snapshot, snapshot_backup
 from koei_editor.shared.experimental_limits import within_numeric_limits
@@ -183,6 +183,11 @@ def _field_index(raw):
     profile = PROFILES[codec.uint(raw, 4, 4)]
     gold = HEADER_SIZE + profile.player_offset + 0x1074
     fields = [Field('gold', 'Gold (decrease only)', gold, 4, codec.uint(raw, gold, 4))]
+    name_offset = HEADER_SIZE + names.OFFSETS[profile.revision]
+    protagonists = [row for row in _character_rows(raw) if row['id'] in (0, 1)]
+    if (len(protagonists) == 1 and protagonists[0]['qualified_owner']
+            and names.framed_name(raw[name_offset:name_offset + names.SIZE]) is not None):
+        fields.append(names.NameField(name_offset))
     for index in range(codec.CONVOY_COUNT):
         base = HEADER_SIZE + index * codec.ITEM_STRIDE
         if codec.item_id(raw, base) not in ORDINARY_EQUIPMENT or raw[base + 3] == 0:
@@ -249,8 +254,13 @@ def changed_payload(document, changes):
             raise SaveError('This field or existing owner is not qualified for edits.')
         field = fields[key]
         # Assigning unusual opened values always preserves/unstages the original.
+        original = field.value(document.payload)
+        if type(value) is type(original) and value == original:
+            continue
         field.validate(value)
-        if value != field.value(document.payload):
+        if field.kind == 'text':
+            field.write(output, value, document.payload)
+        else:
             output[field.offset:field.offset + field.size] = value.to_bytes(field.size, BYTEORDER)
     # Validate the final staged loadout, including edits already pending. Empty
     # slots can repeat, but a standard ability cannot occupy two slots.
@@ -278,7 +288,8 @@ def stage(document, changes, key, value):
     if type(key) is not str or key not in fields:
         raise SaveError('This field or existing owner is not qualified for edits.')
     result = dict(changes)
-    if type(value) is int and value == fields[key].value(document.payload):
+    original = fields[key].value(document.payload)
+    if type(value) is type(original) and value == original:
         result.pop(key, None)
     else:
         fields[key].validate(value)
@@ -360,6 +371,11 @@ def field_hint(document, key):
     field = field_map(document).get(key)
     if field is None:
         raise SaveError('This original record is not qualified for edits.')
+    if field.kind == 'text':
+        return ('Rename the existing protagonist using 1–8 printable ASCII characters. This is a conservative '
+                'editor input limit, not a recovered natural name limit. Original UTF-8 names and both native '
+                'closing controls are preserved on no-op. Recruitment, gender, appearance and system-file previews '
+                'are separate; only this gameplay slot is edited. No Max.')
     if field.group == 'Motivation':
         return ('Instruction motivation in steps of 25, from 0 to 100. Only original unique living '
                 'joined base units other than Byleth qualify. No instruction is performed: '

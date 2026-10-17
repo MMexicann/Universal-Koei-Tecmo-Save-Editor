@@ -4,6 +4,7 @@ Offsets always address the parser's decoded payload, never the encrypted file or
 container. Numeric interpretations are hypotheses, not field mappings or edits.
 """
 from dataclasses import asdict, dataclass
+import heapq
 import json
 import math
 import struct
@@ -169,7 +170,7 @@ def discover_candidates(comparison, query, limit=MAX_RESULTS):
     _integer(end, 'Search end', 1, min(len(first), len(second)))
     if query.start >= end:
         raise SaveError('Search start must precede its exclusive end.')
-    rows, count, encodings = [], 0, []
+    selected, count, encodings = [], 0, []
     for width in query.widths:
         try:
             before = query.before.to_bytes(width, query.byteorder, signed=query.signed)
@@ -190,13 +191,23 @@ def discover_candidates(comparison, query, limit=MAX_RESULTS):
         while offset >= 0:
             if offset % query.alignment == 0 and other[offset:offset + width] == expected:
                 count += 1
-                if len(rows) < limit:
-                    rows.append({'offset': offset, 'length': width,
-                                 'first_hex': before.hex(' '), 'second_hex': after.hex(' '),
-                                 'status': 'unverified_hypothesis',
-                                 'mapped_spans': _overlap(fields, offset, width)})
+                # Keep the globally earliest bounded preview, regardless of
+                # requested width order. Negation makes the largest retained
+                # (offset, width) the first heap entry to replace.
+                entry = (-offset, -width)
+                if len(selected) < limit:
+                    heapq.heappush(selected, entry)
+                elif entry > selected[0]:
+                    heapq.heapreplace(selected, entry)
             offset = haystack.find(needle, offset + 1, end)
-    rows.sort(key=lambda row: (row['offset'], row['length']))
+    rows = []
+    for offset, width in sorted((-offset, -width) for offset, width in selected):
+        before = query.before.to_bytes(width, query.byteorder, signed=query.signed)
+        after = query.after.to_bytes(width, query.byteorder, signed=query.signed)
+        rows.append({'offset': offset, 'length': width,
+                     'first_hex': before.hex(' '), 'second_hex': after.hex(' '),
+                     'status': 'unverified_hypothesis',
+                     'mapped_spans': _overlap(fields, offset, width)})
     return {'query': asdict(query), 'total_candidates': count,
             'truncated': count > len(rows), 'candidates': rows,
             'qualification': 'Exact numeric correlation only. Repeat controlled actions and unchanged controls; '
@@ -249,18 +260,10 @@ def export(comparison, destination, **options):
                       allow_nan=False) + '\n').encode('utf-8')
     save_comparison.validate_sources(comparison)
     atomic_new(raw, destination)
-    try:
-        save_comparison.validate_sources(comparison)
-        with destination.open('rb') as stream:
-            if stream.read(len(raw) + 1) != raw:
-                raise SaveError('Research report changed during actual destination read-back.')
-    except Exception:
-        try:
-            with destination.open('rb') as stream:
-                unchanged = stream.read(len(raw) + 1) == raw
-            if unchanged:
-                destination.unlink()
-        except OSError:
-            pass
-        raise
+    # Retain the completed path on failure. Checking its bytes before unlinking
+    # cannot prevent another process replacing it between those operations.
+    save_comparison.validate_sources(comparison)
+    with destination.open('rb') as stream:
+        if stream.read(len(raw) + 1) != raw:
+            raise SaveError('Research report changed during actual destination read-back.')
     return destination

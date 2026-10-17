@@ -92,6 +92,20 @@ class ResearchLabTests(unittest.TestCase):
             with self.subTest(span=(offset, length)), self.assertRaises(SaveError):
                 lab.byte_window(self.comparison, offset, length)
 
+    def test_truncated_candidate_preview_is_global_and_independent_of_width_order(self):
+        first, second = bytearray(self.first.read_bytes()), bytearray(self.first.read_bytes())
+        first[0x40:0x48], second[0x40:0x48] = b'\x00\x00' * 4, b'\x01\x00' * 4
+        self.first.write_bytes(first); self.second.write_bytes(second)
+        comparison = save_comparison.prepare(parser.GAME_ID, self.first, self.second)
+        for widths in ((1, 2), (2, 1)):
+            with self.subTest(widths=widths):
+                query = lab.CandidateQuery(0, 1, widths, start=0x40, end=0x48)
+                result = lab.discover_candidates(comparison, query, limit=2)
+                self.assertEqual(result['total_candidates'], 8)
+                self.assertTrue(result['truncated'])
+                self.assertEqual([(row['offset'], row['length']) for row in result['candidates']],
+                                 [(0x40, 1), (0x40, 2)])
+
     def test_annotations_require_bounded_spans_text_and_exact_types(self):
         note = lab.Annotation(0x20, 4, 'Controlled currency action', 'Known resource changed', 'Repeat in game')
         self.assertEqual(lab.validate_annotations(self.comparison, (note,)), (note,))
@@ -135,7 +149,7 @@ class ResearchLabTests(unittest.TestCase):
             with self.assertRaises(SaveError): lab.export(self.comparison, self.folder / 'stale.json')
             self.assertFalse((self.folder / 'stale.json').exists()); source.write_bytes(raw)
 
-    def test_source_race_removes_only_unchanged_report_and_keeps_foreign_replacement(self):
+    def test_source_race_retains_completed_report_and_foreign_replacement(self):
         for replace_report in (False, True):
             output = self.folder / ('replaced.json' if replace_report else 'race.json')
             original, source = lab.atomic_new, self.second.read_bytes()
@@ -147,5 +161,19 @@ class ResearchLabTests(unittest.TestCase):
             if replace_report:
                 self.assertEqual(output.read_bytes(), b'foreign replacement')
             else:
-                self.assertFalse(output.exists())
+                self.assertEqual(json.loads(output.read_text(encoding='utf-8'))['schema'], 'koei-save-research')
             self.second.write_bytes(source)
+
+    def test_postflight_failure_never_unlinks_a_completed_report_path(self):
+        output = self.folder / 'racing-replacement.json'
+        original_atomic, original_unlink = lab.atomic_new, Path.unlink
+        def changed_source(raw, destination):
+            original_atomic(raw, destination); self.second.write_bytes(b'changed')
+        def replace_before_unlink(path, *args, **kwargs):
+            if path == output:
+                path.write_bytes(b'foreign replacement immediately before unlink')
+            return original_unlink(path, *args, **kwargs)
+        with patch.object(lab, 'atomic_new', side_effect=changed_source), \
+                patch.object(Path, 'unlink', new=replace_before_unlink), self.assertRaises(SaveError):
+            lab.export(self.comparison, output)
+        self.assertTrue(output.exists(), 'Postflight failure deleted a completed or concurrently replaced path')

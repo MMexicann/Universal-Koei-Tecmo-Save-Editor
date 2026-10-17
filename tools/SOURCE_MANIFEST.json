@@ -3632,6 +3632,11 @@
       "sha256": "079c45d949df50bc7a98b26fa88e8ef7e13acfcb26d5686f4f4f948b48587397"
     },
     {
+      "path": "src/koei_editor/shared/save_doctor.py",
+      "bytes": 13781,
+      "sha256": "15f4744791ec7cb72e2779cb6aac2fceb96a0c00c1fbfa1a8211b30f41dd251f"
+    },
+    {
       "path": "src/koei_editor/shared/save_library.py",
       "bytes": 21604,
       "sha256": "03b963db26aab8b53b50482ab7f3b9d11b9b72b712f367e193c4c217e644549a"
@@ -4850,6 +4855,11 @@
       "path": "tests/test_save_comparison.py",
       "bytes": 8958,
       "sha256": "278cf5c547adf469f07feb06b2c61c718343b04941e0294828efeff27c7e6721"
+    },
+    {
+      "path": "tests/test_save_doctor.py",
+      "bytes": 15899,
+      "sha256": "52288ba2461395d8af64ec74dc424d26948ac381ba197229d2dee891cdaa6539"
     },
     {
       "path": "tests/test_save_library.py",

@@ -32,6 +32,52 @@ class EditingToolsApplicationTests(unittest.TestCase):
             errors.assert_not_called()
         return editor
 
+    def test_native_menu_and_workflow_footer_relabel_without_replacing_commands(self):
+        commands = tuple(self.app.editing_tools_menu.entrycget(index, 'command') for index in (0, 1, 3))
+        for language, header, labels, workflow in (
+                ('English', 'Editing and Research',
+                 ('Reusable Editing Presets', 'Transfer from Save Copy', 'Save Research Lab'), 'Workflow Builder'),
+                ('Deutsch', 'Bearbeitung und Forschung',
+                 ('Wiederverwendbare Bearbeitungsvorlagen', 'Aus Spielstandkopie übertragen',
+                  'Spielstand-Forschungslabor'), 'Ablaufeditor'),
+                ('English', 'Editing and Research',
+                 ('Reusable Editing Presets', 'Transfer from Save Copy', 'Save Research Lab'), 'Workflow Builder')):
+            with self.subTest(language=language):
+                self.app.language_choice.set(language)
+                self.app.change_language()
+                self.root.update()
+                self.assertEqual(self.app.tools_menu_bar.entrycget('end', 'label'), header)
+                self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(index, 'label')
+                                       for index in (0, 1, 3)), labels)
+                self.assertEqual(self.app.workflow_button.cget('text'), workflow)
+                self.assertTrue(self.app.workflow_button.winfo_ismapped())
+                self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(index, 'command')
+                                       for index in (0, 1, 3)), commands)
+
+    def test_direct_tool_navigation_records_unique_recents_and_retains_pending_edits(self):
+        editor = self.open_destination()
+        editor.stage_values({'gold': 12345})
+        before = (dict(editor.changes), [dict(item) for item in editor.history])
+        retained = {}
+        for language in ('English', 'Deutsch'):
+            self.app.language_choice.set(language)
+            self.app.change_language()
+            for key in ('editing_presets', 'research_lab', 'workflow_builder'):
+                with self.subTest(language=language, tool=key):
+                    getattr(self.app, 'show_' + key)()
+                    self.root.update()
+                    self.assertEqual(self.app.shell_settings.recent[0], 'tool:' + key)
+                    self.assertEqual(self.app.shell_settings.recent.count('tool:' + key), 1)
+                    self.assertEqual(self.app.breadcrumb.get(), self.app.tr(key))
+                    tool = getattr(self.app, key)
+                    self.assertTrue(tool.frame.winfo_ismapped())
+                    if key in retained:
+                        self.assertIs(tool, retained[key])
+                    retained[key] = tool
+                    self.assertEqual((editor.changes, editor.history), before)
+                    self.assertEqual(editor.document.source.read_bytes(), editor.document.raw)
+        self.app.workflow_builder.close()
+
     def test_menu_reaches_retained_research_and_presets_and_preserves_editor(self):
         editor = self.open_destination()
         editor.stage_values({'gold': 12345})

@@ -1183,8 +1183,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 70810,
-      "sha256": "097c2d965f9ae936e133ef4eecb2a8978093f71525976f2af24b5b511e9e080d"
+      "bytes": 71250,
+      "sha256": "d3e529203727fb25f7783c92a9b10ccbae27d6532c2e00209b18c6a6e179e502"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3718,8 +3718,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 5581,
-      "sha256": "88411cac8fb573eada35cf3a413c02df5290a968ae1a6922c4fa187c87589934"
+      "bytes": 5690,
+      "sha256": "960fc9c312d1c74a257d8aa1ede0bbf52392520d347306988da9fc65ff13dfdd"
     },
     {
       "path": "src/koei_editor/shared/musou_presentations.py",
@@ -4418,8 +4418,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 7963,
-      "sha256": "65db600bbaf91628ae91402b4090003611afb9fc5aa129c513e3f644867b5c92"
+      "bytes": 10920,
+      "sha256": "59bddf7a79ce44e21dd11b5c14fa9deed02ac8a5daf45677ebb59270f9f408e5"
     },
     {
       "path": "tests/test_editor.py",

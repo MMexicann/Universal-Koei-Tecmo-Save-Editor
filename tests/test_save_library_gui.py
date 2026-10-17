@@ -215,10 +215,20 @@ class SaveLibraryGuiTests(unittest.TestCase):
                 self.root.update()
                 bottom = self.root.winfo_rooty() + self.root.winfo_height()
                 right = self.root.winfo_rootx() + self.root.winfo_width()
-                for widget in (workspace.previous, workspace.next, workspace.page_label,
-                               workspace.detail_label, workspace.guidance_label):
+                # Preserve access to every form, filter, management and batch
+                # control as well as paging at the application's minimum size.
+                visible_controls = (*workspace.controls,
+                                    *workspace.management_button.master.winfo_children(),
+                                    *workspace.select_matches_button.master.winfo_children(),
+                                    *workspace.search_entry.master.winfo_children(),
+                                    workspace.previous, workspace.next, workspace.page_label,
+                                    workspace.detail_label, workspace.guidance_label)
+                for widget in visible_controls:
                     self.assertTrue(widget.winfo_ismapped(), str(widget))
                     self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight(), str(widget))
+                    self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth(), str(widget))
+                    self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx(), str(widget))
+                    self.assertGreaterEqual(widget.winfo_rooty(), self.root.winfo_rooty(), str(widget))
                     self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(), bottom)
                     self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), right)
                 self.assertGreaterEqual(workspace.table.winfo_height(), 100)

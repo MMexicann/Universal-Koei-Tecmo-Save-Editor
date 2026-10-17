@@ -21,7 +21,7 @@ class SaveLibraryWorkspace:
         self.check_results = {}
         self.management = None
         self._palette = None
-        self.frame = ttk.Frame(parent, padding=(28, 16))
+        self.frame = ttk.Frame(parent, padding=(28, 12))
         self.busy, self.prepared, self._revision = False, None, 0
         self._closed, self._poll_id = False, None
         self._cancel = threading.Event()
@@ -34,7 +34,7 @@ class SaveLibraryWorkspace:
         ttk.Label(self.frame, text='SAVE LIBRARY', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
         introduction = ttk.Label(self.frame, text='Find, validate and open your copied saves for one game and platform.',
                                  style='Muted.TLabel', wraplength=1000)
-        introduction.pack(anchor='w', pady=(4, 14))
+        introduction.pack(anchor='w', pady=(2, 6))
         self._wrapped_labels.append(introduction)
         form = ttk.Frame(self.frame)
         form.pack(fill='x')
@@ -43,20 +43,20 @@ class SaveLibraryWorkspace:
         self.recursive = tk.BooleanVar(root, value=False)
         ttk.Label(form, text='Game and platform').grid(row=0, column=0, sticky='w', padx=(0, 14))
         self.selector = ttk.Combobox(form, textvariable=self.game, values=tuple(self._games), state='readonly')
-        self.selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=6)
+        self.selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=3)
         self.controls.append(self.selector)
         ttk.Label(form, text='Copied-save folder').grid(row=1, column=0, sticky='w', padx=(0, 14))
         self.folder_entry = ttk.Entry(form, textvariable=self.folder)
-        self.folder_entry.grid(row=1, column=1, sticky='ew', pady=6)
+        self.folder_entry.grid(row=1, column=1, sticky='ew', pady=3)
         self.browse_button = ttk.Button(form, text='Browse...', command=self.browse)
         self.browse_button.grid(row=1, column=2, padx=(10, 0))
         self.recursive_button = ttk.Checkbutton(form, text='Include subfolders (up to 3 levels)', variable=self.recursive)
-        self.recursive_button.grid(row=2, column=1, sticky='w', pady=(4, 8))
+        self.recursive_button.grid(row=2, column=1, sticky='w', pady=(2, 4))
         self.controls.extend((self.folder_entry, self.browse_button, self.recursive_button))
         context_note = ttk.Label(self.frame, text='Keep required original console or account metadata beside each copy. '
                                 'Live save folders, Steam Cloud paths, linked files and linked folders are excluded.',
                                 style='Muted.TLabel', wraplength=1000)
-        context_note.pack(anchor='w', pady=(6, 10))
+        context_note.pack(anchor='w', pady=(4, 6))
         self._wrapped_labels.append(context_note)
         actions = ttk.Frame(self.frame)
         actions.pack(fill='x')
@@ -72,10 +72,10 @@ class SaveLibraryWorkspace:
         self.controls.append(self.management_button)
         self.status = tk.StringVar(root, value='Choose an exact game/platform and a folder containing separate save copies.')
         status_label = ttk.Label(self.frame, textvariable=self.status, wraplength=1000)
-        status_label.pack(anchor='w', pady=(12, 8))
+        status_label.pack(anchor='w', pady=(6, 4))
         self._wrapped_labels.append(status_label)
         filters = ttk.Frame(self.frame)
-        filters.pack(fill='x', pady=(2, 8))
+        filters.pack(fill='x', pady=(2, 4))
         ttk.Label(filters, text='Find a copy').pack(side='left', padx=(0, 8))
         self.search = tk.StringVar(root)
         self.search_entry = ttk.Entry(filters, textvariable=self.search)
@@ -96,9 +96,9 @@ class SaveLibraryWorkspace:
         self.footer.pack(side='bottom', fill='x')
         self.detail = tk.StringVar(root, value='Select a result to see its validation summary.')
         self.detail_label = ttk.Label(self.footer, textvariable=self.detail, wraplength=1000)
-        self.detail_label.pack(anchor='w', pady=(8, 4))
+        self.detail_label.pack(anchor='w', pady=(6, 2))
         batch = ttk.Frame(self.footer)
-        batch.pack(fill='x', pady=(2, 4))
+        batch.pack(fill='x', pady=2)
         self.select_matches_button = ttk.Button(batch, text='Select qualified matches', command=self.select_matches)
         self.select_matches_button.pack(side='left')
         self.clear_button = ttk.Button(batch, text='Clear selection', command=self.clear_selection)
@@ -109,7 +109,7 @@ class SaveLibraryWorkspace:
         self.manage_button.pack(side='left', padx=8)
         self.controls.extend((self.select_matches_button, self.clear_button))
         paging = ttk.Frame(self.footer)
-        paging.pack(fill='x', pady=(4, 6))
+        paging.pack(fill='x', pady=(2, 4))
         self.previous = ttk.Button(paging, text='Previous', command=lambda: self.change_page(-1), state='disabled')
         self.previous.pack(side='left')
         self.next = ttk.Button(paging, text='Next', command=lambda: self.change_page(1), state='disabled')
@@ -120,7 +120,7 @@ class SaveLibraryWorkspace:
         self.guidance_label = ttk.Label(self.footer, text='Browse without changing your files. Identical-file groups '
                                        'compare the save files; their original console or account metadata may differ.',
                                        style='Muted.TLabel', wraplength=1000)
-        self.guidance_label.pack(anchor='w', pady=(4, 0))
+        self.guidance_label.pack(anchor='w', pady=(2, 0))
         self._wrapped_labels.extend((self.detail_label, self.guidance_label))
         table_frame = ttk.Frame(self.frame)
         table_frame.pack(fill='both', expand=True)

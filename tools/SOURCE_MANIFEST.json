@@ -648,8 +648,13 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14063,
-      "sha256": "6f1ad11a523d3fe17b4c99c16117e8b3845f957a234442a64948373f76a5e3ae"
+      "bytes": 14142,
+      "sha256": "95924ea057b7e5f505fba1250247ca3d86010c3953c9bd69c971c2e8d3e281c1"
+    },
+    {
+      "path": "docs/REAL_GAME_VALIDATION.md",
+      "bytes": 6529,
+      "sha256": "51b6607443fe7c28636708ff6382ee48fb93205a468e1da6e03b6fc2ec722d29"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -3557,6 +3562,11 @@
       "sha256": "48d5d3fea04ef087b3cd95527f12556ef4f1ca8d5bc13853887cd31fa8e5b409"
     },
     {
+      "path": "src/koei_editor/shared/community_feedback.py",
+      "bytes": 4185,
+      "sha256": "98741d358ac20c9f78347a7a5d6f2d18b72ee8d7432e5688d9180d3d043d0851"
+    },
+    {
       "path": "src/koei_editor/shared/community_plugins.py",
       "bytes": 13971,
       "sha256": "b5546538a12bf01a6723687c77ef11aa88b0ac66c0cb6287437dc8dc407003c1"
@@ -3707,6 +3717,16 @@
       "sha256": "f1d15aeb006e41d86fc43a3a9b8c3536207f81530e9e3a94f0bd88da6da0f9df"
     },
     {
+      "path": "src/koei_editor/shared/validation_gui.py",
+      "bytes": 21509,
+      "sha256": "7d9c64d99aed75a99370738b538399d3333676f2d2bd1f287f5cf762386ccd85"
+    },
+    {
+      "path": "src/koei_editor/shared/validation_toolkit.py",
+      "bytes": 7192,
+      "sha256": "ce823b15531492c2f46c05ab91a60a533c6efc974bebaaac4e2211aa31665424"
+    },
+    {
       "path": "src/koei_editor/shared/verified_editor.py",
       "bytes": 21795,
       "sha256": "aa506166ce7cbe91dfa4f54dd14ddd11855c36b2d8c7d5966ec2295b9dff3b77"
@@ -3850,6 +3870,11 @@
       "path": "tests/test_collections_v085.py",
       "bytes": 5784,
       "sha256": "2c83c3997de0961f752d8b3ca2c776274d932138a4d55956007e6b6b55e629b4"
+    },
+    {
+      "path": "tests/test_community_feedback.py",
+      "bytes": 5405,
+      "sha256": "a610637d47be904cbc5e0d47b210d8e12a69fadb7bec68f8d3240d53ad21df73"
     },
     {
       "path": "tests/test_community_plugins.py",
@@ -5180,6 +5205,16 @@
       "path": "tests/test_v27_origins_dw3_dashboard.py",
       "bytes": 10917,
       "sha256": "c4ff2ed6bedd86e6165fcfc8b58b0a618fe3c58373af48c9d390ec4272c01e08"
+    },
+    {
+      "path": "tests/test_validation_gui.py",
+      "bytes": 7948,
+      "sha256": "c61fb97e26ae11d5836869bb44b2ac658825e3f9d7a6f5221362c07c9cb91c1a"
+    },
+    {
+      "path": "tests/test_validation_toolkit.py",
+      "bytes": 8043,
+      "sha256": "80faed0293ab5bca2c6102979508a774de410e89925acf9da2e92de094fdeb91"
     },
     {
       "path": "tests/test_verified_editors.py",

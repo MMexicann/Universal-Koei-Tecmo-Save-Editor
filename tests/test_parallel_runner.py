@@ -187,6 +187,80 @@ class ParallelRunnerTests(unittest.TestCase):
         log = self.results / "logs-shard-0" / report["modules"][0]["log"]
         self.assertIn("deliberate", log.read_text())
 
+    def test_early_tracebacks_survive_abrupt_worker_exit_without_result_json(self):
+        cases = (
+            ("self.fail('early-assertion-marker')", "AssertionError: early-assertion-marker"),
+            ("raise RuntimeError('early-error-marker')", "RuntimeError: early-error-marker"),
+            ("with self.subTest(case='assertion'): self.fail('early-subtest-marker')",
+             "AssertionError: early-subtest-marker"),
+            ("with self.subTest(case='error'): raise ValueError('early-suberror-marker')",
+             "ValueError: early-suberror-marker"),
+        )
+        report = self.results / "worker.json"
+        for statement, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                self.fixture("test_crash.py", "import os, unittest\nclass Check(unittest.TestCase):\n"
+                             f"    def test_a_diagnostic(self):\n        {statement}\n"
+                             "    def test_b_exit(self): os._exit(7)\n")
+                command = [sys.executable, "-m", "tools.run_tests", "--_worker", "test_crash.py",
+                           "--tests-dir", str(self.tests), "--report", str(report)]
+                process = subprocess.run(command, cwd=runner.ROOT, capture_output=True,
+                                         text=True, timeout=30)
+                self.assertEqual(process.returncode, 7, process.stdout + process.stderr)
+                self.assertFalse(report.exists(), "A crashed worker must not claim completed results")
+                self.assertIn("Traceback (most recent call last)", process.stderr)
+                self.assertIn(diagnostic, process.stderr)
+                self.assertLess(process.stderr.index(diagnostic), process.stderr.index("test_b_exit"))
+
+    def test_crashed_worker_retains_early_failure_log_and_fails_shard_gate(self):
+        self.fixture("test_crash.py", "import os, unittest\nclass Check(unittest.TestCase):\n"
+                     "    def test_a_fail(self): self.fail('retained-before-exit-marker')\n"
+                     "    def test_b_exit(self): os._exit(7)\n")
+        process, report, path = self.invoke()
+        self.assertEqual(process.returncode, 1, process.stdout + process.stderr)
+        self.assertFalse(report["success"])
+        record = report["modules"][0]
+        self.assertFalse(record["success"])
+        self.assertIn("infrastructure_error", record)
+        # Missing worker JSON remains an infrastructure failure, not invented
+        # authoritative counts reconstructed from diagnostic text.
+        self.assertEqual(report["counts"], {key: 0 for key in runner.COUNTS})
+        log = self.results / "logs-shard-0" / record["log"]
+        self.assertFalse(log.with_suffix(".json").exists())
+        self.assertIn("AssertionError: retained-before-exit-marker", log.read_text())
+        with self.assertRaisesRegex(ValueError, "did not pass"):
+            runner.verify_reports([path], self.tests)
+
+    def test_early_tracebacks_preserve_complete_result_counts_and_continuation(self):
+        self.fixture("test_results.py", "import unittest\nclass Check(unittest.TestCase):\n"
+                     "    def test_a_fail(self): self.fail('regular-failure-marker')\n"
+                     "    def test_b_error(self): raise RuntimeError('regular-error-marker')\n"
+                     "    def test_c_subtests(self):\n"
+                     "        with self.subTest(case='pass'): self.assertTrue(True)\n"
+                     "        with self.subTest(case='failure'): self.fail('subtest-failure-marker')\n"
+                     "        with self.subTest(case='error'): raise ValueError('subtest-error-marker')\n"
+                     "    @unittest.skip('optional fixture')\n"
+                     "    def test_d_skip(self): pass\n"
+                     "    @unittest.expectedFailure\n"
+                     "    def test_e_expected(self): self.fail('expected-failure-marker')\n"
+                     "    @unittest.expectedFailure\n"
+                     "    def test_f_unexpected(self): pass\n"
+                     "    def test_z_pass(self): self.assertTrue(True)\n")
+        process, report, path = self.invoke()
+        self.assertEqual(process.returncode, 1, process.stdout + process.stderr)
+        self.assertEqual(report["counts"], {"tests": 7, "discovered_tests": 7,
+                         "failures": 2, "errors": 2, "skipped": 1,
+                         "expected_failures": 1, "unexpected_successes": 1})
+        self.assertNotIn("infrastructure_error", report["modules"][0])
+        log = self.results / "logs-shard-0" / report["modules"][0]["log"]
+        text = log.read_text()
+        for diagnostic in ("AssertionError: regular-failure-marker", "RuntimeError: regular-error-marker",
+                           "AssertionError: subtest-failure-marker", "ValueError: subtest-error-marker"):
+            self.assertLess(text.index(diagnostic), text.index("test_z_pass"))
+        self.assertNotIn("expected-failure-marker", text)
+        with self.assertRaisesRegex(ValueError, "did not pass"):
+            runner.verify_reports([path], self.tests)
+
     def test_import_error_causes_failure(self):
         self.fixture("test_broken.py", "raise RuntimeError('deliberate import failure')\n")
         process, report, _ = self.invoke()

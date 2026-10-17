@@ -29,6 +29,7 @@ class Application(Appearance):
         self._translated_widgets = []
         self._search_after = None
         self._navigation_after = None
+        self._editor_width_after = None
         self._shell_controls_expanded = False
         initial_theme = preferences.load_theme(preferences_path)
         self.style = ttk.Style(root)
@@ -46,6 +47,7 @@ class Application(Appearance):
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
+        self._owned_minimum = (780, 680)
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
         self.editing_tools_menu.add_command(label='Reusable Editing Presets...', command=self.show_editing_presets)
@@ -105,7 +107,7 @@ class Application(Appearance):
         self.author_label.pack(side='right')
         self.compact_home_button = ttk.Button(top, command=self.show_library)
         self.shell_controls_button = ttk.Button(top, command=self._toggle_shell_controls)
-        self.breadcrumb.trace_add('write', lambda *_args: self._schedule_navigation())
+        self.breadcrumb.trace_add('write', self._workspace_changed)
         self._rebuild_help_menu()
         top.bind('<Configure>', self._schedule_navigation)
         root.bind('<Configure>', lambda event: self._schedule_navigation()
@@ -263,8 +265,9 @@ class Application(Appearance):
                                             'editing_presets', 'research_lab', 'workflow_builder')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
-            self.breadcrumb.set(self.tr(visible or ('help' if self.help_center is not None
-                                                   and self.help_center.frame.winfo_manager() else 'choose')))
+            if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
+                visible = self.help_center.selected_tab()
+            self.breadcrumb.set(self.tr(visible or 'choose'))
         if self.help_center is not None:
             set_language = getattr(self.help_center, 'set_language', None)
             if callable(set_language):
@@ -287,6 +290,44 @@ class Application(Appearance):
         self.style.configure('Treeview', rowheight=max(29, size * 2 + 9))
         if self.help_center is not None:
             self.help_center.set_text_size(size, self.font_family)
+        self._schedule_editor_width()
+
+    def _workspace_changed(self, *_args):
+        self._schedule_navigation()
+        self._schedule_editor_width()
+
+    def _schedule_editor_width(self):
+        if self._editor_width_after is None:
+            self._editor_width_after = self.root.after_idle(self._fit_editor_actions)
+
+    def _fit_editor_actions(self):
+        self._editor_width_after = None
+        # Embedding bypasses the standalone editors' minimum sizes. Reserve
+        # the measured file-action width without overriding an explicit
+        # caller-selected minimum (including compact dashboard qualification).
+        if self.root.minsize() != self._owned_minimum:
+            return
+        width = 780
+        if self.active_game is not None:
+            editor = self.sessions[self.active_game][1]
+            buttons = getattr(editor, 'save_buttons', ()) or getattr(editor, 'buttons', ())
+            if buttons:
+                row = buttons[0].master
+                # Font changes invalidate the packed row's requested width;
+                # let Tk finish that geometry before measuring this frame.
+                row.update_idletasks()
+                width = row.winfo_reqwidth()
+                ancestor = row.master
+                while ancestor is not self.root:
+                    if 'padding' in ancestor.keys():
+                        padding = tuple(ancestor.winfo_pixels(value) for value in
+                                        self.root.tk.splitlist(ancestor.cget('padding')))
+                        if padding:
+                            width += padding[0] + (padding[2] if len(padding) > 2 else padding[0])
+                    ancestor = ancestor.master
+                width = max(780, width)
+        self._owned_minimum = (width, 680)
+        self.root.minsize(*self._owned_minimum)
 
     def _schedule_navigation(self, _event=None):
         if self._navigation_after is None:
@@ -297,9 +338,12 @@ class Application(Appearance):
         self._layout_navigation()
 
     def _cancel_navigation(self, event):
-        if event.widget is self.root and self._navigation_after is not None:
-            self.root.after_cancel(self._navigation_after)
-            self._navigation_after = None
+        if event.widget is self.root:
+            for name in ('_navigation_after', '_editor_width_after'):
+                pending = getattr(self, name)
+                if pending is not None:
+                    self.root.after_cancel(pending)
+                    setattr(self, name, None)
 
     def _layout_navigation(self):
         if self._navigation_after is not None:
@@ -431,7 +475,8 @@ class Application(Appearance):
     def show_help(self, tab='help'):
         from koei_editor.shared.help_center import HelpCenter
         if self.help_center is None:
-            self.help_center = HelpCenter(self.root, self.workspace, initial_tab=tab, language=self.language)
+            self.help_center = HelpCenter(self.root, self.workspace, initial_tab=tab, language=self.language,
+                                          on_tab_changed=self._help_tab_changed)
         self.library.pack_forget()
         self._hide_tools()
         for frame, _editor in self.sessions.values():
@@ -444,6 +489,11 @@ class Application(Appearance):
         self.breadcrumb.set(self.tr(tab))
         self._remember_workspace('tool:' + tab)
         return 'break'
+
+    def _help_tab_changed(self, tab):
+        if self.help_center is not None and self.help_center.frame.winfo_manager():
+            self.breadcrumb.set(self.tr(tab))
+            self._remember_workspace('tool:' + tab)
 
     def schedule_library_search(self, *_args):
         self._flush_library_search()
@@ -885,6 +935,8 @@ class Application(Appearance):
             editor = self.sessions[self.active_game][1]
             focus = getattr(editor, 'focus_field_search', None)
             return focus() if focus is not None else None
+        if self.help_center is not None and self.help_center.frame.winfo_manager():
+            return self.help_center.focus_search()
         for tool in (self.editing_presets, self.research_lab):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)

@@ -7,8 +7,9 @@ from koei_editor.shared.help_content import Article, help_articles, search_artic
 
 
 class HelpCenter:
-    def __init__(self, root, parent, initial_tab='help', language='en'):
+    def __init__(self, root, parent, initial_tab='help', language='en', on_tab_changed=None):
         self.root = root
+        self.on_tab_changed = on_tab_changed
         self.language = language if language in ('en', 'de') else 'en'
         self.frame = ttk.Frame(parent, padding=16)
         self.busy = False
@@ -180,7 +181,8 @@ class HelpCenter:
         self.guide_label.pack(anchor='w')
         platforms = tuple(sorted({entry.platform for entry in self.entries}))
         self.guide_platform = tk.StringVar(self.root, value='Windows PC')
-        selector = ttk.Combobox(parent, textvariable=self.guide_platform, values=platforms, state='readonly')
+        selector = self.guide_selector = ttk.Combobox(
+            parent, textvariable=self.guide_platform, values=platforms, state='readonly')
         selector.pack(fill='x', pady=8)
         self.guide_detail = self._text(parent)
         selector.bind('<<ComboboxSelected>>', self._show_guide)
@@ -201,11 +203,29 @@ class HelpCenter:
         self._ensure_panel(name)
 
     def _tab_changed(self, _event=None):
+        name = self.selected_tab()
+        self._ensure_panel(name)
+        if self.on_tab_changed is not None:
+            self.on_tab_changed(name)
+
+    def selected_tab(self):
         selected = self.notebook.select()
-        for name, tab in self.tabs.items():
-            if str(tab) == selected:
-                self._ensure_panel(name)
-                break
+        return next((key for key, tab in self.tabs.items() if str(tab) == selected), 'help')
+
+    def focus_search(self):
+        """Keep Ctrl+F within the visible tab without replacing draft forms."""
+        name = self.selected_tab()
+        widget = {'help': self.help_search, 'compatibility': self.compatibility_search,
+                  'workflows': self.guide_selector}.get(name)
+        if name == 'plugins':
+            self._ensure_panel(name)
+            widget = self._panels[name].search_entry
+        if widget is None:
+            self.notebook.focus_set()
+        else:
+            widget.focus_set()
+            widget.selection_range(0, 'end')
+        return 'break'
 
     def _ensure_panel(self, name):
         if name in self._panels or name not in ('validation', 'feedback', 'plugins'):

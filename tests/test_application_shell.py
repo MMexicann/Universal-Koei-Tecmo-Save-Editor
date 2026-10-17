@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
@@ -276,6 +277,7 @@ class ApplicationShellTests(unittest.TestCase):
                                          self.root.winfo_rootx() + 800)
                 self.app.shell_controls_button.invoke()
                 self.root.update()
+
                 for widget in (*self.app._navigation_buttons, self.app.theme_selector,
                                self.app.language_selector, self.app.text_size_selector,
                                self.app.shell_controls_button):
@@ -285,6 +287,83 @@ class ApplicationShellTests(unittest.TestCase):
                 self.app.shell_controls_button.invoke()
                 self.root.update()
 
+    def test_embedded_file_actions_keep_their_full_width_at_each_text_size(self):
+        for game_id in ('origins', 'dw3'):
+            editor = self.app.select_game(game_id)
+            buttons = getattr(editor, 'save_buttons', ()) or editor.buttons
+            row = buttons[0].master
+            for size in ('100%', '120%', '140%'):
+                with self.subTest(game=game_id, size=size):
+                    self.root.geometry('780x680')
+                    self.app.text_size_choice.set(size)
+                    self.app.change_text_size()
+                    self.root.update()
+                    for widget in row.winfo_children():
+                        if not isinstance(widget, ttk.Button):
+                            continue
+                        self.assertTrue(widget.winfo_viewable())
+                        self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
+                        self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                             self.root.winfo_rootx() + self.root.winfo_width())
+                    self.assertFalse(editor.changes)
+            self.app.show_library()
+            self.root.update()
+            self.assertEqual(self.root.minsize(), (780, 680))
+
+    def test_editor_width_fitting_respects_explicit_compact_minimum(self):
+        self.root.minsize(650, 500)
+        self.root.geometry('800x650')
+        self.app.select_game('origins')
+        self.app.text_size_choice.set('140%')
+        self.app.change_text_size()
+        self.root.update()
+        self.assertEqual(self.root.minsize(), (650, 500))
+        self.assertEqual(self.root.winfo_width(), 800)
+
+    def test_help_search_shortcut_targets_the_visible_tab_and_preserves_drafts(self):
+        self.app.show_help('help')
+        center = self.app.help_center
+        self.root.focus_force()
+        for tab, attribute in (('help', 'help_search'), ('compatibility', 'compatibility_search'),
+                               ('workflows', 'guide_selector'), ('plugins', None)):
+            center.notebook.select(center.tabs[tab])
+            self.root.update()
+            self.root.event_generate('<Control-f>')
+            self.root.update()
+            target = getattr(center, attribute) if attribute else center._panels['plugins'].search_entry
+            self.assertIs(self.root.focus_get(), target)
+            self.assertTrue(target.winfo_viewable())
+        center.notebook.select(center.tabs['validation'])
+        self.root.update()
+        panel = center._panels['validation']
+        panel.revision.set('29')
+        self.root.event_generate('<Control-f>')
+        self.root.update()
+        self.assertIs(self.root.focus_get(), center.notebook)
+        self.assertEqual(center.selected_tab(), 'validation')
+        self.assertIs(center._panels['validation'], panel)
+        self.assertEqual(panel.revision.get(), '29')
+        self.assertFalse(self.app.library.winfo_ismapped())
+
+    def test_direct_help_tab_selection_updates_navigation_and_ignores_hidden_tabs(self):
+        self.app.show_help('help')
+        center = self.app.help_center
+        center.notebook.select(center.tabs['compatibility'])
+        self.root.update()
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('compatibility'))
+        self.assertEqual(self.app.shell_settings.recent[0], 'tool:compatibility')
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.root.update()
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('compatibility'))
+        self.app.select_game('origins')
+        self.root.update()
+        breadcrumb, recent = self.app.breadcrumb.get(), self.app.shell_settings.recent
+        center.notebook.select(center.tabs['help'])
+        self.root.update()
+        self.assertEqual(self.app.active_game, 'origins')
+        self.assertEqual(self.app.breadcrumb.get(), breadcrumb)
+        self.assertEqual(self.app.shell_settings.recent, recent)
     def test_search_bursts_coalesce_and_enter_flushes_latest_query(self):
         with patch.object(self.app, 'show_platform', wraps=self.app.show_platform) as show:
             for text in ('d', 'dw', 'dw7', 'dw7xl'):

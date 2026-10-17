@@ -20,7 +20,7 @@ class Editor(ScalarEditor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        tools = ttk.Frame(self.edit_page, padding=(18, 0, 18, 6))
+        tools = ttk.Frame(self.edit_page, padding=(18, 0, 18, 0))
         tools.pack(fill='x', before=self.bulk_bar)
         self.peace_button = ttk.Button(tools, text='Set Peace %...',
                                        command=self.set_peace_percent, state='disabled')

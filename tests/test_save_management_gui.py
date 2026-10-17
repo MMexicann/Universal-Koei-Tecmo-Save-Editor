@@ -1,4 +1,5 @@
 """Real Tk save-management workflows, worker isolation and safe lifecycle."""
+from dataclasses import replace
 import json
 from pathlib import Path
 import tempfile
@@ -132,6 +133,37 @@ class SaveManagementGuiTests(unittest.TestCase):
         self.assertEqual(manager.history.heading('created_utc')['text'], 'Created (UTC)')
         self.assertTrue(manager.history.cget('yscrollcommand'))
         self.assertEqual(str(manager.history_scrollbar.cget('orient')), 'vertical')
+        # History browsing must keep its scrollbar visible after the tree's
+        # wider filename/date columns are constrained by a smaller window.
+        original_snapshots = tuple(snapshots.values())
+        preview_rows = tuple(replace(original_snapshots[0], id=f'preview-{index}') for index in range(18))
+        manager._history_result(original_snapshots + preview_rows)
+        manager.notebook.select(manager.vault_tab)
+        for width, height in ((820, 650), (1000, 780)):
+            with self.subTest(width=width, height=height):
+                manager.window.geometry(f'{width}x{height}')
+                self.root.update()
+                bar = manager.history_scrollbar
+                self.assertTrue(bar.winfo_ismapped())
+                self.assertGreaterEqual(bar.winfo_width(), bar.winfo_reqwidth())
+                self.assertGreater(bar.winfo_height(), 0)
+                self.assertLessEqual(bar.winfo_rootx() + bar.winfo_width(),
+                                     manager.window.winfo_rootx() + manager.window.winfo_width())
+                self.assertLessEqual(bar.winfo_rooty() + bar.winfo_height(),
+                                     manager.window.winfo_rooty() + manager.window.winfo_height())
+                self.assertLessEqual(manager.history.winfo_rootx() + manager.history.winfo_width(),
+                                     bar.winfo_rootx())
+                self.assertLess(manager.history.yview()[1], 1)
+                horizontal = manager.history_horizontal_scrollbar
+                self.assertTrue(horizontal.winfo_ismapped())
+                self.assertGreaterEqual(horizontal.winfo_height(), horizontal.winfo_reqheight())
+                self.assertLessEqual(horizontal.winfo_rootx() + horizontal.winfo_width(),
+                                     manager.window.winfo_rootx() + manager.window.winfo_width())
+                self.assertLessEqual(horizontal.winfo_rooty() + horizontal.winfo_height(),
+                                     manager.window.winfo_rooty() + manager.window.winfo_height())
+                self.assertLessEqual(manager.history.winfo_rooty() + manager.history.winfo_height(),
+                                     horizontal.winfo_rooty())
+        manager._history_result(original_snapshots)
         manager.history.selection_set(ids)
         manager.compare()
         self.finish(manager)

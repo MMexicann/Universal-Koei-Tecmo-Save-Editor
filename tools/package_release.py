@@ -33,7 +33,8 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'origins_evidence.json', 'dw6_migration_evidence.json', 'support_catalog.json')
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
-RUNTIME_GUIDES = ('docs/PROGRESSION_DASHBOARDS.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
+RUNTIME_GUIDES = ('docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                  'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'docs/PROGRESSION_DASHBOARDS.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
                   'docs/SAVE_CONVERSION.md', 'docs/SAVE_COMPARISON.md',
                   'docs/BATCH_CONVERSION.md', 'docs/DW6_CONVERSION.md', 'docs/DW6_PS3_FORMAT.md',
                   'docs/DW7XL_CONVERSION.md', 'docs/DW7XL_WEAPONS.md',

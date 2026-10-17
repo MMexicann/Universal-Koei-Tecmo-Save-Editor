@@ -6,6 +6,9 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Development and releases
 
+- [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
+
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)

@@ -14,6 +14,8 @@ class HelpCenter:
         self.busy = False
         self._panels = {}
         self._palette = None
+        self._text_size = 10
+        self._font_family = 'Helvetica'
         de = self.language == 'de'
         self.title_label = ttk.Label(self.frame, text='Hilfe & Community' if de else 'Help & Community',
                                      style='Section.TLabel')
@@ -219,6 +221,7 @@ class HelpCenter:
         panel.frame.pack(fill='both', expand=True)
         if self._palette is not None:
             panel.apply_theme(self._palette)
+        self.set_text_size(self._text_size, self._font_family)
 
     def _plugins_changed(self, _catalog=None):
         self.articles = help_articles(self.language)
@@ -261,6 +264,15 @@ class HelpCenter:
         for panel in self._panels.values():
             panel.apply_theme(palette)
 
+    def set_text_size(self, size, family):
+        self._text_size, self._font_family = size, family
+        pending = [self.frame]
+        while pending:
+            widget = pending.pop()
+            pending.extend(widget.winfo_children())
+            if isinstance(widget, tk.Text):
+                widget.configure(font=(family, size))
+
     def set_language(self, language):
         """Relabel in place so unfinished validation and plugin approvals survive."""
         self.language = language if language in ('en', 'de') else 'en'
@@ -285,3 +297,4 @@ class HelpCenter:
         for panel in self._panels.values():
             if hasattr(panel, 'set_language'):
                 panel.set_language(self.language)
+        self.set_text_size(self._text_size, self._font_family)

@@ -71,3 +71,30 @@ Retaining the search index trades a small, bounded amount of metadata memory
 and one startup preprocessing pass for lower repeated-query work. Shell startup
 and widget counts can remain unchanged where compatibility requires eager card
 creation. Report neutral measurements and regressions alongside improvements.
+
+## Observed source-checkout comparison
+
+On Linux / Python 3.12.14 with a 1600-pixel Xvfb display, five fresh-process
+samples per timing and memory mode and 20 iterations of 12 searches compared
+v2.7 baseline `7a38e8c` with shell snapshot `7879b0a`. Both had 97 profiles and
+identical query-result IDs. These measurements precede the final help integration.
+
+| Median metric | Baseline | Shell snapshot |
+| --- | ---: | ---: |
+| Search query | 2.660 ms | 0.0469 ms |
+| Six-change search burst renders | 6 | 1 |
+| Warm library navigation | 6.79 ms | 2.06 ms |
+| Shell startup | 165 ms | 199 ms |
+| Startup widgets | 696 | 706 |
+| Shell startup Python peak | 663,325 bytes | 703,519 bytes |
+
+Repeated search and coalesced rendering improve; added controls increase startup
+and allocation costs. Shared-host timing varies. The reported p95 is across
+process-sample metrics, not individual keystroke latency. Allocation totals include
+benchmark bookkeeping and allocator effects, and exclude native Tk memory/RSS.
+These results do not establish Windows or packaged EXE performance.
+
+Runtime source SHA-256 fingerprints:
+
+- Baseline: `2b4679c8be1b57899eb205ebfe057c6448641e059bab57ffecf34779155c576d`
+- Shell snapshot: `4ce2f03002675af9dd9574e775a7f7c843a876b687cb8091e7625766bca76c4a`

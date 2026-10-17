@@ -260,8 +260,11 @@ class Application(Appearance):
         # Keep Tk's native DPI scaling. Point fonts automatically respect it;
         # this additional preference is a user-selected readability adjustment.
         size = round(10 * self.shell_settings.text_size / 100)
+        self.root.option_add('*Font', (self.font_family, size))
         self.style.configure('.', font=(self.font_family, size))
         self.style.configure('Treeview', rowheight=max(29, size * 2 + 9))
+        if self.help_center is not None:
+            self.help_center.set_text_size(size, self.font_family)
 
     def _schedule_navigation(self, _event=None):
         if self._navigation_after is None:
@@ -366,6 +369,7 @@ class Application(Appearance):
         self.help_center.show_tab(tab)
         self.help_center.frame.pack(fill='both', expand=True)
         self.help_center.apply_theme(THEMES[self.theme_name.get()])
+        self.help_center.set_text_size(round(10 * self.shell_settings.text_size / 100), self.font_family)
         self.breadcrumb.set(self.tr(tab))
         self._remember_workspace('tool:' + tab)
         return 'break'

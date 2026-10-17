@@ -3858,8 +3858,8 @@
     },
     {
       "path": "tests/test_compatible_presets_gui.py",
-      "bytes": 14761,
-      "sha256": "9a179360427189dd908302c5c38cf069a35f865eba14ac380f9f52e8f3df68f4"
+      "bytes": 16210,
+      "sha256": "72ffc6383e5ff11c784304972fdf8a9193d0fccb2e7a098485a0db96edecdcbc"
     },
     {
       "path": "tests/test_console_context_regressions.py",

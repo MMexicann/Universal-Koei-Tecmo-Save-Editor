@@ -6,7 +6,7 @@ from tkinter import ttk
 from koei_editor.shared.appearance import Appearance, THEMES
 from koei_editor.game_registry import GAMES, ALL_ADAPTERS, get_game
 from koei_editor.supported_games import SUPPORTED_GAMES
-from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
+from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, LibraryCatalog, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 
 VERSION = '2.7'
@@ -70,6 +70,7 @@ class Application(Appearance):
         ttk.Label(self.library, text='KOEI TECMO', font=(self.font_family, 27, 'bold')).pack(anchor='w', pady=(8, 0))
         ttk.Label(self.library, text='SAVE EDITOR', font=(self.font_family, 17), style='Muted.TLabel').pack(anchor='w')
         self.library_games = tuple(GAMES)
+        self._library_catalog = LibraryCatalog(self.library_games)
         platforms = tuple(dict.fromkeys(game.platform for game in self.library_games))
         platform_bar = ttk.Frame(self.library)
         platform_bar.pack(fill='x', pady=(12, 12))
@@ -467,7 +468,7 @@ class Application(Appearance):
             return
         self.create_library_cards(scope)
         self.platform_frames[scope].pack(fill='both', expand=True)
-        self.library_matches = matching_games(self.library_games, self.library_search.get(),
+        self.library_matches = matching_games(self._library_catalog, self.library_search.get(),
                                               scope, self.series_choice.get())
         content = self._library_contents[scope]
         for card in self.library_cards[scope].values():

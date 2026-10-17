@@ -32,6 +32,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
+- [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)
@@ -43,6 +44,7 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
+- [Application performance benchmarks](PERFORMANCE.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)
 - [Real-game validation and private feedback reports](REAL_GAME_VALIDATION.md)
 - [Validation and evidence boundaries](VALIDATION.md)

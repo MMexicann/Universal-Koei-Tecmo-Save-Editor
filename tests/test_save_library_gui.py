@@ -215,10 +215,20 @@ class SaveLibraryGuiTests(unittest.TestCase):
                 self.root.update()
                 bottom = self.root.winfo_rooty() + self.root.winfo_height()
                 right = self.root.winfo_rootx() + self.root.winfo_width()
-                for widget in (workspace.previous, workspace.next, workspace.page_label,
-                               workspace.detail_label, workspace.guidance_label):
+                # Preserve access to every form, filter, management and batch
+                # control as well as paging at the application's minimum size.
+                visible_controls = (*workspace.controls,
+                                    *workspace.management_button.master.winfo_children(),
+                                    *workspace.select_matches_button.master.winfo_children(),
+                                    *workspace.search_entry.master.winfo_children(),
+                                    workspace.previous, workspace.next, workspace.page_label,
+                                    workspace.detail_label, workspace.guidance_label)
+                for widget in visible_controls:
                     self.assertTrue(widget.winfo_ismapped(), str(widget))
                     self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight(), str(widget))
+                    self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth(), str(widget))
+                    self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx(), str(widget))
+                    self.assertGreaterEqual(widget.winfo_rooty(), self.root.winfo_rooty(), str(widget))
                     self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(), bottom)
                     self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), right)
                 self.assertGreaterEqual(workspace.table.winfo_height(), 100)
@@ -402,11 +412,11 @@ class SaveLibraryGuiTests(unittest.TestCase):
                 inner.palette = palette
         module = SimpleNamespace(SaveManagementWindow=ManagementWindow)
         with patch.dict('sys.modules', {'koei_editor.shared.save_management_gui': module}):
-            self.workspace.apply_theme({'background': 'test'})
+            self.workspace.apply_theme({'background': '#123456'})
             self.workspace.management_button.invoke()
-            self.assertEqual(instances[0].palette, {'background': 'test'})
-            self.workspace.apply_theme({'background': 'changed'})
-            self.assertEqual(instances[0].palette, {'background': 'changed'})
+            self.assertEqual(instances[0].palette, {'background': '#123456'})
+            self.workspace.apply_theme({'background': '#abcdef'})
+            self.assertEqual(instances[0].palette, {'background': '#abcdef'})
             self.assertIs(self.workspace.management, instances[0])
             self.assertEqual(instances[0].requests[0][1], {'game_id': parser.GAME_ID, 'paths': ()})
             self.workspace.scan()
@@ -415,7 +425,12 @@ class SaveLibraryGuiTests(unittest.TestCase):
             self.workspace.manage_selected()
             self.assertEqual(len(instances), 1)
             self.assertEqual(instances[0].requests[1]['game_id'], parser.GAME_ID)
-            self.assertEqual(set(instances[0].requests[1]['paths']), {self.first, self.second})
+            managed_paths = instances[0].requests[1]['paths']
+            self.assertEqual(len(managed_paths), 2)
+            # Windows runner fixtures can use 8.3 ancestors while the library
+            # returns canonical paths. Compare file identity for both copies.
+            for original in (self.first, self.second):
+                self.assertEqual(sum(path.samefile(original) for path in managed_paths), 1)
             self.assertFalse(self.opened)
             instances[0]._closed = True
             self.workspace.show_management()
@@ -446,3 +461,112 @@ class SaveLibraryGuiTests(unittest.TestCase):
         self.assertFalse(self.opened)
         self.assertEqual(self.first.read_bytes(), self.raw)
         self.assertEqual(self.second.read_bytes(), self.raw)
+
+    def test_compact_header_scrolling_resize_state_theme_and_callback_cleanup(self):
+        from koei_editor.application import Application
+        app = Application(self.root, preferences_path=self.folder / 'prefs.json', persist_preferences=False)
+        app.show_save_library()
+        workspace = app.save_library
+        workspace.game.set(next(label for label, game in workspace._games.items() if game == parser.GAME_ID))
+        workspace.folder.set(str(self.folder))
+        prepared = backend.scan(parser.GAME_ID, self.folder)
+        entries = prepared.entries + tuple(replace(prepared.entries[0], relative_path=f'copy-{index:03}.bin')
+                                           for index in range(150))
+        workspace.prepared = replace(prepared, entries=entries)
+        workspace.search.set('bin qualified')
+        workspace.filter.set('Qualified')
+        workspace.sort.set('Newest first')
+        workspace.table.selection_set(workspace.table.get_children()[:2])
+        workspace.selection_changed()
+        workspace.status.set('Scan finished: 152 qualified of 152 candidate files; '
+                             '0 directories excluded. Qualification is specific to the chosen profile.')
+        selected = workspace.selected_entries()
+        inventory = workspace.prepared
+        # Exercise the separately composed shell minimum without changing the
+        # application's shell contract in this Library-only regression.
+        self.root.minsize(780, 680)
+        self.root.deiconify()
+        header_controls = (workspace.selector, workspace.folder_entry, workspace.browse_button,
+                           workspace.recursive_button, *workspace.management_button.master.winfo_children(),
+                           *workspace.search_entry.master.winfo_children(),
+                           *(label for label in workspace._wrapped_labels if label.master is workspace.header.content))
+        pinned_controls = (*workspace.select_matches_button.master.winfo_children(), workspace.previous,
+                           workspace.next, workspace.page_label, workspace.detail_label, workspace.guidance_label)
+        for language, text_size in (('English', '100%'), ('English', '120%'), ('English', '140%'),
+                                    ('Deutsch', '140%'), ('English', '100%')):
+            app.language_choice.set(language)
+            app.change_language()
+            app.text_size_choice.set(text_size)
+            app.change_text_size()
+            for width, height in ((1080, 820), (780, 680), (1180, 930), (780, 680)):
+                with self.subTest(language=language, text_size=text_size, width=width, height=height):
+                    self.root.geometry(f'{width}x{height}')
+                    self.root.update()
+                    self.assertIs(workspace.prepared, inventory)
+                    self.assertEqual(workspace.selected_entries(), selected)
+                    self.assertEqual((workspace.search.get(), workspace.filter.get(), workspace.sort.get()),
+                                     ('bin qualified', 'Qualified', 'Newest first'))
+                    self.assertEqual(int(workspace.folder_filter.grid_info()['row']), int(workspace._narrow_filters))
+                    self.assertEqual(int(workspace.sort_selector.grid_info()['row']), int(workspace._narrow_filters))
+                    for buttons in (workspace._header_actions, workspace._batch_actions):
+                        required = sum(button.winfo_reqwidth() for button in buttons) + 8 * (len(buttons) - 1)
+                        wrapped = required > buttons[0].master.winfo_width()
+                        self.assertEqual({int(button.grid_info()['row']) for button in buttons},
+                                         {0, 1} if wrapped else {0})
+                    self.assertGreaterEqual(workspace.table.winfo_height(), 100)
+                    self.assertTrue(workspace.horizontal_scrollbar.winfo_ismapped())
+                    self.assertLessEqual(workspace.table.winfo_rooty() + workspace.table.winfo_height(),
+                                         workspace.footer.winfo_rooty())
+                    for widget in pinned_controls:
+                        self.assertTrue(widget.winfo_ismapped())
+                        self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
+                        self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
+                        self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
+                        self.assertGreaterEqual(widget.winfo_rooty(), self.root.winfo_rooty())
+                        self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                             self.root.winfo_rootx() + self.root.winfo_width())
+                        self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
+                                             self.root.winfo_rooty() + self.root.winfo_height())
+                    canvas = workspace.header.canvas
+                    if width == 780:
+                        self.assertLess(canvas.yview()[1] - canvas.yview()[0], 1)
+                    elif text_size == '100%':
+                        self.assertEqual(canvas.yview(), (0.0, 1.0))
+                    for widget in header_controls:
+                        workspace.header.reveal(widget)
+                        self.root.update()
+                        self.assertTrue(widget.winfo_ismapped())
+                        self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
+                        self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
+                        self.assertGreaterEqual(widget.winfo_rootx(), canvas.winfo_rootx())
+                        self.assertGreaterEqual(widget.winfo_rooty(), canvas.winfo_rooty())
+                        self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                             canvas.winfo_rootx() + canvas.winfo_width())
+                        self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
+                                             canvas.winfo_rooty() + canvas.winfo_height())
+        # Keyboard focus reveals a lower form control without a direct reveal.
+        workspace.header.canvas.yview_moveto(0)
+        self.root.focus_force()
+        workspace.sort_selector.focus_force()
+        self.root.update()
+        self.assertIs(self.root.focus_get(), workspace.sort_selector)
+        self.assertGreater(workspace.header.canvas.yview()[0], 0)
+        self.assertLessEqual(workspace.sort_selector.winfo_rooty() + workspace.sort_selector.winfo_height(),
+                             canvas.winfo_rooty() + canvas.winfo_height())
+        app.apply_theme('Dark')
+        self.assertEqual(canvas.cget('background'), workspace._palette['background'])
+        self.root.update()
+        workspace._schedule_layout()
+        workspace.header._schedule()
+        workspace.header._focus(SimpleNamespace(widget=workspace.selector))
+        callbacks = (workspace._layout_id, workspace.header._pending, workspace.header._focus_pending)
+        tag = workspace.header._tag
+        self.assertTrue(self.root.bind_class(tag, '<MouseWheel>'))
+        workspace.frame.destroy()
+        self.assertTrue(workspace._closed)
+        self.assertIsNone(workspace._layout_id)
+        pending = self.root.tk.call('after', 'info')
+        for callback in callbacks:
+            self.assertNotIn(callback, pending)
+        for sequence in ('<MouseWheel>', '<FocusIn>', '<Configure>', '<Prior>', '<Next>'):
+            self.assertFalse(self.root.bind_class(tag, sequence))

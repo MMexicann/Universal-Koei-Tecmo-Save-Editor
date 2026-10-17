@@ -3823,8 +3823,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_library_gui.py",
-      "bytes": 25805,
-      "sha256": "7c928b8b0e21d6a623045c44dc9fa60ed7d4c5f64c20c96a3ae0af6961e26313"
+      "bytes": 29334,
+      "sha256": "fcfe8fa9990ff8265b7237393046bf29411580b726b1fd23724ad1fac4b9946e"
     },
     {
       "path": "src/koei_editor/shared/save_management_cli.py",
@@ -5243,8 +5243,8 @@
     },
     {
       "path": "tests/test_save_library_gui.py",
-      "bytes": 22648,
-      "sha256": "c706a57250691ebad2b91e166241fcfa05ab977de46616129f8fa416ed939f0e"
+      "bytes": 31535,
+      "sha256": "af1a709509d129dd9ce2d13298374890c00f906bb7fc498bb05b495d40d75b38"
     },
     {
       "path": "tests/test_save_management_cli.py",

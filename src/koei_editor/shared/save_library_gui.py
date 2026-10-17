@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from koei_editor.shared import save_library as backend
 from koei_editor.shared.appearance import ui_font
+from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 STATUS_LABELS = {'qualified': 'Qualified', 'rejected': 'Not qualified', 'unsafe': 'Unsafe path',
                  'oversized': 'Too large', 'changed': 'Changed', 'unreadable': 'Unreadable'}
@@ -21,9 +22,9 @@ class SaveLibraryWorkspace:
         self.check_results = {}
         self.management = None
         self._palette = None
-        self.frame = ttk.Frame(parent, padding=(28, 16))
+        self.frame = ttk.Frame(parent, padding=(28, 12))
         self.busy, self.prepared, self._revision = False, None, 0
-        self._closed, self._poll_id = False, None
+        self._closed, self._poll_id, self._layout_id = False, None, None
         self._cancel = threading.Event()
         self._results = queue.SimpleQueue()
         self.page, self.page_size = 0, 100
@@ -31,64 +32,67 @@ class SaveLibraryWorkspace:
         self._games = {game.title + ' · ' + game.subtitle + ' [' + game.platform + ']': game.id
                        for game in backend.LIBRARY_GAMES}
         self.controls = []
-        ttk.Label(self.frame, text='SAVE LIBRARY', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
-        introduction = ttk.Label(self.frame, text='Find, validate and open your copied saves for one game and platform.',
+        self._action_columns = {}
+        self.header = ScrollablePanel(self.frame)
+        self.header.frame.pack(fill='x')
+        self.header.frame.grid_propagate(False)
+        ttk.Label(self.header.content, text='SAVE LIBRARY', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
+        introduction = ttk.Label(self.header.content, text='Find, validate and open your copied saves for one game and platform.',
                                  style='Muted.TLabel', wraplength=1000)
-        introduction.pack(anchor='w', pady=(4, 14))
+        introduction.pack(anchor='w', pady=(2, 6))
         self._wrapped_labels.append(introduction)
-        form = ttk.Frame(self.frame)
+        form = ttk.Frame(self.header.content)
         form.pack(fill='x')
         form.columnconfigure(1, weight=1)
         self.game, self.folder = tk.StringVar(root), tk.StringVar(root)
         self.recursive = tk.BooleanVar(root, value=False)
         ttk.Label(form, text='Game and platform').grid(row=0, column=0, sticky='w', padx=(0, 14))
         self.selector = ttk.Combobox(form, textvariable=self.game, values=tuple(self._games), state='readonly')
-        self.selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=6)
+        self.selector.grid(row=0, column=1, columnspan=2, sticky='ew', pady=3)
         self.controls.append(self.selector)
         ttk.Label(form, text='Copied-save folder').grid(row=1, column=0, sticky='w', padx=(0, 14))
         self.folder_entry = ttk.Entry(form, textvariable=self.folder)
-        self.folder_entry.grid(row=1, column=1, sticky='ew', pady=6)
+        self.folder_entry.grid(row=1, column=1, sticky='ew', pady=3)
         self.browse_button = ttk.Button(form, text='Browse...', command=self.browse)
         self.browse_button.grid(row=1, column=2, padx=(10, 0))
         self.recursive_button = ttk.Checkbutton(form, text='Include subfolders (up to 3 levels)', variable=self.recursive)
-        self.recursive_button.grid(row=2, column=1, sticky='w', pady=(4, 8))
+        self.recursive_button.grid(row=2, column=1, sticky='w', pady=(2, 4))
         self.controls.extend((self.folder_entry, self.browse_button, self.recursive_button))
-        context_note = ttk.Label(self.frame, text='Keep required original console or account metadata beside each copy. '
+        context_note = ttk.Label(self.header.content, text='Keep required original console or account metadata beside each copy. '
                                 'Live save folders, Steam Cloud paths, linked files and linked folders are excluded.',
                                 style='Muted.TLabel', wraplength=1000)
-        context_note.pack(anchor='w', pady=(6, 10))
+        context_note.pack(anchor='w', pady=(4, 6))
         self._wrapped_labels.append(context_note)
-        actions = ttk.Frame(self.frame)
+        self.header_actions_frame = actions = ttk.Frame(self.header.content)
         actions.pack(fill='x')
         self.scan_button = ttk.Button(actions, text='Scan copied folder', command=self.scan)
-        self.scan_button.pack(side='left')
         self.controls.append(self.scan_button)
         self.cancel_button = ttk.Button(actions, text='Cancel scan', command=self.cancel, state='disabled')
-        self.cancel_button.pack(side='left', padx=10)
         self.open_button = ttk.Button(actions, text='Open selected copy', command=self.open_selected, state='disabled')
-        self.open_button.pack(side='left')
         self.management_button = ttk.Button(actions, text='Save Doctor / Detection / Vault', command=self.show_management)
-        self.management_button.pack(side='left', padx=10)
         self.controls.append(self.management_button)
+        self._header_actions = (self.scan_button, self.cancel_button, self.open_button, self.management_button)
+        self._arrange_actions(actions, self._header_actions)
         self.status = tk.StringVar(root, value='Choose an exact game/platform and a folder containing separate save copies.')
-        status_label = ttk.Label(self.frame, textvariable=self.status, wraplength=1000)
-        status_label.pack(anchor='w', pady=(12, 8))
+        status_label = ttk.Label(self.header.content, textvariable=self.status, wraplength=1000)
+        status_label.pack(anchor='w', pady=(6, 4))
         self._wrapped_labels.append(status_label)
-        filters = ttk.Frame(self.frame)
-        filters.pack(fill='x', pady=(2, 8))
-        ttk.Label(filters, text='Find a copy').pack(side='left', padx=(0, 8))
+        self.filters = filters = ttk.Frame(self.header.content)
+        filters.pack(fill='x', pady=(2, 4))
+        self.query_label = ttk.Label(filters, text='Find a copy')
         self.search = tk.StringVar(root)
         self.search_entry = ttk.Entry(filters, textvariable=self.search)
-        self.search_entry.pack(side='left', fill='x', expand=True)
         self.filter = tk.StringVar(root, value='All results')
-        ttk.Combobox(filters, textvariable=self.filter, values=('All results', 'Qualified', 'Not qualified', 'Identical gameplay files',
+        self.status_filter = ttk.Combobox(filters, textvariable=self.filter, values=('All results', 'Qualified', 'Not qualified', 'Identical gameplay files',
                              'No identical file found', 'Unsafe path', 'Too large', 'Changed', 'Unreadable'),
-                     state='readonly', width=24).pack(side='left', padx=8)
+                     state='readonly', width=24)
         self.subfolder = tk.StringVar(root, value='All folders')
         self.folder_filter = ttk.Combobox(filters, textvariable=self.subfolder, values=('All folders',), state='readonly', width=16)
-        self.folder_filter.pack(side='left', padx=(0, 8))
         self.sort = tk.StringVar(root, value=SORTS[0])
-        ttk.Combobox(filters, textvariable=self.sort, values=SORTS, state='readonly', width=22).pack(side='left')
+        self.sort_selector = ttk.Combobox(filters, textvariable=self.sort, values=SORTS, state='readonly', width=22)
+        self.filters.columnconfigure(1, weight=1)
+        self._narrow_filters = None
+        self._arrange_filters(False)
         # Reserve navigation and guidance before the expanding viewport. Tk's
         # pack order otherwise lets the table consume their space at the
         # application's minimum window size.
@@ -96,20 +100,18 @@ class SaveLibraryWorkspace:
         self.footer.pack(side='bottom', fill='x')
         self.detail = tk.StringVar(root, value='Select a result to see its validation summary.')
         self.detail_label = ttk.Label(self.footer, textvariable=self.detail, wraplength=1000)
-        self.detail_label.pack(anchor='w', pady=(8, 4))
-        batch = ttk.Frame(self.footer)
-        batch.pack(fill='x', pady=(2, 4))
+        self.detail_label.pack(anchor='w', pady=(6, 2))
+        self.batch_actions_frame = batch = ttk.Frame(self.footer)
+        batch.pack(fill='x', pady=2)
         self.select_matches_button = ttk.Button(batch, text='Select qualified matches', command=self.select_matches)
-        self.select_matches_button.pack(side='left')
         self.clear_button = ttk.Button(batch, text='Clear selection', command=self.clear_selection)
-        self.clear_button.pack(side='left', padx=8)
         self.recheck_button = ttk.Button(batch, text='Recheck selected', command=self.recheck_selected, state='disabled')
-        self.recheck_button.pack(side='left')
         self.manage_button = ttk.Button(batch, text='Manage selected copies', command=self.manage_selected, state='disabled')
-        self.manage_button.pack(side='left', padx=8)
         self.controls.extend((self.select_matches_button, self.clear_button))
+        self._batch_actions = (self.select_matches_button, self.clear_button, self.recheck_button, self.manage_button)
+        self._arrange_actions(batch, self._batch_actions)
         paging = ttk.Frame(self.footer)
-        paging.pack(fill='x', pady=(4, 6))
+        paging.pack(fill='x', pady=(2, 4))
         self.previous = ttk.Button(paging, text='Previous', command=lambda: self.change_page(-1), state='disabled')
         self.previous.pack(side='left')
         self.next = ttk.Button(paging, text='Next', command=lambda: self.change_page(1), state='disabled')
@@ -120,7 +122,7 @@ class SaveLibraryWorkspace:
         self.guidance_label = ttk.Label(self.footer, text='Browse without changing your files. Identical-file groups '
                                        'compare the save files; their original console or account metadata may differ.',
                                        style='Muted.TLabel', wraplength=1000)
-        self.guidance_label.pack(anchor='w', pady=(4, 0))
+        self.guidance_label.pack(anchor='w', pady=(2, 0))
         self._wrapped_labels.extend((self.detail_label, self.guidance_label))
         table_frame = ttk.Frame(self.frame)
         table_frame.pack(fill='both', expand=True)
@@ -132,10 +134,10 @@ class SaveLibraryWorkspace:
             self.table.heading(name, text=title)
             self.table.column(name, width=width, minwidth=75, stretch=name == 'path')
         vertical = ttk.Scrollbar(table_frame, orient='vertical', command=self.table.yview)
-        horizontal = ttk.Scrollbar(table_frame, orient='horizontal', command=self.table.xview)
+        self.horizontal_scrollbar = horizontal = ttk.Scrollbar(table_frame, orient='horizontal', command=self.table.xview)
         self.table.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
         table_frame.columnconfigure(0, weight=1)
-        table_frame.rowconfigure(0, weight=1)
+        table_frame.rowconfigure(0, weight=1, minsize=100)
         self.table.grid(row=0, column=0, sticky='nsew')
         vertical.grid(row=0, column=1, sticky='ns')
         horizontal.grid(row=1, column=0, sticky='ew')
@@ -147,17 +149,71 @@ class SaveLibraryWorkspace:
             variable.trace_add('write', self.refilter)
         self.sort.trace_add('write', lambda *_args: self.refilter(clear=False))
         self.frame.bind('<Destroy>', self._on_destroy, add='+')
-        self.frame.bind('<Configure>', self._resize_guidance, add='+')
+        self.frame.bind('<Configure>', self._schedule_layout, add='+')
+        self.header.canvas.bind('<Configure>', self._schedule_layout, add='+')
+        self.header.content.bind('<Configure>', self._schedule_layout, add='+')
+        self.footer.bind('<Configure>', self._schedule_layout, add='+')
+        for button in (*self._header_actions, *self._batch_actions):
+            button.bind('<Configure>', self._schedule_layout, add='+')
+        self._schedule_layout()
 
-    def _resize_guidance(self, event):
-        if event.widget is self.frame:
-            available = max(120, event.width - 56)
-            for label in self._wrapped_labels:
-                if int(label.cget('wraplength')) != available:
-                    label.configure(wraplength=available)
+    def _arrange_actions(self, frame, buttons):
+        required = sum(button.winfo_reqwidth() for button in buttons) + 8 * (len(buttons) - 1)
+        columns = 2 if required > frame.winfo_width() else 4
+        if self._action_columns.get(frame) == columns:
+            return
+        self._action_columns[frame] = columns
+        for index, button in enumerate(buttons):
+            button.grid(row=index // columns, column=index % columns, sticky='w',
+                        padx=(0, 8) if index % columns < columns - 1 else 0,
+                        pady=(0, 4) if index + columns < len(buttons) else 0)
+
+    def _arrange_filters(self, narrow):
+        if narrow == self._narrow_filters:
+            return
+        self._narrow_filters = narrow
+        self.query_label.grid(row=0, column=0, sticky='w', padx=(0, 8))
+        self.search_entry.grid(row=0, column=1, sticky='ew')
+        self.status_filter.grid(row=0, column=2, sticky='ew', padx=(8, 0 if narrow else 8))
+        self.folder_filter.grid(row=1 if narrow else 0, column=0 if narrow else 3,
+                                columnspan=2 if narrow else 1, sticky='ew',
+                                padx=(0, 8), pady=(4, 0) if narrow else 0)
+        self.sort_selector.grid(row=1 if narrow else 0, column=2 if narrow else 4,
+                                sticky='ew', pady=(4, 0) if narrow else 0)
+
+    def _schedule_layout(self, _event=None):
+        if not self._closed and self._layout_id is None:
+            self._layout_id = self.root.after_idle(self._layout_header)
+
+    def _layout_header(self):
+        self._layout_id = None
+        if self._closed:
+            return
+        header_width = max(120, self.header.canvas.winfo_width())
+        self._arrange_filters(header_width < 850)
+        self._arrange_actions(self.header_actions_frame, self._header_actions)
+        self._arrange_actions(self.batch_actions_frame, self._batch_actions)
+        footer_width = max(120, self.frame.winfo_width() - 56)
+        for label in self._wrapped_labels:
+            width = header_width if label.master is self.header.content else footer_width
+            if int(label.cget('wraplength')) != width:
+                label.configure(wraplength=width)
+        # The ordinary layout shows the full header. Smaller windows scroll
+        # only the form; keep the result table and its footer on screen.
+        required = self.header.content.winfo_reqheight()
+        available = (self.frame.winfo_height() - 24 - self.footer.winfo_reqheight()
+                     - 100 - self.horizontal_scrollbar.winfo_reqheight())
+        height = max(1, min(required, available))
+        if self.header.frame.winfo_reqheight() != height:
+            self.header.frame.configure(height=height)
+        self.header.refresh()
+        if height >= required:
+            self.header.canvas.yview_moveto(0)
 
     def apply_theme(self, palette):
         self._palette = palette
+        if 'background' in palette:
+            self.header.apply_theme(palette)
         if self.management is not None and not getattr(self.management, '_closed', False):
             self.management.apply_theme(palette)
 
@@ -173,6 +229,9 @@ class SaveLibraryWorkspace:
     def close(self):
         self._closed = True
         self._cancel.set()
+        if self._layout_id is not None:
+            self.root.after_cancel(self._layout_id)
+            self._layout_id = None
         if self._poll_id is not None:
             try:
                 self.root.after_cancel(self._poll_id)

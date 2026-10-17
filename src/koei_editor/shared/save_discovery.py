@@ -8,12 +8,13 @@ using the existing copied-save workflow. Paths are private local UI data;
 """
 from dataclasses import dataclass, field
 import os
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
 import re
 import stat
 
 from koei_editor.game_registry import GAMES
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.save_safety import reserved_windows_path
 
 
 @dataclass(frozen=True)
@@ -83,7 +84,7 @@ NATIVE_MAPPINGS = (
                   'docs/KOEI_FORMATS.md'),
     NativeMapping('wo1', 'documents', 'KOEI/WARRIORS OROCHI/Savedata',
                   'docs/WO1_PC_FORMAT.md'),
-    NativeMapping('rotk13_pc', 'documents', 'KoeiTecmo/SAN13',
+    NativeMapping('rotk13_pc', 'documents', 'KoeiTecmo/San13',
                   'docs/ROTK13_FORMAT.md'),
     NativeMapping('origins', 'local_app_data', 'KoeiTecmo/Dynasty Warriors Origins/Savedata',
                   'docs/ORIGINS_FORMAT.md'),
@@ -434,7 +435,7 @@ class _Scanner:
             name = app.get('installdir')
             if (not isinstance(name, str) or not name or name in ('.', '..')
                     or '/' in name or '\\' in name or ':' in name
-                    or PureWindowsPath(name).is_reserved() or any(ord(c) < 32 for c in name)):
+                    or reserved_windows_path(name)):
                 self.issues.add('invalid_install_directory_skipped')
                 continue
             installation = self.directory(root / 'steamapps/common' / name)
@@ -485,18 +486,56 @@ def _default_roots(home):
     return paths
 
 
+def _windows_documents():
+    """Resolve the current user's redirected Documents folder without writes."""
+    import ctypes
+    class GUID(ctypes.Structure):
+        _fields_ = [('data1', ctypes.c_uint32), ('data2', ctypes.c_uint16),
+                    ('data3', ctypes.c_uint16), ('data4', ctypes.c_ubyte * 8)]
+    # FOLDERID_Documents: FDD39AD0-238F-46AF-ADB4-6C85480369C7.
+    folder_id = GUID.from_buffer_copy(bytes.fromhex('d09ad3fd8f23af46adb46c85480369c7'))
+    allocated = ctypes.c_void_p()
+    try:
+        shell = ctypes.WinDLL('shell32', use_last_error=True)
+        ole = ctypes.WinDLL('ole32', use_last_error=True)
+        resolve = shell.SHGetKnownFolderPath
+        resolve.argtypes = (ctypes.POINTER(GUID), ctypes.c_uint32,
+                            ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p))
+        resolve.restype = ctypes.c_int32
+        free = ole.CoTaskMemFree
+        free.argtypes = (ctypes.c_void_p,)
+        free.restype = None
+        try:
+            if resolve(ctypes.byref(folder_id), 0, None, ctypes.byref(allocated)) != 0:
+                return None
+            if allocated.value:
+                value = ctypes.wstring_at(allocated)
+                if value and Path(value).is_absolute():
+                    return Path(value)
+        finally:
+            if allocated.value:
+                free(allocated)
+    except (AttributeError, OSError, ValueError):
+        pass
+    return None
+
+
 def discover_saves(*, steam_roots=None, home=None, documents=None, local_app_data=None,
                    roaming_app_data=None, limits=DiscoveryLimits(), cancel=None):
     """Discover metadata in fixed known locations, without modifying any files.
 
     Explicit ``steam_roots=()`` disables Steam discovery. Missing paths are normal.
     Additional Steam libraries are followed only from bounded libraryfolders VDF.
+    Windows defaults use the current user's Documents known folder; explicit
+    ``home`` or ``documents`` overrides retain their supplied location.
     Results contain private paths for a local UI; use ``report`` for export.
     """
     if type(limits) is not DiscoveryLimits:
         raise SaveError('Choose fixed bounded discovery limits.')
     limits.validate()
-    home = Path.home() if home is None else Path(home)
+    default_home = home is None
+    home = Path.home() if default_home else Path(home)
+    known_documents = documents is None and default_home and os.name == 'nt'
     documents = home / 'Documents' if documents is None else Path(documents)
     if local_app_data is None:
         local_app_data = Path(os.environ['LOCALAPPDATA']) if os.name == 'nt' and os.environ.get('LOCALAPPDATA') else home / 'AppData/Local'
@@ -510,6 +549,8 @@ def discover_saves(*, steam_roots=None, home=None, documents=None, local_app_dat
         raise SaveError('A discovery mapping is not a registered game/platform.')
     try:
         scanner.check()
+        if known_documents:
+            documents = _windows_documents() or documents
         scanner.native(documents, local_app_data, roaming_app_data)
         roots = _default_roots(home) if steam_roots is None else steam_roots
         for index, root in enumerate(roots):

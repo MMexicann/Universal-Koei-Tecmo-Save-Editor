@@ -608,8 +608,8 @@
     },
     {
       "path": "docs/PROGRESSION_DASHBOARDS.md",
-      "bytes": 3158,
-      "sha256": "022b0bbe3cc631e88e47c2612461d2d9547f6b6421a575d7884e99d6071107cc"
+      "bytes": 5312,
+      "sha256": "cfce8bfefd4ada85bd4207d184c6919cf6493635b549e738cc7fc63298cf9c92"
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
@@ -3682,9 +3682,14 @@
       "sha256": "47851d4e26d3c19acc0a0286890a29a66f3fa8afd5e46b668b74906f90b42ab2"
     },
     {
+      "path": "src/koei_editor/shared/progression_report.py",
+      "bytes": 25366,
+      "sha256": "fe93b164af33190f8ef4182d4dfb381e3b6ecc0b63ec3c5c0f7d5434bc16725a"
+    },
+    {
       "path": "src/koei_editor/shared/progression_view.py",
-      "bytes": 30885,
-      "sha256": "5f318a5fb039d6e3a41841d0e16b48f8675c11ac383d4fe6d6b018a0fcf6e907"
+      "bytes": 43672,
+      "sha256": "20c32d296e4aa2fe90761135b92077f234747886bd4f7af780e31be1ba89428e"
     },
     {
       "path": "src/koei_editor/shared/ps3_copy.py",
@@ -4807,6 +4812,11 @@
       "sha256": "6aea8730f95ea08a6dce42693af3768835289b6cda99d525d4889e1c1bfb7298"
     },
     {
+      "path": "tests/test_progression_card_rendering.py",
+      "bytes": 2584,
+      "sha256": "41ea8c70fd60931b71a2eb88b4e60f5229c25a45dbf59c5106fd8dbfc0d87025"
+    },
+    {
       "path": "tests/test_progression_contract.py",
       "bytes": 2366,
       "sha256": "b40e913d76f1cd50502ccd2f7e8b0b5e02980425fa44092f392228555f524b2f"
@@ -4817,6 +4827,16 @@
       "sha256": "3b8ece683651a97de77882cc869de4e167e65768361a951317637fbe46f0a2fb"
     },
     {
+      "path": "tests/test_progression_report_dialog.py",
+      "bytes": 3026,
+      "sha256": "7781270e84b9ea582d53c9afaee96e162acbeb5d71b3c16e29f3da659ff407b1"
+    },
+    {
+      "path": "tests/test_progression_report_security.py",
+      "bytes": 7895,
+      "sha256": "ec5598864c9beea4cc2e101127c7d8362cf7c4e6e3ddf9aec08321f54da6ddcf"
+    },
+    {
       "path": "tests/test_progression_v034.py",
       "bytes": 11035,
       "sha256": "66e92dbaebf42a7fa9e7c78ef9a214fe4a5607d73bb16dd5e278a5a9d328da45"
@@ -4825,6 +4845,11 @@
       "path": "tests/test_progression_view_gui.py",
       "bytes": 12379,
       "sha256": "3141813bd233cb63248e6c3958d045557227aa7c9f7b4f8a562624433626fe39"
+    },
+    {
+      "path": "tests/test_progression_visual_controls.py",
+      "bytes": 8650,
+      "sha256": "c2d22f82bbac42ccdfd705c3664f9b19697d80ddaf1fc8e96e631df87198c291"
     },
     {
       "path": "tests/test_progression_workspace.py",

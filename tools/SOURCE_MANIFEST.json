@@ -93,8 +93,8 @@
     },
     {
       "path": "docs/AUTOMATION.md",
-      "bytes": 9210,
-      "sha256": "49e4ae887bcf247b42e75ea1f0dc544f42c77e7019ab1ed444e67012218a0256"
+      "bytes": 9367,
+      "sha256": "af8e18a089c4dda75850253f067c3d938213f8faee66865452a291952aa3ce5b"
     },
     {
       "path": "docs/AYESHA_PS3_FORMAT.md",
@@ -1128,8 +1128,8 @@
     },
     {
       "path": "src/koei_editor/automation_cli.py",
-      "bytes": 7852,
-      "sha256": "f67fb610d499289dd56b842ed48650d47c6f1f75daa1cbe1fd35b78ca7f5046c"
+      "bytes": 8254,
+      "sha256": "b5fa041f20b52a7acf8ba6146e80f7cb27f38b61c8464daaa923b4dc6263a99e"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3748,8 +3748,8 @@
     },
     {
       "path": "tests/test_automation.py",
-      "bytes": 21948,
-      "sha256": "01519a75145c2f4447c2ac81df56883e4c4759102e699dc4b62e1b312c5ffd4a"
+      "bytes": 22873,
+      "sha256": "7e779c59302da0692fd1c496a45a4f8e5c80dc84739e8ca14097a47015382ba7"
     },
     {
       "path": "tests/test_automation_gui.py",

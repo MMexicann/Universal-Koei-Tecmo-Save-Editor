@@ -255,6 +255,21 @@ class AutomationTests(unittest.TestCase):
         self.assertEqual(self.cli('apply', str(plan), '--review-token', preview['review_token'],
                                   '--journal', str(self.folder / 'another-journal'))[0], 2)
 
+    def test_cli_rejects_journal_containing_planned_output_before_creating_it(self):
+        plan = self.folder / 'plan.json'
+        plan.write_text(json.dumps({'schema_version': 1, 'workflow': engine.workflow_data(self.workflow),
+                                    'jobs': [{'id': 'save', 'source': self.sources[0].name,
+                                              'destination': 'journal/edited.dat'}]}))
+        code, preview = self.cli('preview', str(plan))
+        self.assertEqual(code, 0, preview)
+        journal = self.folder / 'journal'
+        code, result = self.cli('apply', str(plan), '--review-token', preview['review_token'],
+                                '--journal', str(journal))
+        self.assertEqual(code, 2, result)
+        self.assertFalse(journal.exists())
+        self.assertFalse(list(self.folder.glob('*Backups')))
+        self.assertEqual(self.sources[0].read_bytes(), procedural_raw())
+
     def test_crashed_intent_inspection_blocks_absent_and_accepts_native_output(self):
         from koei_editor.shared.automation_journal import RunJournal
         batch = engine.prepare(self.workflow, self.specs[:1])

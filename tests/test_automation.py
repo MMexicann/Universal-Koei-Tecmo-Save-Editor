@@ -361,6 +361,24 @@ class AutomationTests(unittest.TestCase):
         self.assertTrue(self.specs[0].destination.exists())
         self.assertFalse(self.specs[1].destination.exists())
 
+    def test_final_receipt_reopens_earlier_completed_outputs(self):
+        batch = engine.prepare(self.workflow, self.specs[:2])
+        original = BoundScalarAdapter.save_as
+        def save_then_change_earlier(adapter, document, pending, destination):
+            result = original(adapter, document, pending, destination)
+            if destination == self.specs[1].destination:
+                # An external tool replaces the first output with another
+                # native-valid copy; integrity checks alone cannot detect it.
+                self.specs[0].destination.write_bytes(procedural_raw())
+            return result
+        with patch.object(BoundScalarAdapter, 'save_as', save_then_change_earlier):
+            result = engine.apply(batch, batch.review_token)
+        self.assertFalse(result['success'])
+        self.assertEqual([row['status'] for row in result['jobs']],
+                         ['verification_failed', 'completed'])
+        self.assertEqual(result['jobs'][0]['error_code'], 'completed_output_changed')
+        self.assertEqual(self.specs[0].destination.read_bytes(), procedural_raw())
+
 
 if __name__ == '__main__':
     unittest.main()

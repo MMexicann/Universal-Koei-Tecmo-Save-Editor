@@ -425,6 +425,23 @@ def apply(batch, review_token, *, journal=None, cancelled=None):
             outcomes.append({'id': job.spec.id, 'status': 'failed', 'error_code': code,
                              'requires_inspection': True})
             failed = True
+    # A later writer or another process may alter an earlier completed output.
+    # Requalify actual files before reporting the batch result, retaining every
+    # output and journal event if final verification discovers a problem.
+    for index, (job, outcome) in enumerate(zip(batch.jobs, outcomes)):
+        if outcome['status'] != 'completed':
+            continue
+        try:
+            edit_presets.validate_source(job.adapter, job.document)
+            if safe_path(job.spec.destination) != job.spec.destination:
+                raise SaveError('Completed destination identity changed.')
+            actual = job.adapter.read_save(job.spec.destination)
+            if _digest(actual.raw) != job.serialized_sha256:
+                raise SaveError('Completed destination differs from the reviewed output.')
+        except Exception:
+            outcomes[index] = {'id': job.spec.id, 'status': 'verification_failed',
+                               'error_code': 'completed_output_changed', 'requires_inspection': True}
+            failed = True
     return {'success': not failed, 'status': 'stopped' if failed else 'completed',
             'review_token': batch.review_token, 'jobs': outcomes}
 

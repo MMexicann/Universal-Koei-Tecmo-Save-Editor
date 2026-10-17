@@ -110,9 +110,10 @@ FORMATS = {
                     0xb7f49, (bytes.fromhex('f002101309'), bytes.fromhex('f027021909')),
                     DW8_FIELDS, 0x13100200,
                     'Windows PC save.dat. Resources, officer stats, four-star weapon compatibility '
-                    'and existing weapon affinities/ranked attributes. '
+                    'and existing weapon affinities, ranked attributes and attribute replacement. '
                     'Gems use the community-corroborated 9,999 inventory limit. '
-                    'Levels, XP, equipped references and weapon identities are inspected without changing them.'),
+                    'Levels, XP and weapon identities remain read only. Qualified original two-weapon '
+                    'loadouts may be reordered without acquiring another weapon.'),
     'pw3': Format('pw3', 'One Piece: Pirate Warriors 3', 0x135d04,
                   (b'ONE PIECE: PIRATE WARRIORS 3\x00',), PW3_FIELDS, None,
                   'Windows PC OP3WIN0000.dat. Character stats may reset on level-up. '
@@ -148,6 +149,10 @@ def _field_index(game_id, payload):
     fields = {field.id:field for field in get_format(game_id).fields}
     if game_id == 'dw8xl':
         from koei_editor.games.dw8xl.equipment import fields_for_payload
+        from koei_editor.games.dw8xl.attributes import fields_for_payload as attribute_fields
+        fields.update((field.id, field) for field in attribute_fields(
+            payload, _weapon_record, DW8_WEAPON_COUNT, DW8_WEAPON_BASE,
+            DW8_WEAPON_STRIDE, DW8_RANKED_ATTRIBUTES))
         fields.update((field.id, field) for field in fields_for_payload(payload, _weapon_record, DW8_WEAPON_COUNT))
         for index in range(DW8_WEAPON_COUNT):
             record = _weapon_record(payload, index)
@@ -162,7 +167,7 @@ def _field_index(game_id, payload):
                 if identity not in DW8_RANKED_ATTRIBUTES or rank == 0:
                     continue
                 field = Field(f'weapon_{index}_attribute_{attribute}_rank',
-                              f'{DW8_ATTRIBUTE_NAMES.get(identity, "Attribute " + str(attribute + 1))} rank (ID {identity})',
+                              f'Attribute {attribute + 1} rank (opened {DW8_ATTRIBUTE_NAMES.get(identity, "ID " + str(identity))})',
                               DW8_WEAPON_BASE + index * DW8_WEAPON_STRIDE + 12 + attribute,
                               1, 10, 'Weapon attributes', index + 1, 1)
                 fields[field.id] = field
@@ -176,7 +181,16 @@ def fields_for(document):
 
 def field_options(document, key):
     from koei_editor.games.dw8xl.equipment import WeaponOrderField
+    from koei_editor.games.dw8xl.attributes import AttributeIdentityField
     field = field_map(document).get(key)
+    if isinstance(field, AttributeIdentityField):
+        return tuple((identity, f'{DW8_ATTRIBUTE_NAMES.get(identity, "Attribute")} (ID {identity})')
+                     for identity in field.allowed_ids)
+    if isinstance(field, CompatibilityField):
+        return tuple((value, f'{value // 25} stars ({value} stored units)')
+                     for value in (25, 50, 75, 100))
+    if field is not None and field.group == 'Weapon affinity':
+        return tuple((value, f'Affinity ID {value}') for value in (0, 1, 2))
     if isinstance(field, WeaponOrderField):
         return tuple((slot, f'Weapon slot {slot:04} (ID {_weapon_record(document.payload, slot - 1)["id"]})')
                      for slot in field.opened_slots)
@@ -381,6 +395,9 @@ def _pending_fields(document, changes):
         if type(value) is int and value == field.value(document.payload):
             continue  # Existing unusual values remain valid unchanged snapshots.
         field.validate(value)
+    if document.format.id == 'dw8xl':
+        from koei_editor.games.dw8xl.attributes import validate_pending
+        validate_pending(document.payload, changes, fields, DW8_WEAPON_BASE, DW8_WEAPON_STRIDE)
     return fields
 
 
@@ -422,6 +439,7 @@ def stage(document, changes, key, value):
     else:
         fields[key].validate(value)
         result[key] = value
+    _pending_fields(document, result)
     return result
 
 

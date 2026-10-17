@@ -71,6 +71,12 @@ def dashboard(backend, document):
             if identity == 255:
                 continue
             name = DW8_ATTRIBUTE_NAMES.get(identity, f'Attribute ID {identity}')
+            identity_key = f'weapon_{index}_attribute_{attribute}_identity'
+            if identity_key in fields:
+                metrics.append(_metric(
+                    f'attribute_{attribute}_identity', f'Attribute {attribute + 1} identity',
+                    f'{name} (ID {identity})', field_id=identity_key,
+                    note='Replace an existing ranked identity; duplicates are rejected.'))
             metrics.append(_metric(
                 f'attribute_{attribute}', name, rank,
                 field_id=link(f'weapon_{index}_attribute_{attribute}_rank'),

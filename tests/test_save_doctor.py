@@ -303,7 +303,9 @@ class SaveDoctorTests(unittest.TestCase):
         report = doctor.inspect_save(nes.GAME_ID, self.path)
         for suffix in ('.json', '.txt'):
             destination = self.folder / ('report' + suffix)
-            self.assertEqual(doctor.export_report(report, destination), destination)
+            # Windows temp folders may use an 8.3 user-directory alias while
+            # safe_path returns its canonical long path. Verify file identity.
+            self.assertTrue(doctor.export_report(report, destination).samefile(destination))
             expected = report.to_json() if suffix == '.json' else report.to_text()
             self.assertEqual(destination.read_text(encoding='utf-8'), expected)
             with self.assertRaises(FileExistsError):

@@ -1183,8 +1183,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 70812,
-      "sha256": "c7a6b52ca33115b21f3c8d4eedee33b64f4d4947a166297bb379c78a447ac815"
+      "bytes": 70810,
+      "sha256": "097c2d965f9ae936e133ef4eecb2a8978093f71525976f2af24b5b511e9e080d"
     },
     {
       "path": "src/koei_editor/automation_cli.py",

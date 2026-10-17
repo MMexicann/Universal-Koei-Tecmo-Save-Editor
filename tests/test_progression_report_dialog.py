@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from koei_editor.shared.progression_report import show_report_dialog
+from koei_editor.shared.appearance import THEMES
 from tests.test_progression_report_security import ParsedReport, report_snapshot
 
 
@@ -29,6 +30,8 @@ class ProgressionReportDialogTests(unittest.TestCase):
         root.update()
         lists = [w for w in descendants(window) if isinstance(w, tk.Listbox)]
         sections, records = lists
+        self.assertEqual(str(sections.cget('background')), THEMES['Dark']['surface'])
+        self.assertEqual(str(records.cget('foreground')), THEMES['Dark']['text'])
         self.assertEqual(sections.curselection(), (0, 1))
         self.assertEqual(records.size(), 3)
         # Selecting sections removes excluded records before the writer sees them.
@@ -52,6 +55,7 @@ class ProgressionReportDialogTests(unittest.TestCase):
             data = ParsedReport(path.read_text(encoding='utf-8')).data
             self.assertEqual([s['id'] for s in data['sections']], ['shown'])
             self.assertEqual(data['comparisons'], ['first'])
+            self.assertEqual(data['theme'], 'Dark')
             self.assertFalse(window.winfo_exists())
         self.assertEqual(snapshot, report_snapshot())
         cancel_window = show_report_dialog(root, snapshot)

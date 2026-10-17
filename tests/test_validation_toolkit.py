@@ -1,13 +1,18 @@
 """Adversarial evidence imports and controlled real-game observation transitions."""
 import json
+import os
 from pathlib import Path
+import stat
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from koei_editor.game_registry import GAMES
 from koei_editor.shared.validation_toolkit import (
     MAX_REPORT_BYTES, OUTCOMES, STEPS, ReportError, ValidationRecord,
 )
+from koei_editor.shared import validation_toolkit as toolkit
 
 
 def complete_record(provenance='genuine_file'):
@@ -135,6 +140,55 @@ class ValidationToolkitTests(unittest.TestCase):
             source.write_bytes(b' ' * (MAX_REPORT_BYTES + 1))
             with self.assertRaises(ReportError):
                 ValidationRecord.load(source)
+
+    def test_report_reader_rejects_special_sources_before_opening(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'report.json'
+            source.write_text(complete_record().to_json())
+            original_lstat = Path.lstat
+            def special(path, *args, **kwargs):
+                if Path(path) == source:
+                    return SimpleNamespace(st_mode=stat.S_IFIFO, st_nlink=1)
+                return original_lstat(path, *args, **kwargs)
+            with patch.object(Path, 'lstat', special), \
+                    patch.object(toolkit.os, 'open', side_effect=AssertionError('Special files must not be opened')):
+                with self.assertRaises(ReportError):
+                    ValidationRecord.load(source)
+            if hasattr(os, 'mkfifo'):
+                source.unlink()
+                os.mkfifo(source)
+                with patch.object(Path, 'open', side_effect=AssertionError('FIFO must not reach a blocking open')):
+                    with self.assertRaises(ReportError):
+                        ValidationRecord.load(source)
+
+    def test_report_reader_rejects_file_replacement_and_linked_sources(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'report.json'
+            raw = complete_record().to_json().encode('utf-8')
+            source.write_bytes(raw)
+            moved = source.with_name('original.json')
+            original_open = toolkit.os.open
+            def replacing(path, flags):
+                source.rename(moved)
+                source.write_bytes(raw)
+                return original_open(path, flags)
+            with patch.object(toolkit.os, 'open', side_effect=replacing):
+                with self.assertRaises(ReportError):
+                    ValidationRecord.load(source)
+            self.assertEqual(source.read_bytes(), raw)
+            self.assertEqual(moved.read_bytes(), raw)
+            alias = source.with_name('hardlinked.json')
+            os.link(source, alias)
+            with self.assertRaises(ReportError):
+                ValidationRecord.load(alias)
+            alias.unlink()
+            try:
+                alias.symlink_to(source)
+            except OSError:
+                pass
+            else:
+                with self.assertRaises(ReportError):
+                    ValidationRecord.load(alias)
 
     def test_export_roundtrips_and_never_overwrites(self):
         record = complete_record()

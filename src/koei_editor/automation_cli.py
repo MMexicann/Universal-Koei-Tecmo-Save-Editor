@@ -12,6 +12,7 @@ from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared import automation, edit_presets
 from koei_editor.shared.copy_storage import atomic_new
+from koei_editor.shared.save_safety import safe_path
 
 
 class ArgumentError(ValueError):
@@ -124,9 +125,21 @@ def _run(arguments):
     # Imported only for execution; read-only tooling has no filesystem side effects.
     from koei_editor.shared.automation_journal import JournalJob, RunJournal
     automation.validate(batch)
+    journal_folder = safe_path(arguments.journal)
+    for job in batch.jobs:
+        for path in (job.spec.source, job.spec.destination):
+            if journal_folder == path or journal_folder in path.parents or path in journal_folder.parents:
+                raise SaveError('Keep the journal folder separate from all batch input and output files.')
+        # Native safe writers create their automatic snapshots in these shared
+        # roots. Journal metadata must never share that namespace, including
+        # a backup-root symlink resolving to the proposed journal directory.
+        for name in ('WarriorsEditorBackups', 'UniversalEditorBackups', 'OriginsEditorBackups'):
+            backup_root = safe_path(job.spec.source.parent / name)
+            if journal_folder == backup_root or journal_folder in backup_root.parents:
+                raise SaveError('Keep the journal folder separate from native automatic backup folders.')
     jobs = tuple(JournalJob(job.spec.id, job.adapter.game_id, job.document.sha256,
                             job.serialized_sha256, job.profile_sha256) for job in batch.jobs)
-    journal = RunJournal.create(arguments.journal, batch.review_token, jobs)
+    journal = RunJournal.create(journal_folder, batch.review_token, jobs)
     return automation.apply(batch, arguments.review_token, journal=journal)
 
 

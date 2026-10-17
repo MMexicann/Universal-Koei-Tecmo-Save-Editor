@@ -94,6 +94,8 @@ Preview returns a `review_token`, hashes and per-job field differences. Inspect
 the changes, then pass that exact token to `apply` and choose a new journal
 folder. Changing a source, workflow, destination, verified field definition or
 expected serialized output invalidates approval.
+The journal needs an existing parent directory and must remain separate from
+all source and output file paths; it cannot contain a planned save destination.
 
 ```powershell
 $preview = python -m koei_editor --automation preview 'D:\Plans\gold.batch.json' | ConvertFrom-Json

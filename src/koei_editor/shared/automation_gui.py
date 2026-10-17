@@ -345,10 +345,15 @@ class WorkflowWorkspace:
             def work():
                 import json
                 batch = self._prepare_batch(workflow, specs)
+                plan_path = safe_path(destination)
+                for job in batch.jobs:
+                    for path in (job.spec.source, job.spec.destination):
+                        if plan_path == path or plan_path in path.parents or path in plan_path.parents:
+                            raise ValueError('Choose a metadata plan path separate from all save inputs and outputs.')
                 data = {'schema_version': 1, 'workflow': automation.workflow_data(workflow),
                         'jobs': [{'id': job.spec.id, 'source': str(job.spec.source),
                                   'destination': str(job.spec.destination)} for job in batch.jobs]}
-                atomic_new((json.dumps(data, indent=2, ensure_ascii=True) + '\n').encode('utf-8'), destination)
+                atomic_new((json.dumps(data, indent=2, ensure_ascii=True) + '\n').encode('utf-8'), plan_path)
                 return batch
             self._run(work, lambda batch: (self._review(batch), self.status.set(
                 'Validated batch plan exported. Keep it private: it contains local paths. Run --automation preview before apply.')))

@@ -144,6 +144,25 @@ class WorkflowGuiTests(unittest.TestCase):
         error.assert_called_once()
         self.assertIn('failed', self.workspace.status.get())
 
+    def test_batch_plan_metadata_cannot_occupy_planned_save_destination(self):
+        field = next(iter(self.workspace._fields.values()))
+        self.field(field.id, field.value(self.workspace.document.payload))
+        self.workspace.add_operation('assert')
+        output = self.folder / 'results'
+        output.mkdir()
+        colliding = output / ('copy-1-' + self.source.name)
+        with (
+            patch('koei_editor.shared.automation_gui.filedialog.askopenfilenames', return_value=(str(self.source),)),
+            patch('koei_editor.shared.automation_gui.filedialog.askdirectory', return_value=str(output)),
+            patch('koei_editor.shared.automation_gui.filedialog.asksaveasfilename', return_value=str(colliding)),
+            patch('koei_editor.shared.automation_gui.messagebox.showerror') as error,
+        ):
+            self.workspace.export_batch()
+            self.finish()
+        error.assert_called_once()
+        self.assertEqual(tuple(output.iterdir()), ())
+        self.assertEqual(self.source.read_bytes(), self.raw)
+
     def test_application_retains_builder_and_respects_busy_close(self):
         app = Application(self.root, persist_preferences=False)
         app.show_workflow_builder()

@@ -93,8 +93,8 @@
     },
     {
       "path": "docs/AUTOMATION.md",
-      "bytes": 9531,
-      "sha256": "53b3145e2e122fe40d42672b6c06519b6328ccf80de1b144f1d4b908da331927"
+      "bytes": 9688,
+      "sha256": "b426dc9f332641b1b2745591501d5f9d12a8ab67f28334a7797eadc909fd0a21"
     },
     {
       "path": "docs/AUTOMATION_BENCHMARKS.md",
@@ -1133,8 +1133,8 @@
     },
     {
       "path": "src/koei_editor/automation_cli.py",
-      "bytes": 7852,
-      "sha256": "f67fb610d499289dd56b842ed48650d47c6f1f75daa1cbe1fd35b78ca7f5046c"
+      "bytes": 8844,
+      "sha256": "50f3040b30df52b4a1532b14b33d3bf8830b26bcd50492db55c13af4dbc092dc"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3553,8 +3553,8 @@
     },
     {
       "path": "src/koei_editor/shared/automation_gui.py",
-      "bytes": 18108,
-      "sha256": "1b5a00952626c93a4080617dad60fd52396630471ea89257bf319a3eba9d0a51"
+      "bytes": 18492,
+      "sha256": "caffc413ef9e4b868ec9bd58bf7037cbac8a1c49291ee199c8f0697451a744f6"
     },
     {
       "path": "src/koei_editor/shared/automation_journal.py",
@@ -3753,13 +3753,13 @@
     },
     {
       "path": "tests/test_automation.py",
-      "bytes": 21948,
-      "sha256": "01519a75145c2f4447c2ac81df56883e4c4759102e699dc4b62e1b312c5ffd4a"
+      "bytes": 24571,
+      "sha256": "8fd06380934b6906b853f3ca47b2b509b5d5015c4eb5e82f40c5b8862677b4d8"
     },
     {
       "path": "tests/test_automation_gui.py",
-      "bytes": 7942,
-      "sha256": "94dc485a8ef6ebee133cbbe53a468333c5f8525b129e781055ceaa6f844fe6aa"
+      "bytes": 8996,
+      "sha256": "af1a74e818e10f65525dc44e49653c43fcc2794c1162030daaddc0a42a707d9f"
     },
     {
       "path": "tests/test_automation_journal.py",

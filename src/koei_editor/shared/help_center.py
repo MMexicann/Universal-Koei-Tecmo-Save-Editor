@@ -101,7 +101,7 @@ class HelpCenter:
         matches = search_compatibility(self.entries, self.compatibility_query.get(), self.platform.get())
         for entry in matches:
             self.matrix.insert('', 'end', iid=entry.game_id, values=(entry.title, entry.platform,
-                               entry.revision_scope, entry.file_evidence))
+                               entry.revision_scope, self._file_evidence(entry)))
         self.compatibility_count.set(f'{len(matches)} / {len(self.entries)} ' +
                                      ('unterstützte Profile' if self.language == 'de' else 'supported profiles'))
         selected = previous[0] if previous and self.matrix.exists(previous[0]) else matches[0].game_id if matches else None
@@ -119,12 +119,20 @@ class HelpCenter:
         de = self.language == 'de'
         body = (f'{entry.title}\n{entry.platform} · {entry.revision_scope}\n\n'
                 + ('Funktionen' if de else 'Functionality') + f'\n{entry.functionality}\n\n'
-                + ('Dateinachweis' if de else 'File qualification') + f'\n{entry.file_evidence}\n{entry.evidence}\n\n'
+                + ('Dateinachweis' if de else 'File qualification') + f'\n{self._file_evidence(entry)}\n{entry.evidence}\n\n'
                 + ('Weitere Prüfung' if de else 'Remaining validation') + f'\n{entry.remaining_validation}\n\n'
-                + ('Spielvalidierung' if de else 'Game validation') + f'\n{entry.game_validation}\n\n'
+                + ('Spielvalidierung' if de else 'Game validation') + '\n' +
+                ('Kein Nachweis für Laden und erneutes Speichern im Spiel in diesem Katalog.' if de else
+                 entry.game_validation) + '\n\n'
                 + ('Exakte Software-Builds nur verwenden, wenn ausdrücklich dokumentiert.' if de else
                    'Exact software builds are supported only where explicitly documented.'))
         self._set_text(self.compatibility_detail, body)
+
+    def _file_evidence(self, entry):
+        if self.language != 'de':
+            return entry.file_evidence
+        return ('An echter Datei geprüft' if entry.file_evidence == 'Genuine-file qualified' else
+                'Implementiert; unabhängige Dateiprüfung ausstehend')
 
     def _build_help(self):
         parent = self.tabs['help']

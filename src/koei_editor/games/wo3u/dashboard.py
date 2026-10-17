@@ -78,7 +78,7 @@ def dashboard(backend, document):
                                    field_id=link(f'weapon_{index}_reinforcement')),
                    _metric('compatibility', 'Compatibility (stored raw units)', number(base + 20, 4),
                                    field_id=link(f'weapon_{index}_compatibility_reset'),
-                                   note='Grade descriptors are unavailable; no displayed stars, attack or maximum is inferred.')]
+                                   note='Manual 0..5,600 raw units fits every grade; higher opened values are preserved. No displayed stars, attack or weapon maximum is inferred.')]
         for attribute in range(8):
             attribute_id = payload[base + 4 + attribute]
             if attribute_id == 255:

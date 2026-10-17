@@ -360,7 +360,7 @@ class Application(Appearance):
         self._compact_editor_shell = compact
         self.command_button.configure(text=self.tr('commands_compact' if compact else 'commands'))
         if hasattr(self, '_shell_location'):
-            self._shell_top.configure(padding=(12, 2) if compact else (18, 10))
+            self._shell_top.configure(padding=(12, 2) if compact else (18, 4))
             for column in range(5):
                 self._shell_top.columnconfigure(column, weight=1 if column == (3 if compact else 0) else 0)
             if compact:
@@ -398,7 +398,7 @@ class Application(Appearance):
                 self._shell_settings_frame.grid(row=1 if stacked else 0, column=0 if stacked else 1,
                                                columnspan=2 if stacked else 1, sticky='e',
                                                pady=(6, 0) if stacked else 0)
-                self.navigation.grid(row=2 if stacked else 1, column=0, columnspan=2, pady=(10, 0))
+                self.navigation.grid(row=2 if stacked else 1, column=0, columnspan=2, pady=(6, 0))
                 self._shell_location.grid(row=3 if stacked else 2, column=0, columnspan=2)
         available = max(1, self.navigation.winfo_width())
         requested = sum(button.winfo_reqwidth() + 8 for button in self._navigation_buttons)

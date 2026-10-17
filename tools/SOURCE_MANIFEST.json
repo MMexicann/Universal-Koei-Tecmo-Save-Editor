@@ -778,8 +778,8 @@
     },
     {
       "path": "docs/SAVE_RESEARCH_LAB.md",
-      "bytes": 3460,
-      "sha256": "e239a91e20f4d3a06823ff2f6cde79d15529830da3ce52c149905bed83c553c7"
+      "bytes": 3700,
+      "sha256": "cb9d31f3e56da7589c610d5857f1bb0cfbd0b8572bd0a333da87f123be20bf13"
     },
     {
       "path": "docs/SAVE_TRANSFER.md",
@@ -3668,8 +3668,8 @@
     },
     {
       "path": "src/koei_editor/shared/research_lab.py",
-      "bytes": 13289,
-      "sha256": "69b37464d910cee0de0fce7628a95c4d9c04e4662ae80b4688ba23f9d287c429"
+      "bytes": 13739,
+      "sha256": "5ae3c3c5db16accd04fbdaa2e03493ec1b9dace36b3990a10488984796ce06a8"
     },
     {
       "path": "src/koei_editor/shared/research_lab_gui.py",
@@ -4803,8 +4803,8 @@
     },
     {
       "path": "tests/test_research_lab.py",
-      "bytes": 9725,
-      "sha256": "ee918d296baff7fc486c6d964265a02f0390892434ed7e6af45f9d9a5e427936"
+      "bytes": 11618,
+      "sha256": "1ba039018f47115a2d43b12473e0aa1eeb1f6baa6b41ff69987055770ebfa132"
     },
     {
       "path": "tests/test_research_lab_gui.py",

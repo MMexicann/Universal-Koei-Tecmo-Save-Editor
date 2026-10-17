@@ -173,6 +173,16 @@ def _ordinary(path, *, directory=False, missing=False, companion=False):
     return resolved, resolved_info
 
 
+def _directory_identity(path):
+    _, info = _ordinary(path, directory=True)
+    return info.st_dev, info.st_ino
+
+
+def _check_directory_identity(path, expected):
+    if _directory_identity(path) != expected:
+        raise SaveError('The destination directory changed identity.')
+
+
 def _read(path, limit, *, companion=False):
     path, before = _ordinary(path, companion=companion)
     if not 0 <= before.st_size <= limit:
@@ -219,8 +229,7 @@ def _new(raw, path, *, companion=False):
         os.fsync(stream.fileno())
     if _read(temporary, len(raw))[0] != raw:
         raise SaveError('The temporary vault copy failed integrity verification.')
-    if _ordinary(parent, directory=True)[1].st_ino != parent_info.st_ino:
-        raise SaveError('The destination directory changed identity.')
+    _check_directory_identity(parent, (parent_info.st_dev, parent_info.st_ino))
     if os.name == 'nt':
         os.rename(temporary, path)
     else:
@@ -275,7 +284,8 @@ def _profile_path(game_id, path):
     safe_path(path)
     if game.scalar_backend:
         backend = game.get_scalar_adapter().backend
-        guard = getattr(backend, '_copy_path', None) or getattr(backend, '_path', None)
+        guard = (getattr(backend, '_copy_path', None) or getattr(backend, '_path', None)
+                 or getattr(backend, '_destination', None))
         if guard is not None:
             try:
                 signature(guard).bind(path)
@@ -557,13 +567,16 @@ class SaveVault:
 
     @staticmethod
     def _materialize(bundle, directory):
+        identity = _directory_identity(directory)
         for name, raw in bundle.items():
+            _check_directory_identity(directory, identity)
             target = directory / name
             if '/' in name:
                 if not target.parent.exists():
                     target.parent.mkdir(mode=0o700)
                 _ordinary(target.parent, directory=True)
             _new(raw, target, companion=True)
+            _check_directory_identity(directory, identity)
 
     def snapshot(self, game_id, source, *, branch='main', label='', parent_id=None):
         branch, label = _branch(branch), _label(label)
@@ -595,6 +608,9 @@ class SaveVault:
             names = _context_names(source, document)
             if len(names) + 1 > MAX_FILES:
                 raise SaveError('The original context exceeds the companion file bound.')
+            bundle_names = (source.name, *names)
+            if len({name.casefold() for name in bundle_names}) != len(bundle_names):
+                raise SaveError('Save and companion names must be distinct on case-insensitive filesystems.')
             bundle, tokens = {source.name: raw}, {source.name: token}
             for name in names:
                 _relative(name)
@@ -688,13 +704,18 @@ class SaveVault:
             bundle, _ = self._bundle(snapshot)
             _profile_path(snapshot.game_id, destination / snapshot.filename)
             destination.mkdir(mode=0o700)
+            destination_identity = _directory_identity(destination)
             self._materialize(bundle, destination)
+            _check_directory_identity(destination, destination_identity)
             path = destination / snapshot.filename
             _qualify(snapshot.game_id, path, bundle[snapshot.filename])
+            _check_directory_identity(destination, destination_identity)
             for name, raw in bundle.items():
+                _check_directory_identity(destination, destination_identity)
                 if _read(destination / name, MAX_FILE_BYTES, companion=True)[0] != raw:
                     raise SaveError('The restored copy changed during native read-back.')
             self._check_bundle_entries(destination, bundle)
+            _check_directory_identity(destination, destination_identity)
             return path
 
     def relabel(self, snapshot_id, label):

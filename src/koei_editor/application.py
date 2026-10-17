@@ -50,11 +50,11 @@ class Application(Appearance):
         self._owned_minimum = (780, 680)
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
-        self.editing_tools_menu.add_command(label='Reusable Editing Presets...', command=self.show_editing_presets)
-        self.editing_tools_menu.add_command(label='Transfer from Save Copy...', command=self.show_transfer)
+        self.editing_tools_menu.add_command(label=self.tr('editing_presets'), command=self.show_editing_presets)
+        self.editing_tools_menu.add_command(label=self.tr('transfer'), command=self.show_transfer)
         self.editing_tools_menu.add_separator()
-        self.editing_tools_menu.add_command(label='Save Research Lab', command=self.show_research_lab)
-        self.tools_menu_bar.add_cascade(label='Editing and Research', menu=self.editing_tools_menu)
+        self.editing_tools_menu.add_command(label=self.tr('research_lab'), command=self.show_research_lab)
+        self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
         root.option_add('*Font', (self.font_family, 10))
@@ -181,7 +181,7 @@ class Application(Appearance):
         footer_buttons.pack(fill='x', pady=(12, 0))
         self.contact_button = self._translated(ttk.Button(footer_buttons, command=self.contact), 'contact')
         self.contact_button.pack(side='left')
-        self.workflow_button = ttk.Button(footer_buttons, text='Workflow Builder', command=self.show_workflow_builder)
+        self.workflow_button = self._translated(ttk.Button(footer_buttons, command=self.show_workflow_builder), 'workflow_builder')
         self.workflow_button.pack(side='left', padx=10)
         cards = ttk.Frame(self.library)
         cards.pack(fill='both', expand=True)
@@ -260,6 +260,9 @@ class Application(Appearance):
         for widget, key in self._translated_widgets:
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
+        self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
+        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (3, 'research_lab')):
+            self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
@@ -802,6 +805,7 @@ class Application(Appearance):
                                                              self._opened_scalar_editors)
         self.editing_presets.on_show()
         self._show_editing_tool(self.editing_presets, self.tr('editing_presets'))
+        self._remember_workspace('tool:editing_presets')
         return self.editing_presets
 
     def show_transfer(self):
@@ -823,6 +827,7 @@ class Application(Appearance):
         if self.research_lab is None:
             self.research_lab = ResearchLabWorkspace(self.root, self.workspace)
         self._show_editing_tool(self.research_lab, self.tr('research_lab'))
+        self._remember_workspace('tool:research_lab')
         return self.research_lab
 
     def _show_editing_tool(self, tool, title):
@@ -883,6 +888,7 @@ class Application(Appearance):
         self.active_game = None
         self.workflow_builder.frame.pack(fill='both', expand=True)
         self.breadcrumb.set(self.tr('workflow_builder'))
+        self._remember_workspace('tool:workflow_builder')
         self.workflow_builder.apply_theme(THEMES[self.theme_name.get()])
 
     def open_saved_copy(self, game_id, path):

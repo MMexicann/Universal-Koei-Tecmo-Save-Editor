@@ -450,16 +450,29 @@ class SaveVaultTests(unittest.TestCase):
 
     def test_nonportable_save_name_cannot_poison_existing_vault(self):
         record = self.snapshot()
+        index = self.store.root / 'index.json'
+        original_index = index.read_bytes()
+        original_objects = {path.relative_to(self.store.objects): path.read_bytes()
+                            for path in self.store.objects.rglob('*') if path.is_file()}
+        ordinary = vault._ordinary
+        source_info = self.source.stat()
         for name in ('CON.bin', 'trailing.bin.', 'bad:name.bin'):
             renamed = self.source.with_name(name)
-            self.source.rename(renamed)
-            try:
-                # The selected extension gate or portable-name gate rejects it.
-                with self.assertRaises(SaveError):
+            def modeled_source(path, **options):
+                # Keep the actual fixture portable: Windows cannot create some
+                # rejected names. Model only admission's checked source token,
+                # then exercise its real portable-name gate before any reads.
+                return (renamed, source_info) if Path(path) == renamed else ordinary(path, **options)
+            with self.subTest(name=name), patch.object(vault, '_ordinary', side_effect=modeled_source), \
+                    patch.object(vault, '_read', side_effect=AssertionError('Invalid name must reject before file reads')):
+                with self.assertRaisesRegex(SaveError, 'ordinary portable relative paths'):
                     self.store.snapshot(parser.GAME_ID, renamed)
-                self.assertEqual(self.store.list_snapshots(), (record,))
-            finally:
-                renamed.rename(self.source)
+            self.assertEqual(self.store.list_snapshots(), (record,))
+            self.assertEqual(index.read_bytes(), original_index)
+            self.assertEqual(original_objects, {path.relative_to(self.store.objects): path.read_bytes()
+                                               for path in self.store.objects.rglob('*') if path.is_file()})
+            self.assertEqual(self.source.read_bytes(), self.raw)
+            self.assertEqual(self.metadata.read_bytes(), self.context)
 
     def test_directory_replacement_with_identical_file_inodes_is_rejected(self):
         original = self.store._materialize
@@ -651,18 +664,31 @@ class SaveVaultTests(unittest.TestCase):
 
     def test_normalized_paths_cannot_bypass_outside_vault_boundaries(self):
         record = self.snapshot()
+        index = self.store.root / 'index.json'
+        original_index = index.read_bytes()
+        original_objects = {path.relative_to(self.store.objects): path.read_bytes()
+                            for path in self.store.objects.rglob('*') if path.is_file()}
         sibling = self.folder / 'sibling'
         sibling.mkdir()
         alias_root = sibling / '..' / self.store.root.name
         destination = alias_root / 'objects' / 'not-an-id'
-        with self.assertRaisesRegex(SaveError, 'outside the vault'):
-            self.store.restore(record.id, destination)
+        # Windows may reject '..' in its ordinary-name guard before the vault
+        # containment guard runs. Both policies must reject before any file read.
+        with patch.object(vault, '_read', side_effect=AssertionError('Containment must reject before file reads')):
+            with self.assertRaises(SaveError):
+                self.store.restore(record.id, destination)
+            source = alias_root / 'objects' / record.id / record.filename
+            with self.assertRaises(SaveError):
+                self.store.snapshot(parser.GAME_ID, source)
         self.assertFalse(destination.exists())
-        source = alias_root / 'objects' / record.id / record.filename
-        with self.assertRaisesRegex(SaveError, 'outside the vault'):
-            self.store.snapshot(parser.GAME_ID, source)
-        reopened = vault.SaveVault(alias_root)
-        self.assertEqual(reopened.root, self.store.root)
+        self.assertEqual(index.read_bytes(), original_index)
+        self.assertEqual(original_objects, {path.relative_to(self.store.objects): path.read_bytes()
+                                           for path in self.store.objects.rglob('*') if path.is_file()})
+        self.assertEqual(self.source.read_bytes(), self.raw)
+        self.assertEqual(self.metadata.read_bytes(), self.context)
+        # Reopen through a valid canonical spelling on every platform.
+        reopened = vault.SaveVault(alias_root.resolve(strict=True))
+        self.assertTrue(reopened.root.samefile(self.store.root))
         self.assertEqual(reopened.list_snapshots(), (record,))
         self.assertTrue(reopened.verify(record.id)[0].valid)
 

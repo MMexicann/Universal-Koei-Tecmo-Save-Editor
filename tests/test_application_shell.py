@@ -97,6 +97,45 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(self.root.focus_get(), self.app.library_search_entry)
         self.assertFalse(self.app.sessions)
 
+    def test_integrated_tool_commands_dispatch_exact_routes_and_remain_recent(self):
+        calls = []
+        routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
+                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder'}
+        for key, method in routes.items():
+            setattr(self.app, method, lambda tool=key: calls.append(tool))
+        self.app.open_command_palette()
+        for key in routes:
+            command_id = 'tool:' + key
+            entries = self.app.command_entries()
+            self.assertIn(command_id, {entry.id for entry in entries})
+            self.app.command_palette.query.set(self.app.tr(key))
+            self.assertIn(command_id, {entry.id for entry in self.app.command_palette.matches})
+            self.app.execute_command(command_id)
+            self.assertEqual(calls[-1], key)
+            self.assertEqual(self.app.shell_settings.recent[0], command_id)
+        self.app.command_palette.close()
+        self.assertFalse(self.app.sessions)
+
+    def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
+        for key in ('editing_presets', 'research_lab', 'workflow_builder'):
+            with self.subTest(workspace=key):
+                self.app.show_library()
+                self.app.library.pack_forget()
+                frame = tk.Frame(self.app.workspace)
+                frame.pack(fill='both', expand=True)
+                marker = object()
+                from types import SimpleNamespace
+                tool = SimpleNamespace(frame=frame, pending=marker)
+                setattr(self.app, key, tool)
+                self.app.breadcrumb.set(self.app.tr(key))
+                self.app.language_choice.set('Deutsch')
+                self.app.change_language()
+                self.root.update()
+                self.assertEqual(self.app.breadcrumb.get(), self.app.tr(key))
+                self.assertEqual(frame.winfo_manager(), 'pack')
+                self.assertIs(tool.pending, marker)
+                setattr(self.app, key, None)
+                frame.destroy()
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):
         editor = self.app.select_game('dw7xl')
         self.app.show_library()

@@ -204,6 +204,29 @@ class SaveVaultTests(unittest.TestCase):
         self.assertEqual(result.changed_files, ('PARAM.SFO',))
         self.assertEqual(result.changed_field_ids, ())
 
+    def test_explicit_parent_cannot_reassign_an_existing_branch_to_another_profile(self):
+        from koei_editor.games.nobunaga_ambition_nes import parser as nes
+        from tests.test_nobunaga_ambition_nes import procedural_raw
+        first = self.snapshot()
+        source = self.folder / 'battery-copy.sav'
+        source.write_bytes(procedural_raw())
+        other = self.store.snapshot(nes.GAME_ID, source, branch='nes')
+        original_index = (self.store.root / 'index.json').read_bytes()
+        original_objects = set(self.store.objects.iterdir())
+        with self.assertRaisesRegex(SaveError, 'separate branch'):
+            self.store.snapshot(nes.GAME_ID, source, branch='main', parent_id=other.id)
+        self.assertEqual((self.store.root / 'index.json').read_bytes(), original_index)
+        self.assertEqual(set(self.store.objects.iterdir()), original_objects)
+        self.assertEqual(self.store.list_branches(), {'main': first.id, 'nes': other.id})
+        self.assertEqual(self.store.list_snapshots(branch='main'), (first,))
+        # Explicit parents remain useful for same-profile history and new branches.
+        same_profile = self.snapshot(parent_id=first.id)
+        fork = self.store.snapshot(nes.GAME_ID, source, branch='nes-fork', parent_id=other.id)
+        self.assertEqual(same_profile.parent_id, first.id)
+        self.assertEqual(fork.parent_id, other.id)
+        self.assertEqual(self.store.list_branches()['main'], same_profile.id)
+        self.assertTrue(all(result.valid for result in self.store.verify()))
+
     def test_new_destination_only_and_live_cloud_paths_are_blocked(self):
         record = self.snapshot()
         for existing in (self.source.parent, self.source, self.store.root):

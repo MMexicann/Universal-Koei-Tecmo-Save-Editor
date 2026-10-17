@@ -778,8 +778,8 @@
     },
     {
       "path": "docs/SAVE_RESEARCH_LAB.md",
-      "bytes": 3460,
-      "sha256": "e239a91e20f4d3a06823ff2f6cde79d15529830da3ce52c149905bed83c553c7"
+      "bytes": 3700,
+      "sha256": "cb9d31f3e56da7589c610d5857f1bb0cfbd0b8572bd0a333da87f123be20bf13"
     },
     {
       "path": "docs/SAVE_TRANSFER.md",
@@ -3628,8 +3628,8 @@
     },
     {
       "path": "src/koei_editor/shared/preset_library.py",
-      "bytes": 4940,
-      "sha256": "968538b3c8e473ac5e9736d1abd0f033d84e28d2244366218796057a6498fd85"
+      "bytes": 5050,
+      "sha256": "fbd51c77556b29fba2b8834e01b00062071911a7401715cc024ca95191d91410"
     },
     {
       "path": "src/koei_editor/shared/preset_portability.py",
@@ -3668,8 +3668,8 @@
     },
     {
       "path": "src/koei_editor/shared/research_lab.py",
-      "bytes": 13289,
-      "sha256": "69b37464d910cee0de0fce7628a95c4d9c04e4662ae80b4688ba23f9d287c429"
+      "bytes": 13739,
+      "sha256": "5ae3c3c5db16accd04fbdaa2e03493ec1b9dace36b3990a10488984796ce06a8"
     },
     {
       "path": "src/koei_editor/shared/research_lab_gui.py",
@@ -3888,8 +3888,8 @@
     },
     {
       "path": "tests/test_compatible_presets.py",
-      "bytes": 18905,
-      "sha256": "f4514e160d6583640183b935a7f20cbb148689114520d155d2da616b913d09bb"
+      "bytes": 19548,
+      "sha256": "7687772fd9972a3c200da360c659b3591fca73cad092f304cc157669a5bb85d9"
     },
     {
       "path": "tests/test_compatible_presets_gui.py",
@@ -4688,8 +4688,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 30924,
-      "sha256": "9d0043a9a61652e202eda824c60c4d5f212ae3680d0f8732ccff00157d85b11e"
+      "bytes": 31419,
+      "sha256": "00f2a9f149e7f182466a3e881f06bc2a5f340a97662adf68cd3631aefa5b70b5"
     },
     {
       "path": "tests/test_parallel_runner.py",
@@ -4808,8 +4808,8 @@
     },
     {
       "path": "tests/test_research_lab.py",
-      "bytes": 9725,
-      "sha256": "ee918d296baff7fc486c6d964265a02f0390892434ed7e6af45f9d9a5e427936"
+      "bytes": 11618,
+      "sha256": "1ba039018f47115a2d43b12473e0aa1eeb1f6baa6b41ff69987055770ebfa132"
     },
     {
       "path": "tests/test_research_lab_gui.py",
@@ -5398,8 +5398,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32139,
-      "sha256": "d284ac2882c511a1947bf85cf5f2e1c71e5649452bc5f75b57f613ac12e46cc6"
+      "bytes": 32229,
+      "sha256": "639da26da7862cb5c2818a056ce4b270b291e0f13185ffbdd7d649c70485bde3"
     },
     {
       "path": "tools/refresh_manifest.py",

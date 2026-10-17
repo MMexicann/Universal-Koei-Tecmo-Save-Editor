@@ -80,8 +80,10 @@ class PresetLibrary:
         raw = compatible_presets.dumps(preset)
         identity = hashlib.sha256(raw).hexdigest()
         path = self._directory(create=True) / (identity + compatible_presets.SUFFIX)
+        if path.is_symlink():
+            raise SaveError('A local preset identity was replaced. Existing metadata was retained.')
         if path.exists():
-            if path.is_symlink() or compatible_presets.read_bytes(path) != raw:
+            if compatible_presets.read_bytes(path) != raw:
                 raise SaveError('A local preset identity was replaced. Existing metadata was retained.')
             return LibraryEntry(identity, preset, path)
         if len(self.scan().entries) >= MAX_PRESETS:

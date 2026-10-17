@@ -11,12 +11,16 @@ from koei_editor.shared.appearance import ui_font
 
 STATUS_LABELS = {'qualified': 'Qualified', 'rejected': 'Not qualified', 'unsafe': 'Unsafe path',
                  'oversized': 'Too large', 'changed': 'Changed', 'unreadable': 'Unreadable'}
-SORTS = ('Path A-Z', 'Newest first', 'Oldest first', 'Largest first', 'Smallest first', 'Identical files first')
+SORTS = ('Path A-Z', 'Newest first', 'Oldest first', 'Largest first', 'Smallest first', 'Identical files first', 'Validation status')
 
 
 class SaveLibraryWorkspace:
-    def __init__(self, root, parent, on_open):
-        self.root, self.on_open = root, on_open
+    def __init__(self, root, parent, on_open, on_manage=None):
+        self.root, self.on_open, self.on_manage = root, on_open, on_manage
+        self._selected, self._visible, self._rendering = set(), (), False
+        self.check_results = {}
+        self.management = None
+        self._palette = None
         self.frame = ttk.Frame(parent, padding=(28, 16))
         self.busy, self.prepared, self._revision = False, None, 0
         self._closed, self._poll_id = False, None
@@ -63,6 +67,9 @@ class SaveLibraryWorkspace:
         self.cancel_button.pack(side='left', padx=10)
         self.open_button = ttk.Button(actions, text='Open selected copy', command=self.open_selected, state='disabled')
         self.open_button.pack(side='left')
+        self.management_button = ttk.Button(actions, text='Save Doctor / Detection / Vault', command=self.show_management)
+        self.management_button.pack(side='left', padx=10)
+        self.controls.append(self.management_button)
         self.status = tk.StringVar(root, value='Choose an exact game/platform and a folder containing separate save copies.')
         status_label = ttk.Label(self.frame, textvariable=self.status, wraplength=1000)
         status_label.pack(anchor='w', pady=(12, 8))
@@ -74,8 +81,12 @@ class SaveLibraryWorkspace:
         self.search_entry = ttk.Entry(filters, textvariable=self.search)
         self.search_entry.pack(side='left', fill='x', expand=True)
         self.filter = tk.StringVar(root, value='All results')
-        ttk.Combobox(filters, textvariable=self.filter, values=('All results', 'Qualified', 'Not qualified', 'Identical gameplay files'),
+        ttk.Combobox(filters, textvariable=self.filter, values=('All results', 'Qualified', 'Not qualified', 'Identical gameplay files',
+                             'No identical file found', 'Unsafe path', 'Too large', 'Changed', 'Unreadable'),
                      state='readonly', width=24).pack(side='left', padx=8)
+        self.subfolder = tk.StringVar(root, value='All folders')
+        self.folder_filter = ttk.Combobox(filters, textvariable=self.subfolder, values=('All folders',), state='readonly', width=16)
+        self.folder_filter.pack(side='left', padx=(0, 8))
         self.sort = tk.StringVar(root, value=SORTS[0])
         ttk.Combobox(filters, textvariable=self.sort, values=SORTS, state='readonly', width=22).pack(side='left')
         # Reserve navigation and guidance before the expanding viewport. Tk's
@@ -86,6 +97,17 @@ class SaveLibraryWorkspace:
         self.detail = tk.StringVar(root, value='Select a result to see its validation summary.')
         self.detail_label = ttk.Label(self.footer, textvariable=self.detail, wraplength=1000)
         self.detail_label.pack(anchor='w', pady=(8, 4))
+        batch = ttk.Frame(self.footer)
+        batch.pack(fill='x', pady=(2, 4))
+        self.select_matches_button = ttk.Button(batch, text='Select qualified matches', command=self.select_matches)
+        self.select_matches_button.pack(side='left')
+        self.clear_button = ttk.Button(batch, text='Clear selection', command=self.clear_selection)
+        self.clear_button.pack(side='left', padx=8)
+        self.recheck_button = ttk.Button(batch, text='Recheck selected', command=self.recheck_selected, state='disabled')
+        self.recheck_button.pack(side='left')
+        self.manage_button = ttk.Button(batch, text='Manage selected copies', command=self.manage_selected, state='disabled')
+        self.manage_button.pack(side='left', padx=8)
+        self.controls.extend((self.select_matches_button, self.clear_button))
         paging = ttk.Frame(self.footer)
         paging.pack(fill='x', pady=(4, 6))
         self.previous = ttk.Button(paging, text='Previous', command=lambda: self.change_page(-1), state='disabled')
@@ -103,7 +125,7 @@ class SaveLibraryWorkspace:
         table_frame = ttk.Frame(self.frame)
         table_frame.pack(fill='both', expand=True)
         self.table = ttk.Treeview(table_frame, columns=('path', 'size', 'modified', 'status', 'duplicates'),
-                                  show='headings', selectmode='browse', height=12)
+                                  show='headings', selectmode='extended', height=12)
         for name, title, width in (('path', 'Copied file / relative folder', 330), ('size', 'Bytes', 100),
                 ('modified', 'Modified (UTC)', 160), ('status', 'Validation', 150),
                 ('duplicates', 'Identical gameplay bytes', 190)):
@@ -121,8 +143,9 @@ class SaveLibraryWorkspace:
         self.table.bind('<Double-1>', lambda _event: self.open_selected())
         for variable in (self.game, self.folder, self.recursive):
             variable.trace_add('write', self.invalidate)
-        for variable in (self.search, self.filter, self.sort):
+        for variable in (self.search, self.filter, self.subfolder):
             variable.trace_add('write', self.refilter)
+        self.sort.trace_add('write', lambda *_args: self.refilter(clear=False))
         self.frame.bind('<Destroy>', self._on_destroy, add='+')
         self.frame.bind('<Configure>', self._resize_guidance, add='+')
 
@@ -134,7 +157,9 @@ class SaveLibraryWorkspace:
                     label.configure(wraplength=available)
 
     def apply_theme(self, palette):
-        pass  # Shared ttk styles supply both themes.
+        self._palette = palette
+        if self.management is not None and not getattr(self.management, '_closed', False):
+            self.management.apply_theme(palette)
 
     def focus_search(self, _event=None):
         self.search_entry.focus_set()
@@ -159,6 +184,11 @@ class SaveLibraryWorkspace:
         self._revision += 1
         self._cancel.set()
         self.prepared = None
+        self._selected.clear()
+        self.check_results.clear()
+        self._rendering = True
+        self.table.selection_remove(*self.table.selection())
+        self._rendering = False
         self.page = 0
         self.refresh()
         if not self.busy:
@@ -175,7 +205,12 @@ class SaveLibraryWorkspace:
             self.cancel_button.configure(state='disabled')
             self.status.set('Cancelling after the current file check...')
 
-    def refilter(self, *_args):
+    def refilter(self, *_args, clear=True):
+        if clear:
+            self._selected.clear()
+            self._rendering = True
+            self.table.selection_remove(*self.table.selection())
+            self._rendering = False
         self.page = 0
         self.refresh()
 
@@ -190,61 +225,132 @@ class SaveLibraryWorkspace:
         except (ValueError, OSError, OverflowError):
             return 'Unavailable'
 
+    def matching_indices(self):
+        if self.prepared is None:
+            return ()
+        choice = self.filter.get()
+        status = {'Qualified': 'qualified', 'Not qualified': 'not_qualified',
+                  'Unsafe path': 'unsafe', 'Too large': 'oversized', 'Changed': 'changed',
+                  'Unreadable': 'unreadable'}.get(choice, 'all')
+        duplicates = {'Identical gameplay files': 'grouped', 'No identical file found': 'ungrouped'}.get(choice, 'all')
+        folder = '' if self.subfolder.get() == 'All folders' else self.subfolder.get()
+        return backend.browse(self.prepared, query=self.search.get()[:4096], status=status,
+                              duplicates=duplicates, folder=folder,
+                              sort=backend.BROWSE_SORTS[SORTS.index(self.sort.get())])
+
+    def _capture_selection(self):
+        if not self._rendering:
+            self._selected.difference_update(self._visible)
+            self._selected.update(int(item) for item in self.table.selection())
+
     def refresh(self):
-        self.table.delete(*self.table.get_children())
-        query, choice = self.search.get().strip().casefold(), self.filter.get()
-        entries = () if self.prepared is None else self.prepared.entries
-        visible = []
-        for index, entry in enumerate(entries):
-            if choice == 'Qualified' and entry.status != 'qualified':
-                continue
-            if choice == 'Not qualified' and entry.status == 'qualified':
-                continue
-            if choice == 'Identical gameplay files' and not entry.duplicate_group:
-                continue
-            if query and query not in (entry.relative_path + ' ' + STATUS_LABELS[entry.status]).casefold():
-                continue
-            visible.append((index, entry))
-        order = self.sort.get()
-        if order == 'Newest first':
-            key = lambda pair: (-pair[1].modified_ns, pair[1].relative_path.casefold())
-        elif order == 'Oldest first':
-            key = lambda pair: (pair[1].modified_ns, pair[1].relative_path.casefold())
-        elif order == 'Largest first':
-            key = lambda pair: (-pair[1].size_bytes, pair[1].relative_path.casefold())
-        elif order == 'Smallest first':
-            key = lambda pair: (pair[1].size_bytes, pair[1].relative_path.casefold())
-        elif order == 'Identical files first':
-            key = lambda pair: (not bool(pair[1].duplicate_group), pair[1].duplicate_group, pair[1].relative_path.casefold())
-        else:
-            key = lambda pair: pair[1].relative_path.casefold()
-        visible.sort(key=key)
-        self.page = min(self.page, max(0, (len(visible) - 1) // self.page_size))
-        start = self.page * self.page_size
-        end = min(start + self.page_size, len(visible))
-        for index, entry in visible[start:end]:
-            self.table.insert('', 'end', iid=str(index), values=(entry.relative_path, f'{entry.size_bytes:,}',
-                self._modified(entry.modified_ns), STATUS_LABELS[entry.status],
-                'Group ' + str(entry.duplicate_group) if entry.duplicate_group else '-'))
-        self.previous.configure(state='normal' if self.page else 'disabled')
-        self.next.configure(state='normal' if end < len(visible) else 'disabled')
-        self.page_info.set(f'{start + 1 if visible else 0:,}-{end:,} of {len(visible):,} matching results')
+        self._capture_selection()
+        self._rendering = True
+        try:
+            self.table.delete(*self.table.get_children())
+            visible = self.matching_indices()
+            entries = () if self.prepared is None else self.prepared.entries
+            self.page = min(self.page, max(0, (len(visible) - 1) // self.page_size))
+            start = self.page * self.page_size
+            end = min(start + self.page_size, len(visible))
+            self._visible = visible[start:end]
+            for index in self._visible:
+                entry = entries[index]
+                checked = self.check_results.get(entry.relative_path)
+                label = ('Rechecked' if checked == 'qualified' else 'Recheck failed') if checked else STATUS_LABELS[entry.status]
+                self.table.insert('', 'end', iid=str(index), values=(entry.relative_path, f'{entry.size_bytes:,}',
+                    self._modified(entry.modified_ns), label,
+                    'Group ' + str(entry.duplicate_group) if entry.duplicate_group else '-'))
+            self.table.selection_set(tuple(str(index) for index in self._visible if index in self._selected))
+            self.previous.configure(state='normal' if self.page else 'disabled')
+            self.next.configure(state='normal' if end < len(visible) else 'disabled')
+            self.page_info.set(f'{start + 1 if visible else 0:,}-{end:,} of {len(visible):,} matching results')
+        finally:
+            self._rendering = False
+        self.selection_changed()
+
+    def selected_entries(self):
+        self._capture_selection()
+        if self.prepared is None:
+            return ()
+        return tuple(self.prepared.entries[index] for index in sorted(self._selected)
+                     if 0 <= index < len(self.prepared.entries))
+
+    def select_matches(self):
+        if self.busy or self.prepared is None:
+            return
+        self._capture_selection()
+        self._selected.update(index for index in self.matching_indices()
+                              if self.prepared.entries[index].status == 'qualified')
+        self._rendering = True
+        self.table.selection_set(tuple(str(index) for index in self._visible if index in self._selected))
+        self._rendering = False
+        self.selection_changed()
+
+    def clear_selection(self):
+        self._selected.clear()
+        self.table.selection_remove(*self.table.selection())
         self.selection_changed()
 
     def selected_entry(self):
-        selected = self.table.selection()
-        if self.prepared is None or len(selected) != 1:
-            return None
-        try:
-            return self.prepared.entries[int(selected[0])]
-        except (ValueError, IndexError):
-            return None
+        entries = self.selected_entries()
+        return entries[0] if len(entries) == 1 else None
 
     def selection_changed(self, *_args):
-        entry = self.selected_entry()
-        self.open_button.configure(state='normal' if not self.busy and entry is not None and entry.status == 'qualified' else 'disabled')
-        self.detail.set('Select a result to see its validation summary.' if entry is None else
-                        entry.summary + (f' {entry.mapped_fields:,} mapped editable fields.' if entry.status == 'qualified' else ''))
+        if self._rendering:
+            return
+        entries = self.selected_entries()
+        entry = entries[0] if len(entries) == 1 else None
+        qualified = bool(entries) and all(item.status == 'qualified' for item in entries)
+        self.open_button.configure(state='normal' if not self.busy and entry is not None and qualified else 'disabled')
+        for button in (self.recheck_button, self.manage_button):
+            button.configure(state='normal' if not self.busy and qualified else 'disabled')
+        if len(entries) > 1:
+            self.detail.set(f'{len(entries):,} copies selected across all pages. '
+                            'Batch actions require qualified copies; changing search or filters clears the selection.')
+        else:
+            self.detail.set('Select copies to recheck or manage; Ctrl/Shift selects several.' if entry is None else
+                            f'Selected copy: {entry.relative_path}. ' + entry.summary + (f' {entry.mapped_fields:,} mapped editable fields.' if entry.status == 'qualified' else '') +
+                            (' Latest recheck: ' + self.check_results[entry.relative_path].replace('_', ' ') + '.'
+                             if entry.relative_path in self.check_results else ''))
+
+    def show_management(self):
+        if self.busy:
+            return
+        self._show_management(self._games.get(self.game.get()), ())
+
+    def manage_selected(self):
+        if self.busy:
+            return
+        entries = self.selected_entries()
+        if not entries or any(entry.status != 'qualified' for entry in entries):
+            return
+        if self.on_manage is not None:
+            self.on_manage(self.prepared, entries)
+        else:
+            self._show_management(self.prepared.game_id,
+                                  tuple(self.prepared.folder / entry.relative_path for entry in entries))
+
+    def _show_management(self, game_id, paths):
+        if self.management is None or getattr(self.management, '_closed', False):
+            from koei_editor.shared.save_management_gui import SaveManagementWindow
+            self.management = SaveManagementWindow(self.root, game_id=game_id, paths=paths)
+            if self._palette is not None:
+                self.management.apply_theme(self._palette)
+        else:
+            self.management.show(game_id=game_id, paths=paths)
+
+    def recheck_selected(self):
+        if self.busy:
+            return
+        entries = self.selected_entries()
+        if not entries or any(entry.status != 'qualified' for entry in entries):
+            return
+        prepared = self.prepared
+        for entry in entries:
+            self.check_results.pop(entry.relative_path, None)
+        self.refresh()
+        self._start('recheck', lambda cancel: backend.requalify_many(prepared, entries, cancel=cancel))
 
     def _start(self, kind, operation):
         if self.busy or self._closed:
@@ -255,8 +361,10 @@ class SaveLibraryWorkspace:
         for control in self.controls:
             control.configure(state='disabled')
         self.open_button.configure(state='disabled')
-        self.cancel_button.configure(state='normal', text='Cancel scan' if kind == 'scan' else 'Cancel open')
-        self.status.set('Scanning and qualifying copied saves...' if kind == 'scan' else 'Rechecking the selected save and its original context...')
+        self.recheck_button.configure(state='disabled')
+        self.manage_button.configure(state='disabled')
+        self.cancel_button.configure(state='normal', text={'scan': 'Cancel scan', 'open': 'Cancel open', 'recheck': 'Cancel recheck'}[kind])
+        self.status.set('Scanning and qualifying copied saves...' if kind == 'scan' else 'Rechecking selected saves and their original context...')
         results = self._results
         def worker():
             try:
@@ -300,7 +408,16 @@ class SaveLibraryWorkspace:
             messagebox.showerror('Save Library', message, parent=self.root)
             return
         if kind == 'scan':
+            self._rendering = True
+            self.table.selection_remove(*self.table.selection())
+            self._rendering = False
             self.prepared = result
+            self._selected.clear()
+            self.check_results.clear()
+            folders = sorted({parent.as_posix() for entry in result.entries
+                              for parent in Path(entry.relative_path).parents if parent != Path('.')}, key=str.casefold)
+            self.folder_filter.configure(values=('All folders', *folders))
+            self.subfolder.set('All folders')
             self.page = 0
             self.refresh()
             reason = {'complete': 'Scan finished', 'cancelled': 'Scan cancelled (partial results)',
@@ -308,6 +425,12 @@ class SaveLibraryWorkspace:
                       'byte_limit': 'Data limit reached (partial results)'}[result.stop_reason]
             self.status.set(f'{reason}: {result.qualified_count:,} qualified of {len(result.entries):,} candidate files; '
                             f'{result.excluded_directories:,} directories excluded. Qualification is specific to the chosen profile.')
+        elif kind == 'recheck':
+            self.check_results.update((entry.relative_path, entry.status) for entry in result.entries)
+            self.refresh()
+            reason = 'Recheck cancelled (partial results)' if result.stop_reason == 'cancelled' else 'Recheck finished'
+            self.status.set(f'{reason}: {result.qualified_count:,} qualified of {len(result.entries):,} checked; '
+                            f'{result.requested_count:,} selected. Files are unchanged; later actions revalidate again.')
         else:
             game_id, path = result
             self.status.set('Copy requalified. Opening through the normal game editor...')
@@ -337,6 +460,8 @@ class SaveLibraryWorkspace:
             return
         folder, recursive = self.folder.get(), self.recursive.get()
         self.prepared = None
+        self._selected.clear()
+        self.check_results.clear()
         self.refresh()
         self._start('scan', lambda cancel: backend.scan(game_id, folder, recursive=recursive, cancel=cancel))
 

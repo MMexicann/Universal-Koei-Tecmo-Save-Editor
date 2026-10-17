@@ -604,14 +604,17 @@ class Application(Appearance):
         Editor.show_contact(self)
 
     def close(self):
-        if any(getattr(tool, 'busy', False) for tool in self._tool_workspaces()):
+        tools = self._tool_workspaces()
+        management = getattr(self.save_library, 'management', None)
+        if management is not None:
+            tools += (management,)
+        if any(getattr(tool, 'busy', False) for tool in tools):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return
-        tools = self._tool_workspaces()
         if (all(editor.dirty_ok() for _frame, editor in self.sessions.values())
                 and all(tool.dirty_ok() for tool in tools if callable(getattr(tool, 'dirty_ok', None)))):
-            for tool in self._tool_workspaces():
+            for tool in tools:
                 close = getattr(tool, 'close', None)
                 if callable(close):
                     close()
@@ -683,7 +686,11 @@ def main():
     parser.add_argument('--template', help='Separate destination-platform save copy for conversion.')
     parser.add_argument('--output-dir', help='New folder for the converted save and local receipt.')
     parser.add_argument('--dry-run', action='store_true', help='Validate and review conversion without writing files or backups.')
+    from koei_editor.shared import save_management_cli
+    save_management_cli.add_arguments(parser, tests)
     arguments = parser.parse_args()
+    if save_management_cli.handle(parser, arguments):
+        return
     if arguments.recursive and arguments.scan_saves is None:
         parser.error('--recursive requires --scan-saves.')
     if arguments.scan_saves is not None:

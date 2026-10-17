@@ -15,6 +15,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
+- [Save Doctor, automatic detection and local Save Vault](SAVE_MANAGEMENT.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
 - [Bulk edit validation and exact field navigation](EDITING_WORKFLOWS.md)

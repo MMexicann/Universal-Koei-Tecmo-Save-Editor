@@ -424,3 +424,77 @@ class SaveLibraryTests(unittest.TestCase):
                          {'USR-DATA': 'qualified', 'foreign': 'rejected'})
         self.assertEqual(library.requalify(result, next(entry for entry in result.entries if entry.status == 'qualified')).raw,
                          path.read_bytes())
+    def test_browse_combines_tokens_status_folder_and_duplicate_filters(self):
+        self.copy('chapter/first.bin')
+        self.copy('chapter/nested/second.bin', slot='11')
+        self.copy('broken/bad.bin', raw=b'damaged')
+        result = self.scan()
+        indices = library.browse(result, query='CHAPTER qualified', folder='chapter', duplicates='grouped')
+        self.assertEqual([result.entries[index].relative_path for index in indices],
+                         ['chapter/first.bin', 'chapter/nested/second.bin'])
+        self.assertEqual([result.entries[index].relative_path for index in library.browse(result, status='not_qualified')],
+                         ['broken/bad.bin'])
+        self.assertEqual(library.browse(result, status='qualified', duplicates='ungrouped'), ())
+        self.assertEqual(library.browse(result, folder='chap'), ())
+        for kwargs in ({'sort': 'invalid'}, {'status': 'invalid'}, {'folder': '../chapter'},
+                       {'folder': 'chapter\\nested'}, {'query': 1}, {'duplicates': 'unique'}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(SaveError):
+                library.browse(result, **kwargs)
+        # Local organization never opens files or calls a profile parser again.
+        with patch.object(parser, 'read_save', side_effect=AssertionError('Browsing read a save')):
+            self.assertEqual(library.browse(result, query='first'), indices[:1])
+
+    def test_sorting_returns_original_indices_with_deterministic_ties(self):
+        self.copy('Z.bin')
+        self.copy('a.bin')
+        result = self.scan()
+        entries = tuple(replace(entry, modified_ns=0, size_bytes=10) for entry in result.entries)
+        result = replace(result, entries=entries)
+        for sort in library.BROWSE_SORTS:
+            indices = library.browse(result, sort=sort)
+            self.assertEqual([result.entries[index].relative_path for index in indices], ['a.bin', 'Z.bin'])
+        largest = replace(result, entries=(replace(entries[0], size_bytes=100), entries[1]))
+        self.assertEqual(library.browse(largest, sort='largest')[0], 0)
+
+    def test_batch_requalification_preserves_sources_and_reports_changed_context_per_entry(self):
+        first = self.copy('one/DATA.BIN')
+        second = self.copy('two/DATA.BIN', slot='11')
+        result = self.scan()
+        entries = tuple(result.entries[index] for index in library.browse(result))
+        (second.parent / 'PARAM.SFO').write_bytes(ps3_helpers.PS3ContextTests.metadata('NPUB31442-GAMEDATA-12'))
+        with patch.object(parser, 'read_save', wraps=parser.read_save) as reads:
+            checked = library.requalify_many(result, entries)
+        self.assertEqual(reads.call_count, 2)
+        self.assertEqual(checked.requested_count, 2)
+        self.assertEqual(checked.stop_reason, 'complete')
+        self.assertEqual(checked.qualified_count, 1)
+        self.assertEqual([(entry.relative_path, entry.status) for entry in checked.entries],
+                         [('one/DATA.BIN', 'qualified'), ('two/DATA.BIN', 'not_qualified')])
+        self.assertEqual(first.read_bytes(), self.raw)
+        self.assertEqual(second.read_bytes(), self.raw)
+        self.assertEqual(len(tuple(self.folder.rglob('*'))), 6)
+        self.assertNotIn('NPUB', repr(checked))
+        for selection in ([], [entries[0], entries[0]], list(entries) * 300, [replace(entries[0], relative_path='../unsafe.bin')]):
+            with self.subTest(length=len(selection)), self.assertRaises(SaveError):
+                library.requalify_many(result, selection)
+
+    def test_batch_cancellation_retains_only_complete_checks_and_redacts_failures(self):
+        self.copy('one/DATA.BIN')
+        self.copy('two/DATA.BIN')
+        result = self.scan()
+        cancel = threading.Event()
+        original = parser.read_save
+        calls = []
+        def cancelled(*args, **kwargs):
+            document = original(*args, **kwargs)
+            calls.append(True)
+            if len(calls) == 2:
+                cancel.set()
+            return document
+        with patch.object(parser, 'read_save', side_effect=cancelled):
+            checked = library.requalify_many(result, result.entries, cancel=cancel)
+        self.assertEqual((checked.stop_reason, len(checked.entries), checked.qualified_count), ('cancelled', 1, 1))
+        with patch.object(parser, 'read_save', side_effect=SaveError('private-account-token')):
+            failed = library.requalify_many(result, result.entries)
+        self.assertEqual([entry.status for entry in failed.entries], ['not_qualified'] * 2)
+        self.assertNotIn('private-account-token', repr(failed))

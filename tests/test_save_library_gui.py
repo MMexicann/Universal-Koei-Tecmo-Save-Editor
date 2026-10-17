@@ -2,6 +2,7 @@
 from dataclasses import replace
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import threading
 import time
 import tkinter as tk
@@ -305,3 +306,143 @@ class SaveLibraryGuiTests(unittest.TestCase):
             release.set()
         self.root.update()
         self.assertFalse(self.opened)
+    def test_selection_survives_sort_and_pages_and_filter_clears_hidden_selection(self):
+        prepared = backend.scan(parser.GAME_ID, self.folder)
+        entries = tuple(replace(prepared.entries[0], relative_path=f'copy-{index:03}.bin', size_bytes=index + 1)
+                        for index in range(250))
+        self.workspace.prepared = replace(prepared, entries=entries)
+        self.workspace.refresh()
+        self.workspace.table.selection_set(('0', '5'))
+        self.workspace.selection_changed()
+        self.workspace.change_page(1)
+        self.workspace.table.selection_set(('100',))
+        self.workspace.selection_changed()
+        self.assertEqual([entry.relative_path for entry in self.workspace.selected_entries()],
+                         ['copy-000.bin', 'copy-005.bin', 'copy-100.bin'])
+        self.workspace.sort.set('Largest first')
+        self.assertEqual(len(self.workspace.selected_entries()), 3)
+        self.assertEqual(str(self.workspace.open_button['state']), 'disabled')
+        self.assertEqual(str(self.workspace.recheck_button['state']), 'normal')
+        self.assertIn('3 copies selected', self.workspace.detail.get())
+        self.workspace.search.set('copy-111')
+        self.assertEqual(self.workspace.selected_entries(), ())
+        self.workspace.select_matches()
+        self.assertEqual(self.workspace.selected_entry().relative_path, 'copy-111.bin')
+        self.workspace.search.set('')
+        self.workspace.select_matches()
+        self.assertEqual(len(self.workspace.selected_entries()), 250)
+        self.workspace.clear_selection()
+        self.assertEqual(self.workspace.selected_entries(), ())
+
+    def test_batch_rechecks_real_sources_off_tk_thread_and_keeps_failed_copy_visible(self):
+        self.workspace.scan()
+        self.finish()
+        self.workspace.select_matches()
+        self.first.write_bytes(self.raw[:-1])
+        main_thread, calls = threading.get_ident(), []
+        original = backend.requalify
+        def rechecked(*args, **kwargs):
+            calls.append(threading.get_ident())
+            return original(*args, **kwargs)
+        with patch.object(backend, 'requalify', side_effect=rechecked):
+            self.workspace.recheck_selected()
+            self.finish()
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(all(thread != main_thread for thread in calls))
+        self.assertEqual(self.workspace.check_results, {'first.bin': 'not_qualified', 'second.bin': 'qualified'})
+        self.assertIn('1 qualified of 2 checked', self.workspace.status.get())
+        self.assertEqual(len(self.workspace.table.get_children()), 2)
+        self.assertEqual(self.second.read_bytes(), self.raw)
+        self.assertFalse(self.opened)
+        self.workspace.invalidate()
+        self.assertFalse(self.workspace.check_results)
+        self.assertEqual(self.workspace.selected_entries(), ())
+
+    def test_management_callback_uses_explicit_original_selection_on_tk_thread(self):
+        self.workspace.scan()
+        self.finish()
+        self.workspace.select_matches()
+        managed = []
+        self.workspace.on_manage = lambda result, entries: managed.append((result, entries, threading.get_ident()))
+        self.workspace.manage_selected()
+        self.assertEqual(len(managed), 1)
+        self.assertIs(managed[0][0], self.workspace.prepared)
+        self.assertEqual({entry.relative_path for entry in managed[0][1]}, {'first.bin', 'second.bin'})
+        self.assertEqual(managed[0][2], threading.get_ident())
+        self.assertFalse(self.opened)
+
+    def test_folder_status_and_ungrouped_filters_change_actual_table_rows(self):
+        nested = self.folder / 'chapter' / 'nested'
+        nested.mkdir(parents=True)
+        (nested / 'bad.bin').write_bytes(b'damaged')
+        self.workspace.recursive.set(True)
+        self.workspace.scan()
+        self.finish()
+        self.assertIn('chapter', self.workspace.folder_filter['values'])
+        self.workspace.subfolder.set('chapter')
+        self.assertEqual(len(self.workspace.table.get_children()), 1)
+        self.workspace.filter.set('Qualified')
+        self.assertEqual(self.workspace.table.get_children(), ())
+        self.workspace.filter.set('No identical file found')
+        self.assertEqual(len(self.workspace.table.get_children()), 1)
+        self.workspace.subfolder.set('All folders')
+        self.workspace.filter.set('Identical gameplay files')
+        self.assertEqual(len(self.workspace.table.get_children()), 2)
+
+
+    def test_tools_are_available_before_scanning_and_reuse_management_window(self):
+        instances = []
+        class ManagementWindow:
+            def __init__(inner, root, **kwargs):
+                inner.requests = [(root, kwargs)]
+                instances.append(inner)
+            def show(inner, **kwargs):
+                inner.requests.append(kwargs)
+            def apply_theme(inner, palette):
+                inner.palette = palette
+        module = SimpleNamespace(SaveManagementWindow=ManagementWindow)
+        with patch.dict('sys.modules', {'koei_editor.shared.save_management_gui': module}):
+            self.workspace.apply_theme({'background': 'test'})
+            self.workspace.management_button.invoke()
+            self.assertEqual(instances[0].palette, {'background': 'test'})
+            self.workspace.apply_theme({'background': 'changed'})
+            self.assertEqual(instances[0].palette, {'background': 'changed'})
+            self.assertIs(self.workspace.management, instances[0])
+            self.assertEqual(instances[0].requests[0][1], {'game_id': parser.GAME_ID, 'paths': ()})
+            self.workspace.scan()
+            self.finish()
+            self.workspace.select_matches()
+            self.workspace.manage_selected()
+            self.assertEqual(len(instances), 1)
+            self.assertEqual(instances[0].requests[1]['game_id'], parser.GAME_ID)
+            self.assertEqual(set(instances[0].requests[1]['paths']), {self.first, self.second})
+            self.assertFalse(self.opened)
+            instances[0]._closed = True
+            self.workspace.show_management()
+            self.assertEqual(len(instances), 2)
+            self.assertIs(self.workspace.management, instances[1])
+
+    def test_cancel_batch_recheck_preserves_complete_outcomes_and_never_opens_editor(self):
+        self.workspace.scan()
+        self.finish()
+        self.workspace.select_matches()
+        entered, release = threading.Event(), threading.Event()
+        original = backend.requalify
+        calls = []
+        def delayed(*args, **kwargs):
+            calls.append(True)
+            if len(calls) == 2:
+                entered.set()
+                release.wait(5)
+            return original(*args, **kwargs)
+        with patch.object(backend, 'requalify', side_effect=delayed):
+            self.workspace.recheck_selected()
+            self.assertTrue(entered.wait(2))
+            self.workspace.cancel()
+            release.set()
+            self.finish()
+        self.assertEqual(len(self.workspace.check_results), 1)
+        self.assertIn('cancelled (partial results)', self.workspace.status.get())
+        self.assertFalse(self.opened)
+        self.assertEqual(self.first.read_bytes(), self.raw)
+        self.assertEqual(self.second.read_bytes(), self.raw)

@@ -21,6 +21,7 @@ from tests.test_ps3_new_families import fixture
 from tests import test_ps3_expansion as ps3_helpers
 from tests import test_save_library as library_helpers
 from tests.test_verified_editors import synthetic_raw
+from tests.test_fatal_frame2_remake import procedural_raw as fatal_frame_raw
 
 
 class SaveDoctorTests(unittest.TestCase):
@@ -113,6 +114,29 @@ class SaveDoctorTests(unittest.TestCase):
         self.assertEqual(self.checks(report)['unchanged_roundtrip'].status, 'passed')
         self.assertEqual(self.checks(report)['native_integrity'].status, 'not_assessed')
         self.assertEqual(self.path.read_bytes(), document.encrypted)
+
+    def test_large_registered_fatal_frame_system_save_is_qualified_with_bounded_reads(self):
+        raw = fatal_frame_raw()
+        self.assertGreater(len(raw), 32 * 1024 * 1024)
+        path = self.folder / 'system.bin'
+        path.write_bytes(raw)
+        reads = []
+        original = os.read
+        def recorded(descriptor, count):
+            reads.append(count)
+            return original(descriptor, count)
+        with patch.object(doctor.library.os, 'read', side_effect=recorded):
+            report = doctor.inspect_save('fatal_frame2_remake', path)
+        self.assertTrue(report.success, report.to_text())
+        self.assertEqual(report.size_bytes, len(raw))
+        self.assertEqual(report.sha256, hashlib.sha256(raw).hexdigest())
+        self.assertEqual(self.checks(report)['unchanged_roundtrip'].status, 'passed')
+        self.assertEqual(self.checks(report)['source_unchanged'].status, 'passed')
+        self.assertTrue(reads)
+        self.assertLessEqual(max(reads), 65536)
+        self.assertEqual(path.read_bytes(), raw)
+        report = doctor.inspect_save('fatal_frame2_remake', path, max_file_bytes=32 * 1024 * 1024)
+        self.assertEqual(report.status, 'oversized')
 
     def ps3_copy(self):
         path = self.folder / 'DATA.BIN'

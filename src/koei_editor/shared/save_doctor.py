@@ -16,7 +16,9 @@ from koei_editor.shared.copy_storage import atomic_new
 from koei_editor.shared import save_library as library
 from koei_editor.shared.save_safety import safe_path
 
-MAX_FILE_BYTES = 32 * 1024 * 1024
+# The registered Fatal Frame II remake system profile is 61,851,984 bytes.
+# Keep a fixed bound that admits every existing profile, including that save.
+MAX_FILE_BYTES = 64 * 1024 * 1024
 NOTES = (
     'Read-only inspection of a separate save copy; no repairs or game-load test were performed.',
     'Qualification covers only the explicitly selected game/platform and the revisions implemented by its adapter.',
@@ -111,7 +113,7 @@ def inspect_save(game_id, path, *, expected_sha256=None, max_file_bytes=MAX_FILE
     if game not in GAMES:
         raise SaveError('Choose an explicitly registered game/platform for Save Doctor.')
     if type(max_file_bytes) is not int or not 1 <= max_file_bytes <= MAX_FILE_BYTES:
-        raise SaveError('Save Doctor requires a bounded file limit of 1 to 32 MiB.')
+        raise SaveError('Save Doctor requires a bounded file limit of 1 to 64 MiB.')
     if expected_sha256 is not None:
         if type(expected_sha256) is not str or re.fullmatch('[0-9a-fA-F]{64}', expected_sha256) is None:
             raise SaveError('Expected SHA-256 must contain exactly 64 hexadecimal characters.')

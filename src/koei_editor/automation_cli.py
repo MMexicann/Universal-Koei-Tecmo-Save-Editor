@@ -6,6 +6,7 @@ are deliberately excluded; stable error codes and operation IDs are scriptable.
 import argparse
 import json
 from pathlib import Path
+import stat
 import sys
 
 from koei_editor.game_registry import get_game
@@ -100,6 +101,27 @@ def _fields(arguments):
             'source_sha256': document.sha256, 'fields': fields}
 
 
+def _backup_root(path):
+    # Check the literal native namespace before resolving it. On Windows a
+    # dangling directory symlink/junction can survive non-strict resolve() and
+    # later point into a journal once that new directory has been created.
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        info = None  # Native writers may create an ordinary new backup folder.
+    except OSError as error:
+        raise SaveError('The native automatic backup folder could not be qualified.') from error
+    if info is not None and (
+            not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode)
+            or getattr(info, 'st_file_attributes', 0)
+            & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400)):
+        raise SaveError('Native automatic backup folders must be ordinary unlinked directories.')
+    resolved = safe_path(path)
+    if resolved != path:
+        raise SaveError('The native automatic backup folder changed identity during review.')
+    return resolved
+
+
 def _run(arguments):
     if arguments.command == 'build':
         return _build(arguments)
@@ -134,7 +156,7 @@ def _run(arguments):
         # roots. Journal metadata must never share that namespace, including
         # a backup-root symlink resolving to the proposed journal directory.
         for name in ('WarriorsEditorBackups', 'UniversalEditorBackups', 'OriginsEditorBackups'):
-            backup_root = safe_path(job.spec.source.parent / name)
+            backup_root = _backup_root(job.spec.source.parent / name)
             if journal_folder == backup_root or journal_folder in backup_root.parents:
                 raise SaveError('Keep the journal folder separate from native automatic backup folders.')
     jobs = tuple(JournalJob(job.spec.id, job.adapter.game_id, job.document.sha256,

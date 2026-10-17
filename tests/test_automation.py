@@ -5,7 +5,9 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import stat
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -299,6 +301,97 @@ class AutomationTests(unittest.TestCase):
         self.assertFalse(alias_target.exists())
         self.assertFalse((self.folder / 'edited.dat').exists())
 
+    def test_unresolved_native_backup_reparse_is_rejected_before_journal_creation(self):
+        # Windows can return a literal path for a dangling final directory
+        # reparse point. Model that result without requiring symlink privileges.
+        plan = self.folder / 'plan.json'
+        plan.write_text(json.dumps({'schema_version': 1, 'workflow': engine.workflow_data(self.workflow),
+                                    'jobs': [{'id': 'save', 'source': self.sources[0].name,
+                                              'destination': 'edited.dat'}]}))
+        code, preview = self.cli('preview', str(plan))
+        self.assertEqual(code, 0, preview)
+        parent = self.adapter.read_save(self.sources[0]).source.parent
+        backup = parent / 'WarriorsEditorBackups'
+        actual_lstat, actual_safe_path = Path.lstat, automation_cli.safe_path
+        for kind, mode, attributes in (('symlink', stat.S_IFLNK, 0),
+                                        ('reparse', stat.S_IFDIR, 0x400)):
+            with self.subTest(kind=kind):
+                journal = parent / ('innocent-journal-' + kind)
+                def unresolved(path):
+                    return backup if Path(path) == backup else actual_safe_path(path)
+                def metadata(path, *args, **kwargs):
+                    if path == backup:
+                        return SimpleNamespace(st_mode=mode, st_file_attributes=attributes)
+                    return actual_lstat(path, *args, **kwargs)
+                with patch.object(automation_cli, 'safe_path', unresolved), \
+                        patch.object(Path, 'lstat', metadata), \
+                        patch.object(BoundScalarAdapter, 'save_as',
+                                     side_effect=AssertionError('Native save must not start.')) as writer:
+                    code, result = self.cli('apply', str(plan), '--review-token', preview['review_token'],
+                                            '--journal', str(journal))
+                self.assertEqual(code, 2, result)
+                self.assertEqual(result['status'], 'rejected')
+                writer.assert_not_called()
+                self.assertFalse(journal.exists())
+                self.assertFalse(backup.exists())
+                self.assertFalse((parent / 'edited.dat').exists())
+                self.assertEqual(self.sources[0].read_bytes(), procedural_raw())
+
+    def test_unverifiable_or_non_directory_backup_root_rejects_before_journal(self):
+        plan = self.folder / 'plan.json'
+        plan.write_text(json.dumps({'schema_version': 1, 'workflow': engine.workflow_data(self.workflow),
+                                    'jobs': [{'id': 'save', 'source': self.sources[0].name,
+                                              'destination': 'edited.dat'}]}))
+        code, preview = self.cli('preview', str(plan))
+        self.assertEqual(code, 0, preview)
+        parent = self.adapter.read_save(self.sources[0]).source.parent
+        backup = parent / 'WarriorsEditorBackups'
+        journal = parent / 'journal'
+        actual_lstat = Path.lstat
+        for error in (PermissionError('private-player-path'), OSError('private-player-path')):
+            with self.subTest(error=type(error).__name__):
+                def inaccessible(path, *args, **kwargs):
+                    if path == backup:
+                        raise error
+                    return actual_lstat(path, *args, **kwargs)
+                with patch.object(Path, 'lstat', inaccessible), \
+                        patch.object(BoundScalarAdapter, 'save_as') as writer:
+                    code, result = self.cli('apply', str(plan), '--review-token', preview['review_token'],
+                                            '--journal', str(journal))
+                self.assertEqual(code, 2, result)
+                self.assertEqual(result['error_code'], 'validation_failed')
+                self.assertNotIn('private-player-path', json.dumps(result))
+                writer.assert_not_called()
+                self.assertFalse(journal.exists())
+        backup.write_bytes(b'existing ordinary file')
+        with patch.object(BoundScalarAdapter, 'save_as') as writer:
+            code, result = self.cli('apply', str(plan), '--review-token', preview['review_token'],
+                                    '--journal', str(journal))
+        self.assertEqual(code, 2, result)
+        writer.assert_not_called()
+        self.assertEqual(backup.read_bytes(), b'existing ordinary file')
+        self.assertFalse(journal.exists())
+        self.assertFalse((parent / 'edited.dat').exists())
+        self.assertEqual(self.sources[0].read_bytes(), procedural_raw())
+
+    def test_existing_ordinary_backup_folder_allows_separate_journal(self):
+        plan = self.folder / 'plan.json'
+        plan.write_text(json.dumps({'schema_version': 1, 'workflow': engine.workflow_data(self.workflow),
+                                    'jobs': [{'id': 'save', 'source': self.sources[0].name,
+                                              'destination': 'edited.dat'}]}))
+        code, preview = self.cli('preview', str(plan))
+        self.assertEqual(code, 0, preview)
+        backup = self.folder / 'WarriorsEditorBackups'
+        backup.mkdir()
+        journal = self.folder / 'journal'
+        code, result = self.cli('apply', str(plan), '--review-token', preview['review_token'],
+                                '--journal', str(journal))
+        self.assertEqual(code, 0, result)
+        self.assertTrue((journal / '000002.json').is_file())
+        self.assertTrue(any(backup.iterdir()))
+        self.assertTrue((self.folder / 'edited.dat').is_file())
+        self.assertEqual(self.sources[0].read_bytes(), procedural_raw())
+
     def test_crashed_intent_inspection_blocks_absent_and_accepts_native_output(self):
         from koei_editor.shared.automation_journal import RunJournal
         batch = engine.prepare(self.workflow, self.specs[:1])
@@ -407,21 +500,33 @@ class AutomationTests(unittest.TestCase):
 
     def test_final_receipt_reopens_earlier_completed_outputs(self):
         batch = engine.prepare(self.workflow, self.specs[:2])
+        # Keep native inputs ordinary, then model different raw fixture
+        # spellings. Windows temporary folders may use 8.3 aliases before
+        # preparation; callbacks must compare the prepared canonical paths.
+        alias = self.folder / 'parent-alias'
+        self.specs = tuple(replace(spec, destination=alias / '..' / spec.destination.name)
+                           for spec in self.specs)
+        first, second = (job.spec for job in batch.jobs)
+        self.assertNotEqual(second.destination, self.specs[1].destination)
         original = BoundScalarAdapter.save_as
+        mutations = []
         def save_then_change_earlier(adapter, document, pending, destination):
             result = original(adapter, document, pending, destination)
-            if destination == self.specs[1].destination:
+            if destination == second.destination:
                 # An external tool replaces the first output with another
                 # native-valid copy; integrity checks alone cannot detect it.
-                self.specs[0].destination.write_bytes(procedural_raw())
+                self.assertNotEqual(first.destination.read_bytes(), procedural_raw())
+                first.destination.write_bytes(procedural_raw())
+                mutations.append(first.destination)
             return result
         with patch.object(BoundScalarAdapter, 'save_as', save_then_change_earlier):
             result = engine.apply(batch, batch.review_token)
+        self.assertEqual(mutations, [first.destination], 'The external mutation must actually run.')
         self.assertFalse(result['success'])
         self.assertEqual([row['status'] for row in result['jobs']],
                          ['verification_failed', 'completed'])
         self.assertEqual(result['jobs'][0]['error_code'], 'completed_output_changed')
-        self.assertEqual(self.specs[0].destination.read_bytes(), procedural_raw())
+        self.assertEqual(first.destination.read_bytes(), procedural_raw())
 
 
 if __name__ == '__main__':

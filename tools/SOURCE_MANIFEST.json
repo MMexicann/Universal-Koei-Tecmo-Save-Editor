@@ -5743,8 +5743,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32683,
-      "sha256": "e8ab689559f0ea534b8bf58211e326b1b9e7af0168bcbfa6bd29bfca4fe6cb2d"
+      "bytes": 32727,
+      "sha256": "f8b4f03af4521d7375f72c10c145778dc56d866131d14a38c560b43f7e01d1d3"
     },
     {
       "path": "tools/refresh_manifest.py",

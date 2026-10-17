@@ -450,7 +450,13 @@ class SaveVaultTests(unittest.TestCase):
 
     def test_nonportable_save_name_cannot_poison_existing_vault(self):
         record = self.snapshot()
-        for name in ('CON.bin', 'trailing.bin.', 'bad:name.bin'):
+        # Windows rejects ':' at rename itself, before an editor can inspect
+        # the file. Keep both constructible Windows cases; POSIX also exercises
+        # rejection of a colon-bearing file that its filesystem can create.
+        names = ('CON.bin', 'trailing.bin.')
+        if os.name != 'nt':
+            names += ('bad:name.bin',)
+        for name in names:
             renamed = self.source.with_name(name)
             self.source.rename(renamed)
             try:
@@ -655,14 +661,31 @@ class SaveVaultTests(unittest.TestCase):
         sibling.mkdir()
         alias_root = sibling / '..' / self.store.root.name
         destination = alias_root / 'objects' / 'not-an-id'
-        with self.assertRaisesRegex(SaveError, 'outside the vault'):
-            self.store.restore(record.id, destination)
-        self.assertFalse(destination.exists())
         source = alias_root / 'objects' / record.id / record.filename
-        with self.assertRaisesRegex(SaveError, 'outside the vault'):
-            self.store.snapshot(parser.GAME_ID, source)
-        reopened = vault.SaveVault(alias_root)
-        self.assertEqual(reopened.root, self.store.root)
+        original_index = (self.store.root / 'index.json').read_bytes()
+        original_objects = set(self.store.objects.rglob('*'))
+        for operation in (lambda: self.store.restore(record.id, destination),
+                          lambda: self.store.snapshot(parser.GAME_ID, source)):
+            # Windows rejects the lexical '..' at its ordinary-name guard;
+            # POSIX reaches canonical containment. Both must reject safely.
+            with (
+                patch.object(self.store, '_save', side_effect=AssertionError('Unsafe paths must not rewrite the vault index')),
+                patch.object(vault, '_new', side_effect=AssertionError('Unsafe paths must not create save or object files')),
+            ):
+                with self.assertRaises(SaveError):
+                    operation()
+            self.assertFalse(destination.exists())
+            self.assertEqual((self.store.root / 'index.json').read_bytes(), original_index)
+            self.assertEqual(set(self.store.objects.rglob('*')), original_objects)
+        if os.name == 'nt':
+            with self.assertRaises(SaveError):
+                vault.SaveVault(alias_root)
+            self.assertEqual((self.store.root / 'index.json').read_bytes(), original_index)
+            self.assertEqual(set(self.store.objects.rglob('*')), original_objects)
+            reopened = vault.SaveVault(alias_root.resolve())
+        else:
+            reopened = vault.SaveVault(alias_root)
+        self.assertTrue(reopened.root.samefile(self.store.root))
         self.assertEqual(reopened.list_snapshots(), (record,))
         self.assertTrue(reopened.verify(record.id)[0].valid)
 

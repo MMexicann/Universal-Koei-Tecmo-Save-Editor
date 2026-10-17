@@ -5278,8 +5278,8 @@
     },
     {
       "path": "tests/test_save_vault.py",
-      "bytes": 38778,
-      "sha256": "2ae017af4c30b1f66b591b6edd14a7b53bc0439ca0d60acbb54e54ff9afdd113"
+      "bytes": 40208,
+      "sha256": "7c2d94e118eba64f533cebfaca82768287464f62c0b5135e145b427c78d2e748"
     },
     {
       "path": "tests/test_scalar_bulk_actions.py",

@@ -551,7 +551,7 @@ class Application(Appearance):
 
     def close(self):
         tools = self._tool_workspaces()
-        management = getattr(self.save_library, 'management', None)
+        management = getattr(getattr(self, 'save_library', None), 'management', None)
         if management is not None:
             tools += (management,)
         if any(tool.busy for tool in tools):

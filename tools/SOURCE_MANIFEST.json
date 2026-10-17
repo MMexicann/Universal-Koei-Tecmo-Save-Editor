@@ -1123,8 +1123,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 43991,
-      "sha256": "637972c6fd40c805f59f4a03fd64bdb65ff295e879be6da832472e09d5097449"
+      "bytes": 44009,
+      "sha256": "d55a15db558dafd509aac659e115f7bef95f1001883208ff4d024bc3d086e292"
     },
     {
       "path": "src/koei_editor/conversion.py",

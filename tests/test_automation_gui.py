@@ -1,6 +1,7 @@
 """Code-free workflow construction, grouped dependencies and read-only native preview."""
 from pathlib import Path
 import tempfile
+import threading
 import time
 import tkinter as tk
 import unittest
@@ -162,6 +163,23 @@ class WorkflowGuiTests(unittest.TestCase):
         error.assert_called_once()
         self.assertEqual(tuple(output.iterdir()), ())
         self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_native_preview_validation_stays_off_tk_thread(self):
+        field = next(iter(self.workspace._fields.values()))
+        self.field(field.id, field.value(self.workspace.document.payload))
+        self.workspace.add_operation('assert')
+        ui_thread = threading.get_ident()
+        calls = []
+        preview = automation.preview
+        def validate_in_worker(batch):
+            calls.append(threading.get_ident())
+            return preview(batch)
+        with patch('koei_editor.shared.automation_gui.automation.preview', side_effect=validate_in_worker):
+            self.workspace.preview_reference()
+            self.finish()
+        self.assertTrue(calls)
+        self.assertTrue(all(thread != ui_thread for thread in calls))
+        self.assertIn('review_token', self.workspace.summary.get('1.0', 'end'))
 
     def test_application_retains_builder_and_respects_busy_close(self):
         app = Application(self.root, persist_preferences=False)

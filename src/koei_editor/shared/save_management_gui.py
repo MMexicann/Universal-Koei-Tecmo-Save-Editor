@@ -133,13 +133,21 @@ class SaveManagementWindow:
             entry = ttk.Entry(options, textvariable=variable, width=24)
             entry.pack(side='left', padx=(0, 14))
             self.controls.append(entry)
-        self.history = ttk.Treeview(self.vault_tab, columns=('game', 'branch', 'label'), show='tree headings', height=6, selectmode='extended')
+        history_frame = ttk.Frame(self.vault_tab)
+        history_frame.pack(fill='x', pady=8)
+        self.history = ttk.Treeview(history_frame, columns=('game', 'filename', 'created_utc', 'branch', 'label'),
+                                   show='tree headings', height=6, selectmode='extended')
         self.history.heading('#0', text='Snapshot ID')
-        self.history.column('#0', width=260)
-        for name in ('game', 'branch', 'label'):
-            self.history.heading(name, text=name.title())
-            self.history.column(name, width=130)
-        self.history.pack(fill='x', pady=8)
+        self.history.column('#0', width=210, minwidth=150)
+        for name, title, width, minimum in (('game', 'Game', 110, 70), ('filename', 'Gameplay file', 150, 110),
+                                           ('created_utc', 'Created (UTC)', 230, 150),
+                                           ('branch', 'Branch', 90, 70), ('label', 'Label', 130, 90)):
+            self.history.heading(name, text=title)
+            self.history.column(name, width=width, minwidth=minimum)
+        self.history_scrollbar = ttk.Scrollbar(history_frame, orient='vertical', command=self.history.yview)
+        self.history.configure(yscrollcommand=self.history_scrollbar.set)
+        self.history.pack(side='left', fill='x', expand=True)
+        self.history_scrollbar.pack(side='right', fill='y')
         actions = ttk.Frame(self.vault_tab)
         actions.pack(fill='x')
         self._button(actions, 'Restore to new folder…', self.restore)
@@ -245,7 +253,7 @@ class SaveManagementWindow:
                 raise ValueError('A known SHA-256 digest applies to one selected copy at a time.')
             def complete(reports):
                 self.doctor_reports = reports
-                self._set_output(self.doctor_output, '\n\n'.join(f'Copy {index + 1}\n{report.to_text()}' for index, report in enumerate(reports)))
+                self._set_output(self.doctor_output, '\n\n'.join(f'Copy {index + 1}: {paths[index].name}\n{report.to_text()}' for index, report in enumerate(reports)))
             self._start(lambda: tuple(inspect_save(game, path, expected_sha256=digest) for path in paths), complete)
         self._invoke(prepare)
 
@@ -290,7 +298,7 @@ class SaveManagementWindow:
         self.history.delete(*self.history.get_children())
         for item in snapshots:
             self.history.insert('', 'end', iid=item.id, text=item.id,
-                                values=(item.game_id, item.branch, item.label))
+                                values=(item.game_id, item.filename, item.created_utc, item.branch, item.label))
         self.history.selection_set(tuple(item for item in selected if self.history.exists(item)))
         self._set_output(self.vault_output, f'{len(snapshots)} local snapshots. Select a snapshot to restore or manage it.')
 

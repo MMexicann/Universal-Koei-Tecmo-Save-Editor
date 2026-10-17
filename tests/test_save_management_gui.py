@@ -62,13 +62,15 @@ class SaveManagementGuiTests(unittest.TestCase):
         self.finish(manager)
         self.assertTrue(manager.doctor_reports[0].success)
         self.assertIn('byte-for-byte', manager.doctor_output.get('1.0', 'end'))
-        self.assertNotIn(self.source.name, manager.doctor_output.get('1.0', 'end'))
+        self.assertIn(f'Copy 1: {self.source.name}', manager.doctor_output.get('1.0', 'end'))
         report = self.folder / 'report.json'
         with patch('koei_editor.shared.save_management_gui.filedialog.asksaveasfilename', return_value=str(report)):
             manager.export_doctor()
             self.finish(manager)
         self.assertTrue(json.loads(report.read_bytes())[0]['success'])
         original = report.read_bytes()
+        self.assertNotIn(self.source.name.encode(), original)
+        self.assertNotIn(str(self.folder).encode(), original)
         with patch('koei_editor.shared.save_management_gui.filedialog.asksaveasfilename', return_value=str(report)), \
                 patch('koei_editor.shared.save_management_gui.messagebox.showerror') as error:
             manager.export_doctor()
@@ -102,6 +104,18 @@ class SaveManagementGuiTests(unittest.TestCase):
         self.finish(manager)
         self.assertEqual(len(manager.doctor_reports), 2)
         self.assertTrue(all(report.success for report in manager.doctor_reports))
+        local_report = manager.doctor_output.get('1.0', 'end')
+        for index, path in enumerate(manager.paths):
+            self.assertIn(f'Copy {index + 1}: {path.name}', local_report)
+        exported = self.folder / 'multi-report.json'
+        with patch('koei_editor.shared.save_management_gui.filedialog.asksaveasfilename', return_value=str(exported)):
+            manager.export_doctor()
+            self.finish(manager)
+        exported_reports = json.loads(exported.read_bytes())
+        self.assertEqual(len(exported_reports), 2)
+        self.assertTrue(all(report['success'] for report in exported_reports))
+        for private in (self.source.name, second.name, str(self.folder)):
+            self.assertNotIn(private.encode(), exported.read_bytes())
         vault_path = self.folder / 'vault'
         SaveVault.create(vault_path)
         manager.vault_path.set(str(vault_path))
@@ -109,6 +123,15 @@ class SaveManagementGuiTests(unittest.TestCase):
         self.finish(manager)
         ids = manager.history.get_children()
         self.assertEqual(len(ids), 2)
+        snapshots = {item.id: item for item in SaveVault(vault_path).list_snapshots()}
+        self.assertEqual({manager.history.set(snapshot_id, 'filename') for snapshot_id in ids},
+                         {self.source.name, second.name})
+        for snapshot_id in ids:
+            self.assertEqual(manager.history.set(snapshot_id, 'created_utc'), snapshots[snapshot_id].created_utc)
+            self.assertEqual(manager.history.item(snapshot_id, 'text'), snapshot_id)
+        self.assertEqual(manager.history.heading('created_utc')['text'], 'Created (UTC)')
+        self.assertTrue(manager.history.cget('yscrollcommand'))
+        self.assertEqual(str(manager.history_scrollbar.cget('orient')), 'vertical')
         manager.history.selection_set(ids)
         manager.compare()
         self.finish(manager)

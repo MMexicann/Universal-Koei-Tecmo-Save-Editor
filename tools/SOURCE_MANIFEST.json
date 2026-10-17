@@ -3743,8 +3743,8 @@
     },
     {
       "path": "src/koei_editor/shared/preset_library.py",
-      "bytes": 4940,
-      "sha256": "968538b3c8e473ac5e9736d1abd0f033d84e28d2244366218796057a6498fd85"
+      "bytes": 5050,
+      "sha256": "fbd51c77556b29fba2b8834e01b00062071911a7401715cc024ca95191d91410"
     },
     {
       "path": "src/koei_editor/shared/preset_portability.py",
@@ -4093,8 +4093,8 @@
     },
     {
       "path": "tests/test_compatible_presets.py",
-      "bytes": 18905,
-      "sha256": "f4514e160d6583640183b935a7f20cbb148689114520d155d2da616b913d09bb"
+      "bytes": 19548,
+      "sha256": "7687772fd9972a3c200da360c659b3591fca73cad092f304cc157669a5bb85d9"
     },
     {
       "path": "tests/test_compatible_presets_gui.py",
@@ -4933,8 +4933,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 30924,
-      "sha256": "9d0043a9a61652e202eda824c60c4d5f212ae3680d0f8732ccff00157d85b11e"
+      "bytes": 31419,
+      "sha256": "00f2a9f149e7f182466a3e881f06bc2a5f340a97662adf68cd3631aefa5b70b5"
     },
     {
       "path": "tests/test_parallel_runner.py",
@@ -5733,8 +5733,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32593,
-      "sha256": "62a459e56b18b04cd6c58b7534484220b138caab756157f47b486a5a38216825"
+      "bytes": 32683,
+      "sha256": "e8ab689559f0ea534b8bf58211e326b1b9e7af0168bcbfa6bd29bfca4fe6cb2d"
     },
     {
       "path": "tools/refresh_manifest.py",

@@ -328,6 +328,20 @@ class PresetLibraryTests(unittest.TestCase):
         with self.assertRaises(SaveError):
             self.library.save(self.preset)
 
+    def test_dangling_preset_identity_symlink_cannot_create_an_external_file(self):
+        entry = self.library.save(self.preset)
+        entry.path.unlink()
+        target = self.folder / 'outside-library.json'
+        try:
+            entry.path.symlink_to(target)
+        except OSError as error:
+            self.skipTest(f'Symlink unavailable: {error}')
+        self.assertFalse(entry.path.exists())
+        with self.assertRaises(SaveError):
+            self.library.save(self.preset)
+        self.assertTrue(entry.path.is_symlink())
+        self.assertFalse(target.exists(), 'Saving preset metadata followed a dangling library link')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -177,6 +177,11 @@
       "sha256": "8a06e691d8280e3a0f30cbb8c7426bface878b7f5694fffe9689333d6c963aa0"
     },
     {
+      "path": "docs/COMMUNITY_PLUGINS.md",
+      "bytes": 8340,
+      "sha256": "4f2e98a779fb5810a1c713c1cf8c45c8a9857a240f34ff87fdb3d4c4acce4114"
+    },
+    {
       "path": "docs/COMPATIBILITY_FIX.md",
       "bytes": 2553,
       "sha256": "ad7360798778300d7261dbbd4745d96e3966d7e8466eb7bd68d0154e0bc4eff8"
@@ -633,8 +638,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13943,
-      "sha256": "e3a8086e8913d9c3a05b60e420db62c4c958f9bd1d5e52909a4560c160245885"
+      "bytes": 14008,
+      "sha256": "51205b604a863612390f34eb7b838001a5ae7c5add4bea35e80d74e6ce708573"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -3542,6 +3547,11 @@
       "sha256": "48d5d3fea04ef087b3cd95527f12556ef4f1ca8d5bc13853887cd31fa8e5b409"
     },
     {
+      "path": "src/koei_editor/shared/community_plugins.py",
+      "bytes": 13971,
+      "sha256": "b5546538a12bf01a6723687c77ef11aa88b0ac66c0cb6287437dc8dc407003c1"
+    },
+    {
       "path": "src/koei_editor/shared/comparison_gui.py",
       "bytes": 10242,
       "sha256": "7fc0df7bdccc1e971b056fcfec60ba5cee0966754b9f77ced4aee98508d5b006"
@@ -3585,6 +3595,11 @@
       "path": "src/koei_editor/shared/plain_ps3.py",
       "bytes": 7210,
       "sha256": "9c068741f15f4f2326b2920ebba48d2d1dafb499f35223af28bc6b858a3b486c"
+    },
+    {
+      "path": "src/koei_editor/shared/plugin_gui.py",
+      "bytes": 12668,
+      "sha256": "dfcb9a8792f338242a1b8a3ea6279f559d0b0757690e989cdb4b6b9467ceacaa"
     },
     {
       "path": "src/koei_editor/shared/preferences.py",
@@ -3810,6 +3825,16 @@
       "path": "tests/test_collections_v085.py",
       "bytes": 5784,
       "sha256": "2c83c3997de0961f752d8b3ca2c776274d932138a4d55956007e6b6b55e629b4"
+    },
+    {
+      "path": "tests/test_community_plugins.py",
+      "bytes": 15155,
+      "sha256": "d7af21620160480f1bccd26f825998740cbb202d41b804f389e3daa3021087d8"
+    },
+    {
+      "path": "tests/test_community_plugins_gui.py",
+      "bytes": 5325,
+      "sha256": "1d843cc01793d0e699a7bbae3968a84a822119b0d436a1d6bd3d3623ff2441de"
     },
     {
       "path": "tests/test_companion_backup_retention.py",
@@ -5292,14 +5317,24 @@
       "sha256": "2f444269b9bc2f3cf1272d2cd6701668ad49150f09d5e2630fc867a82144b6f8"
     },
     {
+      "path": "tools/check_community_plugins.py",
+      "bytes": 1500,
+      "sha256": "fa8336bf79891839882e721593941914d629bd6f09c230144be5913056e608a8"
+    },
+    {
+      "path": "tools/community_plugin_template/example.plugin.json",
+      "bytes": 2997,
+      "sha256": "b78174e9b3a540481467e62ae9a061f1cf61ce41e8a6f53f0694d3a4ad50e8a7"
+    },
+    {
       "path": "tools/inspect_candidate.py",
       "bytes": 1032,
       "sha256": "dcc217a1db8361e88197c6217221f8b30130770eefb804099cbcb61a474ef94d"
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32139,
-      "sha256": "d284ac2882c511a1947bf85cf5f2e1c71e5649452bc5f75b57f613ac12e46cc6"
+      "bytes": 32244,
+      "sha256": "b83c14d1e144b75ec799504e5854094b31bded28c72883f66bb571067eea72e2"
     },
     {
       "path": "tools/refresh_manifest.py",

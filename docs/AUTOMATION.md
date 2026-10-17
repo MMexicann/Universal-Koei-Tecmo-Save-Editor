@@ -169,7 +169,6 @@ requires it. Never serialize bytes directly to a save destination.
 JSON workflow documents supply data only: no Python imports, scripts, arbitrary
 offsets, shell commands or unvalidated converter selections. Existing
 [conversion CLI and batch queues](BATCH_CONVERSION.md) remain separate scoped
-workflows with their own reviewed routes. Benchmark and reproducibility guidance
-is in [AUTOMATION_BENCHMARKS.md](AUTOMATION_BENCHMARKS.md). Public generated fixtures
+workflows with their own reviewed routes. Public generated fixtures
 exercise invariants; they do not establish genuine-file qualification or edited
 in-game load/re-save success.

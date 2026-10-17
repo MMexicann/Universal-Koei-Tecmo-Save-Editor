@@ -92,6 +92,11 @@
       "sha256": "aa8fc67f97b1789e6f8d128df19db7a60ba182be2bca0c1f92917f6ace295043"
     },
     {
+      "path": "docs/AUTOMATION.md",
+      "bytes": 9210,
+      "sha256": "49e4ae887bcf247b42e75ea1f0dc544f42c77e7019ab1ed444e67012218a0256"
+    },
+    {
       "path": "docs/AYESHA_PS3_FORMAT.md",
       "bytes": 9157,
       "sha256": "04a0edf20c50f83b8b1ac0e61a62f5cb737a9e0d3a1d49614a3509f14df442f8"
@@ -633,8 +638,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13943,
-      "sha256": "e3a8086e8913d9c3a05b60e420db62c4c958f9bd1d5e52909a4560c160245885"
+      "bytes": 14024,
+      "sha256": "d2e54cab00ce9a81d308b94af64377a2408e878adbc847462e10a87b2330cd66"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -1118,8 +1123,13 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 43672,
-      "sha256": "dd802d03ab3622b1a808c5e3f5c11c3be16ee4d0b0f2a389a9ee72a59b485cc8"
+      "bytes": 45142,
+      "sha256": "17602b55b560a940f1d30191dc6d7af4d6ebf0d9ed3d34e5c5483fe31e4d6300"
+    },
+    {
+      "path": "src/koei_editor/automation_cli.py",
+      "bytes": 7852,
+      "sha256": "f67fb610d499289dd56b842ed48650d47c6f1f75daa1cbe1fd35b78ca7f5046c"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -3532,6 +3542,16 @@
       "sha256": "c2570b23e152a9fa84dfc2ac8e2d00305660f1b7608e210f2f29fec3569da011"
     },
     {
+      "path": "src/koei_editor/shared/automation.py",
+      "bytes": 20517,
+      "sha256": "62a1562b391ce79615cfcaaf9e92099d3ebd60537851dff083e9eae2a058b1b5"
+    },
+    {
+      "path": "src/koei_editor/shared/automation_gui.py",
+      "bytes": 18108,
+      "sha256": "1b5a00952626c93a4080617dad60fd52396630471ea89257bf319a3eba9d0a51"
+    },
+    {
       "path": "src/koei_editor/shared/automation_journal.py",
       "bytes": 13326,
       "sha256": "a3e9d9fa9033a18cf15610fa19063788db7893c0b9f114921be039392132a593"
@@ -3725,6 +3745,16 @@
       "path": "tests/test_atelier_sophie2_format.py",
       "bytes": 20367,
       "sha256": "b2894f707e9c4d7cbe07e2ada8206dd29173a40eef88cdeba957712a39721999"
+    },
+    {
+      "path": "tests/test_automation.py",
+      "bytes": 20825,
+      "sha256": "85f6f60d9cfee0abf418de2e8a806d934f6ca2e775a36af15da6e3b7f4d6aab2"
+    },
+    {
+      "path": "tests/test_automation_gui.py",
+      "bytes": 7942,
+      "sha256": "94dc485a8ef6ebee133cbbe53a468333c5f8525b129e781055ceaa6f844fe6aa"
     },
     {
       "path": "tests/test_automation_journal.py",

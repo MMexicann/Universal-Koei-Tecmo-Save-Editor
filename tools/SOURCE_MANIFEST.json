@@ -68,8 +68,8 @@
     },
     {
       "path": "docs/APPLICATION_SHELL.md",
-      "bytes": 4051,
-      "sha256": "8ced8904b01f655336909a59f74405b38e90b30c6426c2305aa9a523ad8fd0f2"
+      "bytes": 4516,
+      "sha256": "bf03be2a436236e3054a9f29a8faefd7a659fab680fa358db075b20ef5a96c43"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -1183,8 +1183,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 68582,
-      "sha256": "291442ecb32d46e752dd8c341be09a189003fe26dcbc28cf64ddfcf09aacaa4b"
+      "bytes": 70812,
+      "sha256": "c7a6b52ca33115b21f3c8d4eedee33b64f4d4947a166297bb379c78a447ac815"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3713,8 +3713,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 5145,
-      "sha256": "ebb704ad9c1586bdfc3f122a76fe1cbd6fd2a2aa2b7ba6a5d51c40afdaa0e50e"
+      "bytes": 5581,
+      "sha256": "88411cac8fb573eada35cf3a413c02df5290a968ae1a6922c4fa187c87589934"
     },
     {
       "path": "src/koei_editor/shared/musou_presentations.py",
@@ -3938,8 +3938,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 21953,
-      "sha256": "40d788573d555bef22f90f41dbb9d596c976f33b6b991aa643dc3e4348b0aba8"
+      "bytes": 25807,
+      "sha256": "1ccbfc18b4f119b712a97085501f7b17cd9f740fc77790e40570bfb523556448"
     },
     {
       "path": "tests/test_arland_ps3.py",

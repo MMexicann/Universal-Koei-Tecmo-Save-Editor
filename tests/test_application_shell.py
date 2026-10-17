@@ -82,6 +82,70 @@ class ApplicationShellTests(unittest.TestCase):
             self.root.destroy()
             self.directory.cleanup()
 
+    def test_active_editor_uses_one_header_row_and_restores_full_navigation(self):
+        editor = self.app.select_game('dw7xl')
+        self.root.geometry('800x680')
+        self.root.update()
+        self.assertLessEqual(self.app._shell_top.winfo_height(), 60)
+        self.assertFalse(self.app.theme_selector.winfo_ismapped())
+        for widget in (self.app.compact_home_button, self.app.compact_help_button, self.app.command_button,
+                       self.app.session_selector):
+            self.assertTrue(widget.winfo_ismapped())
+        self.app.show_library()
+        self.root.update()
+        self.assertTrue(self.app.theme_selector.winfo_ismapped())
+        self.assertTrue(self.app.converter_button.winfo_ismapped())
+        self.app.select_game('dw7xl')
+        self.app.show_help()
+        self.root.update()
+        self.assertTrue(self.app.language_selector.winfo_ismapped())
+        self.assertIs(self.app.sessions['dw7xl'][1], editor)
+
+    def test_compact_header_palette_keeps_language_text_size_and_appearance_available(self):
+        editor = self.app.select_game('dw7xl')
+        self.root.geometry('780x680')
+        for command in ('language_de', 'text_size_140', 'theme_dark'):
+            self.assertIn('command:' + command, {entry.id for entry in self.app.command_entries()})
+            self.app.execute_command('command:' + command)
+        self.root.update()
+        self.assertEqual(self.app.language, 'de')
+        self.assertEqual(self.app.shell_settings.text_size, 140)
+        self.assertEqual(self.app.theme_name.get(), 'Dark')
+        self.assertLessEqual(self.app._shell_top.winfo_height(), 70)
+        self.assertEqual(self.app.active_game, 'dw7xl')
+        self.assertIs(self.app.sessions['dw7xl'][1], editor)
+        self.assertFalse(editor.changes)
+        for widget in (self.app.compact_home_button, self.app.compact_help_button, self.app.command_button,
+                       self.app.session_selector):
+            self.assertTrue(widget.winfo_ismapped())
+            self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
+                                 self.root.winfo_rootx() + self.root.winfo_width())
+
+    def test_compact_session_switch_and_help_keep_pending_edits_and_editor_instances(self):
+        from tests.test_origins_parser import fixture
+        source = Path(self.directory.name) / 'copy.dat'
+        source.write_bytes(fixture())
+        editor = self.app.select_game('origins')
+        self.assertTrue(editor.open_path(source))
+        editor.stage_values({'gold': 4321})
+        pending, history = dict(editor.changes), list(editor.history)
+        other = self.app.select_game('dw7xl')
+        self.root.update()
+        self.assertTrue(self.app.session_selector.winfo_viewable())
+        self.app.session_choice.set(next(label for label, game_id in self.app._session_labels.items()
+                                         if game_id == 'origins'))
+        self.app.resume_session()
+        self.root.update()
+        self.assertEqual(self.app.active_game, 'origins')
+        self.assertIs(self.app.sessions['origins'][1], editor)
+        self.assertIs(self.app.sessions['dw7xl'][1], other)
+        self.app.compact_help_button.invoke()
+        self.root.update()
+        self.assertTrue(self.app.help_center.frame.winfo_viewable())
+        self.assertTrue(self.app.language_selector.winfo_viewable())
+        self.assertEqual((editor.changes, editor.history), (pending, history))
+        self.assertEqual(source.read_bytes(), fixture())
+
     def test_palette_keyboard_search_open_and_escape_restore_focus(self):
         self.app.library_search_entry.focus_force()
         self.root.update()
@@ -270,8 +334,10 @@ class ApplicationShellTests(unittest.TestCase):
                 self.app.apply_theme(theme)
                 self.root.update()
                 for widget in (self.app.command_button, self.app.compact_home_button,
+                               self.app.compact_help_button, self.app.session_selector,
                                self.app.shell_controls_button):
                     self.assertTrue(widget.winfo_viewable())
+                    self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
                     self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
                     self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
                                          self.root.winfo_rootx() + 800)
@@ -280,8 +346,10 @@ class ApplicationShellTests(unittest.TestCase):
 
                 for widget in (*self.app._navigation_buttons, self.app.theme_selector,
                                self.app.language_selector, self.app.text_size_selector,
+                               self.app.session_selector,
                                self.app.shell_controls_button):
                     self.assertTrue(widget.winfo_viewable())
+                    self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
                     self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
                                          self.root.winfo_rootx() + 800)
                 self.app.shell_controls_button.invoke()

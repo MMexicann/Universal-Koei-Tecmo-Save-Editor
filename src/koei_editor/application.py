@@ -106,16 +106,18 @@ class Application(Appearance):
         self.author_label = ttk.Label(location, text='Made by Mexican', style='Muted.TLabel')
         self.author_label.pack(side='right')
         self.compact_home_button = ttk.Button(top, command=self.show_library)
+        self.compact_help_button = ttk.Button(top, command=self.show_help)
         self.shell_controls_button = ttk.Button(top, command=self._toggle_shell_controls)
         self.breadcrumb.trace_add('write', self._workspace_changed)
         self._rebuild_help_menu()
         top.bind('<Configure>', self._schedule_navigation)
         root.bind('<Configure>', lambda event: self._schedule_navigation()
                   if event.widget is root else None, add='+')
-        root.bind('<Destroy>', self._cancel_navigation, add='+')
+        root.bind('<Destroy>', self._cancel_shell_callbacks, add='+')
         self.session_bar = ttk.Frame(root, padding=(18, 0, 18, 8))
         self.session_caption = tk.StringVar(root, value='Open editors')
-        ttk.Label(self.session_bar, textvariable=self.session_caption, style='Muted.TLabel').pack(side='left', padx=(0, 10))
+        self.session_caption_label = ttk.Label(self.session_bar, textvariable=self.session_caption, style='Muted.TLabel')
+        self.session_caption_label.pack(side='left', padx=(0, 10))
         self.session_choice = tk.StringVar(root)
         self.session_selector = ttk.Combobox(self.session_bar, textvariable=self.session_choice, state='readonly', width=1)
         self.session_selector.pack(side='left', fill='x', expand=True)
@@ -337,13 +339,17 @@ class Application(Appearance):
         self._shell_controls_expanded = not self._shell_controls_expanded
         self._layout_navigation()
 
-    def _cancel_navigation(self, event):
+    def _cancel_shell_callbacks(self, event):
         if event.widget is self.root:
-            for name in ('_navigation_after', '_editor_width_after'):
-                pending = getattr(self, name)
+            for name in ('_navigation_after', '_editor_width_after', '_search_after'):
+                pending = getattr(self, name, None)
                 if pending is not None:
                     self.root.after_cancel(pending)
                     setattr(self, name, None)
+
+    def _set_active_game(self, game_id):
+        self.active_game = game_id
+        self._layout_navigation()
 
     def _layout_navigation(self):
         if self._navigation_after is not None:
@@ -351,36 +357,49 @@ class Application(Appearance):
         self._navigation_after = None
         compact = (hasattr(self, 'shell_controls_button') and self.active_game is not None
                    and self.root.winfo_height() < 900)
-        self.command_button.configure(text=self.tr('commands_short' if compact else 'commands'))
+        self._compact_editor_shell = compact
+        self.command_button.configure(text=self.tr('commands_compact' if compact else 'commands'))
         if hasattr(self, '_shell_location'):
-            self._shell_top.configure(padding=(18, 2) if compact else (18, 10))
+            self._shell_top.configure(padding=(12, 2) if compact else (18, 10))
+            for column in range(5):
+                self._shell_top.columnconfigure(column, weight=1 if column == (3 if compact else 0) else 0)
             if compact:
-                self.command_button.grid_configure(columnspan=1)
+                self.command_button.grid(row=0, column=0, columnspan=1, padx=(0, 8))
                 self.compact_home_button.configure(text=self.tr('library_short'))
                 self.compact_home_button.grid(row=0, column=1, padx=(0, 8))
+                self.compact_help_button.configure(text=self.tr('help'))
+                self.compact_help_button.grid(row=0, column=2, padx=(0, 8))
                 self.shell_controls_button.configure(text=self.tr(
                     'hide_shell_controls' if self._shell_controls_expanded else 'shell_controls'))
-                self.shell_controls_button.grid(row=0, column=2, sticky='e')
+                self.shell_controls_button.grid(row=0, column=4, sticky='e')
+                if hasattr(self, 'session_bar'):
+                    self._layout_compact_sessions()
                 if not self._shell_controls_expanded:
-                    # Global controls stay one click away while the opened
-                    # editor receives the available height for its records.
+                    # Keep Home, Help, commands and retained sessions available;
+                    # the full navigation/settings drawer stays one click away.
                     for widget in (self._shell_settings_frame, self.navigation, self._shell_location):
                         widget.grid_remove()
                     return
-                self._shell_settings_frame.grid(row=1, column=0, columnspan=3, sticky='e', pady=(6, 0))
-                self.navigation.grid(row=2, column=0, columnspan=3, sticky='ew', pady=(6, 0))
-                self._shell_location.grid(row=3, column=0, columnspan=3, sticky='ew', pady=(8, 0))
+                self._shell_settings_frame.grid(row=1, column=0, columnspan=5, sticky='e', pady=(6, 0))
+                self.navigation.grid(row=2, column=0, columnspan=5, sticky='ew', pady=(6, 0))
+                self._shell_location.grid(row=3, column=0, columnspan=5, sticky='ew', pady=(8, 0))
             else:
                 self.compact_home_button.grid_remove()
+                self.compact_help_button.grid_remove()
                 self.shell_controls_button.grid_remove()
+                if hasattr(self, 'session_bar'):
+                    self.session_bar.grid_forget()
+                    self.session_bar.configure(padding=(18, 0, 18, 8))
+                    self.session_selector.configure(width=1)
+                    self.session_caption_label.pack(side='left', padx=(0, 10), before=self.session_selector)
                 needed = self.command_button.winfo_reqwidth() + self._shell_settings_frame.winfo_reqwidth() + 16
                 stacked = self._shell_top.winfo_width() < needed
-                self.command_button.grid_configure(columnspan=2 if stacked else 1)
+                self.command_button.grid(row=0, column=0, columnspan=2 if stacked else 1, padx=(0, 16))
                 self._shell_settings_frame.grid(row=1 if stacked else 0, column=0 if stacked else 1,
                                                columnspan=2 if stacked else 1, sticky='e',
                                                pady=(6, 0) if stacked else 0)
-                self.navigation.grid(row=2 if stacked else 1, columnspan=2, pady=(10, 0))
-                self._shell_location.grid(row=3 if stacked else 2, columnspan=2)
+                self.navigation.grid(row=2 if stacked else 1, column=0, columnspan=2, pady=(10, 0))
+                self._shell_location.grid(row=3 if stacked else 2, column=0, columnspan=2)
         available = max(1, self.navigation.winfo_width())
         requested = sum(button.winfo_reqwidth() + 8 for button in self._navigation_buttons)
         columns = 3 if available < requested else 6
@@ -389,6 +408,15 @@ class Application(Appearance):
             button.grid(row=row, column=column, sticky='ew', padx=(0, 8), pady=(0, 4))
         for column in range(6):
             self.navigation.columnconfigure(column, weight=1 if column < columns else 0)
+        if hasattr(self, 'session_bar'):
+            self.refresh_sessions()
+
+    def _layout_compact_sessions(self):
+        self.session_bar.pack_forget()
+        self.session_bar.configure(padding=0)
+        self.session_caption_label.pack_forget()
+        self.session_selector.configure(width=6)
+        self.session_bar.grid(in_=self._shell_top, row=0, column=3, sticky='ew', padx=(0, 8))
 
     def _rebuild_help_menu(self):
         self.help_menu.delete(0, 'end')
@@ -411,7 +439,8 @@ class Application(Appearance):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         for key in self._optional_tool_routes():
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
-        for key in ('theme_light', 'theme_dark', 'search_fields'):
+        for key in ('theme_light', 'theme_dark', 'search_fields', 'language_en', 'language_de',
+                    'text_size_100', 'text_size_120', 'text_size_140'):
             entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
         if self.active_game is not None:
             for key in ('open_copy', 'save_copy', 'save_as', 'undo', 'review'):
@@ -465,6 +494,12 @@ class Application(Appearance):
             return self.show_help(key)
         if key in ('theme_light', 'theme_dark'):
             return self.apply_theme('Light' if key == 'theme_light' else 'Dark')
+        if key in ('language_en', 'language_de'):
+            self.language_choice.set(LANGUAGES[key.removeprefix('language_')])
+            return self.change_language()
+        if key in ('text_size_100', 'text_size_120', 'text_size_140'):
+            self.text_size_choice.set(key.removeprefix('text_size_') + '%')
+            return self.change_text_size()
         if key == 'search_fields':
             return self.focus_library_search()
         methods = {'open_copy': 'open', 'save_copy': 'save_changes', 'save_as': 'save_as',
@@ -481,7 +516,7 @@ class Application(Appearance):
         self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
-        self.active_game = None
+        self._set_active_game(None)
         self.help_center.show_tab(tab)
         self.help_center.frame.pack(fill='both', expand=True)
         self.help_center.apply_theme(THEMES[self.theme_name.get()])
@@ -525,7 +560,9 @@ class Application(Appearance):
         self.session_caption.set(self.tr('open_editors', count=len(labels)))
         self.session_choice.set(current or next((label for label, key in labels.items() if key == previous),
                                                 next(iter(labels), '')))
-        if labels and not self.session_bar.winfo_manager():
+        if self.active_game is not None and self._compact_editor_shell:
+            self._layout_compact_sessions()
+        elif labels and not self.session_bar.winfo_manager():
             self.session_bar.pack(fill='x', before=self.workspace)
 
     def resume_session(self, _event=None):
@@ -703,7 +740,7 @@ class Application(Appearance):
             frame.pack_forget()
         frame, editor = self.sessions[game_id]
         frame.pack(fill='both', expand=True)
-        self.active_game = game_id
+        self._set_active_game(game_id)
         self._remember_workspace('game:' + game_id)
         self.refresh_sessions()
         self.breadcrumb.set(game.title + ' · ' + game.subtitle)
@@ -715,7 +752,7 @@ class Application(Appearance):
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
         self.library.pack(fill='both', expand=True)
-        self.active_game = None
+        self._set_active_game(None)
         self.breadcrumb.set(self.tr('choose'))
         self._remember_workspace('tool:library')
         self.show_platform()
@@ -728,7 +765,7 @@ class Application(Appearance):
         self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
-        self.active_game = None
+        self._set_active_game(None)
         self.converter.frame.pack(fill='both', expand=True)
         self.breadcrumb.set(self.tr('converter'))
         self._remember_workspace('tool:converter')
@@ -742,7 +779,7 @@ class Application(Appearance):
         self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
-        self.active_game = None
+        self._set_active_game(None)
         self.comparison.frame.pack(fill='both', expand=True)
         self.breadcrumb.set(self.tr('comparison'))
         self._remember_workspace('tool:comparison')
@@ -799,6 +836,7 @@ class Application(Appearance):
         tool.apply_theme(THEMES[self.theme_name.get()])
 
     def _hide_tools(self):
+        self._set_active_game(None)
         for tool in self._tool_workspaces():
             tool.frame.pack_forget()
 
@@ -814,7 +852,7 @@ class Application(Appearance):
         self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
-        self.active_game = None
+        self._set_active_game(None)
         batch.frame.pack(fill='both', expand=True)
         self.breadcrumb.set(self.tr('batch'))
         self._remember_workspace('tool:batch')
@@ -828,7 +866,7 @@ class Application(Appearance):
         self._hide_tools()
         for frame, _editor in self.sessions.values():
             frame.pack_forget()
-        self.active_game = None
+        self._set_active_game(None)
         self.save_library.frame.pack(fill='both', expand=True)
         self.breadcrumb.set(self.tr('save_library'))
         self._remember_workspace('tool:save_library')

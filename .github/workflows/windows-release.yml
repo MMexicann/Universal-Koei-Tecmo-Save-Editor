@@ -9,7 +9,7 @@ permissions:
 jobs:
   diagnose:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     defaults:
       run:
         shell: pwsh
@@ -31,7 +31,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Locked dependency installation failed.' }
           python -m pip install -e . --no-build-isolation
           if ($LASTEXITCODE -ne 0) { throw 'Source package installation failed.' }
-      - name: Run four regressions and three complete native GUI modules
+      - name: Run four regressions and four complete diagnostic modules
         run: |
           @'
           from pathlib import Path
@@ -85,6 +85,7 @@ jobs:
               ('tests.test_application_shell', 180, 'positive'),
               ('tests.test_scalar_workspace_gui', 180, 'positive'),
               ('tests.test_validation_toolkit', 180, 'positive'),
+              ('tests.test_parallel_runner', 180, 'positive'),
           ]
           records = []
           for index, (name, limit, expected) in enumerate(tests):

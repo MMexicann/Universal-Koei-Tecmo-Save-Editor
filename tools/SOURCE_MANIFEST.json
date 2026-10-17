@@ -323,8 +323,8 @@
     },
     {
       "path": "docs/EDIT_PRESETS.md",
-      "bytes": 4901,
-      "sha256": "c23f478c3aa15e08478f7aa01aaf97ec0d8e6a9ed4b74bdf6e4c070ff32cb568"
+      "bytes": 5111,
+      "sha256": "faa187fae89686578f293ae5a63c44979e3aff9c398cdb02a49e012832a72168"
     },
     {
       "path": "docs/EXISTING_EDITORS.md",
@@ -633,8 +633,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13943,
-      "sha256": "e3a8086e8913d9c3a05b60e420db62c4c958f9bd1d5e52909a4560c160245885"
+      "bytes": 14042,
+      "sha256": "31906beeb0dbb5adf63ecc47f86cdb511695eafd6cb021d48366be7c41358e04"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -660,6 +660,11 @@
       "path": "docs/REPOSITORY_METADATA.md",
       "bytes": 1636,
       "sha256": "5fcdd902c9a0a45b58ad79de78c00e4e168e54a2dc89b4f0b5b40db507c0f853"
+    },
+    {
+      "path": "docs/REUSABLE_PRESETS.md",
+      "bytes": 4926,
+      "sha256": "e5246afd0d0c6cb03b4ffeedbe3094d53a39737387634c80213fa3bb773ac0ef"
     },
     {
       "path": "docs/RICH_EDITOR_EXPANSION.md",
@@ -3547,6 +3552,16 @@
       "sha256": "7fc0df7bdccc1e971b056fcfec60ba5cee0966754b9f77ced4aee98508d5b006"
     },
     {
+      "path": "src/koei_editor/shared/compatible_preset_gui.py",
+      "bytes": 31045,
+      "sha256": "3a16254d6fbc2bdae93bb65b225edfc08a3c986fb717f8da3f0560804e01dc26"
+    },
+    {
+      "path": "src/koei_editor/shared/compatible_presets.py",
+      "bytes": 16603,
+      "sha256": "de7d76d7637f236a35bd3b17820659fd57bbe82f82de9842ff52f3cb9a8c8299"
+    },
+    {
       "path": "src/koei_editor/shared/conversion_gui.py",
       "bytes": 12974,
       "sha256": "0d551e57894d2f580aaef72271c5b686f0a1200a8de1fca42337fdcb003040e2"
@@ -3558,8 +3573,8 @@
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
-      "bytes": 16007,
-      "sha256": "f127bf9aab499d4442f0f635fdb0a1fdfb2400054d76e29a6f6f6ef83de43bb0"
+      "bytes": 17702,
+      "sha256": "d9f577e1af04af4fa6a7c33a2fbc5fe18ec6d43e86352a186a183fc7d27e6559"
     },
     {
       "path": "src/koei_editor/shared/experimental_limits.py",
@@ -3595,6 +3610,16 @@
       "path": "src/koei_editor/shared/preset_gui.py",
       "bytes": 13020,
       "sha256": "39a25528f9880d5181b954287a0f03a6069f3ee94a46908a5d4427aac7693bf2"
+    },
+    {
+      "path": "src/koei_editor/shared/preset_library.py",
+      "bytes": 4940,
+      "sha256": "968538b3c8e473ac5e9736d1abd0f033d84e28d2244366218796057a6498fd85"
+    },
+    {
+      "path": "src/koei_editor/shared/preset_portability.py",
+      "bytes": 3875,
+      "sha256": "75e6c218101ec4e54c8f4a1ea9c31c2c2bffb825ca87515c219d076215596431"
     },
     {
       "path": "src/koei_editor/shared/progression.py",
@@ -3825,6 +3850,16 @@
       "path": "tests/test_compatibility_v034.py",
       "bytes": 11541,
       "sha256": "8aea46a98f76daeb10a06bc74f718e9e80dd10ce3372a44246283caffa120d80"
+    },
+    {
+      "path": "tests/test_compatible_presets.py",
+      "bytes": 18905,
+      "sha256": "f4514e160d6583640183b935a7f20cbb148689114520d155d2da616b913d09bb"
+    },
+    {
+      "path": "tests/test_compatible_presets_gui.py",
+      "bytes": 11875,
+      "sha256": "e83ea142914770339d269d605dc3103d21ea9efdff2ba231a8ccf7a5cc29bde0"
     },
     {
       "path": "tests/test_console_context_regressions.py",
@@ -4113,8 +4148,8 @@
     },
     {
       "path": "tests/test_edit_presets.py",
-      "bytes": 23409,
-      "sha256": "38d737a13cb184255a470079c028ee23996b3b4686ae37275179f564c665ff8e"
+      "bytes": 24783,
+      "sha256": "57c242ed98d38df1ed3f585c2d5155142cb5027192d861f369d3c6837a28121f"
     },
     {
       "path": "tests/test_edit_presets_gui.py",

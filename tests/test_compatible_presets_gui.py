@@ -272,6 +272,33 @@ class CompatiblePresetGuiTests(unittest.TestCase):
         self.assertEqual(self.workspace._copy_sessions, {})
         self.assert_sources_preserved()
 
+    def test_partial_open_retains_qualified_copy_and_closed_target_rejects_bulk(self):
+        valid, foreign = self.folder / 'third.dat', self.folder / 'foreign.dat'
+        valid.write_bytes(fixture(gold=8888))
+        foreign.write_bytes(b'foreign native format')
+        with patch('koei_editor.shared.verified_gui.messagebox.showerror'):
+            with self.assertRaisesRegex(Exception, 'Opened 1 target copies'):
+                self.workspace.open_target_paths('origins', (valid, foreign))
+        self.assertEqual(len(self.workspace._copy_sessions), 1)
+        self.assertEqual(len(self.workspace._sessions), 3)
+        dialog = self.workspace.bulk_dialog()
+        dialog.targets.selection_set('2')
+        self.root.update()
+        self.assertTrue(dialog.prepare())
+        self.assertTrue(self.workspace.close_target(1))
+        with patch('koei_editor.shared.compatible_preset_gui.messagebox.showerror') as errors:
+            self.assertFalse(dialog.apply())
+            errors.assert_called_once()
+        dialog.window.destroy()
+        self.workspace.open_target_paths('origins', (valid,))
+        self.assertTrue(self.workspace.dirty_ok())
+        self.workspace.close()
+        self.assertEqual(self.workspace._copy_sessions, {})
+        self.workspace.on_show()
+        self.assertEqual(len(self.workspace._sessions), 2)
+        self.assertEqual(valid.read_bytes(), fixture(gold=8888))
+        self.assert_sources_preserved()
+
 
 if __name__ == '__main__':
     unittest.main()

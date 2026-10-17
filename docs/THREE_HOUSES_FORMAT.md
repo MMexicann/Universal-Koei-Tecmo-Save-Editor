@@ -85,6 +85,11 @@ are preserved as unknown records, never made writable.
 
 ## Writable fields and original ownership
 
+Development source also supports
+[qualified protagonist-name customization](GAME_SPECIFIC_EXPANSION.md#fire-emblem-three-houses--nintendo-switch)
+in both admitted profiles, preserving original native name controls and exact
+opened-name no-ops. It edits only this gameplay slot.
+
 Gold can decrease from its opened u32 value to zero. Existing ordinary convoy
 quantity can decrease to one, preserving occupancy/count and identity. Existing
 ordinary finite equipment durability can decrease to zero, preserving the item,

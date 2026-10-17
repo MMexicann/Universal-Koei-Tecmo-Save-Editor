@@ -10,5 +10,6 @@ class Editor(ScalarEditor):
     save_extension = '.bin'
     subtitle = 'Windows PC — native My Castle slot-zero save'
     summary = ('Gold, stock EXP, shared skill points, stock weapon mastery, lumber, mineral and fabric. '
+               'Edit quantities of already-held skill gems while retaining their identities and ranks. '
                'Searchable checkpoint, weapon, officer, mount and progression inspection. '
                'Keep the original steam_autocloud.vdf beside source and destination save copies.')

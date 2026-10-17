@@ -62,6 +62,18 @@ class WeaponRecord:
     upgrade: int
     traits: tuple
     trait_levels: tuple
+    instance_id: int
+    flags: tuple
+
+    @property
+    def qualification_note(self):
+        if self.weapon_id not in KNOWN_WEAPON_IDS:
+            return 'Unqualified weapon catalogue ID'
+        if self.weapon_id not in REFORGABLE_WEAPON_IDS:
+            return 'Native material flag excludes this weapon'
+        if not self.upgrade_qualified:
+            return 'Stored reinforcement exceeds supported range'
+        return 'Qualified existing reforgable weapon'
 
     @property
     def upgrade_qualified(self):
@@ -87,14 +99,16 @@ def weapon_records(payload, revision):
                                               offset + 5 + slot * 2], 'little')
                        for slot in range(6))
         result.append(WeaponRecord(index, offset, weapon_id, payload[offset + 2],
-                                   traits, tuple(payload[offset + 15:offset + 21])))
+                                   traits, tuple(payload[offset + 15:offset + 21]),
+                                   int.from_bytes(payload[offset + 21:offset + 25], 'little'),
+                                   tuple(payload[offset + 25:offset + 27])))
     return tuple(result)
 
 
 def weapon_specs(payload, revision):
     """Return origins_parser.Field keyword dictionaries for qualified records."""
     return tuple(dict(id=f'weapon_{record.index:04d}_upgrade',
-                      label=f'Weapon {record.index + 1} (ID {record.weapon_id}) upgrade',
+                      label=f'Weapon {record.index + 1} (ID {record.weapon_id}) reinforcement',
                       offset=record.offset + 2, size=1,
                       maximum=MAXIMUM_UPGRADE, minimum=0,
                       group='Weapons', slot=record.index + 1)

@@ -31,12 +31,15 @@ class Presentation(ScalarPresentation):
                 record = payload[offset + index * stride:offset + (index + 1) * stride]
                 if kind == 8:
                     if record[0]:
-                        rows.append((index, record[0]))
+                        identity, rank = divmod(index, 10)
+                        rows.append((index, identity, rank, record[0],
+                                     'Existing stack: editable' if rank else 'Rank zero: inspection only'))
                 elif record != bytes(stride) and record != b'\xff' * stride:
                     rows.append((index, stride, record[:min(stride, 16)].hex(' ')))
             if kind == 8:
-                tables.append(InspectionTable(KINDS[kind], ('Native index', 'Stored quantity'), tuple(rows),
-                    'Existing nonzero native quantities. Gem identities, unlock eligibility and learned skills are inspection only.'))
+                tables.append(InspectionTable(KINDS[kind], ('Native index', 'Gem ID', 'Rank', 'Stored quantity', 'Editing'), tuple(rows),
+                    'Existing positive stacks at ranks 1–9 can retain 1–20 gems. Gem names, new acquisition, '
+                    'rank changes, unlock eligibility and learned skills remain unavailable.'))
             else:
                 tables.append(InspectionTable(KINDS[kind], ('Native index', 'Serialized bytes', 'Raw prefix'), tuple(rows),
                     'Native record boundaries are proved. Raw words are not asserted to be IDs or editable progression.'))

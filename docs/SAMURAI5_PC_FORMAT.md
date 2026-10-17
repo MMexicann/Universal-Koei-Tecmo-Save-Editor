@@ -14,6 +14,11 @@ or modifying Steam Cloud metadata remains in force.
 
 ## Editing and mechanics
 
+Development source adds [existing acquired skill-gem quantities](GAME_SPECIFIC_EXPANSION.md#samurai-warriors),
+bounded to 1–20 at their original type/rank, with no empty-stack acquisition or
+learned-skill changes. The original owner-companion and current-checkpoint scope
+below also apply to these controls.
+
 | Mechanic | Editable scope | Native limit / dependencies |
 | --- | --- | --- |
 | Gold | Current wallet, individual edits and Max | 9,999,999; cumulative spending, achievement/reward records and older checkpoints remain separate |
@@ -21,7 +26,8 @@ or modifying Steam Cloud metadata remains in force.
 | Shared skill points | Shared spendable pool, individual edits and Max | 99,999; per-officer allocated points, acquired skills and prerequisite flags remain intact |
 | Stock weapon mastery | Shared pool, individual edits and Max | 9,999,999; officer mastery, weapon ranks and equipment restrictions are separate |
 | Lumber, mineral, fabric | Three independent building-material quantities, individual edits and Max | 9,999 each; castle rank, facilities and upgrade rewards are preserved |
-| Weapons, officers, mounts, gems | Searchable current-copy serialized-record inspection | Native boundaries are proved; unqualified words are displayed as raw prefixes or native indices rather than invented item/character identities |
+| Already held skill gems | Existing positive ranked-stack quantities 1–20, individual edits and Max | Type/rank and acquired skill state remain unchanged; no empty/rank-zero acquisition; hard stack cap applies in experimental mode |
+| Weapons, officers, mounts, remaining gem data | Searchable current-copy serialized-record inspection | Native boundaries are proved; unqualified words are displayed as raw prefixes or native indices rather than invented item/character identities |
 | Scenarios, Citadel, residence, stables, shop weapons, rewards, corps | Searchable inspection | No story completion or unknown flag writes |
 
 Max preserves existing higher values. Returning a field to its opened value

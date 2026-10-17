@@ -28,8 +28,8 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 
 | Game / edition | Platform | Implemented scope |
 | --- | --- | --- |
-| DYNASTY WARRIORS 3 — Complete Edition Remastered | Windows PC | Character progression, equipment, companions and unlocks. |
-| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · PC | Windows PC | Resources, officer stats, weapon compatibility, affinity, attribute ranks and equipped weapon order. |
+| DYNASTY WARRIORS 3 — Complete Edition Remastered | Windows PC | Character progression, owned weapon bonus transfer, filtered elements, companions and targeted gallery unlocks. |
+| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · PC | Windows PC | Resources, officer stats, weapon compatibility, affinity, existing ranked attribute replacement and equipped weapon order. |
 | DYNASTY WARRIORS 7 — Xtreme Legends Definitive Edition · PC | Windows PC | Gold, officer stats, source-witnessed weapon loadouts, learned applied-seal replacement/removal and unlearned seal-meter reductions. |
 | ONE PIECE: PIRATE WARRIORS 3 — Windows PC edition | Windows PC | Individual or bulk character stats, special bars and skill slots. |
 | ONE PIECE: PIRATE WARRIORS 4 — Windows PC · WW/JP/EA revision 15 | Windows PC | Beli, existing obtained coin quantities and searchable resource history. |
@@ -38,8 +38,8 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | ATELIER SOPHIE — Original Steam PC · GAMEDATA slots | Windows PC | Cole, Tess tickets and existing basket/container quality; searchable inventory and alchemy progression. |
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Steam PC | Windows PC | Ordinary item/equipment quality from 1–100 and qualified unspent skill-tree SP reductions; inventory inspection. |
 | FATAL FRAME II — Crimson Butterfly REMAKE · Steam PC | Windows PC | Shared system Photo Point reductions; per-slot inventory, camera and collection inspection. |
-| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, provincial peace, weapon upgrades and battle history; stored proficiency/Battle Art inspection. |
-| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, resources, weapon attributes, compatibility reset, owned ordinary-item equipment and two owned-mount loadouts. |
+| DYNASTY WARRIORS: ORIGINS — Steam PC · slot saves | Windows PC | Gold, Skill Points, bonds, targeted training counts, precise provincial peace, weapon upgrades and battle history; proficiency/Battle Art inspection. |
+| WARRIORS OROCHI 3 ULTIMATE — Definitive Edition · PC | Windows PC | Officer stats, gems, rare crystals, weapon attributes, conservative raw compatibility, owned ordinary-item equipment and two owned-mount loadouts. |
 | WARRIORS OROCHI — Original Windows PC · save revision 2 | Windows PC | Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection. |
 | SAMURAI WARRIORS 4 DX — Windows PC edition | Windows PC | Gold, gems, officers, existing weapons and attached skills. |
 | SAMURAI WARRIORS 4-II — Windows PC edition | Windows PC | Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection. |
@@ -59,7 +59,7 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | ATELIER RYZA 3 DX — Alchemist of the End & the Secret Key · Steam PC revision 4 | Windows PC | Unspent skill-tree SP and gem reductions for rebuilding/duplication; searchable inventory, secret-key and Party records. |
 | WARRIORS OROCHI 4 — Original Windows PC · revision 20180720 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points, existing weapon elements and Skill Orb reductions; searchable records. |
 | WARRIORS OROCHI 4 ULTIMATE — Windows PC · revision 20200101 | Windows PC | Gems, Crystals, Growth Points, officer Skill Points and Upgrade Stones, existing Skill Orbs and attribute inventory; searchable progression and weapons. |
-| SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and building materials; searchable officers, weapons and mounts. |
+| SAMURAI WARRIORS 5 — Windows PC · revision 39 castle/menu slot zero | Windows PC | Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery, building materials and held skill-gem quantities; searchable officers, weapons and mounts. |
 | WARRIORS: ABYSS — Windows PC · revision A4 gameplay slots | Windows PC | Karma Embers and searchable persistent recruitment records; preserves original Steam owner context. |
 | ATELIER FIRIS — The Alchemist and the Mysterious Journey · original Steam PC | Windows PC | Cole deductions and qualified existing ordinary basket/container quality reductions; searchable inventory. |
 | BLUE REFLECTION: SECOND LIGHT — Original Steam PC · native tagged gameplay profile | Windows PC | Existing uniquely identified ordinary container quantity reductions; searchable inventory records. |
@@ -114,7 +114,7 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | HYRULE WARRIORS: AGE OF CALAMITY — Switch · svdt | Nintendo Switch | Rupees, discovered materials, trophies and reports; existing weapon protection and inspection. |
 | FIRE EMBLEM WARRIORS — Switch · scenario0/1/2 exports | Nintendo Switch | Gold, existing ordinary materials, generic weapon stars and ordinary seal KO counters; named inspection. |
 | FIRE EMBLEM WARRIORS: THREE HOPES — Switch · extracted SlotData exports | Nintendo Switch | Gold and existing material-stock reductions, owned Shez/Byleth name customization and searchable character/weapon records. |
-| FIRE EMBLEM: THREE HOUSES — Switch · gameplay save-format v13/v23 | Nintendo Switch | Instruction motivation, existing learned ability loadouts, gold and ordinary convoy quantity/durability reductions. |
+| FIRE EMBLEM: THREE HOUSES — Switch · gameplay save-format v13/v23 | Nintendo Switch | Qualified protagonist names, instruction motivation, existing learned ability loadouts, gold and ordinary convoy quantity/durability reductions. |
 | ATELIER RYZA — Ever Darkness & the Secret Hideout · original Switch main game | Nintendo Switch | Existing ordinary item/equipment quality 1–100; searchable inventory, equipment and read-only trait slots. |
 | ATELIER RYZA 2 — Lost Legends & the Secret Fairy · original Switch | Nintendo Switch | Unspent skill-tree SP reductions; searchable existing inventory and equipment records. |
 | DRAGON QUEST BUILDERS 2 — Original Nintendo Switch · CMNDAT.BIN | Nintendo Switch | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |

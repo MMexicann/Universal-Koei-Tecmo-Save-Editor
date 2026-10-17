@@ -32,6 +32,11 @@ ATTRIBUTE_NAMES = {5: 'Agility', 6: 'Reach', 7: 'Multi', 8: 'Brawn',
 ATTRIBUTE_COUNT = 58
 BINARY_ATTRIBUTE_IDS = frozenset(range(26, 32)) | frozenset(range(46, 58))
 RANKED_ATTRIBUTE_IDS = frozenset(range(ATTRIBUTE_COUNT)) - BINARY_ATTRIBUTE_IDS
+# Native setter 0x14026C7C0 selects descriptor grade -1..4, limits ordinary
+# weapons to grade <=3, and clamps compatibility to 1400 * 2**(grade + 3).
+# Even the fallback grade -1 therefore permits 5,600 raw units. This is a
+# descriptor-independent editing bound, NOT a weapon's natural maximum.
+COMPATIBILITY_SAFE_LIMIT, COMPATIBILITY_LARGEST_CAP = 5600, 179200
 UPGRADE_STONE_OFFSET, UPGRADE_STONE_MAXIMUM = 52, 891
 MATERIAL_SPANS = ((0xE9A8, 16), (0xE9C8, 16), (0xE9E8, 16),
                   (0xEA08, 34), (0xEA3A, 34), (0xEA6C, 34), (0xEAA8, 145))
@@ -77,15 +82,19 @@ class Field:
 
 
 @dataclass(frozen=True)
-class CompatibilityResetField(Field):
-    """Two deliberate states; no descriptor-dependent increase is inferred."""
+class CompatibilityField(Field):
+    """Conservative native range plus exact preservation of a higher original."""
+    opened_value: int = 0
+
     @property
     def experimental_maximum(self):
         return None
 
     def validate(self, value):
-        if type(value) is not int or value not in (0, self.maximum):
-            raise SaveError('Keep the opened compatibility or deliberately reset it to zero.')
+        if (type(value) is not int
+                or not (0 <= value <= self.maximum or value == self.opened_value)):
+            raise SaveError(f'Compatibility requires 0..{self.maximum:,} raw units, '
+                            'or the exact opened value. Higher grade bounds are not mapped.')
 
 
 @dataclass(frozen=True)
@@ -99,7 +108,17 @@ class Format:
 
 
 _static = [Field('growth_points', 'Unallocated growth points', 0x1378, 4, 9999999, maxable=False),
-           Field('gems', 'Precious stones (gems)', 0x137C, 4, 999999, maxable=False)]
+           # Native gain 0x140432DA5..DC1 clamps the current gem DWORD to
+           # 9,999,999. Its cumulative counter at file 0xE7B0 is separate.
+           Field('gems', 'Precious stones (gems)', 0x137C, 4, 9999999, maxable=False),
+           # Current rare crystals: system-copy bridge 0x140248C60/0x140248D70;
+           # serializer 0x14025DE60..DEE8 writes LE word +0xD5DC.
+           # Cursor from file 0x1380: 4*0x668 + 145*145*2 + 6
+           # + 6*10*4 + 150*4 + 150*2 = 0xD5DC; no runtime/file guess.
+           # native gain 0x1403753CF..3E8 and spending 0x140411207..2B2
+           # independently bound it to 999. Lifetime +0xE7B4 is untouched.
+           Field('crystals', 'Rare crystals (current balance)', 0xD5DC, 2, 999,
+                 maxable=False)]
 for index in range(OFFICER_COUNT):
     for key, name, relative, cap in (
             ('health', 'Health', 0, 999), ('musou', 'Musou', 2, 999),
@@ -120,8 +139,10 @@ for family, (base, count) in enumerate(MATERIAL_SPANS):
 FORMAT = Format(GAME_ID, 'Warriors Orochi 3 Ultimate Definitive Edition (Steam PC)',
                 SAVE_SIZE, tuple(_static),
                 'Native copied-file validation; edited game loading remains untested. '
-                'Stats, growth points, gems, attribute orbs, crafting materials and '
-                'existing weapon slots/ranked attributes, reinforcement reduction, unallocated upgrade stones, owned ordinary-item equipment and owned mount loadouts. Story, unlocks and promotions '
+                'Stats, growth points, gems, rare crystals, attribute orbs, crafting materials and '
+                'existing weapon slots/ranked attributes, reinforcement reduction, '
+                'unallocated upgrade stones, owned ordinary-item equipment, owned mount '
+                'loadouts and conservative raw weapon compatibility. Story, unlocks and promotions '
                 'remain unchanged. Five internal officer records are read only.')
 
 
@@ -236,17 +257,17 @@ def _fields_cached(payload, _experimental):
         if slots > 8:
             continue
         compatibility = int.from_bytes(payload[offset + 20:offset + 24], 'little')
-        # Native weapon reset/serializer and independent setter/derived-attack
-        # paths prove this DWORD. Grade-specific upper bounds require external
-        # descriptors, so only the universally valid zero reset is exposed.
-        # 179,200 is the largest native setter ceiling across supported grades;
-        # unusual larger originals are opaque rather than silently normalized.
-        if 0 < compatibility <= 179200:
-            result.append(CompatibilityResetField(
+        # Zero is a valid starting state. Higher originals through the largest
+        # native setter cap retain their exact opened value, but cannot be
+        # changed to another value above the descriptor-independent limit.
+        if 0 <= compatibility <= COMPATIBILITY_LARGEST_CAP:
+            result.append(CompatibilityField(
+                # Retain the existing stable field ID while deepening its range.
                 f'weapon_{index}_compatibility_reset',
-                f'Weapon {index + 1} (ID {identity}): Compatibility reset',
-                offset + 20, 4, compatibility, 'Weapon compatibility', index + 1,
-                maxable=False))
+                f'Weapon {index + 1} (ID {identity}): Compatibility (raw units)',
+                offset + 20, 4, COMPATIBILITY_SAFE_LIMIT,
+                'Weapon compatibility', index + 1, maxable=False,
+                opened_value=compatibility))
         reinforcement = payload[offset + 3]
         # Native total attack adds this separate byte. Decreasing an ordinary
         # existing value cannot exceed a grade-specific reinforcement ceiling.
@@ -306,6 +327,9 @@ def record_label(slot, group='Officers'):
 
 def changed_payload(document, changes):
     mapped = field_map(document)
+    # Typed opened-value assignments are no-ops even when the original exceeds
+    # ordinary edit limits. Validate dependencies on the complete final map.
+    changes = normalize_pending_values(document, changes, mapped)
     result = bytearray(document.payload)
     for key, value in changes.items():
         if key not in mapped:
@@ -337,9 +361,6 @@ def field_options(document, key):
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested WO3 Ultimate Definitive field is not mapped.')
-    if isinstance(mapped[key], CompatibilityResetField):
-        return ((mapped[key].maximum, 'Keep opened compatibility'),
-                (0, 'Reset compatibility to zero'))
     if mapped[key].group == 'Mount equipment':
         return equipment.mount_options(document.payload)
     return equipment.options(document.payload) if '_equipped_item_' in key else ()
@@ -421,6 +442,7 @@ def maximums(document, changes, group=None):
 
 
 def review(document, changes):
+    changes = normalize_pending_values(document, changes, field_map(document))
     changed_payload(document, changes)
     return [(field, field.value(document.payload), changes[field.id])
             for field in fields_for(document) if field.id in changes]
@@ -533,12 +555,14 @@ def field_hint(document, field):
     mapped = field_map(document)
     if key not in mapped:
         raise SaveError('The requested WO3 Ultimate Definitive field is not mapped.')
-    if isinstance(mapped[key], CompatibilityResetField):
-        return ("Deliberately reset this existing weapon's compatibility to zero, or keep "
-                'the opened value. The game derives the associated attack contribution; '
-                'weapon identity, grade, reinforcement, attributes and rewards stay unchanged. '
-                'The number is stored raw compatibility, not displayed stars. Arbitrary '
-                'increases and bulk Max are unavailable without the matching grade descriptors.')
+    if isinstance(mapped[key], CompatibilityField):
+        return ('Set compatibility to 0..5,600 stored raw units, including a zero reset. '
+                'This conservative range fits every native descriptor grade; 5,600 is '
+                "an editing bound, not this weapon's natural maximum or displayed stars. "
+                'A higher opened value can be preserved or restored exactly, but other '
+                'values above 5,600 require missing grade descriptors. The game derives '
+                'the attack contribution; identity, reinforcement, attributes, ownership '
+                'and rewards are preserved. Excluded from Max and experimental expansion.')
     if mapped[key].group == 'Mount equipment':
         return ('Choose an originally owned mount item, or Unequipped. These are two '
                 'stored mount loadouts, separate from officers\' ordinary item slots. '
@@ -568,6 +592,12 @@ def field_hint(document, field):
                 'and equipped references are preserved. Verity is binary (rank 1); '
                 'native ranked effects use ranks 1..10; effects without a proved name retain numeric IDs. '
                 'Slots cannot hide or activate dormant attributes.')
+    if key in ('gems', 'crystals'):
+        return ('Current spendable balance only: native gameplay bounds are 0..9,999,999 '
+                'gems and 0..999 rare crystals. Separate lifetime acquisition counters, '
+                'weapon ownership, recipes, rewards and story are preserved. This edits '
+                'the balance directly and performs no purchase or crafting operation. '
+                'Excluded from bulk Max; higher opened values can be kept unchanged.')
     return ('This resource uses a published edit limit, not a proven natural cap, and is excluded from bulk Max. Only this balance changes. Names for numbered crafting/orb records '
             'are not yet mapped. Max preserves higher existing values; it grants no '
             'character, story, recipe or collection unlocks.')

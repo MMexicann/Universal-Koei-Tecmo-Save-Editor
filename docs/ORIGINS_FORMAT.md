@@ -1,5 +1,9 @@
 # Dynasty Warriors: Origins — native Steam format evidence
 
+The development source adds exact 0.01%-step provincial peace entry, a selected
+formed-bond training-count action, native choices and deeper read-only weapon
+qualification detail. [Current actions and preserved dependencies](GAME_SPECIFIC_EXPANSION.md#dynasty-warriors-origins--steam-slots).
+
 The Origins adapter implements the native Steam envelope and surgical resource,
 existing-bond, provincial-peace and qualified weapon-reinforcement edits for slot
 revisions 16, 17, and 29. Revision 29 also supports its separate DLC skill-point

@@ -116,7 +116,7 @@ class ThreeHousesAuditTests(unittest.TestCase):
             self.assertEqual(sealed(raw), raw)
             for field in backend.fields_for(document):
                 original = field.value(document.payload)
-                target = max(field.minimum, original - 1)
+                target = 'Editor' if field.kind == 'text' else max(field.minimum, original - 1)
                 if field.group == 'Motivation':
                     target = 0 if original else 25
                 elif field.group == 'Existing ability loadout':

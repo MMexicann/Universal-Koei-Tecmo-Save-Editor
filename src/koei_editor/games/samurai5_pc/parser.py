@@ -1,5 +1,6 @@
-"""Copy-only SW5 resource edits in the native current castle checkpoint."""
+"""Copy-only SW5 resources and acquired skill gems in the castle checkpoint."""
 from dataclasses import dataclass, field as hidden
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -27,6 +28,9 @@ RESOURCE_MAP = (
     ('mineral', 'Mineral', 0x2A4A, 2, 9_999, 'Building materials'),
     ('fabric', 'Fabric', 0x2A4C, 2, 9_999, 'Building materials'),
 )
+GEM_BASE = next(start for state, kind, start, _, _ in codec.SECTIONS
+                if state == 4 and kind == 8)
+GEM_COUNT, GEM_STACK_CAP = 1000, 20
 
 @dataclass(frozen=True)
 class Field:
@@ -43,6 +47,8 @@ class Field:
     @property
     def experimental_maximum(self):
         """Largest representable numeric value; protected choices stay bounded."""
+        if self.group == 'Acquired skill gems':
+            return None  # Native inventory stack constraint, including experimental editing.
         return (1 << (8 * self.size)) - 1
 
     def value(self, payload):
@@ -66,7 +72,8 @@ class Format:
     game_load_verified: bool = False
     note: str = ('Native PC slot zero, revision 39, saved at My Castle. '
                  'Requires the original steam_autocloud.vdf beside both source and destination copies. '
-                 'Current gold, three distinct Dojo resources and building materials; older checkpoints, '
+                 'Current gold, three distinct Dojo resources, building materials and existing '
+                 'positive skill-gem stacks (1–20); no new gem acquisition or rank changes. Older checkpoints, '
                  'officer skill allocations, facilities, unlocks, story and battle buffers are preserved.')
 FORMAT = Format()
 @dataclass(frozen=True)
@@ -119,9 +126,23 @@ def validate_document(document):
             or codec.decode_file(document.raw, document.owner.account_id) != document.payload):
         raise SaveError('A frozen qualified native SW5 snapshot is required.')
 
+@lru_cache(maxsize=4)
+def _gem_fields(payload):
+    # Revision-39 class8 serializer 0x1401271C0 writes the quantity bytes.
+    # Native grant 0x14014C060 indexes gem ID * 10 + rank and caps stacks at 20.
+    # Rank zero is never granted. Keep only already-held stacks; no asset-dependent type,
+    # rank ceiling, shop eligibility or ownership transition is manufactured.
+    return tuple(Field(f'skill_gem_{index}',
+                       f'Skill gem ID {index // 10}, rank {index % 10}: held quantity',
+                       GEM_BASE + index, 1, GEM_STACK_CAP, 'Acquired skill gems',
+                       index + 1, minimum=1)
+                 for index in range(GEM_COUNT)
+                 if index % 10 and payload[GEM_BASE + index])
+
+
 def fields_for(document):
     validate_document(document)
-    return FIELDS
+    return FIELDS + _gem_fields(document.payload)
 
 def field_map(document):
     return MappingProxyType({item.id: item for item in fields_for(document)})
@@ -133,7 +154,7 @@ def changed_payload(document, changes):
     output = bytearray(document.payload)
     for key, value in changes.items():
         if type(key) is not str or key not in mapping:
-            raise SaveError('Only the seven mapped current-checkpoint resources are writable.')
+            raise SaveError('Choose a mapped current resource or an already-held skill-gem stack.')
         item = mapping[key]
         if type(value) is int and value == item.value(document.payload):
             continue
@@ -181,14 +202,15 @@ def limit_values(document, changes, keys):
 def maximums(document, changes, group=None):
     changed_payload(document, changes)
     result = dict(changes)
-    keys = [item.id for item in FIELDS if group is None or item.group == group]
+    keys = [item.id for item in fields_for(document) if group is None or item.group == group]
     for key, value in limit_values(document, changes, keys).items():
         result = stage(document, result, key, value)
     return result
 
 def review(document, changes):
     changed_payload(document, changes)
-    return [(item, item.value(document.payload), changes[item.id]) for item in FIELDS if item.id in changes]
+    return [(item, item.value(document.payload), changes[item.id])
+            for item in fields_for(document) if item.id in changes]
 
 def _validate_source(document):
     validate_document(document)
@@ -280,10 +302,20 @@ def prepare_self_test_copy(document, destination):
     require_matching_owner(document.owner, _path(destination))
 
 def record_label(slot, group='Resources'):
+    if group == 'Acquired skill gems' and 1 <= slot <= GEM_COUNT:
+        identity, rank = divmod(slot - 1, 10)
+        return f'Skill gem ID {identity}, rank {rank}'
     return 'Current castle save'
 
 def field_hint(document, key):
+    key = key.id if isinstance(key, Field) else key
     item = field_map(document)[key]
+    if item.group == 'Acquired skill gems':
+        return ('Held quantity of an already-acquired gem at its existing rank. Native stack '
+                'limit: 20; minimum 1 retains ownership. Max preserves higher opened quantities. '
+                'Gem identity, rank, weapon skills, shop eligibility and older checkpoints are '
+                'preserved. Empty stacks and rank-zero entries are not writable. Names require '
+                'the game asset dictionary; native IDs are shown instead.')
     note = {
         'gold': 'Changes the current wallet; cumulative spending and rewards remain separate.',
         'stock_exp': 'Stock EXP is a shared Dojo pool. Officer growth and Dojo level limits are applied by the game.',

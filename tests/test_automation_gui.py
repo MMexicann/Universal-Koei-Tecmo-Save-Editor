@@ -1,6 +1,7 @@
 """Code-free workflow construction, grouped dependencies and read-only native preview."""
 from pathlib import Path
 import tempfile
+import threading
 import time
 import tkinter as tk
 import unittest
@@ -11,6 +12,7 @@ from koei_editor.game_registry import get_game
 from koei_editor.shared import automation
 from koei_editor.shared.automation_gui import WorkflowWorkspace
 from koei_editor.shared.appearance import THEMES
+from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from tests.test_dw4hyper_format import procedural_raw
 
 
@@ -70,6 +72,46 @@ class WorkflowGuiTests(unittest.TestCase):
             self.finish()
         self.assertIsNone(self.workspace.document)
         self.assertEqual(tuple(self.workspace.operations), workflow.operations)
+
+    def test_preview_and_exports_keep_native_reads_and_serialization_off_tk_thread(self):
+        self.workspace.operations = [automation.Operation('assert', (('officer_0_attack', 50),))]
+        tk_thread = threading.get_ident()
+        calls = []
+        def checked(method):
+            def invoke(bound, *args, **kwargs):
+                calls.append((method.__name__, threading.get_ident()))
+                self.assertNotEqual(threading.get_ident(), tk_thread,
+                                    'Native validation returned to the Tk thread.')
+                return method(bound, *args, **kwargs)
+            return invoke
+        workflow_path = self.folder / 'thread-safe.workflow.json'
+        batch_path = self.folder / 'thread-safe.batch.json'
+        output = self.folder / 'output'
+        output.mkdir()
+        with (
+            patch.object(BoundScalarAdapter, 'read_save', checked(BoundScalarAdapter.read_save)),
+            patch.object(BoundScalarAdapter, 'serialize', checked(BoundScalarAdapter.serialize)),
+            patch('koei_editor.shared.automation_gui.messagebox.showerror') as error,
+        ):
+            self.workspace.preview_reference()
+            self.finish()
+            with patch('koei_editor.shared.automation_gui.filedialog.asksaveasfilename', return_value=str(workflow_path)):
+                self.workspace.export()
+                self.finish()
+            with (
+                patch('koei_editor.shared.automation_gui.filedialog.askopenfilenames', return_value=(str(self.source),)),
+                patch('koei_editor.shared.automation_gui.filedialog.askdirectory', return_value=str(output)),
+                patch('koei_editor.shared.automation_gui.filedialog.asksaveasfilename', return_value=str(batch_path)),
+            ):
+                self.workspace.export_batch()
+                self.finish()
+        error.assert_not_called()
+        self.assertTrue(workflow_path.exists())
+        self.assertTrue(batch_path.exists())
+        self.assertIn('review_token', self.workspace.summary.get('1.0', 'end'))
+        self.assertTrue(calls)
+        self.assertEqual({name for name, _thread in calls}, {'read_save', 'serialize'})
+        self.assertTrue(all(thread != tk_thread for _name, thread in calls))
 
     def test_group_reorder_remove_exact_text_and_invalid_value_rejection(self):
         fields = list(self.workspace._fields.values())[:2]
@@ -162,6 +204,23 @@ class WorkflowGuiTests(unittest.TestCase):
         error.assert_called_once()
         self.assertEqual(tuple(output.iterdir()), ())
         self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_native_preview_validation_stays_off_tk_thread(self):
+        field = next(iter(self.workspace._fields.values()))
+        self.field(field.id, field.value(self.workspace.document.payload))
+        self.workspace.add_operation('assert')
+        ui_thread = threading.get_ident()
+        calls = []
+        preview = automation.preview
+        def validate_in_worker(batch):
+            calls.append(threading.get_ident())
+            return preview(batch)
+        with patch('koei_editor.shared.automation_gui.automation.preview', side_effect=validate_in_worker):
+            self.workspace.preview_reference()
+            self.finish()
+        self.assertTrue(calls)
+        self.assertTrue(all(thread != ui_thread for thread in calls))
+        self.assertIn('review_token', self.workspace.summary.get('1.0', 'end'))
 
     def test_application_retains_builder_and_respects_busy_close(self):
         app = Application(self.root, persist_preferences=False)

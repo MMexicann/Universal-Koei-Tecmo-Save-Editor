@@ -19,7 +19,8 @@ changes. Navigation never opens a file automatically.
   the Help Center. Its menu includes compatibility, preparation guides, feedback,
   real-game validation and plugin documentation.
 
-The header wraps navigation into two rows when space is limited. Language and
+The header wraps navigation into two rows when space is limited. Library cards
+reduce their column count as the window narrows. Language and
 text size controls remain visible. English and German cover shell labels and
 commands; game names, original technical evidence and game editor contents are
 not automatically translated. Text sizes of 100%, 120% and 140% apply to shared
@@ -44,13 +45,16 @@ Writes use an atomic replacement. Read-only sessions using
 `shared/command_palette.py` provides immutable `CommandEntry` values and the pure
 `search_commands` function. The application builds entries lazily when the
 palette opens. `Application.execute_command` resolves only IDs present in the
-current catalog through explicit callables. Preference files and community
+current catalog through explicit callables. Enabled community plugin commands
+are added after the plugin manager has approved them. Their `plugin:` identities
+resolve to inert help content in the plugin panel. Preference files and community
 metadata cannot supply Python callbacks, imports or shell commands.
 
 To add a shell command, define its label in both catalogs in
 `shared/localization.py`, add its entry in `Application.command_entries`, and
 resolve its stable ID explicitly in `execute_command`. Use `game:`, `tool:` or
-`command:` IDs followed by a lowercase identifier. Never include save paths or
+`command:` IDs followed by a lowercase identifier. Plugin IDs can also contain
+namespacing punctuation, bounded to 160 characters. Never include save paths or
 dynamic gameplay values in an identity.
 
 Library searches reuse the immutable `LibraryCatalog` index. Changes in one Tk

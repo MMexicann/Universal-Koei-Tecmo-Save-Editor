@@ -11,7 +11,7 @@ from koei_editor.shared.preferences import preference_path
 MAX_BYTES = 32768
 MAX_FAVORITES = 128
 MAX_RECENT = 20
-_ID = re.compile(r'(?:game|tool|command):[a-z][a-z0-9_-]{0,63}\Z')
+_ID = re.compile(r'(?:(?:game|tool|command):[a-z][a-z0-9_-]{0,63}|plugin:[a-z][a-z0-9_.:-]{0,159})\Z')
 
 
 @dataclass(frozen=True)
@@ -90,13 +90,13 @@ def save(value, path=None):
 
 def remember(value, command_id):
     """Record workspace identities only, without paths or gameplay data."""
-    if not _ID.fullmatch(command_id) or not command_id.startswith(('game:', 'tool:')):
+    if type(command_id) is not str or not _ID.fullmatch(command_id) or not command_id.startswith(('game:', 'tool:')):
         return value
     return replace(value, recent=(command_id,) + tuple(key for key in value.recent if key != command_id)[:MAX_RECENT - 1])
 
 
 def toggle_favorite(value, command_id):
-    if not _ID.fullmatch(command_id):
+    if type(command_id) is not str or not _ID.fullmatch(command_id):
         return value
     if command_id in value.favorites:
         return replace(value, favorites=tuple(key for key in value.favorites if key != command_id))

@@ -122,6 +122,32 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(self.root.grab_current(), dialog)
         dialog.destroy()
 
+    def test_repeated_palette_close_releases_query_callbacks(self):
+        for _index in range(10):
+            self.app.open_command_palette()
+            palette = self.app.command_palette
+            self.assertEqual(len(palette.query.trace_info()), 1)
+            palette.close()
+            self.assertEqual(palette.query.trace_info(), [])
+        self.assertFalse(self.app.sessions)
+
+    def test_enabled_plugin_commands_open_only_inert_help_content(self):
+        from types import SimpleNamespace
+        center = SimpleNamespace(
+            plugin_commands=lambda: [('sample.docs:guide', 'Sample guide', 'Read-only community documentation')],
+            open_plugin_command=lambda key: opened.append(key))
+        opened = []
+        self.app.help_center = center
+        commands = self.app.command_entries()
+        self.assertEqual([entry.id for entry in search_commands(commands, 'sample guide')], ['plugin:sample.docs:guide'])
+        with patch.object(self.app, 'show_help') as show:
+            self.app.execute_command('plugin:sample.docs:guide')
+            show.assert_called_once_with('plugins')
+        self.assertEqual(opened, ['sample.docs:guide'])
+        self.app.execute_command('plugin:unapproved')
+        self.assertEqual(opened, ['sample.docs:guide'])
+        self.app.help_center = None
+
     def test_german_shell_and_text_size_do_not_replace_retained_editor(self):
         editor = self.app.select_game('dw7xl')
         self.app.language_choice.set('Deutsch')
@@ -145,6 +171,7 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertTrue(widget.winfo_ismapped())
             self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
             self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), self.root.winfo_rootx() + self.root.winfo_width())
+        self.assertEqual(self.app._library_columns[self.app.platform_choice.get()], 2)
 
     def test_search_bursts_coalesce_and_enter_flushes_latest_query(self):
         with patch.object(self.app, 'show_platform', wraps=self.app.show_platform) as show:

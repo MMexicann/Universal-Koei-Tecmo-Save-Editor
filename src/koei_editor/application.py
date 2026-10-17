@@ -113,18 +113,20 @@ class Application(Appearance):
         platforms = tuple(dict.fromkeys(game.platform for game in self.library_games))
         platform_bar = ttk.Frame(self.library)
         platform_bar.pack(fill='x', pady=(12, 12))
-        self._translated(ttk.Label(platform_bar, font=(self.font_family, 12)), 'platform').pack(side='left', padx=(0, 12))
+        platform_bar.columnconfigure(0, weight=1)
+        platform_bar.columnconfigure(1, weight=1)
+        self._translated(ttk.Label(platform_bar, font=(self.font_family, 12)), 'platform').grid(row=0, column=0, sticky='w')
         self.platform_choice = tk.StringVar(root, value='Windows PC')
         self.platform_selector = ttk.Combobox(platform_bar, textvariable=self.platform_choice,
                                              values=(ALL_PLATFORMS,) + platforms, state='readonly', width=20)
-        self.platform_selector.pack(side='left')
+        self.platform_selector.grid(row=1, column=0, sticky='ew', padx=(0, 16), pady=(4, 0))
         self.platform_selector.bind('<<ComboboxSelected>>', self.show_platform)
-        self._translated(ttk.Label(platform_bar, style='Muted.TLabel'), 'series').pack(side='left', padx=(20, 8))
+        self._translated(ttk.Label(platform_bar, style='Muted.TLabel'), 'series').grid(row=0, column=1, sticky='w')
         self.series_choice = tk.StringVar(root, value=ALL_SERIES)
         self.series_selector = ttk.Combobox(platform_bar, textvariable=self.series_choice,
                                              values=(ALL_SERIES,) + tuple(sorted({series_for(game) for game in self.library_games})),
                                              state='readonly', width=24)
-        self.series_selector.pack(side='left')
+        self.series_selector.grid(row=1, column=1, sticky='ew', pady=(4, 0))
         self.series_selector.bind('<<ComboboxSelected>>', self.show_platform)
         search_bar = ttk.Frame(self.library)
         search_bar.pack(fill='x', pady=(0, 10))
@@ -142,13 +144,17 @@ class Application(Appearance):
         self.compact_toggle.pack(side='right', padx=(8, 0))
         self._translated_widgets.append((self.compact_toggle, 'compact'))
         self.library_hint = tk.StringVar(root)
-        ttk.Label(self.library, textvariable=self.library_hint,
-                  style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=(0, 18))
+        self.library_hint_label = ttk.Label(self.library, textvariable=self.library_hint,
+                                            style='Muted.TLabel', wraplength=1000)
+        self.library_hint_label.pack(anchor='w', pady=(0, 18))
         # Reserve the footer before the expanding cards so its controls remain
         # reachable at the minimum window size.
         self.library_footer = ttk.Frame(self.library)
         self.library_footer.pack(side='bottom', fill='x', pady=(16, 0))
-        self._translated(ttk.Label(self.library_footer, style='Muted.TLabel', wraplength=1000), 'footer').pack(anchor='w')
+        self.library_footer_label = self._translated(ttk.Label(self.library_footer, style='Muted.TLabel', wraplength=1000), 'footer')
+        self.library_footer_label.pack(anchor='w')
+        self.library.bind('<Configure>', lambda event: [widget.configure(wraplength=max(200, event.width - 76))
+                                                       for widget in (self.library_hint_label, self.library_footer_label)])
         footer_buttons = ttk.Frame(self.library_footer)
         footer_buttons.pack(fill='x', pady=(12, 0))
         self.contact_button = self._translated(ttk.Button(footer_buttons, command=self.contact), 'contact')
@@ -159,6 +165,7 @@ class Application(Appearance):
         self.platform_canvases = {}
         self._library_contents = {}
         self._library_windows = {}
+        self._library_columns = {}
         for platform, frame in self.platform_frames.items():
             frame.columnconfigure(0, weight=1)
             frame.rowconfigure(0, weight=1)
@@ -296,6 +303,11 @@ class Application(Appearance):
         if self.active_game is not None:
             for key in ('open_copy', 'save_copy', 'save_as', 'undo', 'review'):
                 entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
+        if self.help_center is not None:
+            plugin_commands = getattr(self.help_center, 'plugin_commands', None)
+            if callable(plugin_commands):
+                for key, title, description in plugin_commands():
+                    entries.append(CommandEntry('plugin:' + key, title, 'plugin', description, 'plugin community'))
         favorite_words = self.tr('favorites') + ' favorites favorite'
         recent_words = self.tr('recent') + ' recent workspace'
         return tuple(replace(entry, keywords=entry.keywords
@@ -323,6 +335,9 @@ class Application(Appearance):
         if command_id not in {entry.id for entry in self.command_entries()}:
             return
         category, key = command_id.split(':', 1)
+        if category == 'plugin':
+            self.show_help('plugins')
+            return self.help_center.open_plugin_command(key)
         if category == 'game':
             return self.select_game(key)
         if category == 'tool':
@@ -488,6 +503,10 @@ class Application(Appearance):
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
         content = self._library_contents[platform]
+        if platform == self.platform_choice.get() and platform in self.library_cards:
+            columns = min(3, max(1, len(self.library_matches)), max(1, canvas.winfo_width() // 280))
+            if self._library_columns.get(platform) != columns:
+                self._arrange_library_matches(platform, columns)
         height = max(canvas.winfo_height(), content.winfo_reqheight())
         canvas.itemconfigure(self._library_windows[platform], width=canvas.winfo_width(), height=height)
         canvas.configure(scrollregion=(0, 0, canvas.winfo_width(), height))
@@ -687,12 +706,23 @@ class Application(Appearance):
         self.platform_frames[scope].pack(fill='both', expand=True)
         self.library_matches = matching_games(self._library_catalog, self.library_search.get(),
                                               scope, self.series_choice.get())
+        columns = min(3, max(1, len(self.library_matches)), max(1, self.platform_canvases[scope].winfo_width() // 280))
+        self._arrange_library_matches(scope, columns)
+        count = len(self.library_matches)
+        self.library_hint.set(self.tr('hint', count=count, scope=scope))
+        filter_key = (scope, self.library_search.get(), self.series_choice.get(), self.compact_library.get())
+        if filter_key != self._library_filter_key:
+            self.platform_canvases[scope].yview_moveto(0)
+        self._library_filter_key = filter_key
+        self.resize_library_cards(scope)
+
+    def _arrange_library_matches(self, scope, columns):
+        self._library_columns[scope] = columns
         content = self._library_contents[scope]
         for card in self.library_cards[scope].values():
             card.grid_remove()
         for row in range(len(self.library_games)):
             content.rowconfigure(row, weight=0, uniform='')
-        columns = min(3, max(1, len(self.library_matches)))
         for column in range(3):
             content.columnconfigure(column, weight=1 if column < columns else 0,
                                     uniform='cards' if column < columns else '')
@@ -706,13 +736,6 @@ class Application(Appearance):
                       padx=(0, 14) if column < columns - 1 else (0, 0), pady=(0, 14))
             self.library_buttons[scope][game.id].configure(
                 text=self.tr('resume') if game.id in self.sessions else self.tr('open'))
-        count = len(self.library_matches)
-        self.library_hint.set(self.tr('hint', count=count, scope=scope))
-        filter_key = (scope, self.library_search.get(), self.series_choice.get(), self.compact_library.get())
-        if filter_key != self._library_filter_key:
-            self.platform_canvases[scope].yview_moveto(0)
-        self._library_filter_key = filter_key
-        self.resize_library_cards(scope)
 
     def update_library_density(self):
         for scope, banners in self.library_banners.items():

@@ -78,7 +78,7 @@ class CommandPalette:
         ttk.Label(content, text=self.tr('palette_hint'), style='Muted.TLabel', wraplength=700).pack(anchor='w', pady=(5, 8))
         self.favorite_button = ttk.Button(content, text=self.tr('favorite'), command=self.toggle_favorite)
         self.favorite_button.pack(anchor='e')
-        self.query.trace_add('write', lambda *_args: self.refresh())
+        self._query_trace = self.query.trace_add('write', lambda *_args: self.refresh())
         for sequence in ('<Escape>', '<Control-k>', '<Control-K>'):
             self.window.bind(sequence, self.close)
         self.window.bind('<Return>', self.activate)
@@ -152,6 +152,9 @@ class CommandPalette:
     def close(self, _event=None, restore_focus=True):
         if not self.window.winfo_exists():
             return 'break'
+        # A Tcl variable trace retains its Python callback (and therefore this
+        # dialog) until explicitly removed. Repeated palette use must release it.
+        self.query.trace_remove('write', self._query_trace)
         self.window.grab_release()
         self.window.destroy()
         if self.previous_grab is not None and self.previous_grab.winfo_exists():

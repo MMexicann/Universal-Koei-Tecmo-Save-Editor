@@ -1,5 +1,10 @@
 # Warriors editor refinements
 
+The development source further deepens the PC profile's compatibility range,
+spendable rare-crystal balance and gem bounds. See the
+[current native evidence and limits](GAME_SPECIFIC_EXPANSION.md#warriors-orochi-3-ultimate-definitive--windows-pc).
+The reset-only description below records the earlier v2.6 behavior.
+
 These changes deepen three existing profiles: **Musou Orochi Z on PC**, **Warriors
 Orochi 3 Ultimate Definitive Edition on PC**, and the separately qualified **US
 PS3 Warriors Orochi 3 Ultimate decrypted export**. They do not add conversion

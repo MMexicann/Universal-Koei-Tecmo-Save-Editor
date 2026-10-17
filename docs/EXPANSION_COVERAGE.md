@@ -1,5 +1,9 @@
 # Expansion coverage and remaining inputs
 
+The current v2.7 development source deepens existing editors without changing
+the 97-profile inventory. See the [game-specific expansion](GAME_SPECIFIC_EXPANSION.md)
+for controls, native evidence and remaining qualification limits.
+
 The v2.6 update has **97 game/platform profiles across 15 platforms**, with
 Legends of Troy EU PS3 Kleos reductions and broader save-management tools.
 Fatal Frame II PS2 stock editing remains unregistered pending independent

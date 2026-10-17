@@ -54,6 +54,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 
 ## Game formats and feature coverage
 
+- [Development source: deeper game-specific editing and qualification limits](GAME_SPECIFIC_EXPANSION.md)
+
 - [Fatal Frame II original US PS2 research: writer deferred](FATAL_FRAME2_PS2_FORMAT.md)
 - [Warriors: Legends of Troy, original EU PS3](TROY_PS3_FORMAT.md)
 - [v2.6 Orochi Z base stats, WO3 compatibility and safer PS3 copies](WARRIORS_V26_DEPTH.md)

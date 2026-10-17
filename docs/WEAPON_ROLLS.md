@@ -1,5 +1,10 @@
 # Officer weapon bonus rolls — v0.3.3
 
+Development source adds a validated owned-copy bonus-layout transfer and
+filtered owned-copy element action. See the
+[current game-specific expansion](GAME_SPECIFIC_EXPANSION.md#dw3-complete-edition-remastered)
+for destination restrictions and preserved acquisition data.
+
 The Weapons tab now edits normal bonus types and values on owned regular,
 fourth and fifth weapon copies. It writes a supported fusion result directly,
 without consuming another weapon or changing achievement/story records.

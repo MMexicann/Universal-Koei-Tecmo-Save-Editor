@@ -1,5 +1,9 @@
 # DW8 XL PC weapon compatibility and ally inspection
 
+Development source additionally supports
+[existing ranked attribute replacement](GAME_SPECIFIC_EXPANSION.md#dynasty-warriors-8-xl--windows-pc)
+with an opened-save palette and complete pending duplicate/rank checks.
+
 This addition uses the already qualified native Windows PC DW8 XL layout. It
 adds individual and grouped edits for the four stored weapon-action aptitudes
 of all 82 officer records, individual affinity edits for qualified existing weapons,

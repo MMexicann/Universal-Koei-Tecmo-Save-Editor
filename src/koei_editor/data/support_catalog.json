@@ -60,7 +60,7 @@
       "title": "Dynasty Warriors 3: Complete Edition Remastered",
       "platform": "Windows PC",
       "status": "Existing full editor",
-      "evidence": "Existing v1.1 native schema, encryption and regression tests retained.",
+      "evidence": "Existing v1.1 native schema, encryption and regression tests retained. Development source: destination-validated owned weapon bonus-layout copying, filtered owned-copy element edits and selected authored music/movie availability unlocks reuse the established tagged patch workflow; acknowledgement arrays, acquisition caches and unknown tails remain intact.",
       "needed": "Private fixtures and native Windows regression checks for this development version.",
       "editing_verified": true
     },
@@ -69,7 +69,7 @@
       "title": "Dynasty Warriors 8: Xtreme Legends Complete Edition",
       "platform": "Windows PC",
       "status": "File editing verified",
-      "evidence": "Genuine PC sample passes both integrity layers. Resources, 82 officer stat records, four weapon-action compatibility ratings, existing weapon attribute ranks and individual affinity IDs are editable. Unusual values, equipment identities and progression remain intact; ally records are inspected. Development expansion: Existing qualified first/second equipped weapon pairs can be reordered atomically without changing their multiset, properties or ownership.",
+      "evidence": "Genuine PC sample passes both integrity layers. Resources, 82 officer stat records, four weapon-action compatibility ratings, existing weapon attribute ranks and individual affinity IDs are editable. Unusual values, equipment identities and progression remain intact; ally records are inspected. Development expansion: Existing qualified first/second equipped weapon pairs can be reordered atomically without changing their multiset, properties or ownership. Development source: existing ranked weapon attributes may select qualified ranked identities also witnessed in the opened pool. Empty/unknown/unusual records stay opaque; complete pending duplicate and rank checks preserve resources, inventory and equipment relationships.",
       "needed": "In-game load checks on copies; controlled attribute/progression pairs and version-labelled samples.",
       "editing_verified": true
     },
@@ -87,7 +87,7 @@
       "title": "Dynasty Warriors: Origins",
       "platform": "Windows PC",
       "status": "Native Steam slot editor",
-      "evidence": "Native Steam envelope, checksum and revision 16/17/29 sizes qualified. Existing Gold, base/DLC skill points, formed bonds, provincial peace, catalogue-qualified weapon reinforcement and persistent battle history retain their surgical editing scope. Nine public native slots across all three revisions corroborate guarded read-only stored proficiency XP and equipped Battle Art inspection. Neither proficiency levels nor Old Coin count is editable; runtime Coin +0x45a and body candidate 0xa95 do not establish a qualified writer.",
+      "evidence": "Native Steam envelope, checksum and revision 16/17/29 sizes qualified. Existing Gold, base/DLC skill points, formed bonds, provincial peace, catalogue-qualified weapon reinforcement and persistent battle history retain their surgical editing scope. Nine public native slots across all three revisions corroborate guarded read-only stored proficiency XP and equipped Battle Art inspection. Neither proficiency levels nor Old Coin count is editable; runtime Coin +0x45a and body candidate 0xa95 do not establish a qualified writer. Development source: exact 0.01%-step provincial peace entry and selected training-count-at-least-3 actions reuse qualified fields, preserve higher counts and leave event/Battle Art/reward state separate; native choices and weapon qualification detail are exposed.",
       "needed": "Independent edited game loading; exact Old Coin disk serialization/semantics, bounds and collection/reward relationships; proficiency thresholds, story/DLC gates and moveset/rank/reward/claim transitions; active campaign and ending dependencies.",
       "editing_verified": true
     },
@@ -168,7 +168,7 @@
       "title": "Samurai Warriors 2",
       "platform": "Windows PC (original 2008 edition)",
       "status": "Original PC revision-2 editor",
-      "evidence": "Two independent native PC saves and period original PC disk-editor reader/writer qualify exact size, revision, byte-sum integrity, owned officer growth, acquired ordinary skill ranks and existing weapon bonus amounts. Unknown bytes, higher values, skill flags, ownership, level/EXP and story are preserved. Development expansion: Existing known weapons from the same officer pool may be equipped without altering acquisition, upgrades or rewards.",
+      "evidence": "Two independent native PC saves and period original PC disk-editor reader/writer qualify exact size, revision, byte-sum integrity, owned officer growth, acquired ordinary skill ranks and existing weapon bonus amounts. Unknown bytes, higher values, skill flags, ownership, level/EXP and story are preserved. Development expansion: Existing known weapons from the same officer pool may be equipped without altering acquisition, upgrades or rewards. Development source: acquired ordinary skills expose rank 1/2/3 choices and owned weapon choices show their native identities; separate high flags and rare-skill restrictions remain intact.",
       "needed": "Edited original-PC game-load/re-save validation; native stat/growth caps and controlled progression, rare-skill, weapon identity/equip, guard/mount ownership and Survival/story reward pairs.",
       "editing_verified": true
     },
@@ -195,7 +195,7 @@
       "title": "Samurai Warriors 4 DX",
       "platform": "Windows PC",
       "status": "Native PC file editor",
-      "evidence": "Supplied executable and genuine shared native PC revision 0x39EA qualify envelope and four inner checksums, gold/gems, 55 standard officers and existing weapon skill records. Malformed/revision checks and surgical serialization are tested.",
+      "evidence": "Supplied executable and genuine shared native PC revision 0x39EA qualify envelope and four inner checksums, gold/gems, 55 standard officers and existing weapon skill records. Malformed/revision checks and surgical serialization are tested. Development source: existing qualified weapon, activation and one-way playable controls expose explicit native choices without widening ownership or unlock dependencies.",
       "needed": "Actual edited game loads; qualified roster/gem names, native progression limits and controlled Chronicle, bonds, mounts, custom-character and story/reward maps.",
       "editing_verified": true
     },
@@ -222,7 +222,7 @@
       "title": "Warriors Orochi 3 Ultimate Definitive Edition",
       "platform": "Windows PC",
       "status": "Native Steam PC file editor",
-      "evidence": "Supplied executable serializer and genuine shared native PC save qualify packed revision, 145 playable officer stat records, growth points/gems, attribute orbs, crafting and existing weapon attribute slots/ranks. ASLR-dependent record markers and unknown bytes are preserved. Development expansion: Already promoted coherent officers have unallocated upgrade-stone controls; ordinary-item equipment uses original ownership/ranks, active slots and duplicate checks. Version 2.5.3 adds two native persisted mount-loadout selectors using only originally owned binary-rank mount IDs 28–31, with a separate ordinal mapping. The native menu, root state-copy bridge and serializer independently qualify both bytes. Two native sources and full copy/GUI workflows preserve ownership/ranks, ordinary equipment and all unrelated data. Decrease-only reinforcement remains bounded under experimental editing. Version 2.6 adds manual existing weapon compatibility reset to zero, corroborated by the native serializer and total-attack getter; arbitrary increases remain blocked. Two distinct native states qualify 526 surgical resets. A separate 64-record inventory distinguishes ownership, rank and equipped usage, and ordinary-item choices reflect the complete pending batch.",
+      "evidence": "Supplied executable serializer and independent genuine Steam PC states qualify the packed revision, 145 playable officer stat records, growth points, gems, attribute orbs, crafting materials and existing weapon attribute slots/ranks. ASLR-dependent markers and unknown bytes are preserved. Already promoted coherent officers expose unallocated upgrade stones; ordinary-item and two mount selectors require original ownership and complete loadout validation. A separate 64-record inventory distinguishes ownership, rank and equipped usage. Development source: native spendable rare crystals 0..999, native gem balance ceiling 9,999,999 and conservative compatibility 0..5,600 raw units are qualified. Compatibility retains exact higher-original restoration through 179,200 and excludes Max/experimental expansion; descriptor-dependent higher edits remain blocked. Lifetime earnings, acquisition and reward state remain unchanged. Two independent native states passed surgical resource/compatibility Save As and read-back, distinct from in-game loading.",
       "needed": "Actual edited game loads, roster/material ID names, controlled promotion/progression/bonds/story rewards and remaining weapon descriptors.",
       "editing_verified": true
     },
@@ -952,7 +952,7 @@
       "platform": "Nintendo Switch",
       "status": "Native gameplay export editor; save-format v13/v23",
       "editing_verified": true,
-      "evidence": "Independent implementation of public format facts, checked against eight genuine publicly shared extracted gameplay candidates. Exact separate v13/v23 lengths and native payload byte-sum integrity; surgical gold reductions, twelve identified ordinary weapon types’ existing convoy quantity and durability reductions. Held equipment requires an original unique living/available/joined base owner ID0–34; DLC/unknown owners and items stay read-only. Progression, mastery, proficiency, abilities, combat arts, battalions and supports are inspected separately. No guessed Max or ownership grants. Development expansion: Unique living joined base units have motivation choices; original equipped-and-learned abilities can be moved or unequipped on undeployed qualified loadouts, with no duplicates or ownership grants.",
+      "evidence": "Independent implementation of public format facts, checked against eight genuine publicly shared extracted gameplay candidates. Exact separate v13/v23 lengths and native payload byte-sum integrity; surgical gold reductions, twelve identified ordinary weapon types’ existing convoy quantity and durability reductions. Held equipment requires an original unique living/available/joined base owner ID0–34; DLC/unknown owners and items stay read-only. Progression, mastery, proficiency, abilities, combat arts, battalions and supports are inspected separately. No guessed Max or ownership grants. Development expansion: Unique living joined base units have motivation choices; original equipped-and-learned abilities can be moved or unequipped on undeployed qualified loadouts, with no duplicates or ownership grants. Development source: existing qualified protagonist names in v13/v23 accept conservative 1–8 printable ASCII input. Canonical original UTF-8 names and both native closing controls are preserved, with exact opened-value Undo; system previews, recruitment, gender and appearance remain separate.",
       "needed": "Edited Switch load/re-save; exact-build/region/DLC-labelled clean controls and action pairs for progression/rewards, item repair/transfer, battalion assignment and supports. Precise patch/DLC entitlement is not encoded by the accepted save-format version. v12, padded exports, system/suspend and Cindered Shadows side-story saves need separate qualification; structurally matching side-story payloads cannot yet be distinguished. See docs/THREE_HOUSES_FORMAT.md for exact inputs."
     },
     {
@@ -1131,7 +1131,7 @@
       "title": "Samurai Warriors 5 (PC)",
       "platform": "Windows PC",
       "status": "Native revision-39 My Castle resource editor",
-      "evidence": "Supplied original save and private original Steam sidecar qualify the owner-dependent AES writer. Complete static 17-class serializer and current-copy selection identify Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and three building materials. Castle/menu saves only; independent checkpoints, officer allocations, equipment, building levels and story remain intact.",
+      "evidence": "Supplied original save and private original Steam sidecar qualify the owner-dependent AES writer. Complete static 17-class serializer and current-copy selection identify Gold, Stock EXP, shared Skill Points, Stock Weapon Mastery and three building materials. Castle/menu saves only; independent checkpoints, officer allocations, equipment, building levels and story remain intact. Development source: positive existing skill-gem stacks at original type/rank indices 1–9 accept quantity 1–20. Native grant and serializer independently qualify one-byte stack storage and the hard cap; empty and rank-zero slots, gem identity/rank, acquired weapon skills, older checkpoints and rewards remain unchanged. Native copied-file quantity and safe Save As/backup/restore audits preserve the original owner context.",
       "needed": "Edited game-load/re-save checks; battle/resume variants, other slots/revisions, native catalogs and controlled officer growth/mastery, learned skills, weapon/mount ownership/fusion/equipment, buildings, friendship and story/reward pairs.",
       "editing_verified": true
     },

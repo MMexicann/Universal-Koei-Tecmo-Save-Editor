@@ -54,6 +54,12 @@ expands only explicitly mapped numeric fields.
 - Progress and completion are shown only where mappings establish their meaning.
   [Dashboard guide and exact coverage](docs/PROGRESSION_DASHBOARDS.md).
 
+The unreleased development source also includes
+[deeper game-specific editing](docs/GAME_SPECIFIC_EXPANSION.md), including targeted
+DW3 weapon/gallery actions, existing DW8 XL attribute replacement, WO3 Ultimate
+resource/compatibility controls, precise Origins progression actions, held SW5
+skill-gem quantities and qualified Three Houses protagonist names.
+
 ## Quick start
 
 1. Download and extract the complete Windows ZIP, then run its EXE. Alternatively,

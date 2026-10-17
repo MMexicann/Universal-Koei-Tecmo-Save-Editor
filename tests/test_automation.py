@@ -291,6 +291,12 @@ class AutomationTests(unittest.TestCase):
                                 '--journal', str(alias_target))
         self.assertEqual(code, 2, result)
         self.assertFalse(alias_target.exists())
+        backup.unlink()
+        backup.symlink_to(alias_target / 'backups', target_is_directory=True)
+        code, result = self.cli('apply', str(plan), '--review-token', preview['review_token'],
+                                '--journal', str(alias_target))
+        self.assertEqual(code, 2, result)
+        self.assertFalse(alias_target.exists())
         self.assertFalse((self.folder / 'edited.dat').exists())
 
     def test_crashed_intent_inspection_blocks_absent_and_accepts_native_output(self):

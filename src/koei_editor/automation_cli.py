@@ -134,7 +134,8 @@ def _run(arguments):
         # roots. Journal metadata must never share that namespace, including
         # a backup-root symlink resolving to the proposed journal directory.
         for name in ('WarriorsEditorBackups', 'UniversalEditorBackups', 'OriginsEditorBackups'):
-            if journal_folder == safe_path(job.spec.source.parent / name):
+            backup_root = safe_path(job.spec.source.parent / name)
+            if journal_folder == backup_root or journal_folder in backup_root.parents:
                 raise SaveError('Keep the journal folder separate from native automatic backup folders.')
     jobs = tuple(JournalJob(job.spec.id, job.adapter.game_id, job.document.sha256,
                             job.serialized_sha256, job.profile_sha256) for job in batch.jobs)

@@ -172,9 +172,16 @@ class RunJournal:
                 or safe_path(path) != path):
             raise SaveError(_ERROR)
         descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+                             | getattr(os, "O_NONBLOCK", 0)
                              | getattr(os, "O_BINARY", 0))
         with os.fdopen(descriptor, "rb") as stream:
             opened = os.fstat(stream.fileno())
+            # A regular path can be replaced with a FIFO/device after lstat.
+            # Nonblocking open prevents waiting for a peer; qualify the actual
+            # descriptor before attempting even a bounded read from it.
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_size > MAX_EVENT_BYTES
+                    or _identity(opened) != _identity(before)):
+                raise SaveError(_ERROR)
             raw = stream.read(MAX_EVENT_BYTES + 1)
             after = os.fstat(stream.fileno())
         final = path.lstat()

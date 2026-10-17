@@ -4,7 +4,7 @@ Each set operation is one dependency-valid assignment group. Assertions observe
 staged values. Preparation is read-only; execution is fail-stop, never rollback
 or replay, and retains completed copies if a later job fails.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 import hashlib
 import json
 from pathlib import Path
@@ -64,6 +64,7 @@ class PreparedJob:
     rows: tuple
     serialized_sha256: str
     profile_sha256: str
+    context_sha256: str
 
 
 @dataclass(frozen=True)
@@ -80,6 +81,45 @@ def _digest(value):
 def _canonical(value):
     return json.dumps(value, sort_keys=True, ensure_ascii=True,
                       separators=(',', ':'), allow_nan=False).encode('ascii')
+
+
+def _native_context_digest(document):
+    """Bind opaque original companions without codec state or local paths.
+
+    Registered adapters expose original context through these frozen snapshot
+    attributes. Owner dataclasses include complete original Steam/Xbox bytes;
+    their source/directory paths deliberately do not distinguish copied bundles.
+    Codec headers, seeds and dynamic field definitions are handled separately.
+    """
+    nodes = 0
+
+    def identity(value, depth=0):
+        nonlocal nodes
+        nodes += 1
+        if depth > 8 or nodes > 1000:
+            raise SaveError('Original automation context exceeds its metadata bound.')
+        if value is None or type(value) in (str, int, bool):
+            return value
+        if type(value) is bytes:
+            return {'bytes': len(value), 'sha256': _digest(value)}
+        if is_dataclass(value) and not isinstance(value, type):
+            result = {'type': type(value).__module__ + '.' + type(value).__qualname__,
+                      'fields': [[field.name, identity(getattr(value, field.name), depth + 1)]
+                                 for field in dataclass_fields(value)
+                                 if not isinstance(getattr(value, field.name), Path)]}
+            # Steam's original basename is a property of its excluded source
+            # path. Native writers require its exact spelling as well as bytes.
+            if hasattr(value, 'basename'):
+                result['basename'] = identity(value.basename, depth + 1)
+            return result
+        if type(value) is tuple:
+            return [identity(item, depth + 1) for item in value]
+        raise SaveError('This adapter does not expose immutable original automation context.')
+
+    context = [[name, identity(getattr(document, name))]
+               for name in ('context_sha256', 'context_digest', 'native_directory', 'owner', 'context')
+               if hasattr(document, name)]
+    return _digest(_canonical(context))
 
 
 def _text(value, maximum=240):
@@ -300,13 +340,15 @@ def _prepare_job(workflow, spec, adapter):
     rows = tuple((key, fields[key].value(document.payload), value)
                  for key, value in sorted(pending.items()))
     edit_presets.validate_source(adapter, document)
-    return PreparedJob(spec, adapter, document, tuple(sorted(pending.items())), rows, _digest(raw), profile)
+    return PreparedJob(spec, adapter, document, tuple(sorted(pending.items())), rows,
+                       _digest(raw), profile, _native_context_digest(document))
 
 
 def _token(workflow, jobs):
     return _digest(_canonical({'workflow': workflow_data(workflow), 'jobs': [
         {'id': job.spec.id, 'source': str(job.spec.source), 'destination': str(job.spec.destination),
          'source_sha256': job.document.sha256, 'profile_sha256': job.profile_sha256,
+         'context_sha256': job.context_sha256,
          'output_sha256': job.serialized_sha256, 'pending': job.pending, 'rows': job.rows}
         for job in jobs]}))
 
@@ -409,7 +451,8 @@ def apply(batch, review_token, *, journal=None, cancelled=None):
             if journal is not None:
                 journal.intent(job.spec.id)
             result = job.adapter.save_as(job.document, dict(job.pending), job.spec.destination)
-            if _digest(result.raw) != job.serialized_sha256:
+            if (_digest(result.raw) != job.serialized_sha256
+                    or _native_context_digest(result) != job.context_sha256):
                 raise SaveError('Saved output differs from the reviewed native result.')
             edit_presets.validate_source(job.adapter, job.document)
             if journal is not None:
@@ -436,7 +479,8 @@ def apply(batch, review_token, *, journal=None, cancelled=None):
             if safe_path(job.spec.destination) != job.spec.destination:
                 raise SaveError('Completed destination identity changed.')
             actual = job.adapter.read_save(job.spec.destination)
-            if _digest(actual.raw) != job.serialized_sha256:
+            if (_digest(actual.raw) != job.serialized_sha256
+                    or _native_context_digest(actual) != job.context_sha256):
                 raise SaveError('Completed destination differs from the reviewed output.')
         except Exception:
             outcomes[index] = {'id': job.spec.id, 'status': 'verification_failed',
@@ -469,7 +513,8 @@ def inspect_recovery(batch, journal):
             # Native read_save binds the exact game/profile and integrity.
             # The reviewed digest covers every output byte. Do not compare
             # input/output field maps: valid edits can remove eligible fields.
-            if _digest(document.raw) == job.serialized_sha256:
+            if (_digest(document.raw) == job.serialized_sha256
+                    and _native_context_digest(document) == job.context_sha256):
                 return 'verified'
         except Exception:
             pass

@@ -185,6 +185,49 @@ class ApplicationShellTests(unittest.TestCase):
         self.app.open_library_match()
         self.assertEqual(self.app.active_game, 'dw7xl')
 
+    def test_real_help_workspace_and_late_panels_follow_text_size_and_locale(self):
+        from tkinter import font
+        self.app.text_size_choice.set('140%')
+        self.app.change_text_size()
+        self.app.show_help('compatibility')
+        center = self.app.help_center
+        self.assertEqual(len(center.matrix.get_children()), len(self.app.library_games))
+        self.assertEqual(font.Font(self.root, font=center.compatibility_detail.cget('font')).actual('size'), 14)
+        self.app.show_help('validation')
+        panel = center._panels['validation']
+        record = panel.record
+        self.assertEqual(font.Font(self.root, font=panel.preview.cget('font')).actual('size'), 14)
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.assertIs(panel.record, record)
+        self.assertEqual(panel.language, 'de')
+        self.app.show_library()
+        self.app.execute_command('tool:validation')
+        self.assertIs(self.app.help_center, center)
+        self.assertIs(panel.record, record)
+
+    def test_real_approved_plugin_appears_in_palette_and_disable_revokes_dispatch(self):
+        from tests.test_help_center_integration import integration_manifest
+        self.app.show_help('plugins')
+        panel = self.app.help_center._panels['plugins']
+        directory = Path(self.directory.name) / 'plugins'
+        directory.mkdir()
+        (directory / 'integration.plugin.json').write_text(json.dumps(integration_manifest()))
+        self.assertTrue(panel.load_directory(directory))
+        self.assertFalse(any(entry.category == 'plugin' for entry in self.app.command_entries()))
+        panel.reviewed.set(True)
+        panel.enable_selected()
+        entry = next(entry for entry in self.app.command_entries() if entry.category == 'plugin')
+        self.app.open_command_palette()
+        palette = self.app.command_palette
+        palette.query.set(entry.id)
+        self.assertEqual(len(palette.matches), 1)
+        palette.activate()
+        self.assertIn('EnglishCommunityMarker', panel.preview.get('1.0', 'end'))
+        panel.disable_selected()
+        self.assertNotIn(entry.id, {item.id for item in self.app.command_entries()})
+        self.assertIsNone(self.app.execute_command(entry.id))
+
 
 if __name__ == '__main__':
     unittest.main()

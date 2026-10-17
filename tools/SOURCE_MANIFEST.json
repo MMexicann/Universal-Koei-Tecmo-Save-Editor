@@ -3793,8 +3793,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 9417,
-      "sha256": "c8c6c18c02a6ce4032ad68324a20896ffec93076e1b5fe8b06208ebf6608d8cb"
+      "bytes": 11684,
+      "sha256": "8364867372619982d0324c249defc3eb817ecdab3c6cce2c1ef6dece213e5b22"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5438,8 +5438,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 32420,
-      "sha256": "1513085c45d139007d990e15bdddac1536762c4c6d22af3f2928ea998be20c32"
+      "bytes": 32560,
+      "sha256": "a21fe12da0d1f3112ad69567eecdee0d8b49d6874a1d61911fd2f6548b3d4297"
     },
     {
       "path": "tools/refresh_manifest.py",

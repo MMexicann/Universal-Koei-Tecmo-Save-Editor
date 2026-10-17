@@ -9,11 +9,19 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from koei_editor import conversion
 from koei_editor.shared import batch_conversion as backend
 from koei_editor.shared.appearance import ui_font
+from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 
 class BatchWorkspace:
     def __init__(self, root, parent):
         self.root, self.frame = root, ttk.Frame(parent, padding=(28, 16))
+        self.actions = ttk.Frame(self.frame)
+        self.actions.pack(side='bottom', fill='x', pady=(8, 0))
+        for column in range(2):
+            self.actions.columnconfigure(column, weight=1)
+        self.viewport = ScrollablePanel(self.frame)
+        self.viewport.frame.pack(fill='both', expand=True)
+        body = self.viewport.content
         self.specs = []
         self.prepared = None
         self.last_report = None
@@ -26,21 +34,20 @@ class BatchWorkspace:
         self._stop = threading.Event()
         self._statuses = {}
         ttk.Label(
-            self.frame, text="BATCH CONVERTER", font=(ui_font(root), 23, "bold")
+            body, text="BATCH CONVERTER", font=(ui_font(root), 23, "bold")
         ).pack(anchor="w")
         ttk.Label(
-            self.frame,
+            body,
             text="Review several conversions, then create separate verified copies.",
             style="Muted.TLabel",
         ).pack(anchor="w", pady=(4, 12))
         ttk.Label(
-            self.frame,
+            body,
             text="Add a reviewed job from Save Converter, or load a schema-1 JSON plan. "
             "Every job uses an explicit supported route and a new output folder. All jobs pass preflight before any copy is written.",
             wraplength=980,
         ).pack(anchor="w", pady=(0, 14))
-        bar = ttk.Frame(self.frame)
-        bar.pack(fill="x")
+        bar = self.actions
         self.controls = []
         for text, callback in (
             ("Load plan…", self.load),
@@ -50,23 +57,24 @@ class BatchWorkspace:
             ("Clear queue", self.clear),
         ):
             button = ttk.Button(bar, text=text, command=callback)
-            button.pack(side="left", padx=(0, 8))
+            index = len(self.controls)
+            button.grid(row=index // 2, column=index % 2, sticky="ew", padx=(0, 8), pady=3)
             self.controls.append(button)
         self.export_button = ttk.Button(
             bar, text="Export reviewed copies", command=self.export, state="disabled"
         )
-        self.export_button.pack(side="left", padx=8)
+        self.export_button.grid(row=2, column=1, sticky="ew", padx=(0, 8), pady=3)
         self.stop_button = ttk.Button(
             bar, text="Stop after current copy", command=self.stop, state="disabled"
         )
-        self.stop_button.pack(side="left")
+        self.stop_button.grid(row=3, column=0, sticky="ew", padx=(0, 8), pady=3)
         self.status = tk.StringVar(
             root, value="The queue is empty. Add a reviewed conversion or load a plan."
         )
-        ttk.Label(self.frame, textvariable=self.status, wraplength=980).pack(
+        ttk.Label(body, textvariable=self.status, wraplength=980).pack(
             anchor="w", pady=(14, 8)
         )
-        table = ttk.Frame(self.frame)
+        table = ttk.Frame(body)
         table.pack(fill="both", expand=True)
         self.table = ttk.Treeview(
             table,
@@ -85,18 +93,21 @@ class BatchWorkspace:
             self.table.heading(key, text=text)
             self.table.column(key, width=width, minwidth=70)
         scroll = ttk.Scrollbar(table, orient="vertical", command=self.table.yview)
-        self.table.configure(yscrollcommand=scroll.set)
+        horizontal = ttk.Scrollbar(table, orient="horizontal", command=self.table.xview)
+        self.table.configure(yscrollcommand=scroll.set, xscrollcommand=horizontal.set)
         scroll.pack(side="right", fill="y")
+        horizontal.pack(side="bottom", fill="x")
         self.table.pack(fill="both", expand=True)
         self.table.bind("<<TreeviewSelect>>", self.show_scope)
         self.scope = tk.StringVar(
             root, value="Select a job to review its transfer scope."
         )
-        detail = ttk.Frame(self.frame)
+        detail = ttk.Frame(body)
         detail.pack(fill="x", pady=12)
         self.scope_preview = tk.Text(
             detail,
             height=5,
+            width=1,
             wrap="word",
             relief="flat",
             state="disabled",
@@ -112,19 +123,27 @@ class BatchWorkspace:
         self.scope.trace_add("write", self._render_scope)
         self._render_scope()
         self.report_button = ttk.Button(
-            self.frame,
+            self.actions,
             text="Save batch report…",
             command=self.save_report,
             state="disabled",
         )
-        self.report_button.pack(anchor="w")
+        self.report_button.grid(row=3, column=1, sticky="ew", padx=(0, 8), pady=3)
         ttk.Label(
-            self.frame,
+            body,
             text="A later failure or stop retains completed verified copies. Remaining jobs are not started. "
             "Console reimport/signing and in-game testing remain external.",
             style="Muted.TLabel",
             wraplength=980,
         ).pack(anchor="w", pady=(10, 0))
+
+        body.bind('<Configure>',self._resize_guidance,add='+')
+
+    def _resize_guidance(self, event):
+        for widget in self.viewport.content.winfo_children():
+            if isinstance(widget, ttk.Label):
+                widget.configure(wraplength=max(1, event.width - 8))
+
 
     def _render_scope(self, *_args):
         self.scope_preview.configure(state="normal")
@@ -133,6 +152,7 @@ class BatchWorkspace:
         self.scope_preview.configure(state="disabled")
 
     def apply_theme(self, palette):
+        self.viewport.apply_theme(palette)
         self.scope_preview.configure(
             background=palette["surface"],
             foreground=palette["text"],

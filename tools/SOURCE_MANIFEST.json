@@ -638,8 +638,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 14308,
-      "sha256": "6ee81691f12f8b39c1ab32db354762ba642f0be03ffc506092620beda4c0968d"
+      "bytes": 14537,
+      "sha256": "a9c4fe0fac290c931d94d867b3f6fb84a6c31d0db047812f35cfa0d1baf96b7f"
     },
     {
       "path": "docs/REGIONAL_EDITION_SCOPE.md",
@@ -783,8 +783,8 @@
     },
     {
       "path": "docs/SAVE_TRANSFER.md",
-      "bytes": 5057,
-      "sha256": "fda0cb78e0bfd1a6ed23b1055f24796fc8ac4f6dcf162c8569fe806bb7d25c68"
+      "bytes": 5095,
+      "sha256": "cbcb20b30b64927b9f4149159284314520867d7fad81871871390fcbd5fff30a"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -1138,8 +1138,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 43672,
-      "sha256": "dd802d03ab3622b1a808c5e3f5c11c3be16ee4d0b0f2a389a9ee72a59b485cc8"
+      "bytes": 46914,
+      "sha256": "efd5af843cc2734ef72c297b9cc8de02e1e2bbd29e2602cfbb53a787d8a8d25a"
     },
     {
       "path": "src/koei_editor/conversion.py",
@@ -4200,6 +4200,11 @@
       "path": "tests/test_edit_presets_gui.py",
       "bytes": 14853,
       "sha256": "c4295f8541120ab4bfa4d0e85622590ad4b6dff9b5c1f5aeaac06c361ebd5d7a"
+    },
+    {
+      "path": "tests/test_editing_tools_application.py",
+      "bytes": 4274,
+      "sha256": "140bb717e4ffaac12d36f85c2c458321127185fadd1aef80fac41ea250de0a7e"
     },
     {
       "path": "tests/test_editor.py",

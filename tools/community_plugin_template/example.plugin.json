@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "api": "1",
+  "id": "community.copy-guide",
+  "title": "Copied-save preparation example",
+  "version": "1.0.0",
+  "author": "Example contributor",
+  "description": "An inert bilingual extension example. It adds guidance, not game adapters or verified support.",
+  "capabilities": ["help", "workflows", "commands"],
+  "contributions": [
+    {
+      "kind": "help",
+      "id": "copy-help-en",
+      "title": "Keep original copies",
+      "locale": "en",
+      "game_ids": [],
+      "body": "Back up the complete original export. Work on a separate copy outside live game and cloud folders. Keep original companion metadata. Select the exact registered game/platform; this example does not qualify any save format."
+    },
+    {
+      "kind": "help",
+      "id": "copy-help-de",
+      "title": "Originalkopien aufbewahren",
+      "locale": "de",
+      "game_ids": [],
+      "body": "Den vollständigen Originalexport sichern. Eine separate Kopie außerhalb aktiver Spiel- und Cloud-Ordner bearbeiten. Zugehörige Original-Metadaten aufbewahren. Das genaue registrierte Spiel und die Plattform auswählen. Dieses Beispiel bestätigt kein Speicherformat."
+    },
+    {
+      "kind": "workflows",
+      "id": "prepare-en",
+      "title": "Prepare a copied export",
+      "locale": "en",
+      "game_ids": [],
+      "platforms": ["Windows PC", "Console exports"],
+      "steps": [
+        "Create a complete backup and a separate working copy using the platform-specific export process.",
+        "Keep the original companion files. Consult the application's exact platform guide before import or export.",
+        "Select the exact supported game/platform and review the editor's changes before saving to a new destination.",
+        "Keep unchanged and edited copies separate. Record successful in-game loading and re-saving independently from procedural checks."
+      ]
+    },
+    {
+      "kind": "workflows",
+      "id": "prepare-de",
+      "title": "Exportkopie vorbereiten",
+      "locale": "de",
+      "game_ids": [],
+      "platforms": ["Windows PC", "Konsolenexporte"],
+      "steps": [
+        "Vollständige Sicherung und separate Arbeitskopie mit dem Exportverfahren der Plattform erstellen.",
+        "Original-Begleitdateien aufbewahren. Vor Import oder Export die genaue Plattformanleitung lesen.",
+        "Das genaue unterstützte Spiel und die Plattform auswählen. Änderungen vor dem Speichern an einem neuen Ziel prüfen.",
+        "Unveränderte und bearbeitete Kopien getrennt halten. Erfolgreiches Laden und erneutes Speichern im Spiel gesondert dokumentieren."
+      ]
+    },
+    {
+      "kind": "commands",
+      "id": "open-guide-en",
+      "title": "Open copied-save guide",
+      "locale": "en",
+      "game_ids": [],
+      "target": "prepare-en"
+    },
+    {
+      "kind": "commands",
+      "id": "open-guide-de",
+      "title": "Anleitung für Exportkopien öffnen",
+      "locale": "de",
+      "game_ids": [],
+      "target": "prepare-de"
+    }
+  ]
+}

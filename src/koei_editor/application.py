@@ -1,13 +1,17 @@
 """Universal Dynasty Warriors application shell, with retained game sessions."""
 import argparse
 import sys
+from dataclasses import replace
 import tkinter as tk
 from tkinter import ttk
 from koei_editor.shared.appearance import Appearance, THEMES
 from koei_editor.game_registry import GAMES, ALL_ADAPTERS, get_game
 from koei_editor.supported_games import SUPPORTED_GAMES
-from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, matching_games, series_for
+from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, LibraryCatalog, matching_games, series_for
 import koei_editor.shared.preferences as preferences
+from koei_editor.shared import shell_preferences
+from koei_editor.shared.localization import LANGUAGES, translate
+from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
 VERSION = '2.7'
 
@@ -17,6 +21,14 @@ class Application(Appearance):
         self.root = root
         self.preferences_path = preferences_path
         self._persist_theme = persist_preferences
+        self.shell_preferences_path = shell_preferences.shell_path(preferences_path)
+        self.shell_settings = shell_preferences.load(self.shell_preferences_path)
+        self.language = self.shell_settings.language
+        self.command_palette = None
+        self.help_center = None
+        self._translated_widgets = []
+        self._search_after = None
+        self._navigation_after = None
         initial_theme = preferences.load_theme(preferences_path)
         self.style = ttk.Style(root)
         self.style.theme_use('clam')
@@ -32,7 +44,7 @@ class Application(Appearance):
         self.workflow_builder = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
-        root.minsize(1080, 820)
+        root.minsize(780, 680)
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
         self.editing_tools_menu.add_command(label='Reusable Editing Presets...', command=self.show_editing_presets)
@@ -45,26 +57,53 @@ class Application(Appearance):
         root.option_add('*Font', (self.font_family, 10))
         top = ttk.Frame(root, padding=(18, 10))
         top.pack(fill='x')
-        self.home_button = ttk.Button(top, text='‹ Game Library', command=self.show_library)
-        self.home_button.pack(side='left')
-        self.converter_button = ttk.Button(top, text='Save Converter', command=self.show_converter)
-        self.converter_button.pack(side='left', padx=(10, 0))
-        self.compare_button = ttk.Button(top, text='Compare Saves', command=self.show_comparison)
-        self.compare_button.pack(side='left', padx=(10, 0))
-        self.batch_button = ttk.Button(top, text='Batch Converter', command=self.show_batch)
-        self.batch_button.pack(side='left', padx=(10, 0))
-        self.save_library_button = ttk.Button(top, text='Save Library', command=self.show_save_library)
-        self.save_library_button.pack(side='left', padx=(10, 0))
-        self.breadcrumb = tk.StringVar(root, value='Choose your game')
-        self.theme_selector = ttk.Combobox(top, values=tuple(THEMES), textvariable=self.theme_name,
+        self._shell_top = top
+        top.columnconfigure(0, weight=1)
+        self.command_button = self._translated(ttk.Button(top, command=self.open_command_palette), 'commands')
+        self.command_button.grid(row=0, column=0, sticky='ew', padx=(0, 16))
+        settings = ttk.Frame(top)
+        settings.grid(row=0, column=1, sticky='e')
+        self._shell_settings_frame = settings
+        for column, key in enumerate(('appearance', 'language', 'text_size')):
+            self._translated(ttk.Label(settings, style='Muted.TLabel'), key).grid(row=0, column=column, sticky='w')
+        self.theme_selector = ttk.Combobox(settings, values=tuple(THEMES), textvariable=self.theme_name,
                                           state='readonly', width=7)
-        self.theme_selector.pack(side='right')
+        self.theme_selector.grid(row=1, column=0)
         self.theme_selector.bind('<<ComboboxSelected>>', lambda _event: self.apply_theme(self.theme_name.get()))
-        ttk.Label(top, text='Appearance', style='Muted.TLabel').pack(side='right', padx=9)
-        self.author_label = ttk.Label(top, text='Made by Mexican', style='Muted.TLabel')
-        self.author_label.pack(side='right', padx=20)
-        self.breadcrumb_label = ttk.Label(top, textvariable=self.breadcrumb, style='Muted.TLabel', width=1)
-        self.breadcrumb_label.pack(side='left', fill='x', expand=True, padx=14)
+        self.language_choice = tk.StringVar(root, value=LANGUAGES[self.language])
+        self.language_selector = ttk.Combobox(settings, values=tuple(LANGUAGES.values()),
+                                              textvariable=self.language_choice, state='readonly', width=8)
+        self.language_selector.grid(row=1, column=1, padx=8)
+        self.language_selector.bind('<<ComboboxSelected>>', self.change_language)
+        self.text_size_choice = tk.StringVar(root, value=f'{self.shell_settings.text_size}%')
+        self.text_size_selector = ttk.Combobox(settings, values=('100%', '120%', '140%'),
+                                              textvariable=self.text_size_choice, state='readonly', width=5)
+        self.text_size_selector.grid(row=1, column=2)
+        self.text_size_selector.bind('<<ComboboxSelected>>', self.change_text_size)
+        self.navigation = ttk.Frame(top)
+        self.navigation.grid(row=1, column=0, columnspan=2, sticky='ew', pady=(10, 0))
+        self.home_button = self._translated(ttk.Button(self.navigation, command=self.show_library), 'library')
+        self.converter_button = self._translated(ttk.Button(self.navigation, command=self.show_converter), 'converter')
+        self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
+        self.batch_button = self._translated(ttk.Button(self.navigation, command=self.show_batch), 'batch')
+        self.save_library_button = self._translated(ttk.Button(self.navigation, command=self.show_save_library), 'save_library')
+        self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
+        self.help_menu = tk.Menu(self.help_button, tearoff=False)
+        self.help_button.configure(menu=self.help_menu)
+        self._navigation_buttons = (self.home_button, self.converter_button, self.compare_button,
+                                    self.batch_button, self.save_library_button, self.help_button)
+        self.navigation.bind('<Configure>', self._schedule_navigation)
+        self._layout_navigation()
+        location = ttk.Frame(top)
+        self._shell_location = location
+        location.grid(row=2, column=0, columnspan=2, sticky='ew', pady=(8, 0))
+        self.breadcrumb = tk.StringVar(root, value=self.tr('choose'))
+        self.breadcrumb_label = ttk.Label(location, textvariable=self.breadcrumb, style='Muted.TLabel', width=1)
+        self.breadcrumb_label.pack(side='left', fill='x', expand=True)
+        self.author_label = ttk.Label(location, text='Made by Mexican', style='Muted.TLabel')
+        self.author_label.pack(side='right')
+        self._rebuild_help_menu()
+        top.bind('<Configure>', self._schedule_navigation)
         self.session_bar = ttk.Frame(root, padding=(18, 0, 18, 8))
         self.session_caption = tk.StringVar(root, value='Open editors')
         ttk.Label(self.session_bar, textvariable=self.session_caption, style='Muted.TLabel').pack(side='left', padx=(0, 10))
@@ -81,48 +120,55 @@ class Application(Appearance):
         ttk.Label(self.library, text='KOEI TECMO', font=(self.font_family, 27, 'bold')).pack(anchor='w', pady=(8, 0))
         ttk.Label(self.library, text='SAVE EDITOR', font=(self.font_family, 17), style='Muted.TLabel').pack(anchor='w')
         self.library_games = tuple(GAMES)
+        self._library_catalog = LibraryCatalog(self.library_games)
         platforms = tuple(dict.fromkeys(game.platform for game in self.library_games))
         platform_bar = ttk.Frame(self.library)
         platform_bar.pack(fill='x', pady=(12, 12))
-        ttk.Label(platform_bar, text='Choose your platform', font=(self.font_family, 12)).pack(side='left', padx=(0, 12))
+        platform_bar.columnconfigure(0, weight=1)
+        platform_bar.columnconfigure(1, weight=1)
+        self._translated(ttk.Label(platform_bar, font=(self.font_family, 12)), 'platform').grid(row=0, column=0, sticky='w')
         self.platform_choice = tk.StringVar(root, value='Windows PC')
         self.platform_selector = ttk.Combobox(platform_bar, textvariable=self.platform_choice,
                                              values=(ALL_PLATFORMS,) + platforms, state='readonly', width=20)
-        self.platform_selector.pack(side='left')
+        self.platform_selector.grid(row=1, column=0, sticky='ew', padx=(0, 16), pady=(4, 0))
         self.platform_selector.bind('<<ComboboxSelected>>', self.show_platform)
-        ttk.Label(platform_bar, text='Series', style='Muted.TLabel').pack(side='left', padx=(20, 8))
+        self._translated(ttk.Label(platform_bar, style='Muted.TLabel'), 'series').grid(row=0, column=1, sticky='w')
         self.series_choice = tk.StringVar(root, value=ALL_SERIES)
         self.series_selector = ttk.Combobox(platform_bar, textvariable=self.series_choice,
                                              values=(ALL_SERIES,) + tuple(sorted({series_for(game) for game in self.library_games})),
                                              state='readonly', width=24)
-        self.series_selector.pack(side='left')
+        self.series_selector.grid(row=1, column=1, sticky='ew', pady=(4, 0))
         self.series_selector.bind('<<ComboboxSelected>>', self.show_platform)
         search_bar = ttk.Frame(self.library)
         search_bar.pack(fill='x', pady=(0, 10))
-        ttk.Label(search_bar, text='Find a game', style='Muted.TLabel').pack(side='left', padx=(0, 12))
+        self._translated(ttk.Label(search_bar, style='Muted.TLabel'), 'find').pack(side='left', padx=(0, 12))
         self.library_search = tk.StringVar(root)
         self.library_search_entry = ttk.Entry(search_bar, textvariable=self.library_search)
         self.library_search_entry.pack(side='left', fill='x', expand=True)
         self.library_search_entry.bind('<Return>', self.open_library_match)
         self.library_search_entry.bind('<Escape>', self.clear_library_filters)
-        ttk.Button(search_bar, text='Clear filters', command=self.clear_library_filters).pack(side='left', padx=10)
+        self._translated(ttk.Button(search_bar, command=self.clear_library_filters), 'clear').pack(side='left', padx=10)
         self.compact_library = tk.BooleanVar(root, value=False)
         self.compact_toggle = ttk.Checkbutton(
-            search_bar, text='Compact cards', style='LibraryDensity.TCheckbutton',
+            search_bar, text=self.tr('compact'), style='LibraryDensity.TCheckbutton',
             variable=self.compact_library, command=self.update_library_density)
         self.compact_toggle.pack(side='right', padx=(8, 0))
+        self._translated_widgets.append((self.compact_toggle, 'compact'))
         self.library_hint = tk.StringVar(root)
-        ttk.Label(self.library, textvariable=self.library_hint,
-                  style='Muted.TLabel', wraplength=1000).pack(anchor='w', pady=(0, 18))
+        self.library_hint_label = ttk.Label(self.library, textvariable=self.library_hint,
+                                            style='Muted.TLabel', wraplength=1000)
+        self.library_hint_label.pack(anchor='w', pady=(0, 18))
         # Reserve the footer before the expanding cards so its controls remain
         # reachable at the minimum window size.
         self.library_footer = ttk.Frame(self.library)
         self.library_footer.pack(side='bottom', fill='x', pady=(16, 0))
-        ttk.Label(self.library_footer, text='Always work with a separate copy. Your game sessions stay open when you switch games.',
-                  style='Muted.TLabel', wraplength=1000).pack(anchor='w')
+        self.library_footer_label = self._translated(ttk.Label(self.library_footer, style='Muted.TLabel', wraplength=1000), 'footer')
+        self.library_footer_label.pack(anchor='w')
+        self.library.bind('<Configure>', lambda event: [widget.configure(wraplength=max(200, event.width - 76))
+                                                       for widget in (self.library_hint_label, self.library_footer_label)])
         footer_buttons = ttk.Frame(self.library_footer)
         footer_buttons.pack(fill='x', pady=(12, 0))
-        self.contact_button = ttk.Button(footer_buttons, text='Contact Mexican', command=self.contact)
+        self.contact_button = self._translated(ttk.Button(footer_buttons, command=self.contact), 'contact')
         self.contact_button.pack(side='left')
         self.workflow_button = ttk.Button(footer_buttons, text='Workflow Builder', command=self.show_workflow_builder)
         self.workflow_button.pack(side='left', padx=10)
@@ -132,6 +178,7 @@ class Application(Appearance):
         self.platform_canvases = {}
         self._library_contents = {}
         self._library_windows = {}
+        self._library_columns = {}
         for platform, frame in self.platform_frames.items():
             frame.columnconfigure(0, weight=1)
             frame.rowconfigure(0, weight=1)
@@ -154,13 +201,15 @@ class Application(Appearance):
         self.library_banners = {}
         self.library_matches = ()
         self._library_filter_key = None
-        self.library_empty = {scope: ttk.Label(content, text='No games match. Try another name or clear the filters.',
-                                               style='Muted.TLabel')
+        self.library_empty = {scope: self._translated(ttk.Label(content, style='Muted.TLabel'), 'empty')
                               for scope, content in self._library_contents.items()}
         for platform in platforms:
             self.create_library_cards(platform)
-        self.library_search.trace_add('write', lambda *_args: self.show_platform())
+        self.library_search.trace_add('write', self.schedule_library_search)
         root.bind('<Control-f>', self.focus_library_search, add='+')
+        root.bind('<Control-k>', self.open_command_palette, add='+')
+        root.bind('<Control-K>', self.open_command_palette, add='+')
+        root.bind('<F1>', lambda _event: self.show_help(), add='+')
         self.show_platform()
         root.bind('<MouseWheel>', self.scroll_library, add='+')
         root.bind('<Button-4>', lambda event: self.scroll_library(event, -1), add='+')
@@ -169,6 +218,183 @@ class Application(Appearance):
                                  ('<Control-Shift-S>', 'save_as'), ('<Control-z>', 'undo'), ('<Control-r>', 'review')):
             root.bind(shortcut, lambda _event, name=method: self.dispatch(name))
         root.protocol('WM_DELETE_WINDOW', self.close)
+        self._apply_text_size()
+
+    def tr(self, key, **values):
+        return translate(key, self.language, **values)
+
+    def _translated(self, widget, key):
+        widget.configure(text=self.tr(key))
+        self._translated_widgets.append((widget, key))
+        return widget
+
+    def _save_shell_settings(self):
+        if self._persist_theme:
+            shell_preferences.save(self.shell_settings, self.shell_preferences_path)
+
+    def _remember_workspace(self, command_id):
+        updated = shell_preferences.remember(self.shell_settings, command_id)
+        if updated != self.shell_settings:
+            self.shell_settings = updated
+            self._save_shell_settings()
+
+    def _toggle_favorite(self, command_id):
+        self.shell_settings = shell_preferences.toggle_favorite(self.shell_settings, command_id)
+        self._save_shell_settings()
+        return self.shell_settings.favorites
+
+    def change_language(self, _event=None):
+        self.language = next(key for key, value in LANGUAGES.items() if value == self.language_choice.get())
+        self.shell_settings = replace(self.shell_settings, language=self.language)
+        for widget, key in self._translated_widgets:
+            widget.configure(text=self.tr(key))
+        self._rebuild_help_menu()
+        self.refresh_sessions()
+        self.show_platform()
+        if self.active_game is None:
+            visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library')
+                            if getattr(self, key) is not None and getattr(self, key).frame.winfo_manager()), None)
+            self.breadcrumb.set(self.tr(visible or ('help' if self.help_center is not None
+                                                   and self.help_center.frame.winfo_manager() else 'choose')))
+        if self.help_center is not None:
+            set_language = getattr(self.help_center, 'set_language', None)
+            if callable(set_language):
+                set_language(self.language)
+        self._layout_navigation()
+        self._save_shell_settings()
+
+    def change_text_size(self, _event=None):
+        self.shell_settings = replace(self.shell_settings, text_size=int(self.text_size_choice.get().rstrip('%')))
+        self._apply_text_size()
+        self._layout_navigation()
+        self._save_shell_settings()
+
+    def _apply_text_size(self):
+        # Keep Tk's native DPI scaling. Point fonts automatically respect it;
+        # this additional preference is a user-selected readability adjustment.
+        size = round(10 * self.shell_settings.text_size / 100)
+        self.root.option_add('*Font', (self.font_family, size))
+        self.style.configure('.', font=(self.font_family, size))
+        self.style.configure('Treeview', rowheight=max(29, size * 2 + 9))
+        if self.help_center is not None:
+            self.help_center.set_text_size(size, self.font_family)
+
+    def _schedule_navigation(self, _event=None):
+        if self._navigation_after is None:
+            self._navigation_after = self.root.after_idle(self._layout_navigation)
+
+    def _layout_navigation(self):
+        self._navigation_after = None
+        if hasattr(self, '_shell_location'):
+            needed = self.command_button.winfo_reqwidth() + self._shell_settings_frame.winfo_reqwidth() + 16
+            stacked = self._shell_top.winfo_width() < needed
+            self.command_button.grid_configure(columnspan=2 if stacked else 1)
+            self._shell_settings_frame.grid_configure(row=1 if stacked else 0, column=0 if stacked else 1,
+                                                      columnspan=2 if stacked else 1, pady=(6, 0) if stacked else 0)
+            self.navigation.grid_configure(row=2 if stacked else 1)
+            self._shell_location.grid_configure(row=3 if stacked else 2)
+        available = max(1, self.navigation.winfo_width())
+        requested = sum(button.winfo_reqwidth() + 8 for button in self._navigation_buttons)
+        columns = 3 if available < requested else 6
+        for index, button in enumerate(self._navigation_buttons):
+            row, column = divmod(index, columns)
+            button.grid(row=row, column=column, sticky='ew', padx=(0, 8), pady=(0, 4))
+        for column in range(6):
+            self.navigation.columnconfigure(column, weight=1 if column < columns else 0)
+
+    def _rebuild_help_menu(self):
+        self.help_menu.delete(0, 'end')
+        for tab in ('help', 'compatibility', 'workflows', 'feedback', 'validation', 'plugins'):
+            self.help_menu.add_command(label=self.tr(tab), command=lambda name=tab: self.show_help(name))
+
+    def command_entries(self):
+        entries = [CommandEntry('game:' + game.id, game.title + ' · ' + game.subtitle,
+                                'game', game.platform, game.id + ' ' + game.description)
+                   for game in self.library_games]
+        for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
+                    'help', 'compatibility', 'workflows', 'feedback', 'validation', 'plugins'):
+            entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+        for key in ('theme_light', 'theme_dark', 'search_fields'):
+            entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
+        if self.active_game is not None:
+            for key in ('open_copy', 'save_copy', 'save_as', 'undo', 'review'):
+                entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
+        if self.help_center is not None:
+            plugin_commands = getattr(self.help_center, 'plugin_commands', None)
+            if callable(plugin_commands):
+                for key, title, description in plugin_commands():
+                    entries.append(CommandEntry('plugin:' + key, title, 'plugin', description, 'plugin community'))
+        favorite_words = self.tr('favorites') + ' favorites favorite'
+        recent_words = self.tr('recent') + ' recent workspace'
+        return tuple(replace(entry, keywords=entry.keywords
+                             + (' ' + favorite_words if entry.id in self.shell_settings.favorites else '')
+                             + (' ' + recent_words if entry.id in self.shell_settings.recent else ''))
+                     for entry in entries)
+
+    def open_command_palette(self, _event=None):
+        if self.command_palette is not None and self.command_palette.window.winfo_exists():
+            self.command_palette.close()
+            return 'break'
+        # Respect an existing safety/review dialog rather than stealing its grab.
+        if self.root.grab_current() is not None:
+            return 'break'
+        self.command_palette = CommandPalette(
+            self.root, self.command_entries(), self.execute_command,
+            favorites=self.shell_settings.favorites, recent=self.shell_settings.recent,
+            on_favorite=self._toggle_favorite, language=self.language,
+            palette=THEMES[self.theme_name.get()])
+        return 'break'
+
+    def execute_command(self, command_id):
+        # Only IDs in the current catalog may resolve to actions. Preferences
+        # and community metadata never provide Python callbacks or imports.
+        if command_id not in {entry.id for entry in self.command_entries()}:
+            return
+        category, key = command_id.split(':', 1)
+        if category == 'plugin':
+            self.show_help('plugins')
+            return self.help_center.open_plugin_command(key)
+        if category == 'game':
+            return self.select_game(key)
+        if category == 'tool':
+            methods = {'library': self.show_library, 'converter': self.show_converter,
+                       'comparison': self.show_comparison, 'batch': self.show_batch,
+                       'save_library': self.show_save_library}
+            return methods[key]() if key in methods else self.show_help(key)
+        if key in ('theme_light', 'theme_dark'):
+            return self.apply_theme('Light' if key == 'theme_light' else 'Dark')
+        if key == 'search_fields':
+            return self.focus_library_search()
+        methods = {'open_copy': 'open', 'save_copy': 'save_changes', 'save_as': 'save_as',
+                   'undo': 'undo', 'review': 'review'}
+        if key in methods:
+            return self.dispatch(methods[key])
+
+    def show_help(self, tab='help'):
+        from koei_editor.shared.help_center import HelpCenter
+        if self.help_center is None:
+            self.help_center = HelpCenter(self.root, self.workspace, initial_tab=tab, language=self.language)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self.active_game = None
+        self.help_center.show_tab(tab)
+        self.help_center.frame.pack(fill='both', expand=True)
+        self.help_center.apply_theme(THEMES[self.theme_name.get()])
+        self.help_center.set_text_size(round(10 * self.shell_settings.text_size / 100), self.font_family)
+        self.breadcrumb.set(self.tr(tab))
+        self._remember_workspace('tool:' + tab)
+        return 'break'
+
+    def schedule_library_search(self, *_args):
+        self._flush_library_search()
+        self._search_after = self.root.after_idle(self.show_platform)
+
+    def _flush_library_search(self):
+        if self._search_after is not None:
+            self.root.after_cancel(self._search_after)
+            self._search_after = None
 
     def refresh_sessions(self):
         if not hasattr(self, 'session_bar'):
@@ -181,14 +407,14 @@ class Application(Appearance):
             game = get_game(key)
             editor = self.sessions[key][1]
             count = len(editor.changes)
-            label = f'{game.title} - {game.subtitle}' + (f' [{count:,} pending]' if count else '')
+            label = f'{game.title} - {game.subtitle}' + (' [' + self.tr('pending', count=f'{count:,}') + ']' if count else '')
             labels[label] = key
             if key == self.active_game:
                 current = label
         previous = self._session_labels.get(self.session_choice.get())
         self._session_labels = labels
         self.session_selector.configure(values=tuple(labels))
-        self.session_caption.set(f'Open editors ({len(labels)})')
+        self.session_caption.set(self.tr('open_editors', count=len(labels)))
         self.session_choice.set(current or next((label for label, key in labels.items() if key == previous),
                                                 next(iter(labels), '')))
         if labels and not self.session_bar.winfo_manager():
@@ -208,9 +434,8 @@ class Application(Appearance):
         self.library_banners[scope] = {}
         games = tuple(game for game in self.library_games
                       if scope == ALL_PLATFORMS or game.platform == scope)
-        for game in games:
+        for index, game in enumerate(games):
             platform_games = games
-            index = platform_games.index(game)
             compact = len(platform_games) > 3
             columns = 3 if len(platform_games) > 4 else len(platform_games)
             row, column = divmod(index, columns)
@@ -280,10 +505,17 @@ class Application(Appearance):
                 theme_dashboard(name)
         for tool in self._tool_workspaces():
             tool.apply_theme(palette)
+        if self.command_palette is not None and self.command_palette.window.winfo_exists():
+            self.command_palette.apply_theme(palette)
+        self._apply_text_size()
 
     def resize_library_cards(self, platform):
         canvas = self.platform_canvases[platform]
         content = self._library_contents[platform]
+        if platform == self.platform_choice.get() and platform in self.library_cards:
+            columns = min(3, max(1, len(self.library_matches)), max(1, canvas.winfo_width() // 280))
+            if self._library_columns.get(platform) != columns:
+                self._arrange_library_matches(platform, columns)
         height = max(canvas.winfo_height(), content.winfo_reqheight())
         canvas.itemconfigure(self._library_windows[platform], width=canvas.winfo_width(), height=height)
         canvas.configure(scrollregion=(0, 0, canvas.winfo_width(), height))
@@ -364,6 +596,7 @@ class Application(Appearance):
         frame, editor = self.sessions[game_id]
         frame.pack(fill='both', expand=True)
         self.active_game = game_id
+        self._remember_workspace('game:' + game_id)
         self.refresh_sessions()
         self.breadcrumb.set(game.title + ' · ' + game.subtitle)
         self.apply_theme(self.theme_name.get())
@@ -375,7 +608,8 @@ class Application(Appearance):
             frame.pack_forget()
         self.library.pack(fill='both', expand=True)
         self.active_game = None
-        self.breadcrumb.set('Choose your game')
+        self.breadcrumb.set(self.tr('choose'))
+        self._remember_workspace('tool:library')
         self.show_platform()
 
     def show_converter(self):
@@ -388,7 +622,8 @@ class Application(Appearance):
             frame.pack_forget()
         self.active_game = None
         self.converter.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Save Converter')
+        self.breadcrumb.set(self.tr('converter'))
+        self._remember_workspace('tool:converter')
         self.converter.apply_theme(THEMES[self.theme_name.get()])
 
     def show_comparison(self):
@@ -401,12 +636,13 @@ class Application(Appearance):
             frame.pack_forget()
         self.active_game = None
         self.comparison.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Compare Saves')
+        self.breadcrumb.set(self.tr('comparison'))
+        self._remember_workspace('tool:comparison')
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab', 'workflow_builder')
+                                       'editing_presets', 'research_lab', 'workflow_builder', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -472,7 +708,8 @@ class Application(Appearance):
             frame.pack_forget()
         self.active_game = None
         batch.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Batch Converter')
+        self.breadcrumb.set(self.tr('batch'))
+        self._remember_workspace('tool:batch')
         batch.apply_theme(THEMES[self.theme_name.get()])
 
     def show_save_library(self):
@@ -485,7 +722,8 @@ class Application(Appearance):
             frame.pack_forget()
         self.active_game = None
         self.save_library.frame.pack(fill='both', expand=True)
-        self.breadcrumb.set('Save Library')
+        self.breadcrumb.set(self.tr('save_library'))
+        self._remember_workspace('tool:save_library')
         self.save_library.apply_theme(THEMES[self.theme_name.get()])
 
     def show_workflow_builder(self):
@@ -526,6 +764,7 @@ class Application(Appearance):
             self.show_batch()
 
     def show_platform(self, _event=None):
+        self._flush_library_search()
         for frame in self.platform_frames.values():
             frame.pack_forget()
         scope = self.platform_choice.get()
@@ -533,14 +772,25 @@ class Application(Appearance):
             return
         self.create_library_cards(scope)
         self.platform_frames[scope].pack(fill='both', expand=True)
-        self.library_matches = matching_games(self.library_games, self.library_search.get(),
+        self.library_matches = matching_games(self._library_catalog, self.library_search.get(),
                                               scope, self.series_choice.get())
+        columns = min(3, max(1, len(self.library_matches)), max(1, self.platform_canvases[scope].winfo_width() // 280))
+        self._arrange_library_matches(scope, columns)
+        count = len(self.library_matches)
+        self.library_hint.set(self.tr('hint', count=count, scope=scope))
+        filter_key = (scope, self.library_search.get(), self.series_choice.get(), self.compact_library.get())
+        if filter_key != self._library_filter_key:
+            self.platform_canvases[scope].yview_moveto(0)
+        self._library_filter_key = filter_key
+        self.resize_library_cards(scope)
+
+    def _arrange_library_matches(self, scope, columns):
+        self._library_columns[scope] = columns
         content = self._library_contents[scope]
         for card in self.library_cards[scope].values():
             card.grid_remove()
         for row in range(len(self.library_games)):
             content.rowconfigure(row, weight=0, uniform='')
-        columns = min(3, max(1, len(self.library_matches)))
         for column in range(3):
             content.columnconfigure(column, weight=1 if column < columns else 0,
                                     uniform='cards' if column < columns else '')
@@ -553,16 +803,7 @@ class Application(Appearance):
             card.grid(row=row, column=column, sticky='nsew',
                       padx=(0, 14) if column < columns - 1 else (0, 0), pady=(0, 14))
             self.library_buttons[scope][game.id].configure(
-                text='Resume Editor' if game.id in self.sessions else 'Open Editor')
-        count = len(self.library_matches)
-        noun = 'editor' if count == 1 else 'editors'
-        self.library_hint.set(f'{count} {noun} · {scope}. Search by game, edition, platform or feature. '
-                              'Enter opens a single match; Ctrl+F searches across platforms.')
-        filter_key = (scope, self.library_search.get(), self.series_choice.get(), self.compact_library.get())
-        if filter_key != self._library_filter_key:
-            self.platform_canvases[scope].yview_moveto(0)
-        self._library_filter_key = filter_key
-        self.resize_library_cards(scope)
+                text=self.tr('resume') if game.id in self.sessions else self.tr('open'))
 
     def update_library_density(self):
         for scope, banners in self.library_banners.items():
@@ -609,6 +850,8 @@ class Application(Appearance):
         return 'break'
 
     def open_library_match(self, _event=None):
+        if self._search_after is not None:
+            self.show_platform()
         if len(self.library_matches) == 1:
             self.select_game(self.library_matches[0].id)
         return 'break'

@@ -10,6 +10,9 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 ## Development and releases
 
+- [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
+
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
@@ -43,6 +46,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
+- [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)
@@ -54,7 +58,9 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
+- [Application performance benchmarks](PERFORMANCE.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)
+- [Real-game validation and private feedback reports](REAL_GAME_VALIDATION.md)
 - [Validation and evidence boundaries](VALIDATION.md)
 - [Current release notes](RELEASE_NOTES.md), [v2.5 release notes](releases/v2.5.md), [v1.8 release notes](releases/v1.8.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
   [v1.5 release notes](releases/v1.5.md)

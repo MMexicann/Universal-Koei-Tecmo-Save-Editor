@@ -31,7 +31,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Locked dependency installation failed.' }
           python -m pip install -e . --no-build-isolation
           if ($LASTEXITCODE -ne 0) { throw 'Source package installation failed.' }
-      - name: Run the bounded native parallel-runner diagnostic
+      - name: Run the bounded native workflow-GUI diagnostic
         run: |
           @'
           from pathlib import Path
@@ -78,7 +78,7 @@ jobs:
           raise SystemExit(0 if result.wasSuccessful() and count_ok and not result.skipped else 1)
           ''', encoding='utf-8')
           tests = [
-              ('tests.test_parallel_runner', 180, 'positive'),
+              ('tests.test_automation_gui', 180, 'positive'),
           ]
           records = []
           for index, (name, limit, expected) in enumerate(tests):

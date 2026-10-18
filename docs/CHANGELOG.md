@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0 — 2026-10-18
+
+- Add command-palette navigation, favorites/recent workspaces, English/German shell and offline help, scalable text and responsive retained tools.
+- Add reusable multi-editor resource presets, validated bulk editing and exact-field navigation, qualified selective save transfer and a read-only Save Research Lab.
+- Expand progression inspection, comparison and interactive HTML export; deepen existing DW3, DW8 XL, WO3 Ultimate, Origins, Three Houses and Samurai Warriors controls within their qualified mappings.
+- Add copied-save organization, read-only Save Doctor, bounded installation/save-location discovery and native-qualified local Save Vault snapshots, branches and safe new-directory restore.
+- Add reviewed batch editing, code-free Workflow Builder, JSON automation CLI/dry runs, source/context-bound approvals and durable read-only crash recovery.
+- Add data-only community plugins, offline validation/feedback tools, indexed search, seeded malformed-save/property regressions, immediate worker failure diagnostics and repeatable application/automation benchmarks.
+- Preserve 97 profiles across 15 platforms and 139 scoped conversion routes. Existing native writers, original-source protection, backups, Undo and readback remain authoritative; edited/converted in-game load/re-save qualification and documented unsupported writers remain unchanged.
+
 ## v2.7 — 2026-10-16
 
 - Add graphical read-only progression dashboards with responsive searchable cards, section navigation, record details, bounded paging and full Light/Dark vector rendering.

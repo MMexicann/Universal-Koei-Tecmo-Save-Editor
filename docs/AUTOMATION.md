@@ -1,7 +1,6 @@
 # Reviewed automation and batch editing
 
-Development source adds reusable scalar workflows and a headless automation CLI.
-The published application remains v2.7; these changes do not publish a new binary.
+Version 3.0 adds reusable scalar workflows and a headless automation CLI.
 Automation uses the same registered `BoundScalarAdapter`, native validation,
 backups, read-back verification and new-destination `save_as` as the editors.
 DW3's tagged patch workflow and research tools retain their existing commands;

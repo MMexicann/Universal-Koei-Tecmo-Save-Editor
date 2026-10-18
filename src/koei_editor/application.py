@@ -13,7 +13,7 @@ from koei_editor.shared import shell_preferences
 from koei_editor.shared.localization import LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
-VERSION = '2.7'
+VERSION = '3.0'
 
 
 class Application(Appearance):

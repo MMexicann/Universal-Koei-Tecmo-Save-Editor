@@ -1,6 +1,6 @@
-# Game-specific editing expansion — development source
+# Game-specific editing expansion
 
-This work deepens existing editors at **v2.7**. The registered inventory remains
+Version **3.0** deepens existing editors. The registered inventory remains
 97 game/platform profiles; no additional edition is qualified by these changes.
 Use a separate save copy and review staged changes before Save As. Native-file
 checks and application workflows do not establish edited game loading/re-saving.

@@ -1,7 +1,7 @@
 # Save Doctor, automatic detection and Save Vault
 
-These development-source additions extend Save Library. The application version
-remains **2.7**; they do not create or update a published release.
+Version **3.0** extends Save Library with read-only diagnostics, bounded location
+discovery and a local native-qualified snapshot vault.
 
 Open **Save Library → Save Doctor / Detection / Vault**. The tools also open from
 **Manage selected copies**, which carries the selected profile and copies into

@@ -38,6 +38,19 @@ class ValidationToolkitTests(unittest.TestCase):
         self.assertFalse(any(value for key, value in record.summary().items() if key != 'revision_unspecified'))
         self.assertEqual(record.to_dict()['attestation'], 'user_reported_unverified')
 
+    def test_legacy_report_import_preserves_observations_and_evidence_class(self):
+        for provenance in ('procedural', 'genuine_file'):
+            with self.subTest(provenance=provenance):
+                current = complete_record(provenance)
+                legacy = current.to_dict()
+                self.assertEqual(legacy['app_version'], '3.0')
+                legacy['app_version'] = '2.7'
+                imported = ValidationRecord.from_json(json.dumps(legacy))
+                self.assertEqual(imported, current)
+                self.assertEqual(imported.to_dict()['app_version'], '3.0')
+                self.assertEqual(imported.summary(), current.summary())
+                self.assertFalse(imported.summary()['independently_verified'])
+
     def test_lanes_remain_distinct_even_after_all_game_steps(self):
         procedural = complete_record('procedural').summary()
         genuine = complete_record().summary()

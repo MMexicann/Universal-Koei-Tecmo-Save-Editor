@@ -10,6 +10,8 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 ## Development and releases
 
+- [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
+
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
 
@@ -71,7 +73,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 ## Game formats and feature coverage
 
-- [Development source: deeper game-specific editing and qualification limits](GAME_SPECIFIC_EXPANSION.md)
+- [Deeper game-specific editing and qualification limits](GAME_SPECIFIC_EXPANSION.md)
 
 - [Fatal Frame II original US PS2 research: writer deferred](FATAL_FRAME2_PS2_FORMAT.md)
 - [Warriors: Legends of Troy, original EU PS3](TROY_PS3_FORMAT.md)

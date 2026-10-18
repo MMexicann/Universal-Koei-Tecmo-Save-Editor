@@ -4,7 +4,7 @@ These developer tools exercise registered adapters and existing save/export
 paths using generated fixtures. They do not accept player-save paths. Procedural
 checks demonstrate invariants and performance on a known workload; they do not
 establish genuine-save qualification, edited game loading or support for another
-revision. The application remains v2.7.
+revision. These tools accompany application v3.0.
 
 ## Reproduce the property suite
 

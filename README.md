@@ -14,7 +14,7 @@ themes. No Python installation is needed for the Windows app.
 **97 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
 <!-- END SUPPORTED GAMES -->
 
-**Version 2.7.** Choose a supported edition below and keep a separate save copy.
+**Version 3.0.** Choose a supported edition below and keep a separate save copy.
 
 ## What you can do
 
@@ -43,22 +43,16 @@ only conservative reductions or specific equipment choices; the supported-games
 list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
 expands only explicitly mapped numeric fields.
 
-## New in v2.7
+## New in v3.0
 
-- **Graphical progression dashboards:** searchable character, equipment, resource
-  and completion cards with responsive layouts, verified progress bars and full
-  Light/Dark appearance.
-- **Rich game views:** DW8 XL, WO3 Ultimate, Origins and DW3 Remastered, plus
-  mapped-value dashboards for all other scalar profiles. Follow a value directly
-  to its editable field; browsing never changes a save.
-- Progress and completion are shown only where mappings establish their meaning.
-  [Dashboard guide and exact coverage](docs/PROGRESSION_DASHBOARDS.md).
+- **A more capable workspace:** Ctrl+K command palette, favorites/recent tools, English/German navigation and offline help, scalable text and responsive layouts.
+- **Faster reviewed editing:** reusable resource presets across compatible copies, validated bulk actions, selective save transfer and a read-only Save Research Lab.
+- **Richer progression:** improved dashboards, record comparisons, interactive HTML reports and [deeper game-specific controls](docs/GAME_SPECIFIC_EXPANSION.md) within existing qualified profiles.
+- **Save management:** organized copied-save browsing, read-only Save Doctor, bounded save-location discovery and local Save Vault snapshots, branches and safe restore to new directories.
+- **Automation:** code-free Workflow Builder, reviewed multi-copy batch plans, a scriptable JSON CLI with dry runs, and durable interrupted-run inspection. [Automation guide](docs/AUTOMATION.md).
+- **Community and reliability:** data-only help plugins, offline validation/feedback reports, indexed search, stronger regression/fuzz coverage and repeatable benchmarks.
 
-The unreleased development source also includes
-[deeper game-specific editing](docs/GAME_SPECIFIC_EXPANSION.md), including targeted
-DW3 weapon/gallery actions, existing DW8 XL attribute replacement, WO3 Ultimate
-resource/compatibility controls, precise Origins progression actions, held SW5
-skill-gem quantities and qualified Three Houses protagonist names.
+[Full v3.0 release notes and limits](docs/RELEASE_NOTES.md). Support remains 97 profiles across 15 platforms, with 139 scoped conversion routes; no new game edition or in-game qualification is implied.
 
 ## Quick start
 

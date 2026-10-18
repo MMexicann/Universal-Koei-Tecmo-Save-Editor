@@ -58,7 +58,7 @@ closed:
 | `api` | Exact string `"1"`; no ranges, coercion or fallback |
 | `id` | Stable lowercase ID with a community namespace containing a dot |
 | `title`, `author` | Nonempty plain text, at most 160 characters each |
-| `version` | Numeric `major.minor.patch`; plugin version is separate from app v2.7 |
+| `version` | Numeric `major.minor.patch`; plugin version is separate from app v3.0 |
 | `description` | Nonempty plain text, at most 1,000 characters |
 | `capabilities` | Unique subset of `help`, `workflows`, `commands`; must exactly match contributed kinds |
 | `contributions` | 1–64 declarations |
@@ -147,4 +147,4 @@ specified by the contributor guide.
 
 Future executable extensions would require a separately reviewed process-isolation
 and capability protocol. API 1 grants no such execution or storage capabilities.
-These additions do not change application v2.7 and do not create a release.
+Application v3.0 includes this data-only API; plugin versions remain independent.

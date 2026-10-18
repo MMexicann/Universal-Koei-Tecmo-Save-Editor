@@ -30,6 +30,18 @@ class CommunityFeedbackTests(unittest.TestCase):
         self.assertEqual(import_bug_report(review_json(report)), report)
         self.assertEqual(report['platform'], 'Windows PC')
 
+    def test_legacy_report_and_nested_validation_migrate_without_promoting_claims(self):
+        validation = ValidationRecord.create('dw8xl', provenance='genuine_file')
+        current = build_bug_report(game_id='dw8xl', validation=validation)
+        self.assertEqual(current['app_version'], '3.0')
+        legacy = json.loads(json.dumps(current))
+        legacy['app_version'] = '2.7'
+        legacy['validation']['app_version'] = '2.7'
+        imported = import_bug_report(json.dumps(legacy))
+        self.assertEqual(imported, current)
+        self.assertEqual(imported['validation']['attestation'], 'user_reported_unverified')
+        self.assertEqual(set(imported['validation']['steps'].values()), {'not_run'})
+
     def test_unknown_keys_rejected_without_echo(self):
         for key in ('path', 'account_id', 'environment', 'stack', 'save_contents', 'notes', 'email', 'hostname'):
             with self.subTest(key=key), self.assertRaises(ReportError) as caught:

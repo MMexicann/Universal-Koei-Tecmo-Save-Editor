@@ -4,7 +4,11 @@ The application’s Help Center provides a **Real-game validation** checklist an
 **Community feedback** report preview. Both work offline. Export creates a new
 JSON file that you can review and choose to share yourself; the application does
 not transmit reports, launch games, import console saves or inspect player files
-through these panels. The application remains v2.7.
+through these panels. These tools are included in v3.0.
+
+Schema-1 reports from the v2.7 development source can still be imported. Import
+revalidates their controlled fields and preserves observations and evidence class;
+re-export uses v3.0 metadata. This does not independently verify reported claims.
 
 ## Evidence stays separate
 

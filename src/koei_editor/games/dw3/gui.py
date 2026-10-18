@@ -18,7 +18,7 @@ import koei_editor.games.dw3.bodyguard_customization as customization
 import koei_editor.games.dw3.collection_editor as collections
 import koei_editor.games.dw3.musou_slots as musou_slots
 
-VERSION = '2.7'
+VERSION = '3.0'
 DISCORD_USERNAME = 'mexicannn'
 STEAM_PROFILE = 'https://steamcommunity.com/id/theonlyjuandeagingmexican/'
 NAMES = read_json('officer_names.json')

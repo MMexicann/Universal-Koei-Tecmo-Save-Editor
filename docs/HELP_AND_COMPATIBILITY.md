@@ -35,4 +35,4 @@ game backends. Add help topics in both languages with matching stable IDs;
 update registry evidence through the existing reviewed support workflow.
 
 Focused verification: `python -m unittest discover -s tests -p test_help_center.py`.
-GUI tests need a display. This work does not create a release or change v2.7.
+GUI tests need a display. Native Windows release checks remain separate.

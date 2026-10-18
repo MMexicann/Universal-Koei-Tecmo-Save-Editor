@@ -1,6 +1,6 @@
 # Application shell
 
-The v2.7 shell owns navigation, retained workspaces, appearance and command
+The v3.0 shell owns navigation, retained workspaces, appearance and command
 discovery. Game dashboards and their save/edit contracts remain in the game
 editors. Returning to a workspace reuses the same editor instance and pending
 changes. Navigation never opens a file automatically.
@@ -75,4 +75,4 @@ tests.test_universal_app tests.test_dashboard_application_theme -v` with a GUI
 display. GUI modules must run serially on a shared display to avoid stealing
 keyboard focus from each other. See [PERFORMANCE.md](PERFORMANCE.md) for the
 repeatable library/startup benchmark. These checks do not establish real-game
-load/re-save compatibility and do not create a release or change v2.7.
+load/re-save compatibility; native Windows release checks remain separate.

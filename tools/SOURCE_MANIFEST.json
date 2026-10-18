@@ -3968,8 +3968,8 @@
     },
     {
       "path": "tests/test_automation_gui.py",
-      "bytes": 18447,
-      "sha256": "d1b934929d6ecb94be5154f03ea30443d5f8a32737bcbfb05e7bda4c6c1176e6"
+      "bytes": 18485,
+      "sha256": "55e364e03cd0d081a07188e06929e81167157f1a548cab0f426bd70deb562ae0"
     },
     {
       "path": "tests/test_automation_journal.py",

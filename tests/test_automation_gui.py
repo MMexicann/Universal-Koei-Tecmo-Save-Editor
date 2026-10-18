@@ -242,6 +242,7 @@ class WorkflowGuiTests(unittest.TestCase):
         self.assertTrue(self.root.winfo_exists())
 
     def test_real_application_builder_controls_fit_or_scroll_into_view_at_minimum_and_large_sizes(self):
+        self.root.maxsize(1800, 1400)
         app = Application(self.root, preferences_path=self.folder / 'preferences.json',
                           persist_preferences=False)
         app.show_workflow_builder()

@@ -248,6 +248,14 @@ class WorkflowGuiTests(unittest.TestCase):
         builder = app.workflow_builder
         self.addCleanup(builder.close)
         self.root.deiconify()
+        # Windows CI desktops can impose a default maximum smaller than the
+        # deliberately large fixture. Reproduce that clamp before qualifying
+        # the fixture's maximum; the exact requested-size assertions below stay.
+        self.root.maxsize(1028, 729)
+        self.root.geometry('1180x930')
+        self.root.update()
+        self.assertEqual((self.root.winfo_width(), self.root.winfo_height()), (1028, 729))
+        self.root.maxsize(1800, 1400)
 
         def inside(widget, boundary):
             self.assertTrue(widget.winfo_ismapped(), str(widget))

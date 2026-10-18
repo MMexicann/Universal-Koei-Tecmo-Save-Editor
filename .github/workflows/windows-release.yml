@@ -9,7 +9,7 @@ permissions:
 jobs:
   diagnose:
     runs-on: windows-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
     defaults:
       run:
         shell: pwsh
@@ -31,7 +31,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Locked dependency installation failed.' }
           python -m pip install -e . --no-build-isolation
           if ($LASTEXITCODE -ne 0) { throw 'Source package installation failed.' }
-      - name: Run four regressions and four complete diagnostic modules
+      - name: Run the bounded native parallel-runner diagnostic
         run: |
           @'
           from pathlib import Path
@@ -56,7 +56,7 @@ jobs:
           def setup_with_geometry(test):
               original_setup(test)
               root = getattr(test, 'root', None)
-              if root is not None:
+              if root is not None and hasattr(root, 'tk'):
                   print('DIAGNOSTIC Tk:', root.tk.call('package', 'provide', 'Tk'),
                         'scaling:', root.tk.call('tk', 'scaling'),
                         'root:', root.winfo_geometry(), 'minimum:', root.minsize(),
@@ -78,13 +78,6 @@ jobs:
           raise SystemExit(0 if result.wasSuccessful() and count_ok and not result.skipped else 1)
           ''', encoding='utf-8')
           tests = [
-              ('tests.test_application_shell.ApplicationShellTests.test_compact_editor_header_retains_controls_pending_state_and_library_navigation', 90, '1'),
-              ('tests.test_application_shell.ApplicationShellTests.test_embedded_file_actions_keep_their_full_width_at_each_text_size', 90, '1'),
-              ('tests.test_scalar_workspace_gui.ScalarWorkspaceGuiTests.test_compact_layout_advanced_toggle_and_horizontal_scrolling', 90, '1'),
-              ('tests.test_scalar_workspace_gui.ScalarWorkspaceGuiTests.test_inventory_choice_search_preserves_native_reference_and_undo', 90, '1'),
-              ('tests.test_application_shell', 180, 'positive'),
-              ('tests.test_scalar_workspace_gui', 180, 'positive'),
-              ('tests.test_validation_toolkit', 180, 'positive'),
               ('tests.test_parallel_runner', 180, 'positive'),
           ]
           records = []

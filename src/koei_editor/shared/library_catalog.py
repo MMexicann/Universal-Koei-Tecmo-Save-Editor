@@ -40,22 +40,40 @@ def series_for(game):
     return game.title.title()
 
 
+class LibraryCatalog:
+    """Search index for one immutable registry snapshot.
+
+    Build once per library, then reuse for each keystroke. Normalized metadata,
+    series and alphabetical ordering are computed once, without importing any
+    editor or backend. Rebuild the index after changing the available profiles.
+    Queries are not cached: memory remains proportional to the registry rather
+    than the number or contents of searches.
+    """
+
+    __slots__ = ('_entries',)
+
+    def __init__(self, games):
+        ordered = sorted(games, key=lambda game: (normalized(game.title),
+                         normalized(game.subtitle), game.platform, game.id))
+        entries = []
+        for game in ordered:
+            series = series_for(game)
+            words = normalized(' '.join((game.title, game.subtitle, game.platform,
+                                        game.description, game.emblem, game.id, series)))
+            compact = normalized(game.id).replace(' ', '')
+            entries.append((game, game.platform, series, words, compact))
+        self._entries = tuple(entries)
+
+    def matching_games(self, query='', platform=ALL_PLATFORMS, series=ALL_SERIES):
+        """AND terms across titles, short IDs, platforms and features."""
+        terms = normalized(query).split()
+        return tuple(game for game, game_platform, game_series, words, compact in self._entries
+                     if (platform == ALL_PLATFORMS or game_platform == platform)
+                     and (series == ALL_SERIES or game_series == series)
+                     and all(term in words or term in compact for term in terms))
+
+
 def matching_games(games, query='', platform=ALL_PLATFORMS, series=ALL_SERIES):
-    """AND the search terms across titles, short IDs, platforms and features."""
-    terms = normalized(query).split()
-    matches = []
-    for game in games:
-        if platform != ALL_PLATFORMS and game.platform != platform:
-            continue
-        if series != ALL_SERIES and series_for(game) != series:
-            continue
-        words = normalized(' '.join((game.title, game.subtitle, game.platform,
-                                    game.description, game.emblem, game.id,
-                                    series_for(game))))
-        # Compact IDs support familiar queries such as DW7, PW4 and WO3.
-        compact = normalized(game.id).replace(' ', '')
-        if all(term in words or term in compact for term in terms):
-            matches.append(game)
-    return tuple(sorted(matches, key=lambda game: (normalized(game.title),
-                                                  normalized(game.subtitle),
-                                                  game.platform, game.id)))
+    """Filter an iterable, or reuse an existing :class:`LibraryCatalog` index."""
+    catalog = games if isinstance(games, LibraryCatalog) else LibraryCatalog(games)
+    return catalog.matching_games(query, platform, series)

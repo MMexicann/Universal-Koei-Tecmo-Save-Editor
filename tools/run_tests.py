@@ -210,6 +210,36 @@ def write_json(path: Path, data: object) -> None:
     temporary.replace(path)
 
 
+class ImmediateDiagnosticsResult(unittest.TextTestResult):
+    """Flush each recorded traceback before another test can crash the worker.
+
+    Keep unittest's final summary and diagnostics, including its result counts.
+    The early copy survives even when no completed worker JSON can be written.
+    """
+
+    def _print_new(self, label, records, previous_count):
+        if len(records) > previous_count:
+            self.stream.writeln()
+            self.printErrorList(label, records[previous_count:])
+            self.stream.flush()
+
+    def addFailure(self, test, err):
+        previous_count = len(self.failures)
+        super().addFailure(test, err)
+        self._print_new("FAIL", self.failures, previous_count)
+
+    def addError(self, test, err):
+        previous_count = len(self.errors)
+        super().addError(test, err)
+        self._print_new("ERROR", self.errors, previous_count)
+
+    def addSubTest(self, test, subtest, err):
+        failures, errors = len(self.failures), len(self.errors)
+        super().addSubTest(test, subtest, err)
+        self._print_new("FAIL", self.failures, failures)
+        self._print_new("ERROR", self.errors, errors)
+
+
 def worker(tests_dir: Path, module: str, report_path: Path) -> int:
     started = time.perf_counter()
     path = tests_dir / module
@@ -225,7 +255,7 @@ def worker(tests_dir: Path, module: str, report_path: Path) -> int:
         options["top_level_dir"] = str(tests_dir)
     suite = loader.discover(start_dir=str(path.parent), pattern=path.name, **options)
     discovered = suite.countTestCases()
-    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    result = unittest.TextTestRunner(verbosity=2, resultclass=ImmediateDiagnosticsResult).run(suite)
     report = {
         "module": module, "duration_seconds": time.perf_counter() - started,
         "success": result.wasSuccessful() and discovered > 0,

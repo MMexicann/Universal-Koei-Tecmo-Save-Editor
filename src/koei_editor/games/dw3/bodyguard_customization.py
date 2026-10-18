@@ -82,8 +82,11 @@ def customization_unlock_changes(kind=None, content_id=None):
     enum values (2–3 and 5–8), rather than availability-array positions.
     Base choices are already available and do not need fabricated flags.
     """
-    keys = {None: tuple(FAMILIES), 'koei_editor.shared.appearance': ('AppearanceUnlocked',),
+    keys = {None: tuple(FAMILIES), 'appearance': ('AppearanceUnlocked',),
             'outfit': ('OutfitUnlocked',)}
+    # Retain the previously exposed selector while accepting the documented
+    # native family name. This string is a selector, never a module import.
+    keys['koei_editor.shared.appearance'] = keys['appearance']
     if (kind is not None and not isinstance(kind, str)) or kind not in keys or (content_id is not None and kind is None):
         raise SaveError('Choose appearance, outfit, or all bodyguard customization.')
     result = []

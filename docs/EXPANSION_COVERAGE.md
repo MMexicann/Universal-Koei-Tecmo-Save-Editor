@@ -1,5 +1,9 @@
 # Expansion coverage and remaining inputs
 
+Version 3.0 deepens existing editors without changing
+the 97-profile inventory. See the [game-specific expansion](GAME_SPECIFIC_EXPANSION.md)
+for controls, native evidence and remaining qualification limits.
+
 The v2.6 update has **97 game/platform profiles across 15 platforms**, with
 Legends of Troy EU PS3 Kleos reductions and broader save-management tools.
 Fatal Frame II PS2 stock editing remains unregistered pending independent
@@ -286,9 +290,9 @@ and Sophie 2 adapters are unchanged by this Gust expansion.
 | Stranger of Paradise, Epic launch PC / later SYSTEM reference | Genuine Epic revision-0x22020200 and Steam revision-0x23013100 USER/SYSTEM framing, plus a separate later source SYSTEM pair, implemented. Native gameplay integrity, unobserved builds and field/reward dependencies remain unresolved. [Checklist](SOPFFO_RESEARCH.md) |
 | Ninja Gaiden Sigma / Sigma 2 / Ninja Gaiden 2 Black | Distinct edition/platform investigation. Seven Sigma PC gameplay files, 31 Sigma 2 Master Collection PC stories and 19 Black Steam files acquired; bounded descriptive/native/Unreal inspection and one Sigma 2/Black metadata CRC recovered. Native integrity remains unresolved; no gameplay card. Console variants need their own profiles. [Checklist](NINJA_GAIDEN_RESEARCH.md) |
 
-## Prepared additional profiles
+## Additional qualified profiles
 
-The unreleased source also implements DW5 Special Windows, DW8 Empires Windows
+The application also implements DW5 Special Windows, DW8 Empires Windows
 custom horses, Hyrule Warriors Legends 3DS, Persona5 Strikers Windows, Wo Long
 Windows, Atelier Ayesha PS3 US/Japanese exports and Fire Emblem Warriors: Three
 Hopes Switch exports. Each has a native-qualified dedicated profile, targeted

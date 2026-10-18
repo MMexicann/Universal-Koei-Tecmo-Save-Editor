@@ -10,14 +10,22 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 ## Development and releases
 
+- [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
+
+- [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
+
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
+- [Save Doctor, automatic detection and local Save Vault](SAVE_MANAGEMENT.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
 - [Bulk edit validation and exact field navigation](EDITING_WORKFLOWS.md)
+- [Reviewed automation, Workflow Builder, batch CLI and recovery](AUTOMATION.md)
+- [Seeded automation regression properties and repeatable benchmarks](AUTOMATION_BENCHMARKS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
 
 - [v2.5.4 review-export filename fix](releases/v2.5.4.md)
@@ -40,6 +48,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
+- [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)
@@ -51,7 +60,9 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
+- [Application performance benchmarks](PERFORMANCE.md)
 - [Parallel pipeline changes and measured performance](TEST_PIPELINE_PERFORMANCE.md)
+- [Real-game validation and private feedback reports](REAL_GAME_VALIDATION.md)
 - [Validation and evidence boundaries](VALIDATION.md)
 - [Current release notes](RELEASE_NOTES.md), [v2.5 release notes](releases/v2.5.md), [v1.8 release notes](releases/v1.8.md), [v1.72 release notes](releases/v1.72.md), [v1.71 release notes](releases/v1.71.md),
   [v1.5 release notes](releases/v1.5.md)
@@ -61,6 +72,8 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Reviewed bug fixes](BUG_REVIEW.md)
 
 ## Game formats and feature coverage
+
+- [Deeper game-specific editing and qualification limits](GAME_SPECIFIC_EXPANSION.md)
 
 - [Fatal Frame II original US PS2 research: writer deferred](FATAL_FRAME2_PS2_FORMAT.md)
 - [Warriors: Legends of Troy, original EU PS3](TROY_PS3_FORMAT.md)

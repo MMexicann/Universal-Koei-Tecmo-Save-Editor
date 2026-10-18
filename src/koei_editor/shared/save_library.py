@@ -18,6 +18,8 @@ from koei_editor.shared.save_safety import safe_path
 LIBRARY_GAMES = tuple(game for game in GAMES if game.scalar_backend is not None)
 STATUSES = ('qualified', 'rejected', 'unsafe', 'oversized', 'changed', 'unreadable')
 STOP_REASONS = ('complete', 'cancelled', 'file_limit', 'entry_limit', 'byte_limit')
+BROWSE_SORTS = ('path', 'newest', 'oldest', 'largest', 'smallest', 'duplicates', 'status')
+DUPLICATE_FILTERS = ('all', 'grouped', 'ungrouped')
 SUMMARIES = {
     'qualified': 'Qualified for the selected profile; rechecked before opening.',
     'rejected': 'Not qualified: foreign/damaged input, unsupported revision, or missing original context.',
@@ -34,12 +36,13 @@ class ScanLimits:
     max_files: int = 500
     max_entries: int = 5000
     max_depth: int = 3
-    max_file_bytes: int = 32 * 1024 * 1024
+    # Includes the supported 61,851,984-byte Fatal Frame II system envelope.
+    max_file_bytes: int = 64 * 1024 * 1024
     max_total_bytes: int = 128 * 1024 * 1024
 
     def validate(self):
         for name, maximum in (('max_files', 500), ('max_entries', 5000),
-                ('max_depth', 3), ('max_file_bytes', 32 * 1024 * 1024),
+                ('max_depth', 3), ('max_file_bytes', 64 * 1024 * 1024),
                 ('max_total_bytes', 128 * 1024 * 1024)):
             value = getattr(self, name)
             if type(value) is not int or not (0 if name == 'max_depth' else 1) <= value <= maximum:
@@ -441,3 +444,99 @@ def report(result):
             'notes': ['Duplicate groups compare qualified gameplay-file bytes only; folder/account-context equality is not established.',
                       'Qualification is specific to the selected profile. It does not verify in-game loading.',
                       'Open a selected copy through the normal editor; a scan is not authorization to skip revalidation.']}
+
+
+@dataclass(frozen=True)
+class LibraryCheckEntry:
+    relative_path: str
+    status: str
+
+
+@dataclass(frozen=True)
+class LibraryBatchCheck:
+    requested_count: int
+    entries: tuple[LibraryCheckEntry, ...]
+    stop_reason: str
+
+    @property
+    def qualified_count(self):
+        return sum(entry.status == 'qualified' for entry in self.entries)
+
+
+def browse(result, *, query='', status='all', duplicates='all', folder='', sort='path'):
+    """Return stable inventory indices for a local, read-only filtered view.
+
+    Space-separated search terms must all occur in the path or readable status.
+    Folder names use inventory-relative POSIX paths; the empty folder means all.
+    Ungrouped means no duplicate was found within this scan, not globally unique.
+    """
+    _validate_scan(result)
+    if (type(query) is not str or len(query) > 4096 or type(folder) is not str
+            or status not in ('all', 'not_qualified', *STATUSES)
+            or duplicates not in DUPLICATE_FILTERS or sort not in BROWSE_SORTS):
+        raise SaveError('Choose valid Save Library browsing filters.')
+    if folder:
+        relative = PurePosixPath(folder)
+        if (relative.is_absolute() or '..' in relative.parts or '\\' in folder
+                or ':' in folder or relative.as_posix() != folder or folder == '.'):
+            raise SaveError('Choose an ordinary relative library folder.')
+    terms = query.casefold().split()
+    selected = []
+    for index, entry in enumerate(result.entries):
+        if status == 'not_qualified' and entry.status == 'qualified':
+            continue
+        if status not in ('all', 'not_qualified') and entry.status != status:
+            continue
+        if duplicates == 'grouped' and not entry.duplicate_group:
+            continue
+        if duplicates == 'ungrouped' and entry.duplicate_group:
+            continue
+        if folder and not entry.relative_path.startswith(folder + '/'):
+            continue
+        searchable = (entry.relative_path + ' ' + entry.status + ' ' + entry.summary).casefold()
+        if all(term in searchable for term in terms):
+            selected.append((index, entry))
+    def key(pair):
+        entry = pair[1]
+        path = (entry.relative_path.casefold(), entry.relative_path, pair[0])
+        primary = {'newest': -entry.modified_ns, 'oldest': entry.modified_ns,
+                   'largest': -entry.size_bytes, 'smallest': entry.size_bytes,
+                   'duplicates': (not bool(entry.duplicate_group), entry.duplicate_group),
+                   'status': STATUSES.index(entry.status)}.get(sort, 0)
+        return primary, path
+    return tuple(index for index, _entry in sorted(selected, key=key))
+
+
+def requalify_many(result, entries, *, cancel=None):
+    """Recheck a bounded, explicit selection without retaining save documents.
+
+    Failed entries are reported locally with fixed status codes, never exception
+    text or context bytes. Cancellation retains only complete checks. A batch
+    recheck is historical evidence and does not authorize subsequent writes.
+    """
+    _validate_scan(result)
+    if type(entries) not in (tuple, list) or not 1 <= len(entries) <= result.limits.max_files:
+        raise SaveError('Choose a bounded nonempty selection of copied saves.')
+    paths = set()
+    for entry in entries:
+        if (type(entry) is not LibraryEntry or entry not in result.entries
+                or entry.status != 'qualified' or entry.relative_path in paths):
+            raise SaveError('Choose distinct qualified copied-save entries.')
+        paths.add(entry.relative_path)
+    checked, reason = [], 'complete'
+    for entry in entries:
+        try:
+            _check_cancel(cancel)
+            document = requalify(result, entry, cancel=cancel)
+            del document
+            _check_cancel(cancel)
+            status = 'qualified'
+        except _Cancelled:
+            reason = 'cancelled'
+            break
+        except OSError:
+            status = 'unreadable'
+        except (SaveError, ValueError, TypeError):
+            status = 'not_qualified'
+        checked.append(LibraryCheckEntry(entry.relative_path, status))
+    return LibraryBatchCheck(len(entries), tuple(checked), reason)

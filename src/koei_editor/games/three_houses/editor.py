@@ -97,7 +97,7 @@ class Editor(ScalarEditor):
     save_extension = ''
     presentation_type = Presentation
     subtitle = 'Nintendo Switch — extracted slot/auto, native revisions 13 / 23'
-    summary = ('Known main-campaign exports: edit qualified instruction motivation and existing ability loadouts; '
+    summary = ('Known main-campaign exports: rename the existing protagonist; edit qualified instruction motivation and existing ability loadouts; '
                'decrease gold and reviewed ordinary weapon convoy quantities/durability; '
                'held durability requires a qualified living joined base-unit owner. '
                'Inspect distinct character, proficiency, mastery, ability, art, battalion and support records. '

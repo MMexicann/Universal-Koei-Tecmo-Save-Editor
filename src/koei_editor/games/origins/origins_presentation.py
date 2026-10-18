@@ -15,14 +15,18 @@ class OriginsPresentation(ScalarPresentation):
             (record.index + 1, record.weapon_id, record.upgrade,
              ', '.join(str(value) for value in record.traits),
              ', '.join(str(value) for value in record.trait_levels),
-             'Editable' if record.upgrade_qualified else 'Inspection only')
+             'Editable' if record.upgrade_qualified else 'Inspection only',
+             record.instance_id, ' '.join(f'{value:02X}' for value in record.flags),
+             record.qualification_note)
             for record in weapon_records(document.payload, document.revision)
         )
         tables = [InspectionTable(
             'Weapons', ('Inventory slot', 'Weapon ID', 'Reinforcement', 'Six trait IDs',
-                        'Six trait levels', 'Reinforcement editing'), weapons,
+                        'Six trait levels', 'Reinforcement editing', 'Stored instance ID',
+                        'Opaque flag bytes (hex)', 'Qualification'), weapons,
             'Existing inventory records. Search any column. Trait IDs/levels, equipment references '
-            'and progression are preserved; weapon IDs without mapped names remain numeric.')]
+            'and progression are preserved. Stored instance IDs and opaque flags are read-only; '
+            'duplicate IDs do not establish interchangeable equipment. Weapon names remain numeric.')]
         proficiency = proficiency_records(document)
         tables.append(InspectionTable(
             'Proficiency', ('Family ID', 'Weapon family', 'Stored XP',

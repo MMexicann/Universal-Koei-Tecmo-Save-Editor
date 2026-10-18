@@ -18,7 +18,7 @@ import koei_editor.games.dw3.bodyguard_customization as customization
 import koei_editor.games.dw3.collection_editor as collections
 import koei_editor.games.dw3.musou_slots as musou_slots
 
-VERSION = '2.7'
+VERSION = '3.0'
 DISCORD_USERNAME = 'mexicannn'
 STEAM_PROFILE = 'https://steamcommunity.com/id/theonlyjuandeagingmexican/'
 NAMES = read_json('officer_names.json')
@@ -487,6 +487,8 @@ class Editor(Appearance):
         self.weapon_element_box.pack(side='left',padx=(0,8))
         self.weapon_element_button=ttk.Button(element_form,text='Apply Element',command=self.apply_weapon_element)
         self.weapon_element_button.pack(side='left');self.buttons.append(self.weapon_element_button)
+        self.weapon_element_visible_button=self.action(right,'Apply Element to Visible Owned Copies',self.apply_visible_weapon_elements)
+        ttk.Label(right, text='Uses the Find filter to select owned copies. View-only copies are preserved.', wraplength=370).pack(anchor='w', pady=(0, 7))
         bulk_element_form = ttk.Frame(right)
         bulk_element_form.pack(fill='x')
         ttk.Label(bulk_element_form, text='All owned unique weapons:').pack(side='left', padx=(0, 6))
@@ -516,6 +518,14 @@ class Editor(Appearance):
             box.bind('<<ComboboxSelected>>', lambda _event, slot=index: self.change_weapon_bonus(slot))
         self.weapon_roll_button = self.action(right, 'Apply Weapon Bonuses', self.apply_weapon_rolls)
         self.weapon_max_button = self.action(right, 'Max Selected Existing Bonus Rolls', self.max_selected_weapon_rolls)
+        ttk.Label(right, text='Copy bonuses from an owned copy:', wraplength=370).pack(anchor='w', pady=(10, 4))
+        self.weapon_bonus_source = tk.StringVar()
+        self.weapon_bonus_sources = {}
+        self.weapon_bonus_source_box = ttk.Combobox(right, textvariable=self.weapon_bonus_source,
+                                                   state='disabled', width=44)
+        self.weapon_bonus_source_box.pack(fill='x')
+        self.weapon_copy_button = self.action(right, 'Copy Bonuses to Selected Weapon', self.copy_weapon_bonuses)
+        ttk.Label(right, text='Copies applied bonuses only. The destination must support every copied value and bonus count. Review Changes shows the complete layout before saving.', wraplength=370).pack(anchor='w', pady=7)
         ttk.Label(right, text='Max raises existing normal rolls. One rare bonus is allowed, with no numeric value. Replace existing rare bonuses or elements; removing them is unsupported.', wraplength=370).pack(anchor='w', pady=7)
         ttk.Label(right, text='Dropdown values show supported rolls. Experimental maximum: 2,147,483,647 for an existing normal bonus in its saved slot.', wraplength=370).pack(anchor='w', pady=7)
 
@@ -615,7 +625,7 @@ class Editor(Appearance):
             messagebox.showinfo('Already Available','This choice is available by default.');return
         if not row['editable']:
             messagebox.showerror('Cannot Unlock Option',row['reason']);return
-        self.stage_many(customization.customization_unlock_changes('koei_editor.shared.appearance' if family=='appearances' else 'outfit',identity))
+        self.stage_many(customization.customization_unlock_changes('appearance' if family=='appearances' else 'outfit',identity))
 
     def build_guard_equipment(self, page):
         ttk.Label(page, text='Choose one owned bodyguard item and a weapon for each family. Only equipment already owned or applied in this editor is available.', wraplength=640).pack(anchor='w', pady=(0, 10))
@@ -730,13 +740,17 @@ class Editor(Appearance):
         self.music_unlock_button.pack(side='left', padx=(0, 8))
         self.movie_unlock_button = ttk.Button(actions, text='Unlock All Movies', command=self.unlock_movies)
         self.movie_unlock_button.pack(side='left')
-        self.buttons.extend((self.music_unlock_button, self.movie_unlock_button))
+        self.collection_selected_button = ttk.Button(actions, text='Unlock Selected Entries', command=self.unlock_selected_collections)
+        self.collection_selected_button.pack(side='left', padx=(8, 0))
+        self.buttons.extend((self.music_unlock_button, self.movie_unlock_button, self.collection_selected_button))
         self.gallery_note = tk.StringVar(value='Open a save copy to view your collections.')
         ttk.Label(page, textvariable=self.gallery_note, wraplength=960).pack(anchor='w', pady=(0, 10))
         self.collection_filter = tk.StringVar()
         self.add_search(page, self.collection_filter, self.refresh_collections)
         self.collection_tree = self.make_tree(page, [('kind', 'Gallery'), ('id', 'Entry ID'), ('owned', 'Unlocked')],
                                               'Collection entry', [520, 130, 90, 100])
+        self.collection_tree.configure(selectmode='extended')
+        self.collection_tree.bind('<<TreeviewSelect>>', lambda *_: self.select_collection_entries())
 
     def build_musou_saves(self):
         page=self.tabs['Musou Saves']
@@ -754,6 +768,7 @@ class Editor(Appearance):
 
     def refresh_collections(self):
         if self.document is None:return
+        selected = self.collection_tree.selection()
         state=collections.collection_state(self.document,list(self.changes.values()))
         notes=[]
         for key,title,button in (('music','Music',self.music_unlock_button),('movies','Movies',self.movie_unlock_button)):
@@ -769,6 +784,29 @@ class Editor(Appearance):
                     continue
                 self.collection_tree.insert('', 'end', iid=f'{key}:{row["id"]}', text=row['name'],
                                             values=(title, row['id'], 'Yes' if row['unlocked'] else 'No'))
+        retained = [key for key in selected if self.collection_tree.exists(key)]
+        if retained:
+            self.collection_tree.selection_set(retained)
+        self.select_collection_entries()
+
+    def select_collection_entries(self):
+        selected = self.collection_tree.selection()
+        state = collections.collection_state(self.document) if self.document else {}
+        supported = bool(selected) and all(state.get(key.split(':')[0], {}).get('editable') for key in selected)
+        self.collection_selected_button.configure(state='normal' if supported else 'disabled')
+
+    def unlock_selected_collections(self):
+        if not self.selected_ok(self.collection_tree):return
+        try:
+            groups = {}
+            for key in self.collection_tree.selection():
+                gallery, index = key.split(':')
+                groups.setdefault(gallery, []).append(int(index))
+            changes = [change for gallery, indices in groups.items()
+                       for change in collections.unlock_entry_changes(self.document, gallery, indices)]
+            self.stage_many(changes)
+        except (ValueError, TypeError) as error:
+            messagebox.showerror('Cannot Unlock Selected Entries', str(error))
 
     def unlock_music(self):
         if self.require_save():
@@ -1045,6 +1083,9 @@ class Editor(Appearance):
         changes = list(self.changes.values())
         states = list(weapon_editor.states(self.document, changes))
         self.weapon_element_all_button.configure(state='normal' if any(row['array']=='UniqueWeaponDataArray' and row['element_editable'] for row in states) else 'disabled')
+        self.weapon_bonus_sources = {
+            f'{row["metadata"].get("name") or "Weapon"} [copy {row["data_id"]}]': row['data_id']
+            for row in states if row['editable']}
         by_data = {row['data_id']:row for row in states}
         self.weapon_rows = {}
         query = self.weapon_filter.get().strip().casefold()
@@ -1063,6 +1104,7 @@ class Editor(Appearance):
             row = by_data.get(10000+weapon['unique_save_index'])
             if row: self.weapon_rows[key] = row
             self.weapons.insert('', 'end', iid=key, text=name, values=(f'{weapon["tier"]}th weapon','Yes' if owned else 'No',weapon['base_power']))
+        self.weapon_element_visible_button.configure(state='normal' if any(row['element_editable'] for row in self.weapon_rows.values()) else 'disabled')
         if selected and self.weapons.exists(selected[0]):
             self.weapons.selection_set(selected[0]); self.weapons.focus(selected[0]); self.weapons.see(selected[0])
             self.select_weapon()
@@ -1104,6 +1146,8 @@ class Editor(Appearance):
         self.weapon_element.set(next(label for label,mask in self.weapon_element_choices.items() if mask==row['elements']))
         self.weapon_element_box.configure(values=tuple(self.weapon_element_choices),state='readonly' if row['element_editable'] else 'disabled')
         self.weapon_element_button.configure(state='normal' if row['element_editable'] else 'disabled')
+        self.weapon_element_visible_button.configure(state='normal' if row['element_editable'] and any(
+            target['element_editable'] for target in self.weapon_rows.values()) else 'disabled')
         self.loading_weapon_form = True
         try:
             for name,value,box,valuebox in zip(self.weapon_bonus_names,self.weapon_bonus_values,self.weapon_bonus_boxes,self.weapon_bonus_value_boxes):
@@ -1119,6 +1163,12 @@ class Editor(Appearance):
         finally: self.loading_weapon_form = False
         self.weapon_roll_button.configure(state='normal' if row['editable'] else 'disabled')
         self.weapon_max_button.configure(state='normal' if row['editable'] else 'disabled')
+        sources = tuple(label for label, data_id in self.weapon_bonus_sources.items() if data_id != row['data_id'])
+        if self.weapon_bonus_source.get() not in sources:
+            self.weapon_bonus_source.set(sources[0] if sources else '')
+        enabled = row['editable'] and bool(sources)
+        self.weapon_bonus_source_box.configure(values=sources, state='readonly' if enabled else 'disabled')
+        self.weapon_copy_button.configure(state='normal' if enabled else 'disabled')
 
     def clear_weapon_form(self):
         self.current_weapon_data_id = None
@@ -1127,9 +1177,13 @@ class Editor(Appearance):
         self.weapon_element.set('None');self.weapon_element_choices={}
         self.weapon_element_box.configure(state='disabled',values=())
         self.weapon_element_button.configure(state='disabled')
+        self.weapon_element_visible_button.configure(state='disabled')
         for name,value,box,valuebox in zip(self.weapon_bonus_names,self.weapon_bonus_values,self.weapon_bonus_boxes,self.weapon_bonus_value_boxes):
             name.set('None'); value.set(''); box.configure(state='disabled'); valuebox.configure(state='disabled',values=())
         self.weapon_roll_button.configure(state='disabled'); self.weapon_max_button.configure(state='disabled')
+        self.weapon_bonus_source.set('')
+        self.weapon_bonus_source_box.configure(state='disabled', values=())
+        self.weapon_copy_button.configure(state='disabled')
 
     def weapon_attribute_text(self, attr):
         labels = ['6-hit flag'] if attr & 2 else ['5-hit flag'] if attr & 1 else []
@@ -1208,6 +1262,30 @@ class Editor(Appearance):
             mask=weapon_editor.validate_elements(row,self.weapon_element_choices[label])
             self.stage_many([Change('weapon_element',self.current_weapon_data_id,'Elements',mask)])
         except (ValueError,TypeError) as error:messagebox.showerror('Cannot Apply Weapon Element',str(error))
+
+    @experimental_session
+    def copy_weapon_bonuses(self):
+        if not self.require_save() or self.current_weapon_data_id is None:return
+        try:
+            source = self.weapon_bonus_sources[self.weapon_bonus_source.get()]
+            changes = weapon_editor.copy_bonus_changes(self.document, source, [self.current_weapon_data_id],
+                                                       list(self.changes.values()))
+            self.stage_many(changes)
+        except (ValueError, TypeError, KeyError) as error:
+            messagebox.showerror('Cannot Copy Weapon Bonuses', str(error))
+
+    @experimental_session
+    def apply_visible_weapon_elements(self):
+        if not self.require_save():return
+        try:
+            label = self.weapon_element.get()
+            mask = self.weapon_element_choices[label]
+            targets = [row['data_id'] for row in self.weapon_rows.values() if row['element_editable']]
+            changes = weapon_editor.element_changes(self.document, targets, mask, list(self.changes.values()))
+            if self.stage_many(changes):
+                self.status.set(f'{label} applied to {len(targets)} visible owned copies. Save to write the changes.')
+        except (ValueError, TypeError, KeyError) as error:
+            messagebox.showerror('Cannot Apply Visible Weapon Elements', str(error))
 
     @experimental_session
     def max_selected_weapon_rolls(self):

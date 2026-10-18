@@ -47,7 +47,7 @@ copy through the normal editor to review and save deliberate gameplay edits.
 
 A scan processes at most 500 candidate files and visits at most 5,000 directory
 entries. Candidate files must match the selected profile's extension, including
-extensionless profiles. Individual gameplay files are limited to 32 MiB; the sum
+extensionless profiles. Individual gameplay files are limited to 64 MiB; the sum
 of candidate file sizes admitted for qualification is limited to 128 MiB.
 Qualification may read admitted files more than once to detect changes. Files
 above a limit remain unsupported by this browser even when another workflow can

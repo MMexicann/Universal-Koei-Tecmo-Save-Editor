@@ -261,7 +261,7 @@ class Samurai5GenuineTests(unittest.TestCase):
             original = parser.read_save(source)
             report = _run(BoundScalarAdapter(parser.GAME_ID, '.bin', parser), parser.GAME_ID, source, folder / 'validation')
             self.assertTrue(report['success'])
-            self.assertEqual(report['fields_checked'], 7)
+            self.assertEqual(report['fields_checked'], len(parser.fields_for(original)))
             self.assertEqual(report['integrity_kind'], 'none')
             self.assertFalse(report['checksum_verified'])
             self.assertFalse(report['in_game_load_tested'])
@@ -284,7 +284,7 @@ class Samurai5GenuineTests(unittest.TestCase):
             with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
                 editor.open()
             root.update()
-            self.assertEqual(len(editor.fields.get_children()), 7)
+            self.assertEqual(len(editor.fields.get_children()), len(parser.fields_for(editor.document)))
             editor.search.set('Lumber')
             root.update()
             self.assertEqual(len(editor.fields.get_children()), 1)

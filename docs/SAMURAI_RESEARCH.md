@@ -200,7 +200,11 @@ them; Max cannot hide an invalid staged change. No game-load check is claimed.
 
 The new `samurai5_pc` adapter supports owner-dependent native `SAVEDATA00.BIN`
 revision 39 saved at My Castle. It edits gold, stock EXP, shared spendable skill
-points, stock weapon mastery, lumber, mineral and fabric. Native source proves
+points, stock weapon mastery, lumber, mineral and fabric. Development source
+also edits already held skill-gem quantities from 1–20 at their original
+type/rank, without acquiring an empty stack or learning a weapon skill; see the
+[current expansion evidence](GAME_SPECIFIC_EXPANSION.md#samurai-warriors).
+Native source proves
 field widths, resource limits and current-checkpoint selection; historical
 copies, spending counters, officer skill allocations, story/facilities and
 both battle buffers remain intact. Searchable native-record inspection covers

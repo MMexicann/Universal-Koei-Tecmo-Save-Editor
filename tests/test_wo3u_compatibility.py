@@ -1,4 +1,4 @@
-"""WO3 PC compatibility reset and pending-aware item selectors."""
+"""WO3 PC conservative compatibility editing and pending-aware item selectors."""
 import os
 from pathlib import Path
 import tempfile
@@ -26,8 +26,8 @@ class WO3CompatibilityTests(unittest.TestCase):
         field = backend.field_map(document)[key]
         self.assertFalse(field.maxable)
         self.assertIsNone(field.experimental_maximum)
-        self.assertEqual(dict(backend.field_options(document, key)),
-                         {44800: 'Keep opened compatibility', 0: 'Reset compatibility to zero'})
+        self.assertEqual(backend.field_options(document, key), ())
+        self.assertEqual(field.maximum, 5600)
         self.assertEqual(backend.record_label(field.slot, field.group), 'Officer 1, weapon 1')
         pending = backend.stage(document, {}, key, 0)
         expected = bytearray(document.raw)
@@ -37,18 +37,18 @@ class WO3CompatibilityTests(unittest.TestCase):
         self.assertEqual([(f.id, old, new) for f, old, new in backend.review(document, pending)],
                          [(key, 44800, 0)])
         reopened = backend.decode(backend.serialize(document, pending))
-        self.assertNotIn(key, backend.field_map(reopened))
+        self.assertIn(key, backend.field_map(reopened))
         self.assertEqual(backend.serialize(reopened, {}), reopened.raw)
         self.assertEqual(backend.maximums(document, {}, 'Weapon compatibility'), {})
         self.assertEqual(backend.limit_values(document, {}, [key]), {})
         self.assertEqual(document.raw, compatibility_raw())
 
-    def test_arbitrary_values_cannot_bypass_reset_in_either_editing_mode(self):
+    def test_higher_values_cannot_bypass_conservative_range_in_either_editing_mode(self):
         document = backend.decode(compatibility_raw())
         key = 'weapon_0_compatibility_reset'
         for enabled in (False, True):
             with experimental_limits(enabled):
-                for value in (-1, 1, 44799, 44801, 179200, 2**32 - 1, 2**32, True, False, '0', 0.0):
+                for value in (-1, 5601, 44799, 44801, 179200, 2**32 - 1, 2**32, True, False, '0', 0.0):
                     with self.subTest(experimental=enabled, value=value):
                         with self.assertRaises(SaveError):
                             backend.stage(document, {}, key, value)
@@ -58,7 +58,7 @@ class WO3CompatibilityTests(unittest.TestCase):
 
     def test_unusual_original_empty_weapon_and_unsupported_slots_stay_opaque(self):
         key = 'weapon_0_compatibility_reset'
-        for compatibility, identity, slots in ((0, 2, 3), (179201, 2, 3),
+        for compatibility, identity, slots in ((179201, 2, 3),
                                                (2**32 - 1, 2, 3), (44800, 65535, 3),
                                                (44800, 1395, 3), (44800, 2, 9)):
             raw = bytearray(compatibility_raw(compatibility))
@@ -158,8 +158,8 @@ class WO3CompatibilityTests(unittest.TestCase):
                 editor.refresh()
                 editor.fields.selection_set(key)
                 editor.selected()
-                editor.choice_value.set('0 · Reset compatibility to zero')
-                editor.selected_choice()
+                self.assertEqual(editor._choice_values, {})
+                editor.value.set('0')
                 editor.apply_selected()
                 self.assertEqual(editor.changes, {key: 0})
                 editor.review()
@@ -182,7 +182,7 @@ class WO3CompatibilityTests(unittest.TestCase):
         original = source.read_bytes()
         document = backend.decode(original)
         fields = [field for field in backend.fields_for(document)
-                  if isinstance(field, backend.CompatibilityResetField)]
+                  if isinstance(field, backend.CompatibilityField)]
         self.assertGreater(len(fields), 5)
         for field in fields:
             expected = bytearray(original)

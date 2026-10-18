@@ -31,7 +31,7 @@ class WO3Presentation(ScalarPresentation):
             InspectionTable('Weapons', ('Owner / slot', 'Opened equipment'), weapons,
                             'Search by proven attribute names or weapon IDs. Unknown IDs are preserved.'),
             InspectionTable('Resources', ('Group', 'Resource', 'Opened balance'), resources,
-                            'Resource edit limits are published patch limits; bulk Max excludes them.'),
+                            'Gems and rare crystals use native gameplay bounds; other resource bounds use published patch limits. Bulk Max excludes resources.'),
             InspectionTable('Item inventory',
                             ('Native item ID', 'Kind', 'Owned', 'Stored rank', 'Equipped references'), items,
                             'Read only. Search by native ID or officer. Ownership, rank and equipped '
@@ -48,7 +48,7 @@ class Editor(ScalarEditor):
     presentation_type = WO3Presentation
     backend = wo3u_parser
     subtitle = 'Steam Windows PC save editor'
-    summary = 'Officer stats, upgrade stones, owned items and mounts, growth points, crafting, weapons and compatibility reset.'
+    summary = 'Officer stats, upgrade stones, owned items and mounts, growth points, gems, rare crystals, crafting, weapons and conservative raw compatibility.'
 
 
 def read_save(path):

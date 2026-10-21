@@ -4483,8 +4483,8 @@
     },
     {
       "path": "tests/test_dw8xl_ps4_editor.py",
-      "bytes": 5911,
-      "sha256": "112de6c8d4b3f0d079761a641f2e4dbbbc2fa75398a819d446429614f7e717ce"
+      "bytes": 5931,
+      "sha256": "50d07827074a7daec0a170fc79ccbbac6fb61b43b04e71f68be7dd415764c5c8"
     },
     {
       "path": "tests/test_dw8xl_vita.py",
@@ -5763,8 +5763,8 @@
     },
     {
       "path": "tests/test_wo3u_ps4_stats_transfer.py",
-      "bytes": 6656,
-      "sha256": "506a82acd48faecb1ea69c9a30e2fb94de0d5094b473a20e345965b18607a2e1"
+      "bytes": 6724,
+      "sha256": "bd83ece7686821cb2dbe0582ccabd7b6646a3aa88f7e78089a47731f52a2a389"
     },
     {
       "path": "tests/test_wo3u_review.py",

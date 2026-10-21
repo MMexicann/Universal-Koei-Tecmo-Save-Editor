@@ -64,7 +64,7 @@ class PS4ContractTests(ScalarContractTests, unittest.TestCase):
         metadata = self.folder / 'sce_sys' / 'param.sfo'
         def raced(raw, path):
             result = original_atomic(raw, path)
-            if Path(path) == destination:
+            if Path(path).resolve() == destination.resolve():
                 metadata.write_bytes(metadata.read_bytes() + b'\0')
             return result
         with patch.object(p, 'atomic_new', side_effect=raced), self.assertRaises(SaveError):

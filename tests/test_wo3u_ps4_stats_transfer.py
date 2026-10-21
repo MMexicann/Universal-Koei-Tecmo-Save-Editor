@@ -95,8 +95,9 @@ class WO3UPS4StatsTransferTests(unittest.TestCase):
             self.assertEqual(output.raw, STATS_TRANSFER.encode(source, template))
             self.assertEqual(path.read_bytes(), template.raw)
             self.assertEqual(source.raw, fixture())
+            saved_paths = {path.resolve(), output.source.resolve()}
             backups = [candidate for candidate in folder.rglob('*')
-                       if candidate.suffix.lower() == '.bin' and candidate not in (path, output.source)]
+                       if candidate.suffix.lower() == '.bin' and candidate.resolve() not in saved_paths]
             self.assertTrue(backups)
             self.assertTrue(all(candidate.read_bytes() == template.raw for candidate in backups))
 

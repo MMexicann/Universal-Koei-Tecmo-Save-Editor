@@ -162,7 +162,8 @@ jobs:
           }
           & ./tools/scan_release.ps1 -Path $baseline -ReportPath defender-reports/baseline.json -Baseline
           if ($LASTEXITCODE -ne 0) { throw 'Active Defender readiness verification failed.' }
-      - name: Build both Windows formats and scan before packaged startup
+      - name: Build both Windows formats and verify frozen payloads
+        timeout-minutes: 10
         run: |
           python -m tools.build_windows
           if ($LASTEXITCODE -ne 0) { throw 'Windows build failed.' }
@@ -172,20 +173,37 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Portable metadata or privacy verification failed.' }
           python -m tools.package_release --verify-standalone
           if ($LASTEXITCODE -ne 0) { throw 'Standalone metadata or privacy verification failed.' }
+      - name: Scan portable runtime with active Defender
+        timeout-minutes: 10
+        run: |
           $bundle = python -m tools.package_release --bundle-path
           if ($LASTEXITCODE -ne 0) { throw 'Portable bundle path validation failed.' }
           & ./tools/scan_release.ps1 -Path $bundle -ReportPath defender-reports/runtime.json
           if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the portable runtime or scan readiness failed.' }
+      - name: Scan standalone runtime with active Defender
+        timeout-minutes: 10
+        run: |
           $standalone = python -m tools.package_release --standalone-path
           if ($LASTEXITCODE -ne 0) { throw 'Standalone executable path validation failed.' }
           & ./tools/scan_release.ps1 -Path $standalone -ReportPath defender-reports/standalone-runtime.json
           if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the standalone executable or scan readiness failed.' }
+      - name: Verify bounded portable packaged startup
+        timeout-minutes: 4
+        run: |
           $launcher = python -m tools.package_release --executable-path
           if ($LASTEXITCODE -ne 0) { throw 'Portable launcher path validation failed.' }
           & ./tools/smoke_windows.ps1 -Path $launcher -Format portable -ReportPath smoke-reports/portable.json
           if ($LASTEXITCODE -ne 0) { throw 'Packaged GUI startup failed; see smoke diagnostics.' }
+      - name: Verify bounded standalone packaged startup
+        timeout-minutes: 4
+        run: |
+          $standalone = python -m tools.package_release --standalone-path
+          if ($LASTEXITCODE -ne 0) { throw 'Standalone executable path validation failed.' }
           & ./tools/smoke_windows.ps1 -Path $standalone -Format standalone -ReportPath smoke-reports/standalone.json
           if ($LASTEXITCODE -ne 0) { throw 'Standalone packaged GUI startup failed; see smoke diagnostics.' }
+      - name: Package verified Windows and source downloads
+        timeout-minutes: 5
+        run: |
           # Verify complete external runtime, metadata and privacy before packaging.
           python -m tools.package_release
           if ($LASTEXITCODE -ne 0) { throw 'Bundle validation or local packaging failed.' }

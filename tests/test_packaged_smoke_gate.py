@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -13,6 +14,42 @@ PWSH = shutil.which('pwsh')
 
 
 class PackagedSmokeContracts(unittest.TestCase):
+    def test_individual_phases_are_named_bounded_and_success_gated(self):
+        source = (ROOT / '.github/workflows/windows-release.yml').read_text()
+        expected = (
+            ('Build both Windows formats and verify frozen payloads', 10),
+            ('Scan portable runtime with active Defender', 10),
+            ('Scan standalone runtime with active Defender', 10),
+            ('Verify bounded portable packaged startup', 4),
+            ('Verify bounded standalone packaged startup', 4),
+            ('Package verified Windows and source downloads', 5),
+        )
+        blocks = {}
+        positions = []
+        for name, minutes in expected:
+            match = re.search(r'^      - name: ' + re.escape(name)
+                              + r'\n(.*?)(?=^      - |\Z)', source, re.M | re.S)
+            self.assertIsNotNone(match, name)
+            block = blocks[name] = match.group(1)
+            positions.append(match.start())
+            self.assertIn(f'        timeout-minutes: {minutes}\n', block)
+            self.assertIn('        run: |\n', block)
+            self.assertNotIn('        if:', block)
+            self.assertNotIn('continue-on-error', block)
+        self.assertEqual(positions, sorted(positions))
+        build = blocks[expected[0][0]]
+        for command in ('python -m tools.build_windows\n', 'python -m tools.build_windows --standalone\n',
+                        'python -m tools.package_release --verify-executable\n',
+                        'python -m tools.package_release --verify-standalone\n'):
+            self.assertEqual(build.count(command), 1)
+        self.assertIn('$bundle = python -m tools.package_release --bundle-path', blocks[expected[1][0]])
+        for index in (2, 4):
+            self.assertIn('$standalone = python -m tools.package_release --standalone-path', blocks[expected[index][0]])
+            self.assertIn("throw 'Standalone executable path validation failed.'", blocks[expected[index][0]])
+        self.assertIn('$launcher = python -m tools.package_release --executable-path', blocks[expected[3][0]])
+        build_job = source.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
+        self.assertIn('    timeout-minutes: 30\n', build_job)
+
     def test_both_smokes_follow_unchanged_defender_gates_and_precede_packaging(self):
         source = (ROOT / '.github/workflows/windows-release.yml').read_text()
         step = source.split('- name: Build both Windows formats', 1)[1].split('- name: Scan every', 1)[0]

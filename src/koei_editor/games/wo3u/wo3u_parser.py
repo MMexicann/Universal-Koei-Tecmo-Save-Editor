@@ -6,6 +6,7 @@ layout markers, not checksums; preserve their original ASLR-dependent values.
 """
 from dataclasses import dataclass
 import hashlib
+import json
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
@@ -448,10 +449,45 @@ def review(document, changes):
             for field in fields_for(document) if field.id in changes]
 
 
-def backup(document):
+def _copy_bytes(path, limit):
+    try:
+        with safe_path(path).open('rb') as stream:
+            raw = stream.read(limit + 1)
+    except OSError as error:
+        raise SaveError('The copied WO3 Ultimate file is missing or unreadable.') from error
+    if len(raw) > limit:
+        raise SaveError('The copied WO3 Ultimate file exceeds its bounded size.')
+    return raw
+
+
+def _check_source(document):
     validate_document(document)
-    return snapshot_backup(document.raw, document.source, GAME_ID,
-                           document.source.parent / 'WarriorsEditorBackups')
+    source = safe_path(document.source)
+    if _copy_bytes(source, SAVE_SIZE) != document.raw:
+        raise SaveError('The opened copy changed on disk. Reopen it before saving or backing up.')
+    return source
+
+
+def backup(document):
+    source = _check_source(document)
+    result = snapshot_backup(document.raw, source, GAME_ID,
+                             source.parent / 'WarriorsEditorBackups')
+    # Keep completed paths on failure: another application may have replaced
+    # them, so rollback cannot assume that their current bytes belong to us.
+    _check_source(document)
+    if _copy_bytes(result, SAVE_SIZE) != document.raw:
+        raise SaveError('The newly created WO3 Ultimate backup changed during verification.')
+    try:
+        manifest = json.loads(_copy_bytes(result.with_suffix('.json'), 4096))
+    except (ValueError, UnicodeError) as error:
+        raise SaveError('The newly created WO3 Ultimate backup manifest changed.') from error
+    if (type(manifest) is not dict or manifest.get('game_id') != GAME_ID
+            or manifest.get('kind') != 'opaque-copy'
+            or manifest.get('sha256') != document.sha256
+            or manifest.get('size_bytes') != SAVE_SIZE):
+        raise SaveError('The newly created WO3 Ultimate backup manifest does not match its snapshot.')
+    _check_source(document)
+    return result
 
 
 def save_as(document, changes, destination):
@@ -460,14 +496,18 @@ def save_as(document, changes, destination):
         raise SaveError('Choose a new .bin destination.')
     if destination.exists():
         raise FileExistsError('Choose a new file; existing files are never replaced.')
-    validate_document(document)
-    with safe_path(document.source).open('rb') as stream:
-        if stream.read(SAVE_SIZE + 1) != document.raw:
-            raise SaveError('The opened copy changed on disk. Reopen it before saving.')
+    _check_source(document)
     raw = serialize(document, changes)
+    _check_source(document)
     backup(document)
+    _check_source(document)
     atomic_new(raw, destination)
-    return decode(raw, GAME_ID, destination)
+    _check_source(document)
+    reopened = read_save(destination)
+    _check_source(document)
+    if reopened.raw != raw or _copy_bytes(destination, SAVE_SIZE) != raw:
+        raise SaveError('The saved WO3 Ultimate copy changed during actual readback.')
+    return reopened
 
 
 def restore(backup_path, destination, game_id=GAME_ID):

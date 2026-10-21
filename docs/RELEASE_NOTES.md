@@ -44,6 +44,8 @@ Undo, comparison and automation remain available.
 
 ## Conversion workspace improvements
 
+- WO3U PC Save As now rejects source changes during backup or writing, verifies
+  backup bytes and manifests, and reopens the actual saved destination.
 - Filter by exact source and destination formats together with text search. Matching
   reviewed selections remain available; hidden/incompatible selections clear safely.
 

@@ -178,8 +178,8 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 32516,
-      "sha256": "c15137f1b8c3b10b95764748c1a3e340a57d92469013bae5a3d189368ab53f76"
+      "bytes": 32706,
+      "sha256": "38af3d1931af414cc0f0f8ebb66f28165dc1edcb7d3144ec1c9e1d844568dd07"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
@@ -698,8 +698,8 @@
     },
     {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 5373,
-      "sha256": "a1f00db07f00320daae71d2cd78d14cd3d74b0a8634923caf9111d107bc32d60"
+      "bytes": 5525,
+      "sha256": "476ce163b8ad3dea025ec92d79dd7978dec8eefb4d8ec2ebc9ac15ed1a0121f8"
     },
     {
       "path": "docs/REMAINING_INPUTS.md",
@@ -3253,8 +3253,8 @@
     },
     {
       "path": "src/koei_editor/games/wo3u/wo3u_parser.py",
-      "bytes": 30555,
-      "sha256": "a4aaad1cc4d9ff6c500e83aafd1a9c79eba27c0e5a71e484801f1430a65b2df3"
+      "bytes": 32239,
+      "sha256": "1e94db1f06b48a219a530d2f020ff858343d574fc996988c92be3f732e01b391"
     },
     {
       "path": "src/koei_editor/games/wo3u_ps3/__init__.py",
@@ -5745,6 +5745,11 @@
       "path": "tests/test_wo3u_native_balances.py",
       "bytes": 10465,
       "sha256": "bc6ddb48ba5d69ea8dc93876f44b231e8851f0361b852082f66382163b97d5e3"
+    },
+    {
+      "path": "tests/test_wo3u_pc_copy_races.py",
+      "bytes": 9214,
+      "sha256": "80ebb54a52f6ddda6e5e2f922522e317de917b6f961267136d53a2f01d106424"
     },
     {
       "path": "tests/test_wo3u_ps3.py",

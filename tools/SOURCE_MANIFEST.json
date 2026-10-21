@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 21522,
-      "sha256": "c251aa8bb8da11f04029097410325f32d86201ebc65e9f5424957ce3fbf18d36"
+      "bytes": 22409,
+      "sha256": "9b434a121cd8a9136302a05a1d0d57fe2278970cd7db4870a2b866e26a6153be"
     },
     {
       "path": ".gitignore",
@@ -173,8 +173,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 9477,
-      "sha256": "80c674be56644dd7dcb5f6192bfd1e6d9c71c94de1dfe9b9a5038b49ceaaf290"
+      "bytes": 9982,
+      "sha256": "cfc7c3f3c6d9bcd187f2beeb5dc20f0a0872fcd3cbc225c50b9690e6e73cacaa"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -903,8 +903,8 @@
     },
     {
       "path": "docs/SW4_PS4_RESEARCH.md",
-      "bytes": 8429,
-      "sha256": "9b3166e2cb8ee38429384d4c774811ed9512a58bc025f0812f516972f8f3fe44"
+      "bytes": 11085,
+      "sha256": "213bdced130f6bacb3c8b7838be52e4d97620042185a4eb7f37d790a72ea1669"
     },
     {
       "path": "docs/SWITCH_WARRIORS_RESEARCH.md",
@@ -5042,6 +5042,11 @@
       "sha256": "00f2a9f149e7f182466a3e881f06bc2a5f340a97662adf68cd3631aefa5b70b5"
     },
     {
+      "path": "tests/test_packaged_smoke_gate.py",
+      "bytes": 12057,
+      "sha256": "fe6adc1a76a66debcb454efab89d8a912af81a9114c0ec96ecf25859ae12d13c"
+    },
+    {
       "path": "tests/test_parallel_runner.py",
       "bytes": 22713,
       "sha256": "d9458c609bf250921ae6d703320b2d2d638bdbe119f8b8c5cb9a0629cb2df081"
@@ -5173,8 +5178,8 @@
     },
     {
       "path": "tests/test_release_preparation.py",
-      "bytes": 15757,
-      "sha256": "67a6388776f081e120dd52e4b5bbbdf8a7ceb72f38b31588b4e6842e6b067770"
+      "bytes": 15809,
+      "sha256": "c5ff47ecfe0c8e79168de3e31572a69843b88ddc3b8c7a4a2b625b22755fbcd1"
     },
     {
       "path": "tests/test_research_import.py",
@@ -5873,8 +5878,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33032,
-      "sha256": "a6bb6ee83cd4ba43c25bbd3a9ea6e1fd8651cc2a8e9468694eae0242dc0fbb69"
+      "bytes": 33059,
+      "sha256": "5fccec31ea962ed20b0a166cf09533f04cfc38a0018e4c57d318d4058d6aa374"
     },
     {
       "path": "tools/refresh_manifest.py",
@@ -5900,6 +5905,11 @@
       "path": "tools/scan_release.ps1",
       "bytes": 26532,
       "sha256": "29f3b70263f9cdb9f75ef3da02070007b0de7049cfcc52717faf5f0ed538e58c"
+    },
+    {
+      "path": "tools/smoke_windows.ps1",
+      "bytes": 8888,
+      "sha256": "d2e61dfe153bde242d976c6a598f2ea6b92da912111cc1ddb63914b13c7546be"
     },
     {
       "path": "tools/test_timings.json",

@@ -138,6 +138,13 @@ source hashes, and rejects save/game-file entries and personal paths.
 The Windows workflow runs the tests, builds the executable and verifies its
 startup and archives before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
+Build, runtime scans, packaged startup and packaging run as separate bounded
+steps. After both runtime scans pass, `tools/smoke_windows.ps1` gives each
+packaged startup 180 seconds and records its exit status and executable hashes.
+On timeout it records bounded descendant metadata, reads window text only from
+the retained launched process, and terminates its process tree. Startup and
+Defender diagnostics are workflow artifacts,
+separate from the release downloads; a timeout still blocks publication.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
 commit. Pushing a tag matching the application version, such as `v3.1`, also

@@ -23,6 +23,18 @@ the other approximately 10.0 MiB. The existing exact PC and PS3 native readers
 correctly reject the save image. No container key, account value, save bytes or
 personal path is published by this report.
 
+An offline build of [pkg_pfs_tool](https://github.com/flatz/pkg_pfs_tool)
+authenticated the outer sealed-key
+companions, but did not authenticate or decrypt the inner PFS header. A separate
+older-format control also failed at that inner layer. The apparent eight-row
+public key table was independently identified as chunks of one wrapped
+portability structure, rather than eight usable inner content keys. Therefore
+the failure cannot be attributed solely to a missing revision-9 key. No native
+gameplay was recovered, and no authentication check was bypassed.
+The interpretation agrees with the public
+[sealed-secret routine](https://github.com/cfwprpht/PSFSKKey/blob/75618b3d3f772b4ab2385c87945428602a7de8f9/TextFile1.txt),
+which unwraps the complete portability structure before using its outer keys.
+
 External console/save-tool decryption must produce the complete native gameplay
 file and original title/revision metadata first. A working route then needs
 its exact framing, native integrity coverage, native object/record geometry and
@@ -50,8 +62,10 @@ Further static inspection of the supplied **PC DX** build, without execution,
 independently confirms that reader `0x140194F00` handles eight revisions. For
 example, native revision `0x2118` uses section b length `0x828`, versus `0x858`
 in current `0x39EA`. Revision `0x35C7` also transforms custom-character records
-from stride `0x6C` to `0xCC`, including native string conversion. These are PC
-loader facts, not proof that an original PS4 export has that framing or revision.
+from stride `0x6C` to `0xCC`, including initialization of expanded name slots
+from fixed localized defaults. This does not establish preservation of original
+custom-character names. These are PC loader facts, not proof that an original
+PS4 export has that framing or revision.
 
 Migration for `0x2118`/`0x253B` additionally remaps custom-character part selectors
 through an external **1,268-entry, stride-`0x38` table**. Loader `0x1401943F0`
@@ -93,3 +107,29 @@ identify raw file framing, promise EU/US compatibility, or establish Steam
 imports of console files. The [Steam web manual](https://www.gamecity.ne.jp/manual/sengoku4/dx/jp/)
 links the PS4 gameplay manual for general game explanations; that reference
 does not extend the console inheritance statement to PC.
+
+The [official US original SW4 page](https://www.koeitecmoamerica.com/sw4/outline.html)
+also documents PS4/PS3/Vita cross-save. If that service remains operational, a
+game-managed US PS3 export could be an intermediate source for the app's scoped
+PS3 → PC gold transfer. Current service availability was not tested, and this
+would not transfer complete progression.
+
+## Further original Vita and DX bridge checks
+
+The original US Vita [native emulator report PCSE00503](https://github.com/Vita3K/compatibility/issues/1531)
+includes a public log that successfully opens `savedata0:./app0000.dat` four times
+after selecting slot 0. An independent [EU PCSB00592 log](https://github.com/Zangetsu38/Log-Vita3K/blob/434573a769887275b9b93ca9aeb0d978a3dd872a/App/EURO/PCSB00592%20-%20%5BSAMURAI%20WARRIORS%204%5D.log)
+records the same filename. Neither supplies native bytes, framing, read lengths,
+revision or checksum coverage. Vita filenames cannot qualify original PS4 files.
+
+The official original PS4 page separately promises PS3/Vita cross-save and
+same-account DLC redownload. The official DX bridge targets Japanese PS4 DX,
+whose linked store identity is `CUSA14824`, distinct from original SW4. It still
+needs an independently qualified console DX → PC stage before it can establish
+a complete PC transfer. Native in-game import does not imply raw file identity.
+
+An apparent 99%-complete Vita save entry on GameFAQs is also identically indexed
+on the PS3 and PC DX pages. Without the actual platform heading and file it is
+not an independent Vita reference. Public Vita checksum-tool listings name SW4
+but supply no acquired codec or native example. No additional decrypted Vita or
+console DX export was qualified in this pass.

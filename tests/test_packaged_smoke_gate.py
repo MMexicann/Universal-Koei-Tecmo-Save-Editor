@@ -77,6 +77,14 @@ class PackagedSmokeContracts(unittest.TestCase):
         self.assertNotIn('CommandLine', source)
         self.assertIn('-RedirectStandardOutput $stdout -RedirectStandardError $stderr', source)
         self.assertIn('Get-OwnedProcessIds $process.Id', source)
+        self.assertIn('Get-RootWindows $process.Id', source)
+        self.assertIn('[PackagedSmokeWindows]::Read([int[]]@($RootPid))', source)
+        self.assertNotIn('Get-OwnedWindows', source)
+        self.assertIn('$rootCreationTime = $process.StartTime', source)
+        self.assertIn('Name,CreationDate -OperationTimeoutSec 5', source)
+        self.assertIn('$child.CreationDate -isnot [DateTime]', source)
+        self.assertIn('$childCreated -lt $createdAt[$parentId]', source)
+        self.assertIn('if ($ids.Count -ge 64) { break }', source)
         self.assertIn('ids.Contains((int)pid)', source)
         self.assertIn('SendMessageTimeout(hwnd, 0x000D', source)
         self.assertIn('text, 3, 250, out result)', source)
@@ -103,7 +111,7 @@ function Start-Process {
     param($FilePath,$ArgumentList,$WindowStyle,$RedirectStandardOutput,$RedirectStandardError,[switch]$PassThru)
     'procedural stdout' | Set-Content $RedirectStandardOutput
     'procedural stderr' | Set-Content $RedirectStandardError
-    $p=[pscustomobject]@{Id=900001;Handle=1;HasExited=($env:SMOKE_MODE -ne 'timeout');ExitCode=0}
+    $p=[pscustomobject]@{Id=900001;Handle=1;HasExited=($env:SMOKE_MODE -ne 'timeout');ExitCode=0;StartTime=[DateTime]::UtcNow.AddMinutes(-1)}
     if($env:SMOKE_MODE -eq 'failure'){$p.ExitCode=7}
     $p | Add-Member ScriptMethod WaitForExit {param($milliseconds) return $this.HasExited}
     $p | Add-Member ScriptMethod Kill {param($tree)
@@ -114,8 +122,8 @@ function Start-Process {
     return $p
 }
 function Get-CimInstance {
-    [pscustomobject]@{ProcessId=900002;ParentProcessId=900001;Name='owned-child.exe'}
-    [pscustomobject]@{ProcessId=900003;ParentProcessId=42;Name='unrelated.exe'}
+    [pscustomobject]@{ProcessId=900002;ParentProcessId=900001;Name='owned-child.exe';CreationDate=[DateTime]::UtcNow.AddSeconds(-30)}
+    [pscustomobject]@{ProcessId=900003;ParentProcessId=42;Name='unrelated.exe';CreationDate=[DateTime]::UtcNow.AddSeconds(-30)}
 }
 & $env:SMOKE_HELPER -Path $env:SMOKE_EXE -Format portable -ReportPath $env:SMOKE_REPORT -TimeoutSeconds 30
 '''
@@ -135,10 +143,13 @@ function Get-CimInstance {
             self.assertEqual(report['timed_out'], mode == 'timeout')
             self.assertEqual(kill.exists(), mode == 'timeout')
             self.assertEqual(report['phase'], 'completed')
+            self.assertEqual(report['window_text_scope'], 'retained_root_only')
             self.assertTrue((path / 'portable-smoke.stdout.log').is_file())
             self.assertTrue((path / 'portable-smoke.stderr.log').is_file())
             if mode == 'timeout':
                 self.assertEqual([p['pid'] for p in report['owned_processes']], [900002])
+                self.assertFalse(any(error.startswith('Owned-window diagnostics:') for error in report['errors']),
+                                 report['errors'])
             else:
                 self.assertEqual(report['exit_code'], 7 if mode == 'failure' else 0)
 
@@ -147,6 +158,45 @@ function Get-CimInstance {
         for mode in ('success', 'failure', 'timeout'):
             with self.subTest(mode=mode):
                 self.procedural_process(mode)
+
+    @unittest.skipUnless(PWSH, 'Procedural PowerShell ancestry check unavailable.')
+    def test_process_ancestry_rejects_reused_pids_unknown_dates_and_excess_children(self):
+        command = r'''
+$tokens=$null;$errors=$null
+$ast=[System.Management.Automation.Language.Parser]::ParseFile($env:SMOKE_HELPER,[ref]$tokens,[ref]$errors)
+if($errors.Count){throw 'Helper parse failed'}
+$definition=$ast.Find({param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Get-OwnedProcessIds'},$true)
+. ([ScriptBlock]::Create($definition.Extent.Text))
+function Get-CimInstance { return $script:rows }
+$rootTime=[DateTime]::SpecifyKind([DateTime]::new(2020,1,1),[DateTimeKind]::Utc)
+function Row($id,$parent,$date) { [pscustomobject]@{ProcessId=$id;ParentProcessId=$parent;CreationDate=$date;Name='procedural.exe'} }
+$script:rows=@(
+    (Row 1000 1 $rootTime.AddSeconds(10)),
+    (Row 2001 1000 $rootTime.AddSeconds(1)),
+    (Row 2002 1000 $rootTime.AddSeconds(-10)),
+    (Row 2003 2002 $rootTime.AddSeconds(5)),
+    (Row 2004 2001 $rootTime.AddMilliseconds(500)),
+    (Row 2005 2004 $rootTime.AddSeconds(3)),
+    (Row 2006 1000 '2020-01-01T00:00:01Z'),
+    (Row 2007 1000 $null),
+    (Row 2008 1000 ([DateTime]::UtcNow.AddDays(1))),
+    (Row 2009 1000 $rootTime.AddSeconds(2)),
+    (Row 2009 1000 $rootTime.AddSeconds(2)),
+    (Row 2010 2001 $rootTime.AddSeconds(2))
+)
+$report=@{owned_processes=@()}
+$ids=Get-OwnedProcessIds 1000 $rootTime
+if((@($ids | Sort-Object) -join ',') -ne '1000,2001,2010'){throw 'Timestamp ancestry admitted a stale or unknown owner'}
+if(($report.owned_processes.pid -join ',') -ne '2001,2010'){throw 'Excluded process metadata leaked'}
+$script:rows=@(1..80 | ForEach-Object { Row (4000+$_) 1000 $rootTime.AddSeconds($_) })
+$report=@{owned_processes=@()}
+$ids=Get-OwnedProcessIds 1000 $rootTime
+if($ids.Count -ne 64 -or $report.owned_processes.Count -ne 63){throw 'Direct-child collection exceeded its strict bound'}
+'''
+        result = subprocess.run([PWSH, '-NoProfile', '-NonInteractive', '-Command', command],
+                                env=dict(os.environ, SMOKE_HELPER=str(HELPER)),
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == '__main__':

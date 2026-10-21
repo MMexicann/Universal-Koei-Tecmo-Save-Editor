@@ -16,37 +16,63 @@ $report = [ordered]@{
     schema_version = 1; format = $Format; clean = $false; phase = 'initialization'
     timeout_seconds = $TimeoutSeconds; timed_out = $false; exit_code = $null
     pid = $null; owned_processes = @(); windows = @(); errors = @()
+    window_text_scope = 'retained_root_only'
     executable_name = $null; sha256_before = $null; sha256_after = $null
     stdout = [IO.Path]::GetFileName($stdout); stderr = [IO.Path]::GetFileName($stderr)
     started_utc = [DateTime]::UtcNow.ToString('o'); completed_utc = $null
 }
 $process = $null
+$rootCreationTime = $null
 $exitCode = 1
 function Write-SmokeReport {
     $report | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $reportFile -Encoding utf8
 }
-function Get-OwnedProcessIds([int]$RootPid) {
+function Get-OwnedProcessIds([int]$RootPid, [DateTime]$RootCreated) {
     # Only descendants of the launched process enter the report. Never collect
     # environment, command lines, full image paths or unrelated window text.
     $ids = [Collections.Generic.HashSet[int]]::new()
+    $rootCreatedUtc = $RootCreated.ToUniversalTime()
+    if ($RootCreated -eq [DateTime]::MinValue -or $rootCreatedUtc -gt [DateTime]::UtcNow) {
+        throw 'The retained process has no qualified creation time.'
+    }
     [void]$ids.Add($RootPid)
+    $createdAt = @{ $RootPid = $rootCreatedUtc }
     $pending = [Collections.Generic.Queue[int]]::new()
     $pending.Enqueue($RootPid)
-    $snapshot = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,Name -OperationTimeoutSec 5)
+    $snapshot = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,Name,CreationDate -OperationTimeoutSec 5)
+    $snapshotEnd = [DateTime]::UtcNow
+    $rows = @{}
+    $duplicates = [Collections.Generic.HashSet[int]]::new()
+    foreach ($row in $snapshot) {
+        $id = $row.ProcessId -as [int]
+        if ($null -eq $id -or $id -le 0) { continue }
+        if ($rows.ContainsKey($id)) { [void]$duplicates.Add($id) }
+        else { $rows[$id] = $row }
+    }
     while ($pending.Count -gt 0 -and $ids.Count -lt 64) {
         $parentId = $pending.Dequeue()
         foreach ($child in @($snapshot | Where-Object { $_.ParentProcessId -eq $parentId })) {
-            if ($ids.Add([int]$child.ProcessId)) {
+            if ($ids.Count -ge 64) { break }
+            $childId = $child.ProcessId -as [int]
+            if ($null -eq $childId -or $childId -le 0 -or $duplicates.Contains($childId) -or
+                $child.CreationDate -isnot [DateTime]) { continue }
+            try { $childCreated = $child.CreationDate.ToUniversalTime() }
+            catch { continue }
+            # A stale child can retain the PID of a previous, unrelated parent.
+            # The root bound comes from our retained process, never its CIM row.
+            if ($childCreated -lt $createdAt[$parentId] -or $childCreated -gt $snapshotEnd) { continue }
+            if ($ids.Add($childId)) {
+                $createdAt[$childId] = $childCreated
                 $report.owned_processes += [ordered]@{
-                    pid = [int]$child.ProcessId; parent_pid = $parentId; name = $child.Name
+                    pid = $childId; parent_pid = $parentId; name = $child.Name
                 }
-                $pending.Enqueue([int]$child.ProcessId)
+                $pending.Enqueue($childId)
             }
         }
     }
     return ,$ids
 }
-function Get-OwnedWindows($Ids) {
+function Get-RootWindows([int]$RootPid) {
     Add-Type -TypeDefinition @'
 using System;
 using System.Collections.Generic;
@@ -90,7 +116,9 @@ public static class PackagedSmokeWindows {
     }
 }
 '@
-    return [PackagedSmokeWindows]::Read([int[]]@($Ids))
+    # Only our retained root handle protects a PID against later reuse.
+    # Descendants supply timestamp-qualified metadata, never window text.
+    return [PackagedSmokeWindows]::Read([int[]]@($RootPid))
 }
 try {
     Write-SmokeReport
@@ -108,6 +136,7 @@ try {
         -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
     # Retain the exact launched process handle, not a later PID/name lookup.
     $null = $process.Handle
+    $rootCreationTime = $process.StartTime
     $report.pid = $process.Id
     $report.phase = 'waiting'
     Write-SmokeReport
@@ -115,7 +144,10 @@ try {
         $report.timed_out = $true
         $report.phase = 'timeout_diagnostics'
         Write-SmokeReport
-        try { $ids = Get-OwnedProcessIds $process.Id; $report.windows = @(Get-OwnedWindows $ids) }
+        try {
+            $null = Get-OwnedProcessIds $process.Id $rootCreationTime
+            if (-not $process.HasExited) { $report.windows = @(Get-RootWindows $process.Id) }
+        }
         catch { $report.errors += ('Owned-window diagnostics: ' + $_.Exception.Message) }
         throw 'The packaged smoke exceeded its deadline; startup is not qualified.'
     }

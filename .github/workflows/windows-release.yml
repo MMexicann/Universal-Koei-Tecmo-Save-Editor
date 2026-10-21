@@ -182,10 +182,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Defender rejected the standalone executable or scan readiness failed.' }
           $launcher = python -m tools.package_release --executable-path
           if ($LASTEXITCODE -ne 0) { throw 'Portable launcher path validation failed.' }
-          $smoke = Start-Process -FilePath $launcher -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
-          if ($smoke.ExitCode -ne 0) { throw 'Packaged GUI startup failed.' }
-          $standaloneSmoke = Start-Process -FilePath $standalone -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
-          if ($standaloneSmoke.ExitCode -ne 0) { throw 'Standalone packaged GUI startup failed.' }
+          & ./tools/smoke_windows.ps1 -Path $launcher -Format portable -ReportPath smoke-reports/portable.json
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged GUI startup failed; see smoke diagnostics.' }
+          & ./tools/smoke_windows.ps1 -Path $standalone -Format standalone -ReportPath smoke-reports/standalone.json
+          if ($LASTEXITCODE -ne 0) { throw 'Standalone packaged GUI startup failed; see smoke diagnostics.' }
           # Verify complete external runtime, metadata and privacy before packaging.
           python -m tools.package_release
           if ($LASTEXITCODE -ne 0) { throw 'Bundle validation or local packaging failed.' }
@@ -226,6 +226,12 @@ jobs:
           $report | ConvertTo-Json -Depth 20 | Set-Content $reportPath -Encoding utf8NoBOM
           $reportHash = (Get-FileHash -Algorithm SHA256 $reportPath).Hash.ToLowerInvariant()
           Add-Content release/SHA256SUMS.txt "$reportHash  $(Split-Path $reportPath -Leaf)" -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: packaged-startup-diagnostics
+          path: smoke-reports/
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         if: always()
         with:

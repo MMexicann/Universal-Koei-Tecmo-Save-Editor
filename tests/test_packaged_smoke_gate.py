@@ -76,6 +76,9 @@ class PackagedSmokeContracts(unittest.TestCase):
         self.assertIn('-RedirectStandardOutput $stdout -RedirectStandardError $stderr', source)
         self.assertIn('Get-OwnedProcessIds $process.Id', source)
         self.assertIn('ids.Contains((int)pid)', source)
+        self.assertIn('SendMessageTimeout(hwnd, 0x000D', source)
+        self.assertIn('text, 3, 250, out result)', source)
+        self.assertIn('return visited < 64;', source)
         self.assertIn('$report.clean = $false', source)
 
     @unittest.skipUnless(PWSH, 'Actual PowerShell parser unavailable.')

@@ -58,24 +58,33 @@ public static class PackagedSmokeWindows {
     [DllImport("user32.dll")] static extern bool EnumChildWindows(IntPtr parent, EnumProc callback, IntPtr arg);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
     [DllImport("user32.dll", CharSet=CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int maximum);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint message, UIntPtr length, StringBuilder text, uint flags, uint milliseconds, out UIntPtr result);
     public static string[] Read(int[] owned) {
         var ids = new HashSet<int>(owned);
         var texts = new List<string>();
+        int visited = 0;
         EnumProc read = (hwnd, arg) => {
             uint pid; GetWindowThreadProcessId(hwnd, out pid);
-            if (ids.Contains((int)pid) && texts.Count < 64) {
+            if (ids.Contains((int)pid) && visited < 64) {
+                visited++;
                 var text = new StringBuilder(4096);
                 GetWindowText(hwnd, text, text.Capacity);
+                // GetWindowText cannot read another process's child controls.
+                // WM_GETTEXT can, with a strict per-control hung-window limit.
+                if (text.Length == 0) {
+                    UIntPtr result;
+                    SendMessageTimeout(hwnd, 0x000D, new UIntPtr((uint)text.Capacity), text, 3, 250, out result);
+                }
                 if (text.Length > 0) texts.Add(pid.ToString() + ": " + text.ToString());
             }
-            return true;
+            return visited < 64;
         };
         EnumWindows((hwnd, arg) => {
             uint pid; GetWindowThreadProcessId(hwnd, out pid);
             if (ids.Contains((int)pid)) {
                 read(hwnd, arg); EnumChildWindows(hwnd, read, IntPtr.Zero);
             }
-            return true;
+            return visited < 64;
         }, IntPtr.Zero);
         return texts.ToArray();
     }

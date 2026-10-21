@@ -102,6 +102,7 @@ from .game_registry import GAMES
 # blue_reflection_second_light_pc: BLUE REFLECTION: SECOND LIGHT / Original Steam PC · native tagged gameplay profile [Windows PC]
 # atelier_ryza_pc: ATELIER RYZA / Ever Darkness & the Secret Hideout · original Steam PC [Windows PC]
 # dw8xl_vita: DYNASTY WARRIORS 8 / Xtreme Legends Complete Edition · plaintext Vita revision 0x131002F0 [PlayStation Vita]
+# dw8xl_ps4: DYNASTY WARRIORS 8 / Xtreme Legends Complete Edition · PS4 CUSA00397 zero extension [PlayStation 4]
 # pw1_ps3: ONE PIECE: PIRATE WARRIORS / Original US PSN NPUB30836 · DATA.BIN + PARAM.SFO [PlayStation 3]
 # pw2_ps3: ONE PIECE: PIRATE WARRIORS 2 / Original EU PSN NPEB01795 · DATA.BIN + PARAM.SFO [PlayStation 3]
 # pw3_ps3: ONE PIECE: PIRATE WARRIORS 3 / Original EU PSN NPEB02211 · DATA.BIN + PARAM.SFO [PlayStation 3]

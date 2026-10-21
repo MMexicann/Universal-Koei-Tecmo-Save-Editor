@@ -38,9 +38,14 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Additional title qualification and source-only inspection](EXPANSION_CANDIDATES.md)
 
 - [Compare Saves: workspace, reports and interpretation](SAVE_COMPARISON.md)
+- [Research Import: additional native candidates without gameplay editing](RESEARCH_IMPORT.md)
 - [Save Research Lab: decoded differences, candidate hypotheses and Codex exports](SAVE_RESEARCH_LAB.md)
 
 - [Save Converter: routes, use, preservation and remaining mappings](SAVE_CONVERSION.md)
+- [DW8 XL, WO3U and SW4: PS4 request status, PS4 editor and resource-only PS3/PC routes](WARRIORS_PS4_TRANSFERS.md)
+- [Additional-title investigation: new source findings and exact remaining gates](NEW_TITLE_RESEARCH.md)
+- [SW4 PS4 research: acquired encrypted exports and exact missing inputs](SW4_PS4_RESEARCH.md)
+- [WO3U PS4 → PC: 354 directly mapped resource balances and exact source qualification](WO3U_PS4_RESOURCE_TRANSFER.md)
 - [DW7 XL PS3 to Definitive Edition PC: transfer scope and native proof](DW7XL_CONVERSION.md)
 - [DW7 XL PC weapon loadouts, learned seals and base-parameter limits](DW7XL_WEAPONS.md)
 - [DW7 XL original US/EU PS3 editor](DW7XL_PS3.md)

@@ -121,12 +121,10 @@ class CompanionBackupRetentionTests(unittest.TestCase):
                 manifest = json.loads(backup.with_suffix('.json').read_bytes())
                 self.assertEqual(manifest['sha256'], document.sha256)
                 self.assertFalse(companion_path(backup, game_id).exists())
-                # DW8 XL PS4 is conversion-only and has no standalone restore.
-                if game_id != 'dw8xl_ps4':
-                    destination = document.source.with_name('restored' + document.source.suffix)
-                    with self.assertRaises((SaveError, OSError)):
-                        backend.restore(backup, destination)
-                    self.assertFalse(destination.exists())
+                destination = document.source.with_name('restored' + document.source.suffix)
+                with self.assertRaises((SaveError, OSError)):
+                    backend.restore(backup, destination)
+                self.assertFalse(destination.exists())
                 self.assertEqual(document.source.read_bytes(), document.raw)
 
     def test_failed_backup_preserves_concurrent_replacements_of_every_completed_path(self):
@@ -170,9 +168,11 @@ class CompanionBackupRetentionTests(unittest.TestCase):
                 with patch.object(hooks, 'atomic_new', side_effect=mutate_after_companion):
                     with self.assertRaises(SaveError):
                         backend.backup(document)
-                self.assertEqual(len(created), 1)
-                companion, expected = created[0]
-                self.assertEqual(companion.read_bytes(), expected)
+                # PS4 DW8 now retains both original SFO and its digest-bound
+                # context receipt. A late source failure must keep both.
+                self.assertEqual(len(created), 2 if game_id == 'dw8xl_ps4' else 1)
+                for companion, expected in created:
+                    self.assertEqual(companion.read_bytes(), expected)
                 backups = list((document.source.parent / 'UniversalEditorBackups').glob('*' + document.source.suffix))
                 self.assertEqual(len(backups), 1)
                 self.assertEqual(backups[0].read_bytes(), document.raw)

@@ -1,5 +1,26 @@
 # Universal development validation
 
+## v3.1 common-core editing and resource transfers
+
+The new DW8 XL PS4 editor reuses the already-qualified CUSA00397 zero-extension
+reader and common field mapping. Bound-contract, Tk, backup/restore and metadata
+race tests cover surgical writes and original-context preservation. The public
+full-file reference lacks original console metadata, so generated title-only
+context does not establish independent native-export evidence or game loading.
+
+The four new resource-only WO3U/SW4 PS3 ↔ PC routes use independently mapped
+balances and each endpoint's existing writer. Procedural tests check numeric
+endian conversion, every retained destination byte, bounds, native integrity,
+seed/header preservation, exported readback and reverse copies. Optional paired
+native checks skip without complete original context. The narrower one-way WO3U PS4 scope transfers 354 directly documented
+crystal/orb/material balances; actual public-origin payload and native-PC guarded
+Save As checks preserve every other PC byte. The reference lacks original PS4
+metadata; generated context tests remain separate. The second scope verifies
+1,079 values across 1,805 mapped bytes, preserving every other PC byte and
+the complete saved-state block, including exact unusual-target no-ops. Complete WO3U/SW4 PS4
+transfers and edited/converted game loading remain unverified.
+[Scope, evidence and blockers](WARRIORS_PS4_TRANSFERS.md).
+
 ## v2.6 new titles and shared tools
 
 Orochi Z native initial and growth tables independently establish all five saved

@@ -138,7 +138,7 @@ class ValidationRecord:
     def to_dict(self):
         game = _game(self.game_id)
         return {
-            'schema_version': 1, 'kind': 'real_game_validation', 'app_version': '3.0',
+            'schema_version': 1, 'kind': 'real_game_validation', 'app_version': '3.1',
             'game_id': game.id, 'platform': game.platform, 'profile_scope': game.subtitle,
             'format_revision': self.revision, 'provenance': self.provenance,
             'attestation': 'user_reported_unverified',
@@ -173,7 +173,7 @@ class ValidationRecord:
             raise ReportError('Report fields do not match the supported schema.')
         if type(report['schema_version']) is not int or report['schema_version'] != 1:
             raise ReportError('Unsupported report schema version.')
-        if (report['kind'] != 'real_game_validation' or report['app_version'] not in ('2.7', '3.0')
+        if (report['kind'] != 'real_game_validation' or report['app_version'] not in ('2.7', '3.0', '3.1')
                 or report['attestation'] != 'user_reported_unverified'):
             raise ReportError('Unsupported report identity or evidence claim.')
         game = _game(report['game_id'])

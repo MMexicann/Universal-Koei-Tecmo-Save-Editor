@@ -2,8 +2,7 @@
 
 import argparse
 import json
-from koei_editor.research.arland_plus_vita import inspector as vita
-from koei_editor.research.gundam2_ps3 import inspector as gundam
+from koei_editor.research import imports
 
 
 def main():
@@ -11,16 +10,13 @@ def main():
         description="Inspect one explicit unregistered copied-save research profile."
     )
     parser.add_argument(
-        "--profile", required=True, choices=tuple(vita.PROFILES) + ("gundam2_ps3",)
+        "--profile", required=True, choices=tuple(imports.PROFILES)
     )
     parser.add_argument("copy")
     arguments = parser.parse_args()
     try:
-        if arguments.profile == "gundam2_ps3":
-            report = gundam.inspect(gundam.read_save(arguments.copy))
-        else:
-            report = vita.inspect(vita.read_save(arguments.copy, arguments.profile))
-        print(json.dumps(report, indent=2, ensure_ascii=True))
+        result = imports.inspect_copy(arguments.profile, arguments.copy)
+        print(json.dumps(json.loads(result.report_json), indent=2, ensure_ascii=True))
     except (OSError, ValueError) as error:
         parser.exit(1, "Read-only research inspection failed: " + str(error) + "\n")
 

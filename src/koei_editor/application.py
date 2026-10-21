@@ -13,7 +13,7 @@ from koei_editor.shared import shell_preferences
 from koei_editor.shared.localization import LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
-VERSION = '3.0'
+VERSION = '3.1'
 
 
 class Application(Appearance):
@@ -43,6 +43,7 @@ class Application(Appearance):
         self.save_library = None
         self.editing_presets = None
         self.research_lab = None
+        self.research_import = None
         self.workflow_builder = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
@@ -54,6 +55,7 @@ class Application(Appearance):
         self.editing_tools_menu.add_command(label=self.tr('transfer'), command=self.show_transfer)
         self.editing_tools_menu.add_separator()
         self.editing_tools_menu.add_command(label=self.tr('research_lab'), command=self.show_research_lab)
+        self.editing_tools_menu.add_command(label=self.tr('research_import'), command=self.show_research_import)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -261,13 +263,13 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (3, 'research_lab')):
+        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (3, 'research_lab'), (4, 'research_import')):
             self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'research_lab', 'workflow_builder')
+                                            'editing_presets', 'research_lab', 'research_import', 'workflow_builder')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -472,7 +474,8 @@ class Application(Appearance):
         """Discover retained tools supplied by the parallel integration PRs."""
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
-            ('research_lab', 'show_research_lab'), ('workflow_builder', 'show_workflow_builder'))
+            ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
+            ('workflow_builder', 'show_workflow_builder'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -836,7 +839,7 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab', 'workflow_builder', 'help_center')
+                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -875,6 +878,14 @@ class Application(Appearance):
         self._show_editing_tool(self.research_lab, self.tr('research_lab'))
         self._remember_workspace('tool:research_lab')
         return self.research_lab
+
+    def show_research_import(self):
+        from koei_editor.shared.research_import_gui import ResearchImportWorkspace
+        if self.research_import is None:
+            self.research_import = ResearchImportWorkspace(self.root, self.workspace)
+        self._show_editing_tool(self.research_import, self.tr('research_import'))
+        self._remember_workspace('tool:research_import')
+        return self.research_import
 
     def _show_editing_tool(self, tool, title):
         self.library.pack_forget()
@@ -1027,7 +1038,7 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        for tool in (self.editing_presets, self.research_lab):
+        for tool in (self.editing_presets, self.research_lab, self.research_import):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1303,6 +1314,7 @@ def main():
         app.show_save_library()
         app.show_editing_presets()
         app.show_research_lab()
+        app.show_research_import()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

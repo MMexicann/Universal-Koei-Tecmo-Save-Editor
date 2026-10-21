@@ -27,7 +27,7 @@ class DW8PS4ConversionTests(unittest.TestCase):
             with self.assertRaisesRegex(SaveError, 'extension'): p.decode(bytes(damaged))
         for candidate in (raw[:-1], raw + b'\0', bytes(len(raw)), bytearray(raw)):
             with self.assertRaises(SaveError): p.decode(candidate)
-        for changes in ({'gold': 1}, [], None):
+        for changes in ({'unmapped': 1}, [], None):
             with self.assertRaises(SaveError): p.serialize(doc, changes)
         for candidate in (replace(doc, payload=b''), replace(doc, format=replace(p.FORMAT)),
                           replace(doc, raw=bytearray(raw)), replace(doc, payload=bytearray(doc.payload)), None):

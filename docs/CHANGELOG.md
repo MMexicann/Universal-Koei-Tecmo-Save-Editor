@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.1 — 2026-10-21
+
+- Add an explicitly read-only Research Import workspace for five additional native game candidates, including original Uncharted Waters IV PK framing and existing Gundam 2/Atelier Plus record inspectors. Keep them outside the supported editing inventory, with bounded original-context/freshness checks, retained navigation, themes, keyboard search and bundled help.
+
+- Add a DW8 XL PS4 CUSA00397 zero-extension editor using the qualified common-core mapping, original metadata, staged Undo/review, source-bound backups and safe saving/restore.
+- Add a directly documented WO3U PS4 → PC route for 354 rare-crystal/orb/material balances (355 bytes), preserving all other PC bytes. Add a separate wider 1,079-value / 1,805-byte scope for five proved base stats of 145 officers, preserving all progression/equipment/saved-state dependencies. Keep strict source markers/title context and refuse reverse conversion.
+- Add four resource-only PS3 ↔ PC routes: WO3U unallocated growth points/gems and SW4 gold only. Preserve destination progression/equipment and rebuild only required native integrity. Reject incompatible bounds without clamping.
+- Show exact source/template filenames and companions, preview incoming resource values, and reverse available routes/copies while invalidating prior review.
+- Update the library to 98 profiles across 15 platforms and conversion inventory to 145 routes. Full WO3U/SW4 PS4-to-PC migration and edited/converted in-game load/re-save remain unqualified. Bundle the exact request/evidence guide and regression coverage.
+
 ## v3.0 — 2026-10-18
 
 - Add command-palette navigation, favorites/recent workspaces, English/German shell and offline help, scalable text and responsive retained tools.

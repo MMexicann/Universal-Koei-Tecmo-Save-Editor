@@ -280,7 +280,7 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(self.app.shell_settings.text_size, 140)
         self.assertIs(self.app.sessions['dw7xl'][1], editor)
         self.assertIsNone(editor.document)
-        self.assertEqual(VERSION, '3.0')
+        self.assertEqual(VERSION, '3.1')
 
     def test_navigation_wraps_and_stays_reachable_at_small_size(self):
         self.app.language_choice.set('Deutsch')

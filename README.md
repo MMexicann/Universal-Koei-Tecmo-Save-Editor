@@ -11,10 +11,10 @@ themes. No Python installation is needed for the Windows app.
 · **[What's new](docs/RELEASE_NOTES.md)**
 
 <!-- BEGIN SUPPORTED GAMES -->
-**97 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
+**98 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
 <!-- END SUPPORTED GAMES -->
 
-**Version 3.0.** Choose a supported edition below and keep a separate save copy.
+**Version 3.1 development source.** The download link always points to the latest published Windows build. Choose a supported edition below and keep a separate save copy.
 
 ## What you can do
 
@@ -33,9 +33,8 @@ themes. No Python installation is needed for the Windows app.
   sessions open, and export complete JSON or spreadsheet-friendly CSV reviews.
   [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
 - **Compare saves:** inspect mapped changes and other payload differences across
-  96 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
-- **Convert saves:** 139 directed routes cover qualified DW6, DW7 XL, DW8 XL and
-  Persona 5 Strikers transfers. Review one copy or queue multiple conversions.
+  97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
+- **Convert saves:** 145 directed routes cover qualified DW6, DW7 XL, DW8 XL, Persona 5 Strikers and resource-only WO3U/SW4 transfers. Review one copy or queue multiple conversions.
   [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
 
 Editing scope varies by edition and save revision. Some newer profiles allow
@@ -43,16 +42,15 @@ only conservative reductions or specific equipment choices; the supported-games
 list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
 expands only explicitly mapped numeric fields.
 
-## New in v3.0
+## New in v3.1
 
-- **A more capable workspace:** Ctrl+K command palette, favorites/recent tools, English/German navigation and offline help, scalable text and responsive layouts.
-- **Faster reviewed editing:** reusable resource presets across compatible copies, validated bulk actions, selective save transfer and a read-only Save Research Lab.
-- **Richer progression:** improved dashboards, record comparisons, interactive HTML reports and [deeper game-specific controls](docs/GAME_SPECIFIC_EXPANSION.md) within existing qualified profiles.
-- **Save management:** organized copied-save browsing, read-only Save Doctor, bounded save-location discovery and local Save Vault snapshots, branches and safe restore to new directories.
-- **Automation:** code-free Workflow Builder, reviewed multi-copy batch plans, a scriptable JSON CLI with dry runs, and durable interrupted-run inspection. [Automation guide](docs/AUTOMATION.md).
-- **Community and reliability:** data-only help plugins, offline validation/feedback reports, indexed search, stronger regression/fuzz coverage and repeatable benchmarks.
+- **DW8 XL PS4 editor:** resources, officer stats, weapon-action aptitudes and existing ranked attributes for decrypted CUSA00397 zero-extension copies, with original metadata, backups, Undo and reviewed Save As.
+- **Import five research candidates:** inspect Gundam 2, Totori/Rorona/Ayesha Plus Vita and original Uncharted Waters IV PK copies in a separate read-only workspace. These are research observations; editing support is not implied. [Research Import](docs/RESEARCH_IMPORT.md).
+- **Six new scoped conversion routes:** WO3 Ultimate PS3 ↔ Definitive Edition PC moves unallocated growth points and gems; SW4 US PS3 ↔ SW4 DX PC moves gold only. WO3U PS4 → PC transfers 354 directly mapped crystal/orb/material balances, with a separate wider scope adding five base stats for 145 playable officers. Destination progression and equipment remain intact.
+- **Clearer conversions:** exact source/destination filters, source/template filenames and companions, numeric before/after previews for the new routes, and an explicit reverse-route action that swaps copies and requires a fresh review.
+- **Requested PS4 transfers:** DW8 XL PS4 → PC is available within its documented profile. WO3U adds a limited PS4 resource route; full WO3U/SW4 PS4 migration still needs broader format evidence and original exports. [Exact scope and remaining evidence](docs/WARRIORS_PS4_TRANSFERS.md).
 
-[Full v3.0 release notes and limits](docs/RELEASE_NOTES.md). Support remains 97 profiles across 15 platforms, with 139 scoped conversion routes; no new game edition or in-game qualification is implied.
+[Release notes and limits](docs/RELEASE_NOTES.md). The development source contains 98 profiles across 15 platforms and 145 scoped routes. Edited/converted game loading remains unverified.
 
 ## Quick start
 

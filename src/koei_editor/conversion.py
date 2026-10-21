@@ -35,12 +35,23 @@ from koei_editor.games.p5strikers_pc import converter as p5_conversion
 from koei_editor.games.dw7xl import conversion as dw7_conversion
 from koei_editor.games.dw7xl import dw7xl_parser as dw7_pc
 from koei_editor.games.dw7xl_ps3 import parser as dw7_ps3
+from koei_editor.games.wo3u import conversion as wo3_conversion
+from koei_editor.games.wo3u import wo3u_parser as wo3_pc
+from koei_editor.games.wo3u import ps4_export as wo3_ps4
+from koei_editor.games.wo3u import ps4_conversion as wo3_ps4_conversion
+from koei_editor.games.wo3u_ps3 import parser as wo3_ps3
+from koei_editor.games.sw4dx import conversion as sw4_conversion
+from koei_editor.games.sw4dx import samurai4dx_parser as sw4_pc
+from koei_editor.games.sw4_ps3 import parser as sw4_ps3
 
 _FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion,
-                            'dw6': dw6_conversion, 'dw7xl': dw7_conversion})
+                            'dw6': dw6_conversion, 'dw7xl': dw7_conversion,
+                            'wo3u': wo3_conversion.TRANSFER, 'sw4': sw4_conversion.TRANSFER})
 _VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression,
                               ('dw6', 'campaigns'): dw6_campaigns,
-                              ('dw6', 'records'): dw6_records})
+                              ('dw6', 'records'): dw6_records,
+                              ('wo3u', 'ps4-materials'): wo3_ps4_conversion.TRANSFER,
+                              ('wo3u', 'ps4-stats-materials'): wo3_ps4_conversion.STATS_TRANSFER})
 
 
 def _transform(route):
@@ -70,7 +81,7 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
              import_note='Reimport the plaintext file with your Vita save manager.'),
     Endpoint('dw8xl_ps4', 'dw8xl', 'DW8 XL · US PS4 zero-extension profile', 'APP.BIN', dw8_ps4,
              'sce_sys/param.sfo', 4096,
-             'Decrypted CUSA00397 export. Reimport and resign with your PS4 save manager.', True),
+             'Decrypted CUSA00397 export. Reimport and resign with your PS4 save manager.'),
     Endpoint('p5strikers_pc', 'p5s', 'Persona 5 Strikers · PC English', 'SAVEDATA.BIN', p5_pc),
     Endpoint('p5strikers_ps4', 'p5s', 'Persona 5 Strikers · PS4 English', 'APP.BIN', p5_ps4,
              'sce_sys/param.sfo', 4096,
@@ -102,6 +113,18 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
              'PARAM.SFO', 4096,
              'PFD-decrypted BLUS30873 or BLES01496 export with its original PARAM.SFO. '
              'One-way transfer to Definitive Edition PC; base DW7 and Empires are separate formats.'),
+    Endpoint('wo3u', 'wo3u', 'WO3 Ultimate Definitive Edition · PC', 'SAVEDATA.BIN', wo3_pc),
+    Endpoint('wo3u_ps3', 'wo3u', 'WO3 Ultimate · US PS3', 'APP.BIN', wo3_ps3,
+             'PARAM.SFO', 4096,
+             'Decrypted NPUB31505-SAVEDATA APP.BIN with original PARAM.SFO. Resources only; reimport/resign externally.'),
+    Endpoint('wo3u_ps4', 'wo3u', 'WO3 Ultimate · US PS4 resource source', 'APP.BIN', wo3_ps4,
+             'sce_sys/param.sfo', 4096,
+             'Decrypted CUSA00588 exact serialized-marker profile with original sce_sys/param.sfo. '
+             'One-way rare-crystal, attribute-orb and material transfer to PC only.', True),
+    Endpoint('samurai4dx', 'sw4', 'Samurai Warriors 4 DX · PC', 'save.dat', sw4_pc),
+    Endpoint('sw4_ps3', 'sw4', 'Samurai Warriors 4 · US PS3', 'DATA.BIN', sw4_ps3,
+             'PARAM.SFO', 4096,
+             'Decrypted NPUB31564 DATA.BIN with original PARAM.SFO. Resources only; reimport/resign externally.'),
 )})
 
 
@@ -133,19 +156,21 @@ class Route:
         return _transform(self).SCOPE_DESCRIPTION
 
 
-def _supported_direction(source, target):
+def _supported_direction(source, target, transform=None):
     if source.family != target.family or source.id == target.id:
         return False
-    directions = getattr(_FAMILIES[source.family], 'SUPPORTED_DIRECTIONS', None)
+    directions = getattr(transform if transform is not None else _FAMILIES[source.family],
+                         'SUPPORTED_DIRECTIONS', None)
     return directions is None or (source.id, target.id) in directions
 
 
 ROUTES = tuple(Route(source.id, target.id) for source in ENDPOINTS.values()
                for target in ENDPOINTS.values()
                if _supported_direction(source, target))
-ROUTES += tuple(Route(route.source_id, route.target_id, variant)
-                for route in ROUTES for family, variant in _VARIANTS
-                if ENDPOINTS[route.source_id].family == family)
+ROUTES += tuple(Route(source.id, target.id, variant)
+                for (family, variant), transform in _VARIANTS.items()
+                for source in ENDPOINTS.values() for target in ENDPOINTS.values()
+                if source.family == family and _supported_direction(source, target, transform))
 _ROUTES = MappingProxyType({route.id: route for route in ROUTES})
 
 

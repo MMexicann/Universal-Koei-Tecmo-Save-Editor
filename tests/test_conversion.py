@@ -20,6 +20,12 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
+    if endpoint_id == 'wo3u_ps4':
+        from tests.test_wo3u_ps4_stats_transfer import fixture as ps4_fixture
+        return ps4_fixture()
+    if endpoint_id in ('wo3u', 'wo3u_ps3', 'samurai4dx', 'sw4_ps3'):
+        from tests.test_resource_conversion import fixture as resource_fixture
+        return resource_fixture(endpoint_id, variant)
     if endpoint_id in ('dw7xl', 'dw7xl_ps3'):
         from tests.test_dw7xl_conversion import fixture as dw7_fixture
         return dw7_fixture(endpoint_id, variant)
@@ -66,17 +72,20 @@ def write_copy(folder, endpoint_id, variant=0):
         if endpoint_id in ('dw6_xbox360_na', 'dw6_xbox360_eu'):
             from tests.test_dw6_xbox360_conversion import context_fixture
             metadata = context_fixture(endpoint_id, fixture(endpoint_id, variant), variant)
-        elif endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu', 'dw7xl_ps3'):
+        elif endpoint_id in ('dw8xl_ps3', 'dw6_ps3', 'dw6_ps3_jp', 'dw6_ps3_eu', 'dw7xl_ps3', 'wo3u_ps3', 'sw4_ps3'):
             metadata = ps3_context.PS3ContextTests.metadata({
                 'dw8xl_ps3': 'NPUB31449-SAVEDATA', 'dw6_ps3': 'BLUS30110-SAVEDATA',
                 'dw6_ps3_jp': 'BLJM60041-SAVEDATA',
                 'dw6_ps3_eu': 'BLES00215-SAVEDATA',
                 'dw7xl_ps3': 'BLUS30873-SAVEDATA',
+                'wo3u_ps3': 'NPUB31505-SAVEDATA', 'sw4_ps3': 'NPUB31564-SAVEDATA',
             }[endpoint_id])
         else:
             metadata = title_only_sfo()
             if endpoint_id == 'dw8xl_ps4':
                 metadata = metadata.replace(b'CUSA19640', b'CUSA00397')
+            elif endpoint_id == 'wo3u_ps4':
+                metadata = metadata.replace(b'CUSA19640', b'CUSA00588')
         companion.write_bytes(metadata)
     return path
 
@@ -86,7 +95,7 @@ class ConversionTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
-                self.assertIn(endpoint.id, ('dw8xl_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
+                self.assertIn(endpoint.id, ('wo3u_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
                                             'dw6_xbox360_na', 'dw6_xbox360_eu'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
@@ -136,12 +145,13 @@ class ConversionTests(unittest.TestCase):
                 self.assertEqual(receipt['output_sha256'], hashlib.sha256(path.read_bytes()).hexdigest())
                 self.assertFalse(receipt['game_load_verified'])
                 self.assertNotIn(str(self.folder), json.dumps(receipt))
-                reverse_id = route.target_id + '-to-' + route.source_id
+                reverse_id = route.target_id + '-to-' + route.source_id + ('-' + route.variant if route.variant else '')
                 if reverse_id in {item.id for item in c.ROUTES}:
                     reverse = c.prepare(reverse_id, path, source)
                     self.assertEqual(reverse.raw, original)
                 else:
-                    self.assertEqual(route.id, 'dw7xl_ps3-to-dw7xl')
+                    self.assertIn(route.id, ('dw7xl_ps3-to-dw7xl', 'wo3u_ps4-to-wo3u-ps4-materials',
+                                             'wo3u_ps4-to-wo3u-ps4-stats-materials'))
                     with self.assertRaises(SaveError):
                         c.get_route(reverse_id)
 

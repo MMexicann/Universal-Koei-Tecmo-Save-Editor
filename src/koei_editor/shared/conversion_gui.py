@@ -28,6 +28,16 @@ class ConversionWorkspace:
         self._revision = 0
         self._results = queue.SimpleQueue()
         self._labels = {route.label: route.id for route in conversion.ROUTES}
+        # Only offer endpoints present in this direction. A source-only profile
+        # must not appear as an available conversion destination.
+        self._all_sources = 'All source formats'
+        self._all_targets = 'All destination formats'
+        self._source_endpoints = {self._all_sources: None}
+        self._target_endpoints = {self._all_targets: None}
+        for endpoints, ids in ((self._source_endpoints, {route.source_id for route in conversion.ROUTES}),
+                               (self._target_endpoints, {route.target_id for route in conversion.ROUTES})):
+            endpoints.update((endpoint.label, endpoint.id) for endpoint in sorted(
+                (conversion.ENDPOINTS[key] for key in ids), key=lambda endpoint: endpoint.label.casefold()))
         font_family = ui_font(root)
         ttk.Label(body, text='SAVE CONVERTER', font=(font_family, 23, 'bold')).pack(anchor='w')
         ttk.Label(body, text='Move a copied save to another platform',
@@ -39,6 +49,8 @@ class ConversionWorkspace:
         form.pack(fill='x')
         form.columnconfigure(1, weight=1)
         self.route_search = tk.StringVar(root)
+        self.source_filter = tk.StringVar(root, value=self._all_sources)
+        self.target_filter = tk.StringVar(root, value=self._all_targets)
         self.route_count = tk.StringVar(root)
         self.route = tk.StringVar(root, value=next(iter(self._labels)))
         self.source = tk.StringVar(root)
@@ -50,26 +62,48 @@ class ConversionWorkspace:
         ttk.Label(form, textvariable=self.route_count, style='Muted.TLabel').grid(
             row=0, column=2, sticky='w', padx=(10, 0))
         self.search_entry.bind('<Escape>', lambda _event: self.route_search.set(''))
+        self.search_entry.bind('<Return>', self.focus_routes)
         self.controls.append(self.search_entry)
-        ttk.Label(form, text='Conversion').grid(row=1, column=0, sticky='w', padx=(0, 14), pady=8)
+        self.source_selector = ttk.Combobox(form, textvariable=self.source_filter,
+                                            values=tuple(self._source_endpoints), state='readonly', width=1)
+        self.target_selector = ttk.Combobox(form, textvariable=self.target_filter,
+                                            values=tuple(self._target_endpoints), state='readonly', width=1)
+        for row, label, selector, variable, default in (
+                (1, 'Source format', self.source_selector, self.source_filter, self._all_sources),
+                (2, 'Destination format', self.target_selector, self.target_filter, self._all_targets)):
+            ttk.Label(form, text=label).grid(row=row, column=0, sticky='w', padx=(0, 14), pady=8)
+            selector.grid(row=row, column=1, columnspan=2, sticky='ew', pady=8)
+            selector.bind('<Escape>', lambda _event, choice=variable, value=default: choice.set(value))
+            self.controls.append(selector)
+        ttk.Label(form, text='Conversion').grid(row=3, column=0, sticky='w', padx=(0, 14), pady=8)
         self.route_selector = ttk.Combobox(form, textvariable=self.route, values=tuple(self._labels), state='readonly', width=1)
-        self.route_selector.grid(row=1, column=1, columnspan=2, sticky='ew', pady=8)
+        self.route_selector.grid(row=3, column=1, columnspan=2, sticky='ew', pady=8)
         self.controls.append(self.route_selector)
         self.scope = tk.StringVar(root)
         self.scope_label = ttk.Label(form, textvariable=self.scope, wraplength=500, style='Muted.TLabel')
-        self.scope_label.grid(row=2, column=1, columnspan=2, sticky='ew')
+        self.scope_label.grid(row=4, column=1, columnspan=2, sticky='ew')
         self.scope_label.bind('<Configure>', lambda event: self.scope_label.configure(wraplength=max(1, event.width)))
-        for row, label, variable, kind in ((3, 'Source copy', self.source, 'source'),
-                                           (4, 'Destination template', self.template, 'template')):
+        self.requirements = tk.StringVar(root)
+        for row, label, variable, kind in ((5, 'Source copy', self.source, 'source'),
+                                           (6, 'Destination template', self.template, 'template')):
             ttk.Label(form, text=label).grid(row=row, column=0, sticky='w', padx=(0, 14), pady=8)
             entry = ttk.Entry(form, textvariable=variable, width=1)
             entry.grid(row=row, column=1, sticky='ew', pady=8)
             button = ttk.Button(form, text='Browse…', command=lambda k=kind: self.browse(k))
             button.grid(row=row, column=2, padx=(10, 0), pady=8)
             self.controls.extend((entry, button))
+        self.requirements_label = ttk.Label(form, textvariable=self.requirements, wraplength=500,
+                                            style='Muted.TLabel')
+        self.requirements_label.grid(row=7, column=1, columnspan=2, sticky='ew', pady=(4, 0))
+        self.requirements_label.bind('<Configure>', lambda event: self.requirements_label.configure(
+            wraplength=max(1, event.width)))
+        self.swap_button = ttk.Button(form, text='Reverse route and copies', command=self.reverse_route)
+        self.swap_button.grid(row=8, column=1, columnspan=2, sticky='w', pady=(8, 0))
+        self.controls.append(self.swap_button)
         ttk.Label(body, text='First create a save in the destination game and copy/export its save folder. '
                   'The template supplies the destination encryption and original console metadata. '
-                  'For PS3, keep PARAM.SFO beside APP.BIN; for PS4, keep sce_sys/param.sfo. '
+                  'For PS3, keep PARAM.SFO beside the gameplay filename shown above; '
+                  'for PS4, keep sce_sys/param.sfo. '
                   'Console inputs must already be exported/decrypted.',
                   style='Muted.TLabel', wraplength=980).pack(anchor='w', pady=(10, 14))
         buttons = self.actions
@@ -88,7 +122,8 @@ class ConversionWorkspace:
         self.preview.pack(fill='both', expand=True)
         for variable in (self.route, self.source, self.template):
             variable.trace_add('write', self.invalidate)
-        self.route_search.trace_add('write', self._filter_routes)
+        for variable in (self.route_search, self.source_filter, self.target_filter):
+            variable.trace_add('write', self._filter_routes)
         self._filter_routes()
         self.invalidate()
 
@@ -102,8 +137,13 @@ class ConversionWorkspace:
 
     def _filter_routes(self, *_args):
         terms = self.route_search.get().casefold().split()
+        source_id = self._source_endpoints.get(self.source_filter.get(), '')
+        target_id = self._target_endpoints.get(self.target_filter.get(), '')
         labels = []
         for route in conversion.ROUTES:
+            if ((source_id is not None and route.source_id != source_id)
+                    or (target_id is not None and route.target_id != target_id)):
+                continue
             endpoints = [conversion.ENDPOINTS[key] for key in (route.source_id, route.target_id)]
             text = ' '.join((route.label, route.id, route.scope_description,
                              *(endpoint.import_note for endpoint in endpoints))).casefold()
@@ -122,6 +162,16 @@ class ConversionWorkspace:
     def invalidate(self, *_args):
         route_id = self._labels.get(self.route.get())
         self.scope.set(conversion.get_route(route_id).scope_description if route_id else 'Choose a supported route.')
+        if route_id:
+            route = conversion.get_route(route_id)
+            def required(endpoint_id):
+                endpoint = conversion.ENDPOINTS[endpoint_id]
+                return endpoint.filename + (' + ' + endpoint.companion if endpoint.companion else '')
+            self.requirements.set('Source: ' + required(route.source_id)
+                                  + '\nDestination template: ' + required(route.target_id))
+        else:
+            self.requirements.set('')
+        self._update_reverse_button()
         self._revision += 1
         self.prepared = None
         self.export_button.configure(state='disabled')
@@ -132,11 +182,41 @@ class ConversionWorkspace:
             self.review_button.configure(state='normal' if route_id else 'disabled')
             self.status.set('Selections changed. Review the conversion before exporting.')
 
+    def _reverse_route(self):
+        route_id = self._labels.get(self.route.get())
+        if not route_id:
+            return None
+        route = conversion.get_route(route_id)
+        reverse_id = route.target_id + '-to-' + route.source_id + ('-' + route.variant if route.variant else '')
+        return next((item for item in conversion.ROUTES if item.id == reverse_id), None)
+
+    def _update_reverse_button(self):
+        self.swap_button.configure(state='normal' if not self.busy and self._reverse_route() else 'disabled')
+
+    def reverse_route(self):
+        reverse = self._reverse_route()
+        if self.busy or reverse is None:
+            return
+        source, template = self.source.get(), self.template.get()
+        # Clear every filter before showing the explicitly selected reverse.
+        self.route_search.set('')
+        self.source_filter.set(self._all_sources)
+        self.target_filter.set(self._all_targets)
+        self.route.set(reverse.label)
+        self.source.set(template)
+        self.template.set(source)
+        self.status.set('Direction and copies reversed. Review this conversion before exporting.')
+
     def _show(self, text):
         self.preview.configure(state='normal')
         self.preview.delete('1.0', 'end')
         self.preview.insert('1.0', text)
         self.preview.configure(state='disabled')
+
+    def focus_routes(self, _event=None):
+        if not self.busy and self.route_selector.instate(['!disabled']):
+            self.route_selector.focus_set()
+        return 'break'
 
     def focus_route_search(self):
         if not self.busy:
@@ -187,8 +267,10 @@ class ConversionWorkspace:
             return
         self.busy = False
         for control in self.controls:
-            control.configure(state='readonly' if control is self.route_selector else 'normal')
+            control.configure(state='readonly' if control in (
+                self.route_selector, self.source_selector, self.target_selector) else 'normal')
         self._filter_routes()
+        self._update_reverse_button()
         if kind == 'review' and revision != self._revision:
             self.status.set('Selections changed during review. Review the current copies again.')
             return

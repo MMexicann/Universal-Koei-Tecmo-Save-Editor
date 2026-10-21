@@ -77,7 +77,7 @@ jobs:
     permissions:
       contents: read
       actions: read
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 30
     defaults:
       run:
@@ -162,15 +162,24 @@ jobs:
           }
           & ./tools/scan_release.ps1 -Path $baseline -ReportPath defender-reports/baseline.json -Baseline
           if ($LASTEXITCODE -ne 0) { throw 'Active Defender readiness verification failed.' }
-      - name: Build both Windows formats and verify frozen payloads
+      - name: Build portable Windows runtime
         timeout-minutes: 10
         run: |
           python -m tools.build_windows
           if ($LASTEXITCODE -ne 0) { throw 'Windows build failed.' }
+      - name: Build standalone Windows executable
+        timeout-minutes: 10
+        run: |
           python -m tools.build_windows --standalone
           if ($LASTEXITCODE -ne 0) { throw 'Standalone Windows build failed.' }
+      - name: Verify portable frozen payload
+        timeout-minutes: 3
+        run: |
           python -m tools.package_release --verify-executable
           if ($LASTEXITCODE -ne 0) { throw 'Portable metadata or privacy verification failed.' }
+      - name: Verify standalone frozen payload
+        timeout-minutes: 3
+        run: |
           python -m tools.package_release --verify-standalone
           if ($LASTEXITCODE -ne 0) { throw 'Standalone metadata or privacy verification failed.' }
       - name: Scan portable runtime with active Defender

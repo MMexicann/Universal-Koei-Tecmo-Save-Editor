@@ -138,8 +138,14 @@ source hashes, and rejects save/game-file entries and personal paths.
 The Windows workflow runs the tests, builds the executable and verifies its
 startup and archives before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
-Build, runtime scans, packaged startup and packaging run as separate bounded
-steps. After both runtime scans pass, `tools/smoke_windows.ps1` gives each
+The build job uses `windows-2022` as a diagnostic comparison after hosted
+`windows-latest` runners stopped reporting during packaging; this does not
+establish the cause or guarantee a remedy. The four full-suite test shards
+continue to use `windows-latest`. Portable and standalone builds each have a
+10-minute step limit, and their separate frozen-payload verification steps each
+have a 3-minute limit, within the unchanged 30-minute job limit. Runtime scans,
+packaged startup and packaging remain separate bounded steps.
+After both runtime scans pass, `tools/smoke_windows.ps1` gives each
 packaged startup 180 seconds and records its exit status and executable hashes.
 On timeout it records bounded descendant metadata, reads window text only from
 the retained launched process, and terminates its process tree. Startup and

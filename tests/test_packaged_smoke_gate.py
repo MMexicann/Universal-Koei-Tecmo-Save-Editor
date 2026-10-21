@@ -17,7 +17,10 @@ class PackagedSmokeContracts(unittest.TestCase):
     def test_individual_phases_are_named_bounded_and_success_gated(self):
         source = (ROOT / '.github/workflows/windows-release.yml').read_text()
         expected = (
-            ('Build both Windows formats and verify frozen payloads', 10),
+            ('Build portable Windows runtime', 10),
+            ('Build standalone Windows executable', 10),
+            ('Verify portable frozen payload', 3),
+            ('Verify standalone frozen payload', 3),
             ('Scan portable runtime with active Defender', 10),
             ('Scan standalone runtime with active Defender', 10),
             ('Verify bounded portable packaged startup', 4),
@@ -37,22 +40,52 @@ class PackagedSmokeContracts(unittest.TestCase):
             self.assertNotIn('        if:', block)
             self.assertNotIn('continue-on-error', block)
         self.assertEqual(positions, sorted(positions))
-        build = blocks[expected[0][0]]
-        for command in ('python -m tools.build_windows\n', 'python -m tools.build_windows --standalone\n',
-                        'python -m tools.package_release --verify-executable\n',
-                        'python -m tools.package_release --verify-standalone\n'):
-            self.assertEqual(build.count(command), 1)
-        self.assertIn('$bundle = python -m tools.package_release --bundle-path', blocks[expected[1][0]])
-        for index in (2, 4):
-            self.assertIn('$standalone = python -m tools.package_release --standalone-path', blocks[expected[index][0]])
-            self.assertIn("throw 'Standalone executable path validation failed.'", blocks[expected[index][0]])
-        self.assertIn('$launcher = python -m tools.package_release --executable-path', blocks[expected[3][0]])
+        commands = (
+            ('Build portable Windows runtime', 'python -m tools.build_windows',
+             "Windows build failed."),
+            ('Build standalone Windows executable', 'python -m tools.build_windows --standalone',
+             "Standalone Windows build failed."),
+            ('Verify portable frozen payload', 'python -m tools.package_release --verify-executable',
+             "Portable metadata or privacy verification failed."),
+            ('Verify standalone frozen payload', 'python -m tools.package_release --verify-standalone',
+             "Standalone metadata or privacy verification failed."),
+        )
+        for name, command, failure in commands:
+            block = blocks[name]
+            self.assertEqual(source.count('          ' + command + '\n'), 1)
+            self.assertIn('          ' + command + '\n'
+                          + "          if ($LASTEXITCODE -ne 0) { throw '" + failure + "' }\n", block)
+            self.assertEqual(len(re.findall(r'^          python -m ', block, re.M)), 1)
+        self.assertIn('$bundle = python -m tools.package_release --bundle-path',
+                      blocks['Scan portable runtime with active Defender'])
+        for name in ('Scan standalone runtime with active Defender',
+                     'Verify bounded standalone packaged startup'):
+            self.assertIn('$standalone = python -m tools.package_release --standalone-path', blocks[name])
+            self.assertIn("throw 'Standalone executable path validation failed.'", blocks[name])
+        self.assertIn('$launcher = python -m tools.package_release --executable-path',
+                      blocks['Verify bounded portable packaged startup'])
         build_job = source.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
         self.assertIn('    timeout-minutes: 30\n', build_job)
 
+    def test_diagnostic_image_fallback_changes_only_build_runner_and_keeps_full_test_gate(self):
+        source = (ROOT / '.github/workflows/windows-release.yml').read_text()
+        tests = source.split('\n  tests:\n', 1)[1].split('\n  build:\n', 1)[0]
+        build = source.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
+        self.assertIn('    runs-on: windows-latest\n', tests)
+        self.assertIn('        shard: [0, 1, 2, 3]\n', tests)
+        self.assertIn('python -m tools.run_tests --workers 2 --shards 4 --shard-index', tests)
+        self.assertIn('    runs-on: windows-2022\n', build)
+        self.assertNotIn('    runs-on: windows-latest\n', build)
+        self.assertIn('    needs: tests\n', build)
+        self.assertIn('    timeout-minutes: 30\n', build)
+        verify = build.index('python -m tools.run_tests --verify-reports test-results')
+        first_build = build.index('- name: Build portable Windows runtime')
+        self.assertLess(verify, first_build)
+        self.assertIn("throw 'Full test coverage or shard integrity validation failed.'", build)
+
     def test_both_smokes_follow_unchanged_defender_gates_and_precede_packaging(self):
         source = (ROOT / '.github/workflows/windows-release.yml').read_text()
-        step = source.split('- name: Build both Windows formats', 1)[1].split('- name: Scan every', 1)[0]
+        step = source.split('- name: Build portable Windows runtime', 1)[1].split('- name: Scan every', 1)[0]
         gate = step.index("throw 'Defender rejected the standalone executable")
         portable = step.index('./tools/smoke_windows.ps1 -Path $launcher -Format portable')
         standalone = step.index('./tools/smoke_windows.ps1 -Path $standalone -Format standalone')

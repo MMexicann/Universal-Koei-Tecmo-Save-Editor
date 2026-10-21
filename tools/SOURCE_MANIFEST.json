@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 22409,
-      "sha256": "9b434a121cd8a9136302a05a1d0d57fe2278970cd7db4870a2b866e26a6153be"
+      "bytes": 22653,
+      "sha256": "ce0ffb62b2340395605410d79f11e40b4c21eec828ef8647792d343ce3790235"
     },
     {
       "path": ".gitignore",
@@ -173,8 +173,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 9982,
-      "sha256": "cfc7c3f3c6d9bcd187f2beeb5dc20f0a0872fcd3cbc225c50b9690e6e73cacaa"
+      "bytes": 10421,
+      "sha256": "9ba449f63e17c40b89dd3fe3ce20aa7116a64deb051036d52533c48e81cdd04a"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -5043,8 +5043,8 @@
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
-      "bytes": 12057,
-      "sha256": "fe6adc1a76a66debcb454efab89d8a912af81a9114c0ec96ecf25859ae12d13c"
+      "bytes": 14166,
+      "sha256": "f9e3ac0e21195b7ad7a7ef8add18cb65ec66884d7fbaeff57a6f09566e7ebb1e"
     },
     {
       "path": "tests/test_parallel_runner.py",

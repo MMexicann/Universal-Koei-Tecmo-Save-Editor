@@ -35,6 +35,17 @@ No native PS4 gameplay checksum is claimed. Size, common revision, zero extensio
 title context, immutable staging and actual saved-byte/value readback are checked.
 Those checks do not verify console authentication or successful in-game loading.
 
+For conversion **to PC**, the destination template may use either exact PC
+header already accepted by the editor: `f002101309` or `f027021909`. Both native
+PC checksums are validated before its original cipher seed is reused. The entire
+destination gameplay core is replaced by the unchanged common-revision source,
+including its `f002101309` header. An alternate-header PC file remains unavailable
+as a conversion source; its header and unknown content are never normalized.
+Private complete public PS4 and alternate-header PC references passed native PC
+checksum/readback and an exact PS4 reverse. The PS4 reference lacks original
+metadata, so application export tests use procedural context; converted game
+loading remains unverified.
+
 ## Resource-only routes
 
 Find these directions in Save Converter, or use their exact CLI route IDs:

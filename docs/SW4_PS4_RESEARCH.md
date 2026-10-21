@@ -42,3 +42,54 @@ endianness and 999,999 bound are independently implemented in both adapters.
 
 This limitation does not remove the existing per-platform manual gem controls.
 It prevents silently assigning a source gem type to an unproven destination type.
+
+
+## Native migration and exact external input
+
+Further static inspection of the supplied **PC DX** build, without execution,
+independently confirms that reader `0x140194F00` handles eight revisions. For
+example, native revision `0x2118` uses section b length `0x828`, versus `0x858`
+in current `0x39EA`. Revision `0x35C7` also transforms custom-character records
+from stride `0x6C` to `0xCC`, including native string conversion. These are PC
+loader facts, not proof that an original PS4 export has that framing or revision.
+
+Migration for `0x2118`/`0x253B` additionally remaps custom-character part selectors
+through an external **1,268-entry, stride-`0x38` table**. Loader `0x1401943F0`
+requests resource **`0x2591`** and stores its pointer at `0x140F7B178`. The pointer
+is in non-file-backed data, not an embedded dictionary; at least **71,008 decoded
+bytes (`0x11560`)**, plus any native resource framing, are required. The matching
+acquired input contains the executable only, without that resource archive.
+
+A future converter might retain a fully qualified, PC-compatible legacy payload
+and revision in a native PC envelope, letting the destination game's existing
+loader perform migration using its installed assets. This is an **unqualified
+avenue**: no PS4 plaintext example yet establishes the framing, section geometry,
+checksum coverage or revision, and the current PC adapter rejects older revisions.
+It does not justify changing a revision word or copying unclassified blocks.
+
+## Additional original-edition source checks
+
+- The complete 403-entry [decrypted PS4 save corpus](https://github.com/xcier/Decrypted-PS4-Saves) and two indexed forks contain Borderlands/Diablo examples, not original SW4. The [historical PS4 collection](https://github.com/bloodrive65/PS4-Game-Saves-Database/blob/master/actual%20bbcode) instead describes encrypted USB exports and external Save Wizard re-signing.
+- The original ShadPS4 report's complete log and comments provide no gameplay file, original SFO or native read/write-size/checksum evidence. Its `app.dat` filename event remains a preparation lead only. Public save-set preview attachments return HTTP 403 and were not accessed through alternate routes.
+- Original Vita regional identities are corroborated separately, but the [EU PCSB00592 VitaCheat file](https://github.com/r0ah/vitacheat/blob/master/db/PCSB00592.psv) contains runtime memory/pointer patches, not a disk decoder or checksum writer. The complete rinCheat and Apollo Vita/save catalogs checked supply no original-SW4 native save codec. Vita, PS3 and SW4-II facts cannot establish original PS4 compatibility.
+
+The next useful input is a complete **original SW4 PS4 decrypted gameplay file**
+with unchanged original title/revision metadata and a known game/update/DLC
+configuration. A low-progress copy and a single-action control pair would qualify
+integrity and typed fields. Broader custom-character migration additionally needs
+the exact resource `0x2591` correspondence or proof of native legacy handoff.
+Gold can avoid CAW/equipment references after source qualification; separately
+qualified standard-officer base stats may also form a scoped transfer. Whole
+progression/equipment/CAW groups still need linked-identity and dependency proof.
+
+## Official console inheritance is a separate route
+
+The [official Japanese SW4 DX site](https://www.gamecity.ne.jp/sengoku4/dx/)
+explicitly documents original SW4 **PS4/PS3/Vita → PS4 DX** inheritance. It uses
+an original save already on the PS4, or the original game's latest-update
+Data Sharing upload, and offers import at startup; trophies do not transfer.
+This confirms an official console-edition migration operation. It does not
+identify raw file framing, promise EU/US compatibility, or establish Steam
+imports of console files. The [Steam web manual](https://www.gamecity.ne.jp/manual/sengoku4/dx/jp/)
+links the PS4 gameplay manual for general game explanations; that reference
+does not extend the console inheritance statement to PC.

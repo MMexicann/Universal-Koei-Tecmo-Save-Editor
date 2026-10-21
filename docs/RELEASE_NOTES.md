@@ -15,6 +15,9 @@ Undo, comparison and automation remain available.
 - Use staged edits, Review Changes, Undo and guarded Save As. Backups retain the
   gameplay and original metadata; restore and saving require the same original
   destination context. Automatic Max remains disabled for these manual controls.
+- Conversion to PC accepts either exact PC template header already supported by
+  the editor. It retains the template's cipher seed and transfers the common
+  source payload unchanged. Alternate-header PC sources remain unqualified.
 
 ## Six new scoped conversion routes
 

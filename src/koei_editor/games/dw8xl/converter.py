@@ -1,4 +1,4 @@
-"""Lossless common-revision PC/PS3/Vita DW8 XL gameplay transfer."""
+"""Lossless common-revision PC/PS3/PS4/Vita DW8 XL gameplay transfer."""
 import struct
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.games.dw8xl_vita.parser import SIGNATURE

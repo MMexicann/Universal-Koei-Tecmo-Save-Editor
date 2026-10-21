@@ -19,7 +19,7 @@ each route shows its own transfer scope before review.
 | --- | --- | --- |
 | Dynasty Warriors 6 | Original PC, US PS3 BLUS30110, European PS3 BLES00215, Japanese PS3 BLJM60041, NA Xbox 360 4B4F07E0 and EU Xbox 360 4B4F07E1; 30 directions for each of four scopes | **Basic:** 41 officers and eight horses (7,368 bytes). **Progress:** also 45 stage records and 17 Musou availability/clear records (8,336 bytes). **Campaigns:** also 20 complete Musou run slots (10,976 bytes). **Records:** also 40 music/170 movie availability bits and five complete challenge boards (11,203 bytes). All retain destination options and interim battles. European/Japanese PS3 and both Xbox endpoints are conversion-only. |
 | Dynasty Warriors 7 Xtreme Legends | US PS3 BLUS30873 or European PS3 BLES01496 → Definitive Edition PC; one direction, revision `0x11080200` | **50,138 canonical bytes:** qualified system/Story/Legend state, 92 officer records, 1,738 weapons, learned-seal state, 16 guardians, both stage-context structures and 80 challenge results. Destination PC settings/platform data retained; active suspensions and nonzero unidentified progress extensions rejected. [Exact map](DW7XL_CONVERSION.md). |
-| Dynasty Warriors 8 Xtreme Legends | PC common revision `0x131002F0`, US PS3 PSN `NPUB31459`, plaintext Vita, US PS4 `CUSA00397` zero-extension profile; 12 directions | All `0xB7F44` common gameplay bytes; native PC/PS3/Vita encryption/checksums rebuilt. PS4 has a zero native extension. |
+| Dynasty Warriors 8 Xtreme Legends | PC common revision `0x131002F0` as source, either editor-accepted PC header as destination template; US PS3 PSN `NPUB31459`, plaintext Vita, US PS4 `CUSA00397` zero-extension profile; 12 directions | All `0xB7F44` common gameplay bytes; native PC/PS3/Vita encryption/checksums rebuilt. PS4 has a zero native extension. |
 | Persona 5 Strikers | English PC, PS4 `CUSA19640`, Switch, revision `0x20012000`; six directions | Complete `0x1C` header and ten `0x88E36` slots, including names; destination reserved tail retained. |
 | Warriors Orochi 3 Ultimate | US PS3 NPUB31505-SAVEDATA ↔ Definitive Edition PC; two directions | Unallocated growth points and gems only (8 bytes); destination progression, equipment and markers retained. |
 | Warriors Orochi 3 Ultimate PS4 | US CUSA00588 exact serialized-marker profile → Definitive Edition PC; two one-way scopes | Rare crystals, 58 attribute orbs and 295 material balances (355 bytes); optionally also five base stats for 145 officers (1,805 bytes total). All other PC bytes retained; original PS4 metadata required. [Evidence](WO3U_PS4_RESOURCE_TRANSFER.md). |
@@ -30,7 +30,7 @@ each route shows its own transfer scope before review.
 progression subset; equivalent 100% completion and PC achievements are unverified.
 
 **DW6 active battle transfer, other Xbox regions, Special and Empires are unavailable.** See the
-[DW6 typed mapping](DW6_CONVERSION.md). Modified DW8 PC signatures, nonzero PS4
+[DW6 typed mapping](DW6_CONVERSION.md). Alternate DW8 PC source headers, nonzero PS4
 extension bytes, other regions and Japanese P5S remain outside these routes.
 Console signing, export-container encryption, reimport and account reassignment
 are external. Converted loading/re-saving in the actual games remains untested.
@@ -126,9 +126,11 @@ roundtrip. Source gameplay is compared with the decoded output before writing,
 and the actual saved file is read through the destination reader afterward.
 Inputs and complete console metadata are rechecked around backups and export.
 
-DW8 XL converts only the common signature; the PC editor's other accepted
-signature is never silently normalized. The destination PC template's original
-word seed is retained. PS3 has its byte XOR layer and native byte sum; Vita uses
+DW8 XL sources require the common signature; the PC editor's other accepted
+header is never silently normalized as a source. A PC destination template may
+use either exact editor-accepted header after both native integrity checks. Its
+entire gameplay is replaced by the unchanged common source, including the source
+header, while the template's original word seed is retained. PS3 has its byte XOR layer and native byte sum; Vita uses
 the plaintext plus sum. The PS4 endpoint also supplies the v3.1 scalar editor in the
 98-profile library, using the same strict profile. Its exact `0xD0F45` length, common header, original CUSA00397
 metadata and entirely zero extension are mandatory. No native PS4 checksum is
@@ -150,7 +152,7 @@ Research/inspiration, inspected independently:
 - [koko-tsuu DW8 XL converter](https://github.com/koko-tsuu/dw8xl_save_converter)
   and its [author's release discussion](https://www.reddit.com/r/dynastywarriors/comments/1qth7rg/dw8_xl_save_converter_pc_ps3_ps4_psv/):
   platform framing and filename facts. Existing project codecs independently
-  implement the streams and checksums. Its permissive truncation/header rewrite
+  implement the streams and checksums. Its permissive truncation/source-header rewrite
   behavior is excluded here. PS4 adds only its documented zero-extension
   profile, corroborated by the complete public reference. No upstream implementation is incorporated.
 - [zarroboogs P5S save utility](https://github.com/zarroboogs/p5spc.saveutil):

@@ -255,7 +255,7 @@ class ConversionTests(unittest.TestCase):
         metadata.unlink()
         with self.assertRaises(OSError): c.prepare('dw8xl-to-dw8xl_ps3', source, template)
 
-    def test_modded_pc_revision_is_not_normalized(self):
+    def test_alternate_pc_source_header_is_not_normalized(self):
         source = write_copy(self.folder / 'source', 'dw8xl')
         template = write_copy(self.folder / 'template', 'dw8xl_vita')
         doc = c.ENDPOINTS['dw8xl'].backend.decode(source.read_bytes(), 'dw8xl')

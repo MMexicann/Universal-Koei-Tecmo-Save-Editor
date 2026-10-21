@@ -162,3 +162,42 @@ acquired PC reference. Two PS4 source speed words are 200; the native PC referen
 already contains 200 at those positions, so those exact assignments remain no-ops.
 A different template that would require newly assigning 200 must be rejected.
 Original PS4 metadata and actual converted game loading remain unqualified.
+
+## Further native boundary and public-export research
+
+Static inspection of the native PC loader identifies the 240-byte span
+`0xEBF8..0xECE8` as platform configuration: `CControllerSettingWin` reads its
+binding array from runtime root `+0x51374`, and `COptionMenuWin` copies the whole
+configuration object at root `+0x51360`. Preserving this span also retains the
+PC control bindings. A raw-import report in the public Steam discussion describes
+an unassigned controller Down binding after transfer.
+
+The native saved-state capture helper at `0x14026A390` positively identifies the
+contents of the opaque `0xA0000` body. It captures the current-system object, a
+`0x6200` stage object, 145 officer snapshots, 2,320 weapon snapshots and additional
+actor/resource state. The acquired PS4 and PC references both have a zero first
+saved-state flag while retaining populated snapshots with different platform
+address fragments. That flag alone does not establish that the body can safely
+be copied, cleared or reconstructed. These routes preserve its complete PC bytes.
+
+An independent [EU CUSA00661 save discussion](https://playersquared.com/threads/warriors-orochi-3-ultimate-starter-save-set-platinum-cusa00661.19134/)
+provides a public retail USB export, but it contains encrypted `SAVEDATA00` and
+its key companion, without readable `APP.BIN` or original `sce_sys/param.sfo`.
+It does not qualify an additional decrypted source profile. Participants also
+report that Advanced Mode export/import into the recipient's own save still
+failed. Their differing DLC installations are a proposed cause; the exact
+byte-level cause is unproven. This supplies another reason that whole-save
+compatibility cannot be inferred from matching payload size and title alone.
+
+A separate [Japanese PS4 format post](https://emu.web-g-p.com/info/bbs/patchcode/ps4/bbs.cgi?list=pickup&num=12260)
+from November 2017 corroborates weapon attribute/slot geometry and names gems
+at `0x137C`. It explicitly distinguishes PS4 from PS3 addresses, but supplies no
+exact CUSA or revision. Its cheat value is not evidence of a native cap. These
+additional observations do not widen the supported US source fields or prove
+weapon ownership, equipped references, ID correspondence or DLC compatibility.
+
+A full progression transfer still needs independently established PS4 persistent
+state and ID/dependency mappings, plus a qualified policy for scene snapshots.
+The PC serializer establishes destination packing; it does not by itself prove
+portability of PS4 runtime snapshots or their resource identifiers. No game
+binary was executed during this static research.

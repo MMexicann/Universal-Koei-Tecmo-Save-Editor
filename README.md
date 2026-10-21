@@ -44,7 +44,7 @@ expands only explicitly mapped numeric fields.
 
 ## New in v3.1
 
-- **DW8 XL PS4 editor:** resources, officer stats, weapon-action aptitudes and existing ranked attributes for decrypted CUSA00397 zero-extension copies, with original metadata, backups, Undo and reviewed Save As.
+- **DW8 XL PS4 editor:** resources, officer stats, weapon-action aptitudes and existing ranked attributes for decrypted CUSA00397 zero-extension copies, with original metadata, backups, Undo and reviewed Save As. Conversion to PC accepts both supported native PC template formats.
 - **Import five research candidates:** inspect Gundam 2, Totori/Rorona/Ayesha Plus Vita and original Uncharted Waters IV PK copies in a separate read-only workspace. These are research observations; editing support is not implied. [Research Import](docs/RESEARCH_IMPORT.md).
 - **Six new scoped conversion routes:** WO3 Ultimate PS3 ↔ Definitive Edition PC moves unallocated growth points and gems; SW4 US PS3 ↔ SW4 DX PC moves gold only. WO3U PS4 → PC transfers 354 directly mapped crystal/orb/material balances, with a separate wider scope adding five base stats for 145 playable officers. Destination progression and equipment remain intact.
 - **Clearer conversions:** exact source/destination filters, source/template filenames and companions, numeric before/after previews for the new routes, and an explicit reverse-route action that swaps copies and requires a fresh review.

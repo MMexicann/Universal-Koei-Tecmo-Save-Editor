@@ -10,7 +10,7 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | --- | ---: |
 | [Windows PC](#windows-pc) | 36 |
 | [PlayStation 3](#playstation-3) | 28 |
-| [PlayStation 4](#playstation-4) | 2 |
+| [PlayStation 4](#playstation-4) | 3 |
 | [Nintendo Switch](#nintendo-switch) | 10 |
 | [PlayStation Vita](#playstation-vita) | 4 |
 | [PlayStation 2](#playstation-2) | 2 |
@@ -104,6 +104,7 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | --- | --- | --- |
 | ATELIER SOPHIE 2 — The Alchemist of the Mysterious Dream · PS4 CUSA28451 app 1.0 | PlayStation 4 | Named existing material-quality reductions and battle-item uses within capacity; searchable inventory, equipment, Party and alchemy records. |
 | PERSONA 5 STRIKERS — English PS4 · decrypted APP.BIN + original sce_sys/param.sfo | PlayStation 4 | Money, Persona/BOND points and existing named consumables, ingredients, incenses, remedies and skill-card stacks. |
+| DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition · PS4 CUSA00397 zero extension | PlayStation 4 | Resources, 82 officers’ stored stats, weapon-action aptitudes and existing ranked attributes; original PS4 metadata required. |
 
 ## Nintendo Switch
 

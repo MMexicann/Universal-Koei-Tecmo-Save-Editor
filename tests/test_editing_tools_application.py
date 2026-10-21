@@ -108,7 +108,7 @@ class EditingToolsApplicationTests(unittest.TestCase):
         self.assertIs(self.app.select_game('origins'), editor)
         self.assertEqual((editor.changes, editor.history), before)
         self.assertEqual(editor.document.source.read_bytes(), editor.document.raw)
-        self.assertEqual(VERSION, '3.0')
+        self.assertEqual(VERSION, '3.1')
 
     def test_transfer_requires_open_destination_then_uses_that_exact_editor(self):
         with patch('tkinter.messagebox.showinfo') as info:

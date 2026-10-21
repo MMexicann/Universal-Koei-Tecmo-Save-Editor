@@ -97,7 +97,8 @@ def validate_document(document):
 
 
 @lru_cache(maxsize=4)
-def _fields(payload, experimental=False):
+def common_fields(payload, experimental=False):
+    """Project mapped common-core fields after an endpoint qualifies its bytes."""
     result = list(BASE_FIELDS)
     for index in range(WEAPON_COUNT):
         base = WEAPON_BASE + index * WEAPON_STRIDE
@@ -115,7 +116,7 @@ def _fields(payload, experimental=False):
 
 def fields_for(document):
     validate_document(document)
-    return _fields(document.payload, experimental_enabled())
+    return common_fields(document.payload, experimental_enabled())
 
 
 def field_map(document):

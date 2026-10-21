@@ -40,7 +40,7 @@ def build_bug_report(*, game_id=None, category='other', error_code='none',
         if game is None or validation.game_id != game.id:
             raise ReportError('Validation and feedback must use the same game profile.')
     return {
-        'schema_version': 1, 'kind': 'community_bug_report', 'app_version': '3.0',
+        'schema_version': 1, 'kind': 'community_bug_report', 'app_version': '3.1',
         'category': category, 'error_code': error_code, 'locale': locale,
         'game_id': None if game is None else game.id,
         'platform': None if game is None else game.platform,
@@ -57,7 +57,7 @@ def review_json(report):
             'game_id', 'platform', 'diagnostics', 'validation', 'transmission'}:
         raise ReportError('Report fields do not match the supported feedback schema.')
     if (type(report['schema_version']) is not int or report['schema_version'] != 1
-            or report['kind'] != 'community_bug_report' or report['app_version'] not in ('2.7', '3.0')
+            or report['kind'] != 'community_bug_report' or report['app_version'] not in ('2.7', '3.0', '3.1')
             or report['transmission'] != 'local_review_only'):
         raise ReportError('Unsupported feedback report identity.')
     validation = report['validation']

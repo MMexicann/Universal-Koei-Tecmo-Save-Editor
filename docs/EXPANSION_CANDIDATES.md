@@ -15,8 +15,9 @@ python -m tools.inspect_candidate --profile rorona_plus_vita copied/USR-DATA0000
 python -m tools.inspect_candidate --profile ayesha_plus_vita copied/USR-DATA0000
 ```
 
-These development tools are included in the Source ZIP. They are not additional
-Windows library editors or alternate application launchers. Each selects its
+The same explicit inspectors are available in the Windows app through
+[Research Import](RESEARCH_IMPORT.md), and these development commands remain in
+the Source ZIP. They do not add Windows library editors or alternate launchers. Each selects its
 exact profile, requires original metadata, reads bounded copies, preserves all
 bytes and prints JSON without paths, raw payloads or owner/signing metadata.
 They provide no gameplay writer, repair, Max, conversion or file-save operation.

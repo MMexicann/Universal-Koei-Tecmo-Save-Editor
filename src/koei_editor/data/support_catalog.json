@@ -1325,6 +1325,15 @@
       "editing_verified": false
     },
     {
+      "id": "dw8xl_ps4",
+      "title": "DYNASTY WARRIORS 8",
+      "platform": "PlayStation 4",
+      "status": "Published native format implemented",
+      "evidence": "Complete public CUSA00397 common-core reference and published platform framing establish the exact 0xD0F45-byte zero-extension profile. Common mapped fields retain their existing widths and record guards. Original PS4 metadata was absent from that reference; title/context checks use generated metadata in public tests. No native checksum is claimed.",
+      "needed": "Independent original-context PS4 exports, edited and converted in-game load/re-save, and revision-labelled controlled action pairs. Nonzero extensions and other regions remain unsupported.",
+      "editing_verified": false
+    },
+    {
       "id": "pw1_ps3",
       "title": "ONE PIECE: PIRATE WARRIORS",
       "platform": "PlayStation 3",

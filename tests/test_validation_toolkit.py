@@ -43,11 +43,11 @@ class ValidationToolkitTests(unittest.TestCase):
             with self.subTest(provenance=provenance):
                 current = complete_record(provenance)
                 legacy = current.to_dict()
-                self.assertEqual(legacy['app_version'], '3.0')
+                self.assertEqual(legacy['app_version'], '3.1')
                 legacy['app_version'] = '2.7'
                 imported = ValidationRecord.from_json(json.dumps(legacy))
                 self.assertEqual(imported, current)
-                self.assertEqual(imported.to_dict()['app_version'], '3.0')
+                self.assertEqual(imported.to_dict()['app_version'], '3.1')
                 self.assertEqual(imported.summary(), current.summary())
                 self.assertFalse(imported.summary()['independently_verified'])
 

@@ -33,7 +33,7 @@ class CommunityFeedbackTests(unittest.TestCase):
     def test_legacy_report_and_nested_validation_migrate_without_promoting_claims(self):
         validation = ValidationRecord.create('dw8xl', provenance='genuine_file')
         current = build_bug_report(game_id='dw8xl', validation=validation)
-        self.assertEqual(current['app_version'], '3.0')
+        self.assertEqual(current['app_version'], '3.1')
         legacy = json.loads(json.dumps(current))
         legacy['app_version'] = '2.7'
         legacy['validation']['app_version'] = '2.7'

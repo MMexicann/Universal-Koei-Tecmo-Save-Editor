@@ -218,7 +218,8 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
         from tools import build_windows as build
         game = SimpleNamespace(editor_module='koei_editor.games.new.gui', parser_module='koei_editor.games.new.reader',
                                scalar_backend='koei_editor.games.new.native')
-        with patch.object(build, 'ALL_ADAPTERS', (game,)), patch.object(build, 'ENDPOINTS', {}):
+        with patch.object(build, 'ALL_ADAPTERS', (game,)), patch.object(build, 'ENDPOINTS', {}), \
+                patch.object(build, 'RESEARCH_PROFILES', {}):
             args = build.build_args()
         modules = [args[index + 1] for index, value in enumerate(args) if value == '--hidden-import']
         self.assertEqual(set(modules), {game.editor_module, game.parser_module, game.scalar_backend})
@@ -232,6 +233,9 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
                 if endpoint.conversion_only:
                     self.assertIn(endpoint.backend.__name__, modules)
                     self.assertNotIn(endpoint.id, {game.id for game in build.ALL_ADAPTERS})
+            for profile in build.RESEARCH_PROFILES.values():
+                self.assertIn(profile.backend.__name__, modules)
+                self.assertNotIn(profile.id, {game.id for game in build.ALL_ADAPTERS})
 
     def test_publication_requires_a_tag_or_explicit_release_commit_and_native_build(self):
         workflow = (PROJECT / '.github/workflows/windows-release.yml').read_text()

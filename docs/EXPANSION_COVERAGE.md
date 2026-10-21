@@ -1,8 +1,11 @@
 # Expansion coverage and remaining inputs
 
-Version 3.0 deepens existing editors without changing
-the 97-profile inventory. See the [game-specific expansion](GAME_SPECIFIC_EXPANSION.md)
-for controls, native evidence and remaining qualification limits.
+Version 3.1 adds the DW8 XL PS4 CUSA00397 zero-extension editor, bringing the
+inventory to 98 game/platform profiles. Four resource-only WO3U/SW4 PS3 ↔ PC
+routes and two WO3U PS4 → PC material/base-stat scopes bring conversion to 145 directions. Full WO3U/SW4 PS4 migration remains
+unqualified. [Exact request scope](WARRIORS_PS4_TRANSFERS.md). See the
+[game-specific expansion](GAME_SPECIFIC_EXPANSION.md) for existing controls,
+native evidence and remaining qualification limits.
 
 The v2.6 update has **97 game/platform profiles across 15 platforms**, with
 Legends of Troy EU PS3 Kleos reductions and broader save-management tools.

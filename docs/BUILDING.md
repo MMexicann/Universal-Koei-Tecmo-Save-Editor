@@ -15,12 +15,12 @@ python -m tools.build_windows
 python -m tools.build_windows --standalone
 ```
 
-The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v3.0/`**, a
+The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v3.1/`**, a
 portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
-**`dist-standalone/UniversalKoeiTecmoSaveEditor-v3.0.exe`**. That direct download
+**`dist-standalone/UniversalKoeiTecmoSaveEditor-v3.1.exe`**. That direct download
 needs no side files. Both modes use pinned Python 3.14.7 and `--noupx`, with the
-same 97 game/platform profiles, runtime metadata and required notices.
+same 98 game/platform profiles, runtime metadata and required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
 
@@ -138,9 +138,22 @@ source hashes, and rejects save/game-file entries and personal paths.
 The Windows workflow runs the tests, builds the executable and verifies its
 startup and archives before creating downloadable build assets. Building locally
 uses the same scripts. A completed build is a prerequisite for packaging.
+The build job uses `windows-2022` as a diagnostic comparison after hosted
+`windows-latest` runners stopped reporting during packaging; this does not
+establish the cause or guarantee a remedy. The four full-suite test shards
+continue to use `windows-latest`. Portable and standalone builds each have a
+10-minute step limit, and their separate frozen-payload verification steps each
+have a 3-minute limit, within the unchanged 30-minute job limit. Runtime scans,
+packaged startup and packaging remain separate bounded steps.
+After both runtime scans pass, `tools/smoke_windows.ps1` gives each
+packaged startup 180 seconds and records its exit status and executable hashes.
+On timeout it records bounded descendant metadata, reads window text only from
+the retained launched process, and terminates its process tree. Startup and
+Defender diagnostics are workflow artifacts,
+separate from the release downloads; a timeout still blocks publication.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
-commit. Pushing a tag matching the application version, such as `v3.0`, also
+commit. Pushing a tag matching the application version, such as `v3.1`, also
 publishes after the native build and checks succeed. Existing releases are not replaced.
 
 The portable runtime loads from the adjacent `_internal` folder. Users extract

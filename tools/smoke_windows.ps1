@@ -119,7 +119,6 @@ try {
         catch { $report.errors += ('Owned-window diagnostics: ' + $_.Exception.Message) }
         throw 'The packaged smoke exceeded its deadline; startup is not qualified.'
     }
-    $process.WaitForExit()
     $report.exit_code = $process.ExitCode
     if ($process.ExitCode -ne 0) { throw 'The packaged smoke exited unsuccessfully.' }
     $report.sha256_after = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()

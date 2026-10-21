@@ -69,6 +69,8 @@ class PackagedSmokeContracts(unittest.TestCase):
         source = HELPER.read_text()
         self.assertIn('[ValidateRange(30, 300)][int]$TimeoutSeconds = 180', source)
         self.assertIn('$process.WaitForExit($TimeoutSeconds * 1000)', source)
+        waits = re.findall(r'\$process\.WaitForExit\(([^)]*)\)', source)
+        self.assertEqual(waits, ['$TimeoutSeconds * 1000', '10000'])
         self.assertIn('$process.Kill($true)', source)
         self.assertNotIn('Stop-Process', source)
         self.assertNotIn('taskkill', source)

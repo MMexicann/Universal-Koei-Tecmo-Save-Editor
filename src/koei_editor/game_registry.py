@@ -21,6 +21,7 @@ class Game:
     published_format: bool = False
     platform: str = 'Windows PC'
     scalar_backend: str | None = None
+    achievement_source: str | None = None
 
     def get_scalar_adapter(self, *, experimental=False):
         if self not in ALL_ADAPTERS:
@@ -29,6 +30,14 @@ class Game:
             raise SaveError('This editor uses its own document workflow.')
         return BoundScalarAdapter(self.id, self.extension, import_module(self.scalar_backend),
                                   experimental=experimental)
+
+    def get_achievement_source(self):
+        """Load an explicitly registered, optional external achievement source."""
+        if self not in ALL_ADAPTERS:
+            raise SaveError('Unregistered game.')
+        if self.achievement_source is None:
+            return None
+        return import_module(self.achievement_source)
 
     def create_editor(self, root, parent, theme='Light', on_theme=None):
         if self not in ALL_ADAPTERS:
@@ -59,7 +68,8 @@ class Game:
 GAMES = (
     Game('dw3', 'DYNASTY WARRIORS 3', 'Complete Edition Remastered',
          'Character progression, owned weapon bonus transfer, filtered elements, companions and targeted gallery unlocks.',
-         '', '.sav', '#92353b', 'koei_editor.games.dw3.gui', 'koei_editor.games.dw3.save_parser', True, 'III'),
+         '', '.sav', '#92353b', 'koei_editor.games.dw3.gui', 'koei_editor.games.dw3.save_parser', True, 'III',
+         achievement_source='koei_editor.games.dw3.achievements'),
     Game('dw8xl', 'DYNASTY WARRIORS 8', 'Xtreme Legends Complete Edition · PC',
          'Resources, officer stats, weapon compatibility, affinity, existing ranked attribute replacement and equipped weapon order.',
          '', '.dat', '#475f8d', 'koei_editor.games.dw8xl.dw8xl_editor', 'koei_editor.games.dw8xl.dw8xl_editor', True, 'VIII', scalar_backend='koei_editor.shared.verified_editor'),

@@ -638,8 +638,8 @@
     },
     {
       "path": "docs/PROGRESSION_DASHBOARDS.md",
-      "bytes": 5484,
-      "sha256": "625488b419faff0ea2426b83c5e96a5df525db70e802b4201ca4d995a6337b1c"
+      "bytes": 8089,
+      "sha256": "cd2fec3142ccbe74cad611ab40d2b45f5db04086a1a16dc8bbd93ba65a7b28f2"
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
@@ -1318,8 +1318,8 @@
     },
     {
       "path": "src/koei_editor/game_registry.py",
-      "bytes": 44545,
-      "sha256": "48166b76a7cfce3004ec6dca458dc96039d5fdea60a23af2e68894b7d2c3cc39"
+      "bytes": 44984,
+      "sha256": "fa7f67e5ddd5d0b2848f4154b952ed271d3f799bc75797cdc3d64c988faf7220"
     },
     {
       "path": "src/koei_editor/games/AGENTS.md",
@@ -1575,6 +1575,11 @@
       "path": "src/koei_editor/games/dw3/__init__.py",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/koei_editor/games/dw3/achievements.py",
+      "bytes": 505,
+      "sha256": "56c69794862406cf6362f280a9821a47f3c1bf4139bfc8c38e5c1c31bd6cd022"
     },
     {
       "path": "src/koei_editor/games/dw3/bodyguard_customization.py",
@@ -3952,6 +3957,11 @@
       "sha256": "3e923fc4089084a7330cc24962786ba012dac512e6976048f523c4e59e4ba21e"
     },
     {
+      "path": "src/koei_editor/shared/steam_achievements.py",
+      "bytes": 9047,
+      "sha256": "1ab45b2d3a71c00c435fe32e3834763df3779ca258b49fec34c7bfc7efc27fe9"
+    },
+    {
       "path": "src/koei_editor/shared/steam_owner.py",
       "bytes": 7385,
       "sha256": "d03c0e8b4c4a70104a6547111c22d417df6b610d0bedcba92b1d1d4295ba5d4a"
@@ -5512,6 +5522,11 @@
       "sha256": "f0c3e359c491317ed40393aab531cd80bf6f688d08c633220cbaaf70e8141a9a"
     },
     {
+      "path": "tests/test_steam_achievements.py",
+      "bytes": 9270,
+      "sha256": "a5d2834a706b79ef45aa3ac4a59bd2e0a3096188574b01468c663602f853d9fa"
+    },
+    {
       "path": "tests/test_steam_owner.py",
       "bytes": 11325,
       "sha256": "1e3aedfda760a6820163b86d6910f6b3749f821ef5fbe120ddb0b3656c979b5b"
@@ -5878,8 +5893,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 3070,
-      "sha256": "dca60490f2eb6883b3b69aa4549ac83f21d6550cb4cf36e16c598be78b44ffda"
+      "bytes": 3132,
+      "sha256": "98885e5a8b07f30910629236528d16722ba841f9e5d474e815f0e0171882a5aa"
     },
     {
       "path": "tools/check_community_plugins.py",

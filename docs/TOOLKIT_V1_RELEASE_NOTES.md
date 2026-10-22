@@ -18,7 +18,7 @@
   read-only Nioh 3 equipment details and clearer Project Zero PS2 film labels.
 - **Source tools and reference data:** offline Localization Studio for supported
   text tables, data-only community packages, a snapshot-based patch analyzer,
-  and edition-scoped Three Hopes/Hyrule reference data.
+  and Three Hopes Switch/Hyrule Warriors Wii U reference data.
 
 **98 game/platform profiles · 15 save platforms · 145 scoped conversion routes.**
 This update adds no new save-editing profiles or platforms. See the

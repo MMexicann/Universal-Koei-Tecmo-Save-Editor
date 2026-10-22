@@ -32,7 +32,7 @@ version reset preserves earlier releases and repository history.
   plans for DW3 Remastered, DW8 XL PC, WO3 Ultimate PC and SW4 DX PC.
   [Character & Weapon Workshop](docs/CHARACTER_WEAPON_WORKSHOP.md).
 - **Explore progress and convert copies:** dashboards, separate manual checklists
-  and supported achievement sources; individual or queued conversion across
+  and optional DW3 Remastered Steam achievements; individual or queued conversion across
   **145 scoped routes**. [Progression](docs/PROGRESSION_DASHBOARDS.md) · [Conversions](docs/SAVE_CONVERSION.md).
 - **Create and manage mods:** package user-provided replacements in Mod Creation
   Workshop; import and manage **Nioh 2 PC** mods with separate profiles and

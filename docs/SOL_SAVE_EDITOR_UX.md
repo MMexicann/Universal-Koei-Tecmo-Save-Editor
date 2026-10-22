@@ -2,9 +2,11 @@
 
 ```yaml
 report_schema: 1
-status: preparing_review_submission
+status: draft_pull_request_open
 base: main
-base_commit: 1d86de1
+base_commit: c851ee5
+pull_request: 138
+pull_request_url: https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/138
 release_or_version_change: false
 registered_profiles: 98
 shared_scalar_profiles: 97
@@ -62,15 +64,15 @@ writer are intentionally bespoke.
 
 | Check | Result | Notes |
 | --- | --- | --- |
-| Focused editor/comparison/transfer/preset command | 84 tests; 0 failures; 33 skips | GUI cases skipped without `$DISPLAY`; one optional native comparison pair was unavailable. |
-| Full test inventory | 3,371 tests across 365 modules; 0 assertion failures; 957 skips; 1 error | This complete run preceded two final regressions: opened-value identity and focused Undo. Both were run afterward in the focused command. The error is an existing `test_rotk3_dos.py` Tk test that calls `tk.Tk()` without a display guard. GUI coverage requires a display-enabled runner. |
-| Final new paging/comparison regression command | 13 tests; 2 passed; 11 skipped | The additional opened-value identity regression passed. GUI cases require a display. |
+| Full test inventory on rebased branch | 3,413 tests across 370 modules; 0 assertion failures; 962 skips; 2 errors | One existing `test_rotk3_dos.py` Tk test calls `tk.Tk()` without a display guard. The other is `test_universal_packaging.py::test_distinct_registered_scalar_backend_is_collected`: its fixture lacks `achievement_source`, added by merged main change #111. `tools/build_windows.py` and that test are unchanged in this branch. |
+| Final new paging/comparison regression modules | 13 tests; 2 passed; 11 skipped | The opened-value identity regression passed. All paging and Tk handoff/focused-Undo cases require a display. |
 | New paging and Undo focus tests | 6 discovered; 6 skipped locally | Includes two retained editors sharing a root; the focused editor alone handles Ctrl+Z. See [test_scalar_field_paging.py](../tests/test_scalar_field_paging.py). |
 | New comparison handoff tests | 7 discovered; 2 passed; 5 skipped locally | Backend definition-identity regressions passed; Tk integration cases require a display. See [test_comparison_transfer_experience.py](../tests/test_comparison_transfer_experience.py). |
-| Package source verification | Passed; 1,187 public source files verified | Source manifest refreshed; no version change. |
+| Package source verification | Passed; 1,199 public source files verified | Source manifest refreshed after rebasing onto the current main; no version change. |
 | Supported game inventory | Passed; 98 registered profiles checked | No game or platform support changed. |
 | Application smoke test | Not completed | The runner cannot create a Tk window without `$DISPLAY` or Xvfb. |
 
 The full run report and per-module logs were written under the ignored local
 `work/` directory. Native saves and private fixtures were not added to the
-checkout. No release, version bump or merge was performed.
+checkout. PR #138 is a draft for review; no release, version bump or merge was
+performed.

@@ -1,15 +1,28 @@
 """Read-only, edition-scoped reference data and its provenance contract."""
+from datetime import date
+
 from koei_editor.resources import read_json
 
 
 SCHEMA_VERSION = 1
 ALLOWED_LICENSES = frozenset({'MIT', 'CC BY-SA 3.0'})
+ALLOWED_DATASET_LICENSES = ALLOWED_LICENSES | {'source-specific'}
+LICENSE_URIS = {
+    'MIT': 'https://opensource.org/license/mit',
+    'CC BY-SA 3.0': 'https://creativecommons.org/licenses/by-sa/3.0/',
+}
 _DATASET_KEYS = frozenset({
     'schema_version', 'dataset_license', 'dataset_license_note', 'sources',
     'games', 'entities',
 })
 _SOURCE_REQUIRED = frozenset({
     'id', 'title', 'uri', 'license', 'license_uri', 'attribution', 'scope',
+})
+_SOURCE_OPTIONAL = frozenset({'revision', 'accessed_on', 'game_ids', 'claim_scopes'})
+_CLAIM_SCOPES = frozenset({
+    'game.profile', 'entity.game_id', 'entity.edition', 'entity.kind',
+    'entity.native_id', 'entity.name', 'entity.summary', 'entity.relationships',
+    'entity.attributes',
 })
 _GAME_KEYS = frozenset({
     'id', 'title', 'edition', 'platform', 'profile_source_id', 'scope_note',
@@ -24,6 +37,32 @@ def _text(value):
     return type(value) is str and bool(value.strip())
 
 
+def _iso_date(value):
+    if not _text(value):
+        return False
+    try:
+        return date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
+
+
+def _valid_claim_scope(scope):
+    if not _text(scope):
+        return False
+    return (scope in _CLAIM_SCOPES
+            or (scope.startswith('entity.attributes.')
+                and _text(scope.removeprefix('entity.attributes.'))))
+
+
+def _source_covers(source, scope):
+    claim_scopes = source.get('claim_scopes')
+    if claim_scopes is None:
+        return True  # Legacy v1 sources had no machine-readable claim scope.
+    return scope in claim_scopes or (
+        scope.startswith('entity.attributes.') and 'entity.attributes' in claim_scopes
+    )
+
+
 def validate_dataset(data):
     """Validate the static feed's edition, source, and cross-reference contract.
 
@@ -35,7 +74,7 @@ def validate_dataset(data):
     if type(data['schema_version']) is not int or data['schema_version'] != SCHEMA_VERSION:
         raise ValueError('Unsupported encyclopedia schema version.')
     if (type(data['dataset_license']) is not str
-            or data['dataset_license'] not in ALLOWED_LICENSES
+            or data['dataset_license'] not in ALLOWED_DATASET_LICENSES
             or not _text(data['dataset_license_note'])):
         raise ValueError('Invalid encyclopedia dataset license declaration.')
     if type(data['sources']) is not list or type(data['games']) is not list or type(data['entities']) is not list:
@@ -45,22 +84,42 @@ def validate_dataset(data):
     for source in data['sources']:
         if type(source) is not dict:
             raise ValueError('Invalid encyclopedia source row.')
-        optional = {'revision', 'accessed_on'}
-        if not _SOURCE_REQUIRED <= set(source) or set(source) - _SOURCE_REQUIRED - optional:
+        if not _SOURCE_REQUIRED <= set(source) or set(source) - _SOURCE_REQUIRED - _SOURCE_OPTIONAL:
             raise ValueError('Invalid encyclopedia source fields.')
         if not all(_text(source[key]) for key in _SOURCE_REQUIRED):
             raise ValueError('Encyclopedia sources need titles, links, licenses, attribution, and scope.')
+        if ('game_ids' in source
+                and (type(source['game_ids']) is not list or not source['game_ids']
+                     or not all(_text(game_id) for game_id in source['game_ids'])
+                     or len(set(source['game_ids'])) != len(source['game_ids']))):
+            raise ValueError('Encyclopedia sources need unique applicable game IDs.')
+        if 'claim_scopes' in source:
+            claim_scopes = source['claim_scopes']
+            if (type(claim_scopes) is not list or not claim_scopes
+                    or not all(_valid_claim_scope(scope) for scope in claim_scopes)
+                    or len(set(claim_scopes)) != len(claim_scopes)):
+                raise ValueError('Encyclopedia sources need unique, supported claim scopes.')
+            if 'game_ids' not in source:
+                raise ValueError('Sources with claim scopes must declare applicable game IDs.')
         if (source['license'] not in ALLOWED_LICENSES
                 or not source['uri'].startswith('https://')
-                or not source['license_uri'].startswith('https://')):
+                or source['license_uri'] != LICENSE_URIS[source['license']]):
             raise ValueError('Encyclopedia source license or URL is not allowed.')
-        if (('revision' in source) == ('accessed_on' in source)
-                or ('revision' in source and not _text(source['revision']))
-                or ('accessed_on' in source and not _text(source['accessed_on']))):
-            raise ValueError('Each encyclopedia source needs one pinned revision or access date.')
+        if (not ({'revision', 'accessed_on'} & set(source))
+                or ('revision' in source and not _text(source['revision']))):
+            raise ValueError('Each encyclopedia source needs a pinned revision or access date.')
+        if 'accessed_on' in source and not _iso_date(source['accessed_on']):
+            raise ValueError('Encyclopedia source access dates must be valid ISO YYYY-MM-DD dates.')
         if source['id'] in sources:
             raise ValueError('Duplicate encyclopedia source ID.')
         sources[source['id']] = source
+
+    source_licenses = {source['license'] for source in sources.values()}
+    if data['dataset_license'] != 'source-specific':
+        if len(source_licenses) > 1:
+            raise ValueError('Mixed source licenses require a source-specific dataset license.')
+        if source_licenses != {data['dataset_license']}:
+            raise ValueError('Dataset license must match every source license.')
 
     games = {}
     for game in data['games']:
@@ -71,6 +130,23 @@ def validate_dataset(data):
         if game['id'] in games or game['profile_source_id'] not in sources:
             raise ValueError('Duplicate game profile or missing profile provenance.')
         games[game['id']] = game
+    for source in sources.values():
+        if 'game_ids' in source and not set(source['game_ids']) <= set(games):
+            raise ValueError('Encyclopedia source applies to an unknown game ID.')
+    for game in games.values():
+        profile_source = sources[game['profile_source_id']]
+        if 'game_ids' in profile_source and game['id'] not in profile_source['game_ids']:
+            raise ValueError('Profile source does not cover its exact game ID.')
+        if not _source_covers(profile_source, 'game.profile'):
+            raise ValueError('Profile source claim scope does not cover the game profile.')
+        from koei_editor.game_registry import get_game
+        try:
+            registered_game = get_game(game['id'])
+        except ValueError as error:
+            raise ValueError('Encyclopedia game profile is not registered.') from error
+        if (game['title'], game['edition'], game['platform']) != (
+                registered_game.title, registered_game.subtitle, registered_game.platform):
+            raise ValueError('Encyclopedia profile title, edition, or platform mismatches the registry.')
 
     entity_ids = set()
     native_ids = set()
@@ -116,6 +192,13 @@ def validate_dataset(data):
         if any(type(source_id) is not str or source_id not in sources
                for source_id in field_sources.values()):
             raise ValueError('Encyclopedia field provenance references an unknown source.')
+        for field, source_id in field_sources.items():
+            source = sources[source_id]
+            if 'game_ids' in source and entity['game_id'] not in source['game_ids']:
+                raise ValueError('Encyclopedia field source is not applicable to the entity game ID.')
+            scope = f'entity.{field}'
+            if not _source_covers(source, scope):
+                raise ValueError(f'Encyclopedia field source claim scope does not cover {scope}.')
         relationships = entity.get('relationships', [])
         if type(relationships) is not list:
             raise ValueError('Entity relationships must be a list.')
@@ -125,6 +208,12 @@ def validate_dataset(data):
                     or not all(_text(relation[key]) for key in ('type', 'entity_id', 'source_id'))
                     or relation['source_id'] not in sources):
                 raise ValueError('Entity relationships need a type, target, and source.')
+            relation_source = sources[relation['source_id']]
+            if ('game_ids' in relation_source
+                    and entity['game_id'] not in relation_source['game_ids']):
+                raise ValueError('Encyclopedia relationship source is not applicable to the entity game ID.')
+            if not _source_covers(relation_source, 'entity.relationships'):
+                raise ValueError('Encyclopedia relationship source claim scope does not cover relationships.')
             targets.append((entity['game_id'], entity['edition'], relation['entity_id']))
 
     entities_by_id = {entity['id']: entity for entity in data['entities']}

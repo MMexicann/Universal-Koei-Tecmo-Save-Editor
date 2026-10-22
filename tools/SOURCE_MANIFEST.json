@@ -1523,8 +1523,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 86609,
-      "sha256": "59bd52b17ffa70bf136958127ea0da1fa9e7cd66212476c09dd3ec43e36aaef6"
+      "bytes": 86746,
+      "sha256": "22c091963f6f164cf16404b43fec8c4fc2b694f3f533e0dcb98343bec1734177"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -5323,8 +5323,8 @@
     },
     {
       "path": "tests/test_game_troubleshooting_gui.py",
-      "bytes": 15483,
-      "sha256": "e3a182422c25b0446155c0a9908c234955a798d2b6b17361299d6f09734bd990"
+      "bytes": 17857,
+      "sha256": "c6c400bda635db7f69a630b6ef69897081254abb1773e0d80ae8da5d677592ee"
     },
     {
       "path": "tests/test_gemfire_battery.py",

@@ -431,7 +431,7 @@ class ModManagerWorkspace:
         enqueue = getattr(self.manager, 'enqueue_nexus_download', None)
         accepted = bool(callable(enqueue) and enqueue(request, downloader))
         self.status.set(
-            'Nexus download queued. The ZIP will be validated and added to the library.'
+            'Nexus download queued. The selected file will be checked as a Nioh 2 ZIP and added if valid.'
             if accepted else
             'The Mod Manager could not queue this Nexus download.'
         )

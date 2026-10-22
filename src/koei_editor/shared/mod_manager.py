@@ -942,7 +942,7 @@ class ModManager:
                 except PackageError:
                     return NexusDownloadResult(
                         "package_rejected",
-                        "The downloaded ZIP did not pass Nioh 2 package validation.",
+                        "The downloaded file is not a valid Nioh 2 ZIP package.",
                     )
                 except Exception:
                     return NexusDownloadResult(

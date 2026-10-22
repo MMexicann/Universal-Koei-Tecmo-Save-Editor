@@ -77,9 +77,9 @@ destination inside a manager-owned temporary directory. Nexus API keys,
 free-user authorization, and resolved signed CDN links stay in the browser
 client and are neither read by the manager nor written by it. The queued
 request and capability are held only in memory while the job is queued or
-active. The manager verifies that the downloader produced a regular ZIP within
-the existing 1 GiB archive limit, then passes it to the same `import_archive`
-ZIP validation used by local imports. A safe temporary filename derived from
+active. The manager verifies that the downloader produced a regular file at
+the temporary ZIP path within the existing 1 GiB limit, then passes it through
+the same `import_archive` ZIP validation used by local imports. A safe temporary filename derived from
 the selected Nexus filename keeps the existing filename-based fallback
 metadata useful for packages that do not include `koei-mod.json`. The manager removes the temporary download
 after processing and only adds a validated package to the library; it never

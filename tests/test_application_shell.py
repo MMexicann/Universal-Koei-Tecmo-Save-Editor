@@ -74,6 +74,25 @@ class ShellPreferencesTests(unittest.TestCase):
         shell._show_editing_tool.assert_called_once_with(workspace, 'mod_manager')
         shell._remember_workspace.assert_called_once_with('tool:mod_manager')
 
+    def test_application_close_waits_for_nested_playthrough_profile_worker(self):
+        from types import SimpleNamespace
+
+        profile_window = SimpleNamespace(busy=True, _closed=False)
+        management = SimpleNamespace(busy=False, profile_window=profile_window)
+        root = Mock()
+        shell = SimpleNamespace(
+            _tool_workspaces=lambda: (),
+            save_library=SimpleNamespace(management=management),
+            root=root,
+            sessions={},
+        )
+
+        with patch('tkinter.messagebox.showinfo') as showinfo:
+            Application.close(shell)
+
+        showinfo.assert_called_once()
+        root.destroy.assert_not_called()
+
     def test_longest_valid_namespaced_plugin_command_can_be_favorited(self):
         command = 'plugin:' + 'a.' + 'a' * 78 + ':' + 'b' * 80
         value = settings.toggle_favorite(settings.ShellPreferences(), command)

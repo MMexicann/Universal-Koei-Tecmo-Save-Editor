@@ -23,8 +23,9 @@ safe way to prepare another playthrough copy. It does not activate a game
 profile, launch a game or switch game-managed state. It never overwrites an
 existing folder or live save. Live and cloud paths are rejected. A failed write
 may leave an incomplete new isolated directory, following the Vault restore
-contract; the application reports failure and does not claim success. If the
-optional backup was completed first, the error reports its Vault snapshot ID.
+contract; the error identifies that directory for review and does not claim
+success. If the optional backup was completed first, the error also reports its
+Vault snapshot ID.
 
 ## Manager component contract
 

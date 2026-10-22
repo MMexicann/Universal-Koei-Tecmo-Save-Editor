@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from koei_editor.games.deception4_ps3 import parser
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared import playthrough_profiles as playthrough_profiles_module
 from koei_editor.shared.save_vault import SaveVault
 from koei_editor.shared.playthrough_profiles import (
     PlaythroughProfileStore,
@@ -254,6 +256,74 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertFalse(destination.exists())
         self.assertEqual(self.source.read_bytes(), self.raw)
         self.assertEqual((self.source.parent / 'PARAM.SFO').read_bytes(), self.context)
+
+    def test_components_parent_symlink_race_cannot_redirect_staging_outside_environment(self):
+        profile = self.make_profile()
+        destination = self.root / 'race-environment'
+        component_parent = destination / 'components'
+        outside = self.root / 'outside-components'
+        outside.mkdir()
+        original_ordinary = playthrough_profiles_module._ordinary
+        race_injected = False
+
+        def replace_parent_after_preflight(path, **kwargs):
+            nonlocal race_injected
+            checked = original_ordinary(path, **kwargs)
+            if (not race_injected and Path(path) == component_parent
+                    and kwargs.get('directory') is True):
+                # This hook runs after the service's parent preflight and
+                # before the first staged component is written.
+                component_parent.rmdir()
+                try:
+                    component_parent.symlink_to(outside, target_is_directory=True)
+                except OSError as error:
+                    self.skipTest(f'Host cannot create a directory symlink: {error}')
+                race_injected = True
+            return checked
+
+        with patch.object(playthrough_profiles_module, '_ordinary',
+                          side_effect=replace_parent_after_preflight):
+            with self.assertRaises(PlaythroughPreparationError) as caught:
+                self.store.prepare_environment(profile.id, destination, '1.02')
+
+        self.assertEqual(caught.exception.destination, destination)
+        self.assertTrue(race_injected, 'the test must inject the race after parent preflight')
+        self.assertEqual(list(outside.iterdir()), [])
+        self.assertFalse((outside / 'mod_configuration.json').exists())
+        self.assertFalse((outside / 'playthrough-report.json').exists())
+
+    def test_environment_destination_symlink_race_cannot_redirect_report_outside(self):
+        profile = self.make_profile(components=())
+        destination = self.root / 'report-race-environment'
+        displaced_destination = self.root / 'displaced-report-race-environment'
+        outside = self.root / 'outside-report'
+        outside.mkdir()
+        original_new_child_bound = playthrough_profiles_module.new_child_bound
+        race_injected = False
+
+        def replace_destination_before_report(data, directory, name, expected_identity):
+            nonlocal race_injected
+            if (not race_injected and Path(directory) == destination
+                    and name == 'playthrough-report.json'):
+                # Save restoration and the destination identity capture have
+                # completed; swap the root just before the report is created.
+                destination.rename(displaced_destination)
+                try:
+                    destination.symlink_to(outside, target_is_directory=True)
+                except OSError as error:
+                    self.skipTest(f'Host cannot create a directory symlink: {error}')
+                race_injected = True
+            return original_new_child_bound(data, directory, name, expected_identity)
+
+        with patch.object(playthrough_profiles_module, 'new_child_bound',
+                          side_effect=replace_destination_before_report):
+            with self.assertRaises(PlaythroughPreparationError) as caught:
+                self.store.prepare_environment(profile.id, destination, '1.02')
+
+        self.assertEqual(caught.exception.destination, destination)
+        self.assertTrue(race_injected, 'the test must inject the race before report creation')
+        self.assertTrue(displaced_destination.is_dir())
+        self.assertEqual(list(outside.iterdir()), [])
 
 
 if __name__ == '__main__':

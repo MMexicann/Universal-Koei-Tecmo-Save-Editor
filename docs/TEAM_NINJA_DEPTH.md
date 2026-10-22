@@ -149,6 +149,33 @@ Generated tests additionally cover all fourteen in both pools/revisions,
 nonordinary records, duplicate identities, invalid inputs and reversible edits.
 Actual edited game-load/re-save validation remains unperformed.
 
+## Nioh 3: read-only equipment detail
+
+The existing qualified equipment array now exposes additional numeric context
+in **Inspect Data**: a source-reported u16 at record `+0x30` and seven raw
+`0x18` modifier-slot tuples from `+0x38` (u16 ID at `+0`, u32 value at `+4`,
+metadata bytes at `+9` and `+0x0A`). Existing level, pre-forge, reinforcement
+and appearance fields remain visible. Empty modifier slots are omitted; IDs,
+values and metadata are displayed as numbers without effect names or inferred
+categories.
+
+The relative sublayout is attributed as a factual research lead to the pinned
+Apache-2.0 [Nioh 3 Save Editor source](https://github.com/alfizari/Nioh-3-Save-Editor/blob/b5d0789791fe31d06ad325d4012aa0333c60cd8f/main.py).
+No code or effect catalog is copied. The current native profiles independently
+qualify the full equipment array tags, lengths, strides and boundaries, but the
+added subfields have not been mapped from a controlled equipment action pair.
+They are inspection hints only: they do not create equipment fields in the
+writer, and edits to balances or consumables must preserve the entire equipment
+array. Category rules, native-value semantics, allowed ranges, affix
+dependencies and game-load/re-save behavior remain unverified.
+
+The generated format regression injects raw values into the first and seventh
+slots, verifies numeric display, confirms `field_map` and `stage` reject these
+subfields, then combines an eligible balance and stack reduction and checks the
+full equipment array remains byte-identical. This is procedural writer-safety
+evidence; it does not qualify the subfield layout on a genuine save or establish
+an editable affix mapping.
+
 ## Original Ninja Gaiden II: audit outcome
 
 The original Xbox 360/Xenia revision-6 parser already selects all eleven

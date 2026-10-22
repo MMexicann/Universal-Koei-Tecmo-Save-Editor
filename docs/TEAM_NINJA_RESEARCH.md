@@ -149,8 +149,10 @@ perform purchases or level-ups. Only `1..opened quantity` is writable for stacks
 ambiguous duplicate known IDs do not grant writes. Increases, removal, Max,
 acquisition and cross-pool transfers need capacity/reference/reward proof.
 Equipment inspection keeps current level, pre-forge level and reinforcement
-separate. Original keys, seeds, header, tail and unknown bytes are preserved;
-integrity is rebuilt and the output reparsed. No integrity flags are cleared.
+separate, and now exposes numeric-only source-reported rarity/modifier-slot
+fields. Those subfields have no native action-pair proof and remain read only.
+Original keys, seeds, header, tail and unknown bytes are preserved; integrity is
+rebuilt and the output reparsed. No integrity flags are cleared.
 
 See [native format, validation and exact mechanic blockers](NIOH3_RESEARCH.md).
 The [expansion note](TEAM_NINJA_DEPTH.md) records the twenty-five additional ordinary

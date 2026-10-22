@@ -3,8 +3,10 @@ from dataclasses import replace
 import io
 import json
 from pathlib import Path
+import queue
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from koei_editor.shared import save_discovery, version_tracker as tracker
@@ -237,6 +239,37 @@ class VersionTrackerTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     tracker.record_scan((self.observation(),), history_path)
                 self.assertEqual(history_path.read_bytes(), original)
+
+
+class VersionTrackerPanelDiagnosticTests(unittest.TestCase):
+    def test_history_error_is_appended_to_scan_diagnostics(self):
+        from koei_editor.shared.version_tracker_gui import VersionTrackerPanel
+
+        class Status:
+            value = ''
+
+            def set(self, value):
+                self.value = value
+
+            def get(self):
+                return self.value
+
+        panel = object.__new__(VersionTrackerPanel)
+        panel._scan_thread = mock.Mock()
+        panel._scan_thread.is_alive.return_value = False
+        panel._scan_queue = queue.SimpleQueue()
+        panel.scan_button = mock.Mock()
+        panel.status = Status()
+        panel._t = lambda key: key
+        panel._render_builds = mock.Mock()
+        panel._render_history = mock.Mock()
+        scan = SimpleNamespace(observations=(), issues=('invalid_build_id_ignored',),
+                                stop_reason='metadata_limit')
+        panel._scan_queue.put(('ok', scan, (), (), True))
+
+        panel._poll_scan()
+
+        self.assertEqual(panel.status.get(), 'no_installs scan_issue scan_stopped history_error')
 
 
 if __name__ == '__main__':

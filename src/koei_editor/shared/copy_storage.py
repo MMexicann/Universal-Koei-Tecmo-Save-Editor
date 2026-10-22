@@ -216,6 +216,9 @@ def _new_directory_child_windows(directory, name, expected_identity):
     kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
     ntdll = ctypes.WinDLL('ntdll')
     kernel32.CreateFileW.restype = wintypes.HANDLE
+    kernel32.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                                     wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                                     wintypes.HANDLE]
     kernel32.GetFileInformationByHandle.argtypes = [wintypes.HANDLE,
                                                      ctypes.POINTER(BY_HANDLE_FILE_INFORMATION)]
     kernel32.GetFileInformationByHandle.restype = wintypes.BOOL

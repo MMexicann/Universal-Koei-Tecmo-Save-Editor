@@ -441,6 +441,36 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertEqual(tuple(displaced_destination.iterdir()), ())
         self.assertEqual(tuple(destination.iterdir()), ())
 
+    def test_environment_parent_swap_before_creation_cannot_leave_output_in_replacement(self):
+        profile = self.make_profile()
+        parent = self.root / 'selected-environment-parent'
+        parent.mkdir()
+        displaced_parent = self.root / 'displaced-environment-parent'
+        replacement_parent = self.root / 'replacement-environment-parent'
+        replacement_parent.mkdir()
+        destination = parent / 'new-environment'
+        original_create = playthrough_profiles_module.new_directory_child_bound
+        race_injected = False
+
+        def replace_parent_before_environment_create(directory, name, expected_identity):
+            nonlocal race_injected
+            if (not race_injected and Path(directory).resolve() == parent.resolve()
+                    and name == destination.name):
+                parent.rename(displaced_parent)
+                replacement_parent.rename(parent)
+                race_injected = True
+            return original_create(directory, name, expected_identity)
+
+        with patch.object(playthrough_profiles_module, 'new_directory_child_bound',
+                          side_effect=replace_parent_before_environment_create):
+            with self.assertRaises(PlaythroughPreparationError):
+                self.store.prepare_environment(profile.id, destination, '1.02')
+
+        self.assertTrue(race_injected, 'the test must swap the parent before environment creation')
+        self.assertFalse(destination.exists())
+        self.assertEqual(tuple(displaced_parent.iterdir()), ())
+        self.assertEqual(tuple(parent.iterdir()), ())
+
     def test_environment_symlink_swap_before_component_staging_cannot_redirect_files(self):
         profile = self.make_profile()
         destination = self.root / 'race-environment'

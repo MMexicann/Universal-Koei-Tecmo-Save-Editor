@@ -22,6 +22,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import (
     ChildPublishedUncertainError,
     new_child_bound,
+    new_directory_child_bound,
     publish_new_child_bound,
 )
 from koei_editor.shared.save_safety import safe_path
@@ -583,12 +584,12 @@ class PlaythroughProfileStore:
             backup_snapshot_id = backup.id
 
         try:
-            try:
-                destination.mkdir(mode=0o700)
-            except FileExistsError:
-                raise SaveError('The environment destination appeared before preparation.') from None
-            _, created_info = _ordinary(destination, directory=True)
+            destination, created_info = new_directory_child_bound(
+                parent, destination.name, (parent_info.st_dev, parent_info.st_ino))
             created_identity = (created_info.st_dev, created_info.st_ino)
+            _, named_info = _ordinary(destination, directory=True)
+            if (named_info.st_dev, named_info.st_ino) != created_identity:
+                raise SaveError('The new environment directory changed identity during creation.')
             _, current_parent_info = _ordinary(parent, directory=True)
             if ((current_parent_info.st_dev, current_parent_info.st_ino)
                     != (parent_info.st_dev, parent_info.st_ino)):

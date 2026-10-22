@@ -4018,8 +4018,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 45920,
-      "sha256": "4a02ed5acdfcde6576b5763aa5585f1056bb2736340e9b35211a024723f0fde4"
+      "bytes": 46119,
+      "sha256": "fab730c102e302b5ea262d54c8653893ed819660ab5cc104f71b981b953a070b"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
@@ -4173,8 +4173,8 @@
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles.py",
-      "bytes": 30311,
-      "sha256": "462bd0626ba43beeba8ee22233b9cbfc16a5a588115a7d1edd55f9589862a1d0"
+      "bytes": 30464,
+      "sha256": "ef9df1d0817e1294c60e11a3f206354aec965c8ea6cf5a220463c7890b31da80"
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles_gui.py",

@@ -4,7 +4,7 @@
 {
   "schema_version": 1,
   "feature": "koei_tecmo_game_hub",
-  "base_commit": "c1b6dcb9e176e39e35fe7be91fcfe4897c6e54e8",
+  "base_commit": "445528e9becb5c2c49613e5173448a1a8a134024",
   "scope": {
     "steam_mappings": "Existing reviewed Windows PC profile mappings",
     "discovery": "Steam library and app manifest metadata only",
@@ -26,7 +26,7 @@
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
-      "public_source_entries": 1274
+      "public_source_entries": 1275
     },
     "supported_game_inventory": {
       "command": "PYTHONPATH=src python -m tools.update_supported_games --check",
@@ -39,7 +39,7 @@
     },
     "source_validation": {
       "checks": [
-        "git diff --check",
+        "git diff --check origin/codex/version-compatibility-tracker...HEAD",
         "python -m py_compile src/koei_editor/application.py src/koei_editor/shared/game_hub.py src/koei_editor/shared/game_hub_gui.py"
       ],
       "status": "passed"

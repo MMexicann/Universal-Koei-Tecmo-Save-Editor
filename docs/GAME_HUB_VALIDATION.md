@@ -4,7 +4,7 @@
 {
   "schema_version": 1,
   "feature": "koei_tecmo_game_hub",
-  "base_commit": "60e70fe8c30ea76429a920a88a2b02ade9850244",
+  "base_commit": "7414af9d7816c40ef44d82e27be72679478b0c32",
   "scope": {
     "steam_mappings": "Existing reviewed Windows PC profile mappings",
     "discovery": "Steam library and app manifest metadata only",

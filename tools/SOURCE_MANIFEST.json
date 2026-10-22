@@ -3758,8 +3758,8 @@
     },
     {
       "path": "src/koei_editor/shared/controller_profiles_gui.py",
-      "bytes": 26007,
-      "sha256": "d5f809115ed14520ff0b95d1ae036ecabc106610df2e65f045c7d6e19b630bf2"
+      "bytes": 27989,
+      "sha256": "ba43da6067198d90f31666e8384613d50effc8c3d2c094c177a68fe3b94bc05e"
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",
@@ -4223,8 +4223,8 @@
     },
     {
       "path": "tests/test_controller_profiles.py",
-      "bytes": 18554,
-      "sha256": "cac531d50336c5d35614ea4d39bcc7a3f74e8a808d4c7ce1a0ca4cdb2ee85b64"
+      "bytes": 18918,
+      "sha256": "ff493c838db41b79ddb83bdee5c3a67c408cb571394cc457789f0055d2244af6"
     },
     {
       "path": "tests/test_conversion.py",

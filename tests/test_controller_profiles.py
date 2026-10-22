@@ -312,6 +312,35 @@ class ControllerProfileWorkspaceTests(unittest.TestCase):
         self.assertIs(self.root.focus_get(), self.workspace.search_entry)
         self.assertIn('do not change game files or Steam Input', self.workspace.status.get())
 
+    def test_workspace_uses_the_shell_language_when_first_opened(self):
+        workspace = ControllerProfileWorkspace(self.root, self.root, self.store, language='de')
+        self.assertEqual(workspace.language, 'de')
+        self.assertEqual(workspace.title_label.cget('text'), 'Controller- und Eingabeprofile')
+
+    def test_edit_preserves_an_imported_custom_preset_identity(self):
+        custom = profiles.create_profile(
+            'dw8xl', 'My custom notes', preset_id='custom',
+            bindings=(profiles.Binding('Guard', 'G', 'LB'),))
+        self.store.save_profile(custom)
+        self.workspace._edit_dialog(custom)
+        self.root.update()
+
+        pending = list(self.root.winfo_children())
+        dialog = next(widget for widget in pending if isinstance(widget, tk.Toplevel))
+        descendants = list(dialog.winfo_children())
+        while descendants:
+            widget = descendants.pop()
+            descendants.extend(widget.winfo_children())
+            if isinstance(widget, ttk.Button) and widget.cget('text') == 'Save profile':
+                widget.invoke()
+                break
+        else:
+            self.fail('Edit dialog did not expose its save action.')
+
+        updated = next(profile for profile in self.store.list_profiles('dw8xl')
+                       if profile.profile_id == custom.profile_id)
+        self.assertEqual(updated.preset_id, 'custom')
+
 
 if __name__ == '__main__':
     unittest.main()

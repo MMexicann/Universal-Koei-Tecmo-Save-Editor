@@ -618,8 +618,13 @@
     },
     {
       "path": "docs/PIRATE_ABYSS_RESEARCH.md",
-      "bytes": 11279,
-      "sha256": "dc53cad4d713887b5f8fa2af2a3559eeabe75703aa94e3267b9c6a05c991db16"
+      "bytes": 11486,
+      "sha256": "85e201c2d2bb2efba9f66b549221391e3f5b01414baff3bfb48e5d42d0304017"
+    },
+    {
+      "path": "docs/PIRATE_WARRIORS_EDITION_SCOPE.md",
+      "bytes": 4550,
+      "sha256": "5b3a2c5ad8453e93a21b943eb846da27f688da57d22c9ca2ee0239aa24c1f685"
     },
     {
       "path": "docs/PIRATE_WARRIORS_PS3_FORMAT.md",
@@ -668,8 +673,8 @@
     },
     {
       "path": "docs/PW3_COVERAGE.md",
-      "bytes": 6095,
-      "sha256": "8851135f40a924773f8986f329096c73192fdad51f1e1c331ca11fe014b0b3ff"
+      "bytes": 6263,
+      "sha256": "61f6c500cce3af7eee3c1b5fef1121d6fe142197777b91937750ba40fb2601f8"
     },
     {
       "path": "docs/PW3_PS3_FORMAT.md",

@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/mod-testing-sandbox.yml",
-      "bytes": 708,
-      "sha256": "330fbdf547c961d29cd622cf3adf3041a1fd1bf0d40fd55a694ee7f9ff522ced"
+      "bytes": 961,
+      "sha256": "43435910d7d97095eefa6a31c674643508f7efbfc7b77b6c88546466cdfc3b95"
     },
     {
       "path": ".github/workflows/windows-release.yml",
@@ -568,8 +568,8 @@
     },
     {
       "path": "docs/MOD_TESTING_SANDBOX.md",
-      "bytes": 5867,
-      "sha256": "a41210308688d4e845acd38e8116b067815e165f932ba15f84aec1fcdaa95864"
+      "bytes": 5730,
+      "sha256": "b3631668095dab8c294e8bc86cca874fcdf0d9cee5e12f758d1a1c878354a37d"
     },
     {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
@@ -4293,8 +4293,8 @@
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
-      "bytes": 91785,
-      "sha256": "4862fce74fb1e97ee10055b1eae8508d23a21da7b35c6839a224c85210519249"
+      "bytes": 92076,
+      "sha256": "e92c6934e2f694672cba0d7074d434302bd6bc7e79e11cc5b29bfc7f60644e74"
     },
     {
       "path": "src/koei_editor/shared/mod_manager_gui.py",
@@ -5523,8 +5523,8 @@
     },
     {
       "path": "tests/test_mod_manager.py",
-      "bytes": 26335,
-      "sha256": "d95c6399375fbd495a8e1031b6fb93a66227cdfde30e8a42f02f66df0cbc4263"
+      "bytes": 28943,
+      "sha256": "5c5f04fc0747ea52a707b098e4241d7a1c4b6ff7935ee3d0f9487afa4f1d6e85"
     },
     {
       "path": "tests/test_mod_manager_gui_lifecycle.py",
@@ -6693,13 +6693,13 @@
     },
     {
       "path": "tools/mod_testing_sandbox/README.md",
-      "bytes": 2456,
-      "sha256": "3a5b4789179ad2908707ac77e1b14911be5208ed5357499cf18a1cdfb37d29af"
+      "bytes": 3021,
+      "sha256": "05f9df1f90a6e9747dfd2ef4745359ec11df81fa21e4318df5374abc49ed28ee"
     },
     {
       "path": "tools/mod_testing_sandbox/index.html",
-      "bytes": 22710,
-      "sha256": "7d892835432b99dfde662f6185dbaf85d9474c47658813b4ef666231770482b6"
+      "bytes": 23038,
+      "sha256": "b3e7581885852c29930d358372e48db1b5e004570418f73f3d9816e3801ee246"
     },
     {
       "path": "tools/mod_testing_sandbox/package.json",
@@ -6713,13 +6713,13 @@
     },
     {
       "path": "tools/mod_testing_sandbox/src/main.mjs",
-      "bytes": 43868,
-      "sha256": "da54853c21cf9ccaeccc224d240e2af50dedc2752d183ed4f8eee175311dc6f6"
+      "bytes": 51611,
+      "sha256": "6ce640166503dcfceff919080f39d894ac0e63e5067e8a4504a75628e92d0f6b"
     },
     {
       "path": "tools/mod_testing_sandbox/src/sandbox-core.mjs",
-      "bytes": 42386,
-      "sha256": "0a243efb4f5086e627864251e5c7700f1e30e1c85c1d5945a55078cb152866e7"
+      "bytes": 48238,
+      "sha256": "e56e9a55f66e6405296f2deccb99dcde2be32e7726d7e82026c8a16859de2f6e"
     },
     {
       "path": "tools/mod_testing_sandbox/src/styles.css",
@@ -6728,23 +6728,23 @@
     },
     {
       "path": "tools/mod_testing_sandbox/src/workspace-store.mjs",
-      "bytes": 8969,
-      "sha256": "5c6e9b8f76f2e0ced86fcfd5d81ede01acf0e77eac8718d7fa164dbe825b365a"
+      "bytes": 9415,
+      "sha256": "9c9dff985d0be84b8e99b090a3fd5f1f95a95510b0f9b39757ed72d494607486"
     },
     {
       "path": "tools/mod_testing_sandbox/test/security.test.mjs",
-      "bytes": 27659,
-      "sha256": "8a2e015537234d7ff2ae80cad1b2a67ceb6b19ee6d02249f66bd107b6a98f78c"
+      "bytes": 40962,
+      "sha256": "231069a4132a1a2ed8daca586297240daff2b7b8054a414de2d9f46303d14d35"
     },
     {
       "path": "tools/mod_testing_sandbox/test/workshop-folder-ui.test.mjs",
-      "bytes": 3279,
-      "sha256": "515e0ecd3a1976f2a7141b823906be211adea8123a0f93623a9c8d6ed99c0e4a"
+      "bytes": 4628,
+      "sha256": "95edba23508d654efeec3feeef674b4150a086d21bc990456453d75b6b013fe4"
     },
     {
       "path": "tools/mod_testing_sandbox/test/workspace-store.test.mjs",
-      "bytes": 8450,
-      "sha256": "e91ac1e98527ad1f6bd774120c747ab7a4bacd5bcae5fc437529b1ba26e84c4c"
+      "bytes": 11538,
+      "sha256": "e4b3d69f9106fa08234bc9056196e8ed7c65334638de1509fc51c96fb8eeed40"
     },
     {
       "path": "tools/package_release.py",

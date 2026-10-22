@@ -9,6 +9,13 @@ import {
   buildProfileComponentSnapshot,
   createZipBlob,
   createNioh2ManagerPackageBlob,
+  nioh2ManagerExportBlockers,
+  createRequestSequence,
+  createWorkshopValidationRecord,
+  collectWorkshopValidationIssues,
+  isDemoWorkspace,
+  isExportableMod,
+  serializeBoundedHandoff,
   sanitizeRelativePath,
   normalizeFolderPaths,
   createImportGate,
@@ -19,7 +26,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const ICONS = ["◈", "◇", "▧", "✳"];
 const COLOR_CLASSES = ["gold", "green", "blue", "red"];
-const MANIFEST_NAMES = new Set(["mod-manifest.json", "koei-mod.json", "manifest.json", "mod.json"]);
+const MANIFEST_NAMES = new Set(["mod-manifest.json", "manifest.json", "mod.json"]);
 
 const state = {
   gameId: "wolong",
@@ -29,9 +36,12 @@ const state = {
   route: "sandbox",
   lastHandoff: null,
   baselineInventory: null,
+  lastRejectedWorkshopValidation: null,
   persistence: "indexeddb",
+  workspaceLoading: true,
 };
-const runExclusiveImport = createImportGate();
+const runExclusiveWorkspaceMutation = createImportGate();
+const workspaceLoadRequests = createRequestSequence();
 
 function fixtureMod(id, name, version, descriptors, tint, note) {
   const manifest = {
@@ -62,6 +72,7 @@ function fixtureMod(id, name, version, descriptors, tint, note) {
 }
 
 function loadDemo() {
+  workspaceLoadRequests.begin();
   state.gameId = "wolong";
   state.gameVersion = "demo-1.0";
   state.mods = [
@@ -77,7 +88,9 @@ function loadDemo() {
   ];
   state.baselineInventory = null;
   state.demo = true;
+  state.lastRejectedWorkshopValidation = null;
   state.persistence = "memory";
+  state.workspaceLoading = false;
   render();
 }
 
@@ -119,15 +132,28 @@ function savedItemToMod(item, index, gameId, gameVersion) {
 
 async function switchWorkspaceProfile(gameId, gameVersion) {
   if (gameId === state.gameId && gameVersion === state.gameVersion) return;
+  const request = workspaceLoadRequests.begin();
   state.gameId = gameId;
   state.gameVersion = gameVersion;
   state.demo = false;
+  state.mods = [];
+  state.workspaceLoading = true;
+  state.persistence = globalThis.indexedDB ? "indexeddb" : "memory";
   if (state.baselineInventory && (state.baselineInventory.gameId !== gameId || state.baselineInventory.gameVersion !== gameVersion)) state.baselineInventory = null;
+  render();
   let allStored = [];
   try { allStored = await loadStagedMods(); } catch { allStored = []; }
-  state.mods = await Promise.all(allStored
+  if (!workspaceLoadRequests.isCurrent(request) || state.gameId !== gameId || state.gameVersion !== gameVersion) return;
+  const loadedMods = await Promise.all(allStored
     .filter((item) => item.gameId === gameId && item.gameVersion === gameVersion)
     .map((item, index) => savedItemToMod(item, index, gameId, gameVersion)));
+  if (!workspaceLoadRequests.isCurrent(request) || state.gameId !== gameId || state.gameVersion !== gameVersion) return;
+  const latestByKey = new Map(loadedMods.map((mod) => [mod.storageKey, mod]));
+  for (const mod of state.mods) {
+    if (mod.gameId === gameId && mod.gameVersion === gameVersion) latestByKey.set(mod.storageKey, mod);
+  }
+  state.mods = [...latestByKey.values()];
+  state.workspaceLoading = false;
   state.persistence = state.mods.length ? "indexeddb" : globalThis.indexedDB ? "indexeddb" : "memory";
   render();
 }
@@ -146,8 +172,8 @@ function textNode(tag, text, className) {
 function currentPlan() {
   return buildWorkspacePlan(state.mods.map((mod) => ({
     ...mod,
-    valid: mod.valid,
-    status: mod.valid ? "ready" : "blocked",
+    valid: isExportableMod(mod),
+    status: isExportableMod(mod) ? "ready" : "blocked",
   })), matchingBaselinePaths(), { gameId: state.gameId, gameVersion: state.gameVersion });
 }
 
@@ -265,7 +291,7 @@ function buildHandoff(contract = "koei.mod-sandbox.handoff/v1") {
     createdAt: new Date().toISOString(),
     workspace: { gameId: state.gameId, gameName: gameLabel(), gameVersion: state.gameVersion, storage: storageSummary(), baselineInventory: state.baselineInventory ? { contract: "koei.mod-manager.inventory/v1", pathCount: state.baselineInventory.paths.length } : null },
     compatibility: { source: "manifest-declared", selectedGameAndBuildChecked: true, workshopVersionRangesSupported: true, independentlyVerified: false },
-    mods: state.mods.map((mod) => ({ id: mod.id, name: mod.name, version: mod.version, gameId: mod.gameId, gameVersion: mod.gameVersion, compatibleGameVersion: mod.compatibleGameVersion || mod.gameVersion, platform: mod.platform || "Windows PC", manifestFormat: mod.manifestFormat || "koei-mod-sandbox.v1", dependencies: mod.dependencies || [], valid: mod.valid, files: (mod.files || []).map((file) => ({ source: file.source, target: file.target })) })),
+    mods: state.mods.map((mod) => ({ id: mod.id, name: mod.name, version: mod.version, gameId: mod.gameId, gameVersion: mod.gameVersion, compatibleGameVersion: mod.compatibleGameVersion || mod.gameVersion, platform: mod.platform || "Windows PC", manifestFormat: mod.manifestFormat || "koei-mod-sandbox.v1", dependencies: mod.dependencies || [], valid: isExportableMod(mod), manifestValid: mod.valid, demoFixture: Boolean(mod.demoFixture), files: (mod.files || []).map((file) => ({ source: file.source, target: file.target })) })),
     plan: { ready: plan.ok, fileCount: plan.fileCount, validationIssues: plan.validationIssues, conflicts: plan.conflicts, changes: plan.changes },
     compatibilityWarnings: plan.compatibilityWarnings,
     safety: { codeExecuted: false, gameInstallationRead: false, originalInstallationModified: false, exportIsConfirmedZipDownloadOnly: true },
@@ -273,7 +299,7 @@ function buildHandoff(contract = "koei.mod-sandbox.handoff/v1") {
 }
 
 function workshopBrief() {
-  const issues = state.mods.flatMap((mod) => (mod.validationErrors || []).map((item) => ({ modId: mod.id, code: item.code, message: item.message })));
+  const issues = collectWorkshopValidationIssues(state.mods, state.lastRejectedWorkshopValidation, state.gameId, state.gameVersion);
   return {
     ...buildHandoff("koei.mod-sandbox.workshop-brief/v1"),
     supportedWorkshopInput: { manifest: "mod.json", projectFolderImport: true, verifiedZipImport: false, verificationReportTrusted: false },
@@ -303,7 +329,7 @@ function managerComponentSnapshot() {
       enabled: false,
       priority: index,
       files: mod.files.map((file) => ({ source: file.source, target: file.target, sha256: file.sha256 })),
-      manifest_valid: mod.valid,
+      manifest_valid: isExportableMod(mod),
     })),
     sandbox_preflight: { ready: plan.ok, conflicts: plan.conflicts, validation_issues: plan.validationIssues, compatibility_warnings: plan.compatibilityWarnings },
     dependencies: state.mods.map((mod) => ({ mod_id: mod.id, requires: mod.dependencies || [] })),
@@ -341,7 +367,7 @@ function renderIntegrations() {
       download.type = "button";
       download.dataset.action = "download-manager-package";
       download.dataset.modId = mod.id;
-      download.disabled = !mod.valid;
+      download.disabled = !isExportableMod(mod) || nioh2ManagerExportBlockers(mod, currentPlan()).length > 0;
       row.append(download);
     }
     managerList.append(row);
@@ -352,7 +378,7 @@ function renderIntegrations() {
   const plan = currentPlan();
   const issueList = $("#workshop-issues"); issueList.replaceChildren();
   const issues = [
-    ...state.mods.flatMap((mod) => (mod.validationErrors || []).map((item) => `${mod.name}: ${item.message}`)),
+    ...collectWorkshopValidationIssues(state.mods, state.lastRejectedWorkshopValidation, state.gameId, state.gameVersion).map((item) => `${item.modId}: ${item.message}`),
     ...plan.validationIssues.map((item) => item.message),
   ];
   const warnings = plan.compatibilityWarnings.map((item) => item.message);
@@ -377,6 +403,8 @@ function renderIntegrations() {
 function render() {
   const plan = currentPlan();
   const nioh2Manager = state.gameId === "nioh2_pc";
+  $("#folder-input").disabled = state.workspaceLoading;
+  for (const button of document.querySelectorAll('[data-action="new-workspace"], [data-action="reset-demo"]')) button.disabled = state.workspaceLoading;
   $("#game-select").value = state.gameId;
   $("#game-build").value = state.gameVersion;
   $("#side-game-name").textContent = gameLabel();
@@ -492,11 +520,16 @@ async function downloadNioh2ManagerPackage(modId) {
     toast("Select a validated Nioh 2 mod package first.", { error: true, title: "Manager export blocked" });
     return;
   }
+  const blockers = nioh2ManagerExportBlockers(mod, currentPlan());
+  if (blockers.length) {
+    toast(blockers.slice(0, 3).join(" "), { error: true, title: "Manager export blocked" });
+    return;
+  }
   try {
-    const archive = await createNioh2ManagerPackageBlob(mod);
+    const archive = await createNioh2ManagerPackageBlob(mod, currentPlan());
     const slug = mod.id.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").slice(0, 48) || "nioh2-mod";
     downloadBlob(archive, `nioh2-manager-${slug}.zip`);
-    toast("The ZIP is ready for import into the Mod Manager library. It does not install or change game files.", { title: "Manager package ready" });
+    toast(`The ZIP is ready for import into the Mod Manager library. The selected build (${state.gameVersion}) is not recorded in that package; the manager does not validate game builds. It does not install or change game files.`, { title: "Manager package ready" });
   } catch (error) {
     toast(error.message || "Package creation failed.", { error: true, title: "Manager export blocked" });
   }
@@ -527,12 +560,12 @@ async function copyText(content) {
 
 async function sendHandoff(contract) {
   const payload = contract === "koei.mod-sandbox.workshop-brief/v1" ? workshopBrief() : contract === "koei.mod-sandbox.troubleshooting-report/v1" ? JSON.parse(reportText()) : buildHandoff(contract || "koei.mod-sandbox.manager-handoff/v1");
-  state.lastHandoff = payload;
-  const serialized = JSON.stringify(payload, null, 2);
-  if (new TextEncoder().encode(serialized).byteLength > LIMITS.manifestBytes) {
+  const serialized = serializeBoundedHandoff(payload);
+  if (serialized === null) {
     toast("This JSON handoff exceeds the 256 KiB contract limit.", { error: true, title: "Handoff refused" });
     return;
   }
+  state.lastHandoff = payload;
   window.dispatchEvent(new CustomEvent("koei:mod-sandbox:handoff", { detail: payload }));
   if (window.location.origin && window.location.origin !== "null") {
     window.postMessage({ type: payload.contract, payload }, window.location.origin);
@@ -542,8 +575,8 @@ async function sendHandoff(contract) {
 
 async function sendTroubleshootingReport() {
   const payload = troubleshootingCenterReport();
-  const serialized = JSON.stringify(payload, null, 2);
-  if (new TextEncoder().encode(serialized).byteLength > LIMITS.manifestBytes) {
+  const serialized = serializeBoundedHandoff(payload);
+  if (serialized === null) {
     toast("This Troubleshooting Center report exceeds the 256 KiB contract limit.", { error: true, title: "Handoff refused" });
     return;
   }
@@ -588,6 +621,14 @@ async function calculateSha256(file) {
 }
 
 async function importFolderUnlocked(fileList) {
+  const gameId = state.gameId;
+  const gameVersion = state.gameVersion;
+  state.lastRejectedWorkshopValidation = null;
+  const contextIsCurrent = () => state.gameId === gameId && state.gameVersion === gameVersion;
+  if (state.workspaceLoading) {
+    toast("Wait for the selected workspace to finish loading before importing a folder.", { error: true, title: "Workspace loading" });
+    return;
+  }
   const files = normalizedUploadFiles(fileList);
   if (!files.length) return;
   if (files.length > LIMITS.fileCount) {
@@ -596,10 +637,17 @@ async function importFolderUnlocked(fileList) {
   }
   const manifests = files.filter((entry) => MANIFEST_NAMES.has(entry.path.split("/").at(-1).toLowerCase()));
   if (manifests.length !== 1) {
-    toast(manifests.length ? "Add exactly one mod-manifest.json, koei-mod.json, manifest.json, or Workshop mod.json to each folder." : "This folder has no supported JSON manifest.", { error: true, title: "Manifest required" });
+    const hasManagerMetadata = files.some((entry) => entry.path.split("/").at(-1).toLocaleLowerCase("en-US") === "koei-mod.json");
+    const message = hasManagerMetadata && !manifests.length
+      ? "koei-mod.json is Mod Manager package metadata, not a Sandbox folder manifest. Import its ZIP through Mod Manager, or use mod-manifest.json, manifest.json, or Workshop mod.json here."
+      : manifests.length
+        ? "Add exactly one mod-manifest.json, manifest.json, or Workshop mod.json to each folder."
+        : "This folder has no supported JSON manifest.";
+    toast(message, { error: true, title: "Manifest required" });
     return;
   }
-  const manifestFile = manifests[0].file;
+  const manifestEntry = manifests[0];
+  const manifestFile = manifestEntry.file;
   if (manifestFile.size > LIMITS.manifestBytes) {
     toast("Manifest exceeds the 256 KiB size limit.", { error: true, title: "Manifest too large" });
     return;
@@ -607,20 +655,32 @@ async function importFolderUnlocked(fileList) {
   let manifest;
   try { manifest = parseManifest(await manifestFile.text()); }
   catch (error) { toast(error.message, { error: true, title: "Manifest rejected" }); return; }
-  const nativeWorkshopManifest = "mod_id" in manifest || "replacements" in manifest || "schema_version" in manifest;
-  if (nativeWorkshopManifest && manifests[0].path !== "mod.json") {
-    toast("Workshop projects must place mod.json at the selected project folder root.", { error: true, title: "Workshop manifest location" });
+  if (!contextIsCurrent()) {
+    toast("The selected game profile changed during folder reading. Choose the folder again for the current profile.", { error: true, title: "Profile changed" });
+    return;
+  }
+  const workshopProject = "mod_id" in manifest || "replacements" in manifest
+    || (manifestEntry.path.toLocaleLowerCase("en-US") === "mod.json" && "schema_version" in manifest);
+  const nativeWorkshopManifest = workshopProject;
+  if (workshopProject) state.lastRejectedWorkshopValidation = null;
+  if (nativeWorkshopManifest && manifestEntry.path !== "mod.json") {
+    const message = "Workshop projects must place mod.json at the selected project folder root.";
+    if (workshopProject) state.lastRejectedWorkshopValidation = createWorkshopValidationRecord(manifest, [{ code: "workshop_manifest_root", message }], gameId, gameVersion);
+    toast(message, { error: true, title: "Workshop manifest location" });
     return;
   }
 
   const totalSize = files.reduce((total, entry) => total + entry.size, 0);
   if (files.some((entry) => entry.size > LIMITS.fileBytes) || totalSize > LIMITS.fileBytes) {
-    toast("The folder exceeds the 256 MiB file or total size limit.", { error: true, title: "Import too large" });
+    const message = "The folder exceeds the 256 MiB file or total size limit.";
+    if (workshopProject) state.lastRejectedWorkshopValidation = createWorkshopValidationRecord(manifest, [{ code: "workshop_folder_size", message }], gameId, gameVersion);
+    toast(message, { error: true, title: "Import too large" });
     return;
   }
   const inventory = files.map(({ path, size, file }) => ({ path, size, file }));
-  const preflight = validateMod(manifest, state.gameId, undefined, state.gameVersion);
+  const preflight = validateMod(manifest, gameId, undefined, gameVersion);
   if (!preflight.ok) {
+    if (workshopProject) state.lastRejectedWorkshopValidation = createWorkshopValidationRecord(manifest, preflight.errors, gameId, gameVersion);
     toast(preflight.errors.slice(0, 3).map((item) => item.message).join(" "), { error: true, title: "Manifest needs attention" });
     return;
   }
@@ -631,16 +691,24 @@ async function importFolderUnlocked(fileList) {
       if (item) item.sha256 = await calculateSha256(item.file);
     }
   } catch (error) {
+    if (workshopProject) state.lastRejectedWorkshopValidation = createWorkshopValidationRecord(manifest, [{ code: error.code || "workshop_hash_check", message: error.message }], gameId, gameVersion);
     toast(error.message, { error: true, title: "Hash verification unavailable" });
     return;
   }
-  const result = validateMod(manifest, state.gameId, inventory, state.gameVersion);
+  if (!contextIsCurrent()) {
+    toast("The selected game profile changed during folder validation. Choose the folder again for the current profile.", { error: true, title: "Profile changed" });
+    return;
+  }
+  const result = validateMod(manifest, gameId, inventory, gameVersion);
   if (!result.ok) {
+    if (workshopProject) state.lastRejectedWorkshopValidation = createWorkshopValidationRecord(manifest, result.errors, gameId, gameVersion);
     toast(result.errors.slice(0, 3).map((item) => item.message).join(" "), { error: true, title: "Manifest needs attention" });
     return;
   }
   if (state.mods.some((mod) => mod.id.toLowerCase() === result.mod.id.toLowerCase())) {
-    toast(`The mod ID ${result.mod.id} is already staged. Remove the existing package before importing it again.`, { error: true, title: "Duplicate mod ID" });
+    const message = `The mod ID ${result.mod.id} is already staged. Remove the existing package before importing it again.`;
+    if (workshopProject) state.lastRejectedWorkshopValidation = createWorkshopValidationRecord(manifest, [{ code: "workshop_duplicate_mod_id", message }], gameId, gameVersion);
+    toast(message, { error: true, title: "Duplicate mod ID" });
     return;
   }
   const filesByPath = new Map(files.map((entry) => [entry.path.toLocaleLowerCase("en-US"), entry.file]));
@@ -650,42 +718,60 @@ async function importFolderUnlocked(fileList) {
     manifest,
     inventory,
     payloads,
-    storageKey: `workspaces/${state.gameId}/${encodeURIComponent(state.gameVersion)}/${result.mod.id}`,
+    storageKey: `workspaces/${gameId}/${encodeURIComponent(gameVersion)}/${result.mod.id}`,
     valid: true,
     validationErrors: [],
     tint: state.mods.length % COLOR_CLASSES.length,
     demoFixture: false,
   };
   const isPersisted = await saveStagedMod(mod);
+  if (!contextIsCurrent()) {
+    toast(`The package was saved under ${gameLabel(gameId)} ${gameVersion}. Select that profile to load it.`, { title: "Profile changed" });
+    return;
+  }
   mod.storageBackend = isPersisted ? "indexeddb" : "memory";
   state.persistence = mod.storageBackend;
   state.mods.push(mod);
   state.demo = false;
+  if (workshopProject) state.lastRejectedWorkshopValidation = null;
   render();
     toast(state.persistence === "indexeddb" ? `${mod.name} is staged in IndexedDB under its own mod-ID namespace.` : `${mod.name} is staged in a per-mod memory namespace in this tab.`, { title: "Mod added" });
 }
 
 async function importFolder(fileList) {
-  const started = await runExclusiveImport(() => importFolderUnlocked(fileList));
+  const started = await runWorkspaceMutation(() => importFolderUnlocked(fileList));
   if (!started) {
-    toast("Wait for the current folder import to finish before starting another.", { error: true, title: "Import already running" });
+    toast("Wait for the current folder import or workspace change to finish.", { error: true, title: "Workspace busy" });
   }
+}
+
+async function runWorkspaceMutation(task) {
+  return runExclusiveWorkspaceMutation(task);
 }
 
 async function importManagerInventory(file) {
   if (!file) return;
+  const gameId = state.gameId;
+  const gameVersion = state.gameVersion;
   if (file.size > LIMITS.manifestBytes) {
     toast("Inventory exceeds the 256 KiB size limit.", { error: true, title: "Inventory rejected" });
     return;
   }
   let inventory;
-  try { inventory = parseManifest(await file.text()); }
+  let inventoryText;
+  try { inventoryText = await file.text(); }
+  catch (error) { toast(error.message, { error: true, title: "Inventory rejected" }); return; }
+  if (state.gameId !== gameId || state.gameVersion !== gameVersion) {
+    toast("The selected game profile changed while inventory was being read. Choose the inventory again for the current profile.", { error: true, title: "Profile changed" });
+    return;
+  }
+  try { inventory = parseManifest(inventoryText); }
   catch (error) { toast(error.message, { error: true, title: "Inventory rejected" }); return; }
   if (inventory.contract !== "koei.mod-manager.inventory/v1") {
     toast("Expected contract koei.mod-manager.inventory/v1.", { error: true, title: "Inventory contract mismatch" });
     return;
   }
-  if (inventory.gameId !== state.gameId || inventory.gameVersion !== state.gameVersion) {
+  if (inventory.gameId !== gameId || inventory.gameVersion !== gameVersion) {
     toast("Inventory game ID and build/profile must exactly match the selected workspace.", { error: true, title: "Inventory profile mismatch" });
     return;
   }
@@ -707,26 +793,55 @@ async function importManagerInventory(file) {
     toast(error.message, { error: true, title: "Unsafe inventory path" });
     return;
   }
-  state.baselineInventory = { gameId: inventory.gameId, gameVersion: inventory.gameVersion, paths, sourceName: file.name };
+  state.baselineInventory = { gameId, gameVersion, paths, sourceName: file.name };
   render();
   toast(`${paths.length} destination paths imported as read-only metadata. No game files were opened.`, { title: "Mod Manager inventory loaded" });
 }
 
 async function newWorkspace() {
+  if (state.workspaceLoading) {
+    toast("Wait for the selected workspace to finish loading before clearing it.", { error: true, title: "Workspace loading" });
+    return;
+  }
   if (state.mods.some((mod) => !mod.demoFixture) && !window.confirm("Clear the staged browser workspace and its saved mod namespaces?")) return;
-  await clearStagedProfile(state.gameId, state.gameVersion);
-  state.mods = [];
-  state.baselineInventory = null;
-  state.demo = false;
-  state.persistence = "indexeddb";
-  render();
-  toast("A new empty browser workspace is ready.", { title: "Workspace cleared" });
+  const started = await runWorkspaceMutation(async () => {
+    const gameId = state.gameId;
+    const gameVersion = state.gameVersion;
+    if (!(await clearStagedProfile(gameId, gameVersion))) {
+      toast("The saved workspace could not be cleared from browser storage. Nothing was removed from the current view.", { error: true, title: "Workspace clear failed" });
+      return;
+    }
+    if (state.gameId !== gameId || state.gameVersion !== gameVersion) return;
+    workspaceLoadRequests.begin();
+    state.mods = [];
+    state.baselineInventory = null;
+    state.lastRejectedWorkshopValidation = null;
+    state.demo = false;
+    state.persistence = "indexeddb";
+    state.workspaceLoading = false;
+    render();
+    toast("A new empty browser workspace is ready.", { title: "Workspace cleared" });
+  });
+  if (!started) toast("Wait for the current folder import or workspace change to finish.", { error: true, title: "Workspace busy" });
 }
 
 async function resetDemoWorkspace() {
+  if (state.workspaceLoading) {
+    toast("Wait for the selected workspace to finish loading before resetting it.", { error: true, title: "Workspace loading" });
+    return;
+  }
   if (state.mods.some((mod) => !mod.demoFixture) && !window.confirm("Clear saved mod namespaces and load the demo workspace?")) return;
-  await clearStagedProfile(state.gameId, state.gameVersion);
-  loadDemo();
+  const started = await runWorkspaceMutation(async () => {
+    const gameId = state.gameId;
+    const gameVersion = state.gameVersion;
+    if (!(await clearStagedProfile(gameId, gameVersion))) {
+      toast("The saved workspace could not be cleared from browser storage. The demo workspace was not loaded.", { error: true, title: "Workspace reset failed" });
+      return;
+    }
+    if (state.gameId !== gameId || state.gameVersion !== gameVersion) return;
+    loadDemo();
+  });
+  if (!started) toast("Wait for the current folder import or workspace change to finish.", { error: true, title: "Workspace busy" });
 }
 
 function focusConflicts() {
@@ -756,14 +871,23 @@ document.addEventListener("click", async (event) => {
   else if (action === "download-manager-package") await downloadNioh2ManagerPackage(actionButton.dataset.modId);
   else if (action === "remove-mod") {
     const removed = state.mods.find((mod) => mod.id === actionButton.dataset.modId);
-    if (removed && !removed.demoFixture && !(await removeStagedMod(removed.storageKey))) {
-      toast("The saved namespace could not be removed from browser storage.", { error: true, title: "Removal incomplete" });
-      return;
-    }
-    state.mods = state.mods.filter((mod) => mod.id !== actionButton.dataset.modId);
-    state.demo = false;
-    render();
-    toast("Package removed from its isolated browser namespace.", { title: "Mod removed" });
+    if (!removed) return;
+    const gameId = state.gameId;
+    const gameVersion = state.gameVersion;
+    const storageKey = removed.storageKey;
+    const started = await runWorkspaceMutation(async () => {
+      if (!removed.demoFixture && !(await removeStagedMod(storageKey))) {
+        toast("The saved namespace could not be removed from browser storage.", { error: true, title: "Removal incomplete" });
+        return;
+      }
+      if (state.gameId !== gameId || state.gameVersion !== gameVersion) return;
+      workspaceLoadRequests.begin();
+      state.mods = state.mods.filter((mod) => mod.storageKey !== storageKey);
+      state.demo = isDemoWorkspace(state.mods);
+      render();
+      toast("Package removed from its isolated browser namespace.", { title: "Mod removed" });
+    });
+    if (!started) toast("Wait for the current folder import or workspace change to finish.", { error: true, title: "Workspace busy" });
   }
 });
 
@@ -797,26 +921,38 @@ window.addEventListener("message", (event) => {
   const message = event.data;
   if (!message || typeof message !== "object" || typeof message.type !== "string") return;
   if (["koei.mod-manager.workspace-request/v1", "koei.mod-workshop.validation-request/v1", "koei.troubleshooting.report-request/v1"].includes(message.type)) {
-    if (message.type.includes("troubleshooting")) {
-      event.source?.postMessage({ type: "koei-game-troubleshooting", payload: troubleshootingCenterReport() }, event.origin);
+    const troubleshooting = message.type.includes("troubleshooting");
+    const contract = message.type.includes("workshop") ? "koei.mod-sandbox.workshop-brief/v1" : "koei.mod-sandbox.manager-handoff/v1";
+    const payload = troubleshooting ? troubleshootingCenterReport() : contract.includes("workshop") ? workshopBrief() : buildHandoff(contract);
+    if (serializeBoundedHandoff(payload) === null) {
+      event.source?.postMessage({ type: "koei.mod-sandbox.handoff-refused/v1", error: "The requested JSON handoff exceeds the 256 KiB contract limit." }, event.origin);
       return;
     }
-    const contract = message.type.includes("workshop") ? "koei.mod-sandbox.workshop-brief/v1" : "koei.mod-sandbox.manager-handoff/v1";
-    const payload = contract.includes("workshop") ? workshopBrief() : buildHandoff(contract);
+    if (troubleshooting) {
+      event.source?.postMessage({ type: "koei-game-troubleshooting", payload }, event.origin);
+      return;
+    }
     event.source?.postMessage({ type: payload.contract, payload }, event.origin);
   }
 });
 
 async function initialize() {
+  const request = workspaceLoadRequests.begin();
+  state.workspaceLoading = true;
   fillGameOptions();
+  render();
   let stored = [];
   try { stored = await loadStagedMods(); } catch { stored = []; }
+  if (!workspaceLoadRequests.isCurrent(request)) return;
   if (stored.length) {
     state.gameId = stored[0].gameId;
     state.gameVersion = stored[0].gameVersion;
-    state.mods = await Promise.all(stored.filter((item) => item.gameId === state.gameId && item.gameVersion === state.gameVersion).map((item, index) => savedItemToMod(item, index, state.gameId, state.gameVersion)));
-    state.demo = false;
+    const restoredMods = await Promise.all(stored.filter((item) => item.gameId === state.gameId && item.gameVersion === state.gameVersion).map((item, index) => savedItemToMod(item, index, state.gameId, state.gameVersion)));
+    if (!workspaceLoadRequests.isCurrent(request)) return;
+    state.mods = restoredMods;
+    state.demo = isDemoWorkspace(state.mods);
     state.persistence = "indexeddb";
+    state.workspaceLoading = false;
     render();
   } else loadDemo();
 }

@@ -1,4 +1,6 @@
 """Read-only, edition-scoped reference data and its provenance contract."""
+from datetime import date
+
 from koei_editor.resources import read_json
 
 
@@ -24,6 +26,15 @@ _ENTITY_OPTIONAL = frozenset({'native_id', 'summary', 'attributes', 'relationshi
 
 def _text(value):
     return type(value) is str and bool(value.strip())
+
+
+def _iso_date(value):
+    if not _text(value):
+        return False
+    try:
+        return date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
 
 
 def validate_dataset(data):
@@ -61,12 +72,20 @@ def validate_dataset(data):
                 or not source['license_uri'].startswith('https://')):
             raise ValueError('Encyclopedia source license or URL is not allowed.')
         if (not ({'revision', 'accessed_on'} & set(source))
-                or ('revision' in source and not _text(source['revision']))
-                or ('accessed_on' in source and not _text(source['accessed_on']))):
+                or ('revision' in source and not _text(source['revision']))):
             raise ValueError('Each encyclopedia source needs a pinned revision or access date.')
+        if 'accessed_on' in source and not _iso_date(source['accessed_on']):
+            raise ValueError('Encyclopedia source access dates must be valid ISO YYYY-MM-DD dates.')
         if source['id'] in sources:
             raise ValueError('Duplicate encyclopedia source ID.')
         sources[source['id']] = source
+
+    source_licenses = {source['license'] for source in sources.values()}
+    if data['dataset_license'] != 'source-specific':
+        if len(source_licenses) > 1:
+            raise ValueError('Mixed source licenses require a source-specific dataset license.')
+        if source_licenses != {data['dataset_license']}:
+            raise ValueError('Dataset license must match every source license.')
 
     games = {}
     for game in data['games']:

@@ -199,6 +199,31 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'relationship source is not applicable'):
             validate_dataset(wrong_relationship_source)
 
+    def test_validator_enforces_dataset_license_consistency(self):
+        mixed_claim = deepcopy(self.dataset)
+        mixed_claim['dataset_license'] = 'MIT'
+        with self.assertRaisesRegex(ValueError, 'Mixed source licenses require'):
+            validate_dataset(mixed_claim)
+
+        wrong_uniform_claim = deepcopy(self.dataset)
+        wrong_uniform_claim['dataset_license'] = 'CC BY-SA 3.0'
+        for source in wrong_uniform_claim['sources']:
+            source['license'] = 'MIT'
+        with self.assertRaisesRegex(ValueError, 'must match every source license'):
+            validate_dataset(wrong_uniform_claim)
+
+    def test_validator_requires_strict_iso_access_dates(self):
+        for invalid_date in ('20261022', '2026-2-02', '2026-02-30'):
+            with self.subTest(accessed_on=invalid_date):
+                invalid = deepcopy(self.dataset)
+                wiki_source = next(
+                    source for source in invalid['sources']
+                    if source['id'] == 'koeitecmo-wiki-weapon-skills'
+                )
+                wiki_source['accessed_on'] = invalid_date
+                with self.assertRaisesRegex(ValueError, 'ISO YYYY-MM-DD'):
+                    validate_dataset(invalid)
+
     def test_validator_rejects_duplicate_ids_and_missing_sources(self):
         duplicate_id = deepcopy(self.dataset)
         duplicate_id['entities'][1]['id'] = duplicate_id['entities'][0]['id']

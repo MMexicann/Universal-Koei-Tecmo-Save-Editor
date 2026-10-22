@@ -1243,8 +1243,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 80336,
-      "sha256": "9b3392aefb365c4ce6d560f080999f4043b77c5ffa337475c1f49e39e93c160e"
+      "bytes": 80428,
+      "sha256": "fd02cad18c1819716dd0c3d7d4cf172bf6e9b487eeee91d15f35e64c5df0017c"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4183,8 +4183,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 39365,
-      "sha256": "b4f6b0e5d5d57b26eff2d2662857bf2bd1e05378a06f85dd3878be055d2fa1b6"
+      "bytes": 39591,
+      "sha256": "402dfca544ad2b7af1c4b40ece5603ee00a1a929d75a9effc774438280c5c819"
     },
     {
       "path": "tests/test_arland_ps3.py",

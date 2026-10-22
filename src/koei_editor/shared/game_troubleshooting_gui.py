@@ -583,6 +583,8 @@ class TroubleshootingWorkspace:
                 pass
 
     def close(self):
+        if self._closed:
+            return
         self._closed = True
         self._revision += 1
         if self._poll_id is not None:

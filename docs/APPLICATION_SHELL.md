@@ -5,6 +5,11 @@ discovery. Game dashboards and their save/edit contracts remain in the game
 editors. Returning to a workspace reuses the same editor instance and pending
 changes. Navigation never opens a file automatically.
 
+**Tools → Editing & Research → Game Asset Explorer** opens an optional,
+read-only asset workspace. It asks the user to choose a local file and stores
+only its stable workspace command ID in shell recents. It does not save paths or
+asset contents. See [its format and validation limits](ASSET_EXPLORER.md).
+
 ## Keyboard and discovery
 
 - **Ctrl+K** opens the command palette from the library, tools or game editor.

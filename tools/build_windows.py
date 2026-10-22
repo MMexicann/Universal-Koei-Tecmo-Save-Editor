@@ -38,6 +38,16 @@ def build_args(root=ROOT, *, standalone=False):
             args.extend(['--hidden-import', endpoint.backend.__name__])
     for module in dict.fromkeys(profile.backend.__name__ for profile in RESEARCH_PROFILES.values()):
         args.extend(['--hidden-import', module])
+    # These adapters are loaded on demand. Pin the dynamically selected
+    # decoders/loaders so both frozen builds contain only the supported formats.
+    for module in (
+            'koei_editor.research.asset_explorer.gui',
+            'koei_editor.research.asset_explorer.media',
+            'miniaudio', '_miniaudio', 'cffi', '_cffi_backend', 'pycparser', 'numpy', 'trimesh',
+            'trimesh.exchange.load',
+            'trimesh.exchange.obj', 'trimesh.exchange.stl',
+            'trimesh.exchange.ply', 'trimesh.exchange.gltf'):
+        args.extend(['--hidden-import', module])
     # The thin launcher uses an absolute package import. __main__.py remains
     # the module entry point, whose relative imports need python -m context.
     args.append(str(root / 'launch.pyw'))

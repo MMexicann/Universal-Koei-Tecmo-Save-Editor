@@ -7,9 +7,11 @@ from koei_editor.shared.help_content import Article, help_articles, search_artic
 
 
 class HelpCenter:
-    def __init__(self, root, parent, initial_tab='help', language='en', on_tab_changed=None):
+    def __init__(self, root, parent, initial_tab='help', language='en', on_tab_changed=None,
+                 preferences_path=None):
         self.root = root
         self.on_tab_changed = on_tab_changed
+        self.preferences_path = preferences_path
         self.language = language if language in ('en', 'de') else 'en'
         self.frame = ttk.Frame(parent, padding=16)
         self.busy = False
@@ -26,6 +28,7 @@ class HelpCenter:
         self.notebook.pack(fill='both', expand=True)
         self.tabs = {}
         labels = (('compatibility', 'Kompatibilität' if de else 'Compatibility'),
+                  ('versions', 'Versionen' if de else 'Game Versions'),
                   ('help', 'Hilfe' if de else 'Help'),
                   ('workflows', 'Anleitungen' if de else 'Guides'),
                   ('validation', 'Validierung' if de else 'Validation'),
@@ -217,24 +220,30 @@ class HelpCenter:
         name = self.selected_tab()
         widget = {'help': self.help_search, 'compatibility': self.compatibility_search,
                   'workflows': self.guide_selector}.get(name)
-        if name == 'plugins':
+        if name in ('plugins', 'versions'):
             self._ensure_panel(name)
-            widget = self._panels[name].search_entry
+            widget = getattr(self._panels[name], 'search_entry', None)
         if widget is None:
             self.notebook.focus_set()
         else:
-            widget.focus_set()
+            # Ctrl+F is an explicit user action in the active window; force
+            # focus so Tk on Windows does not leave keyboard focus on the root.
+            widget.focus_force()
             widget.selection_range(0, 'end')
         return 'break'
 
     def _ensure_panel(self, name):
-        if name in self._panels or name not in ('validation', 'feedback', 'plugins'):
+        if name in self._panels or name not in ('validation', 'feedback', 'plugins', 'versions'):
             return
         from koei_editor.shared.scrollable_panel import ScrollablePanel
         mount = ScrollablePanel(self.tabs[name])
         mount.frame.pack(fill='both', expand=True)
         self._panel_mounts[name] = mount
-        if name == 'plugins':
+        if name == 'versions':
+            from koei_editor.shared.version_tracker_gui import VersionTrackerPanel
+            panel = VersionTrackerPanel(self.root, mount.content, language=self.language,
+                                        preferences_path=self.preferences_path)
+        elif name == 'plugins':
             from koei_editor.shared.plugin_gui import PluginPanel
             panel = PluginPanel(self.root, mount.content, language=self.language,
                                 on_change=self._plugins_changed)
@@ -316,8 +325,8 @@ class HelpCenter:
         self.help_label.configure(text='Dokumentation durchsuchen' if de else 'Search documentation')
         self.guide_label.configure(text='Plattformspezifische Vorbereitung und Import/Export' if de else
                                    'Platform-specific preparation and import/export')
-        titles = ('Kompatibilität', 'Hilfe', 'Anleitungen', 'Validierung', 'Feedback', 'Plugins') if de else (
-                  'Compatibility', 'Help', 'Guides', 'Validation', 'Feedback', 'Plugins')
+        titles = ('Kompatibilität', 'Versionen', 'Hilfe', 'Anleitungen', 'Validierung', 'Feedback', 'Plugins') if de else (
+                  'Compatibility', 'Game Versions', 'Help', 'Guides', 'Validation', 'Feedback', 'Plugins')
         for tab, title in zip(self.tabs.values(), titles):
             self.notebook.tab(tab, text=title)
         headings = ('Spiel', 'Plattform', 'Edition / Revision', 'Dateinachweis') if de else (

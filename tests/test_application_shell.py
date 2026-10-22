@@ -177,7 +177,8 @@ class ApplicationShellTests(unittest.TestCase):
     def test_integrated_tool_commands_dispatch_exact_routes_and_remain_recent(self):
         calls = []
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
-                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder'}
+                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder',
+                  'controller_profiles': 'show_controller_profiles'}
         for key, method in routes.items():
             setattr(self.app, method, lambda tool=key: calls.append(tool))
         self.app.open_command_palette()
@@ -191,6 +192,30 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertEqual(calls[-1], key)
             self.assertEqual(self.app.shell_settings.recent[0], command_id)
         self.app.command_palette.close()
+        self.assertFalse(self.app.sessions)
+
+    def test_controller_profiles_tool_is_discoverable_retained_and_never_opens_a_save(self):
+        command_id = 'tool:controller_profiles'
+        self.assertIn(command_id, {entry.id for entry in self.app.command_entries()})
+        workspace = self.app.execute_command(command_id)
+        self.root.update()
+        self.assertIs(workspace, self.app.controller_profiles)
+        self.assertTrue(workspace.frame.winfo_viewable())
+        self.assertIsNone(self.app.active_game)
+        self.assertFalse(self.app.sessions)
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
+        self.assertEqual(self.app.shell_settings.recent[0], command_id)
+
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.root.update()
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
+        self.assertEqual(self.app.editing_tools_menu.entrycget(2, 'label'),
+                         self.app.tr('controller_profiles'))
+        self.app.show_library()
+        self.root.update()
+        self.assertIs(self.app.controller_profiles, workspace)
+        self.assertFalse(workspace.frame.winfo_ismapped())
         self.assertFalse(self.app.sessions)
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):

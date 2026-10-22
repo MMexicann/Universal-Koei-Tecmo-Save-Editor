@@ -45,6 +45,7 @@ class Application(Appearance):
         self.research_lab = None
         self.research_import = None
         self.workflow_builder = None
+        self.controller_profiles = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -53,6 +54,7 @@ class Application(Appearance):
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
         self.editing_tools_menu.add_command(label=self.tr('editing_presets'), command=self.show_editing_presets)
         self.editing_tools_menu.add_command(label=self.tr('transfer'), command=self.show_transfer)
+        self.editing_tools_menu.add_command(label=self.tr('controller_profiles'), command=self.show_controller_profiles)
         self.editing_tools_menu.add_separator()
         self.editing_tools_menu.add_command(label=self.tr('research_lab'), command=self.show_research_lab)
         self.editing_tools_menu.add_command(label=self.tr('research_import'), command=self.show_research_import)
@@ -263,13 +265,15 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (3, 'research_lab'), (4, 'research_import')):
+        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (2, 'controller_profiles'),
+                           (4, 'research_lab'), (5, 'research_import')):
             self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'research_lab', 'research_import', 'workflow_builder')
+                                            'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
+                                            'controller_profiles')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -277,6 +281,10 @@ class Application(Appearance):
             self.breadcrumb.set(self.tr(visible or 'choose'))
         if self.help_center is not None:
             set_language = getattr(self.help_center, 'set_language', None)
+            if callable(set_language):
+                set_language(self.language)
+        if self.controller_profiles is not None:
+            set_language = getattr(self.controller_profiles, 'set_language', None)
             if callable(set_language):
                 set_language(self.language)
         self._layout_navigation()
@@ -475,7 +483,8 @@ class Application(Appearance):
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
-            ('workflow_builder', 'show_workflow_builder'))
+            ('workflow_builder', 'show_workflow_builder'),
+            ('controller_profiles', 'show_controller_profiles'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -839,7 +848,8 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder', 'help_center')
+                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
+                                       'controller_profiles', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -886,6 +896,14 @@ class Application(Appearance):
         self._show_editing_tool(self.research_import, self.tr('research_import'))
         self._remember_workspace('tool:research_import')
         return self.research_import
+
+    def show_controller_profiles(self):
+        from koei_editor.shared.controller_profiles_gui import ControllerProfileWorkspace
+        if self.controller_profiles is None:
+            self.controller_profiles = ControllerProfileWorkspace(self.root, self.workspace)
+        self._show_editing_tool(self.controller_profiles, self.tr('controller_profiles'))
+        self._remember_workspace('tool:controller_profiles')
+        return self.controller_profiles
 
     def _show_editing_tool(self, tool, title):
         self.library.pack_forget()
@@ -1038,7 +1056,7 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        for tool in (self.editing_presets, self.research_lab, self.research_import):
+        for tool in (self.editing_presets, self.research_lab, self.research_import, self.controller_profiles):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'

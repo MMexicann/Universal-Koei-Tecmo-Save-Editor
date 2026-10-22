@@ -35,7 +35,7 @@ class EditingToolsApplicationTests(unittest.TestCase):
         return editor
 
     def test_native_menu_and_workflow_footer_relabel_without_replacing_commands(self):
-        commands = tuple(self.app.editing_tools_menu.entrycget(index, 'command') for index in (0, 1, 3))
+        commands = tuple(self.app.editing_tools_menu.entrycget(index, 'command') for index in (0, 1, 4))
         for language, header, labels, workflow in (
                 ('English', 'Editing and Research',
                  ('Reusable Editing Presets', 'Transfer from Save Copy', 'Save Research Lab'), 'Workflow Builder'),
@@ -50,11 +50,11 @@ class EditingToolsApplicationTests(unittest.TestCase):
                 self.root.update()
                 self.assertEqual(self.app.tools_menu_bar.entrycget('end', 'label'), header)
                 self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(index, 'label')
-                                       for index in (0, 1, 3)), labels)
+                                       for index in (0, 1, 4)), labels)
                 self.assertEqual(self.app.workflow_button.cget('text'), workflow)
                 self.assertTrue(self.app.workflow_button.winfo_ismapped())
                 self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(index, 'command')
-                                       for index in (0, 1, 3)), commands)
+                                       for index in (0, 1, 4)), commands)
 
     def test_direct_tool_navigation_records_unique_recents_and_retains_pending_edits(self):
         editor = self.open_destination()
@@ -89,7 +89,7 @@ class EditingToolsApplicationTests(unittest.TestCase):
         self.root.update()
         self.assertTrue(presets.frame.winfo_ismapped())
         self.assertIn(editor, presets._sessions.values())
-        self.app.editing_tools_menu.invoke(3)
+        self.app.editing_tools_menu.invoke(4)
         research = self.app.research_lab
         self.root.update()
         self.assertTrue(research.frame.winfo_ismapped())

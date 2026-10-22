@@ -4,15 +4,19 @@ Source setup and contribution rules live in [CONTRIBUTING.md](../CONTRIBUTING.md
 and [AGENTS.md](../AGENTS.md). The application overview is in the
 [repository README](../README.md).
 
-The application's **Editing and Research** menu opens reusable presets and the
-Save Research Lab. For selective transfer, open the destination save in its editor
-first, then choose **Transfer from Save Copy...** from that menu.
+The application's **Editing and Research** menu opens reusable presets,
+Controller & Input Profiles and the Save Research Lab. These input profiles are
+app-owned and do not modify game configuration files or Steam Input. For
+selective transfer, open the destination save in its editor first, then choose
+**Transfer from Save Copy...** from that menu.
 
 ## Development and releases
 
 - [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
 
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Controller and input profiles: app-owned bindings, presets and recovery](CONTROLLER_INPUT_PROFILES.md)
+- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
@@ -63,7 +67,6 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
-- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Application performance benchmarks](PERFORMANCE.md)

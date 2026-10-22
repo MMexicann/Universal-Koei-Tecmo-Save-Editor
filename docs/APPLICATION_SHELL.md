@@ -5,6 +5,11 @@ discovery. Game dashboards and their save/edit contracts remain in the game
 editors. Returning to a workspace reuses the same editor instance and pending
 changes. Navigation never opens a file automatically.
 
+Controller & Input Profiles is a retained global workspace available from
+**Editing and Research** and Ctrl+K. It stores user-defined mappings in
+application-owned profile storage; it does not apply them to game files or
+Steam Input.
+
 ## Keyboard and discovery
 
 - **Ctrl+K** opens the command palette from the library, tools or game editor.

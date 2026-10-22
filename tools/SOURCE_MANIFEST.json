@@ -803,8 +803,8 @@
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
-      "bytes": 5012,
-      "sha256": "9d9a2be0cdd52f1d85e3c731f6986af4bd6562c57433b186e4ced28f098e5de7"
+      "bytes": 5019,
+      "sha256": "503775abf9ad09afc5d11ac9cc27a29a4da3d457f0aa58691dae1ff3771d4033"
     },
     {
       "path": "docs/RESEARCH_IMPORT.md",
@@ -4818,8 +4818,8 @@
     },
     {
       "path": "tests/test_community_packages.py",
-      "bytes": 26697,
-      "sha256": "34699742635a9ac597c0a59c8c17e7a62fd48039639af0c6de6ef7340ed6b102"
+      "bytes": 26707,
+      "sha256": "709553f66e7bc9efeccb60c5f91dc63ccbf2aff527965742c31d4013791231d0"
     },
     {
       "path": "tests/test_community_plugins.py",
@@ -4883,18 +4883,18 @@
     },
     {
       "path": "tests/test_configuration_profile_deletion.py",
-      "bytes": 4110,
-      "sha256": "bdf87b02ecba50040d45131b5fd50ddcb6e15d165bc2d48d15799abd9d4cc14b"
+      "bytes": 4120,
+      "sha256": "1be62a3170dc749a7a10ce93becb81f455270a1a9160ca1ce3846acd9d523e1f"
     },
     {
       "path": "tests/test_configuration_stat_semantics.py",
-      "bytes": 4649,
-      "sha256": "9e34c8d306a09bedc878e12cb30e2bc11d07032a636206772c2300611a9e468d"
+      "bytes": 4871,
+      "sha256": "ec341dbffedde0aae1ca9f9ead3a0d01874091491752f613bb7d4c8aba8657fb"
     },
     {
       "path": "tests/test_configuration_storage_safety.py",
-      "bytes": 8595,
-      "sha256": "44e8a69347ae198d5a7773fb15ddb4b0fec337e2a3dbb8988f227d626740f1d9"
+      "bytes": 9070,
+      "sha256": "f82e1eaec10644eeed7d4c218c862ba184709e9c925d05ee9560d3187165b1df"
     },
     {
       "path": "tests/test_console_context_regressions.py",

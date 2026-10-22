@@ -497,7 +497,7 @@ class CommunityPackageFileTests(unittest.TestCase):
     def test_load_and_new_file_export_use_the_dedicated_suffix(self):
         destination = self.folder / ('build' + packages.SUFFIX)
         created = packages.export(self.package, destination)
-        self.assertEqual(created, destination)
+        self.assertEqual(created, destination.resolve())
         self.assertEqual(packages.load(destination), self.package)
         with self.assertRaises(FileExistsError):
             packages.export(self.package, destination)

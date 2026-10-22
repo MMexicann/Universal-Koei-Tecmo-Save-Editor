@@ -21,7 +21,7 @@ class ConfigurationStatSemanticsTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        self.root = Path(temporary.name).resolve()
         self.source = self.root / 'ArlandDX_Settings.ini'
         self.raw = b'[Window]\nFullScreen=0\n'
         self.source.write_bytes(self.raw)
@@ -72,7 +72,7 @@ class ConfigurationStatSemanticsTests(unittest.TestCase):
                 patch.object(config.os, 'fstat', side_effect=handle_stat):
             with self.assertRaisesRegex(config.ConfigurationChangedError, 'changed while being read'):
                 config.inspect_config(self.source, self.game)
-        self.assertEqual(len(handles), 1)
+        self.assertEqual(len(handles), 1, 'The canonical source handle must be targeted')
         self.assertEqual(len(calls), 2)
         self.assertEqual(self.source.read_bytes(), self.raw)
 
@@ -83,7 +83,7 @@ class ConfigurationStatSemanticsTests(unittest.TestCase):
         path = profiles / (profile.id + '.json')
         original = path.read_bytes()
         native_lstat, native_parse = Path.lstat, config._parse_profile
-        parsed = []
+        parsed, changed_paths = [], []
 
         def parsed_profile(raw, expected_id=None):
             result = native_parse(raw, expected_id)
@@ -93,6 +93,7 @@ class ConfigurationStatSemanticsTests(unittest.TestCase):
         def path_stat(selected, *args, **kwargs):
             info = native_lstat(selected, *args, **kwargs)
             if selected == path and parsed:
+                changed_paths.append(selected)
                 return _CtimeOnlyStat(info, info.st_ctime_ns + 1)
             return info
 
@@ -101,6 +102,7 @@ class ConfigurationStatSemanticsTests(unittest.TestCase):
             with self.assertRaisesRegex(config.ConfigurationChangedError, 'changed during removal'):
                 config.delete_profile(profile.id, profiles)
         self.assertEqual(parsed, [True])
+        self.assertTrue(changed_paths, 'The canonical profile path must receive the ctime fault')
         self.assertEqual(path.read_bytes(), original)
         self.assertEqual(self.source.read_bytes(), self.raw)
 

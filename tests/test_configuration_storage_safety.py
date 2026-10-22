@@ -1,5 +1,6 @@
 """Configuration writes require verified backups, owned staging and bound sources."""
 import os
+from contextlib import contextmanager
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -13,7 +14,7 @@ RAW=b'; original unknown comment\n[Window]\nFullScreen=0\n'
 class WriteSafetyTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
-        self.root=Path(self.tmp.name)
+        self.root=Path(self.tmp.name).resolve()
         self.source=self.root/'ArlandDX_Settings.ini'; self.source.write_bytes(RAW)
         self.document=config.inspect_config(self.source,GAME)
         self.backups=self.root/'backups'
@@ -49,30 +50,37 @@ class WriteSafetyTests(unittest.TestCase):
 
     def stage_hooks(self,fail):
         native_temp=config.tempfile.NamedTemporaryFile
-        native_fsync=os.fsync
         self.staging=[]
+        self.stage_replacements=[]
         foreign=self.root/'foreign-stage.bin'; foreign.write_bytes(b'FOREIGN_STAGING_CONTENT')
+
+        @contextmanager
         def opened(*args,**kwargs):
-            stream=native_temp(*args,**kwargs); self.staging.append(Path(stream.name)); return stream
-        def sync(fd):
-            native_fsync(fd)
-            if self.staging and foreign.exists():
-                foreign.replace(self.staging[-1])
-                if fail: raise OSError('synthetic stage sync failure')
-        return patch.object(config.tempfile,'NamedTemporaryFile',side_effect=opened), patch.object(config.os,'fsync',side_effect=sync)
+            with native_temp(*args,**kwargs) as stream:
+                self.staging.append(Path(stream.name))
+                yield stream
+            # Windows may deny renaming a file while its CRT handle is open.
+            # Substitute immediately after close, before publication checks.
+            foreign.replace(self.staging[-1])
+            self.stage_replacements.append(True)
+            if fail:
+                raise OSError('synthetic stage close failure')
+
+        return patch.object(config.tempfile,'NamedTemporaryFile',side_effect=opened)
 
     def test_staging_substitution_must_not_be_published_into_original(self):
-        temp,sync=self.stage_hooks(False)
-        with temp,sync:
+        with self.stage_hooks(False):
             with self.assertRaises(config.ConfigurationError):
                 config.save_config(self.document,{'fullscreen':1},self.backups)
+        self.assertEqual(self.stage_replacements,[True], 'The foreign staging substitution must occur')
         self.assertEqual(self.source.read_bytes(),RAW,'Unverified foreign staging replaced original before failure')
+        self.assertEqual(self.staging[-1].read_bytes(),b'FOREIGN_STAGING_CONTENT')
 
     def test_failed_stage_write_must_preserve_foreign_staging_replacement(self):
-        temp,sync=self.stage_hooks(True)
-        with temp,sync:
+        with self.stage_hooks(True):
             with self.assertRaises(config.ConfigurationError):
                 config.save_config(self.document,{'fullscreen':1},self.backups)
+        self.assertEqual(self.stage_replacements,[True], 'The foreign staging substitution must occur')
         self.assertEqual(self.source.read_bytes(),RAW)
         self.assertTrue(self.staging[-1].exists(),'Foreign staging replacement was deleted by failure cleanup')
         self.assertEqual(self.staging[-1].read_bytes(),b'FOREIGN_STAGING_CONTENT')
@@ -161,7 +169,7 @@ class WriteSafetyTests(unittest.TestCase):
         with patch.object(config,'_read_bounded_file',side_effect=replace_record):
             with self.assertRaises(config.ConfigurationError):
                 config.save_config(self.document,{'fullscreen':1},self.backups)
-        self.assertEqual(len(records),1)
+        self.assertEqual(len(records),1, 'The canonical published backup must receive the corruption')
         self.assertEqual(records[0].read_bytes(),foreign)
         self.assertEqual(self.source.read_bytes(),RAW)
 

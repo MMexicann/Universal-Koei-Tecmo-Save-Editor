@@ -12,7 +12,7 @@ class ProfileDeletionSafetyTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        self.root = Path(temporary.name).resolve()
         source = self.root / 'ArlandDX_Settings.ini'
         source.write_bytes(b'[Window]\nFullScreen=0\n')
         self.document = config.inspect_config(source, 'arland_rorona_dx')

@@ -77,6 +77,11 @@ loader. It never installs loader files or writes into original game files.
 Other Koei Tecmo titles remain unsupported until their installation methods and
 restoration behavior are verified.
 
+The unreleased development source also includes a Koei Tecmo Game Configuration
+Manager for a small, source-verified set of Atelier Arland DX PC settings.
+Existing downloads do not include it; its supported file list and evidence are
+documented in [Game Configuration Manager](docs/GAME_CONFIGURATION.md).
+
 ## Quick start
 
 1. Download and extract the complete Windows ZIP, then run its EXE. Alternatively,

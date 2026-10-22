@@ -4628,8 +4628,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 50977,
-      "sha256": "dd0337336cf4703b5ecccab02333c953056ce1ecbf98aaead34354fe0ba72fe8"
+      "bytes": 50991,
+      "sha256": "9c37ba927c013b2a258a3470e44eda23a34151b50c80e4ec3e6c5ebbcc543d15"
     },
     {
       "path": "tests/test_arland_ps3.py",

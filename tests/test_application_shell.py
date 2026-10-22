@@ -73,8 +73,11 @@ class MenuTranslationTests(unittest.TestCase):
         def index(self, end):
             return len(self.labels) - 1 if self.labels else None
 
+        def type(self, index):
+            return 'command' if self.labels[index] else 'separator'
+
         def entrycget(self, index, option):
-            if option != 'label':
+            if option != 'label' or self.type(index) != 'command':
                 raise AssertionError(option)
             return self.labels[index]
 
@@ -100,6 +103,34 @@ class MenuTranslationTests(unittest.TestCase):
         self.assertEqual(menu.labels[6], translate('asset_explorer', 'de')
                          if 'asset_explorer' in CATALOGS['de'] else 'Game Asset Explorer')
         self.assertEqual(menu.labels[7], translate('emulator_hub', 'de'))
+
+
+class EditingMenuLabelTests(unittest.TestCase):
+    def test_language_refresh_ignores_separators_and_other_noncommand_entries(self):
+        class Menu:
+            entries = ('separator', 'command', 'checkbutton')
+            changed = []
+
+            def index(self, _name):
+                return len(self.entries) - 1
+
+            def type(self, index):
+                return self.entries[index]
+
+            def entrycget(self, index, option):
+                if self.entries[index] != 'command':
+                    raise AssertionError('Noncommand menu entries have no command label.')
+                return translate('emulator_hub', 'en')
+
+            def entryconfigure(self, index, **kwargs):
+                self.changed.append((index, kwargs))
+
+        app = object.__new__(Application)
+        app.language = 'de'
+        app.editing_tools_menu = Menu()
+        app._refresh_editing_menu_labels()
+        self.assertEqual(app.editing_tools_menu.changed,
+                         [(1, {'label': translate('emulator_hub', 'de')})])
 
 
 class ApplicationShellTests(unittest.TestCase):

@@ -4183,8 +4183,8 @@
     },
     {
       "path": "src/koei_editor/shared/configuration_manager.py",
-      "bytes": 50289,
-      "sha256": "212aacd9c3bafbb33f5db040cf2d983e7a64391e6f5f43fb921d2964cca4f698"
+      "bytes": 50775,
+      "sha256": "e82f7731fc83bd7b05621317bd2bba5ccae4e161530751697bb046abde34f720"
     },
     {
       "path": "src/koei_editor/shared/controller_profiles.py",
@@ -4882,9 +4882,19 @@
       "sha256": "0b7641fb34792dbeaef9fe2c1a203b9571f32d7d5f3c4cf434c7803fc2ae3e11"
     },
     {
+      "path": "tests/test_configuration_profile_deletion.py",
+      "bytes": 4110,
+      "sha256": "bdf87b02ecba50040d45131b5fd50ddcb6e15d165bc2d48d15799abd9d4cc14b"
+    },
+    {
+      "path": "tests/test_configuration_stat_semantics.py",
+      "bytes": 4649,
+      "sha256": "9e34c8d306a09bedc878e12cb30e2bc11d07032a636206772c2300611a9e468d"
+    },
+    {
       "path": "tests/test_configuration_storage_safety.py",
-      "bytes": 7326,
-      "sha256": "633424b4ad8ab30519593fe4a12fe9b2f52bd3a4b3b4047df76f5122bebdd216"
+      "bytes": 8595,
+      "sha256": "44e8a69347ae198d5a7773fb15ddb4b0fec337e2a3dbb8988f227d626740f1d9"
     },
     {
       "path": "tests/test_console_context_regressions.py",

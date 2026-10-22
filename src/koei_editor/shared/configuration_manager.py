@@ -973,8 +973,15 @@ def apply_profile(document, profile):
 def delete_profile(profile_id, profile_dir=None):
     path = _profile_path(profile_id, profile_dir)
     try:
+        resolved, before = _check_file(path)
         raw = _read_bounded_file(path, MAX_PROFILE_BYTES)
         _parse_profile(raw, profile_id)
+        current = _read_bounded_file(path, MAX_PROFILE_BYTES)
+        checked, after = _check_file(path)
+        def identity(info):
+            return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        if current != raw or checked != resolved or identity(after) != identity(before):
+            raise ConfigurationChangedError('The selected profile changed during removal; its current file was retained.')
         path.unlink()
     except FileNotFoundError as error:
         raise ConfigurationError('The selected profile no longer exists.') from error

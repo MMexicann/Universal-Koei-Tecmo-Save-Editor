@@ -141,4 +141,28 @@ class WriteSafetyTests(unittest.TestCase):
         self.assertEqual(restored.raw,RAW)
         self.assertEqual(restored.path,path.resolve())
 
+    def test_unqualified_reparsed_bytes_cannot_authorize_a_source_write(self):
+        unqualified=config._parse_bytes(RAW,GAME,self.source,config.FORMAT_ID)
+        with self.assertRaises(config.IncompatibleConfigurationError):
+            config.save_config(unqualified,{'fullscreen':1},self.backups)
+        self.assertEqual(self.source.read_bytes(),RAW)
+        self.assertFalse(self.backups.exists())
+
+    def test_corrupted_published_backup_is_retained_and_stops_source_save(self):
+        native_read=config._read_bounded_file
+        records=[]
+        foreign=b'FOREIGN_PUBLISHED_BACKUP'
+        def replace_record(path,limit,**kwargs):
+            path=Path(path)
+            if path.parent==self.backups and path.suffix=='.json' and not records:
+                path.write_bytes(foreign)
+                records.append(path)
+            return native_read(path,limit,**kwargs)
+        with patch.object(config,'_read_bounded_file',side_effect=replace_record):
+            with self.assertRaises(config.ConfigurationError):
+                config.save_config(self.document,{'fullscreen':1},self.backups)
+        self.assertEqual(len(records),1)
+        self.assertEqual(records[0].read_bytes(),foreign)
+        self.assertEqual(self.source.read_bytes(),RAW)
+
 if __name__=='__main__': unittest.main(verbosity=2)

@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 6593,
-      "sha256": "bb337c25d912803b51d703835331c5ffba782bd80fa61a704162eae1882e52e2"
+      "bytes": 7188,
+      "sha256": "ee3db3f7b5f88ae6f7daf781ad2f075f4b001ac98fa9efe87a629ab78da67547"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -68,8 +68,8 @@
     },
     {
       "path": "docs/APPLICATION_SHELL.md",
-      "bytes": 4755,
-      "sha256": "d850bf4a7f41d16e057ce49f56a39a17e848a058103a6321820674648a6ce724"
+      "bytes": 4989,
+      "sha256": "b79f2510f4da86bd83e12bac465b086185790468c01b0f70d4543fa8412c3f97"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -517,6 +517,16 @@
       "sha256": "cd057f3696183b506e40cac226002ff49356e9ef9201e4f82ef1c7bf4a0f4f7b"
     },
     {
+      "path": "docs/MOD_MANAGER.md",
+      "bytes": 8518,
+      "sha256": "5ba165357d9bb2fad0a236d43c230b2eaa46fcebc5c6c2ccf19532b46889ead0"
+    },
+    {
+      "path": "docs/MOD_MANAGER_VALIDATION.md",
+      "bytes": 2694,
+      "sha256": "ff7ca3f247667c2053e22b02dc320ed4512d642a76f517f78d62d7756cabb007"
+    },
+    {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
       "bytes": 10366,
       "sha256": "158ce3091d6e270bb30fc1f9884800cf92b3a3ac75b445e0c68b074fa7d2e61e"
@@ -698,8 +708,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16559,
-      "sha256": "9389b131c5874b8e722f3246e38282db0fad8874ffc68e9f2342d4295cd427ea"
+      "bytes": 16843,
+      "sha256": "23cfc20d8c3628f2ca98f4257608cb226d520e91bbc4ccaba9e7d68a2f62415a"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1238,8 +1248,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 78926,
-      "sha256": "5d4617b18d4897bbb042b61f8af37bb90f306484eecb9ffb001e2b42ccdfdb30"
+      "bytes": 80623,
+      "sha256": "bce57f13cfaf058761658124fed4af03bdb59eedfe5a4bbcf08f6b862fdec757"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3888,8 +3898,18 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 6080,
-      "sha256": "28f52b9a98e403567372206c9266718aec9706ffc22f556b2833ed43dfef4438"
+      "bytes": 6170,
+      "sha256": "3c84fee1523a0666e392d7a082c2708229440353eef24da641ef4e4183c63142"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_manager.py",
+      "bytes": 82053,
+      "sha256": "a9e2f6bbf7f30faa68ad925ebfd766984bf46c2f7becff44fd33fdc7b7deff36"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_manager_gui.py",
+      "bytes": 28119,
+      "sha256": "b5eaec7061bfb03ff69805ba9c02bed2e5bf288aa76350f32f2b2e23ed62f84c"
     },
     {
       "path": "src/koei_editor/shared/mod_workshop/__init__.py",
@@ -4173,8 +4193,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 37291,
-      "sha256": "9f1ccd667f683a91b886ba463cf2d8e8d2111382f75e6560c7080313e85fa9a4"
+      "bytes": 42501,
+      "sha256": "30254b16a563fb7344765258e453f79103c5a12cdd24f78cb1287a333f86ff9d"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4995,6 +5015,16 @@
       "path": "tests/test_meruru_plus_vita.py",
       "bytes": 19609,
       "sha256": "f30b4de09064ef9700616fe737bdcbcb202f6f40a302b2af9f6f48c0596be8f5"
+    },
+    {
+      "path": "tests/test_mod_manager.py",
+      "bytes": 15240,
+      "sha256": "755257bca198f08d978d666a5f24cdc5fd5cd8a927bb940799f1f5749d5ee5cf"
+    },
+    {
+      "path": "tests/test_mod_manager_nexus.py",
+      "bytes": 10941,
+      "sha256": "7967afb2f5350f8ae9523b568648c67488e5edf65f7c6110c880d243e2f22220"
     },
     {
       "path": "tests/test_monster_rancher_ds.py",

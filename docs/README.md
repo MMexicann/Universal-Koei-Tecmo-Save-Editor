@@ -9,6 +9,8 @@ Controller & Input Profiles and the Save Research Lab. These input profiles are
 app-owned and do not modify game configuration files or Steam Input. For
 selective transfer, open the destination save in its editor first, then choose
 **Transfer from Save Copy...** from that menu.
+The menu also opens the [Koei Tecmo Mod Manager](MOD_MANAGER.md), whose current
+verified installation adapter supports Nioh 2 PC only.
 
 ## Development and releases
 
@@ -19,6 +21,8 @@ selective transfer, open the destination save in its editor first, then choose
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
 - [Controller and input profiles: app-owned bindings, presets and recovery](CONTROLLER_INPUT_PROFILES.md)
 - [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
+- [Koei Tecmo Mod Manager: supported method and safeguards](MOD_MANAGER.md)
+- [Mod Manager tests and validation evidence](MOD_MANAGER_VALIDATION.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
 - [Game Troubleshooting Center: read-only diagnostics and report evidence](GAME_TROUBLESHOOTING.md)
 

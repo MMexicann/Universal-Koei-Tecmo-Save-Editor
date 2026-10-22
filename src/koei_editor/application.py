@@ -41,6 +41,7 @@ class Application(Appearance):
         self.comparison = None
         self.batch = None
         self.save_library = None
+        self.mod_manager = None
         self.editing_presets = None
         self.research_lab = None
         self.research_import = None
@@ -55,17 +56,16 @@ class Application(Appearance):
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
         self._editing_tools_menu_commands = {}
-        for key, callback in (
-                ('editing_presets', self.show_editing_presets),
-                ('transfer', self.show_transfer),
-                ('controller_profiles', self.show_controller_profiles),
-                ('research_lab', self.show_research_lab),
-                ('research_import', self.show_research_import),
-                ('emulator_hub', self.show_emulator_hub)):
-            if key == 'research_lab':
-                self.editing_tools_menu.add_separator()
-            self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
-            self._editing_tools_menu_commands[key] = self.editing_tools_menu.entrycget('end', 'command')
+        self._add_editing_tools_menu_command('editing_presets', self.show_editing_presets)
+        self._add_editing_tools_menu_command('transfer', self.show_transfer)
+        self.editing_tools_menu.add_separator()
+        self._add_editing_tools_menu_command('controller_profiles', self.show_controller_profiles)
+        self.editing_tools_menu.add_separator()
+        self._add_editing_tools_menu_command('mod_manager', self.show_mod_manager)
+        self.editing_tools_menu.add_separator()
+        self._add_editing_tools_menu_command('research_lab', self.show_research_lab)
+        self._add_editing_tools_menu_command('research_import', self.show_research_import)
+        self._add_editing_tools_menu_command('emulator_hub', self.show_emulator_hub)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -282,8 +282,7 @@ class Application(Appearance):
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
-                                            'editing_presets', 'research_lab', 'research_import',
+                                            'editing_presets', 'mod_manager', 'research_lab', 'research_import',
                                             'workflow_builder', 'controller_profiles', 'emulator_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
@@ -302,7 +301,14 @@ class Application(Appearance):
         self._save_shell_settings()
 
     def _refresh_editing_menu_labels(self):
-        """Translate named menu entries without relying on their Tk indices."""
+        """Translate menu commands through their stable Tk command tokens."""
+        commands = getattr(self, '_editing_tools_menu_commands', None)
+        if commands:
+            for key in commands:
+                index = self._editing_tools_menu_index(key)
+                if index is not None:
+                    self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+            return
         labels = {label: key for catalog in CATALOGS.values() for key, label in catalog.items()}
         last_index = self.editing_tools_menu.index('end')
         if last_index is None:
@@ -512,6 +518,7 @@ class Application(Appearance):
         """Discover retained tools supplied by the parallel integration PRs."""
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
+            ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('workflow_builder', 'show_workflow_builder'), ('controller_profiles', 'show_controller_profiles'),
             ('emulator_hub', 'show_emulator_hub'))
@@ -878,8 +885,8 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
-                                       'controller_profiles', 'emulator_hub', 'help_center')
+                                       'mod_manager', 'editing_presets', 'research_lab', 'research_import',
+                                       'workflow_builder', 'controller_profiles', 'emulator_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -896,6 +903,32 @@ class Application(Appearance):
         self._show_editing_tool(self.editing_presets, self.tr('editing_presets'))
         self._remember_workspace('tool:editing_presets')
         return self.editing_presets
+
+    def show_mod_manager(self):
+        from koei_editor.shared.mod_manager_gui import ModManagerWorkspace
+        if self.mod_manager is None:
+            self.mod_manager = ModManagerWorkspace(self.root, self.workspace)
+        attach_handoff = getattr(self, 'set_mod_manager_download_handoff', None)
+        if callable(attach_handoff):
+            attach_handoff(self.mod_manager)
+        self._show_editing_tool(self.mod_manager, self.tr('mod_manager'))
+        self._remember_workspace('tool:mod_manager')
+        return self.mod_manager
+
+    def _add_editing_tools_menu_command(self, key, callback):
+        self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
+        self._editing_tools_menu_commands[key] = self.editing_tools_menu.entrycget('end', 'command')
+
+    def _editing_tools_menu_index(self, key):
+        command = self._editing_tools_menu_commands.get(key)
+        end = self.editing_tools_menu.index('end')
+        if command is None or end is None:
+            return None
+        for index in range(end + 1):
+            if (self.editing_tools_menu.type(index) == 'command'
+                    and self.editing_tools_menu.entrycget(index, 'command') == command):
+                return index
+        return None
 
     def show_transfer(self):
         from tkinter import messagebox
@@ -1108,8 +1141,8 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        for tool in (self.editing_presets, self.research_lab, self.research_import, self.controller_profiles,
-                     self.emulator_hub):
+        for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
+                     self.controller_profiles, self.emulator_hub):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1394,6 +1427,7 @@ def main():
         app.show_batch()
         app.show_save_library()
         app.show_editing_presets()
+        app.show_mod_manager()
         app.show_research_lab()
         app.show_research_import()
         app.show_controller_profiles()

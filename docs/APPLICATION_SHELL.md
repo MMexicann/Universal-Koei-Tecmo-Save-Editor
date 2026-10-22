@@ -20,6 +20,9 @@ Steam Input.
 - **Ctrl+D**, or the visible favorite button, toggles a command favorite.
   Search `favorites` or `recent` to filter those groups. German equivalents
   also work when German is selected.
+- **Koei Tecmo Mod Manager** is available in the Editing and Research menu and
+  the Ctrl+K command palette. The manager is a retained workspace; its Nioh 2
+  installation and profile controls are independent of save-editor sessions.
 - **Ctrl+F** keeps the existing workspace-specific search behavior. **F1** opens
   the Help Center. Its menu includes compatibility, preparation guides, feedback,
   real-game validation and plugin documentation.

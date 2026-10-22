@@ -51,6 +51,25 @@ that marker remains unqualified. AoC: size `0x100000`, little-endian, marker
 rejected. In particular, Wii U support does not imply 3DS Legends or Switch
 Definitive Edition support, and AoC does not imply Switch 2 support.
 
+## Edition and platform boundaries
+
+These Hyrule titles use separate native profiles. A matching filename or a
+shared Zelda setting does not select a compatible parser.
+
+| Game and platform | Accepted input and profile | Editing scope / status |
+| --- | --- | --- |
+| Hyrule Warriors, Wii U | Decrypted `APP.BIN`, `0x300000` bytes, observed marker `15010500` | Resource, existing map-card, weapon-star and ordinary-seal fields; progression, ownership and reward flags remain protected. [Wii U source](https://github.com/MarcRobledo/savegame-editors/tree/b4db8cd11157c6d5ae54a0a5edc88dba82aebe9d) |
+| Hyrule Warriors Legends, Nintendo 3DS | Decrypted `zmha.bin`, `0x39462` bytes, source-mapped version 1.0.0 | Separate 3DS resource, card, weapon and owned My Fairy name/trust fields. No Wii U offsets are used. [3DS source](https://github.com/nedron92/HWL-SaveEditor/tree/4259e42b4ee6d643859fc218e436c20c337cb358) |
+| Hyrule Warriors: Definitive Edition, Nintendo Switch | Decrypted `zmha.bin`, `0x3D8E4` bytes, observed marker and stored-size checks | Separate Switch resource, weapon-star and ordinary-seal fields; fairy, character progression and map systems remain read-only. [Switch profile sources](https://github.com/WerWolv/EdiZon_CheatsConfigsAndScripts/blob/d16d36c7509c01dca770f402babd83ff2e9ae6e7/Configs/0100AE00096EA000.json) and [dedicated editor source](https://github.com/iAroc/iAroc.github.io/tree/15e4a928bdffb202a7893e14fde432f2dcbc10b3/hyruleWarriors) |
+| Hyrule Warriors: Age of Calamity, Nintendo Switch | Extensionless `svdt`, `0x100000` bytes, source-mapped 1.3.0 profile | Discovered inventory and reports, rupees, and existing weapon-protection fields; growth, fusion, quest rewards and unlocks remain protected. [AoC format source](https://github.com/MarcRobledo/savegame-editors/tree/b4db8cd11157c6d5ae54a0a5edc88dba82aebe9d) and [weapon/data definitions](https://github.com/BtEtta/save-editors/tree/b77b1ac19d26f083365106ce8e8ed1ef32a23ba6/aoc) |
+| Hyrule Warriors: Age of Imprisonment, Nintendo Switch 2 | Nintendo's [product listing](https://www.nintendo.com/us/store/products/hyrule-warriors-age-of-imprisonment-switch-2/) identifies this as a separate Switch 2 title; no complete native save or independently mapped layout is qualified here | Research only; no editor is registered. A separate profile needs the complete native export and any associated system/companion files, exact game/update/DLC provenance, an unchanged control, and controlled before/after pairs for a resource spend, character growth, weapon change and quest/reward. The existing Wii U, 3DS, Switch and Age of Calamity profiles must not be applied to it. |
+
+The Switch 2 row is a candidate intake, not evidence that its save can be
+decoded or safely edited. Preserve the original console backup and owner context;
+share copies and provenance privately, and keep them out of the public PR. Before
+adding a writer, identify its archive/encryption/integrity layers, establish a
+byte-exact unchanged roundtrip, and reparse a surgical edit.
+
 ## Wii U coverage checklist
 
 | Mechanic | Implemented scope / precise remaining blocker |

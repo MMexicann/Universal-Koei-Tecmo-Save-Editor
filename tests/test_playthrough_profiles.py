@@ -393,7 +393,10 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         def replace_parent_after_preflight(path, **kwargs):
             nonlocal race_injected
             checked = original_ordinary(path, **kwargs)
-            if (not race_injected and Path(path) == component_parent
+            # Save Vault canonicalizes paths before returning them. On Windows
+            # this can also expand a short path spelling, so compare resolved
+            # locations rather than their original text.
+            if (not race_injected and Path(path).resolve() == component_parent.resolve()
                     and kwargs.get('directory') is True):
                 # This hook runs after the service's parent preflight and
                 # before the first staged component is written.
@@ -427,7 +430,9 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
         def replace_destination_before_report(data, directory, name, expected_identity):
             nonlocal race_injected
-            if (not race_injected and Path(directory) == destination
+            # The profile store passes the canonical path returned by
+            # _ordinary(), which may differ textually on Windows.
+            if (not race_injected and Path(directory).resolve() == destination.resolve()
                     and name == 'playthrough-report.json'):
                 # Save restoration and the destination identity capture have
                 # completed; swap the root just before the report is created.

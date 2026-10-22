@@ -10,18 +10,22 @@ for enable/disable operations.
 from __future__ import annotations
 
 import copy
+from functools import wraps
 import hashlib
 import json
 import os
+import queue
 import re
 import shutil
 import stat
 import tempfile
+import threading
 import uuid
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Iterable
+from typing import Any, Iterable, Protocol
+from urllib.parse import urlsplit
 
 
 GAME_ID = "nioh2_pc"
@@ -34,6 +38,8 @@ SUPPORTED_MOD_EXTENSIONS = SUPPORTED_ASSET_EXTENSIONS | {".ini"}
 _MAX_ARCHIVE_FILES = 20_000
 _MAX_ARCHIVE_FILE_BYTES = 512 * 1024 * 1024
 _MAX_ARCHIVE_BYTES = 1024 * 1024 * 1024
+_MAX_NEXUS_DOWNLOAD_BYTES = _MAX_ARCHIVE_BYTES
+_MAX_NEXUS_QUEUE_SIZE = 3
 _MAX_METADATA_BYTES = 1024 * 1024
 _MAX_STATE_BYTES = 16 * 1024 * 1024
 _ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{1,47}$")
@@ -92,6 +98,56 @@ class ProfileRecord:
     id: str
     name: str
     enabled_mods: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class NexusDownloadResult:
+    """Safe completion state for a manager-owned Nexus import job.
+
+    The result deliberately contains no request object, downloader, credential,
+    signed URL, temporary path, or exception text.
+    """
+
+    status: str
+    message: str
+    mod_id: str | None = None
+
+
+class NexusDownloadRequestLike(Protocol):
+    """Structural browser request; the manager does not import Nexus API code."""
+
+    provider: str
+    game_id: str
+    game_domain: str
+    game_scoped_mod_id: str
+    mod_id: str
+    file_id: str
+    file_name: str
+    file_version_id: str
+    game_scoped_file_version_id: str
+    mod_page_url: str
+
+
+class NexusArchiveDownloader(Protocol):
+    """Narrow in-memory capability that streams an authorized ZIP to a path."""
+
+    def download_archive(self, request: NexusDownloadRequestLike, destination: Path) -> int:
+        ...
+
+
+@dataclass(frozen=True)
+class _NexusDownloadJob:
+    request: NexusDownloadRequestLike
+    downloader: NexusArchiveDownloader
+
+
+def _library_locked(method):
+    """Serialize library reads/removals with asynchronous package imports."""
+    @wraps(method)
+    def locked(self, *args, **kwargs):
+        with self._library_lock:
+            return method(self, *args, **kwargs)
+    return locked
 
 
 def default_state_dir() -> Path:
@@ -312,6 +368,11 @@ class ModManager:
         self.installations_dir = self.state_dir / "installations"
         self.index_path = self.state_dir / "library.json"
         self.index: dict[str, Any] = {"schema_version": 1, "mods": {}}
+        self._library_lock = threading.RLock()
+        self._nexus_jobs: queue.Queue[_NexusDownloadJob] = queue.Queue(maxsize=_MAX_NEXUS_QUEUE_SIZE)
+        self._nexus_results: queue.Queue[NexusDownloadResult] = queue.Queue()
+        self._nexus_worker_lock = threading.Lock()
+        self._nexus_worker: threading.Thread | None = None
         self.installation: dict[str, Any] | None = None
         self.install_key: str | None = None
         self.install_state_dir: Path | None = None
@@ -644,33 +705,34 @@ class ModManager:
                     mod_files.append(ModFile(relative, digest, size))
             mod_files.sort(key=lambda item: item.path.casefold())
             content_digest = self._content_digest(mod_files)
-            existing = self.index["mods"].get(mod_id)
-            if existing is not None:
-                if existing.get("content_sha256") == content_digest:
-                    shutil.rmtree(temp_dir)
-                    return self._record(mod_id)
-                raise PackageError(f"Mod id {mod_id!r} already exists with different package contents.")
-            final_dir = self.packages_dir / mod_id
-            if final_dir.exists():
-                raise SafetyError(f"The package storage path for {mod_id!r} already exists without a library record.")
-            os.replace(temp_dir, final_dir)
-            record = {
-                "id": mod_id,
-                "name": name,
-                "version": version,
-                "dependencies": list(dependencies),
-                "conflicts": list(conflicts),
-                "files": [item.__dict__ for item in mod_files],
-                "content_sha256": content_digest,
-            }
-            self.index["mods"][mod_id] = record
-            try:
-                self._save_index()
-            except Exception:
-                self.index["mods"].pop(mod_id, None)
-                shutil.rmtree(final_dir, ignore_errors=True)
-                raise
-            return self._record(mod_id)
+            with self._library_lock:
+                existing = self.index["mods"].get(mod_id)
+                if existing is not None:
+                    if existing.get("content_sha256") == content_digest:
+                        shutil.rmtree(temp_dir)
+                        return self._record(mod_id)
+                    raise PackageError(f"Mod id {mod_id!r} already exists with different package contents.")
+                final_dir = self.packages_dir / mod_id
+                if final_dir.exists():
+                    raise SafetyError(f"The package storage path for {mod_id!r} already exists without a library record.")
+                os.replace(temp_dir, final_dir)
+                record = {
+                    "id": mod_id,
+                    "name": name,
+                    "version": version,
+                    "dependencies": list(dependencies),
+                    "conflicts": list(conflicts),
+                    "files": [item.__dict__ for item in mod_files],
+                    "content_sha256": content_digest,
+                }
+                self.index["mods"][mod_id] = record
+                try:
+                    self._save_index()
+                except Exception:
+                    self.index["mods"].pop(mod_id, None)
+                    shutil.rmtree(final_dir, ignore_errors=True)
+                    raise
+                return self._record(mod_id)
         except Exception:
             if temp_dir.exists():
                 shutil.rmtree(temp_dir, ignore_errors=True)
@@ -688,6 +750,7 @@ class ModManager:
             digest.update(b"\n")
         return digest.hexdigest()
 
+    @_library_locked
     def _record(self, mod_id: str) -> ModRecord:
         record = self.index["mods"][mod_id]
         installed = bool(self.installation and mod_id in self.installation["installed"])
@@ -702,7 +765,203 @@ class ModManager:
         )
 
     def mods(self) -> tuple[ModRecord, ...]:
-        return tuple(self._record(mod_id) for mod_id in sorted(self.index["mods"]))
+        with self._library_lock:
+            return tuple(self._record(mod_id) for mod_id in sorted(self.index["mods"]))
+
+    @property
+    def nexus_downloads_pending(self) -> bool:
+        """Whether an accepted Nexus job is queued or currently being handled."""
+        with self._nexus_worker_lock:
+            return bool(self._nexus_worker and self._nexus_worker.is_alive())
+
+    def enqueue_nexus_download(
+        self,
+        request: NexusDownloadRequestLike,
+        downloader: NexusArchiveDownloader,
+    ) -> bool:
+        """Accept a selected Nioh 2 Nexus ZIP for asynchronous library import.
+
+        ``downloader`` is a same-process capability supplied by the Nexus
+        browser. It resolves authorization and streams bytes to a manager-owned
+        temporary ZIP; this service never accepts API keys or resolved URLs.
+        The return value is immediate and true only if the bounded work queue
+        accepted the request.
+        """
+        if not self._is_supported_nexus_request(request):
+            return False
+        try:
+            download_archive = getattr(downloader, "download_archive", None)
+        except Exception:
+            return False
+        if not callable(download_archive):
+            return False
+        try:
+            self._nexus_jobs.put_nowait(_NexusDownloadJob(request, downloader))
+        except queue.Full:
+            return False
+        self._ensure_nexus_worker()
+        return True
+
+    @staticmethod
+    def _is_supported_nexus_request(request) -> bool:
+        """Fail closed on the cross-component request's public metadata."""
+        fields = (
+            "provider", "game_id", "game_domain", "game_scoped_mod_id", "mod_id",
+            "file_id", "file_name", "file_version_id", "game_scoped_file_version_id",
+            "mod_page_url",
+        )
+        values = {}
+        try:
+            for name in fields:
+                value = getattr(request, name)
+                if not isinstance(value, str) or not value or len(value) > 2048:
+                    return False
+                if any(ord(char) < 32 or ord(char) == 127 for char in value):
+                    return False
+                values[name] = value
+        except Exception:
+            return False
+        filename = values["file_name"]
+        try:
+            page = urlsplit(values["mod_page_url"])
+        except ValueError:
+            return False
+        return (
+            values["provider"] == "nexus"
+            and values["game_id"] == GAME_ID
+            and values["game_domain"] == "nioh2"
+            and page.scheme == "https"
+            and page.hostname == "www.nexusmods.com"
+            and page.netloc == "www.nexusmods.com"
+            and page.username is None
+            and page.password is None
+            and not page.query
+            and not page.fragment
+            and page.path == f"/nioh2/mods/{values['game_scoped_mod_id']}"
+            and len(filename) <= 256
+            and filename not in (".", "..")
+            and "/" not in filename
+            and "\\" not in filename
+            and filename.casefold().endswith(".zip")
+        )
+
+    def _ensure_nexus_worker(self) -> None:
+        with self._nexus_worker_lock:
+            if self._nexus_worker is not None and self._nexus_worker.is_alive():
+                return
+            worker = threading.Thread(
+                target=self._drain_nexus_jobs,
+                name="koei-nexus-import",
+                daemon=True,
+            )
+            self._nexus_worker = worker
+            worker.start()
+
+    def _drain_nexus_jobs(self) -> None:
+        while True:
+            try:
+                job = self._nexus_jobs.get_nowait()
+            except queue.Empty:
+                with self._nexus_worker_lock:
+                    if self._nexus_jobs.empty():
+                        self._nexus_worker = None
+                        return
+                continue
+            try:
+                result = self._run_nexus_job(job)
+                self._nexus_results.put(result)
+            finally:
+                self._nexus_jobs.task_done()
+
+    def _run_nexus_job(self, job: _NexusDownloadJob) -> NexusDownloadResult:
+        """Download and validate one archive without installing it."""
+        try:
+            if not self._is_supported_nexus_request(job.request):
+                return NexusDownloadResult(
+                    "download_failed",
+                    "The selected Nexus request is no longer supported by this manager.",
+                )
+            self.state_dir.mkdir(parents=True, exist_ok=True)
+            if self.state_dir.is_symlink() or _is_reparse_point(self.state_dir):
+                raise SafetyError("The manager state directory is not a regular directory.")
+            with tempfile.TemporaryDirectory(prefix=".nexus-", dir=self.state_dir) as temporary:
+                destination = Path(temporary) / self._nexus_temp_archive_name(job.request)
+                try:
+                    job.downloader.download_archive(job.request, destination)
+                except Exception:
+                    return NexusDownloadResult(
+                        "download_failed",
+                        "Nexus could not provide this archive. Check your Nexus access and try again.",
+                    )
+                if (destination.is_symlink() or _is_reparse_point(destination)
+                        or not destination.is_file()):
+                    return NexusDownloadResult(
+                        "download_failed",
+                        "Nexus did not produce a regular ZIP archive.",
+                    )
+                try:
+                    size = destination.stat().st_size
+                except OSError:
+                    return NexusDownloadResult(
+                        "download_failed",
+                        "Nexus did not produce a readable ZIP archive.",
+                    )
+                if size > _MAX_NEXUS_DOWNLOAD_BYTES:
+                    return NexusDownloadResult(
+                        "download_failed",
+                        "The Nexus archive exceeds the manager's 1 GiB download limit.",
+                    )
+                try:
+                    mod = self.import_archive(destination)
+                except PackageError:
+                    return NexusDownloadResult(
+                        "package_rejected",
+                        "The downloaded ZIP did not pass Nioh 2 package validation.",
+                    )
+                except Exception:
+                    return NexusDownloadResult(
+                        "manager_error",
+                        "The manager could not add the downloaded package to its library.",
+                    )
+                return NexusDownloadResult(
+                    "imported",
+                    "Added the validated package to the mod library. Review it before enabling or installing.",
+                    mod.id,
+                )
+        except Exception:
+            return NexusDownloadResult(
+                "manager_error",
+                "The manager could not prepare a temporary download location.",
+            )
+
+    @staticmethod
+    def _nexus_temp_archive_name(request) -> str:
+        """Make a safe, recognizable temporary ZIP name without using raw input."""
+        filename = getattr(request, "file_name")
+        stem = re.sub(r"[^A-Za-z0-9._-]+", "-", Path(filename).stem).strip(".-_")
+        if len(stem) < 2 or "disabled" in stem.casefold():
+            stem = "Nexus-Mod"
+        if stem.split(".", 1)[0].casefold() in _WINDOWS_RESERVED:
+            stem = "Nexus-" + stem
+        identity = "\0".join((
+            getattr(request, "game_scoped_mod_id"),
+            getattr(request, "file_id"),
+            getattr(request, "file_version_id"),
+        ))
+        suffix = hashlib.sha256(identity.encode("utf-8", "strict")).hexdigest()[:8]
+        return f"{stem[:36]}-{suffix}.zip"
+
+    def poll_nexus_download_results(self, *, limit: int = 20) -> tuple[NexusDownloadResult, ...]:
+        """Return completed Nexus imports without blocking the UI thread."""
+        if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 100:
+            raise ValueError("The Nexus result limit must be between 1 and 100.")
+        results = []
+        for _ in range(limit):
+            try:
+                results.append(self._nexus_results.get_nowait())
+            except queue.Empty:
+                break
+        return tuple(results)
 
     def profiles(self) -> tuple[ProfileRecord, ...]:
         if self.installation is None:
@@ -839,6 +1098,7 @@ class ModManager:
             profile["enabled_mods"] = previous
             raise
 
+    @_library_locked
     def profile_issues(self, profile_id: str) -> tuple[str, ...]:
         profile = self._profile(profile_id)
         selected = set(profile["enabled_mods"])
@@ -976,6 +1236,7 @@ class ModManager:
             except OSError:
                 pass
 
+    @_library_locked
     def remove_mod(self, mod_id: str) -> None:
         self._ensure_no_pending_library_transactions()
         if mod_id not in self.index["mods"]:

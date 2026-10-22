@@ -140,6 +140,7 @@ class ModManagerWorkspace:
                   style='Muted.TLabel', wraplength=1100).grid(row=6, column=0, sticky='ew', pady=(4, 0))
 
         self.refresh()
+        self._schedule_nexus_download_poll()
 
     def apply_theme(self, palette):
         """Record the current theme; all widgets follow the shell's ttk styles."""
@@ -424,6 +425,38 @@ class ModManagerWorkspace:
             self.refresh()
             return True
         return self._run('Cannot Add Mod Archive', perform)
+
+    def enqueue_nexus_download(self, request, downloader):
+        """Expose the manager service's same-process Nexus download handoff."""
+        enqueue = getattr(self.manager, 'enqueue_nexus_download', None)
+        accepted = bool(callable(enqueue) and enqueue(request, downloader))
+        self.status.set(
+            'Nexus download queued. The ZIP will be validated and added to the library.'
+            if accepted else
+            'The Mod Manager could not queue this Nexus download.'
+        )
+        return accepted
+
+    def _schedule_nexus_download_poll(self):
+        if callable(getattr(self.manager, 'poll_nexus_download_results', None)):
+            try:
+                self.root.after(500, self._poll_nexus_download_results)
+            except tk.TclError:
+                pass
+
+    def _poll_nexus_download_results(self):
+        poll = getattr(self.manager, 'poll_nexus_download_results', None)
+        if callable(poll):
+            try:
+                results = poll()
+                if results:
+                    self.status.set(str(results[-1].message))
+                    self.refresh()
+            except tk.TclError:
+                return
+            except Exception:
+                self.status.set('The Mod Manager could not read Nexus download results.')
+        self._schedule_nexus_download_poll()
 
     def install_mod(self):
         def perform():

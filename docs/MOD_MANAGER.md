@@ -60,6 +60,39 @@ The library stores imported package bytes in application state and records a
 SHA-256 hash and size for every file. The service verifies the stored package
 again before installation, and verifies staged bytes before deployment.
 
+## Nexus download handoff
+
+The Nioh 2 workspace can accept the browser's frozen `NexusDownloadRequest`
+through `enqueue_nexus_download(request, downloader)`. The manager checks that
+the request identifies provider `nexus`, Nexus domain `nioh2`, game ID
+`nioh2_pc`, and a ZIP filename. It accepts at most three waiting requests and
+returns immediately; `True` means a request entered the queue.
+
+The browser supplies a narrow in-memory downloader capability exposing only
+`download_archive(request, destination)`. The manager calls that method with a
+destination inside a manager-owned temporary directory. Nexus API keys,
+free-user authorization,
+and resolved signed CDN links stay in the browser client and are neither
+read by the manager nor written by it. The queued request and capability are
+held only in memory while the job is queued or active. The manager verifies
+that the downloader produced a regular ZIP within the existing 1 GiB archive
+limit, then passes it to the same `import_archive` ZIP validation used by local
+imports. A safe temporary filename derived from the selected Nexus filename
+keeps the existing filename-based fallback metadata useful for packages that
+do not include `koei-mod.json`. The manager removes the temporary download
+after processing and only adds a validated package to the library; it never
+enables, installs, applies, or removes a mod as part of the download.
+
+`poll_nexus_download_results()` returns completed jobs without blocking. The
+workspace polls this queue and reports success or a sanitized error in its
+status area. Results use `imported`, `download_failed`, `package_rejected`, or
+`manager_error`; messages contain no downloader exception text. An `imported`
+result means the package passed validation and is ready for the user to review
+before taking a separate profile or install action. This adapter is
+intentionally Nioh 2-only even though Nexus discovery
+can list other Koei Tecmo games; each additional game needs its own validated
+manager installation contract.
+
 ## Profiles, conflicts and file changes
 
 Profiles hold independent enabled-mod lists per selected game installation.

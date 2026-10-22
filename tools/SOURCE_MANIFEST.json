@@ -357,6 +357,11 @@
       "sha256": "faa187fae89686578f293ae5a63c44979e3aff9c398cdb02a49e012832a72168"
     },
     {
+      "path": "docs/EMULATOR_HUB.md",
+      "bytes": 5236,
+      "sha256": "1c191afb6040e9e29c49b752f895a825d6c5d80d6714a96d8548fb28eef3490c"
+    },
+    {
       "path": "docs/EXISTING_EDITORS.md",
       "bytes": 10046,
       "sha256": "76cafd8e30ca3f229ebb1094abc2bcd76bac5daf284248f035f1913e91357f17"
@@ -683,8 +688,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16130,
-      "sha256": "2572185008b38fba3d99fbcfc5e4d69c428d55e6ec07dbf57662f14adef7afba"
+      "bytes": 16230,
+      "sha256": "6278c5a9a76ebec10d04994fdbf3ed44f10c685a81a3337d25df28316dbdba0d"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1223,8 +1228,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 75516,
-      "sha256": "08fe16840acf2e609942224af1b2ba9899efb985534ee91469cc3f913acbe3ee"
+      "bytes": 76747,
+      "sha256": "9e3d422b2d0ca83d00bf59a89f14d4d1bf53234acc8afc1196ec742c66a3ff9d"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3787,6 +3792,46 @@
       "sha256": "d9f577e1af04af4fa6a7c33a2fbc5fe18ec6d43e86352a186a183fc7d27e6559"
     },
     {
+      "path": "src/koei_editor/shared/emulator_hub.py",
+      "bytes": 19842,
+      "sha256": "9ca9a1d3b8eebc3175956d2c528c405c0b79aa0178f23126df9d198171b248d3"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_hub_gui.py",
+      "bytes": 32744,
+      "sha256": "a0eb1af3a1a73ac67cf5cc0382db992a821f866266fdbf32ced80439fa60afbe"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_hub_preferences.py",
+      "bytes": 4076,
+      "sha256": "8b10dbb2b82a019de51b61bf6667c17cf84cdde40ad2a878291bad636e60ea09"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_provider_contract.py",
+      "bytes": 3764,
+      "sha256": "9dce3ea9a4558ebee49666133d5e6845d9bd3484c8dba03a6f150b2115ee8607"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/__init__.py",
+      "bytes": 57,
+      "sha256": "3276f3adbca09b42b05c3feb38f6b6f3eba67a550f613a85beacda8acb7fa1e0"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/nintendo.py",
+      "bytes": 5360,
+      "sha256": "71f6f7cdd9d9046f6cb304d077cc3dfb0676e5264353facdbd7b8e34c4068532"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/other.py",
+      "bytes": 7855,
+      "sha256": "96a976a30bd0c223ed66ccfd1cb46f4724cca13551fc4683c17d2432fd432f08"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/sony.py",
+      "bytes": 4577,
+      "sha256": "6ebd18a3e75fa726a39d89c3530d88db159cb49d2b83d6af3c879116d4dd68d8"
+    },
+    {
       "path": "src/koei_editor/shared/experimental_limits.py",
       "bytes": 2991,
       "sha256": "0d5ddec115e7fa2aaf0a88e458153c6f37d5ffc3dafc94e1c563c518d5223484"
@@ -3813,8 +3858,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 5860,
-      "sha256": "8beee04dc629fcccaa28788e5ed91268e746c86d780b17b67730b8d03388ee04"
+      "bytes": 5961,
+      "sha256": "1e506ca8dd75ba5fccc1229d510ef46353cb7ca2a41083ed5f14d3427c54f8b2"
     },
     {
       "path": "src/koei_editor/shared/mod_workshop/__init__.py",
@@ -4098,8 +4143,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 31863,
-      "sha256": "17f1de4c1090eb6d4603353b97cfbf33f5dbb50ebf3e4c962381ca07b8a6529e"
+      "bytes": 34155,
+      "sha256": "39b20c2ccf7925745812bf8e695fb00efaff1fdbd549ee898ebc6d82b84cd25e"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4615,6 +4660,26 @@
       "path": "tests/test_elixirs_v11.py",
       "bytes": 6566,
       "sha256": "e08d25931eec3b4002d322a532dbf0bca12f375048cb6310c5f6cb7eb5de20dc"
+    },
+    {
+      "path": "tests/test_emulator_hub.py",
+      "bytes": 21654,
+      "sha256": "7250158e7d0599e2d90a805a0bd54c4b1b5e19e390b2448f4528f5e556e0ef37"
+    },
+    {
+      "path": "tests/test_emulator_nintendo_providers.py",
+      "bytes": 5646,
+      "sha256": "f2be12367cac9d73b41f9c0b9b2c94bfc076adc50bea6a79278191a21097b5e4"
+    },
+    {
+      "path": "tests/test_emulator_other_providers.py",
+      "bytes": 6600,
+      "sha256": "2683881430f1fb2e33296724b97f57a1158df1b84d13f29ec7df3a57785bc65a"
+    },
+    {
+      "path": "tests/test_emulator_sony_providers.py",
+      "bytes": 4850,
+      "sha256": "6a77834bebdd15143c5c502e46b88fa31e7d1f44f48d2e54caa738069f22c0eb"
     },
     {
       "path": "tests/test_expansion_candidates.py",

@@ -35,6 +35,7 @@ Nioh 2 PC only.
 - [Emulator Integration Hub: documented launch profiles and exported-save handoff](EMULATOR_HUB.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
 - [Save Doctor, automatic detection and local Save Vault](SAVE_MANAGEMENT.md)
+- [Smart Playthrough Profiles: verified snapshots, compatibility previews and isolated environments](SMART_PLAYTHROUGH_PROFILES.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
 - [Bulk edit validation and exact field navigation](EDITING_WORKFLOWS.md)

@@ -723,12 +723,12 @@ class ApplicationShellTests(unittest.TestCase):
         center = self.app.help_center
         self.root.focus_force()
         for tab, attribute in (('help', 'help_search'), ('compatibility', 'compatibility_search'),
-                               ('workflows', 'guide_selector'), ('plugins', None)):
+                               ('workflows', 'guide_selector'), ('plugins', None), ('versions', None)):
             center.notebook.select(center.tabs[tab])
             self.root.update()
             self.root.event_generate('<Control-f>')
             self.root.update()
-            target = getattr(center, attribute) if attribute else center._panels['plugins'].search_entry
+            target = getattr(center, attribute) if attribute else center._panels[tab].search_entry
             self.assertIs(self.root.focus_get(), target)
             self.assertTrue(target.winfo_viewable())
         center.notebook.select(center.tabs['validation'])

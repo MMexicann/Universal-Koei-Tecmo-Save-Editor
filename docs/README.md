@@ -12,6 +12,8 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
 
+- [Scenario and army editor: verified strategy record view and limits](SCENARIO_ARMY_EDITOR_REPORT.md)
+
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
 

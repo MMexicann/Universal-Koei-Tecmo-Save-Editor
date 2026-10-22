@@ -22,38 +22,39 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "fd17633c45f695fe7d6055d607e579359f285760",
+  "base_commit": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit tests.test_game_compatibility",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 267,
-    "passed": 197,
+    "run": 297,
+    "passed": 227,
     "skipped": 70,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1287
+    "verified_public_files": 1290
   },
   "supported_game_inventory": {
     "status": "passed",
     "registered_adapters": 98
   },
   "syntax_and_diff_checks": {
-    "py_compile": "passed for changed Python modules and tests",
-    "git_diff_check": "passed"
+    "py_compile": "passed for 12 changed Python modules and tests",
+    "git_diff_check": "passed against origin/main"
   },
   "windows_ci": {
     "status": "pending_current_head",
-    "previous_remote_head": "7414af9d7816c40ef44d82e27be72679478b0c32",
-    "previous_run": "39848899673",
-    "previous_head_result": "cancelled_after_base_advanced; tracker tests passed 15/15, save discovery passed 47/47, Windows build did not run",
-    "integration_findings": "the Help Center contract fixture now accepts and checks preferences_path forwarding; a Windows assertion typo was corrected after run 39853248908. Other observed Windows failures are tracked in PRs #144, #145, #148, and #149",
-    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; they update the universal tab list and optional achievement-source packaging fixture",
+    "last_completed_head": "e9c15535643c1d4dba22dcc2ce295b45f9555caf",
+    "last_completed_base": "fd17633c45f695fe7d6055d607e579359f285760",
+    "last_completed_run": "39854319696",
+    "last_completed_result": "full_workflow_failed; tracker tests 15/15, save discovery 47/47, Help Center 12/12, Troubleshooting 31/31, and universal app 28/28 passed; build/release skipped after unrelated module failures",
+    "integration_findings": "On prior tracker head e9c1553, Windows passed tracker 15/15, save discovery 47/47, Help Center 12/12, Troubleshooting 31/31, and universal app 28/28. Related Game Hub Windows run 39849115110 passed discovery 5/5, GUI 8/8, and save discovery 47/47. The full tracker run still failed in unrelated Mod Manager shell/Nexus assertions, Emulator Hub path normalization, Completion Companion assertions, Save Library viewport geometry, and Editing Tools menu expectations; build/release jobs were skipped. PRs #144 and #145 have fresh current-base checks in progress; #148 still needs a fresh focused Windows run.",
+    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; PRs #141 Troubleshooting Center and #121 patch compatibility analyzer are included in current main c5b7fdb.",
     "required_before_merge": true
   },
   "fixture": {

@@ -4268,8 +4268,8 @@
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
-      "bytes": 18122,
-      "sha256": "a9ab87527354a4bc324b334bc8fce06405f6c4c1957558d4e89dc38aacf09b45"
+      "bytes": 18280,
+      "sha256": "9125c069d7e8f1ec9690d43c3cab03d71c4268e6449d53c2bb3252350c06a1f5"
     },
     {
       "path": "src/koei_editor/shared/help_content.py",
@@ -5398,8 +5398,8 @@
     },
     {
       "path": "tests/test_help_center.py",
-      "bytes": 5226,
-      "sha256": "f1d87531e0836667fd9d8441b38c2d5b314e9e4873df0e7d1511be8ec3fdb42c"
+      "bytes": 5589,
+      "sha256": "84d244f9268fbec5602f5f0013c0cbb88a63d6d4f2f4c9eb8a35e200708a2dd9"
     },
     {
       "path": "tests/test_help_center_integration.py",
@@ -6458,8 +6458,8 @@
     },
     {
       "path": "tests/test_version_tracker.py",
-      "bytes": 16676,
-      "sha256": "5085e6cfeeafc72e4bb4fdc04884da252f1b50866d9a06233cf95b156a638ed2"
+      "bytes": 18004,
+      "sha256": "3cd3f52c18ef4585145a08926db1e0b37210294ba2b3cfcc3f530b5e6486a94f"
     },
     {
       "path": "tests/test_weapon_attributes.py",

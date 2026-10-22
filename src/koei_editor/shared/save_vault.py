@@ -753,7 +753,12 @@ class SaveVault:
         retained. A failed write may leave a private incomplete directory; it is
         never overwritten or silently deleted, and failure never reports success.
         """
-        destination, info = _ordinary(destination, directory=True, missing=True)
+        requested = Path(destination).absolute()
+        parent, parent_info = _ordinary(requested.parent, directory=True)
+        parent_identity = (parent_info.st_dev, parent_info.st_ino)
+        destination, info = _ordinary(parent / requested.name, directory=True, missing=True)
+        if destination.parent != parent:
+            raise SaveError('The restore parent directory changed identity.')
         if info is not None:
             raise FileExistsError('Restore requires a new dedicated destination directory.')
         if self._contains(destination):
@@ -763,8 +768,13 @@ class SaveVault:
             snapshot = self._find(snapshots, snapshot_id)
             bundle, _ = self._bundle(snapshot)
             _profile_path(snapshot.game_id, destination / snapshot.filename)
-            destination.mkdir(mode=0o700)
-            destination_identity = _directory_identity(destination)
+            _check_directory_identity(parent, parent_identity)
+            created_destination, destination_info = new_directory_child_bound(
+                parent, destination.name, parent_identity)
+            if created_destination != destination:
+                raise SaveError('The restore destination changed identity.')
+            destination_identity = (destination_info.st_dev, destination_info.st_ino)
+            _check_directory_identity(parent, parent_identity)
             return self._restore_bundle_to_directory(
                 snapshot, destination, bundle, destination_identity)
 

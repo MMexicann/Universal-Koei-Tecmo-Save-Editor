@@ -244,6 +244,34 @@ class SaveVaultTests(unittest.TestCase):
                 operation()
         self.assertEqual(self.source.read_bytes(), self.raw)
 
+    def test_restore_root_is_not_created_under_replaced_parent(self):
+        record = self.snapshot()
+        parent = self.folder / 'restore-parent'
+        parent.mkdir()
+        displaced = self.folder / 'displaced-restore-parent'
+        destination = parent / 'restored'
+        original = vault.new_directory_child_bound
+        race_injected = False
+
+        def replace_parent_before_create(directory, name, expected_identity):
+            nonlocal race_injected
+            if Path(directory) == parent and name == destination.name and not race_injected:
+                parent.rename(displaced)
+                parent.mkdir()
+                race_injected = True
+            return original(directory, name, expected_identity)
+
+        with patch.object(vault, 'new_directory_child_bound',
+                          side_effect=replace_parent_before_create):
+            with self.assertRaises(SaveError):
+                self.store.restore(record.id, destination)
+
+        self.assertTrue(race_injected, 'the test must replace the parent before root creation')
+        self.assertFalse(destination.exists())
+        self.assertEqual(tuple(parent.iterdir()), ())
+        self.assertEqual(tuple(displaced.iterdir()), ())
+        self.assertEqual(self.source.read_bytes(), self.raw)
+
     def test_snapshot_and_original_companion_tamper_blocks_verify_restore_and_compare(self):
         for filename in ('DATA.BIN', 'PARAM.SFO'):
             with self.subTest(filename=filename):

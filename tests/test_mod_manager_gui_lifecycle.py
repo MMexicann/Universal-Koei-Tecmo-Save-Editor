@@ -3,10 +3,11 @@ from pathlib import Path
 import tempfile
 import tkinter as tk
 import unittest
+import zipfile
 from unittest.mock import Mock, patch
 
 from koei_editor.application import Application
-from koei_editor.shared.mod_manager import ModManager
+from koei_editor.shared.mod_manager import GAME_EXE, LOADER_FILE, ModManager, ModRecord, SafetyError
 from koei_editor.shared.mod_manager_gui import ModManagerWorkspace
 
 
@@ -76,3 +77,36 @@ class ModManagerGuiLifecycleTests(unittest.TestCase):
         editor.dirty_ok.return_value = True
         app.close()
         self.assertEqual(self._pending_manager_polls(), ())
+
+    def test_real_imported_mod_selection_survives_failed_then_successful_recovery_refresh(self):
+        folder = Path(self.temporary.name)
+        game = folder / 'game'
+        game.mkdir()
+        (game / GAME_EXE).write_bytes(b'synthetic executable; never run')
+        (game / LOADER_FILE).write_bytes(b'synthetic loader; never run')
+        self.manager.set_game_root(game)
+        archive = folder / 'real-service-fixture.zip'
+        with zipfile.ZipFile(archive, 'w') as package:
+            package.writestr('OwnedMod/mod.ini', '[Mod]\nName=Fixture\n')
+            package.writestr('OwnedMod/assets/model.fmt', b'synthetic replacement')
+        record = self.manager.import_archive(archive)
+        self.assertIsInstance(record, ModRecord)
+        self.assertTrue(self.workspace.refresh())
+        self.workspace.mod_table.selection_set(record.id)
+        self.workspace._update_controls()
+        self.assertEqual(str(self.workspace.remove_button.cget('state')), 'normal')
+
+        with patch.object(self.manager, 'recover_pending_transaction', side_effect=SafetyError('recovery blocked')), \
+                patch.object(self.workspace, '_error'):
+            self.assertIsNone(self.workspace.refresh())
+        self.assertTrue(self.workspace._recovery_blocked)
+        self.assertEqual(str(self.workspace.remove_button.cget('state')), 'disabled')
+        self.assertEqual(self.workspace.mod_table.selection(), (record.id,))
+
+        self.assertTrue(self.workspace.refresh())
+        self.assertFalse(self.workspace._recovery_blocked)
+        self.assertEqual(self.workspace.mod_table.selection(), (record.id,))
+        self.assertEqual(str(self.workspace.remove_button.cget('state')), 'normal')
+        self.assertEqual(self.manager.mods(), (record,))
+        self.assertEqual((game / GAME_EXE).read_bytes(), b'synthetic executable; never run')
+        self.assertEqual((game / LOADER_FILE).read_bytes(), b'synthetic loader; never run')

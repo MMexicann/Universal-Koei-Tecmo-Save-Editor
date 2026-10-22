@@ -208,7 +208,8 @@ class CompletionCompanionViewTests(unittest.TestCase):
 
     def test_achievement_status_is_unavailable_until_a_provider_snapshot_arrives(self):
         self.assertIn("Unavailable", self.view.achievement_status.get())
-        self.assertIn("retrieve verified achievement states", self.view.achievement_summary.get())
+        self.assertEqual(self.view.achievement_summary.get(),
+                         "Check the source to retrieve verified achievement states.")
         self.assertEqual(str(self.view.achievement_action.cget("state")), "normal")
         self.assertFalse(self.view._achievement_busy)
         self.assertEqual(self.view.achievement_tree.get_children(), ())

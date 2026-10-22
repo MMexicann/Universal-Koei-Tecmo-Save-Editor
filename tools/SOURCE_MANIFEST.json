@@ -1528,8 +1528,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 86749,
-      "sha256": "a85de2d3ee87f4bb71acdfc977aadbd21569eb29c85fd3835090f9a11783b87d"
+      "bytes": 86809,
+      "sha256": "d9893466987ad62d62e8cc5aeeed25281b9eb5b99932163b07fc1a645a6ba0ea"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4613,8 +4613,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 50484,
-      "sha256": "27d36fa6d3c327d64ff665071c37e9e06cdbad561a1477e4dd60172b24b2042c"
+      "bytes": 50555,
+      "sha256": "b2e14aea2c2b4dbdd611bb935021c1ec745f61bd40b6612b4021299fd9e783a7"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4853,8 +4853,8 @@
     },
     {
       "path": "tests/test_completion_companion_view.py",
-      "bytes": 14993,
-      "sha256": "8bdf5783c78a6616257c2a6e32c57f5be14157e8a21943cb2e5547c1f4fbb75d"
+      "bytes": 15042,
+      "sha256": "e4d471d58679ca49ffec96c30b890b3e0274f44bd5e9b025e8e5c8dcbac77dce"
     },
     {
       "path": "tests/test_console_context_regressions.py",
@@ -5538,8 +5538,8 @@
     },
     {
       "path": "tests/test_mod_manager_gui_lifecycle.py",
-      "bytes": 3523,
-      "sha256": "3e1d06c6b6c1a4e64b70324222ae3546d3b7620b6dc1e0e03a680f23acab7eb6"
+      "bytes": 5536,
+      "sha256": "94449df5e692fcd47a71280424d153b2b4a64f7b2d123a5612aefee79010df3d"
     },
     {
       "path": "tests/test_mod_manager_nexus.py",

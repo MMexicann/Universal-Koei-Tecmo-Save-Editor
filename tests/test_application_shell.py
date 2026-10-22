@@ -550,14 +550,15 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertFalse(workspace._recovery_blocked)
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')
             self.assertEqual(str(workspace.import_button.cget('state')), 'normal')
-            # Refresh rebuilt the empty service library and cleared the synthetic
-            # selection. Removal stays disabled until an uninstalled mod is selected.
-            self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
-            workspace._mods['test-mod'] = test_mod
-            workspace.mod_table.insert('', 'end', iid='test-mod', text='Test mod')
-            workspace.mod_table.selection_set('test-mod')
-            workspace._update_controls()
+            # The typed service fixture remains present through recovery, so
+            # refresh preserves its selection and removal is available again.
+            self.assertEqual(workspace.mod_table.selection(), ('test-mod',))
             self.assertEqual(str(workspace.remove_button.cget('state')), 'normal')
+            # The real service library is empty. Refresh without the fixture
+            # explicitly checks the separate no-selection state.
+            workspace.refresh()
+            self.assertEqual(workspace.mod_table.selection(), ())
+            self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
 
         self.assertTrue(workspace.manager.state_dir.is_relative_to(
             Path(self.directory.name).resolve(strict=True)))

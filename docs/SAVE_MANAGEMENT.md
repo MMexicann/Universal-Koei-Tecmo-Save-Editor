@@ -51,6 +51,13 @@ python -m koei_editor --discover-saves --steam-root ./Steam
 
 ## Save Vault
 
+Save Vault operations require Windows, including opening or listing an existing
+vault: each operation acquires an owned native directory lock. New vaults,
+snapshot folders, nested context folders and restored copies retain their creator
+handles through validation. Lock cleanup uses the owned handle rather than a
+pathname. Other operating systems fail before creating these directories or
+writing payloads; they do not provide an equivalent Vault workflow.
+
 Create a vault in a separate local folder or load an existing vault. A snapshot
 records the exact copied gameplay file and original required companion files,
 its SHA-256 digests, profile, time, label, branch and parent. Native validation

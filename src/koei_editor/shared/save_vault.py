@@ -5,7 +5,7 @@ SHA256 detects accidental damage; this local index is not an authenticated store
 against an attacker who can rewrite both the index and its checksums. Native
 qualification always uses the explicitly selected registered profile.
 """
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 import hashlib
@@ -19,6 +19,7 @@ import uuid
 
 from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.copy_storage import new_directory_child_bound, publish_new_child_bound
 from koei_editor.shared.save_safety import safe_path, reserved_windows_path
 from koei_editor.shared.save_library import _identity, _handle_binding, _linked, _snapshot_digest
 
@@ -216,25 +217,16 @@ def _read(path, limit, *, companion=False):
         os.close(descriptor)
 
 
-def _new(raw, path, *, companion=False):
+def _new(raw, path, *, companion=False, expected_parent_identity=None):
     path, info = _ordinary(path, missing=True, companion=companion)
     if info is not None:
         raise FileExistsError('Save Vault never overwrites an existing destination.')
     parent, parent_info = _ordinary(path.parent, directory=True)
-    temporary = parent / ('.vault-' + uuid.uuid4().hex + '.tmp')
-    # Temp files stay beside their destination, so the final creation is atomic.
-    with temporary.open('xb') as stream:
-        stream.write(raw)
-        stream.flush()
-        os.fsync(stream.fileno())
-    if _read(temporary, len(raw))[0] != raw:
-        raise SaveError('The temporary vault copy failed integrity verification.')
-    _check_directory_identity(parent, (parent_info.st_dev, parent_info.st_ino))
-    if os.name == 'nt':
-        os.rename(temporary, path)
-    else:
-        os.link(temporary, path)
-        temporary.unlink()
+    identity = (parent_info.st_dev, parent_info.st_ino)
+    if expected_parent_identity is not None and identity != expected_parent_identity:
+        raise SaveError('The private output parent changed identity.')
+    publish_new_child_bound(raw, parent, path.name, identity)
+    _check_directory_identity(parent, identity)
     if _read(path, len(raw), companion=companion)[0] != raw:
         raise SaveError('The created vault copy failed integrity verification.')
     return path
@@ -357,15 +349,21 @@ class SaveVault:
 
     @classmethod
     def create(cls, root):
-        root, info = _ordinary(root, missing=True, directory=True)
+        requested = Path(root).absolute()
+        parent, parent_info = _ordinary(requested.parent, directory=True)
+        root, info = _ordinary(parent / requested.name, missing=True, directory=True)
         if info is not None:
             raise FileExistsError('Choose a new private Save Vault folder.')
-        _ordinary(root.parent, directory=True)
-        root.mkdir(mode=0o700)
-        (root / 'objects').mkdir(mode=0o700)
-        payload = {'schema_version': 1, 'snapshots': [], 'branches': {}}
-        _new(_json({'payload': payload, 'sha256': _digest(_json(payload))}), root / 'index.json')
-        return cls(root)
+        if root.parent != parent:
+            raise SaveError('The Save Vault parent changed identity.')
+        with new_directory_child_bound(parent, root.name,
+                                      (parent_info.st_dev, parent_info.st_ino)) as (root, root_info):
+            root_identity = (root_info.st_dev, root_info.st_ino)
+            with new_directory_child_bound(root, 'objects', root_identity):
+                payload = {'schema_version': 1, 'snapshots': [], 'branches': {}}
+                _new(_json({'payload': payload, 'sha256': _digest(_json(payload))}),
+                     root / 'index.json', expected_parent_identity=root_identity)
+                return cls(root)
 
     def _contains(self, path):
         if path.is_relative_to(self.root):
@@ -393,25 +391,14 @@ class SaveVault:
     @contextmanager
     def _locked(self):
         self._check_roots()
-        lock = self.root / '.lock'
-        try:
-            lock.mkdir(mode=0o700)
-        except FileExistsError:
-            raise SaveError('Save Vault is busy or has an interrupted operation lock; no files were changed.') from None
-        _, info = _ordinary(lock, directory=True)
-        identity = (info.st_dev, info.st_ino)
-        try:
+        lock, info = _ordinary(self.root / '.lock', directory=True, missing=True)
+        if info is not None:
+            raise SaveError('Save Vault is busy or has an interrupted operation lock; no files were changed.')
+        with new_directory_child_bound(self.root, lock.name, self._root_identity,
+                                       remove_on_close=True):
             self._check_roots()
             yield
             self._check_roots()
-        finally:
-            # Never remove a replacement lock or someone else's contents.
-            try:
-                _, current = _ordinary(lock, directory=True)
-                if (current.st_dev, current.st_ino) == identity:
-                    lock.rmdir()
-            except (OSError, SaveError):
-                pass
 
     def _load(self):
         raw, token = _read(self.root / 'index.json', MAX_INDEX_BYTES)
@@ -493,7 +480,7 @@ class SaveVault:
         if len(raw) > MAX_INDEX_BYTES:
             raise SaveError('The Save Vault index reached its metadata bound.')
         temporary = self.root / ('.index-' + uuid.uuid4().hex + '.tmp')
-        _new(raw, temporary)
+        _new(raw, temporary, expected_parent_identity=self._root_identity)
         self._check_roots()
         if _read(self.root / 'index.json', MAX_INDEX_BYTES) != (current, token):
             raise SaveError('The Save Vault index changed before committing.')
@@ -592,20 +579,28 @@ class SaveVault:
             raise SaveError('The snapshot contains unindexed or missing storage files.')
 
     @staticmethod
-    def _materialize(bundle, directory, *, expected_identity=None):
-        # Restore owns an identity captured immediately after mkdir. Do not
-        # rebind it to a replacement directory before the first private write.
-        identity = (_directory_identity(directory) if expected_identity is None
-                    else expected_identity)
-        for name, raw in bundle.items():
-            _check_directory_identity(directory, identity)
-            target = directory / name
-            if '/' in name:
-                if not target.parent.exists():
-                    target.parent.mkdir(mode=0o700)
-                _ordinary(target.parent, directory=True)
-            _new(raw, target, companion=True)
-            _check_directory_identity(directory, identity)
+    def _materialize(bundle, directory, *, expected_identity=None, owned_directories=None):
+        identity = (_directory_identity(directory) if expected_identity is None else expected_identity)
+        identities = {directory: identity}
+        with ExitStack() as local_directories:
+            owned_directories = owned_directories or local_directories
+            # Acquire every required directory before writing any bundle payload.
+            for name in bundle:
+                current = directory
+                for part in (directory / name).parent.relative_to(directory).parts:
+                    child = current / part
+                    if child not in identities:
+                        _, info = owned_directories.enter_context(new_directory_child_bound(
+                            current, part, identities[current]))
+                        identities[child] = (info.st_dev, info.st_ino)
+                    _check_directory_identity(child, identities[child])
+                    current = child
+            for name, raw in bundle.items():
+                _check_directory_identity(directory, identity)
+                target = directory / name
+                _new(raw, target, companion=True,
+                     expected_parent_identity=identities[target.parent])
+                _check_directory_identity(directory, identity)
 
     def snapshot(self, game_id, source, *, branch='main', label='', parent_id=None):
         branch, label = _branch(branch), _label(label)
@@ -685,22 +680,25 @@ class SaveVault:
                 raise SaveError('Unindexed vault objects consume the remaining storage capacity.')
             directory = self.objects / snapshot_id
             _profile_path(game_id, directory / source.name)
-            directory.mkdir(mode=0o700)
-            self._materialize(bundle, directory)
-            self._bundle(record)  # Exact restored-byte native qualification before acceptance.
-            for name, expected in bundle.items():
-                data, current = _read(source.parent / name, MAX_FILE_BYTES, companion=True)
-                if data != expected or current != tokens[name]:
-                    raise SaveError('The source changed before the snapshot was committed.')
-            if _context_names(source, document) != names:
-                raise SaveError('The original companion set changed before committing the snapshot.')
-            final_parent = _ordinary(source.parent, directory=True)[1]
-            if (final_parent.st_dev, final_parent.st_ino) != (source_parent.st_dev, source_parent.st_ino):
-                raise SaveError('The original copied-save directory changed identity.')
-            snapshots.append(record)
-            branches[branch] = record.id
-            self._save(snapshots, branches)
-            return record
+            with new_directory_child_bound(self.objects, snapshot_id,
+                                           self._objects_identity) as (directory, directory_info), ExitStack() as owned_directories:
+                self._materialize(bundle, directory, expected_identity=(
+                    directory_info.st_dev, directory_info.st_ino),
+                                  owned_directories=owned_directories)
+                self._bundle(record)  # Exact restored-byte native qualification before acceptance.
+                for name, expected in bundle.items():
+                    data, current = _read(source.parent / name, MAX_FILE_BYTES, companion=True)
+                    if data != expected or current != tokens[name]:
+                        raise SaveError('The source changed before the snapshot was committed.')
+                if _context_names(source, document) != names:
+                    raise SaveError('The original companion set changed before committing the snapshot.')
+                final_parent = _ordinary(source.parent, directory=True)[1]
+                if (final_parent.st_dev, final_parent.st_ino) != (source_parent.st_dev, source_parent.st_ino):
+                    raise SaveError('The original copied-save directory changed identity.')
+                snapshots.append(record)
+                branches[branch] = record.id
+                self._save(snapshots, branches)
+                return record
 
     def verify(self, snapshot_id=None):
         with self._locked():
@@ -718,14 +716,21 @@ class SaveVault:
                 results.append(result)
             return tuple(results)
 
-    def restore(self, snapshot_id, destination):
+    def restore(self, snapshot_id, destination, *, expected_parent_identity=None, owned_directories=None):
         """Restore exact bytes into a NEW dedicated directory; return save path.
 
         The directory must not exist. Companion names and gameplay filename are
         retained. A failed write may leave a private incomplete directory; it is
         never overwritten or silently deleted, and failure never reports success.
         """
-        destination, info = _ordinary(destination, directory=True, missing=True)
+        requested = Path(destination).absolute()
+        parent, parent_info = _ordinary(requested.parent, directory=True)
+        parent_identity = (parent_info.st_dev, parent_info.st_ino)
+        if expected_parent_identity is not None and parent_identity != expected_parent_identity:
+            raise SaveError('The restore parent changed identity.')
+        destination, info = _ordinary(parent / requested.name, directory=True, missing=True)
+        if destination.parent != parent:
+            raise SaveError('The restore parent changed identity.')
         if info is not None:
             raise FileExistsError('Restore requires a new dedicated destination directory.')
         if self._contains(destination):
@@ -735,20 +740,25 @@ class SaveVault:
             snapshot = self._find(snapshots, snapshot_id)
             bundle, _ = self._bundle(snapshot)
             _profile_path(snapshot.game_id, destination / snapshot.filename)
-            destination.mkdir(mode=0o700)
-            destination_identity = _directory_identity(destination)
-            self._materialize(bundle, destination, expected_identity=destination_identity)
-            _check_directory_identity(destination, destination_identity)
-            path = destination / snapshot.filename
-            _qualify(snapshot.game_id, path, bundle[snapshot.filename])
-            _check_directory_identity(destination, destination_identity)
-            for name, raw in bundle.items():
+            with ExitStack() as local_directories:
+                scopes = owned_directories if owned_directories is not None else local_directories
+                destination, created_info = scopes.enter_context(new_directory_child_bound(
+                    parent, destination.name, parent_identity))
+                destination_identity = (created_info.st_dev, created_info.st_ino)
+                self._materialize(bundle, destination, expected_identity=destination_identity,
+                                  owned_directories=scopes)
                 _check_directory_identity(destination, destination_identity)
-                if _read(destination / name, MAX_FILE_BYTES, companion=True)[0] != raw:
-                    raise SaveError('The restored copy changed during native read-back.')
-            self._check_bundle_entries(destination, bundle)
-            _check_directory_identity(destination, destination_identity)
-            return path
+                path = destination / snapshot.filename
+                _qualify(snapshot.game_id, path, bundle[snapshot.filename])
+                _check_directory_identity(destination, destination_identity)
+                for name, raw in bundle.items():
+                    _check_directory_identity(destination, destination_identity)
+                    if _read(destination / name, MAX_FILE_BYTES, companion=True)[0] != raw:
+                        raise SaveError('The restored copy changed during native read-back.')
+                self._check_bundle_entries(destination, bundle)
+                _check_directory_identity(destination, destination_identity)
+                return path
+
 
     def relabel(self, snapshot_id, label):
         label = _label(label)

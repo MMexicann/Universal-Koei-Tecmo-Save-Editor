@@ -1,4 +1,5 @@
 """Integration coverage for safe, vault-backed playthrough environments."""
+from contextlib import ExitStack
 import hashlib
 import json
 import os
@@ -20,10 +21,12 @@ from koei_editor.shared.playthrough_profiles import (
 )
 from tests import test_ps3_expansion
 from tests.test_ps3_new_families import fixture
+from tests.owned_directory_contract import install_owned_directory_contract, attempt_namespace_change
 
 
 class PlaythroughProfileIntegrationTests(unittest.TestCase):
     def setUp(self):
+        install_owned_directory_contract(self)
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         # Canonicalize while the directory exists, before adversarial path swaps.
@@ -209,7 +212,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         active_save = self.copy(current_dir)
         destination = self.root / 'partial-environment'
 
-        def fail_restore(_snapshot_id, _destination):
+        def fail_restore(_snapshot_id, _destination, **_kwargs):
             raise SaveError('injected restore failure')
 
         self.vault.restore = fail_restore
@@ -268,11 +271,14 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         outside.mkdir()
         original_publish_new_child_bound = playthrough_profiles_module.publish_new_child_bound
         race_injected = False
+        denied = []
 
         def replace_profile_store_before_manifest(data, directory, name, expected_identity):
             nonlocal race_injected
             if not race_injected and Path(directory) == profile_directory:
-                Path(directory).rename(displaced_directory)
+                if not attempt_namespace_change(self, lambda: Path(directory).rename(displaced_directory)):
+                    denied.append(True)
+                    return original_publish_new_child_bound(data, directory, name, expected_identity)
                 try:
                     Path(directory).symlink_to(outside, target_is_directory=True)
                 except OSError as error:
@@ -288,12 +294,42 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
         with patch.object(playthrough_profiles_module, 'publish_new_child_bound',
                           side_effect=replace_profile_store_before_manifest):
-            with self.assertRaises(SaveError):
-                self.make_profile()
+            try:
+                created = self.make_profile()
+            except SaveError:
+                self.assertFalse(denied)
+            else:
+                self.assertTrue(denied, 'Success must mean the real native handle denied the swap.')
+                self.assertEqual(self.store.load(created.id), created)
 
-        self.assertTrue(race_injected, 'the test must swap the profile store before manifest creation')
+        self.assertTrue(race_injected or denied, 'The test must attempt the actual profile-store rename.')
         self.assertEqual(list(outside.iterdir()), [])
-        self.assertEqual(self.store.list_profiles(), ())
+        if not denied:
+            self.assertEqual(self.store.list_profiles(), ())
+
+    def test_profile_creation_rejects_changed_selected_vault_root_after_snapshot_verification(self):
+        original = self.store._snapshot
+        selected = self.vault.root
+        displaced = self.root / 'selected-vault-displaced'
+        foreign = self.root / 'foreign-vault-directory'
+        foreign.mkdir()
+        injected = []
+
+        def replace_after_qualification(*args):
+            result = original(*args)
+            if not injected:
+                selected.rename(displaced)
+                foreign.rename(selected)
+                injected.append(True)
+            return result
+
+        with patch.object(self.store, '_snapshot', side_effect=replace_after_qualification):
+            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+                self.make_profile()
+        self.assertTrue(injected)
+        self.assertEqual(tuple(selected.iterdir()), ())
+        self.assertEqual(self.source.read_bytes(), self.raw)
+        self.assertTrue((displaced / 'index.json').is_file())
 
 
     @unittest.skipUnless(os.name != 'nt', 'POSIX child-writer failure injection')
@@ -318,9 +354,10 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
 
     def test_creation_stops_before_exceeding_interrupted_manifest_bound(self):
-        profile_directory, _ = self.store._directory(create=True)
-        for index in range(playthrough_profiles_module.MAX_PENDING_MANIFESTS):
-            (profile_directory / f'.pending-{index:032x}.tmp').write_bytes(b'partial')
+        with ExitStack() as owned_directories:
+            profile_directory, _ = self.store._directory(create=True, owned_directories=owned_directories)
+            for index in range(playthrough_profiles_module.MAX_PENDING_MANIFESTS):
+                (profile_directory / f'.pending-{index:032x}.tmp').write_bytes(b'partial')
 
         with self.assertRaisesRegex(SaveError, 'too many interrupted'):
             self.make_profile()
@@ -390,31 +427,37 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         component_parent = destination / 'components'
         outside = self.root / 'outside-components'
         outside.mkdir()
-        original_ordinary = playthrough_profiles_module._ordinary
+        original_writer = playthrough_profiles_module.new_child_bound
         race_injected = False
+        denied = []
 
-        def replace_parent_after_preflight(path, **kwargs):
+        def replace_parent_after_preflight(data, directory, name, expected_identity):
             nonlocal race_injected
-            checked = original_ordinary(path, **kwargs)
-            if (not race_injected and Path(path) == component_parent
-                    and kwargs.get('directory') is True):
-                # This hook runs after the service's parent preflight and
-                # before the first staged component is written.
-                component_parent.rmdir()
+            if not race_injected and not denied and Path(directory) == component_parent:
+                # Attempt the actual namespace attack immediately before
+                # the bound writer uses the owned components directory.
+                if not attempt_namespace_change(self, component_parent.rmdir):
+                    denied.append(True)
+                    return original_writer(data, directory, name, expected_identity)
                 try:
                     component_parent.symlink_to(outside, target_is_directory=True)
                 except OSError as error:
                     self.skipTest(f'Host cannot create a directory symlink: {error}')
                 race_injected = True
-            return checked
+            return original_writer(data, directory, name, expected_identity)
 
-        with patch.object(playthrough_profiles_module, '_ordinary',
+        with patch.object(playthrough_profiles_module, 'new_child_bound',
                           side_effect=replace_parent_after_preflight):
-            with self.assertRaises(PlaythroughPreparationError) as caught:
-                self.store.prepare_environment(profile.id, destination, '1.02')
+            try:
+                prepared = self.store.prepare_environment(profile.id, destination, '1.02')
+            except PlaythroughPreparationError as error:
+                self.assertFalse(denied)
+                self.assertEqual(error.destination, destination)
+            else:
+                self.assertTrue(denied, 'Success must mean the real native handle denied removal.')
+                self.assertEqual(prepared.save_path.read_bytes(), self.raw)
 
-        self.assertEqual(caught.exception.destination, destination)
-        self.assertTrue(race_injected, 'the test must inject the race after parent preflight')
+        self.assertTrue(race_injected or denied, 'The test must attempt actual component removal.')
         self.assertEqual(list(outside.iterdir()), [])
         self.assertFalse((outside / 'mod_configuration.json').exists())
         self.assertFalse((outside / 'playthrough-report.json').exists())
@@ -427,6 +470,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         outside.mkdir()
         original_new_child_bound = playthrough_profiles_module.new_child_bound
         race_injected = False
+        denied = []
 
         def replace_destination_before_report(data, directory, name, expected_identity):
             nonlocal race_injected
@@ -434,7 +478,9 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
                     and name == 'playthrough-report.json'):
                 # Save restoration and the destination identity capture have
                 # completed; swap the root just before the report is created.
-                destination.rename(displaced_destination)
+                if not attempt_namespace_change(self, lambda: destination.rename(displaced_destination)):
+                    denied.append(True)
+                    return original_new_child_bound(data, directory, name, expected_identity)
                 try:
                     destination.symlink_to(outside, target_is_directory=True)
                 except OSError as error:
@@ -444,12 +490,17 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
         with patch.object(playthrough_profiles_module, 'new_child_bound',
                           side_effect=replace_destination_before_report):
-            with self.assertRaises(PlaythroughPreparationError) as caught:
-                self.store.prepare_environment(profile.id, destination, '1.02')
+            try:
+                prepared = self.store.prepare_environment(profile.id, destination, '1.02')
+            except PlaythroughPreparationError as error:
+                self.assertFalse(denied)
+                self.assertEqual(error.destination, destination)
+            else:
+                self.assertTrue(denied, 'Success must mean the real native handle denied the swap.')
+                self.assertTrue(prepared.report_path.is_file())
 
-        self.assertEqual(caught.exception.destination, destination)
-        self.assertTrue(race_injected, 'the test must inject the race before report creation')
-        self.assertTrue(displaced_destination.is_dir())
+        self.assertTrue(race_injected or denied, 'The test must attempt the actual environment rename.')
+        self.assertEqual(displaced_destination.exists(), not bool(denied))
         self.assertEqual(list(outside.iterdir()), [])
 
 

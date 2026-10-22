@@ -37,7 +37,8 @@ COMMUNITY_SCHEMA_FILES = frozenset(
 SOURCE_ONLY_GUIDES = frozenset({'docs/COMMUNITY_TOOLKIT.md'})
 ADAPTER_TEMPLATE_FILES = {'tools/adapter_template/new_game_parser.py', 'tools/adapter_template/new_game_editor.py',
                           'tools/adapter_template/contract_test.py', 'tools/adapter_template/INSTRUCTIONS.md'}
-PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/gui_paging.py', 'tests/__init__.py'}
+PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/gui_paging.py', 'tests/__init__.py',
+                       'tests/owned_directory_contract.py'}
 PUBLIC_GUIDES = {'src/koei_editor/AGENTS.md', 'src/koei_editor/games/AGENTS.md',
                 'src/koei_editor/shared/AGENTS.md', 'src/koei_editor/research/AGENTS.md',
                 'src/koei_editor/data/AGENTS.md', 'tests/README.md', 'licenses/README.md'}

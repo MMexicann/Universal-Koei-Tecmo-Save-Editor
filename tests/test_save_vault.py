@@ -12,10 +12,12 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared import save_vault as vault
 from tests.test_ps3_new_families import fixture
 from tests.test_ps3_expansion import PS3ContextTests
+from tests.owned_directory_contract import install_owned_directory_contract, attempt_namespace_change
 
 
 class SaveVaultTests(unittest.TestCase):
     def setUp(self):
+        install_owned_directory_contract(self)
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.folder = Path(temporary.name)
@@ -496,8 +498,8 @@ class SaveVaultTests(unittest.TestCase):
     def test_directory_replacement_with_identical_file_inodes_is_rejected(self):
         original = self.store._materialize
         moved = self.folder / 'old-copies'
-        def replacing(bundle, directory):
-            original(bundle, directory)
+        def replacing(bundle, directory, **kwargs):
+            original(bundle, directory, **kwargs)
             self.source.parent.rename(moved)
             self.source.parent.mkdir()
             for item in moved.iterdir():
@@ -566,15 +568,23 @@ class SaveVaultTests(unittest.TestCase):
         destination = self.folder / 'restored'
         moved = self.folder / 'original-restored'
         original = self.store._materialize
+        denied = []
         def replacing(bundle, directory, **kwargs):
             original(bundle, directory, **kwargs)
-            directory.rename(moved)
+            if not attempt_namespace_change(self, lambda: directory.rename(moved)):
+                denied.append(True)
+                return
             directory.mkdir()
             for item in moved.iterdir():
                 item.rename(directory / item.name)
         with patch.object(self.store, '_materialize', side_effect=replacing):
-            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+            try:
                 self.store.restore(record.id, destination)
+            except SaveError as error:
+                self.assertFalse(denied)
+                self.assertIn('directory changed identity', str(error))
+            else:
+                self.assertTrue(denied, 'A successful restore must have blocked the actual rename.')
         self.assertEqual((destination / self.source.name).read_bytes(), self.raw)
         self.assertEqual((destination / self.metadata.name).read_bytes(), self.context)
         self.assertEqual(self.source.read_bytes(), self.raw)
@@ -588,21 +598,34 @@ class SaveVaultTests(unittest.TestCase):
         original_objects = {path.relative_to(self.store.objects): path.read_bytes()
                             for path in self.store.objects.rglob('*') if path.is_file()}
         original = self.store._materialize
+        denied = []
 
         def replacing(bundle, directory, **kwargs):
-            directory.rename(moved)
+            if not attempt_namespace_change(self, lambda: directory.rename(moved)):
+                denied.append(True)
+                return original(bundle, directory, **kwargs)
             directory.mkdir()
             (directory / 'replacement-marker').write_bytes(b'preserve replacement')
             return original(bundle, directory, **kwargs)
 
         with patch.object(self.store, '_materialize', side_effect=replacing), \
-                patch.object(vault, '_new', side_effect=AssertionError('Reject before private writes')) as writes:
-            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+                patch.object(vault, '_new', wraps=vault._new) as writes:
+            try:
                 self.store.restore(record.id, destination)
-        writes.assert_not_called()
-        self.assertEqual(tuple(moved.iterdir()), ())
-        self.assertEqual({path.name: path.read_bytes() for path in destination.iterdir()},
-                         {'replacement-marker': b'preserve replacement'})
+            except SaveError as error:
+                self.assertFalse(denied)
+                self.assertIn('directory changed identity', str(error))
+            else:
+                self.assertTrue(denied, 'A successful restore must have blocked the actual rename.')
+        if denied:
+            self.assertFalse(moved.exists())
+            self.assertEqual((destination / self.source.name).read_bytes(), self.raw)
+            self.assertEqual((destination / self.metadata.name).read_bytes(), self.context)
+        else:
+            writes.assert_not_called()
+            self.assertEqual(tuple(moved.iterdir()), ())
+            self.assertEqual({path.name: path.read_bytes() for path in destination.iterdir()},
+                             {'replacement-marker': b'preserve replacement'})
         self.assertEqual(self.source.read_bytes(), self.raw)
         self.assertEqual(self.metadata.read_bytes(), self.context)
         self.assertEqual(index.read_bytes(), original_index)
@@ -617,19 +640,32 @@ class SaveVaultTests(unittest.TestCase):
         moved = self.folder / 'original-restored'
         original = vault._new
         completed = []
+        denied = []
         def replacing(raw, path, **kwargs):
             result = original(raw, path, **kwargs)
             if Path(path).parent.samefile(destination):
                 completed.append(Path(path).name)
-                destination.rename(moved)
+                if not attempt_namespace_change(self, lambda: destination.rename(moved)):
+                    denied.append(True)
+                    return result
                 destination.mkdir()
             return result
         with patch.object(vault, '_new', side_effect=replacing):
-            with self.assertRaisesRegex(SaveError, 'directory changed identity'):
+            try:
                 self.store.restore(record.id, destination)
-        self.assertEqual(len(completed), 1)
-        self.assertEqual(tuple(destination.iterdir()), ())
-        self.assertEqual((moved / completed[0]).read_bytes(), self.raw)
+            except SaveError as error:
+                self.assertFalse(denied)
+                self.assertIn('directory changed identity', str(error))
+            else:
+                self.assertTrue(denied, 'A successful restore must have blocked each actual rename.')
+        if denied:
+            self.assertFalse(moved.exists())
+            self.assertEqual((destination / self.source.name).read_bytes(), self.raw)
+            self.assertEqual((destination / self.metadata.name).read_bytes(), self.context)
+        else:
+            self.assertEqual(len(completed), 1)
+            self.assertEqual(tuple(destination.iterdir()), ())
+            self.assertEqual((moved / completed[0]).read_bytes(), self.raw)
         self.assertEqual(self.source.read_bytes(), self.raw)
 
     def test_switch_dqb2_live_destination_is_rejected_before_directory_creation(self):

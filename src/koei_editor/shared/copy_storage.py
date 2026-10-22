@@ -1,5 +1,6 @@
 """Immutable copy tools. No operation here overwrites an existing file."""
 from datetime import datetime, timezone
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -75,6 +76,205 @@ def new_child_bound(data, directory, name, expected_identity):
     if os.name == 'nt':
         return _new_child_windows(data, directory, name, expected_identity)
     return _new_child_posix(data, directory, name, expected_identity)
+
+
+@contextmanager
+def _private_directory_security_windows():
+    """Match Python 3.14 mkdir(0700)'s protected, inheritable Windows DACL."""
+    import ctypes
+    from ctypes import wintypes
+
+    advapi32 = ctypes.WinDLL('advapi32', use_last_error=True)
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    convert = advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW
+    convert.argtypes = [wintypes.LPCWSTR, wintypes.DWORD,
+                        ctypes.POINTER(wintypes.LPVOID), ctypes.POINTER(wintypes.ULONG)]
+    convert.restype = wintypes.BOOL
+    kernel32.LocalFree.argtypes = [wintypes.HLOCAL]
+    kernel32.LocalFree.restype = wintypes.HLOCAL
+    descriptor = wintypes.LPVOID()
+    descriptor_size = wintypes.ULONG()
+    try:
+        # Restrict this directory and inherited children to SYSTEM,
+        # Administrators and the object owner; ignore a broad parent DACL.
+        converted = convert('D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;OW)',
+                            1, ctypes.byref(descriptor), ctypes.byref(descriptor_size))
+        if not converted or not descriptor.value or descriptor_size.value < 20:
+            raise SaveError('The private directory security descriptor could not be created safely.')
+        yield descriptor
+    finally:
+        if descriptor.value and kernel32.LocalFree(descriptor):
+            raise SaveError('The private directory security descriptor could not be released safely.')
+
+
+@contextmanager
+def new_directory_child_bound(directory, name, expected_identity, *, remove_on_close=False):
+    """Own a new directory and its checked parent throughout the caller's work.
+
+    Windows FILE_CREATE returns the actual creator handle. mkdir/open sequences
+    on other platforms cannot establish that ownership and therefore fail closed.
+    Locks are deleted only through their still-owned native directory handle.
+    """
+    _validate_child_name(name)
+    if os.name != 'nt':
+        raise SaveError('Owned private directory creation requires Windows; no output was created.')
+    with _new_directory_child_windows(Path(directory), name, expected_identity,
+                                      remove_on_close=remove_on_close) as owned:
+        yield owned
+
+
+def _check_owned_directory_path(path, identity):
+    try:
+        info = Path(path).lstat()
+    except OSError as error:
+        raise SaveError('An owned private directory path became unavailable.') from error
+    if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode)
+            or getattr(info, 'st_file_attributes', 0) & 0x400
+            or (info.st_dev, info.st_ino) != identity):
+        raise SaveError('An owned private directory path changed identity or became linked.')
+
+
+@contextmanager
+def _new_directory_child_windows(directory, name, expected_identity, *, remove_on_close=False):
+    """Create a directory child atomically relative to a pinned Windows handle."""
+    import ctypes
+    from ctypes import wintypes
+
+    FILE_LIST_DIRECTORY = 0x0001
+    FILE_ADD_SUBDIRECTORY = 0x0004
+    FILE_TRAVERSE = 0x0020
+    FILE_READ_ATTRIBUTES = 0x0080
+    FILE_SHARE_READ = 0x00000001
+    FILE_SHARE_WRITE = 0x00000002
+    SYNCHRONIZE = 0x00100000
+    OPEN_EXISTING = 3
+    FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+    FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+    FILE_ATTRIBUTE_DIRECTORY = 0x00000010
+    FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
+    FILE_DIRECTORY_FILE = 0x00000001
+    FILE_SYNCHRONOUS_IO_NONALERT = 0x00000020
+    FILE_CREATE = 2
+    OBJ_CASE_INSENSITIVE = 0x00000040
+
+    class BY_HANDLE_FILE_INFORMATION(ctypes.Structure):
+        _fields_ = [('dwFileAttributes', wintypes.DWORD), ('_rest', wintypes.DWORD * 12)]
+
+    class UNICODE_STRING(ctypes.Structure):
+        _fields_ = [('Length', wintypes.USHORT), ('MaximumLength', wintypes.USHORT),
+                    ('Buffer', wintypes.LPWSTR)]
+
+    class OBJECT_ATTRIBUTES(ctypes.Structure):
+        _fields_ = [('Length', wintypes.ULONG), ('RootDirectory', wintypes.HANDLE),
+                    ('ObjectName', ctypes.POINTER(UNICODE_STRING)), ('Attributes', wintypes.ULONG),
+                    ('SecurityDescriptor', wintypes.LPVOID),
+                    ('SecurityQualityOfService', wintypes.LPVOID)]
+
+    class IO_STATUS_BLOCK_UNION(ctypes.Union):
+        _fields_ = [('Status', ctypes.c_long), ('Pointer', wintypes.LPVOID)]
+
+    class IO_STATUS_BLOCK(ctypes.Structure):
+        _anonymous_ = ('u',)
+        _fields_ = [('u', IO_STATUS_BLOCK_UNION), ('Information', ctypes.c_size_t)]
+
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    ntdll = ctypes.WinDLL('ntdll')
+    kernel32.CreateFileW.restype = wintypes.HANDLE
+    kernel32.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                                     wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                                     wintypes.HANDLE]
+    kernel32.GetFileInformationByHandle.argtypes = [wintypes.HANDLE,
+                                                     ctypes.POINTER(BY_HANDLE_FILE_INFORMATION)]
+    kernel32.GetFileInformationByHandle.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    parent = kernel32.CreateFileW(
+        str(directory), FILE_LIST_DIRECTORY | FILE_ADD_SUBDIRECTORY | FILE_TRAVERSE | FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, None, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, None)
+    if parent == wintypes.HANDLE(-1).value:
+        raise SaveError('The private output directory could not be opened without following links.')
+    try:
+        import msvcrt
+        parent_fd = msvcrt.open_osfhandle(parent, os.O_RDONLY)
+    except OSError as error:
+        kernel32.CloseHandle(parent)
+        raise SaveError('The private output directory handle could not be bound safely.') from error
+    child = wintypes.HANDLE()
+    try:
+        parent = msvcrt.get_osfhandle(parent_fd)
+        parent_info = BY_HANDLE_FILE_INFORMATION()
+        if (not kernel32.GetFileInformationByHandle(parent, ctypes.byref(parent_info))
+                or not parent_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
+                or parent_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT):
+            raise SaveError('The private output directory changed identity or became linked.')
+        parent_stat = os.fstat(parent_fd)
+        if (parent_stat.st_dev, parent_stat.st_ino) != expected_identity:
+            raise SaveError('The private output directory changed identity or became linked.')
+
+        name_buffer = ctypes.create_unicode_buffer(name)
+        unicode_name = UNICODE_STRING(len(name.encode('utf-16-le')), len(name.encode('utf-16-le')) + 2,
+                                      ctypes.cast(name_buffer, wintypes.LPWSTR))
+        with _private_directory_security_windows() as security_descriptor:
+            object_attributes = OBJECT_ATTRIBUTES(
+                ctypes.sizeof(OBJECT_ATTRIBUTES), parent, ctypes.pointer(unicode_name),
+                OBJ_CASE_INSENSITIVE, security_descriptor, None)
+            iosb = IO_STATUS_BLOCK()
+            ntdll.NtCreateFile.argtypes = [ctypes.POINTER(wintypes.HANDLE), wintypes.ULONG,
+                                           ctypes.POINTER(OBJECT_ATTRIBUTES),
+                                           ctypes.POINTER(IO_STATUS_BLOCK), wintypes.LPVOID,
+                                           wintypes.ULONG, wintypes.ULONG, wintypes.ULONG,
+                                           wintypes.ULONG, wintypes.LPVOID, wintypes.ULONG]
+            ntdll.NtCreateFile.restype = ctypes.c_long
+            status = ntdll.NtCreateFile(
+                ctypes.byref(child), FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE
+                | (0x00010000 if remove_on_close else 0),
+                ctypes.byref(object_attributes), ctypes.byref(iosb), None, FILE_ATTRIBUTE_DIRECTORY,
+                FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_CREATE,
+                FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_FLAG_OPEN_REPARSE_POINT,
+                None, 0)
+        if status != 0:
+            raise SaveError('The private output subdirectory already exists or cannot be created safely.')
+        if iosb.Information != 2:  # FILE_CREATED; never adopt an existing directory.
+            raise SaveError('The native directory operation did not create a new owned directory.')
+        child_info = BY_HANDLE_FILE_INFORMATION()
+        if (not kernel32.GetFileInformationByHandle(child, ctypes.byref(child_info))
+                or not child_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
+                or child_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT):
+            raise SaveError('The private output subdirectory is not an ordinary directory.')
+        child_fd = msvcrt.open_osfhandle(child.value, os.O_RDONLY)
+        child = wintypes.HANDLE()
+        try:
+            child_stat = os.fstat(child_fd)
+            if not stat.S_ISDIR(child_stat.st_mode):
+                raise SaveError('The created private output is not a directory.')
+            child_identity = (child_stat.st_dev, child_stat.st_ino)
+            _check_owned_directory_path(directory, expected_identity)
+            _check_owned_directory_path(directory / name, child_identity)
+            yield directory / name, child_stat
+            _check_owned_directory_path(directory, expected_identity)
+            _check_owned_directory_path(directory / name, child_identity)
+        finally:
+            try:
+                if remove_on_close:
+                    class FILE_DISPOSITION_INFO(ctypes.Structure):
+                        _fields_ = [('DeleteFile', wintypes.BOOLEAN)]
+                    disposition = FILE_DISPOSITION_INFO(True)
+                    kernel32.SetFileInformationByHandle.argtypes = [
+                        wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD]
+                    kernel32.SetFileInformationByHandle.restype = wintypes.BOOL
+                    if not kernel32.SetFileInformationByHandle(
+                            msvcrt.get_osfhandle(child_fd), 4, ctypes.byref(disposition),
+                            ctypes.sizeof(disposition)):
+                        raise SaveError('The owned private lock could not be released safely; it was retained.')
+            finally:
+                os.close(child_fd)
+    finally:
+        try:
+            if child.value and not kernel32.CloseHandle(child):
+                raise SaveError('The private directory handle could not be closed safely.')
+        finally:
+            os.close(parent_fd)
 
 
 class ChildPublishedUncertainError(SaveError):

@@ -34,8 +34,11 @@ If completion is uncertain, the error reports the generated profile ID; refresh
 the list before retrying. Interrupted Windows writes may leave bounded pending
 files for review. The store never treats those files as completed profiles.
 
-This publication path supports Windows and Linux. Linux requires a filesystem
-with `O_TMPFILE` and access to `/proc/self/fd`; unsupported systems fail closed.
+Smart Playthrough Profiles requires Windows. Profile-store creation, profile
+locks and environment preparation use owned native directory handles; other
+operating systems fail before creating private output. The low-level manifest
+publisher also supports Linux filesystems with `O_TMPFILE` and `/proc/self/fd`,
+but that primitive alone does not enable the Vault or Profiles workflow there.
 These storage checks do not establish game compatibility.
 
 ## Manager component contract

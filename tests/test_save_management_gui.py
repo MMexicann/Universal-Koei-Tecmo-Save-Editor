@@ -14,6 +14,7 @@ from koei_editor.application import Application
 from koei_editor.shared.save_management_gui import SaveManagementWindow
 from koei_editor.shared.save_vault import SaveVault
 from tests.test_wo1_pc_format import procedural_raw
+from tests.owned_directory_contract import install_owned_directory_contract
 
 
 class SaveManagementProfileVaultBindingTests(unittest.TestCase):
@@ -142,6 +143,7 @@ class SaveManagementProfileVaultBindingTests(unittest.TestCase):
 
 class SaveManagementGuiTests(unittest.TestCase):
     def setUp(self):
+        install_owned_directory_contract(self)
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.folder = Path(temporary.name)

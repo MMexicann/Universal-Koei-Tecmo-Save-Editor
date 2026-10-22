@@ -5,7 +5,7 @@ exports from the other managers. Preparing a profile makes a new isolated
 directory; it never applies a mod, changes settings, edits a build, or writes to
 a live game save.
 """
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -22,6 +22,7 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import (
     ChildPublishedUncertainError,
     new_child_bound,
+    new_directory_child_bound,
     publish_new_child_bound,
 )
 from koei_editor.shared.save_safety import safe_path
@@ -330,20 +331,20 @@ def _profile_from_bytes(raw, expected_id):
                               tuple(components))
 
 
-def _directory(path, *, create=False):
-    """Resolve an ordinary directory using the vault's link and alias guards."""
-    path, info = _ordinary(path, directory=True, missing=True)
+def _directory(path, *, create=False, owned_directories=None, expected_parent_identity=None):
+    """Resolve ordinary storage; create only through an owned native handle."""
+    requested = Path(path).absolute()
+    parent, parent_info = _ordinary(requested.parent, directory=True)
+    if expected_parent_identity is not None and (parent_info.st_dev, parent_info.st_ino) != expected_parent_identity:
+        raise SaveError('The selected Save Vault directory changed identity.')
+    path, info = _ordinary(parent / requested.name, directory=True, missing=True)
+    if path.parent != parent:
+        raise SaveError('The profile-store parent directory changed identity.')
     if info is None and create:
-        parent, parent_info = _ordinary(path.parent, directory=True)
-        try:
-            path.mkdir(mode=0o700)
-        except FileExistsError:
-            pass
-        path, info = _ordinary(path, directory=True)
-        current_parent, current_parent_info = _ordinary(path.parent, directory=True)
-        if (current_parent, current_parent_info.st_dev, current_parent_info.st_ino) != (
-                parent, parent_info.st_dev, parent_info.st_ino):
-            raise SaveError('The profile-store parent directory changed identity.')
+        if owned_directories is None:
+            raise SaveError('Profile-store creation requires an owned directory scope.')
+        path, info = owned_directories.enter_context(new_directory_child_bound(
+            parent, path.name, (parent_info.st_dev, parent_info.st_ino)))
     return path, info
 
 
@@ -353,26 +354,13 @@ def _directory_identity(path):
 
 
 @contextmanager
-def _store_lock(directory):
-    lock = directory / '.lock'
-    _, info = _ordinary(lock, directory=True, missing=True)
+def _store_lock(directory, expected_identity):
+    lock, info = _ordinary(directory / '.lock', directory=True, missing=True)
     if info is not None:
         raise SaveError('Playthrough profile store is busy or has an interrupted operation lock.')
-    try:
-        lock.mkdir(mode=0o700)
-    except FileExistsError:
-        raise SaveError('Playthrough profile store is busy or has an interrupted operation lock.') from None
-    _, info = _ordinary(lock, directory=True)
-    identity = (info.st_dev, info.st_ino)
-    try:
+    with new_directory_child_bound(directory, lock.name, expected_identity,
+                                   remove_on_close=True):
         yield
-    finally:
-        try:
-            _, current = _ordinary(lock, directory=True)
-            if (current.st_dev, current.st_ino) == identity:
-                lock.rmdir()
-        except (OSError, SaveError):
-            pass
 
 
 class PlaythroughProfileStore:
@@ -387,8 +375,9 @@ class PlaythroughProfileStore:
     def directory(self):
         return Path(self.vault.root) / 'playthrough_profiles'
 
-    def _directory(self, *, create=False):
-        return _directory(self.directory, create=create)
+    def _directory(self, *, create=False, owned_directories=None):
+        return _directory(self.directory, create=create, owned_directories=owned_directories,
+                          expected_parent_identity=self.vault._root_identity)
 
     def _snapshot(self, game_id, snapshot_id):
         candidates = self.vault.list_snapshots(game_id=game_id)
@@ -471,24 +460,32 @@ class PlaythroughProfileStore:
                                      datetime.now(timezone.utc).isoformat(), game.id,
                                      game_version, save_snapshot_id, tuple(validated))
         raw = _profile_bytes(profile)
-        directory, directory_info = self._directory(create=True)
-        directory_identity = (directory_info.st_dev, directory_info.st_ino)
-        with _store_lock(directory):
-            existing, pending_count = self._scan(directory)
-            if len(existing) >= MAX_PROFILES:
-                raise SaveError('Playthrough profile store reached its profile limit.')
-            if pending_count >= MAX_PENDING_MANIFESTS:
-                raise SaveError('Playthrough profile store has too many interrupted manifest writes.')
-            if sum(len(_profile_bytes(item)) for item in existing) + len(raw) > MAX_STORE_BYTES:
-                raise SaveError('Playthrough profile store reached its metadata byte limit.')
-            self._snapshot(game.id, save_snapshot_id)
-            target = directory / (profile.id + '.json')
-            _ordinary(target, missing=True)
-            try:
-                publish_new_child_bound(raw, directory, target.name, directory_identity)
-            except ChildPublishedUncertainError as error:
+        manifest_published = False
+        try:
+            with ExitStack() as owned_directories:
+                directory, directory_info = self._directory(create=True, owned_directories=owned_directories)
+                directory_identity = (directory_info.st_dev, directory_info.st_ino)
+                with _store_lock(directory, directory_identity):
+                    existing, pending_count = self._scan(directory)
+                    if len(existing) >= MAX_PROFILES:
+                        raise SaveError('Playthrough profile store reached its profile limit.')
+                    if pending_count >= MAX_PENDING_MANIFESTS:
+                        raise SaveError('Playthrough profile store has too many interrupted manifest writes.')
+                    if sum(len(_profile_bytes(item)) for item in existing) + len(raw) > MAX_STORE_BYTES:
+                        raise SaveError('Playthrough profile store reached its metadata byte limit.')
+                    self._snapshot(game.id, save_snapshot_id)
+                    target = directory / (profile.id + '.json')
+                    _ordinary(target, missing=True)
+                    try:
+                        publish_new_child_bound(raw, directory, target.name, directory_identity)
+                        manifest_published = True
+                    except ChildPublishedUncertainError as error:
+                        raise ProfilePublicationUncertainError(profile.id) from error
+                return profile
+        except BaseException as error:
+            if manifest_published:
                 raise ProfilePublicationUncertainError(profile.id) from error
-        return profile
+            raise
 
     def list_profiles(self, game_id=None):
         if game_id is not None:
@@ -496,7 +493,7 @@ class PlaythroughProfileStore:
         directory, info = self._directory()
         if info is None:
             return ()
-        with _store_lock(directory):
+        with _store_lock(directory, (info.st_dev, info.st_ino)):
             profiles, _pending_count = self._scan(directory)
         return tuple(profile for profile in profiles if game_id is None or profile.game_id == game_id)
 
@@ -509,7 +506,7 @@ class PlaythroughProfileStore:
         directory, info = self._directory()
         if info is None:
             raise SaveError('The requested playthrough profile does not exist.')
-        with _store_lock(directory):
+        with _store_lock(directory, (info.st_dev, info.st_ino)):
             return self._read_profile(profile_id, directory)
 
     def preview(self, profile_id, installed_game_version):
@@ -585,77 +582,76 @@ class PlaythroughProfileStore:
             backup_snapshot_id = backup.id
 
         try:
-            try:
-                destination.mkdir(mode=0o700)
-            except FileExistsError:
-                raise SaveError('The environment destination appeared before preparation.') from None
-            _, created_info = _ordinary(destination, directory=True)
-            created_identity = (created_info.st_dev, created_info.st_ino)
-            _, current_parent_info = _ordinary(parent, directory=True)
-            if ((current_parent_info.st_dev, current_parent_info.st_ino)
-                    != (parent_info.st_dev, parent_info.st_ino)):
-                raise SaveError('The environment parent changed identity during preparation.')
+            with ExitStack() as owned_directories:
+                destination, created_info = owned_directories.enter_context(new_directory_child_bound(
+                    parent, destination.name, (parent_info.st_dev, parent_info.st_ino)))
+                created_identity = (created_info.st_dev, created_info.st_ino)
+                _, current_parent_info = _ordinary(parent, directory=True)
+                if ((current_parent_info.st_dev, current_parent_info.st_ino)
+                        != (parent_info.st_dev, parent_info.st_ino)):
+                    raise SaveError('The environment parent changed identity during preparation.')
 
-            save_path = self.vault.restore(profile.save_snapshot_id, save_destination)
-            if _directory_identity(destination) != created_identity:
-                raise SaveError('The new environment directory changed identity during preparation.')
+                save_path = self.vault.restore(profile.save_snapshot_id, save_destination,
+                                                   expected_parent_identity=created_identity,
+                                                   owned_directories=owned_directories)
+                if _directory_identity(destination) != created_identity:
+                    raise SaveError('The new environment directory changed identity during preparation.')
 
-            component_rows = []
-            if profile.components:
-                component_directory = destination / 'components'
-                component_directory.mkdir(mode=0o700)
-                component_directory, component_info = _ordinary(
-                    component_directory, directory=True)
-                component_identity = (component_info.st_dev, component_info.st_ino)
-                for component in profile.components:
-                    fields = _component_fields(component)
-                    digest = _component_digest(fields)
-                    document = dict(fields, sha256=digest)
-                    raw = _pretty_json(document, MAX_COMPONENT_BYTES)
-                    component_path = component_directory / (component.component + '.json')
-                    new_child_bound(raw, component_directory, component_path.name,
-                                    component_identity)
-                    if _read(component_path, MAX_COMPONENT_BYTES)[0] != raw:
-                        raise SaveError('Staged manager component failed its local read-back check.')
-                    component_rows.append({
-                        'component': component.component,
-                        'provider': component.provider,
-                        'schema_version': component.schema_version,
-                        'path': 'components/' + component.component + '.json',
-                        'sha256': digest,
-                        'applied': False,
-                    })
+                component_rows = []
+                if profile.components:
+                    component_directory = destination / 'components'
+                    component_directory, component_info = owned_directories.enter_context(
+                        new_directory_child_bound(destination, 'components', created_identity))
+                    component_identity = (component_info.st_dev, component_info.st_ino)
+                    for component in profile.components:
+                        fields = _component_fields(component)
+                        digest = _component_digest(fields)
+                        document = dict(fields, sha256=digest)
+                        raw = _pretty_json(document, MAX_COMPONENT_BYTES)
+                        component_path = component_directory / (component.component + '.json')
+                        new_child_bound(raw, component_directory, component_path.name,
+                                        component_identity)
+                        if _read(component_path, MAX_COMPONENT_BYTES)[0] != raw:
+                            raise SaveError('Staged manager component failed its local read-back check.')
+                        component_rows.append({
+                            'component': component.component,
+                            'provider': component.provider,
+                            'schema_version': component.schema_version,
+                            'path': 'components/' + component.component + '.json',
+                            'sha256': digest,
+                            'applied': False,
+                        })
 
-            relative_save = Path('save-copy') / snapshot.filename
-            report = {
-                'schema': 'koei-playthrough-environment-report',
-                'schema_version': 1,
-                'created_utc': datetime.now(timezone.utc).isoformat(),
-                'profile_id': profile.id,
-                'profile_name': profile.name,
-                'game_id': profile.game_id,
-                'profile_game_version': profile.game_version,
-                'installed_game_version': installed_game_version,
-                'installed_game_version_source': 'user_asserted',
-                'compatible': True,
-                'save_snapshot_id': profile.save_snapshot_id,
-                'save_snapshot_verified': True,
-                'restored_save_path': relative_save.as_posix(),
-                'active_save_backup_snapshot_id': backup_snapshot_id,
-                'components': component_rows,
-                'components_applied': False,
-                'components_staged_as_inert_json': True,
-                'live_save_written': False,
-            }
-            report_raw = _pretty_json(report, MAX_REPORT_BYTES)
-            report_path = destination / 'playthrough-report.json'
-            new_child_bound(report_raw, destination, report_path.name, created_identity)
-            if _read(report_path, MAX_REPORT_BYTES)[0] != report_raw:
-                raise SaveError('Environment report failed its local read-back check.')
-            if _directory_identity(destination) != created_identity:
-                raise SaveError('The new environment directory changed identity before completion.')
-            return PreparedEnvironment(destination, save_path, backup_snapshot_id,
-                                      report_path, report)
+                relative_save = Path('save-copy') / snapshot.filename
+                report = {
+                    'schema': 'koei-playthrough-environment-report',
+                    'schema_version': 1,
+                    'created_utc': datetime.now(timezone.utc).isoformat(),
+                    'profile_id': profile.id,
+                    'profile_name': profile.name,
+                    'game_id': profile.game_id,
+                    'profile_game_version': profile.game_version,
+                    'installed_game_version': installed_game_version,
+                    'installed_game_version_source': 'user_asserted',
+                    'compatible': True,
+                    'save_snapshot_id': profile.save_snapshot_id,
+                    'save_snapshot_verified': True,
+                    'restored_save_path': relative_save.as_posix(),
+                    'active_save_backup_snapshot_id': backup_snapshot_id,
+                    'components': component_rows,
+                    'components_applied': False,
+                    'components_staged_as_inert_json': True,
+                    'live_save_written': False,
+                }
+                report_raw = _pretty_json(report, MAX_REPORT_BYTES)
+                report_path = destination / 'playthrough-report.json'
+                new_child_bound(report_raw, destination, report_path.name, created_identity)
+                if _read(report_path, MAX_REPORT_BYTES)[0] != report_raw:
+                    raise SaveError('Environment report failed its local read-back check.')
+                if _directory_identity(destination) != created_identity:
+                    raise SaveError('The new environment directory changed identity before completion.')
+                return PreparedEnvironment(destination, save_path, backup_snapshot_id,
+                                          report_path, report)
         except Exception as error:
             backup_notice = (f' The separate-copy backup is Save Vault snapshot '
                              f'{backup_snapshot_id}.' if backup_snapshot_id is not None else '')

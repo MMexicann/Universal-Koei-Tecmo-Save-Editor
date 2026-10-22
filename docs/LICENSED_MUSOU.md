@@ -251,13 +251,14 @@ For Gundam Reborn, the public
 [Apollo `BLAS50671` patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLAS50671.savepatch)
 is an additional Asian PS3 source-map lead. The community [GameFAQs PS3 release
 catalog](https://gamefaqs.gamespot.com/ps3/730646-dynasty-warriors-gundam-reborn/data)
-lists Asian product code `BLAS50671`; both sources identify an edition to
-investigate, not its native save structure. The patch names resource and
-progression targets and proposes an `add` checksum operation at `0x10` over
-size `0x5F947`, stored at `0x0C`. No Asian native sample is available to
-independently validate the algorithm, coverage or serialization.
+lists Asian product code `BLAS-50671` (the Apollo patch filename omits the
+hyphen). These sources identify an edition to investigate, not its native save
+structure. The patch names resource and progression targets and proposes an
+`add` checksum operation at `0x10` over size `0x5F947`, stored at `0x0C`. No
+Asian native sample is available to independently validate the algorithm,
+coverage or serialization.
 The registered PS3 profile still admits only EU `NPEB02060` and Japan
-`NPJB00533`. To qualify `BLAS50671`, provide its own complete decrypted
+`NPJB00533`. To qualify `BLAS-50671`, provide its own complete decrypted
 `DATA.BIN` and original identity companion, exact build/DLC confirmed from native
 metadata, an unchanged native control, the full integrity writer or independently
 controlled integrity evidence, and labelled resource plus progression/equipment

@@ -585,11 +585,11 @@ class NexusApiClient:
         return ModDependencies(tuple(definitions), tuple(dlc_definitions))
 
     def download_archive(self, download_request, destination):
-        """Download an explicitly selected Nexus ZIP into a manager-owned temp path.
+        """Download one explicitly selected Nexus file into a manager-owned ZIP temp path.
 
         The signed CDN URL is fetched and consumed here; it is never returned to
-        the manager or persisted. The manager remains responsible for validating
-        the ZIP and installing its contents through its own game-specific rules.
+        the manager or persisted. Nexus's file name is a logical label, not a
+        physical archive name; the manager owns ZIP validation and installation.
         """
         if not isinstance(download_request, NexusDownloadRequest):
             raise ValueError('Invalid Nexus download request.')
@@ -604,8 +604,6 @@ class NexusApiClient:
         _validate_opaque_id(download_request.file_version_id, 'file version id')
         _validate_id(download_request.game_scoped_file_version_id, 'game scoped file version id')
         _validate_opaque_id(download_request.file_name, 'file name')
-        if not download_request.file_name.casefold().endswith('.zip'):
-            raise NexusPermissionError('The Nioh 2 Mod Manager accepts ZIP archives only.')
         if self._api_key is None:
             raise NexusAuthenticationError('Add your Nexus API key before sending a download to the Mod Manager.')
 

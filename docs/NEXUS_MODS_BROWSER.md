@@ -94,32 +94,38 @@ an API key, or authorize a public release. Follow Nexus's current policy before
 distributing an API-enabled build.
 
 For downloads, the browser calls the documented, experimental download-link
-operation only after the user selects **Send to Mod Manager** for a Nioh 2 ZIP.
-Premium/direct-download-eligible files use the session API key. When Nexus
-requires free-user download credentials, the user may enter the `key` and Unix
-`expires` values supplied by Nexus's own download flow; both are held in memory
-and sent only to the Nexus API endpoint. The API key remains in the `apikey`
-header. Credentials are never saved or passed to the Mod Manager. The returned
-signed URL is consumed in the browser client, follows HTTPS redirects only, and
-is streamed into a new manager-owned temporary ZIP with a 1 GiB limit. The URL
-is neither returned to the manager nor stored. Quarantined and moderated files
-remain unavailable; Nexus's response and permission errors are respected.
+operation only after the user selects **Send to Mod Manager** for a Nioh 2 file.
+The API's `ModFile.name` is a logical label (for example, `Main files`), not a
+physical archive filename, so the browser does not infer archive format from it.
+The manager requests a `.zip` temporary path and validates the downloaded bytes
+as an actual ZIP before import. Premium/direct-download-eligible files use the
+session API key. When Nexus requires free-user download credentials, the user
+may enter the `key` and Unix `expires` values supplied by Nexus's own download
+flow; both are held in memory and sent only to the Nexus API endpoint. The API
+key remains in the `apikey` header. Credentials are never saved or passed to
+the Mod Manager. The returned signed URL is consumed in the browser client,
+follows HTTPS redirects only, and is streamed into a new manager-owned
+temporary ZIP with a 1 GiB limit. The URL is neither returned to the manager nor
+stored. Quarantined and moderated files remain unavailable; Nexus's response
+and permission errors are respected.
 
 ## Mod Manager handoff
 
 The typed `NexusDownloadRequest`/`DownloadHandoff` boundary accepts only a
-user-selected request and a downloader capability. The manager adapter is
-implemented in the Mod Manager change and accepts Nioh 2 ZIPs only through a
-bounded background queue. It downloads to manager-owned temporary storage,
-passes the archive through the existing Nioh 2 package validator, and reports
-the result in the manager workspace. It does not auto-install the imported
-package; users still review and apply installation through the manager. Other
-supported Nexus games remain browse-only until a matching manager importer is
-available.
+user-selected request and a downloader capability bound to that exact request.
+The manager adapter is implemented in the Mod Manager change and accepts Nioh 2
+files only through a bounded background queue. It downloads to manager-owned
+temporary storage, passes the archive through the existing Nioh 2 package
+validator, and reports the result in the manager workspace. It does not
+auto-install the imported package; users still review and apply installation
+through the manager. Other supported Nexus games remain browse-only until a
+matching manager importer is available.
 
 Open the Mod Manager once in the application to attach its queue to the Nexus
 browser. The download action stays disabled until that manager workspace is
-available and the user has selected a Nioh 2 ZIP.
+available and the user has selected a Nioh 2 file. The Nexus file label does not
+have to end in `.zip`; the manager checks the temporary download as an actual
+ZIP before import.
 
 The browser receives no install path or install logic. The manager receives
 request metadata and a capability to fetch the selected archive; it never
@@ -130,12 +136,13 @@ eligibility, including files unavailable due to quarantine or moderation.
 ## Automated checks
 
 `tests/test_nexus_mods.py` uses only mocked API responses and a fake streamed
-archive. It covers the
-documented request shape, local filtering, plain-text descriptions, required
-authentication, rate and permission errors, response parsing, explicit game
-domains, download authentication and expiry, HTTPS links, ZIP/game restrictions,
-and the credential-free manager handoff. It never contacts Nexus or downloads
-real mod archives.
+archive. It covers the documented request shape, local filtering, plain-text
+descriptions, required authentication, rate and permission errors, response
+parsing, explicit game domains, download authentication and expiry, HTTPS links,
+temporary ZIP path and game restrictions, exact-request downloader binding, and
+the credential-free manager handoff. Mocked file labels such as `Main files`
+verify that API labels are not treated as physical filenames. Tests never
+contact Nexus or download real mod archives.
 `tests/test_nexus_contract_audit.py` checks that only rate-limit telemetry
 headers are retained, and the workspace test guards against handing off a stale
 file version while another file is loading.

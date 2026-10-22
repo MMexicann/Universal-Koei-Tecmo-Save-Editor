@@ -24,12 +24,15 @@ _SORT_FIELDS = ('trending', 'popular', 'new', 'updated', 'endorsements')
 class _NexusArchiveDownloader:
     """Narrow, in-memory capability for one manager-initiated archive transfer."""
 
-    __slots__ = ('__client',)
+    __slots__ = ('__client', '__request')
 
-    def __init__(self, client):
+    def __init__(self, client, request):
         self.__client = client
+        self.__request = request
 
     def download_archive(self, download_request, destination):
+        if download_request is not self.__request:
+            raise ValueError('This downloader is bound to a different selected Nexus file.')
         return self.__client.download_archive(download_request, destination)
 
 
@@ -320,9 +323,8 @@ class NexusModsWorkspace:
         elif (self._selected_game() is not None
               and self._selected_game().game_id != 'nioh2_pc'):
             hint = 'nexus_manager_game_unsupported'
-        elif (self._selected_version is not None
-              and not self._selected_version.file_name.casefold().endswith('.zip')):
-            hint = 'nexus_manager_zip_only'
+        elif self._selected_version is not None:
+            hint = 'nexus_manager_zip_validation'
         else:
             hint = None
         self.manager_hint.configure(text=self.tr(hint) if hint else '')
@@ -627,11 +629,9 @@ class NexusModsWorkspace:
                      and self._selected_summary.game_domain == game.domain)
         visible_mod = (self._selected_summary is not None
                        and self._selected_summary.mod_id in self._shown_mods)
-        compatible_file = (self._selected_version is not None
-                           and self._selected_version.file_name.casefold().endswith('.zip'))
         compatible_game = game is not None and game.game_id == 'nioh2_pc'
         has_key = getattr(self._client, 'has_api_key', False)
-        state = ('normal' if ready and has_key and compatible_game and compatible_file
+        state = ('normal' if ready and has_key and compatible_game
                  and file_matches and same_game and visible_mod else 'disabled')
         self._update_manager_hint()
         self.manager_button.configure(state=state)
@@ -663,7 +663,7 @@ class NexusModsWorkspace:
             self.status_var.set(self.tr('nexus_download_api_key_needed'))
             return False
         game = self._selected_game()
-        if game is None or game.game_id != 'nioh2_pc' or not version.file_name.casefold().endswith('.zip'):
+        if game is None or game.game_id != 'nioh2_pc':
             self.status_var.set(self.tr('nexus_manager_game_unsupported'))
             return False
         request = build_download_request(summary, version, game_id=game.game_id)
@@ -672,7 +672,7 @@ class NexusModsWorkspace:
             self.status_var.set(self.tr('nexus_manager_invalid'))
             return False
         try:
-            accepted = enqueue(request, _NexusArchiveDownloader(self._client))
+            accepted = enqueue(request, _NexusArchiveDownloader(self._client, request))
         except Exception:
             self.status_var.set(self.tr('nexus_manager_error'))
             return False

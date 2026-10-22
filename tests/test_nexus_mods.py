@@ -1,6 +1,7 @@
 """Mocked contract tests for Nexus Mods discovery and metadata calls."""
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import tempfile
@@ -125,7 +126,8 @@ class _FakeStatus:
 
 class _FakeLabel:
     def configure(self, **_kwargs):
-        pass
+        self.options = getattr(self, 'options', {})
+        self.options.update(_kwargs)
 
 
 class _FakeDownloadClient:
@@ -329,10 +331,10 @@ class NexusApiTests(unittest.TestCase):
         self.assertNotIn('download_url', request.__dataclass_fields__)
         self.assertEqual(request.mod_page_url, 'https://www.nexusmods.com/dynastywarriors8/mods/17')
 
-    def test_nioh2_download_uses_documented_link_endpoint_and_streams_selected_zip(self):
+    def test_nioh2_download_uses_documented_link_endpoint_for_logical_file_label(self):
         summary = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
                              'ModAuthor', 'Gameplay', 1, 2, '', False, True)
-        version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
+        version = ModFileVersion('version-a', '300', 'file-a', 'Main files', 'Release 1',
                                  '1.0', 'main', '', True)
         request = build_download_request(summary, version)
         download_expires = str(int((datetime.now(timezone.utc) + timedelta(hours=1)).timestamp()))
@@ -372,8 +374,8 @@ class NexusApiTests(unittest.TestCase):
         self.assertEqual(streamed['max_bytes'], 1024 * 1024 * 1024)
         self.assertNotIn('signed', repr(request))
 
-    def test_download_requires_nioh2_zip_and_api_key_without_contacting_nexus(self):
-        version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
+    def test_download_requires_nioh2_and_api_key_without_contacting_nexus(self):
+        version = ModFileVersion('version-a', '300', 'file-a', 'Main files', 'Release 1',
                                  '1.0', 'main', '', True)
         other_game = ModSummary('9001', '17', 'dynastywarriors8', 'Koei Mod', '', '1.2',
                                 'ModAuthor', 'Gameplay', 1, 2, '', False, True)
@@ -389,10 +391,6 @@ class NexusApiTests(unittest.TestCase):
         api = client(transport, api_key='private-key')
         with self.assertRaises(NexusPermissionError):
             api.download_archive(build_download_request(other_game, version), '/tmp/not-created.zip')
-        non_zip = ModFileVersion('version-b', '301', 'file-b', 'KoeiMod.7z', 'Release 1',
-                                 '1.0', 'main', '', True)
-        with self.assertRaises(NexusPermissionError):
-            api.download_archive(build_download_request(nioh_game, non_zip), '/tmp/not-created.zip')
         self.assertEqual(transport.requests, [])
 
     def test_download_rejects_expired_links_and_cleans_failed_partial_stream(self):
@@ -453,11 +451,11 @@ class NexusApiTests(unittest.TestCase):
 
 
 class NexusWorkspaceAndDescriptionTests(unittest.TestCase):
-    def test_selected_nioh2_zip_is_enqueued_with_a_narrow_downloader_capability(self):
+    def test_selected_nioh2_logical_file_label_is_enqueued_and_capability_is_request_bound(self):
         workspace = NexusModsWorkspace.__new__(NexusModsWorkspace)
         summary = ModSummary('9001', '17', 'nioh2', 'Selected Mod', '', '1.0',
                              'Author', 'Gameplay', 1, 2, '', False, True)
-        version = ModFileVersion('version-2', '300', 'file-2', 'Selected.zip', 'Release 1',
+        version = ModFileVersion('version-2', '300', 'file-2', 'Main files', 'Release 1',
                                  '1.0', 'main', '', True)
         workspace._selected_summary = summary
         workspace._selected_version = version
@@ -474,14 +472,27 @@ class NexusWorkspaceAndDescriptionTests(unittest.TestCase):
         workspace.status_var = _FakeStatus()
         workspace.language = 'en'
 
+        workspace._sync_manager_button()
+        self.assertEqual(workspace.manager_button.state, 'normal')
+        self.assertIn('temporary ZIP path', workspace.manager_hint.options['text'])
         self.assertTrue(workspace.handoff_selected_version())
 
         request, downloader = workspace.download_handoff.accepted
         self.assertEqual(request.game_id, 'nioh2_pc')
         self.assertEqual(request.game_domain, 'nioh2')
-        self.assertEqual(request.file_name, 'Selected.zip')
+        self.assertEqual(request.file_name, 'Main files')
         self.assertNotIn('api_key', request.__dataclass_fields__)
         self.assertEqual(downloader.download_archive(request, '/tmp/selected.zip'), 1)
+        self.assertEqual(workspace._client.downloads, [(request, '/tmp/selected.zip')])
+
+        different_request = replace(request, file_id='another-file')
+        with self.assertRaises(ValueError):
+            downloader.download_archive(different_request, '/tmp/another.zip')
+        equivalent_copy = replace(request)
+        self.assertEqual(equivalent_copy, request)
+        self.assertIsNot(equivalent_copy, request)
+        with self.assertRaises(ValueError):
+            downloader.download_archive(equivalent_copy, '/tmp/equivalent-copy.zip')
         self.assertEqual(workspace._client.downloads, [(request, '/tmp/selected.zip')])
 
     def test_hiding_a_selected_mod_invalidates_its_pending_details_request(self):

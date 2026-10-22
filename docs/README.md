@@ -63,6 +63,7 @@ verified installation adapter supports Nioh 2 PC only.
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
 - [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
+- [Nexus Mods browser, API use and Mod Manager handoff](NEXUS_MODS_BROWSER.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)

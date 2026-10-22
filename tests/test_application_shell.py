@@ -140,6 +140,9 @@ class ApplicationShellTests(unittest.TestCase):
     def tearDown(self):
         if hasattr(self, 'root'):
             if self.root is not None:
+                browser = getattr(self.app, 'nexus_mods', None)
+                if browser is not None:
+                    browser.close()
                 if hasattr(self, '_original_scaling'):
                     self.root.tk.call('tk', 'scaling', self._original_scaling)
                 self.root.destroy()
@@ -253,6 +256,22 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertEqual(self.app.shell_settings.recent[0], command_id)
         self.app.command_palette.close()
         self.assertFalse(self.app.sessions)
+
+    def test_nexus_browser_is_a_localized_tool_and_uses_active_pc_game(self):
+        self.app.select_game('pw4')
+        browser = self.app.show_nexus_mods()
+        self.root.update()
+        self.assertIs(browser, self.app.nexus_mods)
+        self.assertEqual(browser._selected_game().game_id, 'pw4')
+        self.assertFalse(browser._client.has_api_key)
+        self.assertEqual(str(browser.manager_button['state']), 'disabled')
+        self.assertEqual(self.app.editing_tools_menu.entrycget(6, 'label'), 'Nexus Mods')
+        self.assertIn('tool:nexus_mods', {entry.id for entry in self.app.command_entries()})
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.root.update()
+        self.assertEqual(browser.title_label.cget('text'), 'Nexus-Mods-Browser')
+        self.assertEqual(self.app.editing_tools_menu.entrycget(6, 'label'), 'Nexus Mods')
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
         for key in ('editing_presets', 'mod_manager', 'research_lab', 'workflow_builder', 'emulator_hub'):

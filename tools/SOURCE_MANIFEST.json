@@ -708,8 +708,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16693,
-      "sha256": "b32dd03474eaad2ae5d3fc5fdb5301862a0268cf137cc5e60b58cbddee3dfcc7"
+      "bytes": 16825,
+      "sha256": "0fc30ab1d0f347a28024f11b7fbe632eb500943ec05542e7b618062333fcacd9"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -858,8 +858,8 @@
     },
     {
       "path": "docs/SAVE_MANAGEMENT.md",
-      "bytes": 5903,
-      "sha256": "7dd60a468319a949a6f9656321095f0f80946d70227c51e701895d41013f6019"
+      "bytes": 7503,
+      "sha256": "ccf0379b520615164634d50cdf52d48a8262f21ffa9be299f548c0c4d43baf8d"
     },
     {
       "path": "docs/SAVE_RESEARCH_LAB.md",
@@ -875,6 +875,11 @@
       "path": "docs/SCENARIO_ARMY_EDITOR_REPORT.md",
       "bytes": 4723,
       "sha256": "21c6679913bed61c9b2d82ec10c3fb1356d890bbe40d5840c71d5a71f732b8d1"
+    },
+    {
+      "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
+      "bytes": 3957,
+      "sha256": "beb4501929c207271ce8225923ba3679123c66820a9ec07dcadb4e27942adf42"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -3967,6 +3972,16 @@
       "sha256": "9c068741f15f4f2326b2920ebba48d2d1dafb499f35223af28bc6b858a3b486c"
     },
     {
+      "path": "src/koei_editor/shared/playthrough_profiles.py",
+      "bytes": 28617,
+      "sha256": "b59c91d23607387e1af85a10c7de7f7298b69b98306ba7484ab601de461a6fed"
+    },
+    {
+      "path": "src/koei_editor/shared/playthrough_profiles_gui.py",
+      "bytes": 27316,
+      "sha256": "f9ca0387e3344332a463a64472210226a3597e988e108a63fe3df710deba4c34"
+    },
+    {
       "path": "src/koei_editor/shared/plugin_gui.py",
       "bytes": 13410,
       "sha256": "63956c839fb75065e9d97f7c6467ff255450c3289d11ac093922c7c99a9d5363"
@@ -4078,8 +4093,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_management_gui.py",
-      "bytes": 21785,
-      "sha256": "1570635827cdbe0b478eba1adbc21366aa790aeb047c742e38a455ec12779ed6"
+      "bytes": 23800,
+      "sha256": "e38026516f5f74500e0c118e9281c72bde5c73be3ab873ed85388a559fb85828"
     },
     {
       "path": "src/koei_editor/shared/save_safety.py",
@@ -4173,8 +4188,8 @@
     },
     {
       "path": "tests/README.md",
-      "bytes": 11439,
-      "sha256": "2390020f3bdce1c324e334c48824d241e89ad0cdcff0e7c81b14f3926879fb58"
+      "bytes": 11803,
+      "sha256": "90568b7463709181f3735baf8112b4153ca837f40a9c70f4df39007caccffc46"
     },
     {
       "path": "tests/scalar_contract.py",
@@ -6128,8 +6143,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33186,
-      "sha256": "8ae2c398e7e915e5a1a459d1c6c31a4f59150391399dfe0015623a71cedb73e1"
+      "bytes": 33278,
+      "sha256": "26aa164631b3ef5fe928d797fe949078dfd29e14555dc8f91e4f227be9d02184"
     },
     {
       "path": "tools/refresh_manifest.py",

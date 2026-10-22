@@ -78,10 +78,11 @@ Steam achievements are a separate source from opened-save records. The
 DW3 Remastered Steam mapping uses app ID `3841510`, verified from the
 [official Steam store page](https://store.steampowered.com/app/3841510/DYNASTY_WARRIORS_3_Complete_Edition_Remastered/).
 The [Steamworks ISteamUserStats API](https://partner.steamgames.com/doc/webapi/ISteamUserStats)
-provides the title schema and a player's achievement states. The app requests
-those endpoints only after an explicit user action and requires a Steam Web API
-key and 17-digit SteamID64 for that lookup. These values stay in memory for the
-request and are not saved with preferences, checklists, reports or game saves.
+provides the title schema and a player's achievement states. The provider
+requires a Steam Web API key and 17-digit SteamID64 for a lookup. It makes no
+requests until a caller explicitly invokes it with those values. The Completion
+Companion should invoke it only after an explicit user action. The provider
+does not save these values or include them in returned snapshots.
 
 The provider joins player state to the official schema by exact achievement API
 name. It displays `unlocked` only for an explicit API value of `1` and `locked`
@@ -94,8 +95,8 @@ with the displayed snapshot; the profile identifier and API key do not.
 
 This mapping does not infer Steam achievements from save flags. DW3's existing
 save-backed characters, mission routes and gallery records remain sourced from
-the opened save. Other games without an explicit provider display achievement
-information as unavailable.
+the opened save. Other games without an explicit provider have no platform
+achievement mapping in this provider.
 
 | Claim | Public evidence | Limit |
 | --- | --- | --- |

@@ -122,25 +122,31 @@ def _player_states(response, requested_steam_id):
     states = {}
     seen = set()
     ambiguous = set()
+    malformed = False
     for row in rows:
         if type(row) is not dict:
+            malformed = True
             continue
         identity = row.get('apiname')
         if type(identity) is not str or not identity or len(identity) > 256:
+            malformed = True
             continue
         if identity in seen:
             states.pop(identity, None)
             ambiguous.add(identity)
+            malformed = True
             continue
         seen.add(identity)
         achieved = row.get('achieved')
         unlocktime = row.get('unlocktime')
         if type(achieved) is not int or achieved not in (0, 1):
+            malformed = True
             continue
         if type(unlocktime) is not int or unlocktime < 0:
+            malformed = True
             continue
         states[identity] = (achieved, unlocktime)
-    return states, ambiguous
+    return states, ambiguous, malformed
 
 
 def _utc_time(timestamp):
@@ -172,9 +178,9 @@ def fetch_steam_achievements(api_key, steam_id64, app_id, *, opener=None, now=No
     try:
         entries = _schema_entries(_read_json(schema_url, open_url))
         player = _read_json(player_url, open_url)
-        states, ambiguous = _player_states(player, steam_id64)
+        states, ambiguous, malformed = _player_states(player, steam_id64)
         mapped_ids = {item['id'] for item in entries}
-        complete = mapped_ids == set(states) and not ambiguous
+        complete = mapped_ids == set(states) and not ambiguous and not malformed
         achievement_rows = []
         for item in entries:
             state = states.get(item['id'])
@@ -190,7 +196,7 @@ def fetch_steam_achievements(api_key, steam_id64, app_id, *, opener=None, now=No
         if not complete:
             return SteamAchievementSnapshot(
                 app_id=app_id, status='unavailable', achievements=tuple(achievement_rows),
-                note='Steam’s player response did not exactly match its achievement schema; missing or extra states remain unavailable.',
+                note='Steam’s player response did not exactly match its achievement schema; malformed, missing or extra states remain unavailable.',
             )
         unlocked = sum(state[0] == 1 for state in states.values())
         stamp = (now or (lambda: datetime.now(timezone.utc)))()

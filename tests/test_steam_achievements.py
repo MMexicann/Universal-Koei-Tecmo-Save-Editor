@@ -121,6 +121,26 @@ class SteamAchievementTests(unittest.TestCase):
         self.assertIsNone(result.unlocked_count)
         self.assertIsNone(result.total_count)
 
+    def test_malformed_extra_player_rows_cannot_verify_schema_match(self):
+        valid_rows = [
+            {'apiname': 'ACH_FIRST', 'achieved': 1, 'unlocktime': 1735689600},
+            {'apiname': 'ACH_SECRET', 'achieved': 0, 'unlocktime': 0},
+        ]
+        malformed_rows = (
+            None,
+            {},
+            {'apiname': 'UNMAPPED', 'achieved': 'invalid', 'unlocktime': 0},
+            {'apiname': 'UNMAPPED', 'achieved': 1, 'unlocktime': 'invalid'},
+        )
+        for malformed in malformed_rows:
+            with self.subTest(row=malformed):
+                opened = Opener(Response(schema()),
+                                Response(player([*valid_rows, malformed])))
+                result = self.fetch(opened)
+                self.assertEqual(result.status, 'unavailable')
+                self.assertIsNone(result.unlocked_count)
+                self.assertIsNone(result.total_count)
+
     def test_private_profile_marks_every_state_unavailable_not_locked(self):
         opened = Opener(Response(schema()), Response(player(success=False)))
         result = self.fetch(opened)

@@ -7,6 +7,11 @@
       "sha256": "1f29b352629d4399c686aae61bdcd0fd05c3adf9fd13b95e79fe81e72fad55c1"
     },
     {
+      "path": ".github/workflows/mod-testing-sandbox.yml",
+      "bytes": 708,
+      "sha256": "330fbdf547c961d29cd622cf3adf3041a1fd1bf0d40fd55a694ee7f9ff522ced"
+    },
+    {
       "path": ".github/workflows/windows-release.yml",
       "bytes": 22653,
       "sha256": "ce0ffb62b2340395605410d79f11e40b4c21eec828ef8647792d343ce3790235"
@@ -557,6 +562,11 @@
       "sha256": "a495376e8be46b66534499c13975391f25a5db70b1aaaea2a609a2c681bdb6f8"
     },
     {
+      "path": "docs/MOD_TESTING_SANDBOX.md",
+      "bytes": 5867,
+      "sha256": "a41210308688d4e845acd38e8116b067815e165f932ba15f84aec1fcdaa95864"
+    },
+    {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
       "bytes": 10366,
       "sha256": "158ce3091d6e270bb30fc1f9884800cf92b3a3ac75b445e0c68b074fa7d2e61e"
@@ -753,8 +763,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 17644,
-      "sha256": "382060e930c5e4694fe47d1b0b2330d20d2837c6d4840ad08afb4c66dec7bbd9"
+      "bytes": 17754,
+      "sha256": "694fee1d58465d543c1a50efed4c60ac706aba05a50df588ed7a3cabac313a77"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -5728,8 +5738,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 35452,
-      "sha256": "26284ac1381ba077a34db11b07ee11327b94ad4789cf731eba7e1a9158f3b27d"
+      "bytes": 35701,
+      "sha256": "c28ef698e1e3e548c99893bec8c4fe03fcc0abfa4003af04ce155a58f6ac3c43"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
@@ -6632,9 +6642,59 @@
       "sha256": "97a8a0fee9783ef29565febc8a03af40ca592f1ff960a299186c47939f711cc4"
     },
     {
+      "path": "tools/mod_testing_sandbox/README.md",
+      "bytes": 2456,
+      "sha256": "3a5b4789179ad2908707ac77e1b14911be5208ed5357499cf18a1cdfb37d29af"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/index.html",
+      "bytes": 22710,
+      "sha256": "7d892835432b99dfde662f6185dbaf85d9474c47658813b4ef666231770482b6"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/package.json",
+      "bytes": 181,
+      "sha256": "c4dfc9c48ca8e93a79eea9a228362fc3f7b07575517dba22259f9f23a7f745a0"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/scripts/build.mjs",
+      "bytes": 242,
+      "sha256": "1ef906a6bc85c3c833c9e986c99a2cc648881e9f4e456c73ebf932c10a61821c"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/src/main.mjs",
+      "bytes": 43868,
+      "sha256": "da54853c21cf9ccaeccc224d240e2af50dedc2752d183ed4f8eee175311dc6f6"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/src/sandbox-core.mjs",
+      "bytes": 42386,
+      "sha256": "0a243efb4f5086e627864251e5c7700f1e30e1c85c1d5945a55078cb152866e7"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/src/styles.css",
+      "bytes": 28889,
+      "sha256": "1d21b6bf7e94d8f2760392d452b01b5f35819393ffaf9187a8d15642b42a2cb1"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/src/workspace-store.mjs",
+      "bytes": 8969,
+      "sha256": "5c6e9b8f76f2e0ced86fcfd5d81ede01acf0e77eac8718d7fa164dbe825b365a"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/test/security.test.mjs",
+      "bytes": 27659,
+      "sha256": "8a2e015537234d7ff2ae80cad1b2a67ceb6b19ee6d02249f66bd107b6a98f78c"
+    },
+    {
+      "path": "tools/mod_testing_sandbox/test/workspace-store.test.mjs",
+      "bytes": 8450,
+      "sha256": "e91ac1e98527ad1f6bd774120c747ab7a4bacd5bcae5fc437529b1ba26e84c4c"
+    },
+    {
       "path": "tools/package_release.py",
-      "bytes": 37143,
-      "sha256": "5da58aa6e80d2f7ceddeb3b616e720d0a1b6f8252b128eec7570e7f6d967e53a"
+      "bytes": 37947,
+      "sha256": "c0586b23d0370bb0c9f250a870083fb2482fcff22546826b65d511a8624a2cab"
     },
     {
       "path": "tools/refresh_manifest.py",

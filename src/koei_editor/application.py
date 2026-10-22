@@ -52,7 +52,7 @@ class Application(Appearance):
         self._owned_minimum = (780, 680)
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
-        self._editing_menu_localized_commands = {}
+        self._editing_tools_menu_commands = {}
         for key, callback in (
                 ('editing_presets', self.show_editing_presets),
                 ('transfer', self.show_transfer),
@@ -62,8 +62,7 @@ class Application(Appearance):
             if key == 'research_lab':
                 self.editing_tools_menu.add_separator()
             self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
-            command = self.editing_tools_menu.entrycget('end', 'command')
-            self._editing_menu_localized_commands[command] = key
+            self._editing_tools_menu_commands[key] = self.editing_tools_menu.entrycget('end', 'command')
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -271,11 +270,9 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        last_entry = self.editing_tools_menu.index('end')
-        for index in range(last_entry + 1):
-            command = self.editing_tools_menu.entrycget(index, 'command')
-            key = self._editing_menu_localized_commands.get(command)
-            if key:
+        for key in self._editing_tools_menu_commands:
+            index = self._editing_tools_menu_index(key)
+            if index is not None:
                 self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
         self.refresh_sessions()
         self.show_platform()
@@ -914,6 +911,18 @@ class Application(Appearance):
         self._show_editing_tool(self.controller_profiles, self.tr('controller_profiles'))
         self._remember_workspace('tool:controller_profiles')
         return self.controller_profiles
+
+    def _editing_tools_menu_index(self, key):
+        """Find a registered Editing and Research menu command by its Tk ID."""
+        command = self._editing_tools_menu_commands.get(key)
+        end = self.editing_tools_menu.index('end')
+        if command is None or end is None:
+            return None
+        for index in range(end + 1):
+            if (self.editing_tools_menu.type(index) == 'command'
+                    and self.editing_tools_menu.entrycget(index, 'command') == command):
+                return index
+        return None
 
     def _show_editing_tool(self, tool, title):
         self.library.pack_forget()

@@ -344,7 +344,7 @@ class EmulatorHubTests(unittest.TestCase):
         self.assertEqual(qualify.call_count, 1)
         self.assertEqual(qualify.call_args.args, (result, entry))
         self.assertIsInstance(qualify.call_args.kwargs.get('cancel'), threading.Event)
-        callback.assert_called_once_with(deception4.GAME_ID, save)
+        callback.assert_called_once_with(deception4.GAME_ID, save.resolve())
         status.set.assert_called_once()
 
     def test_scan_worker_result_clears_active_root_confirmation(self):

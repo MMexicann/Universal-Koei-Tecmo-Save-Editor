@@ -22,16 +22,16 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "6fa3cf05d5230f1f7eb98350f04d41a7e8c3dbcf",
+  "base_commit": "05c8bfed36589e76a9795f8b77ecf3cf1c652deb",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 194,
-    "passed": 133,
-    "skipped": 61,
+    "run": 216,
+    "passed": 154,
+    "skipped": 62,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
   },

@@ -69,10 +69,9 @@ individual game/platform combinations, not distinct games or complete series.
 | Strategy and classics | Selected Romance of the Three Kingdoms, Nobunaga’s Ambition, Uncharted Waters, Gemfire, Monster Rancher DS, Pokémon Conquest, Tecmo Super Bowl and Project Zero/Fatal Frame |
 
 Save profiles span PC, PlayStation, Xbox, Nintendo and classic platforms.
-**The downloadable application runs on Windows.** Save Vault and Playthrough
-Profiles also require Windows when running from source. Use the
-[full platform catalog](docs/SUPPORTED_GAMES.md) for exact editions, regions,
-required files and available controls. Research on additional ports or editions
+**The downloadable application runs on Windows.** Save Vault and Playthrough Profiles
+also require Windows when running from source. Use the [full platform catalog](docs/SUPPORTED_GAMES.md)
+for exact editions, regions, required files and available controls. Research on additional ports or editions
 adds no new editing support; the inventory remains 98 profiles and 15 platforms.
 
 ## Download and install

@@ -155,9 +155,18 @@ class Editor(Appearance):
         self.edit_page = ttk.Frame(self.workspace_tabs)
         self.workspace_tabs.add(self.dashboard_page, text='Progression Dashboard')
         self.workspace_tabs.add(self.edit_page, text='Edit Fields')
+        self.scenario_view = None
+        scenario_title = getattr(self.presentation, 'scenario_view_title', None)
+        if scenario_title:
+            self.scenario_page = ttk.Frame(self.workspace_tabs)
+            self.workspace_tabs.add(self.scenario_page, text=scenario_title)
+            from koei_editor.shared.territory_visualization import TerritoryOverview
+            self.scenario_view = TerritoryOverview(self.scenario_page, theme=theme)
+            self.scenario_view.pack(fill='both', expand=True)
         from koei_editor.shared.progression import ProgressionDashboard
         from koei_editor.shared.progression_view import ProgressionView
         self._dashboard_document = None
+        self._scenario_view_document = None
         self.dashboard_view = ProgressionView(self.dashboard_page,
             ProgressionDashboard(self.layout.title, note='Open a save copy to explore its verified values.'),
             on_navigate=self.navigate_dashboard_field, theme=theme)
@@ -483,6 +492,8 @@ class Editor(Appearance):
         super().apply_theme(name)
         self._style_pending_rows()
         self.theme_dashboard(name)
+        if getattr(self, 'scenario_view', None) is not None:
+            self.scenario_view.apply_theme(name)
         if self.on_theme is not None:
             self.on_theme(name)
 
@@ -522,6 +533,21 @@ class Editor(Appearance):
                     note='This dashboard could not be displayed. Verified values remain available in Edit Fields and Inspect Data.')
         self.dashboard_view.set_dashboard(dashboard)
         self._dashboard_document = self.document
+
+    def _refresh_scenario_view(self):
+        if self.scenario_view is None:
+            return
+        if self.document is self._scenario_view_document:
+            return
+        self._scenario_view_document = self.document
+        if self.document is None:
+            self.scenario_view.set_tables(())
+            return
+        try:
+            self.scenario_view.set_tables(self.presentation.inspection_tables(self.document))
+        except Exception:
+            self.scenario_view.set_tables(())
+            self.status.set('Scenario records could not be displayed. Verified editing remains in Edit Fields.')
 
     def dirty_ok(self):
         return not self.changes or messagebox.askyesno('Pending Edits', 'Discard pending edits and continue?')
@@ -574,6 +600,7 @@ class Editor(Appearance):
     @experimental_operation
     def refresh(self):
         self._refresh_dashboard()
+        self._refresh_scenario_view()
         selected = self.fields.selection()
         focus = self.fields.focus()
         position = self.fields.yview()[0]

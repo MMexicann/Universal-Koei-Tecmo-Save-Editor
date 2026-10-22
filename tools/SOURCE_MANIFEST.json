@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5829,
-      "sha256": "ac2d263949c8128ee38d2e6cf8660b201740b9427128637af10c691965b26302"
+      "bytes": 6073,
+      "sha256": "3713a14209bb712573032c3704be086b35a9d658605f0d9f9d1a4f6a73be4283"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -678,8 +678,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 15856,
-      "sha256": "b042980c6e435d007d5e777633a93e5f5573459a7d82f80b9724086832ce0f53"
+      "bytes": 16051,
+      "sha256": "e487eee2536d7339708c118c7fe3f67dadcbb060cddec1b8de242d76f0744086"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -840,6 +840,11 @@
       "path": "docs/SAVE_TRANSFER.md",
       "bytes": 5095,
       "sha256": "cbcb20b30b64927b9f4149159284314520867d7fad81871871390fcbd5fff30a"
+    },
+    {
+      "path": "docs/SCENARIO_ARMY_EDITOR_REPORT.md",
+      "bytes": 4723,
+      "sha256": "21c6679913bed61c9b2d82ec10c3fb1356d890bbe40d5840c71d5a71f732b8d1"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -2448,8 +2453,8 @@
     },
     {
       "path": "src/koei_editor/games/nobu6_pk_pc/editor.py",
-      "bytes": 2098,
-      "sha256": "9bb7c82c74f407c4129e6b2b95b926c0396dc8878a35803ee1f467cde5e2d505"
+      "bytes": 2141,
+      "sha256": "934e01e6235ca11d1d8df856c00eed925c2960ea6ec2ff86ecd025b0a383a43d"
     },
     {
       "path": "src/koei_editor/games/nobu6_pk_pc/parser.py",
@@ -2463,8 +2468,8 @@
     },
     {
       "path": "src/koei_editor/games/nobunaga_ambition_nes/editor.py",
-      "bytes": 972,
-      "sha256": "c3827b6dc5242d1b5bec4a156610af459bb0b33034d897ce1fb93426b71cfd89"
+      "bytes": 1015,
+      "sha256": "3734e15c0ba4fbc17c756908db5048c63c32fc099f4dca5e1b570aac8a3b9ead"
     },
     {
       "path": "src/koei_editor/games/nobunaga_ambition_nes/parser.py",
@@ -2748,8 +2753,8 @@
     },
     {
       "path": "src/koei_editor/games/reko3_dos/editor.py",
-      "bytes": 1106,
-      "sha256": "b5019a85283bec7287785ae5ccbe138b4466a2d6a013353ee22b660ba5cb353b"
+      "bytes": 1149,
+      "sha256": "47c3463b353c904102d2a935b5ba6e189a87ad88f4065941063b576898fe12d4"
     },
     {
       "path": "src/koei_editor/games/reko3_dos/parser.py",
@@ -2783,8 +2788,8 @@
     },
     {
       "path": "src/koei_editor/games/rotk13/editor.py",
-      "bytes": 2182,
-      "sha256": "6ecb2e0ccf1dd7c3cf01a69e06f7c875d833d27b45a778db9924b66adef9582b"
+      "bytes": 2225,
+      "sha256": "e79639590f7ba767aabf7dcb5e620566bc757037c1c240858b7191570510d38b"
     },
     {
       "path": "src/koei_editor/games/rotk13/parser.py",
@@ -2798,8 +2803,8 @@
     },
     {
       "path": "src/koei_editor/games/rotk2_dos/editor.py",
-      "bytes": 1150,
-      "sha256": "c490e11f672d04d9cb7cf3cc182dfc753877f9610b20dc732d813ce772dae0d4"
+      "bytes": 1193,
+      "sha256": "fb27a4b84e9a17f65dbefe9071b725e3a8c6bc6592ed557c313c5d897a8107c0"
     },
     {
       "path": "src/koei_editor/games/rotk2_dos/parser.py",
@@ -2813,8 +2818,8 @@
     },
     {
       "path": "src/koei_editor/games/rotk3_dos/editor.py",
-      "bytes": 2123,
-      "sha256": "3d0217987875a0ab4cf7f0633fc7022dff432971f98af63e4cedd51529035dcc"
+      "bytes": 2166,
+      "sha256": "c90b9a81372d83ccb90bad6cc6253d8b7361084d44da91b6aecd6da1db92bdc3"
     },
     {
       "path": "src/koei_editor/games/rotk3_dos/parser.py",
@@ -3933,8 +3938,8 @@
     },
     {
       "path": "src/koei_editor/shared/scalar_presentation.py",
-      "bytes": 1820,
-      "sha256": "c121d3fc32ad8bdc1b52fb267a95f398acb7883da2683fc9132feabfa04eb6c7"
+      "bytes": 1851,
+      "sha256": "3909b2f18363b25359f5ba2977de70c46f46a026419a12fd910a8f958967957e"
     },
     {
       "path": "src/koei_editor/shared/scrollable_panel.py",
@@ -3962,6 +3967,11 @@
       "sha256": "f1d15aeb006e41d86fc43a3a9b8c3536207f81530e9e3a94f0bd88da6da0f9df"
     },
     {
+      "path": "src/koei_editor/shared/territory_visualization.py",
+      "bytes": 11214,
+      "sha256": "dac079cf0cfd5f2b6c7cad1bc7dc8b3229657c32e2becf1d566aab8561d4e601"
+    },
+    {
       "path": "src/koei_editor/shared/transfer_gui.py",
       "bytes": 12716,
       "sha256": "b0b5503076c252a15b10904febf88d77b6d4e85ec2868c8b6718d951a26c25b9"
@@ -3983,8 +3993,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 61075,
-      "sha256": "f900be1de1cdba766c24ca937e86dbea8acbf85513dc348ae1f1e3f2abe87f0f"
+      "bytes": 62399,
+      "sha256": "22d5cb95409b32e42eb127c66102f3c7cb79cbcf2fefbfd17647cba0059775c1"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -5417,6 +5427,11 @@
       "sha256": "5014b3b376b09c2eb056c285a662beb5cdbd28175497f55f377d854b712dbe41"
     },
     {
+      "path": "tests/test_scenario_army_editor.py",
+      "bytes": 4708,
+      "sha256": "aeeeb652b114480764513b386947fa1687e8002e3b79f1fa22c1aa5b084f25f3"
+    },
+    {
       "path": "tests/test_self_test_integrity.py",
       "bytes": 1793,
       "sha256": "5419867bc9eada4d1c1bc0bcc747c36a2af85cae94d26b384ed8559520beec3f"
@@ -5575,6 +5590,11 @@
       "path": "tests/test_tecmo_super_bowl_nes.py",
       "bytes": 16071,
       "sha256": "5cc31479d7cd552e9fcc99e8e60a0e85a047821260102adff1abedd68a6bd535"
+    },
+    {
+      "path": "tests/test_territory_visualization.py",
+      "bytes": 5524,
+      "sha256": "38c25455048e07f49a29163a2e7a6ed5a8be96dd5cbeb62afbbab720fedf594c"
     },
     {
       "path": "tests/test_three_hopes.py",

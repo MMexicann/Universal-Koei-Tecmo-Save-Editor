@@ -4,54 +4,29 @@
 {
   "schema_version": 1,
   "feature": "koei_tecmo_game_hub",
-  "base_commit": "065096967a4b3dd4513aaffe40c8fc495f8e75c4",
+  "base_commit": "f8eb321cd3830125c09c5de1c3b5f5ed3f6f91ce",
   "scope": {
     "steam_mappings": "Existing reviewed Windows PC profile mappings",
     "discovery": "Steam library and app manifest metadata only",
+    "shared_discovery_api": "discover_installed_builds",
+    "installation_paths": "Local UI only; excluded from reports and compatibility history",
     "launch": "Known Steam app IDs through the registered steam://run handler",
-    "installation_management": [
-      "View install and Steam library paths locally",
-      "Open the install folder",
-      "Save bounded local notes beside preferences"
-    ],
     "build_metadata_note": "Steam build IDs are not asserted to be in-game patch versions"
   },
   "checks": {
     "focused_tests": {
-      "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center -v",
+      "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center",
       "status": "passed_with_gui_skips",
       "tests": 122,
       "passed": 82,
       "skipped": 40,
       "failures": 0,
-      "skip_reason": "Tk display unavailable in this environment",
-      "review_regressions": [
-        "Wide navigation places all seven navigation buttons on one row when width permits.",
-        "Ctrl+F focuses and selects the Game Hub search field when the Hub is visible."
-      ],
-      "review_gui_regressions": "Both new GUI tests were collected but skipped locally because no Tk display is available; Windows CI is pending."
-    },
-    "full_suite": {
-      "command": "PYTHONPATH=src python -m tools.run_tests --workers 4 --report /tmp/koei-game-hub-rebased-report.json",
-      "status": "environment_limited",
-      "tested_base_commit": "3de7583dec2107dbf8589bc9dc9e4fcda9bf6b91",
-      "tested_feature_head": "e5d653f",
-      "timing": "Earlier integration snapshot before the current pull-request review fixes",
-      "tests": 3513,
-      "skipped": 960,
-      "failures": 0,
-      "errors": 2,
-      "error_modules": {
-        "test_rotk3_dos.py": "An existing Tk test creates a root without checking for display availability; this headless environment raised TclError because DISPLAY is unset.",
-        "test_universal_packaging.py": "test_distinct_registered_scalar_backend_is_collected uses a SimpleNamespace fixture without the achievement_source attribute now read by build_args after merged PR #111."
-      },
-      "source_changed": false,
-      "remaining_checks": "Windows PR workflows are required for display-backed GUI coverage. The scanner dependency PR #119 and this Hub PR must pass their required checks before merge."
+      "skip_reason": "Tk display unavailable in this environment"
     },
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
-      "public_source_entries": 1242
+      "public_source_entries": 1274
     },
     "supported_game_inventory": {
       "command": "PYTHONPATH=src python -m tools.update_supported_games --check",
@@ -61,6 +36,17 @@
     "windows_build_configuration": {
       "command": "PYTHONPATH=src python -m tools.build_windows --print-config",
       "status": "passed"
+    },
+    "source_validation": {
+      "checks": [
+        "git diff --check",
+        "python -m py_compile src/koei_editor/application.py src/koei_editor/shared/game_hub.py src/koei_editor/shared/game_hub_gui.py"
+      ],
+      "status": "passed"
+    },
+    "full_suite": {
+      "status": "not_run_on_rebased_branch",
+      "reason": "Focused integration validation was requested for this rebase; display-backed GUI coverage remains for CI."
     }
   },
   "compatibility": {

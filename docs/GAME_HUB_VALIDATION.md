@@ -44,6 +44,12 @@
       ],
       "status": "passed"
     },
+    "windows_regression_fixes": {
+      "control_f_focus": "The Game Hub search requests forced focus after the shortcut; the test enters through Application.show_game_hub with an existing query.",
+      "ttk_state_values": "Windows tests normalize button state values to strings before comparison.",
+      "scanner_fixture": "The install fixture keeps last_updated as a bounded decimal string.",
+      "windows_execution": "pending_fresh_workflow_run"
+    },
     "full_suite": {
       "status": "not_run_on_rebased_branch",
       "reason": "Focused integration validation was requested for this rebase; display-backed GUI coverage remains for CI."

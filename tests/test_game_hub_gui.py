@@ -80,7 +80,7 @@ class GameHubGuiTests(unittest.TestCase):
         result = DiscoveryResult(
             (InstalledGame('atelier_sophie', '527270', install,
                            library_path=library, build_id='123456',
-                           last_updated=1_700_000_000, size_on_disk=2_500_000_000),),
+                           last_updated='1700000000', size_on_disk=2_500_000_000),),
             (), (), 'complete', 0, 0, ('atelier_sophie',))
         thread_ids, calls = [], []
 
@@ -111,9 +111,9 @@ class GameHubGuiTests(unittest.TestCase):
                 patch('koei_editor.shared.game_hub.open_install_folder', return_value=True) as show_folder:
             hub.busy = True
             hub._set_busy(True)
-            self.assertEqual(hub.launch_button['state'], 'disabled')
-            self.assertEqual(hub.folder_button['state'], 'disabled')
-            self.assertEqual(hub.note_button['state'], 'disabled')
+            self.assertEqual(str(hub.launch_button['state']), 'disabled')
+            self.assertEqual(str(hub.folder_button['state']), 'disabled')
+            self.assertEqual(str(hub.note_button['state']), 'disabled')
             hub.busy = False
             hub._set_busy(False)
             hub.launch_button.invoke()
@@ -137,16 +137,15 @@ class GameHubGuiTests(unittest.TestCase):
         self.assertEqual(hub.table.set(row, 'status'), 'Not detected (partial scan)')
 
     def test_control_f_focuses_and_selects_game_hub_search(self):
-        hub = GameHubWorkspace(self.root, self.app.workspace,
-                               preferences_path=self.folder / 'preferences.json')
-        self.app.game_hub = hub
-        hub.frame.pack(fill='both', expand=True)
+        with patch.object(GameHubWorkspace, 'on_show'):
+            hub = self.app.show_game_hub()
+        hub.query.set('Sophie')
         self.root.update()
         self.root.focus_force()
         self.root.event_generate('<Control-f>')
         self.root.update()
 
-        self.assertIs(self.root.focus_get(), hub.search_entry)
+        self.assertEqual(str(self.root.focus_get()), str(hub.search_entry))
         self.assertTrue(hub.search_entry.selection_present())
 
     def test_refresh_failure_preserves_prior_installations(self):

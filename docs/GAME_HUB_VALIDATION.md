@@ -25,15 +25,20 @@
     },
     "full_suite": {
       "command": "python -m tools.run_tests --workers 4",
-      "status": "pending"
+      "status": "environment_limited",
+      "tests": 3369,
+      "skipped": 950,
+      "failures": 0,
+      "errors": 1,
+      "error_module": "test_rotk3_dos.py",
+      "error_summary": "An existing Tk test creates a root without checking for display availability; this headless environment raised TclError because DISPLAY is unset.",
+      "source_changed": false,
+      "remaining_checks": "Windows CI is required to exercise GUI tests with a display."
     },
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
       "public_source_entries": 1187
-    },
-    "windows_ci": {
-      "status": "pending"
     }
   },
   "compatibility": {

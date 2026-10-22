@@ -22,22 +22,22 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "1955b73f10ec32f6ceec916f2d854acfa01f0c84",
+  "base_commit": "8e0c74fee6284acf81728f33ec0e7f9d1b104824",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 113,
-    "passed": 82,
+    "run": 133,
+    "passed": 102,
     "skipped": 31,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1221
+    "verified_public_files": 1225
   },
   "supported_game_inventory": {
     "status": "passed",

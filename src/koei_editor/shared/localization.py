@@ -4,6 +4,7 @@ LANGUAGES = {'en': 'English', 'de': 'Deutsch'}
 
 _EN = {
     'library': '‹ Game Library', 'converter': 'Save Converter',
+    'troubleshooting': 'Game Troubleshooting Center',
     'comparison': 'Compare Saves', 'batch': 'Batch Converter', 'save_library': 'Save Library',
     'help': 'Help Center', 'compatibility': 'Compatibility Center', 'workflows': 'Guides',
     'editing_presets': 'Reusable Editing Presets', 'transfer': 'Transfer from Save Copy',
@@ -77,6 +78,7 @@ _EN = {
 }
 _DE = {
     'library': '‹ Spielebibliothek', 'converter': 'Spielstand konvertieren',
+    'troubleshooting': 'Koei-Tecmo-Spielhilfe',
     'comparison': 'Spielstände vergleichen', 'batch': 'Stapelkonvertierung', 'save_library': 'Spielstandbibliothek',
     'help': 'Hilfezentrum', 'compatibility': 'Kompatibilität', 'workflows': 'Anleitungen',
     'editing_presets': 'Wiederverwendbare Bearbeitungsvorlagen', 'transfer': 'Aus Spielstandkopie übertragen',

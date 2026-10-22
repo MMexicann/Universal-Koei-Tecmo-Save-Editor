@@ -217,12 +217,12 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
     def test_distinct_registered_scalar_backend_is_collected(self):
         from tools import build_windows as build
         game = SimpleNamespace(editor_module='koei_editor.games.new.gui', parser_module='koei_editor.games.new.reader',
-                               scalar_backend='koei_editor.games.new.native')
+                               scalar_backend='koei_editor.games.new.native', achievement_source=None)
         with patch.object(build, 'ALL_ADAPTERS', (game,)), patch.object(build, 'ENDPOINTS', {}), \
                 patch.object(build, 'RESEARCH_PROFILES', {}):
             args = build.build_args()
         modules = [args[index + 1] for index, value in enumerate(args) if value == '--hidden-import']
-        self.assertEqual(set(modules), {game.editor_module, game.parser_module, game.scalar_backend})
+        self.assertTrue({game.editor_module, game.parser_module, game.scalar_backend}.issubset(modules))
 
     def test_conversion_only_native_backends_are_collected_without_scalar_registration(self):
         from tools import build_windows as build

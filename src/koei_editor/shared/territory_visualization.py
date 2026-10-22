@@ -124,9 +124,7 @@ class TerritoryOverview(ttk.Frame):
         self._body_window = self._canvas.create_window((0, 0), window=self._body, anchor='nw')
         self._body.bind('<Configure>', self._sync_scrollregion)
         self._canvas.bind('<Configure>', self._sync_body_width)
-        self._canvas.bind('<MouseWheel>', self._mousewheel)
-        self._canvas.bind('<Button-4>', self._mousewheel_linux)
-        self._canvas.bind('<Button-5>', self._mousewheel_linux)
+        self._bind_mousewheel(self._canvas)
         self.cards = ()
         self.sections = ()
         self.apply_theme(theme)
@@ -138,6 +136,24 @@ class TerritoryOverview(ttk.Frame):
     def _sync_body_width(self, event):
         self._canvas.itemconfigure(self._body_window, width=max(1, event.width))
         self._sync_scrollregion()
+
+    def _bind_mousewheel(self, widget):
+        # Widget-local handlers cover the embedded cards without capturing
+        # wheel events from another editor, page or application workspace.
+        widget.bind('<MouseWheel>', self._mousewheel)
+        widget.bind('<Button-4>', self._mousewheel_linux)
+        widget.bind('<Button-5>', self._mousewheel_linux)
+        for child in widget.winfo_children():
+            self._bind_mousewheel(child)
+
+    def _finish_page(self):
+        # Every direct child is newly created by _draw_page. Bind each new
+        # subtree once; do not accumulate callbacks on the retained body.
+        for child in self._body.winfo_children():
+            self._bind_mousewheel(child)
+        self._body.update_idletasks()
+        self._sync_scrollregion()
+        self._canvas.yview_moveto(0)
 
     def _mousewheel(self, event):
         if event.delta:
@@ -173,7 +189,7 @@ class TerritoryOverview(ttk.Frame):
             self.page_status.set('No table selected')
             self.previous_button.configure(state='disabled')
             self.next_button.configure(state='disabled')
-            self._sync_scrollregion()
+            self._finish_page()
             return False
 
         table = self._tables[self._selected_table]
@@ -193,7 +209,7 @@ class TerritoryOverview(ttk.Frame):
         if not table.rows:
             ttk.Label(self._body, text='No records in this table.', style='Muted.TLabel').grid(
                 row=2, column=0, sticky='w', padx=8, pady=6)
-            self._sync_scrollregion()
+            self._finish_page()
             return False
 
         cards = []
@@ -211,8 +227,7 @@ class TerritoryOverview(ttk.Frame):
         for index in range(self.card_columns):
             self._body.columnconfigure(index, weight=1, uniform='record-card')
         self.cards = tuple(cards)
-        self._body.update_idletasks()
-        self._sync_scrollregion()
+        self._finish_page()
         return bool(cards)
 
     def set_tables(self, tables):

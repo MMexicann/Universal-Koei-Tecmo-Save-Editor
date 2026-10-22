@@ -111,5 +111,66 @@ class TerritoryOverviewGuiTests(unittest.TestCase):
         self.assertEqual(len(view.cards), 1)
 
 
+    def _scrollable_view(self):
+        from koei_editor.shared.territory_visualization import TerritoryOverview
+        self.root.geometry('900x500')
+        self.root.deiconify()
+        outside = ttk.Label(self.root, text='Outside the record viewport')
+        outside.pack(side='bottom')
+        view = TerritoryOverview(self.root)
+        view.pack(fill='both', expand=True)
+        rows = tuple((index, 'Native owner', 1000, 2000) for index in range(60))
+        view.set_tables((InspectionTable('Cities', ('ID', 'Owner', 'Gold', 'Rice'), rows),
+                         InspectionTable('Fiefs', ('ID', 'Owner', 'Gold', 'Rice'), rows)))
+        self.root.update()
+        self.assertLess(view._canvas.yview()[1], 1.0)
+        return view, outside
+
+    def test_wheel_events_on_record_children_scroll_only_their_view(self):
+        view, outside = self._scrollable_view()
+        card = view.cards[0]
+        label = next(widget for widget in descendants(card) if isinstance(widget, ttk.Label))
+        for target in (view._body, card, label):
+            for sequence, arguments in (('<MouseWheel>', {'delta': -120}),
+                                        ('<Button-5>', {})):
+                with self.subTest(widget=type(target).__name__, sequence=sequence):
+                    view._canvas.yview_moveto(0)
+                    self.root.update()
+                    before = view._canvas.yview()[0]
+                    target.event_generate(sequence, **arguments)
+                    self.root.update()
+                    self.assertGreater(view._canvas.yview()[0], before)
+        before = view._canvas.yview()
+        outside.event_generate('<MouseWheel>', delta=-120)
+        outside.event_generate('<Button-5>')
+        self.root.update()
+        self.assertEqual(view._canvas.yview(), before)
+
+    def test_page_table_and_replacement_reset_the_viewport_to_first_records(self):
+        view, _outside = self._scrollable_view()
+        view._canvas.yview_moveto(1)
+        self.root.update()
+        self.assertGreater(view._canvas.yview()[0], 0.1)
+        view.next_button.invoke()
+        self.root.update()
+        self.assertIn('Page 2 of 3', view.page_status.get())
+        self.assertLess(view._canvas.yview()[0], 0.01)
+        self.assertEqual(view.cards[0].cget('text'), 'Record 25')
+        view._canvas.yview_moveto(1)
+        view.previous_button.invoke()
+        self.root.update()
+        self.assertLess(view._canvas.yview()[0], 0.01)
+        view._canvas.yview_moveto(1)
+        view.table_selector.current(1)
+        view.table_selector.event_generate('<<ComboboxSelected>>')
+        self.root.update()
+        self.assertLess(view._canvas.yview()[0], 0.01)
+        view._canvas.yview_moveto(1)
+        tables = (InspectionTable('Replacement', ('ID',), tuple((i,) for i in range(60))),)
+        view.set_tables(tables)
+        self.root.update()
+        self.assertLess(view._canvas.yview()[0], 0.01)
+
+
 if __name__ == '__main__':
     unittest.main()

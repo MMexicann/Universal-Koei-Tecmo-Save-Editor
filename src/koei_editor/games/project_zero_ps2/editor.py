@@ -16,7 +16,7 @@ class Presentation(ScalarPresentation):
                             'Special abilities and equipped references stay unchanged.'),
             InspectionTable('Inventory', ('Slot', 'Native item ID', 'Record', 'Stored quantity/status'),
                             parser.inventory_records(document),
-                            'Film stocks 1–4 can be reduced while retaining one sheet. Other item '
+                            'Film 14, 37, 74 and 90 can be reduced while retaining one sheet. Other item '
                             'and status identities remain unmapped and read only.'),
         )
 

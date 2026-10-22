@@ -33,6 +33,7 @@ class CompletionChecklistView(ttk.Frame):
         self._achievement_results = queue.SimpleQueue()
         self._achievement_revision = 0
         self._achievement_busy = False
+        self._achievement_poll_id = None
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -49,6 +50,19 @@ class CompletionChecklistView(ttk.Frame):
         self._build_manual_checklist()
         self._render()
         self.set_achievement_snapshot(self._initial_snapshot(self._achievement_source))
+
+    def destroy(self):
+        # A worker only queues a sanitized result. Cancel the Tk callback when
+        # this editor closes so a late result never targets a deleted widget.
+        self._achievement_revision = getattr(self, "_achievement_revision", 0) + 1
+        poll_id = getattr(self, "_achievement_poll_id", None)
+        if poll_id is not None:
+            try:
+                self.after_cancel(poll_id)
+            except tk.TclError:
+                pass
+            self._achievement_poll_id = None
+        super().destroy()
 
     @staticmethod
     def _get_achievement_source(game_id):
@@ -209,7 +223,7 @@ class CompletionChecklistView(ttk.Frame):
         threading.Thread(target=self._fetch_achievements,
                          args=(revision, source, api_key, steam_id64),
                          daemon=True).start()
-        self.after(40, self._poll_achievement_result)
+        self._achievement_poll_id = self.after(40, self._poll_achievement_result)
         return True
 
     @classmethod
@@ -260,12 +274,13 @@ class CompletionChecklistView(ttk.Frame):
             steam_id64 = None
 
     def _poll_achievement_result(self):
+        self._achievement_poll_id = None
         try:
             if not self.winfo_exists():
                 return
             revision, snapshot, failed = self._achievement_results.get_nowait()
         except queue.Empty:
-            self.after(40, self._poll_achievement_result)
+            self._achievement_poll_id = self.after(40, self._poll_achievement_result)
             return
         except tk.TclError:
             return

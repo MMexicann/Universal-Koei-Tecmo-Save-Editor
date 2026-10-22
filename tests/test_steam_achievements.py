@@ -108,6 +108,19 @@ class SteamAchievementTests(unittest.TestCase):
         self.assertIsNone(result.unlocked_count)
         self.assertIsNone(result.total_count)
 
+    def test_malformed_first_row_cannot_hide_a_duplicate_api_name(self):
+        opened = Opener(Response(schema()), Response(player([
+            {'apiname': 'ACH_FIRST', 'achieved': 'invalid', 'unlocktime': 0},
+            {'apiname': 'ACH_FIRST', 'achieved': 1, 'unlocktime': 1735689600},
+            {'apiname': 'ACH_SECRET', 'achieved': 0, 'unlocktime': 0},
+        ])))
+        result = self.fetch(opened)
+
+        self.assertEqual(result.status, 'unavailable')
+        self.assertEqual([item.state for item in result.achievements], ['unavailable', 'locked'])
+        self.assertIsNone(result.unlocked_count)
+        self.assertIsNone(result.total_count)
+
     def test_private_profile_marks_every_state_unavailable_not_locked(self):
         opened = Opener(Response(schema()), Response(player(success=False)))
         result = self.fetch(opened)

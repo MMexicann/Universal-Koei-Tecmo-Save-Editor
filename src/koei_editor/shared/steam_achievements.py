@@ -120,19 +120,21 @@ def _player_states(response, requested_steam_id):
     if type(rows) is not list or len(rows) > 10000:
         raise ValueError('Steam returned no bounded player achievement list.')
     states = {}
+    seen = set()
     ambiguous = set()
     for row in rows:
         if type(row) is not dict:
             continue
         identity = row.get('apiname')
-        achieved = row.get('achieved')
-        unlocktime = row.get('unlocktime')
         if type(identity) is not str or not identity or len(identity) > 256:
             continue
-        if identity in states or identity in ambiguous:
+        if identity in seen:
             states.pop(identity, None)
             ambiguous.add(identity)
             continue
+        seen.add(identity)
+        achieved = row.get('achieved')
+        unlocktime = row.get('unlocktime')
         if type(achieved) is not int or achieved not in (0, 1):
             continue
         if type(unlocktime) is not int or unlocktime < 0:

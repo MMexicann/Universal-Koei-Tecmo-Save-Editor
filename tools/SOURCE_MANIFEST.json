@@ -3958,8 +3958,8 @@
     },
     {
       "path": "src/koei_editor/shared/steam_achievements.py",
-      "bytes": 8634,
-      "sha256": "764c3ee4ef7103da850307455e68f84069781a99563ea21dbc8a2b35198e212e"
+      "bytes": 8651,
+      "sha256": "abd813224885ec326795178f761f22a9c939860a9da27d17c540d3521dfabbcd"
     },
     {
       "path": "src/koei_editor/shared/steam_owner.py",
@@ -5523,8 +5523,8 @@
     },
     {
       "path": "tests/test_steam_achievements.py",
-      "bytes": 6597,
-      "sha256": "11d809be6137c6b0826752f9aae0afb792fe11e3bc06fa5c292fc702131bb81a"
+      "bytes": 7259,
+      "sha256": "f39aca401d73338cb186e78496e28e578f08d36b14bb35d51592dad03112c633"
     },
     {
       "path": "tests/test_steam_owner.py",

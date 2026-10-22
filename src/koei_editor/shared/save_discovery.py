@@ -146,6 +146,9 @@ class InstalledGame:
     evidence: str = ''
     build_id: str | None = None
     last_updated: str | None = None
+    # Local-only installation context for UI consumers such as the Game Hub.
+    library_path: Path | None = field(default=None, repr=False)
+    size_on_disk: int | None = None
 
 
 def _build_marker(value):
@@ -156,6 +159,14 @@ def _build_marker(value):
 def _last_updated_marker(value):
     """Accept Steam's bounded Unix-seconds marker separately from its build ID."""
     return value if type(value) is str and re.fullmatch(r'[0-9]{1,12}', value) else None
+
+
+def _size_on_disk_marker(value):
+    """Parse Steam's install-size estimate without retaining arbitrary VDF text."""
+    if type(value) is not str or re.fullmatch(r'[0-9]{1,20}', value) is None:
+        return None
+    number = int(value)
+    return number if number <= (1 << 63) - 1 else None
 
 
 @dataclass(frozen=True)
@@ -189,7 +200,8 @@ def report(result):
         'issues': list(result.issues),
         'installed_games': [dict(game_id=item.game_id, app_id=item.app_id,
                                  source=item.source, confidence=item.confidence,
-                                 build_id=item.build_id, last_updated=item.last_updated)
+                                 build_id=item.build_id, last_updated=item.last_updated,
+                                 size_on_disk=item.size_on_disk)
                             for item in result.installed_games],
         'locations': [dict(game_id=item.game_id, source=item.source,
                            confidence=item.confidence, live=item.live)
@@ -484,14 +496,18 @@ class _Scanner:
                 continue
             build_id = _build_marker(app.get('buildid'))
             last_updated = _last_updated_marker(app.get('lastupdated'))
+            size_on_disk = _size_on_disk_marker(app.get('sizeondisk'))
             if app.get('buildid') is not None and build_id is None:
                 self.issues.add('invalid_build_id_ignored')
             if app.get('lastupdated') is not None and last_updated is None:
                 self.issues.add('invalid_last_updated_ignored')
+            if app.get('sizeondisk') is not None and size_on_disk is None:
+                self.issues.add('invalid_size_on_disk_ignored')
             self.reserve_result()
             self.installed.append(InstalledGame(mapping.game_id, mapping.app_id, installation,
                                                evidence=mapping.evidence, build_id=build_id,
-                                               last_updated=last_updated))
+                                               last_updated=last_updated, library_path=root,
+                                               size_on_disk=size_on_disk))
             user = root / f'steamapps/compatdata/{mapping.app_id}/pfx/drive_c' / 'users' / 'steamuser'
             if include_save_locations:
                 self.native(user / 'Documents', user / 'AppData/Local', user / 'AppData/Roaming',

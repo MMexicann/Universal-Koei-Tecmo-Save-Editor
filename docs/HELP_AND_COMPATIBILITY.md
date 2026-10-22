@@ -57,7 +57,7 @@ remains visible.
 The packaged `data/version_compatibility.json` catalog is deliberately empty
 until exact-build evidence has been reviewed. To add an entry, use a registered
 Windows PC profile and mapped Steam app ID, exact decimal build ID, one of the
-four artifact kinds, the specific artifact version, a timezone-qualified check time, a stable reason
+four artifact kinds, the specific reviewed artifact version, a timezone-qualified check time, a stable reason
 code, concise explanation, and relative `docs/...` or HTTPS evidence references.
 Use `unknown` when evidence is absent. Do not turn editor file-scope evidence,
 Steam `LastUpdated`, install presence, or a community contribution into an exact

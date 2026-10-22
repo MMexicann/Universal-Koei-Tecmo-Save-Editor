@@ -18,7 +18,7 @@ _TEXT = {
         'installed': 'Installed builds', 'compat': 'Current compatibility', 'build_history': 'Build history',
         'compat_history': 'Compatibility history', 'game': 'Game', 'platform': 'Platform', 'build': 'Steam Build ID',
         'updated': 'Steam Last Updated (Unix seconds)', 'artifact': 'Tool or format', 'kind': 'Type', 'status': 'Status',
-        'version': 'Tool version', 'checked': 'Checked', 'previous': 'Previous build', 'observed': 'Observed build',
+        'version': 'Reviewed artifact version', 'checked': 'Checked', 'previous': 'Previous build', 'observed': 'Observed build',
         'date': 'Observed at', 'event': 'Change', 'details': 'Details', 'loading': 'Reading reviewed Steam manifests…',
         'no_installs': ('No reviewed Steam installation was detected. Non-Steam stores and unmapped game editions '
                         'are not detected by this scan.'),
@@ -54,7 +54,7 @@ _TEXT = {
         'installed': 'Installierte Builds', 'compat': 'Aktuelle Kompatibilität', 'build_history': 'Build-Verlauf',
         'compat_history': 'Kompatibilitätsverlauf', 'game': 'Spiel', 'platform': 'Plattform', 'build': 'Steam-Build-ID',
         'updated': 'Steam-Updatezeit (Unix-Sekunden)', 'artifact': 'Werkzeug oder Format', 'kind': 'Typ', 'status': 'Status',
-        'version': 'Werkzeugversion', 'checked': 'Geprüft', 'previous': 'Vorheriger Build', 'observed': 'Erkannter Build',
+        'version': 'Geprüfte Artefaktversion', 'checked': 'Geprüft', 'previous': 'Vorheriger Build', 'observed': 'Erkannter Build',
         'date': 'Erkannt am', 'event': 'Änderung', 'details': 'Details', 'loading': 'Geprüfte Steam-Manifeste werden gelesen…',
         'no_installs': ('Keine geprüfte Steam-Installation erkannt. Andere Stores und nicht zugeordnete Editionen '
                         'werden bei dieser Suche nicht erkannt.'),
@@ -276,7 +276,7 @@ class VersionTrackerPanel:
         if scan.stop_reason != 'complete':
             self.status.set(self.status.get() + ' ' + self._t('scan_stopped'))
         if history_error:
-            self.status.set(self._t('history_error'))
+            self.status.set(self.status.get() + ' ' + self._t('history_error'))
 
     def refresh_history(self):
         self._load_history()

@@ -110,11 +110,16 @@ class Editor(Appearance):
     summary = ''
     presentation_type = ScalarPresentation
 
-    def __init__(self, root, parent=None, theme='Light', on_theme=None):
+    def __init__(self, root, parent=None, theme='Light', on_theme=None,
+                 workshop_provider=None):
         self.root, self.on_theme = root, on_theme
         self.adapter = BoundScalarAdapter(self.game_id, self.save_extension, self.backend)
         self.layout = self.adapter.get_format()
         self.presentation = self.presentation_type(self.backend, self.game_id)
+        if isinstance(workshop_provider, str):
+            from importlib import import_module
+            workshop_provider = import_module(workshop_provider)
+        self.workshop_provider = workshop_provider
         self.style = ttk.Style(root)
         self.theme_name = tk.StringVar(root, value=theme)
         self.document, self.backup = None, None
@@ -165,6 +170,20 @@ class Editor(Appearance):
             from koei_editor.shared.territory_visualization import TerritoryOverview
             self.scenario_view = TerritoryOverview(self.scenario_page, theme=theme)
             self.scenario_view.pack(fill='both', expand=True)
+        self.workshop_view = None
+        if self.workshop_provider is not None:
+            from koei_editor.shared.build_workshop_gui import BuildWorkshopView
+            self.workshop_page = ttk.Frame(self.workspace_tabs)
+            self.workspace_tabs.add(self.workshop_page, text='Character & Weapon Workshop')
+            self.workshop_view = BuildWorkshopView(
+                self.workshop_page, game_id=self.game_id,
+                platform_id=self.workshop_provider.PLATFORM_ID,
+                on_stage=self._stage_workshop_plan,
+                on_compare_records=(self._compare_workshop_records
+                                    if callable(getattr(self.workshop_provider,
+                                                        'compare_weapon_records', None)) else None),
+                theme=theme)
+            self.workshop_view.pack(fill='both', expand=True)
         from koei_editor.shared.progression import ProgressionDashboard
         from koei_editor.shared.progression_view import ProgressionView
         self._dashboard_document = None
@@ -555,6 +574,75 @@ class Editor(Appearance):
             self.scenario_view.set_tables(())
             self.status.set('Scenario records could not be displayed. Verified editing remains in Edit Fields.')
 
+    def _refresh_workshop(self):
+        if self.workshop_view is None:
+            return
+        if self.document is None:
+            self.workshop_view.set_provider_data((), {}, (), ())
+            return
+        try:
+            from koei_editor.shared.build_workshop_context import scalar_projection_context
+            projection = self.workshop_provider.workshop_projection(
+                self.document, backend=self.backend)
+            plans, metadata, stats = scalar_projection_context(projection)
+            options = getattr(self.workshop_provider, 'weapon_record_options', None)
+            record_options = options(self.document, backend=self.backend) if callable(options) else ()
+            self.workshop_view.set_provider_data(plans, metadata, stats, record_options)
+        except Exception:
+            # A workshop projection is optional UI; a provider fault must not
+            # interrupt opening, reviewing, or staging through the editor.
+            self.workshop_view.set_provider_data((), {}, (), ())
+            self.workshop_view.status.set(
+                'Mapped workshop data is unavailable for this opened save. Existing editor fields remain available.')
+
+    def _compare_workshop_records(self, left_slot, right_slot):
+        """Delegate read-only native record comparison to the qualified provider."""
+        comparer = getattr(self.workshop_provider, 'compare_weapon_records', None)
+        if self.document is None or not callable(comparer):
+            raise SaveError('Open a qualified save copy with mapped weapon records.')
+        return comparer(self.document, left_slot, right_slot, backend=self.backend)
+
+    def _stage_workshop_plan(self, plan):
+        """Send an explicitly chosen plan through the ordinary field validator."""
+        if self.document is None:
+            raise SaveError('Open a qualified save copy before staging a build plan.')
+        if (plan.game_id, plan.platform_id) != (
+                self.game_id, self.workshop_provider.PLATFORM_ID):
+            raise SaveError('This build plan belongs to a different game or platform.')
+        from koei_editor.shared.build_workshop_context import (
+            assignments_from_plan, scalar_projection_context,
+        )
+        projection = self.workshop_provider.workshop_projection(
+            self.document, backend=self.backend)
+        _plans, metadata, _stats = scalar_projection_context(projection)
+        assignments = assignments_from_plan(
+            plan, game_id=self.game_id,
+            platform_id=self.workshop_provider.PLATFORM_ID,
+            field_metadata=metadata)
+        try:
+            candidate = self._prepare_pending_values(assignments)
+        except Exception as error:
+            self.status.set('Edit was not staged. ' + str(error))
+            messagebox.showerror('Cannot Stage Edit', str(error))
+            return False
+        fields = self.adapter.field_map(self.document)
+        conflicts = []
+        for field_id, pending_value in self.changes.items():
+            field = fields[field_id]
+            candidate_value = candidate.get(field_id, field.value(self.document.payload))
+            if (type(pending_value) is not type(candidate_value)
+                    or pending_value != candidate_value):
+                conflicts.append(field_id)
+        if conflicts and not messagebox.askyesno(
+                'Replace Pending Fields',
+                'This plan will replace pending edits to these mapped fields:\n\n'
+                + '\n'.join(fields[key].label for key in conflicts[:12])
+                + (f'\n...and {len(conflicts) - 12:,} more.' if len(conflicts) > 12 else '')
+                + '\n\nOther pending edits remain staged. You can Undo after staging and Review Changes before saving.'):
+            return False
+        self._accept_pending(candidate)
+        return True
+
     def dirty_ok(self):
         return not self.changes or messagebox.askyesno('Pending Edits', 'Discard pending edits and continue?')
 
@@ -607,6 +695,7 @@ class Editor(Appearance):
     def refresh(self):
         self._refresh_dashboard()
         self._refresh_scenario_view()
+        self._refresh_workshop()
         selected = self.fields.selection()
         focus = self.fields.focus()
         position = self.fields.yview()[0]
@@ -858,34 +947,40 @@ class Editor(Appearance):
         ttk.Button(dialog, text='Close', command=dialog.destroy).pack(pady=10)
         self.apply_theme(self.theme_name.get())
 
+    def _prepare_pending_values(self, values):
+        """Validate assignments and return their complete native staged result."""
+        values = dict(values)
+        fields = self.adapter.field_map(self.document)
+        failures = []
+        for key, value in values.items():
+            try:
+                with experimental_limits(self.adapter.experimental):
+                    validate_pending_values(self.document, {key: value}, fields)
+            except SaveError as error:
+                label = f'{fields[key].label} [{key}]' if key in fields else str(key)
+                failures.append(f'{label}: {error}')
+        if failures:
+            shown = '\n'.join(failures[:12])
+            remaining = f'\n...and {len(failures) - 12:,} more.' if len(failures) > 12 else ''
+            raise SaveError(f'{len(failures):,} selected values failed validation.\n{shown}{remaining}')
+        result = dict(self.changes)
+        for key, value in values.items():
+            result = self.adapter.stage(self.document, result, key, value)
+        # Native staging can update another reference as a side effect.
+        # Every explicitly requested assignment must survive the full batch.
+        for key, value in values.items():
+            actual = result.get(key, fields[key].value(self.document.payload))
+            if type(actual) is not type(value) or actual != value:
+                raise SaveError(f'{fields[key].label} [{key}] was changed by another selected assignment. '
+                                'Review the dependent fields and apply a compatible selection.')
+        self.adapter.changed_payload(self.document, result)
+        return result
+
     def stage_values(self, values):
         if self.document is None:
             return False
         try:
-            values = dict(values)
-            fields = self.adapter.field_map(self.document)
-            failures = []
-            for key, value in values.items():
-                try:
-                    with experimental_limits(self.adapter.experimental):
-                        validate_pending_values(self.document, {key: value}, fields)
-                except SaveError as error:
-                    label = f'{fields[key].label} [{key}]' if key in fields else str(key)
-                    failures.append(f'{label}: {error}')
-            if failures:
-                shown = '\n'.join(failures[:12])
-                remaining = f'\n...and {len(failures) - 12:,} more.' if len(failures) > 12 else ''
-                raise SaveError(f'{len(failures):,} selected values failed validation.\n{shown}{remaining}')
-            result = dict(self.changes)
-            for key, value in values.items():
-                result = self.adapter.stage(self.document, result, key, value)
-            # Native staging can update another reference as a side effect.
-            # Every explicitly requested assignment must survive the full batch.
-            for key, value in values.items():
-                actual = result.get(key, fields[key].value(self.document.payload))
-                if type(actual) is not type(value) or actual != value:
-                    raise SaveError(f'{fields[key].label} [{key}] was changed by another selected assignment. '
-                                    'Review the dependent fields and apply a compatible selection.')
+            result = self._prepare_pending_values(values)
             self._accept_pending(result)
         except Exception as error:
             self.status.set('Edit was not staged. ' + str(error))

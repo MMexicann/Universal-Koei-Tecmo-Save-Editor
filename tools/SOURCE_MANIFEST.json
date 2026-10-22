@@ -6058,8 +6058,8 @@
     },
     {
       "path": "tests/test_universal_packaging.py",
-      "bytes": 15347,
-      "sha256": "ed1a3748d7684c89c212bf4e7ccf827dc03b004d4c9fb6b7ff0db9c6e5c2777e"
+      "bytes": 15375,
+      "sha256": "8d270f34f06a63161030e29614c4310abe00bd0f31910f69e409622b9e416196"
     },
     {
       "path": "tests/test_v27_dw8_wo3_dashboards.py",

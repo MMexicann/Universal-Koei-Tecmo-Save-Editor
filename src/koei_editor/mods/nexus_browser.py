@@ -21,6 +21,18 @@ from koei_editor.shared.localization import translate
 _SORT_FIELDS = ('trending', 'popular', 'new', 'updated', 'endorsements')
 
 
+class _NexusArchiveDownloader:
+    """Narrow, in-memory capability for one manager-initiated archive transfer."""
+
+    __slots__ = ('__client',)
+
+    def __init__(self, client):
+        self.__client = client
+
+    def download_archive(self, download_request, destination):
+        return self.__client.download_archive(download_request, destination)
+
+
 class NexusModsWorkspace:
     """Dedicated mod browser; archive downloads and installation stay with a manager."""
 
@@ -63,9 +75,10 @@ class NexusModsWorkspace:
         self.set_language(language)
         self._poll_id = self.frame.after(100, self._poll_results)
 
-    def _new_client(self, api_key):
+    def _new_client(self, api_key, download_key=None, download_expires=None):
         return NexusApiClient(api_key=api_key, application_name=self.application_name,
                               application_version=self.application_version,
+                              download_key=download_key, download_expires=download_expires,
                               transport=self._transport)
 
     def tr(self, key, **values):
@@ -113,6 +126,25 @@ class NexusModsWorkspace:
         self.apply_key_button.grid(row=0, column=1, padx=(8, 0))
         self.api_key_note = ttk.Label(controls, style='Muted.TLabel')
         self.api_key_note.grid(row=4, column=0, columnspan=2, sticky='w', pady=(3, 8))
+
+        self.download_auth_label = ttk.Label(controls, style='Muted.TLabel')
+        self.download_auth_label.grid(row=5, column=0, sticky='w')
+        self.download_auth_controls = ttk.Frame(controls)
+        self.download_auth_controls.grid(row=6, column=0, columnspan=2, sticky='ew')
+        self.download_auth_controls.columnconfigure(0, weight=1)
+        self.download_auth_controls.columnconfigure(1, weight=1)
+        self.download_key_label = ttk.Label(self.download_auth_controls, style='Muted.TLabel')
+        self.download_key_label.grid(row=0, column=0, sticky='w')
+        self.download_expires_label = ttk.Label(self.download_auth_controls, style='Muted.TLabel')
+        self.download_expires_label.grid(row=0, column=1, sticky='w', padx=(8, 0))
+        self.download_key_var = tk.StringVar(self.root)
+        self.download_key_entry = ttk.Entry(self.download_auth_controls,
+                                            textvariable=self.download_key_var, show='•')
+        self.download_key_entry.grid(row=1, column=0, sticky='ew')
+        self.download_expires_var = tk.StringVar(self.root)
+        self.download_expires_entry = ttk.Entry(self.download_auth_controls,
+                                                textvariable=self.download_expires_var)
+        self.download_expires_entry.grid(row=1, column=1, sticky='ew', padx=(8, 0))
 
         self.filter_label = ttk.Label(controls, style='Muted.TLabel')
         self.filter_label.grid(row=2, column=2, sticky='w', padx=(10, 0))
@@ -236,14 +268,16 @@ class NexusModsWorkspace:
         self.sort_label.configure(text=self.tr('nexus_sort'))
         self.api_key_label.configure(text=self.tr('nexus_api_key'))
         self.api_key_note.configure(text=self.tr('nexus_key_note'))
+        self.download_auth_label.configure(text=self.tr('nexus_download_auth'))
+        self.download_key_label.configure(text=self.tr('nexus_download_key'))
+        self.download_expires_label.configure(text=self.tr('nexus_download_expires'))
         self.apply_key_button.configure(text=self.tr('nexus_use_key'))
         self.load_button.configure(text=self.tr('nexus_load'))
         self.filter_label.configure(text=self.tr('nexus_filter'))
         self.load_more_button.configure(text=self.tr('nexus_load_more'))
         self.open_page_button.configure(text=self.tr('nexus_open_page'))
         self.manager_button.configure(text=self.tr('nexus_send_manager'))
-        ready = callable(getattr(self.download_handoff, 'enqueue_nexus_download', None))
-        self.manager_hint.configure(text='' if ready else self.tr('nexus_manager_missing'))
+        self._update_manager_hint()
         self.mod_tree.heading('#0', text=self.tr('nexus_mod'))
         self.mod_tree.heading('version', text=self.tr('nexus_version'))
         self.mod_tree.heading('author', text=self.tr('nexus_author'))
@@ -275,9 +309,23 @@ class NexusModsWorkspace:
     def set_download_handoff(self, handoff):
         """Attach a Mod Manager provided implementation without adding install logic here."""
         self.download_handoff = handoff
-        ready = callable(getattr(handoff, 'enqueue_nexus_download', None))
-        self.manager_hint.configure(text='' if ready else self.tr('nexus_manager_missing'))
+        self._update_manager_hint()
         self._sync_manager_button()
+
+    def _update_manager_hint(self):
+        if not callable(getattr(self.download_handoff, 'enqueue_nexus_download', None)):
+            hint = 'nexus_manager_missing'
+        elif not getattr(self._client, 'has_api_key', False):
+            hint = 'nexus_download_api_key_needed'
+        elif (self._selected_game() is not None
+              and self._selected_game().game_id != 'nioh2_pc'):
+            hint = 'nexus_manager_game_unsupported'
+        elif (self._selected_version is not None
+              and not self._selected_version.file_name.casefold().endswith('.zip')):
+            hint = 'nexus_manager_zip_only'
+        else:
+            hint = None
+        self.manager_hint.configure(text=self.tr(hint) if hint else '')
 
     def _select_initial_game(self, game_id):
         selected = nexus_game_for_id(game_id) if game_id else None
@@ -303,6 +351,7 @@ class NexusModsWorkspace:
         self._loaded_game_domain = None
         self._loaded_sort_field = None
         self._clear_current_selection()
+        self._update_manager_hint()
         self._clear_tree(self.mod_tree)
         self._shown_mods = {}
         self.load_more_button.configure(state='disabled')
@@ -323,9 +372,20 @@ class NexusModsWorkspace:
 
     def apply_api_key(self, _event=None):
         key = self.api_key_var.get().strip()
-        self._client = self._new_client(key or None)
+        download_key = self.download_key_var.get().strip()
+        expiry_text = self.download_expires_var.get().strip()
+        try:
+            download_expires = int(expiry_text) if expiry_text else None
+            self._client = self._new_client(key or None, download_key or None, download_expires)
+        except (TypeError, ValueError):
+            self.status_var.set(self.tr('nexus_download_auth_invalid'))
+            return 'break'
         self.api_key_var.set('')
+        self.download_key_var.set('')
+        self.download_expires_var.set('')
         self.status_var.set(self.tr('nexus_key_set' if key else 'nexus_key_cleared'))
+        self._update_manager_hint()
+        self._sync_manager_button()
         if self._selected_summary is not None:
             self._request_generation += 1
             self._select_current_summary()
@@ -567,7 +627,13 @@ class NexusModsWorkspace:
                      and self._selected_summary.game_domain == game.domain)
         visible_mod = (self._selected_summary is not None
                        and self._selected_summary.mod_id in self._shown_mods)
-        state = ('normal' if ready and file_matches and same_game and visible_mod else 'disabled')
+        compatible_file = (self._selected_version is not None
+                           and self._selected_version.file_name.casefold().endswith('.zip'))
+        compatible_game = game is not None and game.game_id == 'nioh2_pc'
+        has_key = getattr(self._client, 'has_api_key', False)
+        state = ('normal' if ready and has_key and compatible_game and compatible_file
+                 and file_matches and same_game and visible_mod else 'disabled')
+        self._update_manager_hint()
         self.manager_button.configure(state=state)
 
     def _sync_selection_actions(self):
@@ -593,13 +659,20 @@ class NexusModsWorkspace:
                 or self._selected_file_id != version.file_id
                 or self.file_tree.selection() != (version.file_id,)):
             return False
-        request = build_download_request(summary, version)
+        if not getattr(self._client, 'has_api_key', False):
+            self.status_var.set(self.tr('nexus_download_api_key_needed'))
+            return False
+        game = self._selected_game()
+        if game is None or game.game_id != 'nioh2_pc' or not version.file_name.casefold().endswith('.zip'):
+            self.status_var.set(self.tr('nexus_manager_game_unsupported'))
+            return False
+        request = build_download_request(summary, version, game_id=game.game_id)
         enqueue = getattr(handoff, 'enqueue_nexus_download', None)
         if not callable(enqueue):
             self.status_var.set(self.tr('nexus_manager_invalid'))
             return False
         try:
-            accepted = enqueue(request)
+            accepted = enqueue(request, _NexusArchiveDownloader(self._client))
         except Exception:
             self.status_var.set(self.tr('nexus_manager_error'))
             return False

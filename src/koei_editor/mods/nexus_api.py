@@ -5,19 +5,23 @@ experimental. Keep transport and schema handling isolated in this module.
 """
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from html import unescape
 from html.parser import HTMLParser
 import json
+import os
+from pathlib import Path
 import re
 from typing import Callable, Mapping, Protocol
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote
+from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import (HTTPRedirectHandler, Request, build_opener)
 
 
 API_ROOT = 'https://api.nexusmods.com/v3'
 API_DOCS_URL = 'https://api-docs.nexusmods.com/'
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
+MAX_DOWNLOAD_BYTES = 1024 * 1024 * 1024
 DEFAULT_TIMEOUT_SECONDS = 15
 MAX_PAGE = 100
 MAX_PAGE_SIZE = 100
@@ -33,6 +37,7 @@ class NexusGame:
 # These are explicit Nexus game domains, not guesses derived from display names.
 # Keep this list limited to Windows PC profiles with a confirmed Nexus game page.
 SUPPORTED_NEXUS_GAMES = (
+    NexusGame('nioh2_pc', 'nioh2', 'NIOH 2'),
     NexusGame('dw8xl', 'dynastywarriors8', 'DYNASTY WARRIORS 8 — Xtreme Legends Complete Edition'),
     NexusGame('pw3', 'onepiecepiratewarriors3', 'ONE PIECE: PIRATE WARRIORS 3'),
     NexusGame('pw4', 'onepiecepiratewarriors4', 'ONE PIECE: PIRATE WARRIORS 4'),
@@ -54,7 +59,9 @@ SUPPORTED_NEXUS_GAMES = (
     NexusGame('blue_reflection_second_light_pc', 'bluereflectionsecondlight',
               'BLUE REFLECTION: SECOND LIGHT'),
 )
-_GAME_BY_DOMAIN = {game.domain: game for game in SUPPORTED_NEXUS_GAMES}
+_GAME_BY_DOMAIN = {}
+for _game in SUPPORTED_NEXUS_GAMES:
+    _GAME_BY_DOMAIN.setdefault(_game.domain, _game)
 _GAMES_BY_ID = {game.game_id: game for game in SUPPORTED_NEXUS_GAMES}
 _DOMAIN_RE = re.compile(r'^[a-z0-9_]{1,64}$')
 _NUMERIC_ID_RE = re.compile(r'^[0-9]{1,20}$')
@@ -111,6 +118,16 @@ class _RejectRedirects(HTTPRedirectHandler):
         return None
 
 
+class _HttpsRedirects(HTTPRedirectHandler):
+    """Follow signed CDN redirects only over HTTPS; no API credentials are sent."""
+
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        parsed = urlsplit(new_url)
+        if parsed.scheme.casefold() != 'https' or not parsed.hostname or parsed.username or parsed.password:
+            return None
+        return super().redirect_request(request, response, code, message, headers, new_url)
+
+
 def _urllib_transport(request, timeout):
     opener = build_opener(_RejectRedirects())
     try:
@@ -127,6 +144,63 @@ def _urllib_transport(request, timeout):
                            response.read(MAX_RESPONSE_BYTES + 1))
     finally:
         response.close()
+
+
+def _urllib_download_transport(url, destination, timeout, max_bytes):
+    """Stream an API-issued HTTPS link to a new file without retaining it in memory."""
+    parsed = urlsplit(url)
+    if (parsed.scheme.casefold() != 'https' or not parsed.hostname
+            or parsed.username or parsed.password or parsed.fragment):
+        raise NexusProtocolError('Nexus returned an invalid download link.')
+    request = Request(url, headers={'Accept': 'application/octet-stream'}, method='GET')
+    opener = build_opener(_HttpsRedirects())
+    target = Path(destination)
+    if target.exists() or target.is_symlink() or not target.parent.is_dir():
+        raise NexusProtocolError('The temporary download destination is unavailable.')
+    try:
+        response = opener.open(request, timeout=timeout)
+    except HTTPError as error:
+        error.close()
+        raise NexusNetworkError('Nexus could not provide the selected archive.') from None
+    except (URLError, TimeoutError, OSError):
+        raise NexusNetworkError('Could not download from Nexus Mods. Check the connection and try again.') from None
+    written = 0
+    try:
+        length = response.headers.get('Content-Length')
+        if length:
+            try:
+                if int(length) > max_bytes:
+                    raise NexusProtocolError('The Nexus archive exceeds the download size limit.')
+            except ValueError:
+                pass
+        created = False
+        with target.open('xb') as stream:
+            created = True
+            while True:
+                block = response.read(min(1024 * 1024, max_bytes - written + 1))
+                if not block:
+                    break
+                written += len(block)
+                if written > max_bytes:
+                    raise NexusProtocolError('The Nexus archive exceeds the download size limit.')
+                stream.write(block)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except Exception:
+        if created:
+            try:
+                target.unlink()
+            except OSError:
+                pass
+        raise
+    finally:
+        response.close()
+    if written == 0:
+        try:
+            target.unlink()
+        except OSError:
+            pass
+        raise NexusProtocolError('Nexus returned an empty archive.')
 
 
 @dataclass(frozen=True)
@@ -217,38 +291,52 @@ class ModDependencies:
 
 @dataclass(frozen=True)
 class NexusDownloadRequest:
-    """Metadata handoff; it deliberately contains no key or signed download URL."""
+    """Validated request metadata; credentials and signed URLs stay in the downloader."""
 
     provider: str
+    game_id: str
     game_domain: str
     game_scoped_mod_id: str
     mod_id: str
     file_id: str
+    file_name: str
     file_version_id: str
     game_scoped_file_version_id: str
     mod_page_url: str
 
 
+class ArchiveDownloader(Protocol):
+    """Narrow capability the browser gives a manager worker for one archive."""
+
+    def download_archive(self, download_request: NexusDownloadRequest, destination) -> int:
+        ...
+
+
 class DownloadHandoff(Protocol):
     """Structural contract implemented by the separate Mod Manager component."""
 
-    def enqueue_nexus_download(self, request: NexusDownloadRequest) -> bool:
+    def enqueue_nexus_download(self, request: NexusDownloadRequest,
+                               downloader: ArchiveDownloader) -> bool:
         """Return true only after the manager accepts this user-selected request."""
         ...
 
 
-def build_download_request(summary, version):
+def build_download_request(summary, version, *, game_id=None):
     """Build the manager payload from selected API rows, never a resolved URL."""
     _validate_supported_domain(summary.game_domain)
     _validate_id(summary.game_scoped_id, 'mod id')
     _validate_id(summary.mod_id, 'mod id')
     _validate_opaque_id(version.file_id, 'file id')
+    _validate_opaque_id(version.file_name, 'file name')
     _validate_opaque_id(version.version_id, 'file version id')
     _validate_opaque_id(version.game_scoped_version_id, 'game scoped file version id')
+    game = _GAME_BY_DOMAIN[summary.game_domain] if game_id is None else nexus_game_for_id(game_id)
+    if game is None or game.domain != summary.game_domain:
+        raise ValueError('The selected Nexus game does not match the mod listing.')
     return NexusDownloadRequest(
-        provider='nexus', game_domain=summary.game_domain,
+        provider='nexus', game_id=game.game_id, game_domain=summary.game_domain,
         game_scoped_mod_id=summary.game_scoped_id, mod_id=summary.mod_id,
-        file_id=version.file_id, file_version_id=version.version_id,
+        file_id=version.file_id, file_name=version.file_name, file_version_id=version.version_id,
         game_scoped_file_version_id=version.game_scoped_version_id,
         mod_page_url=mod_page_url(summary.game_domain, summary.game_scoped_id),
     )
@@ -323,7 +411,8 @@ class NexusApiClient:
     """Nexus API client with an in-memory API key and injectable HTTP transport."""
 
     def __init__(self, *, api_key=None, application_name, application_version,
-                 transport=None, timeout=DEFAULT_TIMEOUT_SECONDS):
+                 download_key=None, download_expires=None, transport=None,
+                 download_transport=None, timeout=DEFAULT_TIMEOUT_SECONDS):
         if not isinstance(application_name, str) or not application_name.strip():
             raise ValueError('Application-Name must be provided.')
         if (not isinstance(application_version, str)
@@ -331,12 +420,25 @@ class NexusApiClient:
             raise ValueError('Application-Version must be a semantic version.')
         if api_key is not None and (not isinstance(api_key, str) or '\n' in api_key or '\r' in api_key):
             raise ValueError('The Nexus API key is invalid.')
+        if download_key is not None and (
+                not isinstance(download_key, str) or not download_key.strip()
+                or '\n' in download_key or '\r' in download_key):
+            raise ValueError('The Nexus free-user download key is invalid.')
+        if (download_key is None) != (download_expires is None):
+            raise ValueError('The Nexus free-user download key and expiry must be supplied together.')
+        if download_expires is not None and (
+                not isinstance(download_expires, (int, str)) or isinstance(download_expires, bool)
+                or not str(download_expires).isdigit() or len(str(download_expires)) > 12):
+            raise ValueError('The Nexus free-user download expiry must be a Unix timestamp.')
         if not isinstance(timeout, (int, float)) or not 1 <= timeout <= 60:
             raise ValueError('Timeout must be between 1 and 60 seconds.')
         self._api_key = api_key.strip() if isinstance(api_key, str) and api_key.strip() else None
+        self._download_key = download_key.strip() if isinstance(download_key, str) else None
+        self._download_expires = int(download_expires) if download_expires is not None else None
         self._application_name = application_name.strip()
         self._application_version = application_version.strip()
         self._transport = transport or _urllib_transport
+        self._download_transport = download_transport or _urllib_download_transport
         self._timeout = float(timeout)
         self.last_rate_headers = {}
 
@@ -481,6 +583,89 @@ class NexusApiClient:
                                            'DLC dependency name') for item in raw_targets)
             dlc_definitions.append(DlcDependencyDefinition(targets))
         return ModDependencies(tuple(definitions), tuple(dlc_definitions))
+
+    def download_archive(self, download_request, destination):
+        """Download an explicitly selected Nexus ZIP into a manager-owned temp path.
+
+        The signed CDN URL is fetched and consumed here; it is never returned to
+        the manager or persisted. The manager remains responsible for validating
+        the ZIP and installing its contents through its own game-specific rules.
+        """
+        if not isinstance(download_request, NexusDownloadRequest):
+            raise ValueError('Invalid Nexus download request.')
+        _validate_supported_domain(download_request.game_domain)
+        game = _GAME_BY_DOMAIN[download_request.game_domain]
+        if (download_request.provider != 'nexus' or download_request.game_id != game.game_id
+                or download_request.game_id != 'nioh2_pc' or download_request.game_domain != 'nioh2'):
+            raise NexusPermissionError('The Mod Manager does not support downloads for this game.')
+        _validate_id(download_request.game_scoped_mod_id, 'mod id')
+        _validate_id(download_request.mod_id, 'mod id')
+        _validate_opaque_id(download_request.file_id, 'file id')
+        _validate_opaque_id(download_request.file_version_id, 'file version id')
+        _validate_id(download_request.game_scoped_file_version_id, 'game scoped file version id')
+        _validate_opaque_id(download_request.file_name, 'file name')
+        if not download_request.file_name.casefold().endswith('.zip'):
+            raise NexusPermissionError('The Nioh 2 Mod Manager accepts ZIP archives only.')
+        if self._api_key is None:
+            raise NexusAuthenticationError('Add your Nexus API key before sending a download to the Mod Manager.')
+
+        path = (f'/games/{quote(download_request.game_domain, safe="")}'
+                f'/mod-file-versions/{quote(download_request.game_scoped_file_version_id, safe="")}'
+                '/download-link')
+        query = {}
+        if self._download_key is not None:
+            query = {'key': self._download_key, 'expires': str(self._download_expires)}
+        if query:
+            path += '?' + urlencode(query)
+        try:
+            payload = self._request('GET', path)
+        except NexusApiError as error:
+            if error.status == 400:
+                raise NexusAuthenticationError(
+                    'Nexus rejected the free-user download key. Use current values from the Nexus download flow.',
+                    status=400) from None
+            if error.status == 410:
+                raise NexusAuthenticationError(
+                    'The Nexus free-user download key expired. Use current values from the Nexus download flow.',
+                    status=410) from None
+            raise
+        data = _mapping(payload.get('data'), 'download links')
+        links = data.get('links')
+        expires_at = _required_text(data.get('expires_at'), 'download link expiry')
+        if not isinstance(links, list) or not links:
+            raise NexusProtocolError('Nexus returned no download links.')
+        try:
+            expires = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+        except (TypeError, ValueError):
+            raise NexusProtocolError('Nexus returned an invalid download link expiry.') from None
+        if expires.tzinfo is None or expires.astimezone(timezone.utc) <= datetime.now(timezone.utc):
+            raise NexusPermissionError('The Nexus download link is expired or has no usable expiry.')
+        link = _mapping(links[0], 'download link')
+        url = _required_text(link.get('url'), 'download URL')
+        parsed = urlsplit(url)
+        if (parsed.scheme.casefold() != 'https' or not parsed.hostname
+                or parsed.username or parsed.password or parsed.fragment):
+            raise NexusProtocolError('Nexus returned an invalid download link.')
+        target = Path(destination)
+        if target.suffix.casefold() != '.zip' or target.exists() or target.is_symlink():
+            raise ValueError('The manager must provide a new temporary ZIP destination.')
+        try:
+            self._download_transport(url, target, self._timeout, MAX_DOWNLOAD_BYTES)
+        except (NexusApiError, ValueError):
+            raise
+        except Exception:
+            try:
+                target.unlink()
+            except OSError:
+                pass
+            raise NexusNetworkError('Could not download from Nexus Mods. Check the connection and try again.') from None
+        if not target.is_file() or target.stat().st_size == 0 or target.stat().st_size > MAX_DOWNLOAD_BYTES:
+            try:
+                target.unlink()
+            except OSError:
+                pass
+            raise NexusProtocolError('Nexus returned an invalid archive file.')
+        return target.stat().st_size
 
     def _request(self, method, path, *, authenticated=True, body=None):
         if authenticated and self._api_key is None:

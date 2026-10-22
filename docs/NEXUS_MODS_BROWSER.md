@@ -14,6 +14,7 @@ game page below was checked on the official Nexus site.
 
 | Supported PC profile | Nexus domain | Official page |
 | --- | --- | --- |
+| Nioh 2 PC | `nioh2` | [Nexus game page](https://www.nexusmods.com/games/nioh2) |
 | Dynasty Warriors 8 XL | `dynastywarriors8` | [Nexus game page](https://www.nexusmods.com/games/dynastywarriors8) |
 | Pirate Warriors 3 | `onepiecepiratewarriors3` | [Nexus game page](https://www.nexusmods.com/games/onepiecepiratewarriors3) |
 | Pirate Warriors 4 | `onepiecepiratewarriors4` | [Nexus game page](https://www.nexusmods.com/games/onepiecepiratewarriors4) |
@@ -50,6 +51,7 @@ and [OpenAPI schema](https://api.nexusmods.com/openapi.yaml):
 | Mod files | `GET /v3/mods/{mod_id}/files` |
 | Versions for one mod file | `GET /v3/mod-files/{file_id}/versions` |
 | Declared file-version dependencies | `GET /v3/mod-file-versions/{version_id}/dependencies` |
+| User-selected file download link | `GET /v3/games/{game_domain}/mod-file-versions/{game_scoped_id}/download-link` |
 
 Nexus's search request has filters for games and time range, sort modes, and
 pagination, but no text-query field. The UI fetches one 30-item page at a time
@@ -91,33 +93,49 @@ and wider deployment. This code change does not register an application, request
 an API key, or authorize a public release. Follow Nexus's current policy before
 distributing an API-enabled build.
 
+For downloads, the browser calls the documented, experimental download-link
+operation only after the user selects **Send to Mod Manager** for a Nioh 2 ZIP.
+Premium/direct-download-eligible files use the session API key. When Nexus
+requires free-user download credentials, the user may enter the `key` and Unix
+`expires` values supplied by Nexus's own download flow; both are held in memory
+and sent only to the Nexus API endpoint. The API key remains in the `apikey`
+header. Credentials are never saved or passed to the Mod Manager. The returned
+signed URL is consumed in the browser client, follows HTTPS redirects only, and
+is streamed into a new manager-owned temporary ZIP with a 1 GiB limit. The URL
+is neither returned to the manager nor stored. Quarantined and moderated files
+remain unavailable; Nexus's response and permission errors are respected.
+
 ## Mod Manager handoff
 
-There is no Mod Manager component or published handoff interface in this
-repository yet. The browser exposes the typed
-`NexusDownloadRequest`/`DownloadHandoff` boundary. The **Send to Mod Manager**
-button stays disabled until a manager implementation is attached through
-`Application.set_mod_manager_download_handoff(...)`. The manager receives only the
-provider, game domain, game-scoped mod ID, mod ID, file ID, version IDs and
-official mod-page URL. It does not receive the browser's API key or a signed CDN
-URL.
+The typed `NexusDownloadRequest`/`DownloadHandoff` boundary accepts only a
+user-selected request and a downloader capability. The manager adapter is
+implemented in the Mod Manager change and accepts Nioh 2 ZIPs only through a
+bounded background queue. It downloads to manager-owned temporary storage,
+passes the archive through the existing Nioh 2 package validator, and reports
+the result in the manager workspace. It does not auto-install the imported
+package; users still review and apply installation through the manager. Other
+supported Nexus games remain browse-only until a matching manager importer is
+available.
 
-The browser deliberately does not call Nexus's download-link endpoint, fetch
-archive bytes, choose install paths, resolve dependencies, or install files. The
-manager owns those operations and must follow Nexus's current eligibility rules:
-some files require the key and expiry values produced by a user-initiated
-download flow; quarantined files and moderated mods are not downloadable. Signed
-links expire and should not be persisted. The current [OpenAPI download-link
-description](https://api-docs.nexusmods.com/) records the exact rules. A future
-Mod Manager PR can attach a fast `enqueue_nexus_download(request) -> bool`
-capability and keep its download/install implementation in its own module.
+Open the Mod Manager once in the application to attach its queue to the Nexus
+browser. The download action stays disabled until that manager workspace is
+available and the user has selected a Nioh 2 ZIP.
+
+The browser receives no install path or install logic. The manager receives
+request metadata and a capability to fetch the selected archive; it never
+receives either credential or the signed URL. Nexus's current [OpenAPI
+download-link description](https://api-docs.nexusmods.com/) is the authority for
+eligibility, including files unavailable due to quarantine or moderation.
 
 ## Automated checks
 
-`tests/test_nexus_mods.py` uses only mocked HTTP responses. It covers the
+`tests/test_nexus_mods.py` uses only mocked API responses and a fake streamed
+archive. It covers the
 documented request shape, local filtering, plain-text descriptions, required
 authentication, rate and permission errors, response parsing, explicit game
-domains, and the ID-only handoff. It never contacts Nexus or handles mod archives.
+domains, download authentication and expiry, HTTPS links, ZIP/game restrictions,
+and the credential-free manager handoff. It never contacts Nexus or downloads
+real mod archives.
 `tests/test_nexus_contract_audit.py` checks that only rate-limit telemetry
 headers are retained, and the workspace test guards against handing off a stale
 file version while another file is loading.

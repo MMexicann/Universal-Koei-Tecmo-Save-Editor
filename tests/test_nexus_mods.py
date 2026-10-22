@@ -1,6 +1,9 @@
 """Mocked contract tests for Nexus Mods discovery and metadata calls."""
 
 import json
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+import tempfile
 import unittest
 
 from koei_editor.game_registry import get_game
@@ -10,6 +13,7 @@ from koei_editor.mods.nexus_api import (
     NexusApiClient,
     NexusGame,
     NexusAuthenticationError,
+    NexusNetworkError,
     ModFileVersion,
     ModSummary,
     build_download_request,
@@ -119,13 +123,43 @@ class _FakeStatus:
         pass
 
 
+class _FakeLabel:
+    def configure(self, **_kwargs):
+        pass
+
+
+class _FakeDownloadClient:
+    has_api_key = True
+
+    def __init__(self):
+        self.downloads = []
+
+    def download_archive(self, request, destination):
+        self.downloads.append((request, destination))
+        return 1
+
+
+class _FakeHandoff:
+    def __init__(self):
+        self.accepted = None
+
+    def enqueue_nexus_download(self, request, downloader):
+        self.accepted = (request, downloader)
+        return True
+
+
 class NexusApiTests(unittest.TestCase):
     def test_explicit_allowlist_maps_only_supported_windows_pc_profiles(self):
         self.assertTrue(SUPPORTED_NEXUS_GAMES)
         for nexus_game in SUPPORTED_NEXUS_GAMES:
             with self.subTest(game=nexus_game.game_id):
-                game = get_game(nexus_game.game_id)
-                self.assertEqual(game.platform, 'Windows PC')
+                if nexus_game.game_id == 'nioh2_pc':
+                    # The Mod Manager has a separate verified Nioh 2 profile;
+                    # it is not a save-editor adapter in game_registry.
+                    self.assertEqual(nexus_game.domain, 'nioh2')
+                else:
+                    game = get_game(nexus_game.game_id)
+                    self.assertEqual(game.platform, 'Windows PC')
                 self.assertTrue(nexus_game.domain)
                 self.assertEqual(mod_page_url(nexus_game.domain, '12'),
                                  f'https://www.nexusmods.com/{nexus_game.domain}/mods/12')
@@ -201,7 +235,7 @@ class NexusApiTests(unittest.TestCase):
         transport = FakeTransport(
             json_response({'data': {'mod_files': [{'id': 'file_100.v1', 'name': 'Main file'}]}}),
             json_response({'data': {'versions': [{
-                'id': 'version-200.v1', 'game_scoped_id': 'scoped-version-300',
+                'id': 'version-200.v1', 'game_scoped_id': '300',
                 'file': {'id': 'file_100.v1', 'name': 'Main file'},
                 'name': 'Release 1', 'version': '1.0', 'category': 'main',
                 'uploaded_at': '2026-02-01T00:00:00Z', 'is_primary': True,
@@ -222,7 +256,7 @@ class NexusApiTests(unittest.TestCase):
         versions = api.get_versions(files[0].file_id)
         dependencies = api.get_dependencies(versions[0].version_id)
         self.assertEqual(files[0].name, 'Main file')
-        self.assertEqual(versions[0].game_scoped_version_id, 'scoped-version-300')
+        self.assertEqual(versions[0].game_scoped_version_id, '300')
         self.assertEqual(versions[0].file_id, 'file_100.v1')
         self.assertTrue(versions[0].is_primary)
         self.assertEqual(dependencies.definitions[0].alternatives[0].mod_name, 'Base Mod')
@@ -289,12 +323,167 @@ class NexusApiTests(unittest.TestCase):
                                  '1.0', 'main', '', True)
         request = build_download_request(summary, version)
         self.assertEqual(request.provider, 'nexus')
+        self.assertEqual(request.game_id, 'dw8xl')
+        self.assertEqual(request.file_name, 'Main file')
         self.assertNotIn('api_key', request.__dataclass_fields__)
         self.assertNotIn('download_url', request.__dataclass_fields__)
         self.assertEqual(request.mod_page_url, 'https://www.nexusmods.com/dynastywarriors8/mods/17')
 
+    def test_nioh2_download_uses_documented_link_endpoint_and_streams_selected_zip(self):
+        summary = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
+                             'ModAuthor', 'Gameplay', 1, 2, '', False, True)
+        version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
+                                 '1.0', 'main', '', True)
+        request = build_download_request(summary, version)
+        download_expires = str(int((datetime.now(timezone.utc) + timedelta(hours=1)).timestamp()))
+        link_expires = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat().replace('+00:00', 'Z')
+        api_transport = FakeTransport(json_response({'data': {
+            'links': [{'name': 'Primary', 'short_name': 'NEXUS',
+                       'url': 'https://cdn.example.invalid/signed/archive?token=signed'}],
+            'expires_at': link_expires,
+        }}))
+        streamed = {}
+
+        def download_transport(url, destination, timeout, max_bytes):
+            streamed.update(url=url, destination=Path(destination), timeout=timeout, max_bytes=max_bytes)
+            Path(destination).write_bytes(b'zip-archive')
+
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'nexus-download.zip'
+            api = NexusApiClient(api_key='private-api-key', download_key='free-flow-key',
+                                 download_expires=download_expires, application_name='Test Mod Browser',
+                                 application_version='3.1', transport=api_transport,
+                                 download_transport=download_transport)
+            size = api.download_archive(request, destination)
+
+            self.assertEqual(size, len(b'zip-archive'))
+            self.assertEqual(destination.read_bytes(), b'zip-archive')
+
+        api_request, _timeout = api_transport.requests[0]
+        self.assertEqual(api_request.get_method(), 'GET')
+        self.assertEqual(api_request.full_url.split('?')[0],
+                         API_ROOT + '/games/nioh2/mod-file-versions/300/download-link')
+        self.assertIn('key=free-flow-key', api_request.full_url)
+        self.assertIn('expires=' + download_expires, api_request.full_url)
+        self.assertNotIn('private-api-key', api_request.full_url)
+        headers = {key.casefold(): value for key, value in api_request.header_items()}
+        self.assertEqual(headers['apikey'], 'private-api-key')
+        self.assertEqual(streamed['url'], 'https://cdn.example.invalid/signed/archive?token=signed')
+        self.assertEqual(streamed['max_bytes'], 1024 * 1024 * 1024)
+        self.assertNotIn('signed', repr(request))
+
+    def test_download_requires_nioh2_zip_and_api_key_without_contacting_nexus(self):
+        version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
+                                 '1.0', 'main', '', True)
+        other_game = ModSummary('9001', '17', 'dynastywarriors8', 'Koei Mod', '', '1.2',
+                                'ModAuthor', 'Gameplay', 1, 2, '', False, True)
+        nioh_game = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
+                               'ModAuthor', 'Gameplay', 1, 2, '', False, True)
+        transport = FakeTransport()
+        anonymous = NexusApiClient(application_name='Test Mod Browser', application_version='3.1',
+                                   transport=transport)
+        with self.assertRaises(NexusAuthenticationError):
+            anonymous.download_archive(build_download_request(nioh_game, version), '/tmp/not-created.zip')
+        self.assertEqual(transport.requests, [])
+
+        api = client(transport, api_key='private-key')
+        with self.assertRaises(NexusPermissionError):
+            api.download_archive(build_download_request(other_game, version), '/tmp/not-created.zip')
+        non_zip = ModFileVersion('version-b', '301', 'file-b', 'KoeiMod.7z', 'Release 1',
+                                 '1.0', 'main', '', True)
+        with self.assertRaises(NexusPermissionError):
+            api.download_archive(build_download_request(nioh_game, non_zip), '/tmp/not-created.zip')
+        self.assertEqual(transport.requests, [])
+
+    def test_download_rejects_expired_links_and_cleans_failed_partial_stream(self):
+        summary = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
+                             'ModAuthor', 'Gameplay', 1, 2, '', False, True)
+        version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
+                                 '1.0', 'main', '', True)
+        request = build_download_request(summary, version)
+        expired = FakeTransport(json_response({'data': {
+            'links': [{'url': 'https://cdn.example.invalid/expired'}],
+            'expires_at': '2000-01-01T00:00:00Z',
+        }}))
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'nexus-download.zip'
+            api = client(expired, api_key='private-key')
+            with self.assertRaises(NexusPermissionError):
+                api.download_archive(request, destination)
+            self.assertFalse(destination.exists())
+
+            future = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+            transport = FakeTransport(json_response({'data': {
+                'links': [{'url': 'https://cdn.example.invalid/partial'}],
+                'expires_at': future,
+            }}))
+
+            def partial_transport(_url, path, _timeout, _max_bytes):
+                Path(path).write_bytes(b'partial')
+                raise OSError('private transport details')
+
+            api = NexusApiClient(api_key='private-key', application_name='Test Mod Browser',
+                                 application_version='3.1', transport=transport,
+                                 download_transport=partial_transport)
+            with self.assertRaises(NexusNetworkError) as caught:
+                api.download_archive(request, destination)
+            self.assertNotIn('private transport details', str(caught.exception))
+            self.assertFalse(destination.exists())
+
+    def test_download_maps_nexus_eligibility_errors_without_exposing_response_body(self):
+        summary = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
+                             'ModAuthor', 'Gameplay', 1, 2, '', False, True)
+        version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
+                                 '1.0', 'main', '', True)
+        request = build_download_request(summary, version)
+        cases = (
+            (400, NexusAuthenticationError, 'free-user download key'),
+            (403, NexusPermissionError, 'denied access'),
+            (410, NexusAuthenticationError, 'download key expired'),
+        )
+        for status, expected_error, message in cases:
+            with self.subTest(status=status):
+                transport = FakeTransport(ApiResponse(status, {}, b'private Nexus response body'))
+                api = client(transport, api_key='private-api-key')
+                with self.assertRaises(expected_error) as caught:
+                    api.download_archive(request, '/tmp/not-created.zip')
+                self.assertIn(message, str(caught.exception))
+                self.assertNotIn('private Nexus response body', str(caught.exception))
+                self.assertNotIn('private-api-key', str(caught.exception))
+
 
 class NexusWorkspaceAndDescriptionTests(unittest.TestCase):
+    def test_selected_nioh2_zip_is_enqueued_with_a_narrow_downloader_capability(self):
+        workspace = NexusModsWorkspace.__new__(NexusModsWorkspace)
+        summary = ModSummary('9001', '17', 'nioh2', 'Selected Mod', '', '1.0',
+                             'Author', 'Gameplay', 1, 2, '', False, True)
+        version = ModFileVersion('version-2', '300', 'file-2', 'Selected.zip', 'Release 1',
+                                 '1.0', 'main', '', True)
+        workspace._selected_summary = summary
+        workspace._selected_version = version
+        workspace._selected_file_id = version.file_id
+        workspace._shown_mods = {summary.mod_id: summary}
+        workspace._game_by_label = {
+            'Nioh 2': NexusGame('nioh2_pc', 'nioh2', 'NIOH 2')}
+        workspace.game_var = _FakeVar('Nioh 2')
+        workspace.file_tree = _FakeTree(selection=(version.file_id,))
+        workspace._client = _FakeDownloadClient()
+        workspace.download_handoff = _FakeHandoff()
+        workspace.manager_button = _FakeButton('disabled')
+        workspace.manager_hint = _FakeLabel()
+        workspace.status_var = _FakeStatus()
+        workspace.language = 'en'
+
+        self.assertTrue(workspace.handoff_selected_version())
+
+        request, downloader = workspace.download_handoff.accepted
+        self.assertEqual(request.game_id, 'nioh2_pc')
+        self.assertEqual(request.game_domain, 'nioh2')
+        self.assertEqual(request.file_name, 'Selected.zip')
+        self.assertNotIn('api_key', request.__dataclass_fields__)
+        self.assertEqual(downloader.download_archive(request, '/tmp/selected.zip'), 1)
+        self.assertEqual(workspace._client.downloads, [(request, '/tmp/selected.zip')])
+
     def test_hiding_a_selected_mod_invalidates_its_pending_details_request(self):
         workspace = NexusModsWorkspace.__new__(NexusModsWorkspace)
         selected = ModSummary('9001', '17', 'dynastywarriors8', 'Selected Mod', '', '1.0',
@@ -337,6 +526,7 @@ class NexusWorkspaceAndDescriptionTests(unittest.TestCase):
         workspace.versions_tree = _FakeTree(items=('version-old',), selection=('version-old',))
         workspace.dependencies_text = _FakeText()
         workspace.manager_button = _FakeButton()
+        workspace.manager_hint = _FakeLabel()
         workspace.language = 'en'
         submitted = {}
         workspace._submit = lambda operation, callback, *, generation: submitted.update(

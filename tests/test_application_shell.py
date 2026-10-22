@@ -528,24 +528,25 @@ class ApplicationShellTests(unittest.TestCase):
                 id='test-mod', name='Test mod', version='1.0', dependencies=(), conflicts=(),
                 files=(), content_sha256='0' * 64, installed=False, enabled=False,
             )
-            workspace._mods['test-mod'] = test_mod
-            workspace.mod_table.insert('', 'end', iid='test-mod', text='Test mod')
+            with patch.object(workspace.manager, 'mods', return_value=(test_mod,)):
+                workspace.refresh()
             workspace.mod_table.selection_set('test-mod')
             workspace._update_controls()
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
             self.assertEqual(str(workspace.import_button.cget('state')), 'disabled')
             self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
-            workspace.refresh()
-            self.assertTrue(workspace._recovery_blocked)
-            self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
+            with patch.object(workspace.manager, 'mods', return_value=(test_mod,)):
+                workspace.refresh()
+                self.assertTrue(workspace._recovery_blocked)
+                self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
 
-            def select_candidate(path):
-                workspace.manager.current_game_root = Path(path)
-                return Path(path)
-            with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
-                  patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
-                  patch.object(workspace, '_error')):
-                workspace.choose_game_root()
+                def select_candidate(path):
+                    workspace.manager.current_game_root = Path(path)
+                    return Path(path)
+                with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
+                      patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
+                      patch.object(workspace, '_error')):
+                    workspace.choose_game_root()
             self.assertFalse(workspace._recovery_blocked)
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')
             self.assertEqual(str(workspace.import_button.cget('state')), 'normal')

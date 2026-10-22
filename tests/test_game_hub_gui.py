@@ -14,6 +14,10 @@ from koei_editor.shared.save_discovery import DiscoveryResult, InstalledGame
 
 
 class GameHubServiceTests(unittest.TestCase):
+    def test_tracker_timestamp_string_is_formatted_as_utc(self):
+        self.assertEqual(GameHubWorkspace._updated('1700000000'), '2023-11-14 22:13')
+        self.assertEqual(GameHubWorkspace._updated('not-a-timestamp'), 'Unknown')
+
     def test_steam_launch_only_accepts_reviewed_app_ids(self):
         self.assertEqual(game_hub.steam_launch_uri('527270'), 'steam://run/527270')
         with patch('koei_editor.shared.game_hub.webbrowser.open', return_value=True) as opener:
@@ -153,10 +157,6 @@ class GameHubGuiTests(unittest.TestCase):
         self.assertIs(hub._result, result)
         self.assertEqual(hub.table.set('527270:0', 'status'), 'Installed')
         self.assertIn('refresh failed', hub.status.get().casefold())
-
-    def test_tracker_timestamp_string_is_formatted_as_utc(self):
-        self.assertEqual(GameHubWorkspace._updated('1700000000'), '2023-11-14 22:13')
-        self.assertEqual(GameHubWorkspace._updated('not-a-timestamp'), 'Unknown')
 
     def test_cancelled_scan_does_not_report_a_limit(self):
         hub = GameHubWorkspace(self.root, self.app.workspace,

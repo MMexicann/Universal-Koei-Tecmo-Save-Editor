@@ -22,7 +22,7 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
+  "base_commit": "1955b73f10ec32f6ceec916f2d854acfa01f0c84",
   "commands": {
     "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
@@ -37,7 +37,7 @@ requires exact app/build identities and versioned evidence before showing
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1208
+    "verified_public_files": 1221
   },
   "supported_game_inventory": {
     "status": "passed",

@@ -31,6 +31,18 @@ required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
 
+Both builds retain exact reviewed `METADATA` for the five asset-preview
+dependencies so runtime version queries work. After PyInstaller analysis, the
+build removes their build-only distribution records, installer markers and
+upstream `DELVEWHEEL` logs before assembling either format. These records are not
+needed by the previews; their licenses remain in the required runtime notices.
+The filter is bound to the complete hash-locked wheel list and rejects unknown
+distribution metadata. Package verification checks retained metadata hashes and
+continues rejecting personal paths, unreviewed resources and native modules.
+Optional CFFI compilation helpers (`setuptools`, `distutils`, `pkg_resources`)
+are excluded from the frozen application; previews use the precompiled decoders.
+Build tools remain installed in the build environment.
+
 `tools/build_windows.py` requires Windows for compilation. Inspect the build inputs on
 any OS with:
 

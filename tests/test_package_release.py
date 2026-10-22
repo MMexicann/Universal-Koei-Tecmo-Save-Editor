@@ -29,6 +29,13 @@ class PackagingTests(unittest.TestCase):
                                       for name, data in self.trimesh_resources.items()}, clear=True)
         resource_hashes.start()
         self.addCleanup(resource_hashes.stop)
+        self.dependency_metadata = {name: ('Metadata-Version: 2.4\nName: synthetic-' + name + '\n').encode()
+                                    for name in release.RUNTIME_DEPENDENCY_METADATA}
+        metadata_hashes = patch.dict(release.RUNTIME_DEPENDENCY_METADATA,
+                                    {name: hashlib.sha256(data).hexdigest()
+                                     for name, data in self.dependency_metadata.items()}, clear=True)
+        metadata_hashes.start()
+        self.addCleanup(metadata_hashes.stop)
         self.sources = {name: b'Public document\n' for name in release.WINDOWS_DOCS}
         self.sources.update({name: b'# Public build helper\n' for name in release.TOOL_FILES})
         self.sources.update({name: b'# Public community schema or guide\n'
@@ -81,7 +88,8 @@ class PackagingTests(unittest.TestCase):
             self.write_runtime_resources()
 
     def write_runtime_resources(self):
-        resources = {**release.embedded_metadata(self.sources), **self.trimesh_resources}
+        resources = {**release.embedded_metadata(self.sources), **self.trimesh_resources,
+                     **self.dependency_metadata}
         for name, data in resources.items():
             path = self.runtime / '_internal' / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -94,7 +102,8 @@ class PackagingTests(unittest.TestCase):
         (self.root / release.MANIFEST).write_text(json.dumps({'version': '1.0', 'files': entries}), encoding='utf-8')
 
     def archive_fixture(self):
-        blobs = {**release.embedded_metadata(self.sources), **self.trimesh_resources}
+        blobs = {**release.embedded_metadata(self.sources), **self.trimesh_resources,
+                 **self.dependency_metadata}
         blobs['PYZ.pyz'] = b'compressed archive'
         module = [b'public Python module']
         pyz = SimpleNamespace(toc={'koei_editor.application': (0, 0, 0)}, extract=lambda name, raw=False: module[0])
@@ -125,7 +134,7 @@ class PackagingTests(unittest.TestCase):
                      'tk86t.dll', '_tcl_data/init.tcl', '_tk_data/tk.tcl',
                      'koei_editor/data/game_metadata.json', 'licenses/LICENSE',
                      'licenses/THIRD_PARTY_NOTICES.md', *release.RUNTIME_LICENSES,
-                     *release.TRIMESH_RESOURCES):
+                     *release.TRIMESH_RESOURCES, *release.RUNTIME_DEPENDENCY_METADATA):
             entry = archive.toc.pop(name)
             with self.subTest(missing=name), self.assertRaisesRegex(ValueError, 'missing'):
                 release.verify_standalone(self.root, reader)
@@ -139,6 +148,28 @@ class PackagingTests(unittest.TestCase):
                 release.verified_sources(self.root)
             self.sources[name] = original
         self.write_manifest()
+
+    def test_both_executable_archives_reject_changed_or_extra_distribution_metadata(self):
+        for standalone in (False, True):
+            archive, blobs, _ = (self.standalone_archive_fixture() if standalone
+                                 else self.archive_fixture())
+            verify = release.verify_standalone if standalone else release.verify_executable
+            for name in self.dependency_metadata:
+                original = blobs[name]
+                blobs[name] += b'tampered'
+                with self.subTest(standalone=standalone, name=name), \
+                        self.assertRaisesRegex(ValueError, 'differs from the pinned wheel'):
+                    verify(self.root, lambda _: archive)
+                blobs[name] = original
+            for name in ('numpy-2.5.4.dist-info/DELVEWHEEL', 'numpy-2.5.4.dist-info/RECORD',
+                         'numpy-2.5.5.dist-info/METADATA', '_tcl_data/foreign.dist-info/METADATA'):
+                archive.toc[name] = (0, 0, 0, 0, 'x')
+                blobs[name] = b'unreviewed build metadata'
+                with self.subTest(standalone=standalone, name=name), \
+                        self.assertRaisesRegex(ValueError, 'Unreviewed dependency metadata'):
+                    verify(self.root, lambda _: archive)
+                del archive.toc[name]
+                del blobs[name]
 
     def test_trimesh_resources_require_exact_reviewed_bytes_and_exclude_viewers(self):
         for name, data in self.trimesh_resources.items():

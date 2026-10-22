@@ -413,6 +413,87 @@ TRIMESH_RESOURCES = {
     'trimesh/resources/color_map.json.gzip': 'd0476d6b5697444c8b359fd933e7effde10023329aeddbebf132d803ec031735',
     'trimesh/resources/templates/ply.json': '3317874b902a0eac387906ff7eb900a32c31a642718d275c1eef43c8f5e93640',
 }
+# Official Windows/universal wheels verified against tools/requirements/build.txt.
+# Only their runtime METADATA is shipped; DELVEWHEEL, RECORD, installer markers,
+# entry points and duplicate licenses are build metadata, not application data.
+REVIEWED_WHEEL_HASHES = {
+    'pyinstaller-6.22.3.dist-info': '500bd58c7bf7e584a8435adccbd763a0b918d5c12b08d74ff50fd79b2915458b',
+    'altgraph-0.17.5.dist-info': 'f3a22400bce1b0c701683820ac4f3b159cd301acab067c51c653e06961600597',
+    'packaging-26.3.dist-info': 'd7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c',
+    'pefile-2024.8.26.dist-info': '76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f',
+    'pyinstaller_hooks_contrib-2026.8.dist-info': '6d21d65323ea4467753afc21f52d7d0e69416ae8101dd88269bf273ad48db084',
+    'pywin32_ctypes-0.2.3.dist-info': '8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8',
+    'setuptools-84.0.0.dist-info': '51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670',
+    'miniaudio-1.71.dist-info': '154b085dd914a0e79e3d93160e1a07aacb27d66c65f9ef6a0d87c1a194f32c04',
+    'cffi-2.1.1.dist-info': '3222ba5d678f80a030e6afbcc33dc1ae5cb45facabb61cee2c7016b8432fde48',
+    'pycparser-3.12.dist-info': 'a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e',
+    'trimesh-5.1.1.dist-info': 'c5be85a3e31e9ff749f9b0aecc204e37a2cf7cca4e92cd066bb5f3d3c1127765',
+    'numpy-2.5.4.dist-info': '2ca144f15135b6212a5c47b1e2aeca6e412f102f95a2d5d88d8aec77eb255de3',
+}
+RUNTIME_DEPENDENCY_METADATA = {
+    'miniaudio-1.71.dist-info/METADATA': '4c375f306c54fe64792ffc56fb2a2b5a6458d644149d268898393364cab56f1c',
+    'cffi-2.1.1.dist-info/METADATA': '67b6a7595df7ede2195016a05d285faa7d362a8f57c238984edb8bb674b5770d',
+    'pycparser-3.12.dist-info/METADATA': 'ad8db5fe2b0e0a3b0e8419fe5041b80be92470a40b06bd9c1462a0a8bb637c92',
+    'trimesh-5.1.1.dist-info/METADATA': '83ff5dabdef64a3ee82e560f419c06c7d5d40704e3cefe1807ea136db79b01b7',
+    'numpy-2.5.4.dist-info/METADATA': 'e2b909d6a37d76c2bc130f528d7fed0c517322bce16dc7846b6a6df30e200403',
+}
+
+
+def verify_dependency_metadata_lock(root=ROOT):
+    text = (Path(root) / 'tools/requirements/build.txt').read_text(encoding='utf-8')
+    locked, flags = {}, set()
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line in {'--require-hashes', '--only-binary=:all:'} and line not in flags:
+            flags.add(line)
+            continue
+        match = re.fullmatch(r'([\w-]+)==([^ ]+) --hash=sha256:([0-9a-f]{64})', line)
+        if match is None:
+            raise ValueError('Unreviewed dependency lock syntax.')
+        name, version, digest = match.groups()
+        directory = name.replace('-', '_') + '-' + version + '.dist-info'
+        if directory in locked:
+            raise ValueError('Duplicate reviewed wheel lock entry.')
+        locked[directory] = digest
+    if locked != REVIEWED_WHEEL_HASHES or flags != {'--require-hashes', '--only-binary=:all:'}:
+        raise ValueError('Dependency metadata review differs from the hash-locked wheels.')
+
+
+def _is_distribution_metadata(path):
+    return any(part.casefold().endswith('.dist-info') for part in path.parts)
+
+
+def filter_runtime_metadata(datas, root=ROOT):
+    """Minimize PyInstaller Analysis data before either executable is assembled."""
+    verify_dependency_metadata_lock(root)
+    retained, seen, metadata = [], set(), set()
+    for entry in datas:
+        if not isinstance(entry, (tuple, list)) or len(entry) != 3 or not isinstance(entry[0], str):
+            raise ValueError('Invalid PyInstaller runtime data entry.')
+        name, source, kind = entry
+        if not _is_distribution_metadata(PurePosixPath(name.replace('\\', '/'))):
+            retained.append(entry)
+            continue
+        normalized, relative = _bundled_path(name)
+        if (kind != 'DATA' or len(relative.parts) < 2
+                or relative.parts[0] not in REVIEWED_WHEEL_HASHES
+                or any(part.casefold().endswith('.dist-info') for part in relative.parts[1:])
+                or normalized.casefold() in seen):
+            raise ValueError(f'Unreviewed dependency metadata collection: {name}')
+        seen.add(normalized.casefold())
+        if normalized in RUNTIME_DEPENDENCY_METADATA:
+            with Path(source).open('rb') as stream:
+                data = stream.read(65537)
+            _validate_runtime_file(normalized, data, {})
+            metadata.add(normalized)
+            retained.append(entry)
+    if metadata != RUNTIME_DEPENDENCY_METADATA.keys():
+        raise ValueError('Required runtime dependency metadata missing from build analysis.')
+    return retained
+
+
 TCL_PACKAGE_DLLS = frozenset({'_tcl_data/dde1.4/tcldde14.dll', '_tcl_data/reg1.3/tclreg13.dll'})
 TCL_RESOURCE_SUFFIXES = frozenset({'', '.tcl', '.tm', '.msg', '.enc', '.txt', '.n'})
 
@@ -470,6 +551,13 @@ def _verify_tcl_zip(label, data, prefix, entry):
 def _validate_runtime_file(name, data, expected):
     """Apply the same resource/native/privacy rules inside either distribution."""
     normalized, relative = _bundled_path(name)
+    if _is_distribution_metadata(relative):
+        if normalized not in RUNTIME_DEPENDENCY_METADATA:
+            raise ValueError(f'Unreviewed dependency metadata in runtime: {name}')
+        if hashlib.sha256(data).hexdigest() != RUNTIME_DEPENDENCY_METADATA[normalized]:
+            raise ValueError(f'Bundled dependency metadata differs from the pinned wheel: {name}')
+        scan_bundled_data(name, data)
+        return normalized
     if normalized in TRIMESH_RESOURCES:
         if hashlib.sha256(data).hexdigest() != TRIMESH_RESOURCES[normalized]:
             raise ValueError(f'Bundled trimesh resource differs from the pinned wheel: {name}')
@@ -511,6 +599,7 @@ def _validate_runtime_inventory(entries, expected):
         required.update({'tcl86t.dll', 'tk86t.dll', '_tcl_data/init.tcl', '_tk_data/tk.tcl'})
     required.update(expected)
     required.update(TRIMESH_RESOURCES)
+    required.update(RUNTIME_DEPENDENCY_METADATA)
     missing = required - entries.keys()
     if len([name for name in entries if re.fullmatch(r'python3\d+\.dll', name)]) != 1:
         missing.add('one versioned CPython runtime DLL')
@@ -576,6 +665,8 @@ def _verify_archive(executable, sources, archive_reader=None, require_complete_r
             raise ValueError(f'Unreviewed JSON data in executable archive: {name}')
         data = archive.extract(name)
         scan_bundled_data(name, data)
+        if _is_distribution_metadata(path):
+            _validate_runtime_file(normalized, data, expected)
         if normalized in expected and data != expected[normalized]:
             raise ValueError(f'Bundled metadata differs from manifest: {name}')
         if entry[-1] == 'z':

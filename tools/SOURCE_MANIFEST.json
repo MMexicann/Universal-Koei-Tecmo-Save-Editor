@@ -183,8 +183,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 10927,
-      "sha256": "49903a78bdc723cb224259b5fa462fe7c1a607f5692e3df51d02967964e78c09"
+      "bytes": 11765,
+      "sha256": "7959f7bcb521ba31c782a9269c28d775ee00cd78c41a95cc9a71729c6a272c61"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -5833,8 +5833,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 37195,
-      "sha256": "95ecee72742c5d62fc1d1c9171a9d5749d4a4f56107415f00a4596ad7096bae9"
+      "bytes": 39209,
+      "sha256": "8ad70f77dcbc75642adaa67dd221b2fa560c25f8d98d3bca12d3ab52a45b01b4"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
@@ -6060,6 +6060,11 @@
       "path": "tests/test_rotk3_dos.py",
       "bytes": 14769,
       "sha256": "e4391dfe770710b0028b4e0eadf34c592f90babeac1e57c0bce148ebe1189c19"
+    },
+    {
+      "path": "tests/test_runtime_dependency_metadata.py",
+      "bytes": 9063,
+      "sha256": "b10ea843c28e9b112bfab08e1c5e943dc096fc699eca6d57e6cdec620dcb773b"
     },
     {
       "path": "tests/test_ryza2_switch.py",
@@ -6698,8 +6703,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 4144,
-      "sha256": "039a777f562d961edfbb129bd2fd719ec21cd56370cba43f1451bcbdd1746839"
+      "bytes": 6029,
+      "sha256": "1ca6edae6e878ca030f1d33debd85382fe04147c23ce777dd5c570dca733495a"
     },
     {
       "path": "tools/check_community_packages.py",
@@ -6803,8 +6808,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 39443,
-      "sha256": "cd28317d24a5496241e0d8b11ec77210016157e257c3dd634e15eb5737310fcf"
+      "bytes": 44754,
+      "sha256": "622025f4cc6d5772ef065db5d753199fb7d7b35a1de794b261f0f726652f1dc7"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-trimesh.py",

@@ -34,7 +34,7 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'save_discovery.json', 'game_troubleshooting.json')
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
-RUNTIME_GUIDES = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+RUNTIME_GUIDES = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
                   'docs/GAME_TROUBLESHOOTING.md',
                   'docs/WARRIORS_PS4_TRANSFERS.md',
                   'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
@@ -46,8 +46,19 @@ RUNTIME_GUIDES = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICA
                   'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
                   'docs/FIELD_PINS_AND_REVIEWS.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
-                   'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
-WINDOWS_DOCS = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                   'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt',
+                   'licenses/G1Tool-MIT.txt', 'licenses/miniaudio-MIT.txt',
+                   'licenses/trimesh-MIT.txt', 'licenses/numpy-BSD-3-Clause.txt',
+                   'licenses/numpy-libdivide.txt', 'licenses/numpy-pythoncapi-compat.txt',
+                   'licenses/numpy-highway.txt', 'licenses/numpy-dragon4.txt',
+                   'licenses/numpy-x86-simd-sort.txt', 'licenses/numpy-svml.txt',
+                   'licenses/numpy-pocketfft.txt', 'licenses/numpy-lapack-lite.txt',
+                   'licenses/numpy-ma.txt', 'licenses/numpy-random.txt',
+                   'licenses/numpy-random-distributions.txt', 'licenses/numpy-mt19937.txt',
+                   'licenses/numpy-pcg64.txt', 'licenses/numpy-philox.txt',
+                   'licenses/numpy-sfc64.txt', 'licenses/numpy-splitmix64.txt',
+                   'licenses/cffi-MIT-0.txt', 'licenses/pycparser-BSD-3-Clause.txt')
+WINDOWS_DOCS = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
                 'docs/GAME_TROUBLESHOOTING.md',
                 'docs/WARRIORS_PS4_TRANSFERS.md',
                 'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
@@ -72,6 +83,7 @@ MODULE_NAME = re.compile(r'koei_editor(?:\.[A-Za-z_]\w*)*\Z')
 CODEC_LICENSES = {
     'src/koei_editor/games/sophie2/atelier_sophie2_codec.py': 'licenses/atelier-sophie2-save-editor-MIT.txt',
     'src/koei_editor/research/katana/katana_codec.py': 'licenses/katana-save-data-resigner-MIT.txt',
+    'src/koei_editor/research/asset_explorer/g1t.py': 'licenses/G1Tool-MIT.txt',
 }
 
 
@@ -311,19 +323,29 @@ def _bundled_path(name):
     return normalized, path
 
 
-# The application has no third-party Windows runtime packages. External native
-# libraries are CPython, Tcl/Tk and their ordinary Windows dependencies; a game
-# binary or arbitrary extension is not admitted just because it has a DLL suffix.
+# External native runtime modules remain an explicit allowlist. The asset
+# inspection stack needs pinned miniaudio, cffi and NumPy extensions in addition
+# to CPython/Tcl/Tk; an arbitrary extension is never admitted by its suffix.
 NATIVE_DLL = re.compile(
     r'(?:python(?:3|3\d+)\.dll|vcruntime140(?:_1)?\.dll|msvcp140\.dll|ucrtbase\.dll|'
     r'api-ms-win-[a-z0-9-]+\.dll|lib(?:crypto|ssl)-\d+(?:-x64)?\.dll|'
     r'libffi-\d+\.dll|(?:lib)?(?:tcl|tk)\d+t?\.dll|tcl9tk90\.dll|'
     r'libtommath\.dll|zlib1\.dll|sqlite3\.dll)\Z', re.I)
+NUMPY_DLLS = frozenset({
+    'numpy.libs/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
+    'numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll',
+})
 STDLIB_EXTENSIONS = frozenset({
     '_asyncio', '_bz2', '_ctypes', '_decimal', '_elementtree', '_hashlib', '_lzma',
     '_multiprocessing', '_overlapped', '_queue', '_socket', '_sqlite3', '_ssl',
     '_tkinter', '_uuid', '_wmi', '_zoneinfo', '_zstd', 'pyexpat', 'select', 'unicodedata', 'zlib',
 })
+ASSET_EXTENSION = re.compile(r'(?:_miniaudio|_cffi_backend)(?:\.cp314-win_amd64)?\.pyd\Z', re.I)
+NUMPY_EXTENSION = re.compile(
+    r'numpy/(?:_core/(?:_multiarray_umath|_multiarray_tests|_operand_flag_tests|_rational_tests|_simd|_struct_ufunc_tests|_umath_tests)|'
+    r'fft/_pocketfft_umath|linalg/(?:_umath_linalg|lapack_lite)|'
+    r'random/(?:bit_generator|mtrand|_bounded_integers|_common|_generator|_mt19937|_pcg64|_philox|_sfc64))'
+    r'(?:\.cp314-win_amd64)?\.pyd\Z', re.I)
 TCL_PACKAGE_DLLS = frozenset({'_tcl_data/dde1.4/tcldde14.dll', '_tcl_data/reg1.3/tclreg13.dll'})
 TCL_RESOURCE_SUFFIXES = frozenset({'', '.tcl', '.tm', '.msg', '.enc', '.txt', '.n'})
 
@@ -389,10 +411,14 @@ def _validate_runtime_file(name, data, expected):
     elif normalized == 'base_library.zip':
         _verify_library_zip(name, data, require_stdlib=True)
     elif relative.suffix.casefold() in {'.dll', '.pyd'}:
-        approved = (normalized in TCL_PACKAGE_DLLS or (len(relative.parts) == 1
-                    and (NATIVE_DLL.fullmatch(relative.name)
-                         if relative.suffix.casefold() == '.dll'
-                         else relative.stem in STDLIB_EXTENSIONS)))
+        approved = (normalized in TCL_PACKAGE_DLLS
+                    or (relative.suffix.casefold() == '.dll' and len(relative.parts) == 1
+                        and NATIVE_DLL.fullmatch(relative.name))
+                    or (relative.suffix.casefold() == '.dll' and normalized in NUMPY_DLLS)
+                    or (relative.suffix.casefold() == '.pyd' and (
+                        len(relative.parts) == 1 and relative.stem in STDLIB_EXTENSIONS
+                        or len(relative.parts) == 1 and ASSET_EXTENSION.fullmatch(relative.name)
+                        or NUMPY_EXTENSION.fullmatch(normalized))))
         if not approved or not data.startswith(b'MZ'):
             raise ValueError(f'Unreviewed or invalid native runtime dependency: {name}')
         if normalized == 'tcl90.dll':

@@ -191,6 +191,19 @@ def stl_binary_fixture() -> bytes:
     return header + triangle
 
 
+def stl_ascii_fixture() -> bytes:
+    return b"""solid synthetic
+facet normal 0 0 1
+outer loop
+vertex 0 0 0
+vertex 1 0 0
+vertex 0 1 0
+endloop
+endfacet
+endsolid synthetic
+"""
+
+
 def ply_ascii_fixture() -> bytes:
     return b"""ply
 format ascii 1.0
@@ -224,7 +237,13 @@ end_header
     return header + vertices + face
 
 
-def glb_fixture(external_image: bool = False) -> bytes:
+def glb_fixture(
+    external_image: bool = False,
+    repeated_accessors: int = 0,
+    repeated_meshes: int = 0,
+    compression_extension: str | None = None,
+    declare_extension: bool = True,
+) -> bytes:
     binary = struct.pack("<9f3H", 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 2)
     gltf = {
         "asset": {"version": "2.0"},
@@ -242,8 +261,23 @@ def glb_fixture(external_image: bool = False) -> bytes:
         "scenes": [{"nodes": [0]}],
         "scene": 0,
     }
+    for _ in range(repeated_accessors):
+        gltf["accessors"].append(
+            {"bufferView": 0, "componentType": 5126, "count": 3, "type": "VEC3"}
+        )
+    gltf["meshes"].extend(
+        {"primitives": [{"attributes": {"POSITION": 0}, "indices": 1}]}
+        for _ in range(repeated_meshes)
+    )
     if external_image:
         gltf["images"] = [{"uri": "../must-not-be-read.png"}]
+    if compression_extension is not None:
+        if declare_extension:
+            gltf["extensionsUsed"] = [compression_extension]
+        if compression_extension == "KHR_draco_mesh_compression":
+            gltf["meshes"][0]["primitives"][0]["extensions"] = {compression_extension: {}}
+        else:
+            gltf["bufferViews"][0]["extensions"] = {compression_extension: {}}
     json_data = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
     json_data += b" " * ((-len(json_data)) % 4)
     binary += b"\0" * ((-len(binary)) % 4)
@@ -439,7 +473,9 @@ class ModelInspectionTests(unittest.TestCase):
     def test_stl_ply_and_glb_procedural_geometry(self):
         for extension, data in (
             ("stl", stl_binary_fixture()),
+            ("stl", stl_ascii_fixture() + b"\n" * 1_000),
             ("ply", ply_ascii_fixture()),
+            ("ply", ply_ascii_fixture() + b"\n" * 1_000),
             ("ply", ply_binary_fixture()),
             ("glb", glb_fixture()),
         ):
@@ -457,6 +493,30 @@ class ModelInspectionTests(unittest.TestCase):
         with mock.patch.object(media, "MAX_MESH_VERTICES", 2):
             with self.assertRaises(media.AssetInspectionError):
                 media.inspect_model(obj_fixture(), "obj")
+
+    def test_glb_repeated_accessors_and_text_model_lines_are_bounded(self):
+        with mock.patch.object(media, "MAX_GLTF_MATERIALIZED_BYTES", 100):
+            with self.assertRaisesRegex(media.AssetInspectionError, "decoded-memory cap"):
+                media._glb_json(glb_fixture(repeated_accessors=4))
+        with mock.patch.object(media, "MAX_MESH_VERTICES", 4):
+            with self.assertRaisesRegex(media.AssetInspectionError, "total mesh geometry"):
+                media._glb_json(glb_fixture(repeated_meshes=1))
+        with mock.patch.object(media, "MAX_TEXT_LINE_CHARS", 8):
+            with self.assertRaisesRegex(media.AssetInspectionError, "line exceeds"):
+                media._obj_preflight(b"#" + b"x" * 9)
+        with mock.patch.object(media, "MAX_TEXT_LINES", 2):
+            with self.assertRaisesRegex(media.AssetInspectionError, "line count exceeds"):
+                list(media._iter_text_lines("\n\n\n"))
+
+    def test_glb_rejects_optional_compression_extensions_before_loader(self):
+        for extension in ("KHR_draco_mesh_compression", "EXT_meshopt_compression"):
+            for declared in (True, False):
+                with self.subTest(extension=extension, declared=declared):
+                    with self.assertRaisesRegex(media.AssetInspectionError, "compressed glTF"):
+                        media._glb_json(glb_fixture(
+                            compression_extension=extension,
+                            declare_extension=declared,
+                        ))
 
 
 class OptionalDependencyTests(unittest.TestCase):

@@ -27,8 +27,12 @@ MAX_MESH_VERTICES = 50_000
 MAX_MESH_FACES = 100_000
 MAX_GLTF_JSON_BYTES = 2 * 1024 * 1024
 MAX_GLTF_NODES = 10_000
+MAX_GLTF_MATERIALIZED_BYTES = 128 * 1024 * 1024
 MAX_PLY_HEADER_BYTES = 64 * 1024
 MAX_PNG_CHUNKS = 4_096
+MAX_TEXT_LINE_CHARS = 256 * 1024
+MAX_TEXT_LINES = 1_000_000
+_UNSUPPORTED_GLTF_EXTENSIONS = frozenset({"KHR_draco_mesh_compression", "EXT_meshopt_compression"})
 
 
 class AssetInspectionError(ValueError):
@@ -108,6 +112,22 @@ def _optional_import(module: str, label: str):
         raise AssetDependencyError(
             f"{label} preview needs the optional {module} package"
         ) from exc
+
+
+def _iter_text_lines(text: str):
+    """Yield universal-newline text with bounded line size and record count."""
+
+    stream = io.StringIO(text, newline=None)
+    for _ in range(MAX_TEXT_LINES):
+        line = stream.readline(MAX_TEXT_LINE_CHARS + 2)
+        if not line:
+            return
+        line = line.removesuffix("\n")
+        if len(line) > MAX_TEXT_LINE_CHARS:
+            raise AssetInspectionError("text model line exceeds the inspection cap")
+        yield line
+    if stream.read(1):
+        raise AssetInspectionError("text model line count exceeds the inspection cap")
 
 
 def _paeth(left: int, above: int, upper_left: int) -> int:
@@ -565,7 +585,7 @@ def _obj_preflight(data: bytes) -> None:
         raise AssetInspectionError("OBJ contains a NUL byte")
     vertices = 0
     triangles = 0
-    for line in text.splitlines():
+    for line in _iter_text_lines(text):
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
@@ -595,7 +615,7 @@ def _obj_preflight(data: bytes) -> None:
                     index = int(head)
                 except ValueError as exc:
                     raise AssetInspectionError("OBJ face index is malformed") from exc
-                if index == 0 or (index > 0 and index > MAX_MESH_VERTICES):
+                if index == 0 or (index > 0 and index > MAX_MESH_VERTICES) or index < -vertices:
                     raise AssetInspectionError("OBJ face index is outside the supported range")
 
 
@@ -615,16 +635,22 @@ def _stl_preflight(data: bytes) -> None:
         text = data.decode("ascii")
     except UnicodeDecodeError as exc:
         raise AssetInspectionError("STL is neither a valid binary nor ASCII model") from exc
-    lowered = text.lower()
-    if not lowered.lstrip().startswith("solid") or "endsolid" not in lowered:
-        raise AssetInspectionError("STL text framing is malformed")
     triangles = 0
     vertices = 0
-    for line in text.splitlines():
+    first_token = None
+    saw_endsolid = False
+    for line in _iter_text_lines(text):
         words = line.split()
-        if words and words[0].lower() == "facet":
+        if not words:
+            continue
+        token = words[0].lower()
+        if first_token is None:
+            first_token = token
+        if token == "endsolid":
+            saw_endsolid = True
+        if token == "facet":
             triangles += 1
-        elif words and words[0].lower() == "vertex":
+        elif token == "vertex":
             if len(words) != 4:
                 raise AssetInspectionError("ASCII STL vertex is malformed")
             try:
@@ -634,10 +660,30 @@ def _stl_preflight(data: bytes) -> None:
             if not all(math.isfinite(value) for value in coordinates):
                 raise AssetInspectionError("ASCII STL coordinate is not finite")
             vertices += 1
+    if first_token != "solid" or not saw_endsolid:
+        raise AssetInspectionError("STL text framing is malformed")
     if triangles > MAX_MESH_FACES or vertices > MAX_MESH_VERTICES:
         raise AssetInspectionError("STL geometry exceeds the preview cap")
     if triangles == 0 or vertices != triangles * 3:
         raise AssetInspectionError("ASCII STL has an invalid triangle/vertex count")
+
+
+def _stl_geometry_only(data: bytes) -> bytes:
+    """Pass binary STL through; normalize ASCII STL to bounded vertex records."""
+
+    if len(data) >= 84:
+        count = struct.unpack_from("<I", data, 80)[0]
+        if 84 + count * 50 == len(data):
+            return data
+    text = data.decode("ascii")
+    filtered = io.BytesIO()
+    filtered.write(b"solid\n")
+    for line in _iter_text_lines(text):
+        words = line.split()
+        if words and words[0].lower() == "vertex":
+            filtered.write(("vertex " + " ".join(words[1:]) + "\n").encode("ascii"))
+    filtered.write(b"endsolid\n")
+    return filtered.getvalue()
 
 
 _PLY_SCALAR_SIZES = {
@@ -741,7 +787,7 @@ def _ply_preflight(data: bytes) -> None:
             text = data[offset:].decode("ascii")
         except UnicodeDecodeError as exc:
             raise AssetInspectionError("ASCII PLY body contains non-ASCII data") from exc
-        rows = iter(text.splitlines())
+        rows = iter(_iter_text_lines(text))
         for _ in range(vertex_count):
             row = next(rows, None)
             if row is None or not row.split():
@@ -806,6 +852,29 @@ def _ply_preflight(data: bytes) -> None:
         raise AssetInspectionError("binary PLY body is truncated")
 
 
+def _ply_ascii_geometry_only(data: bytes) -> bytes:
+    """Trim ASCII PLY to its declared, preflighted vertex and face rows."""
+
+    ply_format, elements, offset = _ply_header(data)
+    if ply_format != "ascii":
+        return data
+    try:
+        text = data[offset:].decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise AssetInspectionError("ASCII PLY body contains non-ASCII data") from exc
+    rows = iter(_iter_text_lines(text))
+    row_count = sum(element[1] for element in elements)
+    filtered = io.BytesIO()
+    filtered.write(data[:offset])
+    for _ in range(row_count):
+        row = next(rows, None)
+        if row is None:
+            raise AssetInspectionError("ASCII PLY row table is truncated")
+        filtered.write(row.encode("ascii"))
+        filtered.write(b"\n")
+    return filtered.getvalue()
+
+
 def _glb_json(data: bytes) -> tuple[dict, bytes]:
     if len(data) < 20 or data[:4] != b"glTF":
         raise AssetInspectionError("GLB extension does not match glTF binary data")
@@ -858,11 +927,12 @@ def _glb_json(data: bytes) -> tuple[dict, bytes]:
             uri = entry.get("uri")
             if uri is not None and (not isinstance(uri, str) or not uri.startswith("data:")):
                 raise AssetInspectionError("GLB external URIs are not followed")
-    required = document.get("extensionsRequired", [])
-    if not isinstance(required, list) or any(not isinstance(ext, str) for ext in required):
-        raise AssetInspectionError("GLB required-extension list is malformed")
-    if any(ext in {"KHR_draco_mesh_compression", "EXT_meshopt_compression"} for ext in required):
-        raise AssetInspectionError("compressed glTF geometry extensions are not supported")
+    for field in ("extensionsUsed", "extensionsRequired"):
+        extensions = document.get(field, [])
+        if not isinstance(extensions, list) or any(not isinstance(ext, str) for ext in extensions):
+            raise AssetInspectionError(f"GLB {field} list is malformed")
+        if _UNSUPPORTED_GLTF_EXTENSIONS.intersection(extensions):
+            raise AssetInspectionError("compressed glTF geometry extensions are not supported")
     _glb_geometry_preflight(document, binary_data)
     return document, binary_data
 
@@ -888,15 +958,24 @@ def _glb_geometry_preflight(document: dict, binary_data: bytes) -> None:
         raise AssetInspectionError("GLB geometry table exceeds the preview cap")
     component_sizes = {5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4}
     type_sizes = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT2": 4, "MAT3": 9, "MAT4": 16}
+    materialized_bytes = 0
     for view in views:
         if not isinstance(view, dict) or view.get("buffer", 0) != 0:
             raise AssetInspectionError("GLB buffer view references a missing buffer")
+        view_extensions = view.get("extensions", {})
+        if not isinstance(view_extensions, dict):
+            raise AssetInspectionError("GLB buffer-view extensions are malformed")
+        if _UNSUPPORTED_GLTF_EXTENSIONS.intersection(view_extensions):
+            raise AssetInspectionError("compressed glTF geometry extensions are not supported")
         offset = view.get("byteOffset", 0)
         length = view.get("byteLength")
         if not isinstance(offset, int) or not isinstance(length, int) or offset < 0 or length < 0:
             raise AssetInspectionError("GLB buffer view range is malformed")
         if offset + length > len(binary_data):
             raise AssetInspectionError("GLB buffer view extends past the binary chunk")
+        materialized_bytes += length
+        if materialized_bytes > MAX_GLTF_MATERIALIZED_BYTES:
+            raise AssetInspectionError("GLB buffer views exceed the decoded-memory cap")
     for accessor in accessors:
         if not isinstance(accessor, dict) or "sparse" in accessor:
             raise AssetInspectionError("sparse or malformed GLB accessors are not supported")
@@ -914,6 +993,9 @@ def _glb_geometry_preflight(document: dict, binary_data: bytes) -> None:
         if not isinstance(accessor_offset, int) or accessor_offset < 0:
             raise AssetInspectionError("GLB accessor offset is malformed")
         element_size = component_sizes[component_type] * type_sizes[kind]
+        materialized_bytes += count * element_size
+        if materialized_bytes > MAX_GLTF_MATERIALIZED_BYTES:
+            raise AssetInspectionError("GLB accessors exceed the decoded-memory cap")
         stride = views[view_index].get("byteStride", element_size)
         view_length = views[view_index]["byteLength"]
         if not isinstance(stride, int) or stride < element_size:
@@ -924,6 +1006,8 @@ def _glb_geometry_preflight(document: dict, binary_data: bytes) -> None:
         if needed > view_length:
             raise AssetInspectionError("GLB accessor extends past its buffer view")
     per_mesh: list[tuple[int, int]] = []
+    all_mesh_vertices = 0
+    all_mesh_faces = 0
     for mesh in meshes:
         if not isinstance(mesh, dict) or not isinstance(mesh.get("primitives", []), list):
             raise AssetInspectionError("GLB mesh entry is malformed")
@@ -932,6 +1016,11 @@ def _glb_geometry_preflight(document: dict, binary_data: bytes) -> None:
         for primitive in mesh.get("primitives", []):
             if not isinstance(primitive, dict) or primitive.get("mode", 4) != 4:
                 raise AssetInspectionError("only triangle GLB primitives are supported")
+            primitive_extensions = primitive.get("extensions", {})
+            if not isinstance(primitive_extensions, dict):
+                raise AssetInspectionError("GLB primitive extensions are malformed")
+            if _UNSUPPORTED_GLTF_EXTENSIONS.intersection(primitive_extensions):
+                raise AssetInspectionError("compressed glTF geometry extensions are not supported")
             attributes = primitive.get("attributes")
             if not isinstance(attributes, dict) or not isinstance(attributes.get("POSITION"), int):
                 raise AssetInspectionError("GLB triangle primitive is missing POSITION")
@@ -958,6 +1047,10 @@ def _glb_geometry_preflight(document: dict, binary_data: bytes) -> None:
             face_total += index_count // 3
             if vertex_total > MAX_MESH_VERTICES or face_total > MAX_MESH_FACES:
                 raise AssetInspectionError("GLB mesh geometry exceeds the preview cap")
+        all_mesh_vertices += vertex_total
+        all_mesh_faces += face_total
+        if all_mesh_vertices > MAX_MESH_VERTICES or all_mesh_faces > MAX_MESH_FACES:
+            raise AssetInspectionError("GLB total mesh geometry exceeds the preview cap")
         per_mesh.append((vertex_total, face_total))
     vertices = 0
     faces = 0
@@ -1003,22 +1096,36 @@ def inspect_model(
     except Exception as exc:
         raise AssetInspectionError(f"malformed {ext.upper()} model structure") from exc
     trimesh = _optional_import("trimesh", "3D model")
-    # OBJ material declarations may name sidecar files. Strip those declarations;
-    # an empty resolver and allow_remote=False prevent resolving any other resource.
+    # OBJ materials and vertex attributes are outside this geometry preview.
+    # Rebuild only position and face records, so sidecars and unused attributes
+    # never reach the external parser.
     file_bytes = raw
     if ext == "obj":
         try:
-            lines = raw.decode("utf-8-sig").splitlines()
+            text = raw.decode("utf-8-sig")
         except UnicodeDecodeError as exc:
             raise AssetInspectionError("OBJ must be UTF-8 text") from exc
-        file_bytes = ("\n".join(line for line in lines if line.lstrip().split(maxsplit=1)[0:1] != ["mtllib"]) + "\n").encode("utf-8")
+        filtered = io.BytesIO()
+        for line in _iter_text_lines(text):
+            fields = line.strip().split()
+            if fields and fields[0] == "v":
+                filtered.write(("v " + " ".join(fields[1:4]) + "\n").encode("utf-8"))
+            elif fields and fields[0] == "f":
+                indices = (token.split("/", 1)[0] for token in fields[1:])
+                filtered.write(("f " + " ".join(indices) + "\n").encode("utf-8"))
+        file_bytes = filtered.getvalue()
+    elif ext == "stl":
+        file_bytes = _stl_geometry_only(raw)
+    elif ext == "ply":
+        file_bytes = _ply_ascii_geometry_only(raw)
     try:
+        options = {"resolver": {}, "allow_remote": False, "process": False}
+        if ext == "glb":
+            options["skip_materials"] = True
         scene = trimesh.load_scene(
             io.BytesIO(file_bytes),
             file_type=ext,
-            resolver={},
-            allow_remote=False,
-            process=False,
+            **options,
         )
         geometries = tuple(scene.geometry.values())
         if not geometries or any(not isinstance(geometry, trimesh.Trimesh) for geometry in geometries):

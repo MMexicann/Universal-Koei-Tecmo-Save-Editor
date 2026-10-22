@@ -3,9 +3,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.shared import save_discovery
+from koei_editor.shared import game_hub, save_discovery
 
 
 class GameHubDiscoveryTests(unittest.TestCase):
@@ -74,6 +75,18 @@ class GameHubDiscoveryTests(unittest.TestCase):
         self.assertEqual(safe_game['size_on_disk'], 2430432)
         for local_path in (str(self.root), str(self.steam), str(library), str(install_path)):
             self.assertNotIn(local_path, portable)
+
+    def test_game_hub_prefers_the_install_only_scanner_contract(self):
+        expected = object()
+        cancel = object()
+        with patch.object(save_discovery, 'discover_installed_builds', create=True,
+                          return_value=expected) as installed_scan, \
+                patch.object(save_discovery, 'discover_saves') as legacy_scan:
+            actual = game_hub.discover_installations(steam_roots=(self.steam,), cancel=cancel)
+
+        self.assertIs(actual, expected)
+        installed_scan.assert_called_once_with(steam_roots=(self.steam,), cancel=cancel)
+        legacy_scan.assert_not_called()
 
     def test_installed_game_keeps_legacy_positional_metadata_order(self):
         item = save_discovery.InstalledGame(

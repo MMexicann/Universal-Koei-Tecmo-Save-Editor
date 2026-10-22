@@ -11,7 +11,8 @@
 - **Mod tools:** create replacement packages and manage Nioh 2 PC Mods-folder
   packages with profiles and dependency/conflict checks. A browser-local Sandbox
   provides separate source tools and reviewed file handoffs.
-- **Game and asset tools:** Steam Game Hub, version observations, emulator
+- **Game and asset tools:** selected Atelier Arland DX PC settings, Steam Game
+  Hub, version observations, emulator
   profiles and read-only ZIP, G1T and common-media previews. Controller profiles
   store local notes; Nexus provides website links while API access is gated.
 - **Progress and inspection:** Completion Companion, strategy record views,

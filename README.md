@@ -40,6 +40,9 @@ version reset preserves earlier releases and repository history.
 - **Find games and inspect files:** Steam Game Hub, documented emulator launch
   profiles and a read-only Asset Explorer for supported ZIP, G1T and media subsets.
   [Game Hub](docs/APPLICATION_SHELL.md#game-hub) · [Emulators](docs/EMULATOR_HUB.md) · [Assets](docs/ASSET_EXPLORER.md).
+- **Manage selected PC settings:** review supported Atelier Arland DX game and
+  installed-mod settings, save profiles and keep verified backups.
+  [Configuration Manager](docs/GAME_CONFIGURATION.md).
 - **Reuse and share reviewed work:** automation, resource presets for qualified
   profiles, local controller-profile records and data-only community packages.
   [Automation](docs/AUTOMATION.md) · [Presets](docs/REUSABLE_PRESETS.md) · [Community formats](docs/COMMUNITY_TOOLKIT.md).

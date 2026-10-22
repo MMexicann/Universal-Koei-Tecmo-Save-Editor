@@ -38,8 +38,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 7999,
-      "sha256": "f158ded26aaeb8d623ece203e512d2ed8108bffea572e341ade811160cd08d1f"
+      "bytes": 8200,
+      "sha256": "38d87f630535e1ea7ef825623eb4363bdee8de6e0e21ab1a73788c10d09e320c"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -447,6 +447,11 @@
       "sha256": "c7fd0d517a4cac8b5c3411c91340b68589ce029a415a918478a8c5066e3bf5c2"
     },
     {
+      "path": "docs/GAME_CONFIGURATION.md",
+      "bytes": 10014,
+      "sha256": "2e57bd27194f6f3f40c89ff4029888ac17dcaf91282133a491c0c6353fcac7b1"
+    },
+    {
       "path": "docs/GAME_DATA_ENCYCLOPEDIA.md",
       "bytes": 8604,
       "sha256": "8614ef3a4433b665a6c5292691390936859fb22a37a2883006093a5beb25e96f"
@@ -768,8 +773,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 18208,
-      "sha256": "9ae255a142bd3b1c77b7ac60349fbca50d50d185c7613a7581e91abb71a9bdc6"
+      "bytes": 18314,
+      "sha256": "68311a085b37791bb8edd5766a092b3ac87682a6fd241995b10b80dc8b4d2656"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1058,8 +1063,8 @@
     },
     {
       "path": "docs/TOOLKIT_V1_RELEASE_NOTES.md",
-      "bytes": 1969,
-      "sha256": "95f777ac4fb11c49b6ac7884d3e168dce85f5f81c595faabcd0a267a857158b2"
+      "bytes": 2011,
+      "sha256": "b9af65ee12688799a3fb5e99713ece397bfc8917279848ac6b5b6e5b6acb891d"
     },
     {
       "path": "docs/TOTORI_DX_PS4_FORMAT.md",
@@ -1503,8 +1508,8 @@
     },
     {
       "path": "pyproject.toml",
-      "bytes": 1115,
-      "sha256": "e5139a0b17e866b86429c91be970f127da45996b8c428a624173d0aac3f6cf47"
+      "bytes": 1137,
+      "sha256": "94115100482fea8d78cf4031919324ec912802c449e2361d4555f516603a74b8"
     },
     {
       "path": "src/koei_editor/AGENTS.md",
@@ -1528,8 +1533,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 86809,
-      "sha256": "d9893466987ad62d62e8cc5aeeed25281b9eb5b99932163b07fc1a645a6ba0ea"
+      "bytes": 87606,
+      "sha256": "9d02c29a110cf1ea28f338c06c5787055b79cba5aa123a5559f87e0389f7299b"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4172,6 +4177,16 @@
       "sha256": "04eae6246d33f49c9b2109df8e9bfdae657462e4159eabd98409c543e7ab3e13"
     },
     {
+      "path": "src/koei_editor/shared/configuration_gui.py",
+      "bytes": 26657,
+      "sha256": "ecbb4e0178cdc9287a7dad7bfb959a886ed680e55628da37f6e1c614dc65af18"
+    },
+    {
+      "path": "src/koei_editor/shared/configuration_manager.py",
+      "bytes": 50291,
+      "sha256": "e0ec61e46d03f42ffee9aafa6815989b072eb90fa6b8d6980b529adec8892722"
+    },
+    {
       "path": "src/koei_editor/shared/controller_profiles.py",
       "bytes": 20951,
       "sha256": "1498cb78b6ba21d6a2c79efc06570e3c3eb82d73b954a57747b52285a19d48e5"
@@ -4293,8 +4308,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 15939,
-      "sha256": "bf8d080d6e82ebe81b5bbd286712ba3ab456b4097f3031b1cbc9a015bba28c36"
+      "bytes": 16054,
+      "sha256": "7edbfcae2e4fe93bf196ec6cadbee39ffe29166cecd0f6fa945f7719bded9e9f"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4613,8 +4628,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 50555,
-      "sha256": "b2e14aea2c2b4dbdd611bb935021c1ec745f61bd40b6612b4021299fd9e783a7"
+      "bytes": 50977,
+      "sha256": "dd0337336cf4703b5ecccab02333c953056ce1ecbf98aaead34354fe0ba72fe8"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4855,6 +4870,21 @@
       "path": "tests/test_completion_companion_view.py",
       "bytes": 15042,
       "sha256": "e4d471d58679ca49ffec96c30b890b3e0274f44bd5e9b025e8e5c8dcbac77dce"
+    },
+    {
+      "path": "tests/test_configuration_gui.py",
+      "bytes": 11173,
+      "sha256": "a0d98648d549ff8bf0a48f8ebcbfb25478894e4d62026051c4fc6d8e7064cacb"
+    },
+    {
+      "path": "tests/test_configuration_manager.py",
+      "bytes": 18328,
+      "sha256": "0b7641fb34792dbeaef9fe2c1a203b9571f32d7d5f3c4cf434c7803fc2ae3e11"
+    },
+    {
+      "path": "tests/test_configuration_storage_safety.py",
+      "bytes": 7326,
+      "sha256": "633424b4ad8ab30519593fe4a12fe9b2f52bd3a4b3b4047df76f5122bebdd216"
     },
     {
       "path": "tests/test_console_context_regressions.py",
@@ -5188,8 +5218,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 17993,
-      "sha256": "2cc7cec92a35de567f468b7a05fc2fa862ab6c65ea0ff02e9332fe9230a74d28"
+      "bytes": 18720,
+      "sha256": "9c3869f35ef7d3b9bea099dd9ae138ce2f95c56faac6f8ab5881455838deb2db"
     },
     {
       "path": "tests/test_editor.py",
@@ -5948,8 +5978,8 @@
     },
     {
       "path": "tests/test_research_import.py",
-      "bytes": 10849,
-      "sha256": "24725e0be11bdb2a1346a94c2d9cf0ccac56e5ce75f8b72988fae9ff1a0603b3"
+      "bytes": 11224,
+      "sha256": "937f7bf4dedd841a3039b66f6a1ca7952d9b815e884f467d48993a70b1f1d6e1"
     },
     {
       "path": "tests/test_research_lab.py",
@@ -6428,8 +6458,8 @@
     },
     {
       "path": "tests/test_universal_packaging.py",
-      "bytes": 16711,
-      "sha256": "1f691321bc25b23cf75e9a09fcd6e3b8660b453b7de5f162900b0ebe6d29e4d2"
+      "bytes": 16845,
+      "sha256": "efce3041ba5015b2aa2e0720378b50887c16e67f5db24506b3ff466a8c627857"
     },
     {
       "path": "tests/test_v27_dw8_wo3_dashboards.py",
@@ -6653,8 +6683,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 3904,
-      "sha256": "77d3943a88daf28b5c8028dc1af034a849e4be7b743cedc8b4028770b603d482"
+      "bytes": 4144,
+      "sha256": "039a777f562d961edfbb129bd2fd719ec21cd56370cba43f1451bcbdd1746839"
     },
     {
       "path": "tools/check_community_packages.py",
@@ -6758,8 +6788,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 39365,
-      "sha256": "736ccd9e91a94f9ab8f1a80ea3a5247fbce3130de988faf3ab772ec352d6cec4"
+      "bytes": 39443,
+      "sha256": "cd28317d24a5496241e0d8b11ec77210016157e257c3dd634e15eb5737310fcf"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-trimesh.py",

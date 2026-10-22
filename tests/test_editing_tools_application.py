@@ -40,28 +40,31 @@ class EditingToolsApplicationTests(unittest.TestCase):
         return editor
 
     def test_native_menu_and_workflow_footer_relabel_without_replacing_commands(self):
-        keys = ('editing_presets', 'transfer', 'research_lab')
-        commands = tuple(self.app.editing_tools_menu.entrycget(self.menu_index(key), 'command')
-                         for key in keys)
+        keys = ('editing_presets', 'transfer', 'game_configuration', 'research_lab', 'research_import')
+        indices = tuple(self.app._editing_tools_menu_index(key) for key in keys)
+        self.assertTrue(all(index is not None for index in indices))
+        commands = tuple(self.app.editing_tools_menu.entrycget(index, 'command') for index in indices)
         for language, header, labels, workflow in (
                 ('English', 'Editing and Research',
-                 ('Reusable Editing Presets', 'Transfer from Save Copy', 'Save Research Lab'), 'Workflow Builder'),
+                 ('Reusable Editing Presets', 'Transfer from Save Copy', 'Game Configuration Manager',
+                  'Save Research Lab', 'Research Import'), 'Workflow Builder'),
                 ('Deutsch', 'Bearbeitung und Forschung',
                  ('Wiederverwendbare Bearbeitungsvorlagen', 'Aus Spielstandkopie übertragen',
-                  'Spielstand-Forschungslabor'), 'Ablaufeditor'),
+                  'Spielkonfigurationsverwaltung', 'Spielstand-Forschungslabor', 'Forschungsimport'), 'Ablaufeditor'),
                 ('English', 'Editing and Research',
-                 ('Reusable Editing Presets', 'Transfer from Save Copy', 'Save Research Lab'), 'Workflow Builder')):
+                 ('Reusable Editing Presets', 'Transfer from Save Copy', 'Game Configuration Manager',
+                  'Save Research Lab', 'Research Import'), 'Workflow Builder')):
             with self.subTest(language=language):
                 self.app.language_choice.set(language)
                 self.app.change_language()
                 self.root.update()
                 self.assertEqual(self.app.tools_menu_bar.entrycget('end', 'label'), header)
-                self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(self.menu_index(key), 'label')
-                                       for key in keys), labels)
+                self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(index, 'label')
+                                       for index in indices), labels)
                 self.assertEqual(self.app.workflow_button.cget('text'), workflow)
                 self.assertTrue(self.app.workflow_button.winfo_ismapped())
-                self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(self.menu_index(key), 'command')
-                                       for key in keys), commands)
+                self.assertEqual(tuple(self.app.editing_tools_menu.entrycget(index, 'command')
+                                       for index in indices), commands)
 
     def test_direct_tool_navigation_records_unique_recents_and_retains_pending_edits(self):
         editor = self.open_destination()
@@ -91,12 +94,18 @@ class EditingToolsApplicationTests(unittest.TestCase):
         editor = self.open_destination()
         editor.stage_values({'gold': 12345})
         before = (dict(editor.changes), list(editor.history))
-        self.app.editing_tools_menu.invoke(self.menu_index('editing_presets'))
+        self.app.editing_tools_menu.invoke(self.app._editing_tools_menu_index('editing_presets'))
         presets = self.app.editing_presets
         self.root.update()
         self.assertTrue(presets.frame.winfo_ismapped())
         self.assertIn(editor, presets._sessions.values())
-        self.app.editing_tools_menu.invoke(self.menu_index('research_lab'))
+        self.app.editing_tools_menu.invoke(self.app._editing_tools_menu_index('game_configuration'))
+        configuration = self.app.game_configuration
+        self.root.update()
+        self.assertTrue(configuration.frame.winfo_ismapped())
+        self.assertFalse(presets.frame.winfo_ismapped())
+        self.assertEqual((editor.changes, editor.history), before)
+        self.app.editing_tools_menu.invoke(self.app._editing_tools_menu_index('research_lab'))
         research = self.app.research_lab
         self.root.update()
         self.assertTrue(research.frame.winfo_ismapped())

@@ -189,6 +189,11 @@ class ResearchImportGuiTests(unittest.TestCase):
         self.assertIn('Research Import', labels)
         self.assertEqual(self.app.editing_tools_menu.entrycget(index, 'label'),
                          self.app.tr('research_import'))
+        keys = ('editing_presets', 'transfer', 'game_configuration', 'research_lab', 'research_import')
+        indices = (self.app._editing_tools_menu_index(key) for key in keys)
+        labels = [self.app.editing_tools_menu.entrycget(i, 'label') for i in indices]
+        self.assertIn('Game Configuration Manager', labels)
+        self.assertIn('Research Import', labels)
         self.select('gundam2_ps3')
         self.gui.inspect()
         self.wait()

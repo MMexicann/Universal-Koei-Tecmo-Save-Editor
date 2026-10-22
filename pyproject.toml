@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "universal-koei-tecmo-game-toolkit"
 version = "3.1"
-description = "Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management and read-only asset tools, with backups and Undo."
+description = "Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management, selected PC settings and read-only asset tools, with backups and Undo."
 requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}

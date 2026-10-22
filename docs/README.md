@@ -41,6 +41,7 @@ Nioh 2 PC only.
 - [Reviewed automation, Workflow Builder, batch CLI and recovery](AUTOMATION.md)
 - [Seeded automation regression properties and repeatable benchmarks](AUTOMATION_BENCHMARKS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
+- [Sol save-editing UX report: shared field paging and safe comparison handoff](SOL_SAVE_EDITOR_UX.md)
 
 - [v2.5.4 review-export filename fix](releases/v2.5.4.md)
 - [v2.5.3 equipment, new profiles and shared refinements](releases/v2.5.3.md)

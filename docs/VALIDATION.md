@@ -63,6 +63,13 @@ requires exact app/build identities and versioned evidence before showing
 }
 ```
 
+## Sol save-editing UX — 2026-10-22
+
+The [structured UX report](SOL_SAVE_EDITOR_UX.md) covers the shared scalar
+editor changes, comparison-to-transfer safety boundary, full automated test
+results and the headless GUI limitations. The 97 scalar profiles share the
+updated editor; DW3 retains its existing dedicated tagged-schema workflow.
+
 ## v3.1 common-core editing and resource transfers
 
 The new DW8 XL PS4 editor reuses the already-qualified CUSA00397 zero-extension

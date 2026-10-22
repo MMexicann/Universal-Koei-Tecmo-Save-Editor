@@ -753,8 +753,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 17409,
-      "sha256": "ea34b979ce59d6b3de86e18483a5e91ac09e8976d9686d778107d8f4ef832013"
+      "bytes": 17512,
+      "sha256": "6ea641f56f151ad1edd5f2b70331cdcad9234aa1502a58d92018dbc249c2ee07"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -927,6 +927,11 @@
       "sha256": "32dd80b6f629d30bf90234ca1f0476941987228398196316cfe43d6743dbe919"
     },
     {
+      "path": "docs/SOL_SAVE_EDITOR_UX.md",
+      "bytes": 6056,
+      "sha256": "63d85eb1fd2bc59a40571dddd7d0a58265fdec308c9bbfb7892557994ddfba7c"
+    },
+    {
       "path": "docs/SOPFFO_RESEARCH.md",
       "bytes": 12328,
       "sha256": "756f5b3cfb7414ccf8e820f37dcd59152eb97bb5121cc95e5538862a40d41743"
@@ -1078,8 +1083,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 98692,
-      "sha256": "a9f6e81c183a58a7029f06b203b20433e28136e9d8e4de15f80750ae46fef45a"
+      "bytes": 99033,
+      "sha256": "7dab133c24ab335c2caa88ad48d5968a69173a5cb137e7a09fb2a87aa19b6d8c"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -1493,8 +1498,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 82336,
-      "sha256": "f02d19e5d500d14e951ac6e307e5a9c7fc632a6127a210ba61f66d66c72a7233"
+      "bytes": 83193,
+      "sha256": "f18e5e844fb10a99ce200b38b10a211e958621eea93fc17c3ce8cd9fd25e86c7"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4108,8 +4113,8 @@
     },
     {
       "path": "src/koei_editor/shared/comparison_gui.py",
-      "bytes": 11349,
-      "sha256": "449f0e8d5237d0ad8cc0f233f753402f012c66e92454e7c053a02247cb38f65f"
+      "bytes": 20475,
+      "sha256": "6109f1a4bd88f29f8d5d8e1e8063d801c25b47497f2c8cfaf2de2b52305e9bf6"
     },
     {
       "path": "src/koei_editor/shared/compatibility_center.py",
@@ -4148,8 +4153,8 @@
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
-      "bytes": 17702,
-      "sha256": "d9f577e1af04af4fa6a7c33a2fbc5fe18ec6d43e86352a186a183fc7d27e6559"
+      "bytes": 18207,
+      "sha256": "76ac7c80108a065a31cb2ee85e802e1bd9d971cd0755f30d341d5d3d5b805fdb"
     },
     {
       "path": "src/koei_editor/shared/emulator_hub.py",
@@ -4388,8 +4393,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_comparison.py",
-      "bytes": 8208,
-      "sha256": "079c45d949df50bc7a98b26fa88e8ef7e13acfcb26d5686f4f4f948b48587397"
+      "bytes": 8501,
+      "sha256": "93789c700897c1bb7efd6391ce1bd4d370c161f3b8d928e6a6e139940234cc56"
     },
     {
       "path": "src/koei_editor/shared/save_discovery.py",
@@ -4428,8 +4433,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_transfer.py",
-      "bytes": 9830,
-      "sha256": "365728213eacffe82f11c4e5a0a7e7dadd3d7ab72252605d8e384d6c4c825872"
+      "bytes": 9990,
+      "sha256": "6a248601aff4d84c1c36c024388102b6f621407baa6c4dfb5af5e923b4e4e24c"
     },
     {
       "path": "src/koei_editor/shared/save_vault.py",
@@ -4478,8 +4483,8 @@
     },
     {
       "path": "src/koei_editor/shared/transfer_gui.py",
-      "bytes": 12716,
-      "sha256": "b0b5503076c252a15b10904febf88d77b6d4e85ec2868c8b6718d951a26c25b9"
+      "bytes": 18183,
+      "sha256": "2150d07e69c4b9653d61c3cb35e96b38014f266e62b838e33a297caf73bb8146"
     },
     {
       "path": "src/koei_editor/shared/validation_gui.py",
@@ -4498,8 +4503,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 68023,
-      "sha256": "e7023a131164c5737a7a80dddbddb1fb1d0ee767c4c89415f18163c5be45b8f6"
+      "bytes": 75626,
+      "sha256": "3e3d4ad3cf9b6fd51bee9b9913c59c0da683df653a10d9efff7618231f126079"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4755,6 +4760,11 @@
       "path": "tests/test_comparison_gui.py",
       "bytes": 7122,
       "sha256": "5c29279f8383804d4b7edb9d5ccb9e149926ae4d291e3ddd0a08c78498095939"
+    },
+    {
+      "path": "tests/test_comparison_transfer_experience.py",
+      "bytes": 15784,
+      "sha256": "94e49a157168325ed2ab7fa6d54672b716530f4f8de8a4bf0ca74998b390a6a0"
     },
     {
       "path": "tests/test_compatibility_v034.py",
@@ -6067,14 +6077,19 @@
       "sha256": "bc5b1adf48327d7d088c483e096c54b1bab95a31d9c79b7ad6671b4d5b257023"
     },
     {
+      "path": "tests/test_scalar_field_paging.py",
+      "bytes": 11776,
+      "sha256": "c9901e316e8f7a36493b5e32fcab4640b3400b3efac88563fc0fa4def21292a5"
+    },
+    {
       "path": "tests/test_scalar_workspace_gui.py",
       "bytes": 18170,
       "sha256": "8f36adeea872caa9b08ce290cb2a73f78facea3a82d5816a023ec3a3185ea734"
     },
     {
       "path": "tests/test_scalar_workspace_navigation.py",
-      "bytes": 12755,
-      "sha256": "5014b3b376b09c2eb056c285a662beb5cdbd28175497f55f377d854b712dbe41"
+      "bytes": 12671,
+      "sha256": "7fe4e78aa29516f9cd8a34a5ffc3bdedfac2e69cd2d43b33ed0566f20e5b1163"
     },
     {
       "path": "tests/test_scenario_army_editor.py",

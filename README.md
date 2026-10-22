@@ -110,4 +110,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [build instructions](docs/BUILDING.md),
 and the [documentation index](docs/README.md). AI coding agents should read
 [AGENTS.md](AGENTS.md).
 
+The development source also includes a [Character & Weapon Workshop](docs/CHARACTER_WEAPON_WORKSHOP.md)
+for mapped Dynasty Warriors, Samurai Warriors and Warriors Orochi profiles.
+This feature is not part of the published v3.1 binaries.
+
 Discord: `mexicannn` · [Mexican's Steam profile](https://steamcommunity.com/id/theonlyjuandeagingmexican/)

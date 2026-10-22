@@ -22,7 +22,7 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
+  "base_commit": "8faac64bf1601be00048248ef35bf6df9b74270b",
   "commands": {
     "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit tests.test_game_compatibility",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
@@ -48,13 +48,13 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed against origin/main"
   },
   "windows_ci": {
-    "status": "pending_current_head_after_review_wording_fix",
-    "last_completed_head": "e9c15535643c1d4dba22dcc2ce295b45f9555caf",
-    "last_completed_base": "fd17633c45f695fe7d6055d607e579359f285760",
-    "last_completed_run": "39854319696",
-    "last_completed_result": "full_workflow_failed; tracker tests 15/15, save discovery 47/47, Help Center 12/12, Troubleshooting 31/31, and universal app 28/28 passed; build/release skipped after unrelated module failures",
-    "integration_findings": "On prior tracker head e9c1553, Windows passed tracker 15/15, save discovery 47/47, Help Center 12/12, Troubleshooting 31/31, and universal app 28/28. Related Game Hub Windows run 39849115110 passed discovery 5/5, GUI 8/8, and save discovery 47/47. The full tracker run still failed in unrelated Mod Manager shell/Nexus assertions, Emulator Hub path normalization, Completion Companion assertions, Save Library viewport geometry, and Editing Tools menu expectations; build/release jobs were skipped. PRs #144 and #145 have fresh current-base checks in progress; #148 still needs a fresh focused Windows run.",
-    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; PRs #141 Troubleshooting Center and #121 patch compatibility analyzer are included in current main c5b7fdb.",
+    "status": "pending_current_head_after_main_sync",
+    "last_completed_head": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
+    "last_completed_base": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
+    "last_completed_run": "39856326664",
+    "last_completed_result": "full_workflow_failed; test_version_tracker 15/15, test_save_discovery 47/47, Help Center 12/12, Troubleshooting 31/31, universal app 28/28, and analyzer 29 passed/1 skipped; unrelated failures were application shell, Mod Manager/Nexus, Emulator Hub, Completion Companion, Save Library, and Editing Tools; build/release skipped",
+    "integration_findings": "The related Game Hub Windows run 39849115110 passed discovery 5/5, GUI 8/8, and Save Discovery 47/47. Mod Manager PR #144 Windows run 39856097841 passed all changed modules: Application Shell 40/40, Mod Manager 12/12, Nexus 11/11, Editing Tools 8/8. Emulator Hub PR #145 run 39856060823 passed its target module 17/17; its branch is being synced after main advanced. Completion Companion PR #148 run 39856540396 is still in progress. The latest tracker head run 39856624878 is queued/running after the review wording change. Save Library viewport assertions remain unrelated to tracker.",
+    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; PRs #141 Troubleshooting Center, #121 patch compatibility analyzer, and #144 Windows test fixes are included in current main 8faac64.",
     "required_before_merge": true
   },
   "fixture": {
@@ -79,8 +79,8 @@ requires exact app/build identities and versioned evidence before showing
       "skipped": 0,
       "failures": 0
     },
-    "source_manifest": "refreshed and verified 1,290 public source files",
-    "git_diff_check": "passed against origin/main"
+    "source_manifest": "refreshed and verified 1,290 public source files after PR #144 main sync",
+    "git_diff_check": "passed after merging current main 8faac64"
   }
 }
 ```
@@ -1555,3 +1555,14 @@ The official release workflow requires complete source/Windows coverage, actual
 portable and standalone startup, active updated Defender scans of exact payloads,
 and artifact integrity before publication. Individual optional native tests skip
 when their private inputs are absent; release CI does not contain player saves.
+
+## Mod Manager Windows path assertion — 2026-10-22
+
+Windows run `39844797122`, shard 0, exposed a stale `startswith()` assertion in
+`test_mod_manager_workspace_is_constructed_once_with_temporary_state`. On
+Windows, `TemporaryDirectory.name` may use an 8.3 alias while the manager stores
+the resolved long path. The test already checks equality with its resolved
+temporary `state_dir`; the redundant prefix assertion has been removed. The
+Mod Manager state path and product behavior are unchanged.
+
+The test-only change was rebased onto `fd17633c45f695fe7d6055d607e579359f285760` before main advanced. Its fresh current-base Windows run `39856097841` passed all changed modules: Application Shell 40/40, Mod Manager 12/12, Nexus 11/11, and Editing Tools 8/8. The source package installation step passed in all four shards. The full matrix still failed in unrelated Emulator Hub path normalization, four Save Library viewport assertions, and two Completion Companion expectations. Focused fixes for the Emulator Hub and Completion Companion assertions are tracked in #145 and #148. No production code or release behavior changed.

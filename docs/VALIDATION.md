@@ -37,7 +37,7 @@ requires exact app/build identities and versioned evidence before showing
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1269
+    "verified_public_files": 1270
   },
   "supported_game_inventory": {
     "status": "passed",
@@ -48,8 +48,7 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed"
   },
   "windows_ci": {
-    "status": "incomplete_cancelled",
-    "run_id": 39845173291,
+    "status": "see_pull_request_checks",
     "required_before_merge": true
   },
   "fixture": {

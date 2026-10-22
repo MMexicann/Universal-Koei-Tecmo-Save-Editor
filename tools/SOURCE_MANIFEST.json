@@ -1388,8 +1388,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 84946,
-      "sha256": "bb6e98863662d5c137b2c0df8b035757d5c94b4ac12ce0d88eba0cc94ed374cc"
+      "bytes": 84956,
+      "sha256": "3f6d0e6cd881db946d92356fcc294fd4d4aba2c25cd2f2503b21d62acc86dd6f"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -5603,8 +5603,8 @@
     },
     {
       "path": "tests/test_playthrough_profiles.py",
-      "bytes": 29822,
-      "sha256": "830c95b9e6771e04238f5c55a3d14f2d65e07d238f767eba6349e725aa01f7f5"
+      "bytes": 29839,
+      "sha256": "bbb41285f93569dc4a48fa55b74111cbd03fe24bf8dd6a14a680d9e6a0a1295d"
     },
     {
       "path": "tests/test_playthrough_profiles_gui.py",
@@ -5903,8 +5903,8 @@
     },
     {
       "path": "tests/test_save_library_gui.py",
-      "bytes": 31535,
-      "sha256": "af1a709509d129dd9ce2d13298374890c00f906bb7fc498bb05b495d40d75b38"
+      "bytes": 31639,
+      "sha256": "feb32be3c658a56160f1cf2c9a93913c2318f0bd9710c9108b844e02889575ab"
     },
     {
       "path": "tests/test_save_management_cli.py",
@@ -5938,8 +5938,8 @@
     },
     {
       "path": "tests/test_save_vault.py",
-      "bytes": 51047,
-      "sha256": "466e4968986f72749f217c8ead251b5692dcd4a6942077899b7451643b9b626c"
+      "bytes": 51057,
+      "sha256": "30de1bf1cb241512dd8f424b64cf9df6736f089215ff4aa769b1146c18202e4e"
     },
     {
       "path": "tests/test_scalar_bulk_actions.py",

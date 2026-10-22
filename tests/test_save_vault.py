@@ -255,7 +255,7 @@ class SaveVaultTests(unittest.TestCase):
 
         def replace_parent_before_create(directory, name, expected_identity):
             nonlocal race_injected
-            if Path(directory) == parent and name == destination.name and not race_injected:
+            if os.path.samefile(directory, parent) and name == destination.name and not race_injected:
                 parent.rename(displaced)
                 parent.mkdir()
                 race_injected = True

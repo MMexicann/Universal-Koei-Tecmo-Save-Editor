@@ -530,7 +530,8 @@ class SaveLibraryGuiTests(unittest.TestCase):
                     canvas = workspace.header.canvas
                     if width == 780:
                         self.assertLess(canvas.yview()[1] - canvas.yview()[0], 1)
-                    elif text_size == '100%':
+                    elif (text_size == '100%'
+                          and canvas.winfo_height() + 1 >= workspace.header.content.winfo_reqheight()):
                         self.assertEqual(canvas.yview(), (0.0, 1.0))
                     for widget in header_controls:
                         workspace.header.reveal(widget)

@@ -424,7 +424,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
         def replace_environment_before_restore(snapshot_id, restore_destination, **kwargs):
             nonlocal race_injected
-            self.assertEqual(restore_destination, destination)
+            self.assertTrue(os.path.samefile(restore_destination, destination))
             self.assertIn('expected_directory_identity', kwargs)
             destination.rename(displaced_destination)
             replacement.rename(destination)

@@ -1278,7 +1278,7 @@ class Application(Appearance):
             from tkinter import messagebox
             messagebox.showinfo(
                 'Operation running',
-                'Wait for the copied-save or playthrough profile operation to finish before closing.',
+                'Wait for any copied-save operation or playthrough profile operation to finish before closing.',
                 parent=self.root,
             )
             return

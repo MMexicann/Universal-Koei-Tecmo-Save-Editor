@@ -5578,8 +5578,8 @@
     },
     {
       "path": "tests/test_research_import.py",
-      "bytes": 10470,
-      "sha256": "12f28709433b19762d0545e033a25cdb19d07c44456b30b75ca40c721bd48e5d"
+      "bytes": 10588,
+      "sha256": "fac208448f26e6bc82d314261ab187c714b6ab9360bddae05e6f0004917a0597"
     },
     {
       "path": "tests/test_research_lab.py",

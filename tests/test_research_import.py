@@ -181,8 +181,10 @@ class ResearchImportGuiTests(unittest.TestCase):
 
     def test_menu_palette_retained_state_themes_and_useful_readonly_records(self):
         self.assertIn('tool:research_import', {entry.id for entry in self.app.command_entries()})
-        labels = [self.app.editing_tools_menu.entrycget(i, 'label') for i in (0, 1, 3, 4)]
-        self.assertIn('Research Import', labels)
+        menu_index = self.app._editing_tools_menu_index('research_import')
+        self.assertIsNotNone(menu_index)
+        self.assertEqual(self.app.editing_tools_menu.entrycget(menu_index, 'label'),
+                         self.app.tr('research_import'))
         self.select('gundam2_ps3')
         self.gui.inspect()
         self.wait()

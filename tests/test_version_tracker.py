@@ -70,6 +70,21 @@ class VersionTrackerTests(unittest.TestCase):
         self.assertTrue(all(item.reason_code == 'no_exact_build_record' for item in unknown))
         self.assertTrue(all('No version-specific' in item.explanation for item in unknown))
 
+    def test_unlisted_artifact_warnings_cover_each_artifact_kind(self):
+        observation = self.observation()
+        records = tuple(self.record(artifact_kind=kind, artifact_id=f'{kind}-review')
+                        for kind in tracker.ARTIFACT_KINDS)
+        results = tracker.compatibility_for(observation, records=records)
+        unlisted = {item.artifact_kind: item for item in results
+                    if item.artifact_id.startswith('unlisted_')}
+
+        self.assertEqual(set(unlisted), set(tracker.ARTIFACT_KINDS))
+        for kind, item in unlisted.items():
+            self.assertEqual(item.artifact_id, f'unlisted_{kind}')
+            self.assertEqual(item.status, 'unknown')
+            self.assertEqual(item.reason_code, 'incomplete_artifact_inventory')
+            self.assertIn('not a complete inventory', item.explanation)
+
     def test_older_unsupported_record_does_not_mark_a_new_build_unsupported(self):
         current = self.observation('123456790')
         older = self.record('123456789', status='unsupported')

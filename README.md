@@ -29,6 +29,9 @@ themes. No Python installation is needed for the Windows app.
 - **Browse copied saves:** choose an exact game/platform and scan a folder.
   Search, sort and filter qualified copies and identical gameplay files.
   [Save Library](docs/SAVE_LIBRARY.md).
+- **Track Steam installs:** find supported Koei Tecmo games across Steam libraries,
+  review Steam build and update metadata, add local notes, open install folders,
+  and launch through Steam. [Game Hub](docs/APPLICATION_SHELL.md#game-hub).
 - **Reuse edits:** export a reviewed edit preset and apply it to the same
   byte-identical source after previewing the complete resulting changes.
   [Edit Presets](docs/EDIT_PRESETS.md).

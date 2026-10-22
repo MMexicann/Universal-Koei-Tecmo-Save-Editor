@@ -21,6 +21,8 @@ Nioh 2 PC only.
 - [Koei Tecmo Mod Manager: supported method and safeguards](MOD_MANAGER.md)
 - [Mod Manager tests and validation evidence](MOD_MANAGER_VALIDATION.md)
 - [Game Asset Explorer: supported subsets, safe reads and validation evidence](ASSET_EXPLORER.md)
+- [Game Hub: supported Steam installations, build metadata and launch](APPLICATION_SHELL.md#game-hub)
+- [Game Hub validation report](GAME_HUB_VALIDATION.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
 - [Game Troubleshooting Center: read-only diagnostics and report evidence](GAME_TROUBLESHOOTING.md)
 

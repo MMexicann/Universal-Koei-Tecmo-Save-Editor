@@ -42,10 +42,10 @@ only conservative reductions or specific equipment choices; the supported-games
 list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
 expands only explicitly mapped numeric fields.
 
-The initial [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
-intentionally scoped to verified Three Hopes Switch character and weapon
-ID/name mappings; it is not a complete gameplay reference or a Character
-Workshop interface.
+The [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
+intentionally scoped to verified Three Hopes Switch character/weapon mappings,
+Hyrule Warriors Wii U catalog names, and a few cited Hyrule mechanics; it is
+not a complete gameplay reference or a Character Workshop interface.
 
 ## New in v3.1
 

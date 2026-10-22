@@ -4,12 +4,14 @@ from koei_editor.resources import read_json
 
 SCHEMA_VERSION = 1
 ALLOWED_LICENSES = frozenset({'MIT', 'CC BY-SA 3.0'})
+ALLOWED_DATASET_LICENSES = ALLOWED_LICENSES | {'source-specific'}
 _DATASET_KEYS = frozenset({
     'schema_version', 'dataset_license', 'dataset_license_note', 'sources',
     'games', 'entities',
 })
 _SOURCE_REQUIRED = frozenset({
     'id', 'title', 'uri', 'license', 'license_uri', 'attribution', 'scope',
+    'game_ids',
 })
 _GAME_KEYS = frozenset({
     'id', 'title', 'edition', 'platform', 'profile_source_id', 'scope_note',
@@ -35,7 +37,7 @@ def validate_dataset(data):
     if type(data['schema_version']) is not int or data['schema_version'] != SCHEMA_VERSION:
         raise ValueError('Unsupported encyclopedia schema version.')
     if (type(data['dataset_license']) is not str
-            or data['dataset_license'] not in ALLOWED_LICENSES
+            or data['dataset_license'] not in ALLOWED_DATASET_LICENSES
             or not _text(data['dataset_license_note'])):
         raise ValueError('Invalid encyclopedia dataset license declaration.')
     if type(data['sources']) is not list or type(data['games']) is not list or type(data['entities']) is not list:
@@ -48,16 +50,20 @@ def validate_dataset(data):
         optional = {'revision', 'accessed_on'}
         if not _SOURCE_REQUIRED <= set(source) or set(source) - _SOURCE_REQUIRED - optional:
             raise ValueError('Invalid encyclopedia source fields.')
-        if not all(_text(source[key]) for key in _SOURCE_REQUIRED):
+        if not all(_text(source[key]) for key in _SOURCE_REQUIRED - {'game_ids'}):
             raise ValueError('Encyclopedia sources need titles, links, licenses, attribution, and scope.')
+        if (type(source['game_ids']) is not list or not source['game_ids']
+                or not all(_text(game_id) for game_id in source['game_ids'])
+                or len(set(source['game_ids'])) != len(source['game_ids'])):
+            raise ValueError('Encyclopedia sources need unique applicable game IDs.')
         if (source['license'] not in ALLOWED_LICENSES
                 or not source['uri'].startswith('https://')
                 or not source['license_uri'].startswith('https://')):
             raise ValueError('Encyclopedia source license or URL is not allowed.')
-        if (('revision' in source) == ('accessed_on' in source)
+        if (not ({'revision', 'accessed_on'} & set(source))
                 or ('revision' in source and not _text(source['revision']))
                 or ('accessed_on' in source and not _text(source['accessed_on']))):
-            raise ValueError('Each encyclopedia source needs one pinned revision or access date.')
+            raise ValueError('Each encyclopedia source needs a pinned revision or access date.')
         if source['id'] in sources:
             raise ValueError('Duplicate encyclopedia source ID.')
         sources[source['id']] = source
@@ -71,6 +77,13 @@ def validate_dataset(data):
         if game['id'] in games or game['profile_source_id'] not in sources:
             raise ValueError('Duplicate game profile or missing profile provenance.')
         games[game['id']] = game
+    for source in sources.values():
+        if not set(source['game_ids']) <= set(games):
+            raise ValueError('Encyclopedia source applies to an unknown game ID.')
+    for game in games.values():
+        profile_source = sources[game['profile_source_id']]
+        if game['id'] not in profile_source['game_ids']:
+            raise ValueError('Profile source does not cover its exact game ID.')
 
     entity_ids = set()
     native_ids = set()
@@ -116,6 +129,9 @@ def validate_dataset(data):
         if any(type(source_id) is not str or source_id not in sources
                for source_id in field_sources.values()):
             raise ValueError('Encyclopedia field provenance references an unknown source.')
+        if any(entity['game_id'] not in sources[source_id]['game_ids']
+               for source_id in field_sources.values()):
+            raise ValueError('Encyclopedia field source is not applicable to the entity game ID.')
         relationships = entity.get('relationships', [])
         if type(relationships) is not list:
             raise ValueError('Entity relationships must be a list.')
@@ -125,6 +141,8 @@ def validate_dataset(data):
                     or not all(_text(relation[key]) for key in ('type', 'entity_id', 'source_id'))
                     or relation['source_id'] not in sources):
                 raise ValueError('Entity relationships need a type, target, and source.')
+            if entity['game_id'] not in sources[relation['source_id']]['game_ids']:
+                raise ValueError('Encyclopedia relationship source is not applicable to the entity game ID.')
             targets.append((entity['game_id'], entity['edition'], relation['entity_id']))
 
     entities_by_id = {entity['id']: entity for entity in data['entities']}

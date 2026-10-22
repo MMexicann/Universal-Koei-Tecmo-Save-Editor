@@ -308,7 +308,7 @@ class ControllerProfileWorkspace:
         body.pack(fill='both', expand=True)
         name = tk.StringVar(dialog, value=existing.name if existing else profiles.PRESETS['blank']['name'])
         preset_id = existing.preset_id if existing else 'blank'
-        preset_label = PRESET_LABELS.get(preset_id, self._preset_label(preset_id))
+        preset_label = self._preset_label(preset_id)
         preset_choice = tk.StringVar(dialog, value=preset_label)
         layout = tk.StringVar(dialog, value=existing.layout if existing else 'generic')
         header = ttk.Frame(body)

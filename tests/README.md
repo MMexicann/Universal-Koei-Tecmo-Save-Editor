@@ -31,6 +31,15 @@ python -m unittest discover -s tests -v
 python -m unittest discover -s tests -p 'test_your_game.py' -v
 ```
 
+Smart Playthrough Profiles use generated/procedural fixtures and require no
+private saves. Their integration tests verify exact-version compatibility,
+inert component digests, Vault restoration into new isolated directories,
+separate-copy backups, tamper rejection and live-save path protection:
+
+```text
+python -m unittest tests.test_playthrough_profiles -v
+```
+
 
 The universal application adds `test_universal_app.py`, `test_origins_tools.py`,
 `test_save_provider.py` and `test_universal_packaging.py`. Origins synthetic files

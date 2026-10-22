@@ -506,6 +506,14 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), self.root.winfo_rootx() + self.root.winfo_width())
         self.assertEqual(self.app._library_columns[self.app.platform_choice.get()], 2)
 
+    def test_wide_navigation_uses_a_column_for_every_button(self):
+        with patch.object(self.app.navigation, 'winfo_width', return_value=10000):
+            self.app._layout_navigation()
+
+        positions = [button.grid_info() for button in self.app._navigation_buttons]
+        self.assertEqual([position['row'] for position in positions], [0] * len(positions))
+        self.assertEqual([position['column'] for position in positions], list(range(len(positions))))
+
     def test_compact_editor_header_retains_controls_pending_state_and_library_navigation(self):
         from tests.test_origins_parser import fixture
         source = Path(self.directory.name) / 'copy.dat'

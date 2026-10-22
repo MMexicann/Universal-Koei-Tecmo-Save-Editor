@@ -19,18 +19,24 @@
   "checks": {
     "focused_tests": {
       "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center -v",
-      "status": "passed",
-      "tests": 120,
+      "status": "passed_with_gui_skips",
+      "tests": 122,
       "passed": 82,
-      "skipped": 38,
+      "skipped": 40,
       "failures": 0,
-      "skip_reason": "Tk display unavailable in this environment"
+      "skip_reason": "Tk display unavailable in this environment",
+      "review_regressions": [
+        "Wide navigation places all seven navigation buttons on one row when width permits.",
+        "Ctrl+F focuses and selects the Game Hub search field when the Hub is visible."
+      ],
+      "review_gui_regressions": "Both new GUI tests were collected but skipped locally because no Tk display is available; Windows CI is pending."
     },
     "full_suite": {
       "command": "PYTHONPATH=src python -m tools.run_tests --workers 4 --report /tmp/koei-game-hub-rebased-report.json",
       "status": "environment_limited",
       "tested_base_commit": "3de7583dec2107dbf8589bc9dc9e4fcda9bf6b91",
       "tested_feature_head": "e5d653f",
+      "timing": "Earlier integration snapshot before the current pull-request review fixes",
       "tests": 3513,
       "skipped": 960,
       "failures": 0,

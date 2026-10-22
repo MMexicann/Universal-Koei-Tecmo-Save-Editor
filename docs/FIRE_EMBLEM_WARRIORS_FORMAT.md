@@ -10,6 +10,34 @@ folder unchanged; import a separately edited scenario copy through the user's
 existing save-management workflow. No console account, encryption or signing
 bypass is provided.
 
+## Nintendo 3DS edition — separate, unqualified profile
+
+The New Nintendo 3DS release is a separate platform target. Its 2017
+[save-editing discussion](https://gbatemp.net/threads/fire-emblem-warriors-save-editing-discussion.489382/)
+describes `scenario0`–`scenario2` and `system` and records an early little-endian
+investigation. The opening post labels the weapon and character area as guesswork:
+it proposes 300 records of `0x40` bytes at `0x1262E`, while calling the weapon
+and attribute IDs probable and the character block unidentified. Those leads do
+not qualify a 3DS writer or prove that the proposed records are correct.
+
+The later [Switch save-editing thread](https://gbatemp.net/threads/fire-emblem-warriors-save-editing.505591/)
+explicitly excludes 3DS. Its source-backed `1.5.0` Switch layout is a separate
+profile; matching filenames, fields or early resource offsets do not establish
+that the Switch parser accepts 3DS exports. Nintendo's [3DS update history](https://en-americas-support.nintendo.com/app/answers/detail/a_id/27735/~/how-to-update-fire-emblem-warriors-%28new-nintendo-3ds%29)
+records a 1.5.0 update that raised the character level cap to 150 and added the
+Legendary attribute, among other changes. Therefore early 3DS notes cannot be
+treated as a complete current-version mechanics or record map.
+
+| Edition | Current evidence | Support status and next qualification |
+| --- | --- | --- |
+| Switch, observed 1.5.0 export | This document's fixed-size layout, public editor sources and one modified USA/EUR player export | Implemented for the exact observed layout. Japanese-region equivalence and console load/re-save remain unverified. |
+| New Nintendo 3DS | Exploratory 2017 field notes and a separate official update history | No adapter. Need a complete untouched extracted scenario export with title region and installed version recorded; matched before/after copies for one labelled resource, weapon and character-progression action; and a no-op/surgical roundtrip that confirms the full-file boundary and any integrity rules. Keep `system` alongside the capture as an unchanged companion. Qualify each region/version separately. |
+
+Until those 3DS inputs exist, do not register the Switch parser for 3DS, expose
+the preliminary weapon table, or write the 3DS resource leads. The raw game data
+may still require the platform's own container/export step; that boundary must
+be documented separately from any game-level scenario parser.
+
 ## Evidence and provenance
 
 The primary [Switch save-editing discussion](https://gbatemp.net/threads/fire-emblem-warriors-save-editing.505591/)

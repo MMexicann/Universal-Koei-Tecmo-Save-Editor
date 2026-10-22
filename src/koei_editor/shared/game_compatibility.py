@@ -1,9 +1,12 @@
 """Compare immutable game-install snapshots against explicit requirements.
 
 This module deliberately does not discover installations, inspect archive bytes,
-or manage mods. The Game Version Tracker owns snapshot creation and the Mod
-Manager owns requirement declarations. The analyzer compares those records and
-reports evidence without claiming that a hash change proves incompatibility.
+or manage mods. The Tracker owns installation discovery and bounded Steam build
+metadata; it does not currently hand off the product version or this schema's
+file/archive/format inventory arrays. Snapshot fields are explicit inputs.
+Compatibility requirements are a separate optional input contract; the current
+Mod Manager does not generate them automatically. Reports describe evidence without claiming
+that a hash change proves incompatibility.
 """
 
 from __future__ import annotations
@@ -919,7 +922,7 @@ def analyze_snapshots(
     after_snapshot: Mapping[str, Any],
     requirements: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Compare two tracker snapshots and optional Mod Manager requirements.
+    """Compare two explicit game-install snapshots and optional requirements.
 
     Paths in the snapshots must be normalized relative POSIX paths. The report
     contains only relative paths and never includes an installation root.
@@ -1225,9 +1228,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Compare two immutable Koei Tecmo game-install snapshots and explicit compatibility requirements."
     )
-    parser.add_argument("before", help="Baseline Game Version Tracker snapshot JSON")
-    parser.add_argument("after", help="Candidate Game Version Tracker snapshot JSON")
-    parser.add_argument("--requirements", help="Optional Mod Manager compatibility requirements JSON")
+    parser.add_argument("before", help="Baseline game-install snapshot JSON")
+    parser.add_argument("after", help="Candidate game-install snapshot JSON")
+    parser.add_argument("--requirements", help="Optional compatibility-requirements JSON")
     parser.add_argument("--json-out", help="Write the machine-readable report to this path")
     parser.add_argument("--markdown-out", help="Write the readable report to this path")
     args = parser.parse_args(argv)

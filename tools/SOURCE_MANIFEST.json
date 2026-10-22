@@ -1038,8 +1038,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 96055,
-      "sha256": "58e596914acad8f17923e5fd50be58913245cb49edb4f00d053ab31af0476e08"
+      "bytes": 97110,
+      "sha256": "5939a381e83471b083c35c6f1b373b62c297b08a47f4b22851152ca43c763ec5"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -4538,8 +4538,8 @@
     },
     {
       "path": "tests/test_completion_companion_view.py",
-      "bytes": 10899,
-      "sha256": "aa9c28420aae0a461c6d99d5d3129b2bff81e7d2b211f3efbc6121895ffd36e7"
+      "bytes": 10949,
+      "sha256": "2b1594778ed2d566a9066475661af88ae6a68cd5bcb0137bf519bf27f72a780e"
     },
     {
       "path": "tests/test_console_context_regressions.py",

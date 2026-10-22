@@ -1470,3 +1470,22 @@ The official release workflow requires complete source/Windows coverage, actual
 portable and standalone startup, active updated Defender scans of exact payloads,
 and artifact integrity before publication. Individual optional native tests skip
 when their private inputs are absent; release CI does not contain player saves.
+
+## Completion companion test wording — 2026-10-22
+
+Windows run `39844525285` exposed two stale assertions in the completion
+companion GUI tests: the unavailable-state summary expected obsolete wording,
+and the one-entry count used a plural label. The view continues to show that
+achievement state is unavailable and prompts users to check the source; product
+behavior is unchanged.
+
+Local validation: `PYTHONPATH=src python -m unittest
+tests.test_completion_companion_view -v` ran 9 tests: 7 passed and 2 Tk tests
+skipped because this non-Windows environment has no display. The Windows shard
+must verify those display-dependent assertions after the correction.
+
+After rebasing onto `1ae3b3139ea5d6f5a664b66651c88bb849ee091d` (including the
+Troubleshooting Center UI and packaging fixture fix), the same focused command
+again ran 9 tests: 7 passed and 2 display-dependent Tk tests skipped. The public
+source manifest was refreshed and verified across 1,268 files. A fresh Windows
+run on the rebased head must still exercise the two skipped assertions.

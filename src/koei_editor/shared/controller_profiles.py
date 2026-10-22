@@ -72,7 +72,9 @@ def _valid_text(value, label, maximum, *, allow_empty=False):
     if type(value) is not str:
         raise ProfileError(f'{label} must be text.')
     value = value.strip()
-    if (not _SAFE_TEXT.fullmatch(value) or len(value) > maximum
+    if (not _SAFE_TEXT.fullmatch(value)
+            or any(0xd800 <= ord(character) <= 0xdfff for character in value)
+            or len(value) > maximum
             or (not allow_empty and not value)):
         raise ProfileError(f'{label} must be plain text up to {maximum} characters.')
     return value

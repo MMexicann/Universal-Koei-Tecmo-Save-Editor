@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
@@ -36,6 +37,13 @@ class ControllerProfileValidationTests(unittest.TestCase):
         for bindings in cases:
             with self.subTest(bindings=len(bindings)), self.assertRaises(profiles.ProfileError):
                 profiles.create_profile('dw8xl', 'Personal profile', bindings=bindings)
+
+    def test_profile_text_rejects_lone_unicode_surrogates(self):
+        with self.assertRaises(profiles.ProfileError):
+            profiles.create_profile('dw8xl', 'Bad name \ud800')
+        with self.assertRaises(profiles.ProfileError):
+            profiles.create_profile('dw8xl', 'Valid name',
+                                    bindings=(profiles.Binding('Bad action \ud800', 'A'),))
 
     def test_invalid_profile_id_name_layout_and_preset_are_rejected(self):
         for kwargs in (
@@ -196,6 +204,15 @@ class ControllerProfileStoreTests(unittest.TestCase):
         with self.assertRaises(profiles.ProfileError):
             self.store.import_profile(path)
 
+    def test_import_rejects_a_lone_surrogate_before_tk_can_render_it(self):
+        path = self.root / 'surrogate-profile.json'
+        payload = {'schema': profiles.SCHEMA, 'kind': 'controller-profile',
+                   'profile': profiles._encode_profile(self.profile)}
+        payload['profile']['name'] = 'Bad name \ud800'
+        path.write_text(json.dumps(payload), encoding='utf-8')
+        with self.assertRaises(profiles.ProfileError):
+            self.store.import_profile(path)
+
     def test_failed_atomic_store_replacement_preserves_original_and_cleans_temp(self):
         self.store.save_profile(self.profile)
         original = self.store.path.read_bytes()
@@ -342,6 +359,65 @@ class ControllerProfileWorkspaceTests(unittest.TestCase):
         layout_selector = next(widget for widget in widgets if isinstance(widget, ttk.Combobox)
                                and 'Allgemein' in widget.cget('values'))
         self.assertEqual(layout_selector.get(), 'Allgemein')
+        dialog.destroy()
+
+    def test_adding_multiple_bindings_appends_instead_of_replacing(self):
+        self.workspace._edit_dialog(None)
+        self.root.update()
+        dialog = next(widget for widget in self.root.winfo_children() if isinstance(widget, tk.Toplevel))
+        descendants = list(dialog.winfo_children())
+        widgets = []
+        while descendants:
+            widget = descendants.pop()
+            widgets.append(widget)
+            descendants.extend(widget.winfo_children())
+        fields = next(widget for widget in widgets if isinstance(widget, ttk.Frame)
+                      and sum(isinstance(child, ttk.Entry) for child in widget.winfo_children()) == 3)
+        entries = sorted((widget for widget in fields.winfo_children() if isinstance(widget, ttk.Entry)),
+                         key=lambda widget: int(widget.grid_info()['column']))
+        tree = next(widget for widget in widgets if isinstance(widget, ttk.Treeview))
+        add_button = next(widget for widget in widgets if isinstance(widget, ttk.Button)
+                          and widget.cget('text') == 'Add / update binding')
+        action, keyboard, controller = entries[-3:]
+        action.insert(0, 'Move up')
+        keyboard.insert(0, 'W')
+        add_button.invoke()
+        self.assertEqual(len(tree.get_children()), 1)
+        self.assertEqual(tree.selection(), ())
+        action.insert(0, 'Confirm')
+        keyboard.insert(0, 'Enter')
+        add_button.invoke()
+        self.assertEqual(len(tree.get_children()), 2)
+        self.assertEqual(tree.item('0', 'text'), 'Move up')
+        self.assertEqual(tree.item('1', 'text'), 'Confirm')
+        dialog.destroy()
+
+    def test_starter_selection_updates_only_the_automatic_profile_name(self):
+        self.workspace._edit_dialog(None)
+        self.root.update()
+        dialog = next(widget for widget in self.root.winfo_children() if isinstance(widget, tk.Toplevel))
+        descendants = list(dialog.winfo_children())
+        widgets = []
+        while descendants:
+            widget = descendants.pop()
+            widgets.append(widget)
+            descendants.extend(widget.winfo_children())
+        header = next(widget for widget in widgets if isinstance(widget, ttk.Frame)
+                      and sum(isinstance(child, ttk.Entry) for child in widget.winfo_children()) == 1
+                      and any(isinstance(child, ttk.Combobox) for child in widget.winfo_children()))
+        profile_name = next(widget for widget in header.winfo_children() if isinstance(widget, ttk.Entry))
+        starter = next(widget for widget in widgets if isinstance(widget, ttk.Combobox)
+                       and 'Keyboard WASD starter' in widget.cget('values'))
+        starter.set('Keyboard WASD starter')
+        starter.event_generate('<<ComboboxSelected>>')
+        self.root.update()
+        self.assertEqual(profile_name.get(), 'Keyboard WASD starter')
+        profile_name.delete(0, 'end')
+        profile_name.insert(0, 'My custom controls')
+        starter.set('Nintendo label starter')
+        starter.event_generate('<<ComboboxSelected>>')
+        self.root.update()
+        self.assertEqual(profile_name.get(), 'My custom controls')
         dialog.destroy()
 
     def test_edit_preserves_an_imported_custom_preset_identity(self):

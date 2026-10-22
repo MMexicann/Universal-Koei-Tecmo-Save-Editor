@@ -323,6 +323,7 @@ class ControllerProfileWorkspace:
         preset_id = existing.preset_id if existing else 'blank'
         preset_label = self._preset_label(preset_id)
         preset_choice = tk.StringVar(dialog, value=preset_label)
+        automatic_name = [self._preset_label('blank')]
         layout = tk.StringVar(dialog, value=self._layout_label(existing.layout if existing else 'generic'))
         header = ttk.Frame(body)
         header.pack(fill='x')
@@ -410,7 +411,7 @@ class ControllerProfileWorkspace:
                                          self._dialog_text('unique_action'), parent=dialog)
                     return
                 rows.append(updated)
-                redraw(len(rows) - 1)
+                redraw()
             action.set('')
             keyboard.set('')
             controller.set('')
@@ -434,8 +435,8 @@ class ControllerProfileWorkspace:
             redraw()
         else:
             preset_selector.bind('<<ComboboxSelected>>', lambda _event: self._apply_preset_to_dialog(
-                preset_choice, layout, rows, redraw))
-            self._apply_preset_to_dialog(preset_choice, layout, rows, redraw)
+                preset_choice, layout, rows, redraw, name, automatic_name))
+            self._apply_preset_to_dialog(preset_choice, layout, rows, redraw, name, automatic_name)
 
         def save():
             try:
@@ -460,9 +461,14 @@ class ControllerProfileWorkspace:
         ttk.Button(footer, text=self._dialog_text('cancel'), command=dialog.destroy).pack(side='right')
         ttk.Button(footer, text=self._dialog_text('save'), command=save).pack(side='right', padx=(0, 6))
 
-    def _apply_preset_to_dialog(self, preset_choice, layout, rows, redraw):
+    def _apply_preset_to_dialog(self, preset_choice, layout, rows, redraw,
+                                profile_name=None, automatic_name=None):
         preset_id = self._preset_id_from_label(preset_choice.get())
         preset = profiles.PRESETS[preset_id]
+        if profile_name is not None and automatic_name is not None:
+            if profile_name.get() == automatic_name[0]:
+                profile_name.set(self._preset_label(preset_id))
+            automatic_name[0] = self._preset_label(preset_id)
         layout.set(self._layout_label(preset['layout']))
         rows[:] = list(preset['bindings'])
         redraw()

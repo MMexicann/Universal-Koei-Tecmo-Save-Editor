@@ -34,6 +34,12 @@ extension alone. It preserves comments, line endings, ordering and all unmapped
 bytes. Duplicate occurrences of a mapped key are rejected as ambiguous.
 Unsupported files are left untouched.
 
+Stage a documented setting, then choose **Review Changes** to compare its
+opened and pending values. **Undo** reverses the latest staging action,
+including a staged profile. These actions leave the file unchanged; only
+**Save staged settings** writes the reviewed values. **Create backup** is
+available after opening a supported file and captures its exact source bytes.
+
 Profiles are private, path-free records bound to the selected game, exact format
 ID and format revision. Applying one requires every saved setting to be present
 and writable in the opened file; incompatible or partial targets are rejected

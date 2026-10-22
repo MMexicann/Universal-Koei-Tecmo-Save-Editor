@@ -448,8 +448,8 @@
     },
     {
       "path": "docs/GAME_CONFIGURATION.md",
-      "bytes": 10014,
-      "sha256": "2e57bd27194f6f3f40c89ff4029888ac17dcaf91282133a491c0c6353fcac7b1"
+      "bytes": 10386,
+      "sha256": "f5363c1e19764d67fae9e736254d464357f93c374b840aa1cbe46e14a4dad4f7"
     },
     {
       "path": "docs/GAME_DATA_ENCYCLOPEDIA.md",
@@ -4178,8 +4178,8 @@
     },
     {
       "path": "src/koei_editor/shared/configuration_gui.py",
-      "bytes": 26657,
-      "sha256": "ecbb4e0178cdc9287a7dad7bfb959a886ed680e55628da37f6e1c614dc65af18"
+      "bytes": 32219,
+      "sha256": "d9e9325c93a009df017564d40e1bb6036555097f0247ef1976ec0175f21564c2"
     },
     {
       "path": "src/koei_editor/shared/configuration_manager.py",
@@ -4873,8 +4873,8 @@
     },
     {
       "path": "tests/test_configuration_gui.py",
-      "bytes": 11173,
-      "sha256": "a0d98648d549ff8bf0a48f8ebcbfb25478894e4d62026051c4fc6d8e7064cacb"
+      "bytes": 21136,
+      "sha256": "d79295bf9e3f1e2dc202a94d368a8714546a4ae8bb65059d2daf566dfb6f3cf3"
     },
     {
       "path": "tests/test_configuration_manager.py",

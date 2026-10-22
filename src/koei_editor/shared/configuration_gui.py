@@ -1,5 +1,6 @@
 """Tk workspace for the exact, evidence-backed PC settings formats."""
 from pathlib import Path
+from types import MappingProxyType
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -15,10 +16,12 @@ class ConfigurationWorkspace:
         self.root = root
         self.frame = ttk.Frame(parent, padding=(28, 14))
         self.document = None
-        self.staged = {}
+        self.staged = MappingProxyType({})
+        self.history = ()
         self._fields = {}
         self._field_labels = {}
         self._profiles = {}
+        self._profile_id_by_label = {}
         self._backups = {}
         self._formats = {item.id: item for item in backend.SUPPORTED_FORMATS}
         self._games = {game.title + ' · ' + game.platform: game.id
@@ -86,10 +89,17 @@ class ConfigurationWorkspace:
         self.stage_button = ttk.Button(edit_row, text='Stage value', command=self.stage_value,
                                        state='disabled')
         self.stage_button.pack(side='left')
-        self.save_button = ttk.Button(edit_row, text='Save staged settings', command=self.save,
+        actions = self.edit_actions = ttk.Frame(body)
+        actions.pack(fill='x', pady=(0, 8))
+        self.undo_button = ttk.Button(actions, text='Undo', command=self.undo, state='disabled')
+        self.undo_button.pack(side='left', padx=(8, 0))
+        self.review_button = ttk.Button(actions, text='Review Changes', command=self.review,
+                                        state='disabled')
+        self.review_button.pack(side='left', padx=(8, 0))
+        self.save_button = ttk.Button(actions, text='Save staged settings', command=self.save,
                                       state='disabled')
         self.save_button.pack(side='right')
-        self.backup_button = ttk.Button(edit_row, text='Create backup', command=self.create_backup,
+        self.backup_button = ttk.Button(actions, text='Create backup', command=self.create_backup,
                                         state='disabled')
         self.backup_button.pack(side='right', padx=(0, 8))
 
@@ -226,7 +236,8 @@ class ConfigurationWorkspace:
                 self._selection_reverting = False
             return
         self.document = None
-        self.staged.clear()
+        self.staged = MappingProxyType({})
+        self.history = ()
         self._clear_settings()
         self._refresh_records()
         self._set_status('The selected game or path changed. Open and inspect that exact file before continuing.')
@@ -237,6 +248,8 @@ class ConfigurationWorkspace:
         self._field_labels.clear()
         self.choice_selector.configure(state='disabled', values=())
         self.stage_button.configure(state='disabled')
+        self.undo_button.configure(state='disabled')
+        self.review_button.configure(state='disabled')
         self.save_button.configure(state='disabled')
         self.backup_button.configure(state='disabled')
         self.restore_button.configure(state='disabled')
@@ -253,7 +266,8 @@ class ConfigurationWorkspace:
         if not self.dirty_ok():
             return
         self.document = None
-        self.staged.clear()
+        self.staged = MappingProxyType({})
+        self.history = ()
         self._clear_settings()
         game_id = self.selected_game_id
         if not game_id or not self.path.get().strip():
@@ -308,20 +322,104 @@ class ConfigurationWorkspace:
             return
         number = choices[self.value_choice.get()]
         if number == field.value:
-            self.staged.pop(field.id, None)
+            candidate = dict(self.staged)
+            candidate.pop(field.id, None)
         else:
-            self.staged[field.id] = number
-        self._render_staged()
-        self._set_status(f'{field.label} is staged. Save to write the documented value to this file.')
+            candidate = dict(self.staged)
+            candidate[field.id] = number
+        self._accept_staged(candidate)
 
     def _render_staged(self):
-        self.staged = {field_id: value for field_id, value in self.staged.items()
-                       if field_id in self._fields and self._fields[field_id].writable
-                       and self._fields[field_id].value != value}
         for field_id, field in self._fields.items():
             pending = self._field_labels[field_id].get(self.staged.get(field_id), '')
             self.settings.set(field_id, 'pending', pending)
         self.save_button.configure(state='normal' if self.document and self.staged else 'disabled')
+        self.undo_button.configure(state='normal' if self.document and self.history else 'disabled')
+        self.review_button.configure(state='normal' if self.document and self.staged else 'disabled')
+
+    def _accept_staged(self, candidate):
+        """Validate and atomically replace the immutable pending map."""
+        if self.document is None:
+            return False
+        try:
+            candidate = dict(candidate)
+            # Pure serialization validates the complete request, including
+            # unknown/read-only fields and exact value types, before staging.
+            backend.serialize_config(self.document, candidate)
+        except (backend.ConfigurationError, TypeError, ValueError) as error:
+            self._set_status('Settings were not staged: ' + str(error))
+            return False
+        candidate = {field_id: value for field_id, value in candidate.items()
+                     if self._fields[field_id].value != value}
+        if candidate != dict(self.staged):
+            self.history = (*self.history, tuple(self.staged.items()))
+            self.staged = MappingProxyType(candidate)
+        self._render_staged()
+        self._set_status(f'{len(self.staged)} documented setting(s) staged. Review them before saving.')
+        return True
+
+    def undo(self):
+        if self.document is None or not self.history:
+            return False
+        previous = dict(self.history[-1])
+        try:
+            backend.serialize_config(self.document, previous)
+        except backend.ConfigurationError as error:
+            self._set_status('Undo was not applied: ' + str(error))
+            return False
+        self.history = self.history[:-1]
+        self.staged = MappingProxyType(previous)
+        self._render_staged()
+        self._set_status(f'Undo complete. {len(self.staged)} documented setting(s) remain staged.')
+        return True
+
+    def review(self):
+        """Show the validated pending changes without writing the source file."""
+        if self.document is None or not self.staged:
+            self._set_status('Stage at least one supported setting before reviewing changes.')
+            return None
+        document = self.document
+        pending = dict(self.staged)
+        try:
+            backend.serialize_config(document, pending)
+        except backend.ConfigurationError as error:
+            self._set_status('Review unavailable: ' + str(error))
+            return None
+
+        dialog = tk.Toplevel(self.root)
+        dialog.title('Review Configuration Changes')
+        dialog.geometry('760x380')
+        dialog.configure(background=ttk.Style(dialog).lookup('TFrame', 'background')
+                         or self.root.cget('background'))
+        ttk.Label(dialog, text=f'{document.game_title}\n{document.filename} · {len(pending)} staged setting(s)',
+                  padding=14, wraplength=720).pack(anchor='w')
+        ttk.Label(dialog, text='No file has been written. Save only after reviewing these values.',
+                  padding=(14, 0, 14, 10), style='Muted.TLabel').pack(anchor='w')
+        # Reserve the footer before the expanding tree at native row heights.
+        ttk.Button(dialog, text='Close', command=dialog.destroy).pack(side='bottom', pady=12)
+        scroll = ttk.Scrollbar(dialog, orient='vertical')
+        scroll.pack(side='right', fill='y', padx=(0, 14))
+        tree = ttk.Treeview(dialog, columns=('category', 'opened', 'pending'),
+                            show='tree headings', height=9)
+        tree.heading('#0', text='Setting')
+        tree.heading('category', text='Category')
+        tree.heading('opened', text='Opened value')
+        tree.heading('pending', text='Pending value')
+        tree.column('#0', width=240, minwidth=140)
+        tree.column('category', width=120, minwidth=90)
+        tree.column('opened', width=160, minwidth=100)
+        tree.column('pending', width=160, minwidth=100)
+        tree.pack(fill='both', expand=True, padx=(14, 0))
+        tree.configure(yscrollcommand=scroll.set)
+        scroll.configure(command=tree.yview)
+        for field_id, value in pending.items():
+            field = self._fields[field_id]
+            labels = self._field_labels[field_id]
+            tree.insert('', 'end', iid=field_id, text=field.label,
+                        values=(field.category.title(), labels.get(field.value, str(field.value)),
+                                labels.get(value, str(value)))
+                        )
+        return dialog
 
     def save(self):
         if self.document is None or not self.staged:
@@ -333,7 +431,8 @@ class ConfigurationWorkspace:
             return
         changed = len(self.staged)
         self.document = saved
-        self.staged.clear()
+        self.staged = MappingProxyType({})
+        self.history = ()
         self.open_file()
         self._set_status(f'Saved and read back {changed} documented setting(s). A verified backup was created.')
 
@@ -359,11 +458,19 @@ class ConfigurationWorkspace:
             profiles = ()
             self._set_status('Could not load profiles: ' + str(error))
         self._profiles = {profile.id: profile for profile in profiles}
-        self._profile_labels = {
+        profile_bases = {
             profile.id: f'{profile.name} · {self._game_labels.get(profile.game_id, profile.game_id)} · '
-                         f'{self._format_id_to_label.get(profile.format_id, profile.format_id)}'
+                        f'{self._format_id_to_label.get(profile.format_id, profile.format_id)}'
             for profile in profiles
         }
+        base_counts = {}
+        for label in profile_bases.values():
+            base_counts[label] = base_counts.get(label, 0) + 1
+        self._profile_labels = {
+            profile.id: (label if base_counts[label] == 1 else f'{label} [{profile.id}]')
+            for profile in profiles for label in (profile_bases[profile.id],)
+        }
+        self._profile_id_by_label = {label: profile_id for profile_id, label in self._profile_labels.items()}
         self.profile_selector.configure(values=tuple(self._profile_labels.values()))
         if self.profile_choice.get() not in self._profile_labels.values():
             self.profile_choice.set('')
@@ -379,11 +486,11 @@ class ConfigurationWorkspace:
         self.backup_selector.configure(values=tuple(self._backup_labels.values()))
         if self.backup_choice.get() not in self._backup_labels.values():
             self.backup_choice.set('')
+        self.backup_button.configure(state='normal' if self.document is not None else 'disabled')
         self.restore_button.configure(state='normal' if self.document and self._backups else 'disabled')
 
     def _profile_by_selection(self):
-        label = self.profile_choice.get()
-        profile_id = next((key for key, value in self._profile_labels.items() if value == label), None)
+        profile_id = self._profile_id_by_label.get(self.profile_choice.get())
         return self._profiles.get(profile_id)
 
     def apply_profile(self):
@@ -398,9 +505,8 @@ class ConfigurationWorkspace:
         except backend.ConfigurationError as error:
             self._set_status('Profile is incompatible: ' + str(error))
             return
-        self.staged.update(assignments)
-        self._render_staged()
-        self._set_status(f'Profile “{profile.name}” staged. Review pending values before saving.')
+        if self._accept_staged({**self.staged, **assignments}):
+            self._set_status(f'Profile “{profile.name}” staged. Review pending values before saving.')
 
     def delete_profile(self):
         profile = self._profile_by_selection()
@@ -452,7 +558,8 @@ class ConfigurationWorkspace:
         except backend.ConfigurationError as error:
             self._set_status('Restore failed: ' + str(error))
             return
-        self.staged.clear()
+        self.staged = MappingProxyType({})
+        self.history = ()
         self.open_file()
         self._set_status(f'Restored {backup.filename}; exact bytes were verified after writing.')
 

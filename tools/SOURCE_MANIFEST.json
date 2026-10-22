@@ -1197,6 +1197,71 @@
       "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
     },
     {
+      "path": "localization-studio/LICENSE",
+      "bytes": 1100,
+      "sha256": "85476c34b558f232be4950755e6c2f8f029b17270a1a6950c851239eb8cccdb2"
+    },
+    {
+      "path": "localization-studio/README.md",
+      "bytes": 2837,
+      "sha256": "94ff84f4a8d0d211611f0bdfe2863e5a1cf0c5c9e75827abc119cf537e8a2415"
+    },
+    {
+      "path": "localization-studio/docs/RESEARCH.md",
+      "bytes": 4778,
+      "sha256": "ee04f3be3b8dbf9b51ed6e484a27a0ec6ea0dfe3dbdedea979dd0f215ebfcb8c"
+    },
+    {
+      "path": "localization-studio/docs/SUPPORTED_FORMATS.md",
+      "bytes": 4894,
+      "sha256": "91e9f0147a62a61b0fe0255575731cb1f47e3a747e6fe64b4d133ab8aa0cfad1"
+    },
+    {
+      "path": "localization-studio/index.html",
+      "bytes": 13373,
+      "sha256": "684a7fb30a1770ef2a565d8a1278f077d2b09101390abfb586a0f6599bdc4b84"
+    },
+    {
+      "path": "localization-studio/package.json",
+      "bytes": 188,
+      "sha256": "ca2f0fdf6ce1daac9a3b84876ae53dc5d6fb20624a0138901bbfa8af348c0a10"
+    },
+    {
+      "path": "localization-studio/reports/validation-report.json",
+      "bytes": 12496,
+      "sha256": "b69c521d899389a86f9b36c91abd3f42b1386debb1306cbb68fa2379d1447136"
+    },
+    {
+      "path": "localization-studio/src/app.mjs",
+      "bytes": 22090,
+      "sha256": "04a66029f99a44914d8a49b27bd819b1423909bc664b03e5ff8a7bb70195bda8"
+    },
+    {
+      "path": "localization-studio/src/formats.mjs",
+      "bytes": 26387,
+      "sha256": "e4ee28e2dd527f5d6ee5ecb40c12ee7581bde865b867d45dea221d94d606ad87"
+    },
+    {
+      "path": "localization-studio/styles.css",
+      "bytes": 26024,
+      "sha256": "b113fd2f3d5ce9f712e7e4f21e87b57a3e64fd9279f51662fe3da89ddd3a45d7"
+    },
+    {
+      "path": "localization-studio/tests/browser-smoke.html",
+      "bytes": 5396,
+      "sha256": "0fb5f2e8f5855f1ff480bbdc38e4a79978657d80af47027ce36d2daf5721ed4b"
+    },
+    {
+      "path": "localization-studio/tests/formats.test.mjs",
+      "bytes": 10178,
+      "sha256": "4b166674fa1f58a838009996d3ed2433a0f3a653174fdce119f34d380bfe5009"
+    },
+    {
+      "path": "localization-studio/tests/run-browser-smoke.mjs",
+      "bytes": 5963,
+      "sha256": "4198ee8e10790f41a22ef4a122582cfd53b8a535881d6304ac8c68515b2e3f10"
+    },
+    {
       "path": "pyproject.toml",
       "bytes": 706,
       "sha256": "60a60f2c8f83c9d4b5a437fafdfd0e4a8137d7de11b4a6395c3bc989380698dc"
@@ -5123,8 +5188,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 31419,
-      "sha256": "00f2a9f149e7f182466a3e881f06bc2a5f340a97662adf68cd3631aefa5b70b5"
+      "bytes": 33490,
+      "sha256": "fb4900d696933812b054d5935a73d696f2151364401ccc0c41675b740fd62130"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
@@ -5978,8 +6043,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33059,
-      "sha256": "5fccec31ea962ed20b0a166cf09533f04cfc38a0018e4c57d318d4058d6aa374"
+      "bytes": 33950,
+      "sha256": "0c5469a105ec45a2171bd9465577fc77065e3e349683a1e33e3e7e1abfdd922f"
     },
     {
       "path": "tools/refresh_manifest.py",

@@ -423,8 +423,8 @@
     },
     {
       "path": "docs/GAME_HUB_VALIDATION.md",
-      "bytes": 2229,
-      "sha256": "95279a5fcbb6aa48090d935c8b70c6e9af47ec5db57eea01c039620488538b48"
+      "bytes": 2689,
+      "sha256": "45c5e4e237516d060630cb18b7245b928d7a1afbcc6a10f20de51f5b9214dfbd"
     },
     {
       "path": "docs/GAME_MECHANICS.md",
@@ -4033,8 +4033,8 @@
     },
     {
       "path": "src/koei_editor/shared/game_hub_gui.py",
-      "bytes": 19018,
-      "sha256": "479a300b8012d656c5427d78451f98ee24a49a6c00caf8c955310c009baed55a"
+      "bytes": 19175,
+      "sha256": "14021b6582ad16bb9c5bd8f1b1e0370497b7ae785f7ca8157b714592689929cd"
     },
     {
       "path": "src/koei_editor/shared/game_troubleshooting.py",
@@ -5013,8 +5013,8 @@
     },
     {
       "path": "tests/test_game_hub_gui.py",
-      "bytes": 8577,
-      "sha256": "8355c55e303eca999c86f1fd63057fa9915769ce903454e352160ec161ff85c5"
+      "bytes": 8510,
+      "sha256": "c0f8a86802db22223fe20b4adcaa337c697043f7b5c3acc18f13d909b03cddfe"
     },
     {
       "path": "tests/test_game_troubleshooting.py",

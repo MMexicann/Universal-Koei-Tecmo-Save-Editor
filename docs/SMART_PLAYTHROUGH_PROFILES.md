@@ -8,9 +8,10 @@ Profiles…**.
 ## Create, preview and prepare
 
 Choose a verified Vault snapshot, name the profile and enter the exact version
-you intend to use. The version is entered by the user; this application does not
-detect installed game builds. Optional component imports must identify the same
-registered game/platform and exact version as the selected save snapshot.
+you intend to use. Playthrough Profiles requires a manually entered game
+product version and does not consume Game Version Tracker observations.
+Optional component imports must identify the same registered game/platform and
+exact version as the selected save snapshot.
 
 The Game Version Tracker reads mapped Steam app manifests and can show exact
 Steam build IDs alongside reviewed compatibility records. A Steam build ID is

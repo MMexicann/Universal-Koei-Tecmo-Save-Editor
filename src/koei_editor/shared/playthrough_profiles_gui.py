@@ -234,7 +234,8 @@ class PlaythroughProfilesWindow:
 
         ttk.Label(
             self.library_tab,
-            text=('This checkout does not detect installed builds; enter the version shown by the game. '
+            text=('The Game Version Tracker reports Steam build IDs, but Playthrough Profiles needs the game product version shown in-game. '
+                  'Enter that product version manually; tracker build IDs are not used as substitutes. '
                   'Optional backup accepts only an independent copied save; live and cloud paths are rejected. '
                   'Preparing a profile restores the selected Vault snapshot into a brand-new isolated environment. '
                   'Existing folders are never replaced and live saves/configuration are never written.'),

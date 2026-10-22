@@ -903,8 +903,8 @@
     },
     {
       "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
-      "bytes": 5075,
-      "sha256": "c35beedcaa6695e8a2161271f0e9dcc5e45fd7f603fe80366719c01eb42818b3"
+      "bytes": 5109,
+      "sha256": "d228eb523842e7dbb4ae9aecade8f1f78dc9471f66a7e332ef32a62679a0950b"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -4198,8 +4198,8 @@
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles_gui.py",
-      "bytes": 27663,
-      "sha256": "53a29a204ff65ebe1f2d09b4005e811df85323ed00a605c0b5406eba85cb0ac5"
+      "bytes": 27804,
+      "sha256": "6fac045384f74e4efe44927a9b336599a08a9a62e33de96dee2af1db9f0f986f"
     },
     {
       "path": "src/koei_editor/shared/plugin_gui.py",

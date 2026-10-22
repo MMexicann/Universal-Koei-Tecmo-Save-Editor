@@ -27,6 +27,17 @@ contract; the error identifies that directory for review and does not claim
 success. If the optional backup was completed first, the error also reports its
 Vault snapshot ID.
 
+## Profile storage
+
+New manifests are verified before publication and cannot replace existing files.
+If completion is uncertain, the error reports the generated profile ID; refresh
+the list before retrying. Interrupted Windows writes may leave bounded pending
+files for review. The store never treats those files as completed profiles.
+
+This publication path supports Windows and Linux. Linux requires a filesystem
+with `O_TMPFILE` and access to `/proc/self/fd`; unsupported systems fail closed.
+These storage checks do not establish game compatibility.
+
 ## Manager component contract
 
 The component providers are fixed to these identities:
@@ -53,11 +64,11 @@ An exported UTF-8 JSON component has this shape:
 The profile store validates bounded JSON, rejects duplicate keys and nonfinite
 numbers, checks the provider/component pair, and requires exact game and version
 matches. It binds a SHA-256 digest to each component in the profile manifest and
-staged artifact. Components are opaque data: this checkout does not include the
-Game Hub, Mod Manager, Configuration Manager or Character Workshop execution
-interfaces, so it cannot export from or apply to those managers. A future adapter
-can exchange the typed `ProfileComponentSnapshot` without treating a profile as
-an executable command.
+staged artifact. Components are opaque data. The toolkit includes Game Hub, Mod
+Manager, Configuration Manager and Character Workshop, but their profile
+export/apply adapters are not connected to this feature. A future adapter can
+exchange the typed `ProfileComponentSnapshot` without treating a profile as an
+executable command.
 
 ## Reports
 
@@ -74,7 +85,8 @@ manager data is compatible beyond matching the declared game/version strings.
 
 ## Integration coverage
 
-`tests/test_playthrough_profiles.py` uses generated and existing procedural
+`tests/test_playthrough_profiles.py` and
+`tests/test_profile_manifest_publication.py` use generated and existing procedural
 fixtures only. It covers bounded profile persistence, exact version matching,
 component digests, save and companion byte preservation, copied-save backup,
 new-directory restoration, corrupt/tampered data, failed backup reporting and

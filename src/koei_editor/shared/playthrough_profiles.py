@@ -14,17 +14,23 @@ import math
 import os
 from pathlib import Path
 import re
+import stat
 import uuid
 
 from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.shared.copy_storage import atomic_new, new_child_bound
+from koei_editor.shared.copy_storage import (
+    ChildPublishedUncertainError,
+    new_child_bound,
+    publish_new_child_bound,
+)
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.save_vault import _ordinary, _profile_path, _read
 
 
 PROFILE_SCHEMA_VERSION = 1
 MAX_PROFILES = 500
+MAX_PENDING_MANIFESTS = 32
 MAX_PROFILE_BYTES = 1024 * 1024
 MAX_COMPONENT_BYTES = 256 * 1024
 MAX_STORE_BYTES = 128 * 1024 * 1024
@@ -32,6 +38,7 @@ MAX_REPORT_BYTES = 256 * 1024
 MAX_JSON_DEPTH = 32
 MAX_JSON_NODES = 10_000
 _PROFILE_ID = re.compile('[0-9a-f]{32}')
+_PENDING_MANIFEST = re.compile('[.]pending-[0-9a-f]{32}[.]tmp')
 _COMPONENTS = {
     'mod_configuration': 'mod_manager',
     'game_settings': 'configuration_manager',
@@ -91,6 +98,17 @@ class PlaythroughPreparationError(SaveError):
         super().__init__(message)
         self.backup_snapshot_id = backup_snapshot_id
         self.destination = Path(destination)
+
+
+class ProfilePublicationUncertainError(SaveError):
+    """Manifest publication succeeded but a later check could not confirm durability."""
+
+    def __init__(self, profile_id):
+        self.profile_id = profile_id
+        super().__init__(
+            f'Playthrough profile {profile_id} may already be published. Refresh the profile list '
+            'before retrying creation.'
+        )
 
 
 def _canonical_json(value):
@@ -391,15 +409,29 @@ class PlaythroughProfileStore:
 
     def _scan(self, directory):
         profiles, total = [], 0
+        pending_count = 0
+        profile_count = 0
         with os.scandir(directory) as entries:
             for count, entry in enumerate(entries):
-                if count >= MAX_PROFILES + 1:
+                if count >= MAX_PROFILES + MAX_PENDING_MANIFESTS + 1:
                     raise SaveError('Playthrough profile store exceeds its fixed entry bound.')
                 if entry.name == '.lock':
+                    continue
+                if _PENDING_MANIFEST.fullmatch(entry.name):
+                    pending_count += 1
+                    if pending_count > MAX_PENDING_MANIFESTS:
+                        raise SaveError('Playthrough profile store has too many interrupted manifest writes.')
+                    pending_info = entry.stat(follow_symlinks=False)
+                    if (not stat.S_ISREG(pending_info.st_mode)
+                            or pending_info.st_size > MAX_PROFILE_BYTES):
+                        raise SaveError('Playthrough profile store has an invalid pending manifest entry.')
                     continue
                 match = re.fullmatch('([0-9a-f]{32})[.]json', entry.name)
                 if match is None:
                     raise SaveError('Playthrough profile store contains an unexpected entry.')
+                profile_count += 1
+                if profile_count > MAX_PROFILES:
+                    raise SaveError('Playthrough profile store exceeds its fixed profile bound.')
                 profile_id = match.group(1)
                 raw, _ = _read(Path(entry.path), MAX_PROFILE_BYTES)
                 total += len(raw)
@@ -408,7 +440,8 @@ class PlaythroughProfileStore:
                 profiles.append(_profile_from_bytes(raw, profile_id))
         if len(profiles) > MAX_PROFILES:
             raise SaveError('Playthrough profile store exceeds its fixed profile bound.')
-        return tuple(sorted(profiles, key=lambda item: (item.name.casefold(), item.id)))
+        return (tuple(sorted(profiles, key=lambda item: (item.name.casefold(), item.id))),
+                pending_count)
 
     def create_profile(self, name, game_id, game_version, save_snapshot_id, components=()):
         name = _text(name, 'name', 120)
@@ -438,19 +471,23 @@ class PlaythroughProfileStore:
                                      datetime.now(timezone.utc).isoformat(), game.id,
                                      game_version, save_snapshot_id, tuple(validated))
         raw = _profile_bytes(profile)
-        directory, _ = self._directory(create=True)
+        directory, directory_info = self._directory(create=True)
+        directory_identity = (directory_info.st_dev, directory_info.st_ino)
         with _store_lock(directory):
-            existing = self._scan(directory)
+            existing, pending_count = self._scan(directory)
             if len(existing) >= MAX_PROFILES:
                 raise SaveError('Playthrough profile store reached its profile limit.')
+            if pending_count >= MAX_PENDING_MANIFESTS:
+                raise SaveError('Playthrough profile store has too many interrupted manifest writes.')
             if sum(len(_profile_bytes(item)) for item in existing) + len(raw) > MAX_STORE_BYTES:
                 raise SaveError('Playthrough profile store reached its metadata byte limit.')
             self._snapshot(game.id, save_snapshot_id)
             target = directory / (profile.id + '.json')
             _ordinary(target, missing=True)
-            result = atomic_new(raw, safe_path(target))
-            if _read(result, MAX_PROFILE_BYTES)[0] != raw:
-                raise SaveError('New playthrough profile failed its local read-back check.')
+            try:
+                publish_new_child_bound(raw, directory, target.name, directory_identity)
+            except ChildPublishedUncertainError as error:
+                raise ProfilePublicationUncertainError(profile.id) from error
         return profile
 
     def list_profiles(self, game_id=None):
@@ -460,7 +497,7 @@ class PlaythroughProfileStore:
         if info is None:
             return ()
         with _store_lock(directory):
-            profiles = self._scan(directory)
+            profiles, _pending_count = self._scan(directory)
         return tuple(profile for profile in profiles if game_id is None or profile.game_id == game_id)
 
     def load(self, profile_id):

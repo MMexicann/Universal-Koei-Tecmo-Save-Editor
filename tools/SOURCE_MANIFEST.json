@@ -38,8 +38,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 8200,
-      "sha256": "38d87f630535e1ea7ef825623eb4363bdee8de6e0e21ab1a73788c10d09e320c"
+      "bytes": 8410,
+      "sha256": "a1495d71fdab648c3728964c041b049f9fbb0f81eda5ded52ecd864bc7b0ffec"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -943,8 +943,8 @@
     },
     {
       "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
-      "bytes": 3977,
-      "sha256": "42bb390ef9cdd6e290059a6a84c206464133ec4c246d129f04427fd1bca06b35"
+      "bytes": 4568,
+      "sha256": "28b131c4e56850dbcdc872e49a82acdd11e841cfebd5d8718c92c894c60fd397"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -4203,8 +4203,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 17946,
-      "sha256": "620a48d89a6e69c838b4adcd728c443b39d73b95b6ce7ef4d8fa4f840b604ad0"
+      "bytes": 28740,
+      "sha256": "d8a575c50f9d3774abd94e11dc113d8d2a480bdb7e21892bad0dbff6d2559686"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
@@ -4373,8 +4373,8 @@
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles.py",
-      "bytes": 28912,
-      "sha256": "6a84df4ac012bdd3df1c17e987eb0ee956ad23fefd82234887df2f0565d9fe43"
+      "bytes": 30685,
+      "sha256": "42251eaf31cfa07c1b86fab6a4fc1d6712b6c2738379f2f9104e98539c126f28"
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles_gui.py",
@@ -5885,6 +5885,11 @@
       "path": "tests/test_preferences.py",
       "bytes": 8291,
       "sha256": "6aea8730f95ea08a6dce42693af3768835289b6cda99d525d4889e1c1bfb7298"
+    },
+    {
+      "path": "tests/test_profile_manifest_publication.py",
+      "bytes": 5754,
+      "sha256": "7c6c83d13b9dc876c86ce2c60549fe571fa1a789c9a34a1d51fd72ed13e2164c"
     },
     {
       "path": "tests/test_progression_card_rendering.py",

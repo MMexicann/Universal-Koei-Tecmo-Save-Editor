@@ -21,16 +21,8 @@ MAX_NOTE_LENGTH = 500
 
 
 def discover_installations(*, steam_roots=None, cancel=None):
-    """Use the install-only scanner when available, preserving older callers.
-
-    The version tracker owns the install-only API. The fallback keeps the Hub
-    usable on checkouts that have the earlier shared discovery contract.
-    """
-    scan = getattr(save_discovery, 'discover_installed_builds', None)
-    if callable(scan):
-        return scan(steam_roots=steam_roots, cancel=cancel)
-    return save_discovery.discover_saves(steam_roots=steam_roots, cancel=cancel,
-                                         include_locations=False)
+    """Use the version tracker's install-only scanner for all Hub scans."""
+    return save_discovery.discover_installed_builds(steam_roots=steam_roots, cancel=cancel)
 
 
 def _unique_object(pairs):

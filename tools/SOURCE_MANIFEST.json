@@ -188,8 +188,8 @@
     },
     {
       "path": "docs/CHARACTER_WEAPON_WORKSHOP_EVIDENCE.md",
-      "bytes": 2694,
-      "sha256": "1fa377e1a147ccae990835f6c48984b9fdb63f9386a3c54be563f196277ff57a"
+      "bytes": 2772,
+      "sha256": "06cf3c0bfac821ad052cba575d23bb64b6154f68f245637ceb3b85d817701b18"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
@@ -4358,8 +4358,8 @@
     },
     {
       "path": "tests/test_character_weapon_workshop_gui.py",
-      "bytes": 8990,
-      "sha256": "a498f324bf1f132fd46e30ac6d4ce7d9095d4b24c93586bca88776f5c799f1f9"
+      "bytes": 9139,
+      "sha256": "b7da9d6b4c4c399252352511183b6d4873b720d8864bf2c145ae3c9b0df7f7cd"
     },
     {
       "path": "tests/test_character_weapon_workshop_model.py",
@@ -5953,8 +5953,8 @@
     },
     {
       "path": "tests/test_universal_app.py",
-      "bytes": 53673,
-      "sha256": "acf88a54647df9ce69738b36f1c00ddbd4d5a3d7401e0636c5ed1367b77acc5f"
+      "bytes": 53704,
+      "sha256": "d80f8f1fbcf832017482b7b7197a39993acf36af6d2f4352f65d02f48e93cca2"
     },
     {
       "path": "tests/test_universal_packaging.py",

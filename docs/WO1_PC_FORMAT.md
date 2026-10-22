@@ -68,7 +68,7 @@ explicit.
 | `0x4045F0`, `0x404730` | Weapon properties in records at officer `+0x14`, stride `0x16`: ID u16 `+0`, ownership mask u16 `+2`, capacity u8 `+4`, attack bonus u8 `+5`, fifteen rank bytes at `+6` |
 | `0x404633`–`0x404643` | Four weapon tiers selected by descriptor ID modulo four; own-family IDs corroborated by all 79 fourth-weapon IDs `4*record + 3` in the second independent copy |
 | `0x4177E0` | Deliberately skip native attribute enum 5; its mask and stored rank remain read only |
-| Label/getter tables `0x4B25C8`, `0x404830` | Officer level byte `+0` displayed plus one, equipped weapon byte `+1`, costume byte `+2`, Life/Musou/Attack/Defense/Speed u16 at `+4/+6/+8/+A/+C`, proficiency u16 `+E`, EXP u32 `+0x10` |
+| Label/getter tables `0x4B25C8`, `0x404830` | The 79-record officer resolver supplies a stable record index; the disk getter reads level byte `+0`, equipped weapon byte `+1`, costume byte `+2`, five named stat words as u16 at `+4/+6/+8/+A/+C`, proficiency u16 `+E` and EXP u32 `+0x10` |
 
 The first DWORD, upper revision word at `+6`, DWORD at `+8` and the final 28 bytes
 after the checksum have no check in the inspected reader. They are retained
@@ -99,6 +99,18 @@ automatic backups, validated restore and atomic Save As to a new copied `.dat`.
 | Existing weapon capacity | Byte `+4`, between the opened ownership-mask bit count and eight; individual only, no bulk Max. Decreasing cannot hide an owned effect, increasing cannot acquire or activate an absent effect. |
 | Already owned named effect ranks | Byte `+6+enum`, stored as displayed rank minus one; fourteen named effects use `1..10` with the original PC manual's natural maximum. Native enum 5, absent effects and mask identities remain untouched. Higher opened ranks survive Max; assigning the opened value unstages a prior edit. |
 | Existing equipped weapon | Officer byte `+1`, displayed as slot 1..8; only qualified original own-family weapon choices with a supported original selector and at least two choices; no Max, ownership or pool changes |
+
+### Stored officer stats: read-only research candidate
+
+The original PC period getter at `0x404830` and label table at `0x4B25C8` name
+Life, Musou, Attack, Defense and Speed as u16 words at officer-relative offsets
+`+4`, `+6`, `+8`, `+10` and `+12`. The disk reader resolves 79 officer records
+from base `0xC` at stride `0xC8`; independent native saves qualify the current
+file profile and preserve these bytes. This is a credible mapping candidate,
+but no controlled native Growth Points allocation pair has verified that each
+named UI stat changes its corresponding word or revealed coupled changes.
+These values therefore remain read only. An experimental numeric option cannot
+replace the missing field-to-action evidence.
 
 The [existing-editor depth review](OROCHI_DYNASTY_DEPTH.md) records the selector
 proof, 63 qualifying genuine early-save choices, exact checksum/byte tests and
@@ -152,7 +164,7 @@ It is a mechanics corroboration, not a PC disk-offset or revision reference.
 | --- | --- |
 | Native disk framing, revision and integrity | Period original-PC reader/writer facts implemented; two independent native copies qualify unchanged and surgical roundtrips. Native game-loader execution is separate and unperformed. |
 | Persistent currencies | Shared Growth Points writable; no separate currency is invented. A native original PC growth-point clamp or documented controlled ceiling is needed before resource Max. |
-| Character EXP/level/five growth stats | Stored values inspected read only. Controlled level-up and Growth Points allocation pairs with displayed values are needed to prove thresholds, five-stat recalculation and coupled reward behavior. No displayed final stat is assumed to equal a serialized base modifier. |
+| Character stats, level and EXP | Five getter-mapped u16 stat words are read-only candidates; stored level and EXP remain inspection only. Provide a revision-2 native baseline with exact region/build provenance and displayed values for one selected officer, then five separate before/after pairs from that baseline, allocating exactly one Growth Point to Life, Musou, Attack, Defense and Speed respectively. Record all five displayed stats, Growth Points, level, EXP, proficiency and the selected officer on each side. Native copies must identify the changed record bytes, checksum and any coupled fields. A separate one-level transition pair with the same observations is needed for level/EXP behavior. A manually edited duplicate must then load and re-save in the original game before writable stat support. |
 | Proficiency | Stored u16 inspected; controlled active-character enemy-count and proficiency/reward pairs are needed for persistent units, natural ceiling and reward dependencies. |
 | Abilities/skills | Acquisition flags, global recomputed rank, prerequisites and seven equipped references remain preserved. Native acquire/equip pairs and exact flag-to-ability correspondence are needed before coherent edits. |
 | Existing weapons and attributes | Qualified bonus/capacity/owned rank values writable. The four-tier identity stays unchanged, and records with unqualified layouts remain read only. |

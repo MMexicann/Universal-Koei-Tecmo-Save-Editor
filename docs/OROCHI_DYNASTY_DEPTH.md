@@ -107,9 +107,26 @@ backup, Save As and byte-exact restore.
 This is native-save qualification backed by a period-tool disk mapping; the
 original game's executable and an in-game load/re-save test remain unavailable.
 
+The same original-PC getter maps five stored officer u16 stat words at `+4`,
+`+6`, `+8`, `+10` and `+12` within each resolved record. These names and offsets
+are evidence for read-only inspection; they do not qualify stat writes. No
+controlled Growth Points allocation pair currently ties each named stat to its
+stored word or establishes allocation side effects, bounds, or game loading.
+
+The next useful evidence is a revision-2 original-PC `save.dat` with exact
+region/build provenance, an unchanged copy, and displayed values for one chosen
+officer. Starting separately from that same baseline, provide five isolated
+before/after pairs: spend exactly one Growth Point on Life, then repeat for
+Musou, Attack, Defense and Speed. Record all five displayed stats, Growth
+Points, level, EXP and proficiency before and after each action, plus the exact
+officer selected. The corresponding native copies must identify which stored
+word changed, preserve all other records and unknown bytes, and pass the native
+checksum. Only after those mappings and any coupled changes are understood
+should a manually edited duplicate be loaded and re-saved in the original game.
+
 | Reviewed mechanic | Remaining dependency or evidence required |
 | --- | --- |
-| Stock Growth Points / EXP / levels / base stats | Existing stock control remains manual; level growth, EXP thresholds and rewards need matching native transition proof |
+| Stock Growth Points / EXP / levels / base stats | Existing stock control remains manual; five stored stat words remain read only. Growth limits, EXP thresholds, each stat's allocation mapping and any coupled rewards need matching native transition proof |
 | Weapon fusion | Existing qualified capacity, attack bonus and attribute ranks remain; fusion acquisition and consumption are distinct |
 | Skills / proficiency / costumes | Prerequisites, rewards and threshold side effects remain unproved |
 | Story / character unlocks | Named route/clear flags and reward dependencies remain unproved |

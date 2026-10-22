@@ -13,6 +13,8 @@ Nioh 2 PC only.
 
 ## Development and releases
 
+- [Browser-local Mod Testing Sandbox: staging, contracts, reports and safety limits](MOD_TESTING_SANDBOX.md)
+
 - [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
 
 - [Scenario and army editor: verified strategy record view and limits](SCENARIO_ARMY_EDITOR_REPORT.md)

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101820">
+    <meta name="description" content="Stage Koei Tecmo game mods safely, inspect file changes, resolve conflicts, and validate manifests before exporting a deployment package.">
+    <title>Mod Testing Sandbox · Koei Tecmo Tools</title>
+    <link rel="stylesheet" href="./src/styles.css">
+  </head>
+  <body>
+    <div class="app-frame">
+      <header class="topbar">
+        <a class="brand" href="#sandbox" aria-label="Koei Tecmo Tools home">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="brand-copy"><b>KOEI TECMO</b><small>MOD TOOLKIT</small></span>
+        </a>
+        <div class="topbar-divider"></div>
+        <div class="breadcrumb"><span>WORKBENCH</span><i>/</i><strong>MOD TESTING SANDBOX</strong></div>
+        <div class="topbar-spacer"></div>
+        <span class="local-badge"><span class="status-dot"></span> LOCAL SESSION</span>
+        <button class="topbar-help" data-action="show-safety" aria-label="Show safety details" title="Safety details">?</button>
+      </header>
+
+      <div class="app-layout">
+        <aside class="sidebar" aria-label="Main navigation">
+          <div class="side-label">WORKSPACE</div>
+          <nav class="primary-nav">
+            <button class="nav-item active" data-route="sandbox"><span class="nav-icon nav-grid">▦</span><span>Testing sandbox</span><span class="nav-pulse"></span></button>
+            <button class="nav-item" data-route="manager"><span class="nav-icon">▣</span><span>Mod manager</span><span class="nav-arrow">↗</span></button>
+            <button class="nav-item" data-route="workshop"><span class="nav-icon">⌘</span><span>Creation workshop</span><span class="nav-arrow">↗</span></button>
+            <button class="nav-item" data-route="troubleshooting"><span class="nav-icon">⌕</span><span>Troubleshooting</span><span class="nav-arrow">↗</span></button>
+          </nav>
+
+          <div class="sidebar-rule"></div>
+          <div class="side-label side-label-row"><span>ACTIVE WORKSPACE</span><span class="tiny-live"></span></div>
+          <div class="workspace-mini">
+            <div class="game-icon" id="side-game-mark">WL</div>
+            <div class="workspace-mini-copy"><b id="side-game-name">Wo Long: Fallen Dynasty</b><span>PC · isolated stage</span></div>
+            <span class="more-dots">···</span>
+          </div>
+          <button class="side-quiet-button" data-action="new-workspace"><span>＋</span> Start a new workspace</button>
+
+          <div class="sidebar-bottom">
+            <div class="safety-mini"><span class="safety-shield">◇</span><div><b>Protected workspace</b><small>Original game files are read only</small></div></div>
+            <div class="side-foot"><span>MOD SANDBOX</span><span>LOCAL BUILD</span></div>
+          </div>
+        </aside>
+
+        <main class="main-content">
+          <section class="route-view active" data-view="sandbox" aria-labelledby="page-title">
+            <div class="page-heading">
+              <div>
+                <div class="eyebrow"><span class="eyebrow-line"></span> MOD QA WORKSPACE <span class="eyebrow-badge" id="demo-badge">DEMO DATA</span></div>
+                <h1 id="page-title">Test before <em>you install.</em></h1>
+                <p class="heading-copy">Stage compatible mods in isolation. Review every destination, catch collisions, and verify the install manifest before exporting.</p>
+              </div>
+              <div class="heading-actions">
+                <button class="button button-quiet" data-action="download-report"><span class="button-icon">⇩</span> Audit report</button>
+                <button class="button button-primary" data-action="open-export" id="export-button"><span class="button-icon">↗</span> Prepare package</button>
+              </div>
+            </div>
+
+            <div class="metrics-row" aria-label="Workspace summary">
+              <article class="metric-card"><div class="metric-label">STAGED MODS <span class="metric-icon">◇</span></div><div class="metric-value" id="metric-mods">02</div><div class="metric-note"><span class="note-dot mint"></span><span id="metric-mods-note">2 manifests loaded</span></div></article>
+              <article class="metric-card"><div class="metric-label">PLANNED CHANGES <span class="metric-icon">⇄</span></div><div class="metric-value" id="metric-changes">05</div><div class="metric-note"><span class="note-dot blue"></span><span id="metric-changes-note">Across staged files</span></div></article>
+              <article class="metric-card metric-card-alert"><div class="metric-label">CONFLICTS FOUND <span class="metric-icon">!</span></div><div class="metric-value" id="metric-conflicts">01</div><div class="metric-note"><span class="note-dot coral"></span><span id="metric-conflicts-note">Resolve before export</span></div></article>
+              <article class="metric-card"><div class="metric-label">MANIFEST HEALTH <span class="metric-icon">⌁</span></div><div class="metric-health" id="manifest-health"><span class="health-ring">!</span><span>Review needed</span></div><div class="metric-note"><span class="note-dot amber"></span><span id="manifest-health-note">A destination is shared</span></div></article>
+            </div>
+
+            <div class="work-grid">
+              <div class="work-main">
+                <section class="panel workspace-panel">
+                  <div class="panel-heading">
+                    <div><div class="section-kicker">01 <span>·</span> STAGING AREA</div><h2>Mod workspace</h2></div>
+                    <div class="panel-heading-actions">
+                      <label class="game-select-wrap" for="game-select"><span class="select-caption">INITIAL TITLE PROFILE</span><select id="game-select" aria-label="Initial title profile"></select><span class="select-chevron">⌄</span></label>
+                      <label class="game-build-wrap" for="game-build"><span class="select-caption">GAME BUILD / PROFILE</span><input id="game-build" type="text" value="demo-1.0" maxlength="80" spellcheck="false" aria-label="Exact game build or profile"></label>
+                      <button class="button button-small button-outline" data-action="add-mod"><span>＋</span> Add mod folder</button>
+                      <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple aria-label="Select a mod folder">
+                    </div>
+                  </div>
+                  <div class="staging-callout"><span class="callout-lock">◇</span><span>Windows PC profiles only. Workshop version ranges are checked against your selected build; required dependencies must be staged too.</span><button class="text-button" data-action="show-safety">Safety details</button></div>
+                  <div class="mod-table-wrap">
+                    <table class="mod-table">
+                      <thead><tr><th>MOD PACKAGE</th><th>VERSION</th><th>FILES</th><th>MANIFEST</th><th></th></tr></thead>
+                      <tbody id="mod-list"></tbody>
+                    </table>
+                    <div class="empty-state hidden" id="empty-mods"><div class="empty-symbol">＋</div><b>Your staging area is clear.</b><span>Choose a project folder with <code>mod.json</code> or a supported sandbox manifest.</span><button class="button button-outline" data-action="add-mod">Choose mod folder</button></div>
+                  </div>
+                  <div class="panel-footer"><span><span class="tiny-live"></span> <b id="workspace-state">Workspace isolated</b> <span class="footer-muted" id="workspace-updated">· sample files are inert</span></span><button class="text-button" data-action="reset-demo">Reset demo workspace <span>↺</span></button></div>
+                </section>
+
+                <section class="panel changes-panel">
+                  <div class="panel-heading compact-heading"><div><div class="section-kicker">02 <span>·</span> DEPLOYMENT PREVIEW</div><h2>File changes <span class="heading-count" id="change-count">05</span></h2></div><div class="changes-tools"><label class="baseline-button"><input id="manager-inventory-input" type="file" accept="application/json,.json" aria-label="Import Mod Manager inventory JSON"><span>＋ Import manager inventory</span></label><button class="icon-button" data-action="download-report" aria-label="Download audit report">⇩</button></div></div>
+                  <div class="baseline-state" id="baseline-state"><span class="baseline-orb">◎</span><span>No game installation files are read</span><span class="baseline-note">Preview shows staged destinations only</span></div>
+                  <div class="change-list" id="change-list"></div>
+                  <div class="conflict-banner hidden" id="conflict-banner"><span class="conflict-mark">!</span><div><b id="conflict-title">Collision detected</b><span id="conflict-description">Two mods write to the same destination.</span></div><button class="text-button" data-action="focus-conflicts">Review</button></div>
+                  <div class="safe-guard-row"><span class="check-mark">✓</span><span>Original files stay untouched. Export creates a separate staging archive only.</span><span class="guard-lock">◇</span></div>
+                </section>
+              </div>
+
+              <aside class="work-rail">
+                <section class="panel deploy-panel">
+                  <div class="deploy-topline"><span class="section-kicker">PRE-DEPLOYMENT GATE</span><span class="gate-icon">◇</span></div>
+                  <h2>Manifest<br><em>validation</em></h2>
+                  <p>Every package must match this game and resolve to a safe relative destination.</p>
+                  <div class="gate-progress"><div class="gate-progress-line"><span id="gate-progress-fill"></span></div><span id="gate-progress-label">1 of 3 checks passed</span></div>
+                  <div class="gate-checks" id="gate-checks"></div>
+                  <button class="button button-dark-wide" data-action="open-export" id="export-button-rail"><span>Review &amp; prepare</span><span>↗</span></button>
+                  <div class="gate-footnote"><span>◇</span> Explicit confirmation required at export</div>
+                </section>
+
+                <section class="panel integration-panel">
+                  <div class="panel-heading integration-heading"><div><div class="section-kicker">HANDOFF CONTRACTS</div><h2>Prepare handoff for</h2></div><span class="link-status">JSON ONLY</span></div>
+                  <button class="integration-link" data-route="manager"><span class="integration-icon manager-icon">▣</span><span><b>Mod Manager</b><small>Nioh 2 ZIP / profile preview</small></span><span class="integration-arrow">›</span></button>
+                  <button class="integration-link" data-route="workshop"><span class="integration-icon workshop-icon">⌘</span><span><b>Creation Workshop</b><small>Preview validation brief</small></span><span class="integration-arrow">›</span></button>
+                  <button class="integration-link" data-route="troubleshooting"><span class="integration-icon trouble-icon">⌕</span><span><b>Troubleshooting Center</b><small>Download schema report</small></span><span class="integration-arrow">›</span></button>
+                  <div class="integration-divider"></div>
+                  <button class="integration-contract" data-action="copy-handoff"><span class="contract-icon">⤴</span><span><b>Copy workspace handoff</b><small>JSON contract · v1</small></span><span class="integration-arrow">›</span></button>
+                </section>
+
+                <section class="quiet-card"><div class="quiet-mark">01</div><div><b>Isolated by design</b><p>Mods are handled as data. The sandbox never launches game files, plugins, or scripts.</p></div><span class="quiet-decoration">✳</span></section>
+              </aside>
+            </div>
+          </section>
+
+          <section class="route-view integration-view" data-view="manager" aria-labelledby="manager-title">
+            <div class="page-heading integration-page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> TOOLCHAIN HANDOFF</div><h1 id="manager-title">Mod <em>Manager.</em></h1><p class="heading-copy">Prepare a Nioh 2 manager-importable ZIP from validated staged files, or preview the Smart Playthrough Profile component for registered profiles. Package export does not install mods.</p></div><div class="heading-actions"><button class="button button-quiet" id="manager-download-component" data-action="download-component-snapshot">Download profile JSON</button><button class="button button-primary" id="manager-copy-component" data-action="component-snapshot">Copy profile component <span class="button-icon">⤴</span></button></div></div>
+            <div class="integration-summary"><div class="integration-summary-mark manager-icon">▣</div><div><span class="section-kicker">MOD MANAGER · HANDOFF</span><h2 id="manager-summary-title">Package library handoff</h2><p id="manager-summary-copy">The Nioh 2 route creates one ZIP with the manager's supported `.ini` and asset layout plus root `koei-mod.json`. The manager revalidates each imported ZIP and requires its own confirmation before any game file changes.</p></div><span class="integration-port-state">PACKAGE / PROFILE DATA</span></div>
+            <div class="integration-content-grid"><section class="panel integration-detail-panel"><div class="panel-heading"><div><div class="section-kicker">CURRENT STAGE</div><h2>Package queue</h2></div><span class="heading-count" id="manager-count">02</span></div><div class="handoff-list" id="manager-list"></div></section><section class="panel integration-detail-panel" id="manager-profile-panel"><div class="section-kicker">PROFILE COMPONENT SNAPSHOT · SCHEMA 1</div><h2>Playthrough profile preview</h2><p class="contract-copy">For registered save profiles, this JSON follows the Smart Playthrough Profile envelope (PR #112). It is inert profile data and does not directly import to or install through a Mod Manager.</p><pre class="json-preview" id="manager-component-payload"></pre><button class="button button-outline" id="manager-copy-component-secondary" data-action="component-snapshot">Copy component snapshot</button> <button class="button button-quiet" id="manager-download-component-secondary" data-action="download-component-snapshot">Download JSON</button></section><section class="panel integration-detail-panel hidden" id="manager-native-panel"><div class="section-kicker">NIOH 2 MOD MANAGER · ZIP IMPORT</div><h2>Manager-compatible packages</h2><p class="contract-copy">Download one validated Nioh 2 mod at a time. Import the ZIP into the manager library for its own package checks; the sandbox never selects a game folder or applies a package.</p><div class="requirement-list"><div><span>01</span><b>Manager package rules</b><small>Exactly one `.ini`, at least one `.fmt`, `.vb`, `.ib`, or `.dds` asset, and all files inside the `.ini` marker folder.</small></div><div><span>02</span><b>Revalidation and install confirmation</b><small>The manager verifies package bytes, then separately requires its loader and game-closed confirmation before file changes.</small></div></div></section></div>
+          </section>
+
+          <section class="route-view integration-view" data-view="workshop" aria-labelledby="workshop-title">
+            <div class="page-heading integration-page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> TOOLCHAIN HANDOFF</div><h1 id="workshop-title">Creation <em>Workshop.</em></h1><p class="heading-copy">Open a Workshop project folder here to check its native manifest, source hashes, compatibility and dependencies before staging.</p></div><button class="button button-primary" data-action="copy-workshop-handoff">Copy validation brief <span class="button-icon">⤴</span></button></div>
+            <div class="integration-summary workshop-summary"><div class="integration-summary-mark workshop-icon">⌘</div><div><span class="section-kicker">MOD CREATION WORKSHOP · PROJECT FOLDER</span><h2>Native manifest validation</h2><p>Folder import reads <code>mod.json</code> and declared replacement files. ZIP packages are not opened, and the Workshop verification report is not trusted as a substitute for checking source bytes.</p></div><span class="integration-port-state">FOLDER IMPORT</span></div>
+            <div class="integration-content-grid"><section class="panel integration-detail-panel"><div class="section-kicker">MANIFEST REQUIREMENTS</div><h2>Before a package can stage</h2><div class="requirement-list"><div><span>01</span><b>Identify the game and platform</b><small>Use a supported game ID and Windows PC platform.</small></div><div><span>02</span><b>Verify each replacement</b><small>Every source must exist, hashes must match, and targets must be safe relative paths.</small></div><div><span>03</span><b>Resolve compatibility</b><small>The selected build must satisfy the Workshop version declaration and required staged dependencies.</small></div></div></section><section class="panel integration-detail-panel"><div class="section-kicker">VALIDATION BRIEF</div><h2>Issues to resolve</h2><div id="workshop-issues" class="issues-list"></div><button class="button button-outline" data-action="copy-workshop-handoff">Copy brief JSON</button></section></div>
+          </section>
+
+          <section class="route-view integration-view" data-view="troubleshooting" aria-labelledby="troubleshooting-title">
+            <div class="page-heading integration-page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> TOOLCHAIN HANDOFF</div><h1 id="troubleshooting-title">Game <em>Troubleshooting.</em></h1><p class="heading-copy">Create a Troubleshooting Center schema report for sandbox manifest checks and conflicts without transferring mod contents.</p></div><button class="button button-primary" data-action="download-troubleshooting-report">Download Center report <span class="button-icon">⇩</span></button></div>
+            <div class="integration-summary trouble-summary"><div class="integration-summary-mark trouble-icon">⌕</div><div><span class="section-kicker">GAME TROUBLESHOOTING CENTER · SCHEMA HANDOFF</span><h2>Sandbox diagnostic context</h2><p>The report uses the Center's <code>koei-game-troubleshooting</code> schema. It covers sandbox preflight only; the Center has no report import action yet, and installation checks remain unchecked.</p></div><span class="integration-port-state">JSON REPORT</span></div>
+            <div class="integration-content-grid"><section class="panel integration-detail-panel"><div class="section-kicker">TEST SUMMARY</div><h2>Current workspace health</h2><div class="troubleshoot-summary" id="troubleshoot-summary"></div><button class="button button-outline" data-action="copy-troubleshooting-report">Copy Center report</button> <button class="button button-quiet" data-action="download-report">Download detailed audit</button></section><section class="panel integration-detail-panel"><div class="section-kicker">SAFE DIAGNOSTIC HANDOFF</div><h2>What gets included</h2><div class="diagnostic-includes"><div><span>✓</span><b>Selected game/build and counts</b><small>Sandbox metadata only</small></div><div><span>✓</span><b>Manifest and conflict status</b><small>Issue counts; no local paths</small></div><div><span>✓</span><b>Safety scope</b><small>Confirms no code ran or originals were read</small></div><div class="excluded"><span>×</span><b>Mod file contents or hashes</b><small>Never included in this report</small></div></div></section></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog class="confirm-dialog" id="export-dialog" aria-labelledby="export-dialog-title">
+      <form method="dialog" class="dialog-card">
+        <button class="dialog-close" value="cancel" aria-label="Close dialog">×</button>
+        <div class="dialog-emblem">◇</div><div class="section-kicker">EXPLICIT EXPORT CONFIRMATION</div>
+        <h2 id="export-dialog-title">Prepare a separate<br><em>staging package?</em></h2>
+        <p>This downloads a ZIP containing the reviewed files and an install manifest. It does not copy files into your game folder or modify an original installation.</p>
+        <div class="export-summary" id="export-summary"></div>
+        <label class="confirm-check"><input id="export-confirm-checkbox" type="checkbox"><span class="custom-check"></span><span>I reviewed the file list and want to download this staging archive.</span></label>
+        <div class="dialog-actions"><button class="button button-quiet" value="cancel">Cancel</button><button class="button button-primary" id="confirm-export" type="button" disabled>Confirm &amp; download <span>↗</span></button></div>
+        <div class="dialog-safety"><span>◇</span> No scripts, plugins, or game code are executed.</div>
+      </form>
+    </dialog>
+
+    <dialog class="confirm-dialog safety-dialog" id="safety-dialog" aria-labelledby="safety-dialog-title">
+      <form method="dialog" class="dialog-card">
+        <button class="dialog-close" value="cancel" aria-label="Close dialog">×</button><div class="dialog-emblem">◇</div><div class="section-kicker">SAFETY MODEL</div>
+        <h2 id="safety-dialog-title">Your game stays<br><em>untouched.</em></h2>
+        <div class="safety-details"><div><span>01</span><b>Browser-local staging</b><p>Files stay in this browser’s isolated workspace, in separate game and mod-ID namespaces. IndexedDB persists across reloads; if it is unavailable, files stay in tab memory. No mod file is uploaded.</p></div><div><span>02</span><b>Data only</b><p>Manifests are parsed as JSON. Imported files are never executed, evaluated, or launched.</p></div><div><span>03</span><b>Review before export</b><p>Unsafe paths, missing files, incompatible game/build declarations, hash mismatches, and collisions block package creation.</p></div><div><span>04</span><b>Confirmation gate</b><p>Export requires a separate confirmation and creates a ZIP download only. The sandbox cannot write to your original game installation.</p></div></div>
+        <div class="dialog-actions"><button class="button button-primary" value="ok">Understood</button></div>
+      </form>
+    </dialog>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="./src/main.mjs"></script>
+  </body>
+</html>

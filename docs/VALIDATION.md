@@ -29,8 +29,8 @@ requires exact app/build identities and versioned evidence before showing
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 110,
-    "passed": 79,
+    "run": 113,
+    "passed": 82,
     "skipped": 31,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."

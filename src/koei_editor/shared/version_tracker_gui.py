@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from koei_editor.game_registry import GAMES
+from koei_editor.shared.help_content import help_articles
 from koei_editor.shared import version_tracker
 
 
@@ -12,10 +13,11 @@ _TEXT = {
     'en': {
         'title': 'Game Version & Compatibility Tracker',
         'scope': ('Scans reviewed Steam app manifests only. It does not launch games, inspect save files, '
-                  'or read Steam user data. Detected Steam build IDs are separate from save-format revisions.'),
+                  'or read Steam user data. Steam build IDs are store metadata, not save-format revisions. '
+                  'Compatibility rows show catalog reviews; installed mod, tool, and asset versions are not detected.'),
         'scan': 'Scan Steam installs', 'refresh': 'Refresh history', 'search': 'Filter installed games',
         'privacy': ('Build history is saved locally without install paths, Steam account IDs, or save data.'),
-        'installed': 'Installed builds', 'compat': 'Current compatibility', 'build_history': 'Build history',
+        'installed': 'Installed builds', 'compat': 'Reviewed compatibility', 'build_history': 'Build history',
         'compat_history': 'Compatibility history', 'game': 'Game', 'platform': 'Platform', 'build': 'Steam Build ID',
         'updated': 'Steam Last Updated (Unix seconds)', 'artifact': 'Tool or format', 'kind': 'Type', 'status': 'Status',
         'version': 'Reviewed artifact version', 'checked': 'Checked', 'previous': 'Previous build', 'observed': 'Observed build',
@@ -40,7 +42,7 @@ _TEXT = {
         'unknown_status': 'Unknown', 'kind_save_editor': 'Save editor', 'kind_mod': 'Mod',
         'kind_config_tool': 'Configuration tool', 'kind_asset_format': 'Asset format',
         'source': 'Detection source', 'confidence': 'Confidence', 'app_id': 'Steam app ID',
-        'evidence': 'Evidence', 'reason': 'Reason code', 'next_steps': 'Next steps',
+        'evidence': 'Evidence', 'reason': 'Reason code', 'next_steps': 'Next steps in Help',
         'file_scope': ('Profile scope and genuine-file qualification remain available in Compatibility Center. '
                        'They do not verify this installed game build.'),
         'history_saved': 'New build observation saved locally.', 'history_unchanged': 'No new build changes were found.',
@@ -48,10 +50,12 @@ _TEXT = {
     'de': {
         'title': 'Spielversionen und Kompatibilität',
         'scope': ('Es werden nur geprüfte Steam-Appmanifeste gelesen. Spiele werden nicht gestartet; Spielstände '
-                  'und Steam-Benutzerdaten werden nicht geöffnet. Steam-Build-IDs sind keine Spielstandrevisionen.'),
+                  'und Steam-Benutzerdaten werden nicht geöffnet. Steam-Build-IDs sind Ladenmetadaten, keine '
+                  'Spielstandrevisionen. Kompatibilitätszeilen zeigen Katalogprüfungen; installierte Mod-, '
+                  'Werkzeug- und Asset-Versionen werden nicht erkannt.'),
         'scan': 'Steam-Installationen prüfen', 'refresh': 'Verlauf aktualisieren', 'search': 'Installierte Spiele filtern',
         'privacy': ('Der Build-Verlauf wird lokal ohne Installationspfade, Steam-Konto-IDs oder Spielstanddaten gespeichert.'),
-        'installed': 'Installierte Builds', 'compat': 'Aktuelle Kompatibilität', 'build_history': 'Build-Verlauf',
+        'installed': 'Installierte Builds', 'compat': 'Geprüfte Kompatibilität', 'build_history': 'Build-Verlauf',
         'compat_history': 'Kompatibilitätsverlauf', 'game': 'Spiel', 'platform': 'Plattform', 'build': 'Steam-Build-ID',
         'updated': 'Steam-Updatezeit (Unix-Sekunden)', 'artifact': 'Werkzeug oder Format', 'kind': 'Typ', 'status': 'Status',
         'version': 'Geprüfte Artefaktversion', 'checked': 'Geprüft', 'previous': 'Vorheriger Build', 'observed': 'Erkannter Build',
@@ -76,7 +80,7 @@ _TEXT = {
         'unknown_status': 'Unbekannt', 'kind_save_editor': 'Spielstand-Editor', 'kind_mod': 'Mod',
         'kind_config_tool': 'Konfigurationswerkzeug', 'kind_asset_format': 'Asset-Format',
         'source': 'Erkennungsquelle', 'confidence': 'Sicherheit', 'app_id': 'Steam-App-ID',
-        'evidence': 'Nachweise', 'reason': 'Grundcode', 'next_steps': 'Nächste Schritte',
+        'evidence': 'Nachweise', 'reason': 'Grundcode', 'next_steps': 'Nächste Schritte in Hilfe',
         'file_scope': ('Profilumfang und Prüfung echter Dateien stehen weiterhin im Kompatibilitätszentrum. '
                        'Sie bestätigen nicht diesen installierten Build.'),
         'history_saved': 'Neue Build-Beobachtung lokal gespeichert.', 'history_unchanged': 'Keine neuen Build-Änderungen gefunden.',
@@ -146,6 +150,10 @@ class VersionTrackerPanel:
 
     def _t(self, key):
         return _TEXT[self.language][key]
+
+    def _next_step_titles(self, step_ids):
+        titles = {article.id: article.title for article in help_articles(self.language)}
+        return tuple(titles[step_id] for step_id in step_ids)
 
     @staticmethod
     def _text_widget(parent, height=8):
@@ -377,7 +385,8 @@ class VersionTrackerPanel:
         if record.evidence:
             body += '\n\n' + self._t('evidence') + '\n' + '\n'.join(record.evidence)
         if record.next_step_ids:
-            body += '\n\n' + self._t('next_steps') + '\n' + ', '.join(record.next_step_ids)
+            body += '\n\n' + self._t('next_steps') + '\n' + '\n'.join(
+                self._next_step_titles(record.next_step_ids))
         self._set_text(self.compatibility_detail, body)
 
     def _render_compatibility_history(self, game_id=None, app_id=None):

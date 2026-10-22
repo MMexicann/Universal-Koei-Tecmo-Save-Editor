@@ -15,6 +15,42 @@ from koei_editor.shared import shell_preferences as settings
 
 
 class ShellPreferencesTests(unittest.TestCase):
+    def test_nexus_browser_receives_manager_handoff_in_either_open_order(self):
+        from types import SimpleNamespace
+
+        manager = object()
+        created_browser = Mock()
+
+        def make_shell(handoff):
+            return SimpleNamespace(
+                nexus_mods=None,
+                mod_manager_download_handoff=handoff,
+                root=object(),
+                workspace=object(),
+                language='en',
+                active_game='nioh2_pc',
+                _show_editing_tool=Mock(),
+                _remember_workspace=Mock(),
+                tr=lambda key: key,
+            )
+
+        manager_first = make_shell(manager)
+        with patch('koei_editor.mods.nexus_browser.NexusModsWorkspace',
+                   return_value=created_browser) as create_browser:
+            Application.show_nexus_mods(manager_first)
+        self.assertIs(manager_first.nexus_mods, created_browser)
+        self.assertIs(create_browser.call_args.kwargs['download_handoff'], manager)
+
+        browser_first = make_shell(None)
+        existing_browser = Mock()
+        with patch('koei_editor.mods.nexus_browser.NexusModsWorkspace',
+                   return_value=existing_browser) as create_browser:
+            Application.show_nexus_mods(browser_first)
+        self.assertIsNone(create_browser.call_args.kwargs['download_handoff'])
+        Application.set_mod_manager_download_handoff(browser_first, manager)
+        self.assertIs(browser_first.mod_manager_download_handoff, manager)
+        existing_browser.set_download_handoff.assert_called_once_with(manager)
+
     def test_show_mod_manager_attaches_workspace_to_existing_download_handoff_seam(self):
         from types import SimpleNamespace
         from koei_editor.shared import mod_manager_gui
@@ -265,13 +301,15 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(browser._selected_game().game_id, 'pw4')
         self.assertFalse(browser._client.has_api_key)
         self.assertEqual(str(browser.manager_button['state']), 'disabled')
-        self.assertEqual(self.app.editing_tools_menu.entrycget(6, 'label'), 'Nexus Mods')
+        nexus_menu_index = self.app._editing_tools_menu_index('nexus_mods')
+        self.assertEqual(self.app.editing_tools_menu.entrycget(nexus_menu_index, 'label'), 'Nexus Mods')
         self.assertIn('tool:nexus_mods', {entry.id for entry in self.app.command_entries()})
         self.app.language_choice.set('Deutsch')
         self.app.change_language()
         self.root.update()
         self.assertEqual(browser.title_label.cget('text'), 'Nexus-Mods-Browser')
-        self.assertEqual(self.app.editing_tools_menu.entrycget(6, 'label'), 'Nexus Mods')
+        nexus_menu_index = self.app._editing_tools_menu_index('nexus_mods')
+        self.assertEqual(self.app.editing_tools_menu.entrycget(nexus_menu_index, 'label'), 'Nexus Mods')
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
         for key in ('editing_presets', 'mod_manager', 'research_lab', 'workflow_builder', 'emulator_hub'):

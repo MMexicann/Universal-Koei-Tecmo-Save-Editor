@@ -5,12 +5,16 @@ on:
     branches: [main]
     paths:
       - 'tools/mod_testing_sandbox/**'
+      - 'src/koei_editor/shared/mod_manager.py'
+      - 'tests/test_mod_manager.py'
       - 'docs/MOD_TESTING_SANDBOX.md'
       - '.github/workflows/mod-testing-sandbox.yml'
   push:
     branches: [main]
     paths:
       - 'tools/mod_testing_sandbox/**'
+      - 'src/koei_editor/shared/mod_manager.py'
+      - 'tests/test_mod_manager.py'
       - 'docs/MOD_TESTING_SANDBOX.md'
       - '.github/workflows/mod-testing-sandbox.yml'
 
@@ -26,5 +30,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Run sandbox security and storage tests
         run: npm test --prefix tools/mod_testing_sandbox

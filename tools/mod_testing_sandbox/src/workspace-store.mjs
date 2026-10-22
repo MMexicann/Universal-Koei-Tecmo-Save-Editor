@@ -146,9 +146,12 @@ export async function verifyStoredDigests(item) {
 }
 
 export async function removeStagedMod(storageKey) {
-  const removedFromMemory = memoryFallback.delete(storageKey);
+  const indexedDBAvailable = Boolean(globalThis.indexedDB);
   const db = await openDatabase();
-  if (!db) return removedFromMemory;
+  if (!db) {
+    if (indexedDBAvailable) return false;
+    return memoryFallback.delete(storageKey);
+  }
   return new Promise((resolve) => {
     let transaction;
     try { transaction = db.transaction(STORE, "readwrite"); }
@@ -158,22 +161,26 @@ export async function removeStagedMod(storageKey) {
     request.onsuccess = () => {
       for (const key of request.result) if (typeof key === "string" && key.startsWith(`${storageKey}/`)) store.delete(key);
     };
-    transaction.oncomplete = () => { db.close(); resolve(true); };
+    transaction.oncomplete = () => { memoryFallback.delete(storageKey); db.close(); resolve(true); };
     transaction.onerror = () => { db.close(); resolve(false); };
     transaction.onabort = () => { db.close(); resolve(false); };
   });
 }
 
 export async function clearStagedMods() {
-  memoryFallback.clear();
+  const indexedDBAvailable = Boolean(globalThis.indexedDB);
   const db = await openDatabase();
-  if (!db) return true;
+  if (!db) {
+    if (indexedDBAvailable) return false;
+    memoryFallback.clear();
+    return true;
+  }
   return new Promise((resolve) => {
     let transaction;
     try { transaction = db.transaction(STORE, "readwrite"); }
     catch { db.close(); resolve(false); return; }
     transaction.objectStore(STORE).clear();
-    transaction.oncomplete = () => { db.close(); resolve(true); };
+    transaction.oncomplete = () => { memoryFallback.clear(); db.close(); resolve(true); };
     transaction.onerror = () => { db.close(); resolve(false); };
     transaction.onabort = () => { db.close(); resolve(false); };
   });
@@ -182,11 +189,18 @@ export async function clearStagedMods() {
 /** Remove only the selected game/build workspace, preserving other profiles. */
 export async function clearStagedProfile(gameId, gameVersion) {
   const prefix = `workspaces/${gameId}/${encodeURIComponent(gameVersion)}/`;
-  for (const [storageKey, item] of memoryFallback) {
-    if (item.metadata.gameId === gameId && item.metadata.gameVersion === gameVersion) memoryFallback.delete(storageKey);
-  }
+  const clearMemoryProfile = () => {
+    for (const [storageKey, item] of memoryFallback) {
+      if (item.metadata.gameId === gameId && item.metadata.gameVersion === gameVersion) memoryFallback.delete(storageKey);
+    }
+  };
+  const indexedDBAvailable = Boolean(globalThis.indexedDB);
   const db = await openDatabase();
-  if (!db) return true;
+  if (!db) {
+    if (indexedDBAvailable) return false;
+    clearMemoryProfile();
+    return true;
+  }
   return new Promise((resolve) => {
     let transaction;
     try { transaction = db.transaction(STORE, "readwrite"); }
@@ -196,7 +210,7 @@ export async function clearStagedProfile(gameId, gameVersion) {
     request.onsuccess = () => {
       for (const key of request.result) if (typeof key === "string" && key.startsWith(prefix)) store.delete(key);
     };
-    transaction.oncomplete = () => { db.close(); resolve(true); };
+    transaction.oncomplete = () => { clearMemoryProfile(); db.close(); resolve(true); };
     transaction.onerror = () => { db.close(); resolve(false); };
     transaction.onabort = () => { db.close(); resolve(false); };
   });

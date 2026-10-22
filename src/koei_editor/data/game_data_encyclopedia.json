@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "dataset_license": "MIT",
-  "dataset_license_note": "This feed preserves the upstream MIT attribution for its native character and weapon labels. The repository license does not replace the pinned source notice.",
+  "dataset_license": "source-specific",
+  "dataset_license_note": "This feed combines sources with different terms. MIT-derived ID/name mappings retain their cited MIT notices; wiki-derived mechanics summaries are paraphrased adaptations under CC BY-SA 3.0. Per-source license and attribution metadata identify terms for each fact; no single blanket license is asserted.",
   "sources": [
     {
       "id": "local-profile-registry",
@@ -11,7 +11,10 @@
       "license_uri": "https://opensource.org/license/mit",
       "revision": "cede8a91a7ce5d150d0b2d88a71120ac02bd821a",
       "attribution": "MMexicann",
-      "scope": "Exact game ID, edition label, and platform for this checkout."
+      "scope": "Exact game ID, edition label, and platform for this checkout.",
+      "game_ids": [
+        "three_hopes"
+      ]
     },
     {
       "id": "few2-binary-templates",
@@ -21,7 +24,84 @@
       "license_uri": "https://opensource.org/license/mit",
       "revision": "9b6e9946e5a33e182f80fbe3553e7c2afbebbdcb",
       "attribution": "Copyright (c) 2022 SilentLuna",
-      "scope": "Character and weapon ID/name facts. The template implementation is not redistributed."
+      "scope": "Character and weapon ID/name facts. The template implementation is not redistributed.",
+      "game_ids": [
+        "three_hopes"
+      ]
+    },
+    {
+      "id": "hyrule-wiiu-profile-registry",
+      "title": "Universal Koei Tecmo Save Editor profile registry",
+      "uri": "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/1d86de1b78195d873a59bffb2c1de20befe6c473/src/koei_editor/game_registry.py",
+      "license": "MIT",
+      "license_uri": "https://opensource.org/license/mit",
+      "revision": "1d86de1b78195d873a59bffb2c1de20befe6c473",
+      "attribution": "MMexicann",
+      "scope": "Exact Hyrule Warriors game ID, title, Wii U edition label, and platform for the reviewed profile.",
+      "game_ids": [
+        "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "game.profile",
+        "entity.game_id",
+        "entity.edition"
+      ]
+    },
+    {
+      "id": "hyrule-wiiu-catalog",
+      "title": "Hyrule Warriors Wii U named format facts — MarcRobledo/savegame-editors",
+      "uri": "https://github.com/MarcRobledo/savegame-editors/tree/b4db8cd11157c6d5ae54a0a5edc88dba82aebe9d",
+      "license": "MIT",
+      "license_uri": "https://opensource.org/license/mit",
+      "revision": "b4db8cd11157c6d5ae54a0a5edc88dba82aebe9d",
+      "attribution": "Copyright (c) 2017-2023 Marc Robledo",
+      "scope": "Native item/material, named weapon, and weapon-skill numeric ID/name mappings; source-marked unknown/reserved weapons and the blank skill slot are excluded. Implementation code is not redistributed.",
+      "game_ids": [
+        "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "entity.kind",
+        "entity.native_id",
+        "entity.name"
+      ]
+    },
+    {
+      "id": "koeitecmo-wiki-weapon-skills",
+      "title": "Weapon Skills (Hyrule Warriors) — Koei Tecmo Wiki",
+      "uri": "https://koeitecmo.wiki/wiki/Weapon_Skills_(Hyrule_Warriors)?oldid=525135",
+      "license": "CC BY-SA 3.0",
+      "license_uri": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "accessed_on": "2026-10-22",
+      "attribution": "Koei Tecmo Wiki contributors: Sake neko, Humble Novice, Ixbran, Thomas04, Jarie Suisen, Folt99, Jexithehunter, Tastymeatball, Seralla.",
+      "scope": "Short paraphrased factual summaries of Wii U weapon-skill behavior; no prose copied verbatim.",
+      "revision": "525135",
+      "game_ids": [
+        "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "entity.kind",
+        "entity.name",
+        "entity.summary"
+      ]
+    },
+    {
+      "id": "koeitecmo-wiki-adventure-mode",
+      "title": "Adventure Mode (Hyrule Warriors) — Koei Tecmo Wiki",
+      "uri": "https://koeitecmo.wiki/wiki/Adventure_Mode_(Hyrule_Warriors)?oldid=513185",
+      "license": "CC BY-SA 3.0",
+      "license_uri": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "accessed_on": "2026-10-22",
+      "attribution": "Koei Tecmo Wiki contributors: Sake neko, Humble Novice, Kyosei, Ixbran, Jarie Suisen, Catonfire26, Lapideus, Tailikku.",
+      "scope": "Short paraphrased fact about Adventure Mode board structure and objective for the Wii U profile; no prose copied verbatim.",
+      "revision": "513185",
+      "game_ids": [
+        "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "entity.kind",
+        "entity.name",
+        "entity.summary"
+      ]
     }
   ],
   "games": [
@@ -32,6 +112,14 @@
       "platform": "Nintendo Switch",
       "profile_source_id": "local-profile-registry",
       "scope_note": "Initial feed contains native character and weapon ID/name mappings only. Character names do not establish recruitability, route availability, class, stats, effects, or entitlement."
+    },
+    {
+      "id": "hyrule_warriors",
+      "title": "HYRULE WARRIORS",
+      "edition": "Wii U · APP.BIN",
+      "platform": "Wii U",
+      "profile_source_id": "hyrule-wiiu-profile-registry",
+      "scope_note": "Player-facing material, named weapon, and nonblank skill ID/name mappings plus three source-linked mechanics summaries. Placeholder/reserved catalog entries are excluded; this is not complete gameplay coverage or a claim about other editions."
     }
   ],
   "entities": [
@@ -3303,6 +3391,4131 @@
         "kind": "few2-binary-templates",
         "native_id": "few2-binary-templates",
         "name": "few2-binary-templates"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:000",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 0,
+      "name": "Metal Plate",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:001",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 1,
+      "name": "Monster Tooth",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:002",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 2,
+      "name": "Old Rag",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:003",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 3,
+      "name": "Soldier's Uniform",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:004",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 4,
+      "name": "Rock",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:005",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 5,
+      "name": "Aeralfos Leather",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:006",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 6,
+      "name": "Fiery Aeralfos Leather",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:007",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 7,
+      "name": "Gibdo Bandage",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:008",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 8,
+      "name": "ReDead Bandage",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:009",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 9,
+      "name": "Lizalfos Scale",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:010",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 10,
+      "name": "Dinolfos Fang",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:011",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 11,
+      "name": "Moblin Flank",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:012",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 12,
+      "name": "Shield-Moblin Helmet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:013",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 13,
+      "name": "Piece of Darknut Armor",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:014",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 14,
+      "name": "Stalmaster Wrist Bone",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:015",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 15,
+      "name": "Big Poe Necklace",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:016",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 16,
+      "name": "Essence of Icy Big Poe",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:017",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 17,
+      "name": "Hylian Captain Gauntlet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:018",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 18,
+      "name": "Goron Armor Breastplate",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:019",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 19,
+      "name": "Ganon's Mane",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:020",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 20,
+      "name": "King Dodongo's Claws",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:021",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 21,
+      "name": "Gohma's Acid",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:022",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 22,
+      "name": "Manhandla's Toxic Dust",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:023",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 23,
+      "name": "Argorok's Embers",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:024",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 24,
+      "name": "The Imprisoned's Scales",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:025",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 25,
+      "name": "Cia's Bracelet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:026",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 26,
+      "name": "Volga's Helmet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:027",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 27,
+      "name": "Wizzro's Robe",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:028",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 28,
+      "name": "Link's Boots",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:029",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 29,
+      "name": "Lana's Hair Clip",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:030",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 30,
+      "name": "Zelda's Brooch",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:031",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 31,
+      "name": "Impa's Hair Band",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:032",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 32,
+      "name": "Ganondorf's Gauntlet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:033",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 33,
+      "name": "Sheik's Kunai",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:034",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 34,
+      "name": "Darunia's Spikes",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:035",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 35,
+      "name": "Ruto's Earrings",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:036",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 36,
+      "name": "Agitha's Basket",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:037",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 37,
+      "name": "Midna's Hair",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:038",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 38,
+      "name": "Fi's Heels",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:039",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 39,
+      "name": "Ghirahim's Sash",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:040",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 40,
+      "name": "Zant's Magic Gem",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:041",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 41,
+      "name": "Round Aeralfos Shield",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:042",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 42,
+      "name": "Fiery Aeralfos Wing",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:043",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 43,
+      "name": "Heavy Gibdo Sword",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:044",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 44,
+      "name": "ReDead Knight Ashes",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:045",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 45,
+      "name": "Lizalfos Gauntlet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:046",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 46,
+      "name": "Dinolfos Arm Guard",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:047",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 47,
+      "name": "Moblin Spear",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:048",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 48,
+      "name": "Metal Moblin Shield",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:049",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 49,
+      "name": "Large Darknut Sword",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:050",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 50,
+      "name": "Stalmaster's Skull",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:051",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 51,
+      "name": "Big Poe's Lantern",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:052",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 52,
+      "name": "Icy Big Poe's Talisman",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:053",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 53,
+      "name": "Holy Hylian Shield",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:054",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 54,
+      "name": "Thick Goron Helmet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:055",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 55,
+      "name": "Ganon's Fang",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:056",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 56,
+      "name": "King Dodongo's Crystal",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:057",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 57,
+      "name": "Gohma's Lens",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:058",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 58,
+      "name": "Manhandla's Sapling",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:059",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 59,
+      "name": "Argorok's Stone",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:060",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 60,
+      "name": "The Imprisoned's Pillar",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:061",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 61,
+      "name": "Cia's Staff",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:062",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 62,
+      "name": "Volga's Dragon Spear",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:063",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 63,
+      "name": "Wizzro's Ring",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:064",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 64,
+      "name": "Link's Scarf",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:065",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 65,
+      "name": "Lana's Cloak",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:066",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 66,
+      "name": "Zelda's Tiara",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:067",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 67,
+      "name": "Impa's Breastplate",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:068",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 68,
+      "name": "Ganondorf's Jewel",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:069",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 69,
+      "name": "Sheik's Turban",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:070",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 70,
+      "name": "Darunia's Bracelet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:071",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 71,
+      "name": "Ruto's Scale",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:072",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 72,
+      "name": "Agitha's Pendant",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:073",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 73,
+      "name": "Midna's Fused Shadow",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:074",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 74,
+      "name": "Fi's Crystal",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:075",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 75,
+      "name": "Ghirahim's Cape",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:material:076",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "material",
+      "native_id": 76,
+      "name": "Zant's Helmet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:000",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 0,
+      "name": "Knight's Sword (Link - Hylian Sword Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:001",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 1,
+      "name": "White Sword (Link - Hylian Sword Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:002",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 2,
+      "name": "Magical Sword (Link - Hylian Sword Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:003",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 3,
+      "name": "Fire Rod (Link - Magic Rod Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:004",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 4,
+      "name": "Prism Rod (Link - Magic Rod Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:005",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 5,
+      "name": "Magical Rod (Link - Magic Rod Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:006",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 6,
+      "name": "Great Fountain Fairy (Link - Great Fairy Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:007",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 7,
+      "name": "Great Forest Fairy (Link - Great Fairy Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:008",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 8,
+      "name": "Great Sky Fairy (Link - Great Fairy Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:009",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 9,
+      "name": "Silver Gauntlets (Link - Gauntlets Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:010",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 10,
+      "name": "Golden Gauntlets (Link - Gauntlets Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:011",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 11,
+      "name": "Power Gloves (Link - Gauntlets Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:012",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 12,
+      "name": "Spirit's Tome (Lana - Book of Sorcery Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:013",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 13,
+      "name": "Sealing Tome (Lana - Book of Sorcery Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:014",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 14,
+      "name": "Sorceress Tome (Lana - Book of Sorcery Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:015",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 15,
+      "name": "Deku Spear (Lana - Spear Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:016",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 16,
+      "name": "Kokiri Spear (Lana - Spear Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:017",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 17,
+      "name": "Faron Spear (Lana - Spear Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:018",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 18,
+      "name": "Gate of Time (Lana - Summoning Gate Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:019",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 19,
+      "name": "Guardian's Gate (Lana - Summoning Gate Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:020",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 20,
+      "name": "Gate of Souls (Lana - Summoning Gate Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:021",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 21,
+      "name": "Polished Rapier (Zelda - Rapier Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:022",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 22,
+      "name": "Glittering Rapier (Zelda - Rapier Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:023",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 23,
+      "name": "Gleaming Rapier (Zelda - Rapier Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:024",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 24,
+      "name": "Wind Waker (Zelda - Baton Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:025",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 25,
+      "name": "Sacred Baton (Zelda - Baton Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:026",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 26,
+      "name": "Glorious Baton (Zelda - Baton Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:027",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 27,
+      "name": "Giant's Knife (Impa - Giant Blade Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:028",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 28,
+      "name": "Biggoron's Knife (Impa - Giant Blade Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:029",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 29,
+      "name": "Biggoron's Sword (Impa - Giant Blade Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:030",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 30,
+      "name": "Guardian Naginata (Impa - Naginata Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:031",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 31,
+      "name": "Scorching Naginata (Impa - Naginata Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:032",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 32,
+      "name": "Sheikah Naginata (Impa - Naginata Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:033",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 33,
+      "name": "Swords of Despair (Ganondorf - Great Swords Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:034",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 34,
+      "name": "Swords of Darkness (Ganondorf - Great Swords Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:035",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 35,
+      "name": "Swords of Demise (Ganondorf - Great Swords Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:036",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 36,
+      "name": "Goddess's Harp (Sheik - Harp Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:037",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 37,
+      "name": "Typhoon Harp (Sheik - Harp Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:038",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 38,
+      "name": "Triforce Harp (Sheik - Harp Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:039",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 39,
+      "name": "Magic Hammer (Darunia - Hammer Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:040",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 40,
+      "name": "Igneous Hammer (Darunia - Hammer Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:041",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 41,
+      "name": "Megaton Hammer (Darunia - Hammer Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:042",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 42,
+      "name": "Silver Scale (Ruto - Zora Scale Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:043",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 43,
+      "name": "Golden Scale (Ruto - Zora Scale Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:044",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 44,
+      "name": "Water Dragon Scale (Ruto - Zora Scale Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:045",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 45,
+      "name": "Butterfly Parasol (Agitha - Parasol Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:046",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 46,
+      "name": "Luna Parasol (Agitha - Parasol Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:047",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 47,
+      "name": "Princess Parasol (Agitha - Parasol Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:048",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 48,
+      "name": "Cursed Shackle (Midna - Shackle Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:049",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 49,
+      "name": "Twilight Shackle (Midna - Shackle Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:050",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 50,
+      "name": "Sol Shackle (Midna - Shackle Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:051",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 51,
+      "name": "Goddess Sword (Fi - Goddess Blade Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:052",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 52,
+      "name": "Goddess Longsword (Fi - Goddess Blade Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:053",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 53,
+      "name": "True Goddess Blade (Fi - Goddess Blade Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:054",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 54,
+      "name": "Demon Tribe Sword (Ghirahim - Demon Blade Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:055",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 55,
+      "name": "Demon Longsword (Ghirahim - Demon Blade Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:056",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 56,
+      "name": "True Demon Blade (Ghirahim - Demon Blade Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:057",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 57,
+      "name": "Usurper's Scimitars (Zant - Scimitars Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:058",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 58,
+      "name": "Shadow Scimitars (Zant - Scimitars Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:059",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 59,
+      "name": "Scimitars of Twilight (Zant - Scimitars Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:061",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 61,
+      "name": "Master Sword (Link - Master Sword)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:062",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 62,
+      "name": "8-Bit Wooden Sword (Link - Hylian Sword Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:063",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 63,
+      "name": "8-Bit Candle (Link - Magic Rod Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:064",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 64,
+      "name": "8-Bit Fairy (Link - Great Fairy Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:065",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 65,
+      "name": "8-Bit Power Bracelets (Link - Gauntlets Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:066",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 66,
+      "name": "8-Bit Book of Magic (Lana - Book of Sorcery Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:067",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 67,
+      "name": "8-Bit Magical Rod? (Lana - Spear Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:068",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 68,
+      "name": "8-Bit Compass (Lana - Summoning Gate Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:069",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 69,
+      "name": "8-Bit White Sword? (Zelda - Rapier Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:070",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 70,
+      "name": "8-Bit Recorder (Zelda - Baton Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:071",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 71,
+      "name": "8-Bit Boomerang? (Impa - Giant Blade Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:072",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 72,
+      "name": "8-Bit Magical Sword? (Impa - Naginata Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:073",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 73,
+      "name": "8-Bit Magical Keys (Ganondorf - Great Swords Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:074",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 74,
+      "name": "8-Bit Stepladder (Sheik - Harp Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:075",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 75,
+      "name": "8-Bit Food (Darunia - Hammer Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:076",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 76,
+      "name": "8-Bit Clock (Ruto - Zora Scale Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:077",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 77,
+      "name": "8-Bit Rupee (Agitha - Parasol Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:078",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 78,
+      "name": "8-Bit Red Ring (Midna - Shackle Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:079",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 79,
+      "name": "8-Bit Silver Arrow (Fi - Goddess Blade Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:080",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 80,
+      "name": "8-Bit Arrow (Ghirahim - Demon Blade Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:081",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 81,
+      "name": "8-Bit Magic Boomerangs (Zant - Scimitars Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:082",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 82,
+      "name": "Scepter of Time (Cia - Scepter Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:083",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 83,
+      "name": "Guardian's Scepter (Cia - Scepter Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:084",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 84,
+      "name": "Scepter of Souls (Cia - Scepter Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:085",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 85,
+      "name": "Dragonbone Pike (Volga - Dragon Spear Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:086",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 86,
+      "name": "Stonecleaver Claw (Volga - Dragon Spear Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:087",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 87,
+      "name": "Flesh-Render Fang (Volga - Dragon Spear Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:088",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 88,
+      "name": "Blue Ring (Wizzro - Ring Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:089",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 89,
+      "name": "Red Ring (Wizzro - Ring Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:090",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 90,
+      "name": "Magical Ring (Wizzro - Ring Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:091",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 91,
+      "name": "Epona (Link - Horse Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:092",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 92,
+      "name": "Twilight Epona (Link - Horse Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:093",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 93,
+      "name": "Epona of Time (Link - Horse Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:094",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 94,
+      "name": "Mirror of Shadows (Twili Midna - Mirror Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:095",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 95,
+      "name": "Mirror of Silence (Twili Midna - Mirror Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:096",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 96,
+      "name": "Mirror of Twilight (Twili Midna - Mirror Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:097",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 97,
+      "name": "Ancient Spinner (Link - Spinner Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:098",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 98,
+      "name": "Enhanced Spinner (Link - Spinner Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:099",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 99,
+      "name": "Triforce Spinner (Link - Spinner Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:100",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 100,
+      "name": "Old Dominion Rod (Zelda - Dominion Rod Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:101",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 101,
+      "name": "High Dominion Rod (Zelda - Dominion Rod Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:102",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 102,
+      "name": "Royal Dominion Rod (Zelda - Dominion Rod Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:103",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 103,
+      "name": "Fierce Deity Mask (Young Link - Mask Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:104",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 104,
+      "name": "Furious Deity Mask (Young Link - Mask Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:105",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 105,
+      "name": "Vengeful Deity Mask (Young Link - Mask Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:106",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 106,
+      "name": "Rosy Balloon (Tingle - Balloon Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:107",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 107,
+      "name": "Love-Filled Balloon (Tingle - Balloon Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:108",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 108,
+      "name": "Mr. Fairy Balloon (Tingle - Balloon Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:111",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 111,
+      "name": "Thief's Trident (Ganondorf - Trident Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:112",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 112,
+      "name": "King of Evil Trident (Ganondorf - Trident Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:113",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 113,
+      "name": "Trident of Demise (Ganondorf - Trident Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:114",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 114,
+      "name": "Simple Crossbows (Linkle - Crossbows Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:115",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 115,
+      "name": "Hylian Crossbows (Linkle - Crossbows Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:116",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 116,
+      "name": "Legend's Crossbows (Linkle - Crossbows Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:117",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 117,
+      "name": "Fairy Ocarina (Skull Kid - Ocarina Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:118",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 118,
+      "name": "Lunar Ocarina (Skull Kid - Ocarina Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:119",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 119,
+      "name": "Majora's Ocarina (Skull Kid - Ocarina Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:120",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 120,
+      "name": "Hero's Sword (Toon Link - Light Sword Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:121",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 121,
+      "name": "Phantom Sword (Toon Link - Light Sword Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:122",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 122,
+      "name": "Lokomo Sword (Toon Link - Light Sword Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:123",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 123,
+      "name": "Pirate Cutlass (Tetra - Cutlass Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:124",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 124,
+      "name": "Jeweled Cutlass (Tetra - Cutlass Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:125",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 125,
+      "name": "Regal Cutlass (Tetra - Cutlass Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:126",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 126,
+      "name": "Windfall Sail (King Daphnes - Sail Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:127",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 127,
+      "name": "Swift Sail (King Daphnes - Sail Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:128",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 128,
+      "name": "Sail of Red Lions (King Daphnes - Sail Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:129",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 129,
+      "name": "Sacred Harp (Medli - Rito Harp Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:130",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 130,
+      "name": "Earth God's Harp (Medli - Rito Harp Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:131",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 131,
+      "name": "Din's Harp (Medli - Rito Harp Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:132",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 132,
+      "name": "Sea Lily's Bell (Marin - Bell Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:133",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 133,
+      "name": "Wavelet Bell (Marin - Bell Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:134",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 134,
+      "name": "Awakening Bell (Marin - Bell Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:135",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 135,
+      "name": "Winged Boots (Linkle - Boots Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:136",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 136,
+      "name": "Roc Boots (Linkle - Boots Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:137",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 137,
+      "name": "Pegasus Boots (Linkle - Boots Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:138",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 138,
+      "name": "Protector Sword (Toon Zelda - Sword Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:139",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 139,
+      "name": "Warp Sword (Toon Zelda - Sword Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:140",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 140,
+      "name": "Wrecker Sword (Toon Zelda - Sword Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:141",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 141,
+      "name": "Sand Wand (Toon Link - Wand Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:142",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 142,
+      "name": "Jeweled Sand Wand (Toon Link - Wand Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:143",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 143,
+      "name": "Nice Sand Wand (Toon Link - Wand Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:144",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 144,
+      "name": "Wooden Hammer (Ravio - Rental Hammer Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:145",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 145,
+      "name": "White Bunny Hammer (Ravio - Rental Hammer Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:146",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 146,
+      "name": "Nice Hammer (Ravio - Rental Hammer Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:147",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 147,
+      "name": "Wooden Frame (Yuga - Picture Frame Level 1)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:148",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 148,
+      "name": "Frame of Sealing (Yuga - Picture Frame Level 2)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:weapon:149",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "weapon",
+      "native_id": 149,
+      "name": "Demon King's Frame (Yuga - Picture Frame Level 3)",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:001",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 1,
+      "name": "Strong Att.+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:002",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 2,
+      "name": "Strength II",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:003",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 3,
+      "name": "Strength III",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:004",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 4,
+      "name": "Strength IV",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:005",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 5,
+      "name": "Strength V",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:006",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 6,
+      "name": "Strength VI",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:007",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 7,
+      "name": "Fire+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:008",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 8,
+      "name": "Water+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:009",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 9,
+      "name": "Lightning+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:010",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 10,
+      "name": "Light+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:011",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 11,
+      "name": "Darkness+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:012",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 12,
+      "name": "VS Legend",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:013",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 13,
+      "name": "VS Time",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:014",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 14,
+      "name": "VS Twilight",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:015",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 15,
+      "name": "VS Skyward",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:016",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 16,
+      "name": "VS Sorceress",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:017",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 17,
+      "name": "VS Beast",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:018",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 18,
+      "name": "VS Dragon",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:019",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 19,
+      "name": "VS Undead",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:020",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 20,
+      "name": "VS Soldier",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:021",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 21,
+      "name": "VS Ganon",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:022",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 22,
+      "name": "EXP+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:023",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 23,
+      "name": "Rupees+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:024",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 24,
+      "name": "Materials+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:025",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 25,
+      "name": "Slots+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:026",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 26,
+      "name": "Stars+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:027",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 27,
+      "name": "Hearts+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:028",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 28,
+      "name": "Health+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:029",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 29,
+      "name": "Special+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:030",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 30,
+      "name": "Bombs+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:031",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 31,
+      "name": "Arrows+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:032",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 32,
+      "name": "Boomerang+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:033",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 33,
+      "name": "Hookshot+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:034",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 34,
+      "name": "One-Hit Kill",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:035",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 35,
+      "name": "Sturdy Feet",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:036",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 36,
+      "name": "Regen",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:037",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 37,
+      "name": "Defenseless",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:038",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 38,
+      "name": "No Healing",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:039",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 39,
+      "name": "Adversity",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:040",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 40,
+      "name": "Compatriot",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:041",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 41,
+      "name": "Evil's Bane",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:042",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 42,
+      "name": "Legendary",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:043",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 43,
+      "name": "Special Attack+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:044",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 44,
+      "name": "Finishing Blow+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:045",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 45,
+      "name": "Regular Attack+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:046",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 46,
+      "name": "Heart-strong",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:047",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 47,
+      "name": "Focus Spirit+",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:skill:048",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "skill",
+      "native_id": 48,
+      "name": "Hasty Attacks",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "hyrule-wiiu-catalog",
+        "native_id": "hyrule-wiiu-catalog",
+        "name": "hyrule-wiiu-catalog"
+      }
+    },
+    {
+      "id": "hyrule_warriors:mechanic:weapon-skill-effects-transfer",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "mechanic",
+      "name": "Weapon skill effects and transfer",
+      "summary": "Weapon skills are attributes that can improve combat, amplify elemental effects, or change drops. The source describes moving a skill between weapons at the Smithy as requiring an open slot and a fee.",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "koeitecmo-wiki-weapon-skills",
+        "name": "koeitecmo-wiki-weapon-skills",
+        "summary": "koeitecmo-wiki-weapon-skills"
+      }
+    },
+    {
+      "id": "hyrule_warriors:mechanic:weapon-skill-ko-unlock",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "mechanic",
+      "name": "Weapon skill KO unlocks",
+      "summary": "Some weapon skills unlock after the weapon reaches a required KO count; the skill cannot be transferred until its seal is broken.",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "koeitecmo-wiki-weapon-skills",
+        "name": "koeitecmo-wiki-weapon-skills",
+        "summary": "koeitecmo-wiki-weapon-skills"
+      }
+    },
+    {
+      "id": "hyrule_warriors:mechanic:adventure-map-objective",
+      "game_id": "hyrule_warriors",
+      "edition": "Wii U · APP.BIN",
+      "kind": "mechanic",
+      "name": "Adventure Mode map objective",
+      "summary": "Adventure Mode places battles on a 16-by-8 board modeled on the original Zelda map. The described goal on each map is to find the key to the boss dungeon and defeat its boss.",
+      "field_sources": {
+        "game_id": "hyrule-wiiu-profile-registry",
+        "edition": "hyrule-wiiu-profile-registry",
+        "kind": "koeitecmo-wiki-adventure-mode",
+        "name": "koeitecmo-wiki-adventure-mode",
+        "summary": "koeitecmo-wiki-adventure-mode"
       }
     }
   ]

@@ -6,9 +6,12 @@
 - **New identity:** Universal Koei Tecmo Save Editor becomes **Universal Koei Tecmo
   Game Toolkit**. v1.0 is a branding version reset after v3.1; earlier releases,
   repository history and existing save-editing support are retained.
-- **Reference data:** an initial Three Hopes Switch character and weapon ID/name
-  feed is bundled as read-only reference data. A browsing interface and Character Workshop
-  integration are not available yet.
+- **Strategy views:** read-only Scenario View cards show existing province, city,
+  officer and military-district records across six strategy profiles. Editing
+  remains limited to each profile’s existing controls.
+- **Integration groundwork:** a DW3 Remastered Steam achievement backend and
+  edition-scoped Three Hopes/Hyrule Warriors reference data. Achievement lookup,
+  encyclopedia browsing and Character Workshop interfaces are still pending.
 - **Existing toolkit capabilities:** save editing, dashboards, Save Library/Doctor/Vault,
   comparison, scoped conversion, presets, reviewed automation and community plugins
   continue under the new name, with backups, Undo and Review Changes.

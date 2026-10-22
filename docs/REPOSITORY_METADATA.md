@@ -39,12 +39,13 @@ On 2026-10-22, the latest published release is **Save Editor v3.1**. Its assets 
 an EXE, Windows ZIP, Source ZIP, `SHA256SUMS.txt` and `DefenderScan-v3.1.json`.
 The README links to those existing assets and labels v1.0 as pending.
 
-The reviewed source baseline is `1d86de1b78195d873a59bffb2c1de20befe6c473`,
-including the Three Hopes reference feed. It has 98 game/platform editing
-profiles across 15 save platforms and 145 scoped conversion routes. That feed
-adds reference data, not a game profile, browsing UI or Character Workshop.
-PRs #110, #111, #112 and #114 were open when this preparation began; their
-features are excluded from these notes pending review and integration.
+The reviewed source baseline is `c77e1beeddc195298c68ce18301d27373408d46e`.
+It includes read-only Scenario View cards for six existing strategy profiles,
+the opt-in DW3 Steam achievement backend, and Three Hopes/Hyrule Warriors Wii U
+reference data. There is no achievement-lookup UI, encyclopedia browser or
+Character Workshop yet. Coverage remains 98 game/platform editing profiles,
+15 save platforms and 145 scoped conversion routes. Other development PRs
+remain outside these notes until accepted and reviewed.
 This is a presentation review, not completion evidence for all 26 workstreams.
 
 **Historical tag conflict:** `v1.0` already points to

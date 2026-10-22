@@ -29,7 +29,8 @@ def build_args(root=ROOT, *, standalone=False):
     for source, destination in DATA:
         args.extend(['--add-data', str(root / source) + os.pathsep + destination])
     for game in ALL_ADAPTERS:
-        for module in dict.fromkeys((game.editor_module, game.parser_module, game.scalar_backend)):
+        for module in dict.fromkeys((game.editor_module, game.parser_module,
+                                     game.scalar_backend, game.achievement_source)):
             if module is not None:
                 args.extend(['--hidden-import', module])
     for endpoint in ENDPOINTS.values():

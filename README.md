@@ -62,9 +62,12 @@ region, required files and available controls.
 ## What's changing for v1.0
 
 - A new **Game Toolkit** identity for the existing save tools and workflows.
-- An initial [Three Hopes reference-data feed](docs/GAME_DATA_ENCYCLOPEDIA.md)
-  for character and weapon ID/name mappings in development source. It has no
-  browsing interface or Character Workshop integration yet.
+- Read-only **Scenario View** cards for six existing strategy profiles.
+  [Scope and limits](docs/SCENARIO_ARMY_EDITOR_REPORT.md).
+- Integration groundwork in source: a DW3 Steam achievement provider and
+  [Three Hopes/Hyrule Warriors reference data](docs/GAME_DATA_ENCYCLOPEDIA.md).
+  Achievement lookup and encyclopedia browsing interfaces are still pending;
+  these additions do not expand save-editing support.
 
 No additional game profiles or platforms have been integrated since v3.1.
 Features still under review are excluded. See the [pending v1.0 notes](docs/TOOLKIT_V1_RELEASE_NOTES.md)

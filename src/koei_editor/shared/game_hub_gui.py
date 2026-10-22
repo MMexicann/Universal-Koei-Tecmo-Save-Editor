@@ -119,6 +119,11 @@ class GameHubWorkspace:
             self._shown = True
             self.discover()
 
+    def focus_search(self):
+        self.search_entry.focus_set()
+        self.search_entry.selection_range(0, 'end')
+        return 'break'
+
     def _set_details(self, value):
         self.details.configure(state='normal')
         self.details.delete('1.0', 'end')

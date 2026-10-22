@@ -418,8 +418,8 @@
     },
     {
       "path": "docs/GAME_HUB_VALIDATION.md",
-      "bytes": 2825,
-      "sha256": "3594519e599605b77fb64edd3d5a8021b894f188783f6f73ff78bfbd4751bfac"
+      "bytes": 3302,
+      "sha256": "bb55c5010c9846e7cf8736ad0ddc317eb776697c7cdc389fcf9d9fd9da90507d"
     },
     {
       "path": "docs/GAME_MECHANICS.md",
@@ -1253,8 +1253,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 81230,
-      "sha256": "3d0e99e6b9e83e28257895df4a362c3ed8f0cb4387317071c666acb554ee19e9"
+      "bytes": 81509,
+      "sha256": "4751a8653f796b1d1cb95572958d988c9acc31b0a7717b3a1e10d3ef13e915a6"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3893,8 +3893,8 @@
     },
     {
       "path": "src/koei_editor/shared/game_hub_gui.py",
-      "bytes": 18876,
-      "sha256": "5e7efc74a961dddd0c1cbae389e1daf9b45cd85717dd52f3ed851b4e71213584"
+      "bytes": 19018,
+      "sha256": "479a300b8012d656c5427d78451f98ee24a49a6c00caf8c955310c009baed55a"
     },
     {
       "path": "src/koei_editor/shared/game_troubleshooting.py",
@@ -4228,8 +4228,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42172,
-      "sha256": "9c8eadad99222aa73ecdaf4d52a3709fee3e5c3e31b11ad217168debcc43cc5a"
+      "bytes": 42644,
+      "sha256": "031760256344cb7f08cc9f8c231ef09a1488f2316c77c4cba9ad9f181ef10e83"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4853,8 +4853,8 @@
     },
     {
       "path": "tests/test_game_hub_gui.py",
-      "bytes": 8025,
-      "sha256": "1141183c5c9a1cf40018185ed4e0100681c1f64b3c93cda72e3964202384d530"
+      "bytes": 8577,
+      "sha256": "8355c55e303eca999c86f1fd63057fa9915769ce903454e352160ec161ff85c5"
     },
     {
       "path": "tests/test_game_troubleshooting.py",

@@ -54,6 +54,7 @@ _TEXTS = {
 _DIALOG_TEXTS = {
     'edit_title': ('Edit controller profile', 'Controllerprofil bearbeiten'),
     'new_title': ('New controller profile', 'Neues Controllerprofil'),
+    'blank_profile_name': ('Blank profile', 'Leeres Profil'),
     'profile_name': ('Profile name', 'Profilname'),
     'starter_preset': ('Starter preset', 'Startvorlage'),
     'controller_labels': ('Controller labels', 'Controller-Beschriftungen'),
@@ -75,6 +76,11 @@ _DIALOG_TEXTS = {
                      'Vorlagen sind Vorschläge, keine im Spiel bestätigten Standardbelegungen.'),
     'cancel': ('Cancel', 'Abbrechen'),
     'save': ('Save profile', 'Profil speichern'),
+    'layout_generic': ('Generic', 'Allgemein'),
+    'layout_xbox': ('Xbox labels', 'Xbox-Beschriftungen'),
+    'layout_playstation': ('PlayStation labels', 'PlayStation-Beschriftungen'),
+    'layout_nintendo': ('Nintendo labels', 'Nintendo-Beschriftungen'),
+    'layout_custom': ('Custom', 'Benutzerdefiniert'),
 }
 
 
@@ -168,6 +174,12 @@ class ControllerProfileWorkspace:
     def _dialog_text(self, key):
         value = _DIALOG_TEXTS[key]
         return value[1] if self.language == 'de' else value[0]
+
+    def _layout_label(self, layout_id):
+        return self._dialog_text(f'layout_{layout_id}')
+
+    def _layout_id_from_label(self, label):
+        return next((key for key in profiles.LAYOUTS if self._layout_label(key) == label), 'generic')
 
     def _label(self, parent, key, **kwargs):
         widget = ttk.Label(parent, text=self._tr(key), **kwargs)
@@ -306,11 +318,12 @@ class ControllerProfileWorkspace:
         dialog.geometry('720x600')
         body = ttk.Frame(dialog, padding=18)
         body.pack(fill='both', expand=True)
-        name = tk.StringVar(dialog, value=existing.name if existing else profiles.PRESETS['blank']['name'])
+        name = tk.StringVar(dialog, value=existing.name if existing else
+                            self._dialog_text('blank_profile_name'))
         preset_id = existing.preset_id if existing else 'blank'
         preset_label = self._preset_label(preset_id)
         preset_choice = tk.StringVar(dialog, value=preset_label)
-        layout = tk.StringVar(dialog, value=existing.layout if existing else 'generic')
+        layout = tk.StringVar(dialog, value=self._layout_label(existing.layout if existing else 'generic'))
         header = ttk.Frame(body)
         header.pack(fill='x')
         ttk.Label(header, text=self._dialog_text('profile_name')).grid(row=0, column=0, sticky='w')
@@ -326,7 +339,8 @@ class ControllerProfileWorkspace:
         preset_selector.grid(row=1, column=1, sticky='ew', padx=(0, 12))
         ttk.Label(header, text=self._dialog_text('controller_labels')).grid(row=0, column=2, sticky='w')
         layout_selector = ttk.Combobox(header, textvariable=layout,
-                                       values=tuple(profiles.LAYOUTS), state='readonly', width=16)
+                                       values=tuple(self._layout_label(key) for key in profiles.LAYOUTS),
+                                       state='readonly', width=24)
         layout_selector.grid(row=1, column=2, sticky='ew')
         for column in range(3):
             header.columnconfigure(column, weight=1)
@@ -381,7 +395,7 @@ class ControllerProfileWorkspace:
                 updated = profiles.Binding(action.get(), keyboard.get(), controller.get())
                 # Validate the row with a temporary one-action profile.
                 profiles.create_profile(self.game_id, name.get().strip() or 'Profile',
-                                        layout=layout.get(), bindings=(updated,))
+                                        layout=self._layout_id_from_label(layout.get()), bindings=(updated,))
             except profiles.ProfileError as error:
                 messagebox.showerror(self._dialog_text('invalid_binding'), str(error), parent=dialog)
                 return
@@ -428,7 +442,8 @@ class ControllerProfileWorkspace:
                 selected_preset = (existing.preset_id if existing else
                                    self._preset_id_from_label(preset_choice.get()))
                 profile = profiles.create_profile(
-                    self.game_id, name.get(), layout=layout.get(), bindings=tuple(rows),
+                    self.game_id, name.get(), layout=self._layout_id_from_label(layout.get()),
+                    bindings=tuple(rows),
                     preset_id=selected_preset,
                     profile_id=existing.profile_id if existing else None)
                 self.store.save_profile(profile)
@@ -448,7 +463,7 @@ class ControllerProfileWorkspace:
     def _apply_preset_to_dialog(self, preset_choice, layout, rows, redraw):
         preset_id = self._preset_id_from_label(preset_choice.get())
         preset = profiles.PRESETS[preset_id]
-        layout.set(preset['layout'])
+        layout.set(self._layout_label(preset['layout']))
         rows[:] = list(preset['bindings'])
         redraw()
 

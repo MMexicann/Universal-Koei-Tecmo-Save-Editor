@@ -64,6 +64,15 @@ class ControllerProfileValidationTests(unittest.TestCase):
         self.assertNotIn('Steam', str(path))
 
 
+class ControllerProfileLayoutLocalizationTests(unittest.TestCase):
+    def test_german_layout_labels_map_back_to_stable_storage_ids(self):
+        workspace = object.__new__(ControllerProfileWorkspace)
+        workspace.language = 'de'
+        self.assertEqual(workspace._layout_label('generic'), 'Allgemein')
+        self.assertEqual(workspace._layout_label('playstation'), 'PlayStation-Beschriftungen')
+        self.assertEqual(workspace._layout_id_from_label('Nintendo-Beschriftungen'), 'nintendo')
+
+
 class ControllerProfileStoreTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -320,6 +329,19 @@ class ControllerProfileWorkspaceTests(unittest.TestCase):
         dialog = next(widget for widget in self.root.winfo_children() if isinstance(widget, tk.Toplevel))
         self.assertEqual(dialog.title(), 'Neues Controllerprofil')
         self.assertEqual(workspace._preset_id_from_label('Tastaturvorlage WASD'), 'keyboard_wasd')
+        self.assertEqual(workspace._layout_label('generic'), 'Allgemein')
+        self.assertEqual(workspace._layout_id_from_label('PlayStation-Beschriftungen'), 'playstation')
+        descendants = list(dialog.winfo_children())
+        widgets = []
+        while descendants:
+            widget = descendants.pop()
+            widgets.append(widget)
+            descendants.extend(widget.winfo_children())
+        self.assertTrue(any(isinstance(widget, ttk.Entry) and widget.get() == 'Leeres Profil'
+                            for widget in widgets))
+        layout_selector = next(widget for widget in widgets if isinstance(widget, ttk.Combobox)
+                               and 'Allgemein' in widget.cget('values'))
+        self.assertEqual(layout_selector.get(), 'Allgemein')
         dialog.destroy()
 
     def test_edit_preserves_an_imported_custom_preset_identity(self):

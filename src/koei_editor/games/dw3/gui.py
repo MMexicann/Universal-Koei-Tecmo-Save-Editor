@@ -157,11 +157,12 @@ class Editor(Appearance):
         self.notebook = ttk.Notebook(outer, height=360)
         self.notebook.pack(fill='both', expand=True)
         self.tabs = {}
-        for name in ('Dashboard', 'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves'):
+        for name in ('Dashboard', 'Completion Companion', 'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves'):
             tab = ttk.Frame(self.notebook, padding=12)
             self.notebook.add(tab, text=name)
             self.tabs[name] = tab
         self.build_dashboard()
+        self.build_completion_companion()
         self.build_officers()
         self.build_items()
         self.build_weapons()
@@ -229,6 +230,12 @@ class Editor(Appearance):
                 'Dynasty Warriors 3 Remastered', note='Open a copied save to explore verified progression.'),
             on_navigate=self.navigate_dashboard, theme=self.theme_name.get())
         self.dashboard_view.pack(fill='both', expand=True)
+
+    def build_completion_companion(self):
+        from koei_editor.shared.completion_checklist_view import CompletionChecklistView
+        self.completion_companion_view = CompletionChecklistView(
+            self.tabs['Completion Companion'], 'dw3')
+        self.completion_companion_view.pack(fill='both', expand=True)
 
     def refresh_dashboard(self):
         from koei_editor.shared.progression import ProgressionDashboard

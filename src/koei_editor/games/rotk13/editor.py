@@ -5,6 +5,8 @@ from koei_editor.shared.verified_gui import Editor as ScalarEditor
 
 
 class XIIIPresentation(ScalarPresentation):
+    scenario_view_title = 'Scenario View'
+
     def inspection_tables(self, document):
         cities = backend.cities(document)
         rows = tuple((row['id'],

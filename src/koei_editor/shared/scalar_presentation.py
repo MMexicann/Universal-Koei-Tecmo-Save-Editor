@@ -13,6 +13,7 @@ class InspectionTable:
 class ScalarPresentation:
     """Default hooks use optional backend hints; they never parse or write files."""
     extra_groups = ()
+    scenario_view_title = None
 
     def __init__(self, backend, game_id):
         self.backend, self.game_id = backend, game_id

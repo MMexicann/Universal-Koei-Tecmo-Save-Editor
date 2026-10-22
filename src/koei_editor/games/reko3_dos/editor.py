@@ -5,6 +5,8 @@ from koei_editor.shared.verified_gui import Editor as ScalarEditor
 
 
 class Presentation(ScalarPresentation):
+    scenario_view_title = 'Scenario View'
+
     def inspection_tables(self, document):
         return (InspectionTable('Characters and carried items',
                                 ('ID', 'Character', 'Army code', 'Current troops',

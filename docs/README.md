@@ -14,6 +14,8 @@ selective transfer, open the destination save in its editor first, then choose
 
 - [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
 
+- [Scenario and army editor: verified strategy record view and limits](SCENARIO_ARMY_EDITOR_REPORT.md)
+
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
 - [Controller and input profiles: app-owned bindings, presets and recovery](CONTROLLER_INPUT_PROFILES.md)
 - [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
@@ -21,6 +23,7 @@ selective transfer, open the destination save in its editor first, then choose
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
+- [Completion Companion evidence for Sol](COMPLETION_COMPANION_AI_EVIDENCE.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)

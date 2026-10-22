@@ -918,8 +918,8 @@
     },
     {
       "path": "docs/SUPPORTED_GAMES.md",
-      "bytes": 21575,
-      "sha256": "92c69492a03a7381df0d7721a100491ecc5dfdff40a0bc79982d880da8594641"
+      "bytes": 21595,
+      "sha256": "77849b64737064e99a34e81778cf2158442dae32a604a92d9b526e860451d5bb"
     },
     {
       "path": "docs/SW2HD_PS3.md",
@@ -948,13 +948,13 @@
     },
     {
       "path": "docs/TEAM_NINJA_DEPTH.md",
-      "bytes": 9812,
-      "sha256": "693fb8e9481edfc5cb9d8ac75c431ac448d5e38602566164d244c8de7ec61913"
+      "bytes": 11496,
+      "sha256": "f75fd1bc91b49140d92b1e56a13ad0dc8a70b39a72067fbc504f36388cdbe5fd"
     },
     {
       "path": "docs/TEAM_NINJA_RESEARCH.md",
-      "bytes": 16658,
-      "sha256": "3d65a3212b7c9a891bde4c1dadf32b4f24f067e6358f9161434d183e223c5c53"
+      "bytes": 16803,
+      "sha256": "baf91c9f7b01b4adcdde1fb502b1a94799318119abe7f95846f523f45ca213c9"
     },
     {
       "path": "docs/TECMO_SUPER_BOWL_NES_FORMAT.md",
@@ -1333,8 +1333,8 @@
     },
     {
       "path": "src/koei_editor/data/support_catalog.json",
-      "bytes": 128575,
-      "sha256": "c9d088cf74853a5a800705deb8ea3887a69faebf7cb97a21fa89e1c882306030"
+      "bytes": 128830,
+      "sha256": "f0da74fbb3e6e66aeccf9d595d2562fed85b5af48187c68eec5d0b6cfa16739e"
     },
     {
       "path": "src/koei_editor/data/unique_weapons.json",
@@ -1353,8 +1353,8 @@
     },
     {
       "path": "src/koei_editor/game_registry.py",
-      "bytes": 44984,
-      "sha256": "fa7f67e5ddd5d0b2848f4154b952ed271d3f799bc75797cdc3d64c988faf7220"
+      "bytes": 45004,
+      "sha256": "5cab907fdd72b8949adf20fdb9db0e8fa630ca9213e7baf8fb380d077a55e42a"
     },
     {
       "path": "src/koei_editor/games/AGENTS.md",
@@ -2473,8 +2473,8 @@
     },
     {
       "path": "src/koei_editor/games/nioh3/editor.py",
-      "bytes": 1475,
-      "sha256": "04aca940ca779236ef871c0045529b3fa3c10a72e729754d156a400a7342bf5d"
+      "bytes": 1543,
+      "sha256": "469b8b2dcc585eca725e2a3632de92c774916d6fba828ad60f6290bd93ce33de"
     },
     {
       "path": "src/koei_editor/games/nioh3/inventory.py",
@@ -2483,8 +2483,8 @@
     },
     {
       "path": "src/koei_editor/games/nioh3/parser.py",
-      "bytes": 11738,
-      "sha256": "152bec6c418e0cdd9a3b5940fcc5fd0574f9368f93a6a6114d2780292a27ca6e"
+      "bytes": 13106,
+      "sha256": "d2127eca678af277ec7535564c076f9951f404d882cbb9d07548e3b28400f17d"
     },
     {
       "path": "src/koei_editor/games/nobu6_pk_pc/__init__.py",
@@ -3368,8 +3368,8 @@
     },
     {
       "path": "src/koei_editor/games/wolong/wolong_editor.py",
-      "bytes": 1323,
-      "sha256": "13dd4d28c0888d79ac5a50c7257899ce08d947c5533af9bb8c84bf2385f81116"
+      "bytes": 1389,
+      "sha256": "1d920e1ea663c6712d91d0bb458df081b4b4810058f1abe7ab8a4ea62afb899e"
     },
     {
       "path": "src/koei_editor/games/wolong/wolong_json.py",
@@ -3378,8 +3378,8 @@
     },
     {
       "path": "src/koei_editor/games/wolong/wolong_parser.py",
-      "bytes": 20614,
-      "sha256": "6f00ff0fdcf98d9b4087b8f4c75e7cc8c43581d1a9241d73d9a973f2c2ac57e9"
+      "bytes": 20847,
+      "sha256": "2f6892dc06e77b8642d89065437c9e6fdf1b1927688c8b9726a876116be2d20a"
     },
     {
       "path": "src/koei_editor/research/AGENTS.md",
@@ -5073,8 +5073,8 @@
     },
     {
       "path": "tests/test_nioh3_format.py",
-      "bytes": 22059,
-      "sha256": "3319cf1422e6df0f7c95db143ca2ffe3fef292f4a84f496f0f772f5d5619e679"
+      "bytes": 24159,
+      "sha256": "0b3c2feb94b1a8cc17c288052d79b7d35ca86c3af941cdb5743bf545329e29cf"
     },
     {
       "path": "tests/test_nioh3_native.py",
@@ -6013,8 +6013,8 @@
     },
     {
       "path": "tests/test_wolong_expansion.py",
-      "bytes": 10491,
-      "sha256": "f3e324c140760b2f5441ec27e68c8ff716d2f51311cad9af780e7a11d3505b05"
+      "bytes": 10762,
+      "sha256": "5cef8caedaadd815bb93b8e809d5f6e1f1eddd4454335584de2d44df1ac357c1"
     },
     {
       "path": "tests/test_wolong_format.py",

@@ -1518,8 +1518,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 86651,
-      "sha256": "f6825e5632dbe33b435097e8a2d3493222a14619d6b294806c228476d4659036"
+      "bytes": 86609,
+      "sha256": "59bd52b17ffa70bf136958127ea0da1fa9e7cd66212476c09dd3ec43e36aaef6"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4353,8 +4353,8 @@
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles_gui.py",
-      "bytes": 27472,
-      "sha256": "d5a682fad91a49cbd3de3635a76aa7217e9c37973d02f7ac14d38e501ec89dce"
+      "bytes": 27650,
+      "sha256": "292dcba19919849147d30464235c25e5c44feabea72c0323d8acc65c1d9c16e4"
     },
     {
       "path": "src/koei_editor/shared/plugin_gui.py",
@@ -4468,8 +4468,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_management_gui.py",
-      "bytes": 23800,
-      "sha256": "e38026516f5f74500e0c118e9281c72bde5c73be3ab873ed85388a559fb85828"
+      "bytes": 26808,
+      "sha256": "cba356d2680279ef5056c4b84c44dda00c919ce956ca105157fedff4a692e68f"
     },
     {
       "path": "src/koei_editor/shared/save_safety.py",
@@ -4598,8 +4598,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 49432,
-      "sha256": "4663489d528fb3129fcf70e1bd5b2b99d45a120e28c5428ceb1710a0a1c0796e"
+      "bytes": 50139,
+      "sha256": "cad482000cdf83becd01db394a0518485586e851bf8f031748b68bda7bd8babc"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5173,8 +5173,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 17628,
-      "sha256": "31db4deee013c5f27166e46e67dfdd0285eaecd19a3c4258b811caa541b3b031"
+      "bytes": 17993,
+      "sha256": "2cc7cec92a35de567f468b7a05fc2fa862ab6c65ea0ff02e9332fe9230a74d28"
     },
     {
       "path": "tests/test_editor.py",
@@ -5812,6 +5812,11 @@
       "sha256": "b640f6fa5aaa1ddc3bab0ed143e6407bf37426856642def73564366b2bd33224"
     },
     {
+      "path": "tests/test_playthrough_lifecycle_gui.py",
+      "bytes": 6040,
+      "sha256": "c857ada9295a602e752019e87a010986c3aba5edfccc2a3abf4bfe04d4268888"
+    },
+    {
       "path": "tests/test_playthrough_profiles_gui.py",
       "bytes": 5724,
       "sha256": "e7f72ecfaa465407cd1c5f0e2daad61e57e7e0091dd805d1fdb6e9dd13811317"
@@ -5928,8 +5933,8 @@
     },
     {
       "path": "tests/test_research_import.py",
-      "bytes": 10470,
-      "sha256": "e50233c8beab71d95c25d09ef5c22cb263b01b9cf6b654c831bcde66f58a84e7"
+      "bytes": 10712,
+      "sha256": "2f97894f1b9de1af226fc6237475dab82d99ff68971cff345ef5d846016646bd"
     },
     {
       "path": "tests/test_research_lab.py",
@@ -6118,8 +6123,8 @@
     },
     {
       "path": "tests/test_save_management_gui.py",
-      "bytes": 12429,
-      "sha256": "8800bfc70e524650a6fe59306f3bf239b91ebf6895cdab374a008e17e64fb691"
+      "bytes": 18254,
+      "sha256": "9e4f7dd1433213f2fdb0262eac7b65b6cc972a6bcb0a59a8c1ece6074d937edb"
     },
     {
       "path": "tests/test_save_management_regressions.py",

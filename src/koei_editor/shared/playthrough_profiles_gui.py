@@ -162,7 +162,9 @@ class PlaythroughProfilesWindow:
         ttk.Label(
             self.create_tab,
             text=('Each import must be an exported component snapshot for the same game and exact game version. '
-                  'These manager interfaces are not implemented in this checkout; the profile stores their snapshots as data only.'),
+                  'The Mod Manager is available separately, but no profile export/apply adapter connects it here. '
+                  'Configuration Manager and Character Workshop profile adapters are not connected either. '
+                  'Imported components stay inert JSON and never control a manager.'),
             wraplength=920, style='Muted.TLabel',
         ).pack(anchor='w', pady=(5, 8))
         actions = ttk.Frame(self.create_tab)

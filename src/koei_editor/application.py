@@ -334,14 +334,8 @@ class Application(Appearance):
         last_index = self.editing_tools_menu.index('end')
         if last_index is None:
             return
-        translated = set()
-        for key in getattr(self, '_editing_tools_menu_commands', {}):
-            index = self._editing_tools_menu_index(key)
-            if index is not None:
-                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
-                translated.add(index)
         for index in range(last_index + 1):
-            if index in translated or self.editing_tools_menu.type(index) != 'command':
+            if self.editing_tools_menu.type(index) != 'command':
                 continue
             key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
             if key is not None:
@@ -1298,6 +1292,9 @@ class Application(Appearance):
         management = getattr(getattr(self, 'save_library', None), 'management', None)
         if management is not None:
             tools += (management,)
+            profile_window = getattr(management, 'profile_window', None)
+            if profile_window is not None and not getattr(profile_window, '_closed', False):
+                tools += (profile_window,)
         if any(
                 getattr(tool, 'busy', False)
                 and not (
@@ -1306,7 +1303,11 @@ class Application(Appearance):
                 )
                 for tool in tools):
             from tkinter import messagebox
-            messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
+            messagebox.showinfo(
+                'Operation running',
+                'Wait for the save or playthrough profile operation to finish before closing.',
+                parent=self.root,
+            )
             return
         if (all(editor.dirty_ok() for _frame, editor in self.sessions.values())
                 and all(tool.dirty_ok() for tool in tools if callable(getattr(tool, 'dirty_ok', None)))):

@@ -173,6 +173,31 @@ class GameCompatibilityTests(unittest.TestCase):
         self.assertEqual(unknown["data/malformed.bin"], "archive_structure_unavailable")
         self.assertEqual(report["archive_changes"]["changed"], [])
 
+    def test_archive_state_change_preserves_known_side_inventory(self):
+        before = snapshot(archives=[{
+            "relative_path": "data/game.pack",
+            "format_id": "koei.pack.v1",
+            "status": "parsed",
+            "entries": [{"path": "scripts/main.bin", "size_bytes": 12, "sha256": digest(b"member")}],
+        }])
+        after = snapshot(archives=[{
+            "relative_path": "data/game.pack",
+            "format_id": "koei.pack.v1",
+            "status": "unsupported",
+            "entries": [],
+        }])
+
+        report = compatibility.analyze_snapshots(before, after)
+        archive = report["archive_changes"]["changed"][0]
+        self.assertEqual(archive["analysis_status"], "unknown")
+        self.assertEqual(archive["entries"]["added"], [])
+        self.assertEqual(archive["entries"]["removed"], [])
+        self.assertEqual(
+            [entry["path"] for entry in archive["entries"]["observed_before"]],
+            ["scripts/main.bin"],
+        )
+        self.assertEqual(archive["entries"]["observed_after"], [])
+
     def test_declared_requirements_show_possible_impact_without_hash_only_claims(self):
         old_file, new_file = digest(b"old executable"), digest(b"new executable")
         old_entry, new_entry = digest(b"old archive member"), digest(b"new archive member")
@@ -580,6 +605,289 @@ class GameCompatibilityTests(unittest.TestCase):
         self.assertEqual(archive["analysis_status"], "unknown")
         self.assertIn(
             {"relative_path": "data/game.pack", "reason": "member_size_hash_conflict"},
+            report["archive_changes"]["unknown"],
+        )
+        self.assertEqual(report["evidence_status"], "unknown")
+        self.assertEqual(report["overall_status"], "unknown")
+
+    def test_kind_summary_remains_unsatisfied_when_requirements_are_mixed(self):
+        baseline = snapshot(files=[file_record("bin/known.dll", b"known")])
+        candidate_snapshot = deepcopy(baseline)
+        known = {
+            **consumer("mods", files=[{"relative_path": "bin/known.dll", "sha256": digest(b"known")}]),
+            "id": "mods.known",
+        }
+        persistently_missing = {
+            **consumer("mods", files=[{"relative_path": "bin/missing.dll", "sha256": digest(b"missing")}]),
+            "id": "mods.missing",
+        }
+
+        report = compatibility.analyze_snapshots(
+            baseline,
+            candidate_snapshot,
+            requirements([known, persistently_missing]),
+        )
+        mod_summary = report["impacts"]["by_kind"]["mods"]
+        self.assertEqual(mod_summary["counts"]["requirements_satisfied"], 1)
+        self.assertEqual(mod_summary["counts"]["already_not_satisfied"], 1)
+        self.assertEqual(mod_summary["status"], "already_not_satisfied")
+        self.assertEqual(report["overall_status"], "requirements_not_satisfied_before_and_after")
+
+    def test_oversized_integer_and_deep_json_are_wrapped_for_loader_and_cli(self):
+        baseline = snapshot("1.0")
+        candidate_snapshot = snapshot("1.1")
+        before_path = self.folder / "before.json"
+        after_path = self.folder / "after.json"
+        before_path.write_text(json.dumps(baseline), encoding="utf-8")
+        after_path.write_text(json.dumps(candidate_snapshot), encoding="utf-8")
+        invalid_inputs = {
+            "oversized-integer.json": "9" * 5000,
+            "deep.json": "[" * 10000 + "0" + "]" * 10000,
+        }
+        root = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        previous_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = str(root / "src") + (os.pathsep + previous_pythonpath if previous_pythonpath else "")
+
+        for name, text in invalid_inputs.items():
+            with self.subTest(name=name):
+                invalid_path = self.folder / name
+                invalid_path.write_text(text, encoding="utf-8")
+                with self.assertRaises(compatibility.CompatibilityInputError):
+                    compatibility.load_json(invalid_path)
+                output_path = self.folder / f"{name}.report.json"
+                process = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "koei_editor.shared.game_compatibility",
+                        str(before_path),
+                        str(after_path),
+                        "--requirements",
+                        str(invalid_path),
+                        "--json-out",
+                        str(output_path),
+                    ],
+                    cwd=root,
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                self.assertEqual(process.returncode, 2, process.stderr)
+                self.assertFalse(output_path.exists())
+
+    def test_invalid_utf8_json_is_wrapped_for_loader_and_cli(self):
+        baseline = snapshot("1.0")
+        candidate_snapshot = snapshot("1.1")
+        before_path = self.folder / "before-utf8.json"
+        after_path = self.folder / "after-utf8.json"
+        requirements_path = self.folder / "invalid-utf8.json"
+        before_path.write_text(json.dumps(baseline), encoding="utf-8")
+        after_path.write_text(json.dumps(candidate_snapshot), encoding="utf-8")
+        requirements_path.write_bytes(b'{"requirements": [\xff]}')
+
+        with self.assertRaises(compatibility.CompatibilityInputError):
+            compatibility.load_json(requirements_path)
+
+        root = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        previous_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = str(root / "src") + (os.pathsep + previous_pythonpath if previous_pythonpath else "")
+        output_path = self.folder / "invalid-utf8.report.json"
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "koei_editor.shared.game_compatibility",
+                str(before_path),
+                str(after_path),
+                "--requirements",
+                str(requirements_path),
+                "--json-out",
+                str(output_path),
+            ],
+            cwd=root,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(process.returncode, 2, process.stderr)
+        self.assertFalse(output_path.exists())
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "Named pipes are unavailable on this platform")
+    def test_non_regular_json_input_is_rejected_without_blocking(self):
+        fifo_path = self.folder / "snapshot.fifo"
+        after_path = self.folder / "after-fifo.json"
+        after_path.write_text(json.dumps(snapshot("1.1")), encoding="utf-8")
+        os.mkfifo(fifo_path)
+
+        root = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        previous_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = str(root / "src") + (os.pathsep + previous_pythonpath if previous_pythonpath else "")
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "koei_editor.shared.game_compatibility",
+                str(fifo_path),
+                str(after_path),
+            ],
+            cwd=root,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        self.assertEqual(process.returncode, 2, process.stderr)
+        self.assertIn("regular file", process.stderr)
+
+    def test_unpaired_surrogate_is_rejected_before_cli_output_is_written(self):
+        bad_snapshot = snapshot(version_label="1.0\ud800")
+        with self.assertRaises(compatibility.CompatibilityInputError):
+            compatibility.analyze_snapshots(bad_snapshot, snapshot())
+
+        before_path = self.folder / "before-surrogate.json"
+        after_path = self.folder / "after-surrogate.json"
+        before_path.write_text(json.dumps(bad_snapshot, ensure_ascii=True), encoding="utf-8")
+        after_path.write_text(json.dumps(snapshot(), ensure_ascii=True), encoding="utf-8")
+        before_bytes = before_path.read_bytes()
+        output_path = self.folder / "surrogate-report.json"
+        root = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        previous_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = str(root / "src") + (os.pathsep + previous_pythonpath if previous_pythonpath else "")
+
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "koei_editor.shared.game_compatibility",
+                str(before_path),
+                str(after_path),
+                "--json-out",
+                str(output_path),
+            ],
+            cwd=root,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(process.returncode, 2, process.stderr)
+        self.assertFalse(output_path.exists())
+        self.assertEqual(before_path.read_bytes(), before_bytes)
+
+    def test_unknown_version_and_asymmetric_build_are_uncertain_not_confirmed_changes(self):
+        baseline = snapshot("1.0")
+        unknown_version = snapshot(
+            "unknown",
+            version={"value": "unknown", "source": "unavailable", "build_id": "build-a"},
+        )
+        unknown_report = compatibility.analyze_snapshots(baseline, unknown_version)
+        self.assertIsNone(unknown_report["version_change"]["changed"])
+        self.assertEqual(unknown_report["version_change"]["status"], "unknown")
+        self.assertIn(
+            "version_value_unknown",
+            {reason["type"] for reason in unknown_report["version_change"]["evidence_reasons"]},
+        )
+        self.assertEqual(unknown_report["evidence_status"], "unknown")
+
+        asymmetric_build = snapshot(
+            "1.0",
+            version={"value": "1.0", "source": "manual"},
+        )
+        asymmetric_report = compatibility.analyze_snapshots(baseline, asymmetric_build)
+        self.assertIsNone(asymmetric_report["version_change"]["changed"])
+        self.assertEqual(asymmetric_report["version_change"]["status"], "unknown")
+        self.assertIn(
+            "build_id_asymmetric",
+            {reason["type"] for reason in asymmetric_report["version_change"]["evidence_reasons"]},
+        )
+        self.assertEqual(asymmetric_report["evidence_status"], "unknown")
+
+        unknown_build = snapshot(
+            "1.0",
+            version={"value": "1.0", "source": "manual", "build_id": "unavailable"},
+        )
+        build_report = compatibility.analyze_snapshots(unknown_build, snapshot("1.0"))
+        self.assertIsNone(build_report["version_change"]["changed"])
+        self.assertEqual(build_report["version_change"]["status"], "unknown")
+        self.assertIn(
+            "build_id_unknown",
+            {reason["type"] for reason in build_report["version_change"]["evidence_reasons"]},
+        )
+
+    def test_hard_link_output_alias_is_rejected_without_mutating_input(self):
+        before = snapshot("1.0", files=[file_record("bin/game.exe", b"before")])
+        after = snapshot("1.1", files=[file_record("bin/game.exe", b"after!")])
+        before_path = self.folder / "before-hardlink.json"
+        after_path = self.folder / "after-hardlink.json"
+        before_path.write_text(json.dumps(before, sort_keys=True), encoding="utf-8")
+        after_path.write_text(json.dumps(after, sort_keys=True), encoding="utf-8")
+        original = before_path.read_bytes()
+        hard_link = self.folder / "before-hardlink-alias.json"
+        try:
+            os.link(before_path, hard_link)
+        except OSError as error:
+            self.skipTest(f"The test filesystem does not support hard links: {error}")
+        self.assertTrue(before_path.samefile(hard_link))
+
+        root = Path(__file__).resolve().parents[1]
+        env = dict(os.environ)
+        previous_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = str(root / "src") + (os.pathsep + previous_pythonpath if previous_pythonpath else "")
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "koei_editor.shared.game_compatibility",
+                str(before_path),
+                str(after_path),
+                "--json-out",
+                str(hard_link),
+            ],
+            cwd=root,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(process.returncode, 2, process.stderr)
+        self.assertEqual(before_path.read_bytes(), original)
+        self.assertEqual(hard_link.read_bytes(), original)
+
+    def test_matching_archive_member_sha_with_different_crc_lowers_evidence(self):
+        member = {
+            "path": "scripts/main.bin",
+            "size_bytes": 12,
+            "crc32": "11111111",
+            "sha256": digest(b"same archive member"),
+        }
+        before = snapshot(archives=[{
+            "relative_path": "data/game.pack",
+            "format_id": "koei.pack.v1",
+            "status": "parsed",
+            "entries": [member],
+        }])
+        after = snapshot(archives=[{
+            "relative_path": "data/game.pack",
+            "format_id": "koei.pack.v1",
+            "status": "parsed",
+            "entries": [{**member, "crc32": "22222222"}],
+        }])
+
+        report = compatibility.analyze_snapshots(before, after)
+        archive = report["archive_changes"]["changed"][0]
+        self.assertIn(
+            {"path": "scripts/main.bin", "reason": "sha256_crc_conflict"},
+            archive["entries"]["unverified"],
+        )
+        self.assertEqual(archive["analysis_status"], "unknown")
+        self.assertIn(
+            {"relative_path": "data/game.pack", "reason": "member_checksum_conflict"},
             report["archive_changes"]["unknown"],
         )
         self.assertEqual(report["evidence_status"], "unknown")

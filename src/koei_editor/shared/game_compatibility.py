@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import stat
 import sys
 import unicodedata
 from datetime import datetime, timezone
@@ -27,6 +29,7 @@ _HEX_32 = re.compile(r"^[0-9a-fA-F]{1,8}$")
 _MAX_JSON_BYTES = 64 * 1024 * 1024
 _KINDS = ("mods", "tools", "saves")
 _ARCHIVE_STATUSES = ("parsed", "unsupported", "malformed")
+_UNKNOWN_EVIDENCE_VALUES = {"unknown", "unavailable", "unverified", "n/a", "none", "null", "?"}
 
 
 class CompatibilityInputError(ValueError):
@@ -45,24 +48,44 @@ def _object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, An
 def load_json(path: str | Path) -> Any:
     """Load one UTF-8 JSON document, rejecting duplicate keys and huge inputs."""
     source = Path(path)
+    descriptor: int | None = None
     try:
-        size = source.stat().st_size
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
+        descriptor = os.open(source, flags)
+        stream = os.fdopen(descriptor, "rb")
+        descriptor = None  # The stream now owns the descriptor.
+        with stream:
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                raise CompatibilityInputError(
+                    f"JSON input {source.name!r} must be a regular file."
+                )
+            raw_bytes = stream.read(_MAX_JSON_BYTES + 1)
+    except CompatibilityInputError:
+        raise
     except OSError as exc:
         raise CompatibilityInputError(f"Cannot read JSON input {source.name!r}: {exc}") from exc
-    if size > _MAX_JSON_BYTES:
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if len(raw_bytes) > _MAX_JSON_BYTES:
         raise CompatibilityInputError(
             f"JSON input {source.name!r} exceeds the {_MAX_JSON_BYTES}-byte limit."
         )
     try:
-        raw = source.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeError) as exc:
-        raise CompatibilityInputError(f"Cannot read JSON input {source.name!r}: {exc}") from exc
+        raw = raw_bytes.decode("utf-8-sig")
+    except UnicodeError as exc:
+        raise CompatibilityInputError(f"Cannot read UTF-8 JSON input {source.name!r}: {exc}") from exc
     try:
         return json.loads(raw, object_pairs_hook=_object_without_duplicate_keys)
+    except CompatibilityInputError:
+        # Preserve the more specific duplicate-key failure raised by the hook.
+        raise
     except json.JSONDecodeError as exc:
         raise CompatibilityInputError(
             f"Invalid JSON in {source.name!r} at line {exc.lineno}, column {exc.colno}: {exc.msg}"
         ) from exc
+    except (ValueError, RecursionError) as exc:
+        raise CompatibilityInputError(f"Invalid JSON in {source.name!r}: {exc}") from exc
 
 
 def _require_mapping(value: Any, where: str) -> Mapping[str, Any]:
@@ -74,9 +97,13 @@ def _require_mapping(value: Any, where: str) -> Mapping[str, Any]:
 def _require_string(value: Any, where: str, *, allow_empty: bool = False) -> str:
     if not isinstance(value, str) or (not allow_empty and not value.strip()):
         raise CompatibilityInputError(f"{where} must be a non-empty string.")
-    if any(unicodedata.category(character) in ("Cc", "Zl", "Zp") for character in value):
-        raise CompatibilityInputError(f"{where} must not contain control characters.")
+    if any(unicodedata.category(character) in ("Cc", "Cs", "Zl", "Zp") for character in value):
+        raise CompatibilityInputError(f"{where} must not contain control, surrogate, or line-separator characters.")
     return value
+
+
+def _is_unknown_evidence(value: str | None) -> bool:
+    return value is not None and value.strip().casefold() in _UNKNOWN_EVIDENCE_VALUES
 
 
 def _require_non_path_text(value: Any, where: str) -> str:
@@ -460,6 +487,14 @@ def _entry_comparison(old_entries: Mapping[str, Any], new_entries: Mapping[str, 
             and old["size_bytes"] != new["size_bytes"]
         ):
             unverified_by_path[path] = "sha256_size_conflict"
+        if (
+            old["sha256"] is not None
+            and old["sha256"] == new["sha256"]
+            and old["crc32"] is not None
+            and new["crc32"] is not None
+            and old["crc32"] != new["crc32"]
+        ):
+            unverified_by_path[path] = "sha256_crc_conflict"
         if not shared_checksum:
             if (old["crc32"] is None and old["sha256"] is None) or (
                 new["crc32"] is None and new["sha256"] is None
@@ -529,6 +564,8 @@ def _archive_analysis_status(archive: Mapping[str, Any]) -> str:
 def _archive_incomplete_reason(entry_rows: list[Mapping[str, Any]]) -> str:
     if any(row["reason"] in ("checksum_missing", "no_shared_checksum") for row in entry_rows):
         return "member_checksum_missing"
+    if any(row["reason"] == "sha256_crc_conflict" for row in entry_rows):
+        return "member_checksum_conflict"
     if any(row["reason"] == "sha256_size_conflict" for row in entry_rows):
         return "member_size_hash_conflict"
     return "member_metadata_incomplete"
@@ -585,6 +622,15 @@ def _archive_comparison(before: Mapping[str, Any], after: Mapping[str, Any]) -> 
             reason = "archive_format_unsupported" if "unsupported" in (old["status"], new["status"]) else "archive_structure_unavailable"
             unknown.append({"relative_path": path, "reason": reason})
             if format_changed or status_changed:
+                entries = _empty_entry_comparison()
+                entries["observed_before"] = [
+                    dict(old["entries"][member_path])
+                    for member_path in sorted(old["entries"])
+                ] if old["status"] == "parsed" else []
+                entries["observed_after"] = [
+                    dict(new["entries"][member_path])
+                    for member_path in sorted(new["entries"])
+                ] if new["status"] == "parsed" else []
                 changed.append({
                     "relative_path": path,
                     "before": {"format_id": old["format_id"], "status": old["status"]},
@@ -592,7 +638,7 @@ def _archive_comparison(before: Mapping[str, Any], after: Mapping[str, Any]) -> 
                     "format_changed": format_changed,
                     "status_changed": status_changed,
                     "analysis_status": "unknown",
-                    "entries": _empty_entry_comparison(),
+                    "entries": entries,
                 })
             continue
         entries = _entry_comparison(old["entries"], new["entries"])
@@ -674,7 +720,7 @@ def _evaluate_requirement(requirement: Mapping[str, Any], snapshot: Mapping[str,
     version = snapshot["version"]
     supported_versions = requirement["supported_versions"]
     if supported_versions is not None:
-        if version["value"].strip().casefold() in {"unknown", "unavailable", "unverified", "n/a", "none", "null", "?"}:
+        if _is_unknown_evidence(version["value"]):
             unknown = True
             reasons.append({"type": "supported_version_unknown", "candidate_value": version["value"]})
         elif version["value"] not in supported_versions:
@@ -687,9 +733,7 @@ def _evaluate_requirement(requirement: Mapping[str, Any], snapshot: Mapping[str,
     supported_build_ids = requirement["supported_build_ids"]
     if supported_build_ids is not None:
         build_id = version.get("build_id")
-        if build_id is None or build_id.strip().casefold() in {
-            "unknown", "unavailable", "unverified", "n/a", "none", "null", "?"
-        }:
+        if build_id is None or _is_unknown_evidence(build_id):
             unknown = True
             reasons.append({"type": "supported_build_id_unknown"})
         elif build_id not in supported_build_ids:
@@ -831,12 +875,12 @@ def _impact_report(
             kind_status = "may_affect"
         elif counts["unknown"]:
             kind_status = "unknown"
+        elif counts["already_not_satisfied"]:
+            kind_status = "already_not_satisfied"
         elif counts["requirements_satisfied"]:
             kind_status = "requirements_satisfied"
         elif counts["improved"]:
             kind_status = "improved"
-        elif counts["already_not_satisfied"]:
-            kind_status = "already_not_satisfied"
         else:
             kind_status = "unknown" if changed else "unchanged"
         by_kind[kind] = {"status": kind_status, "requirement_count": len(rows), "counts": counts}
@@ -887,23 +931,61 @@ def analyze_snapshots(
     files = _file_comparison(before, after)
     archives = _archive_comparison(before, after)
     formats = _format_comparison(before, after)
-    version_changed = (
-        before["version"]["value"] != after["version"]["value"]
-        or before["version"].get("build_id") != after["version"].get("build_id")
+    before_version = before["version"]
+    after_version = after["version"]
+    evidence_reasons: list[dict[str, str]] = []
+    if _is_unknown_evidence(before_version["value"]):
+        evidence_reasons.append({"type": "version_value_unknown", "side": "baseline"})
+    if _is_unknown_evidence(after_version["value"]):
+        evidence_reasons.append({"type": "version_value_unknown", "side": "candidate"})
+
+    before_build_id = before_version.get("build_id")
+    after_build_id = after_version.get("build_id")
+    before_build_unknown = _is_unknown_evidence(before_build_id)
+    after_build_unknown = _is_unknown_evidence(after_build_id)
+    if before_build_unknown:
+        evidence_reasons.append({"type": "build_id_unknown", "side": "baseline"})
+    if after_build_unknown:
+        evidence_reasons.append({"type": "build_id_unknown", "side": "candidate"})
+    if (before_build_id is None) != (after_build_id is None):
+        evidence_reasons.append({"type": "build_id_asymmetric"})
+
+    version_values_known = not (
+        _is_unknown_evidence(before_version["value"])
+        or _is_unknown_evidence(after_version["value"])
     )
+    build_values_known = (
+        before_build_id is not None
+        and after_build_id is not None
+        and not before_build_unknown
+        and not after_build_unknown
+    )
+    confirmed_version_delta = (
+        version_values_known and before_version["value"] != after_version["value"]
+    )
+    confirmed_build_delta = build_values_known and before_build_id != after_build_id
+    version_changed: bool | None
+    if confirmed_version_delta or confirmed_build_delta:
+        version_changed = True
+    elif evidence_reasons:
+        version_changed = None
+    else:
+        version_changed = False
     version = {
         "changed": version_changed,
+        "status": "unknown" if version_changed is None else "changed" if version_changed else "unchanged",
         "before": dict(before["version"]),
         "after": dict(after["version"]),
         "source_changed": before["version"]["source"] != after["version"]["source"],
+        "evidence_reasons": evidence_reasons,
     }
     has_changes = bool(
-        version_changed
+        version_changed is True
         or files["added"] or files["removed"] or files["modified"]
         or archives["added"] or archives["removed"] or archives["changed"]
         or formats["added"] or formats["removed"] or formats["changed"]
     )
-    comparison_uncertain = bool(files["unverified"] or archives["unknown"])
+    comparison_uncertain = bool(files["unverified"] or archives["unknown"] or evidence_reasons)
     impacts = _impact_report(requirement_rows, before, after, has_changes or comparison_uncertain)
     return {
         "schema_id": REPORT_SCHEMA_ID,
@@ -927,7 +1009,7 @@ def analyze_snapshots(
 
 def _md_code(value: Any) -> str:
     text = "".join(
-        " " if unicodedata.category(character) in ("Cc", "Zl", "Zp") else character
+        " " if unicodedata.category(character) in ("Cc", "Cs", "Zl", "Zp") else character
         for character in str(value)
     )
     escaped = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -946,14 +1028,36 @@ def render_markdown(report: Mapping[str, Any]) -> str:
     """Render a deterministic, human-readable Markdown compatibility report."""
     if report.get("schema_id") != REPORT_SCHEMA_ID or report.get("schema_version") != SCHEMA_VERSION:
         raise CompatibilityInputError("report is not a supported game-compatibility report.")
+    version_change = report["version_change"]
+    version_changed_label = (
+        "unknown" if version_change["changed"] is None
+        else "yes" if version_change["changed"]
+        else "no"
+    )
+    version_evidence_lines = [
+        f"- Version evidence uncertain: {reason['type']} ({reason.get('side', 'both')})."
+        for reason in version_change["evidence_reasons"]
+    ]
+    provenance = report["provenance"]
+    provenance_lines = []
+    if provenance["baseline_captured_at"] is not None:
+        provenance_lines.append(
+            f"- Baseline snapshot captured: {_md_code(provenance['baseline_captured_at'])}"
+        )
+    if provenance["candidate_captured_at"] is not None:
+        provenance_lines.append(
+            f"- Candidate snapshot captured: {_md_code(provenance['candidate_captured_at'])}"
+        )
     lines = [
         "# Koei Tecmo Game Patch Compatibility Report",
         "",
         f"- Game: {_md_code(report['game_id'])}",
         f"- Platform: {_md_code(report['platform_id'])}",
-        f"- Baseline version: {_md_code(_version_label(report['version_change']['before']))}",
-        f"- Candidate version: {_md_code(_version_label(report['version_change']['after']))}",
-        f"- Version/build changed: {'yes' if report['version_change']['changed'] else 'no'}",
+        f"- Baseline version: {_md_code(_version_label(version_change['before']))}",
+        f"- Candidate version: {_md_code(_version_label(version_change['after']))}",
+        f"- Version/build changed: {version_changed_label}",
+        *version_evidence_lines,
+        *provenance_lines,
         f"- Overall declared-requirement assessment: **{report['overall_status']}**",
         f"- Overall evidence status: **{report['evidence_status']}**",
         "",
@@ -962,17 +1066,6 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         "## File changes",
         "",
     ]
-    provenance = report["provenance"]
-    if provenance["baseline_captured_at"] is not None:
-        lines.insert(
-            7,
-            f"- Baseline snapshot captured: {_md_code(provenance['baseline_captured_at'])}",
-        )
-    if provenance["candidate_captured_at"] is not None:
-        lines.insert(
-            8 if provenance["baseline_captured_at"] is not None else 7,
-            f"- Candidate snapshot captured: {_md_code(provenance['candidate_captured_at'])}",
-        )
     files = report["file_changes"]
     lines.append(
         f"Added: {len(files['added'])}; removed: {len(files['removed'])}; "
@@ -1037,6 +1130,12 @@ def render_markdown(report: Mapping[str, Any]) -> str:
                         f"  - Entry {label}: {_md_code(entry['path'])}; size {entry['size_bytes']} bytes; "
                         f"compressed size {compressed if compressed is not None else 'unknown'} bytes."
                     )
+        for side, label in (("observed_before", "baseline"), ("observed_after", "candidate")):
+            for entry in item["entries"].get(side, []):
+                lines.append(
+                    f"  - Known {label} member: {_md_code(entry['path'])}; "
+                    f"size {entry['size_bytes']} bytes."
+                )
         for entry in item["entries"]["unverified"]:
             lines.append(f"  - Member evidence unknown: {_md_code(entry['path'])} ({entry['reason']}).")
     for item in archives["unknown"]:
@@ -1104,6 +1203,20 @@ def _write_report(path: Path, content: str) -> None:
         raise CompatibilityInputError(f"Cannot write report {path.name!r}: {exc}") from exc
 
 
+def _paths_alias(left: Path, right: Path) -> bool:
+    try:
+        if left.resolve() == right.resolve():
+            return True
+    except (OSError, RuntimeError) as exc:
+        raise CompatibilityInputError("Cannot safely resolve an input or report path.") from exc
+    try:
+        return left.samefile(right)
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+    except OSError as exc:
+        raise CompatibilityInputError("Cannot safely check input and report path aliases.") from exc
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Compare two immutable Koei Tecmo game-install snapshots and explicit compatibility requirements."
@@ -1121,12 +1234,14 @@ def main(argv: list[str] | None = None) -> int:
         if requirements_path:
             input_paths.append(requirements_path)
         output_paths = [Path(path) for path in (args.json_out, args.markdown_out) if path]
-        resolved_inputs = {path.resolve() for path in input_paths}
-        resolved_outputs = [path.resolve() for path in output_paths]
-        if len(set(resolved_outputs)) != len(resolved_outputs):
-            raise CompatibilityInputError("JSON and Markdown outputs must use different paths.")
-        if any(path in resolved_inputs for path in resolved_outputs):
+        if any(_paths_alias(output, source) for output in output_paths for source in input_paths):
             raise CompatibilityInputError("Report output paths must not overwrite an input snapshot or requirements file.")
+        if any(
+            _paths_alias(output_paths[left], output_paths[right])
+            for left in range(len(output_paths))
+            for right in range(left + 1, len(output_paths))
+        ):
+            raise CompatibilityInputError("JSON and Markdown outputs must use different paths.")
 
         before = load_json(args.before)
         after = load_json(args.after)

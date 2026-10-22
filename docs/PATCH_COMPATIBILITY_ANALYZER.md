@@ -45,6 +45,11 @@ arrays are sorted observations:
 | `archives[].entries` | `path`, `size_bytes`, and optional `compressed_size_bytes`, `crc32`, and SHA-256. Members without CRC or SHA-256 are listed as unverified. |
 | `formats` | Supported format `id`, optional `revision`, `evidence_paths`, and optional confidence. |
 
+When an archive changes between `parsed` and an unknown state, the report keeps
+the parsed side's member list under `entries.observed_before` or
+`entries.observed_after`. It does not classify those members as added or
+removed because the other side could not be inspected.
+
 Every path is a normalized relative POSIX path. Absolute install paths and file
 contents do not belong in snapshots or reports. The analyzer validates the
 schema, identity, hashes, and paths before comparing data. Unsupported or
@@ -67,6 +72,12 @@ When an explicit requirement matches the baseline but not the candidate, the
 report marks that requirement as potentially affected and includes the evidence.
 A changed file with no matching requirement remains a reported change, not a
 compatibility failure. Missing evidence is labeled unknown.
+
+The JSON `version_change.changed` field is `true`, `false`, or `null` when a
+confirmed change, confirmed lack of change, or uncertain version/build evidence
+is observed. Unknown version sentinels and a build ID present on only one side
+produce an uncertain result; the report records the reason in
+`version_change.evidence_reasons`.
 
 ```json
 {

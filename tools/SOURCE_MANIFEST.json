@@ -5198,8 +5198,8 @@
     },
     {
       "path": "tests/test_emulator_hub.py",
-      "bytes": 21654,
-      "sha256": "7250158e7d0599e2d90a805a0bd54c4b1b5e19e390b2448f4528f5e556e0ef37"
+      "bytes": 25064,
+      "sha256": "ff93850304325df4b46e313f8904555b9799d74acfdc38c9fd06f6f6043e24e1"
     },
     {
       "path": "tests/test_emulator_nintendo_providers.py",

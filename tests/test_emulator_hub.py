@@ -1,4 +1,6 @@
 """Mocked integration checks for emulator discovery, launch, and save handoff."""
+import ctypes
+import os
 from pathlib import Path
 import queue
 import tempfile
@@ -311,6 +313,9 @@ class EmulatorHubTests(unittest.TestCase):
             export_folder.mkdir()
             save = export_folder / 'DATA.BIN'
             save.write_bytes(ps3_fixture(deception4))
+            # Resolve while the fixture exists: Windows TEMP may use an 8.3
+            # alias, whereas the qualified scan deliberately stores its canonical root.
+            expected_save = save.resolve(strict=True)
             (export_folder / 'PARAM.SFO').write_bytes(
                 ps3_helpers.PS3ContextTests.metadata('NPUB31442-GAMEDATA-10'))
             installation = emulator_hub.EmulatorInstallation(
@@ -344,8 +349,59 @@ class EmulatorHubTests(unittest.TestCase):
         self.assertEqual(qualify.call_count, 1)
         self.assertEqual(qualify.call_args.args, (result, entry))
         self.assertIsInstance(qualify.call_args.kwargs.get('cancel'), threading.Event)
-        callback.assert_called_once_with(deception4.GAME_ID, save)
+        callback.assert_called_once_with(deception4.GAME_ID, expected_save)
         status.set.assert_called_once()
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows 8.3 aliases require a native Windows filesystem.')
+    def test_windows_short_path_handoff_keeps_canonical_copy_and_protects_live_folder(self):
+        get_short_path = ctypes.windll.kernel32.GetShortPathNameW
+        get_short_path.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint)
+        get_short_path.restype = ctypes.c_uint
+
+        def short_path(path):
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = get_short_path(str(path.resolve(strict=True)), buffer, len(buffer))
+            if not length or length >= len(buffer):
+                self.skipTest('The native temporary filesystem has no available 8.3 alias.')
+            alias = Path(buffer.value)
+            if os.path.normcase(os.path.abspath(alias)) == os.path.normcase(str(path.resolve(strict=True))):
+                self.skipTest('The native temporary filesystem has no distinct 8.3 alias.')
+            self.assertTrue(alias.samefile(path))
+            return alias
+
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            managed = folder / 'emulator managed data'
+            exported = folder / 'qualified exported copies'
+            managed.mkdir()
+            exported.mkdir()
+            save = exported / 'DATA.BIN'
+            save.write_bytes(ps3_fixture(deception4))
+            (exported / 'PARAM.SFO').write_bytes(
+                ps3_helpers.PS3ContextTests.metadata('NPUB31442-GAMEDATA-10'))
+            alias = short_path(exported)
+            with patch.object(emulator_hub, 'discover_installations', return_value=()):
+                with self.assertRaisesRegex(SaveError, 'outside emulator-managed'):
+                    emulator_hub.scan_export_folder(deception4.GAME_ID, short_path(managed),
+                        provider_id='rpcs3', active_data_root=str(managed.resolve(strict=True)))
+                result = emulator_hub.scan_export_folder(deception4.GAME_ID, alias,
+                    provider_id='rpcs3', active_data_root=str(managed.resolve(strict=True)))
+            self.assertEqual(result.folder, exported.resolve(strict=True))
+            self.assertEqual(result.qualified_count, 1)
+            callback = Mock(return_value=True)
+            workspace = object.__new__(EmulatorHubWorkspace)
+            workspace.export_result = result
+            workspace.export_game_id = deception4.GAME_ID
+            workspace.export_tree = Mock(selection=Mock(return_value=('0',)))
+            workspace._export_busy = False
+            workspace._start_export_operation = lambda _kind, operation: callback(
+                deception4.GAME_ID, operation(threading.Event()))
+            with patch.object(emulator_hub, 'qualify_export', wraps=emulator_hub.qualify_export) as qualify:
+                workspace.open_export_selected()
+            qualify.assert_called_once()
+            self.assertEqual(qualify.call_args.args, (result, result.entries[0]))
+            callback.assert_called_once_with(deception4.GAME_ID, save.resolve(strict=True))
+            self.assertTrue(callback.call_args.args[1].samefile(save))
 
     def test_scan_worker_result_clears_active_root_confirmation(self):
         workspace = object.__new__(EmulatorHubWorkspace)

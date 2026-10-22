@@ -40,6 +40,9 @@ Each exact-build entry identifies a save editor, mod, configuration tool, or
 asset format, its reviewed version, status, reason code, explanation, check time,
 and evidence references. The tracker does not detect installed mod/tool versions
 or inspect local assets; the version shown is the version in the catalog review.
+For a `config_tool`, `artifact_version` is the utility's own release version, not
+the configuration file format revision; for an `asset_format`, it is the named
+format revision. Editor and mod entries use their reviewed release/version.
 `verified` and `unsupported` entries require an exact build, artifact version,
 and evidence. `unknown` means no exact review is available; it is not a warning
 that the build is incompatible. An explicit `unsupported` result applies only
@@ -63,6 +66,8 @@ four artifact kinds, the specific reviewed artifact version, a timezone-qualifie
 code, concise explanation, relative `docs/...` or HTTPS evidence references,
 and Help article IDs from `evidence` and `troubleshooting` for unsupported
 entries. The UI displays the localized Help article titles for next steps.
+Reject blank artifact versions; catalog versions must identify the specific
+tool release or format revision being reviewed.
 Open the matching topic from the Help tab to read the full guidance.
 Use `unknown` when evidence is absent. Do not turn editor file-scope evidence,
 Steam `LastUpdated`, install presence, or a community contribution into an exact

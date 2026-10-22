@@ -498,8 +498,8 @@
     },
     {
       "path": "docs/HELP_AND_COMPATIBILITY.md",
-      "bytes": 5958,
-      "sha256": "575045d5343f0a3349f357e1646085cfffb9f07dd74c1f976b81915815eae7ce"
+      "bytes": 6319,
+      "sha256": "c3482c1240162f22e4eada190b246327226f24c3a3cb7d2a3df00ccf03d43697"
     },
     {
       "path": "docs/HYRULE_FIRE_EMBLEM_DEPTH.md",
@@ -4468,8 +4468,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_discovery.py",
-      "bytes": 29142,
-      "sha256": "77544a4b6ccc8341b750fd68e0f55697012e00d164255528f77c7b683bda8631"
+      "bytes": 29163,
+      "sha256": "99954956e35e4de3361f6df35f25e7b3172df95a74290e8f095ece3f0b52bf61"
     },
     {
       "path": "src/koei_editor/shared/save_doctor.py",
@@ -4583,8 +4583,8 @@
     },
     {
       "path": "src/koei_editor/shared/version_tracker.py",
-      "bytes": 28025,
-      "sha256": "134a9e040734304325e808413ea4dac59f5009ec1831e1e95703d8b0eeeda376"
+      "bytes": 28078,
+      "sha256": "e4739e443730e91af565cc0d6b814f5a143bcfa5e535729517a0a601f9975205"
     },
     {
       "path": "src/koei_editor/shared/version_tracker_gui.py",
@@ -6523,8 +6523,8 @@
     },
     {
       "path": "tests/test_version_tracker.py",
-      "bytes": 18004,
-      "sha256": "3cd3f52c18ef4585145a08926db1e0b37210294ba2b3cfcc3f530b5e6486a94f"
+      "bytes": 19548,
+      "sha256": "6058babe1a0fc7af3dd21d3e6138419c20f0f5207ac40f871811ecad05476854"
     },
     {
       "path": "tests/test_weapon_attributes.py",

@@ -22,6 +22,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Completion Companion evidence for Sol](COMPLETION_COMPANION_AI_EVIDENCE.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
+- [Emulator Integration Hub: documented launch profiles and exported-save handoff](EMULATOR_HUB.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
 - [Save Doctor, automatic detection and local Save Vault](SAVE_MANAGEMENT.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)

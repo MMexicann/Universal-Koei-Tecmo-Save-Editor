@@ -10,7 +10,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, LibraryCatalog, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 from koei_editor.shared import shell_preferences
-from koei_editor.shared.localization import LANGUAGES, translate
+from koei_editor.shared.localization import CATALOGS, LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
 VERSION = '3.1'
@@ -45,6 +45,7 @@ class Application(Appearance):
         self.research_lab = None
         self.research_import = None
         self.workflow_builder = None
+        self.emulator_hub = None
         self.mod_workshop_window = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
@@ -57,6 +58,7 @@ class Application(Appearance):
         self.editing_tools_menu.add_separator()
         self.editing_tools_menu.add_command(label=self.tr('research_lab'), command=self.show_research_lab)
         self.editing_tools_menu.add_command(label=self.tr('research_import'), command=self.show_research_import)
+        self.editing_tools_menu.add_command(label=self.tr('emulator_hub'), command=self.show_emulator_hub)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -268,13 +270,13 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (3, 'research_lab'), (4, 'research_import')):
-            self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+        self._refresh_editing_menu_labels()
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'research_lab', 'research_import', 'workflow_builder')
+                                            'editing_presets', 'research_lab', 'research_import',
+                                            'workflow_builder', 'emulator_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -286,6 +288,17 @@ class Application(Appearance):
                 set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
+
+    def _refresh_editing_menu_labels(self):
+        """Translate named menu entries without relying on their Tk indices."""
+        labels = {label: key for catalog in CATALOGS.values() for key, label in catalog.items()}
+        last_index = self.editing_tools_menu.index('end')
+        if last_index is None:
+            return
+        for index in range(last_index + 1):
+            key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
+            if key is not None:
+                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
 
     def change_text_size(self, _event=None):
         self.shell_settings = replace(self.shell_settings, text_size=int(self.text_size_choice.get().rstrip('%')))
@@ -480,7 +493,7 @@ class Application(Appearance):
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
-            ('workflow_builder', 'show_workflow_builder'))
+            ('workflow_builder', 'show_workflow_builder'), ('emulator_hub', 'show_emulator_hub'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -844,7 +857,8 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder', 'help_center')
+                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
+                                       'emulator_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -938,6 +952,15 @@ class Application(Appearance):
         self.breadcrumb.set(self.tr('save_library'))
         self._remember_workspace('tool:save_library')
         self.save_library.apply_theme(THEMES[self.theme_name.get()])
+
+    def show_emulator_hub(self):
+        from koei_editor.shared.emulator_hub_gui import EmulatorHubWorkspace
+        if self.emulator_hub is None:
+            self.emulator_hub = EmulatorHubWorkspace(self.root, self.workspace, self.open_saved_copy,
+                                                     preferences_path=self.preferences_path)
+        self._show_editing_tool(self.emulator_hub, self.tr('emulator_hub'))
+        self._remember_workspace('tool:emulator_hub')
+        return self.emulator_hub
 
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace

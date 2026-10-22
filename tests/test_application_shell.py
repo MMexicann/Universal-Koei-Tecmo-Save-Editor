@@ -65,6 +65,43 @@ class ShellPreferencesTests(unittest.TestCase):
         self.assertFalse(search_commands(entries, 'missing'))
 
 
+class MenuTranslationTests(unittest.TestCase):
+    class Menu:
+        def __init__(self, labels):
+            self.labels = list(labels)
+
+        def index(self, end):
+            return len(self.labels) - 1 if self.labels else None
+
+        def entrycget(self, index, option):
+            if option != 'label':
+                raise AssertionError(option)
+            return self.labels[index]
+
+        def entryconfigure(self, index, **options):
+            self.labels[index] = options['label']
+
+    def test_named_menu_entries_translate_after_other_routes_shift_indices(self):
+        menu = self.Menu((CATALOGS['en']['editing_presets'], CATALOGS['en']['transfer'], '',
+                          CATALOGS['en']['research_lab'], CATALOGS['en']['research_import'], '',
+                          'Game Asset Explorer', CATALOGS['en']['emulator_hub']))
+
+        class Shell:
+            editing_tools_menu = menu
+
+            @staticmethod
+            def tr(key):
+                return translate(key, 'de')
+
+        Application._refresh_editing_menu_labels(Shell())
+
+        self.assertEqual(menu.labels[0], translate('editing_presets', 'de'))
+        self.assertEqual(menu.labels[5], '')
+        self.assertEqual(menu.labels[6], translate('asset_explorer', 'de')
+                         if 'asset_explorer' in CATALOGS['de'] else 'Game Asset Explorer')
+        self.assertEqual(menu.labels[7], translate('emulator_hub', 'de'))
+
+
 class ApplicationShellTests(unittest.TestCase):
     def setUp(self):
         try:
@@ -177,7 +214,8 @@ class ApplicationShellTests(unittest.TestCase):
     def test_integrated_tool_commands_dispatch_exact_routes_and_remain_recent(self):
         calls = []
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
-                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder'}
+                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder',
+                  'emulator_hub': 'show_emulator_hub'}
         for key, method in routes.items():
             setattr(self.app, method, lambda tool=key: calls.append(tool))
         self.app.open_command_palette()
@@ -194,7 +232,7 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertFalse(self.app.sessions)
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
-        for key in ('editing_presets', 'research_lab', 'workflow_builder'):
+        for key in ('editing_presets', 'research_lab', 'workflow_builder', 'emulator_hub'):
             with self.subTest(workspace=key):
                 self.app.show_library()
                 self.app.library.pack_forget()
@@ -213,6 +251,21 @@ class ApplicationShellTests(unittest.TestCase):
                 self.assertIs(tool.pending, marker)
                 setattr(self.app, key, None)
                 frame.destroy()
+
+    def test_emulator_hub_opens_as_retained_tool_and_survives_language_change(self):
+        hub = self.app.show_emulator_hub()
+        self.root.update()
+        self.assertIs(self.app.emulator_hub, hub)
+        self.assertIn(hub, self.app._tool_workspaces())
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('emulator_hub'))
+        self.assertIs(hub.open_saved_copy.__self__, self.app)
+        self.assertIs(hub.open_saved_copy.__func__, Application.open_saved_copy)
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.root.update()
+        self.assertIs(self.app.emulator_hub, hub)
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('emulator_hub'))
+        self.assertEqual(hub.frame.winfo_manager(), 'pack')
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):
         editor = self.app.select_game('dw7xl')
         self.app.show_library()

@@ -463,8 +463,8 @@
     },
     {
       "path": "docs/GAME_TROUBLESHOOTING.md",
-      "bytes": 4692,
-      "sha256": "80b49f9bbbd9f0bdbb49299286379d4c8bbb19a82d2a025851aac7a8f7560d81"
+      "bytes": 5053,
+      "sha256": "cd3fedbe03b5bce4736abbcf01a4b1b38a782bc500acb52ea1b64844fcd7d88f"
     },
     {
       "path": "docs/GEMFIRE_BATTERY_FORMAT.md",
@@ -1513,8 +1513,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 83193,
-      "sha256": "f18e5e844fb10a99ce200b38b10a211e958621eea93fc17c3ce8cd9fd25e86c7"
+      "bytes": 84911,
+      "sha256": "185ea7e29be6ff5c32dc910d1b502aca6100467cc1b5a658b855bc853dcfd9d1"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4238,8 +4238,13 @@
     },
     {
       "path": "src/koei_editor/shared/game_troubleshooting.py",
-      "bytes": 32489,
-      "sha256": "e82ba951d840a0bf2833317089c168c027cbfd7b8e632db107e6303321d5d699"
+      "bytes": 35435,
+      "sha256": "6545aa767fbf7c53c91688477446e19295ee3b1d59a377649206aa49c58c50b4"
+    },
+    {
+      "path": "src/koei_editor/shared/game_troubleshooting_gui.py",
+      "bytes": 28268,
+      "sha256": "c6e4e56055b0c432677dbc41a5be3b327f48418d6c1bdd89d1324c36f89a6ab5"
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
@@ -4263,8 +4268,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 15718,
-      "sha256": "b77dd7b4c2a72eee7f67cc7be0615a5d036163d1ede4c0e23248e38cc5bc30f9"
+      "bytes": 15820,
+      "sha256": "f4f0c58cd3d2681edb9e45011444b6329e58c8ee5778e31e8f3178c2f3d63506"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -5283,8 +5288,13 @@
     },
     {
       "path": "tests/test_game_troubleshooting.py",
-      "bytes": 21989,
-      "sha256": "bf7d3b6db5c4862ebda7067a11b45e4133f6b4a305f9431ad823353f7a22e6bb"
+      "bytes": 32347,
+      "sha256": "52618c1cb64ea66f89867170e4946f835b8830666398b4bec7bbbc49c9240045"
+    },
+    {
+      "path": "tests/test_game_troubleshooting_gui.py",
+      "bytes": 15483,
+      "sha256": "e3a182422c25b0446155c0a9908c234955a798d2b6b17361299d6f09734bd990"
     },
     {
       "path": "tests/test_gemfire_battery.py",

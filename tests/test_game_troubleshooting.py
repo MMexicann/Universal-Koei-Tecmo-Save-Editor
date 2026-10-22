@@ -1,6 +1,7 @@
 """Deterministic, read-only tests for the Game Troubleshooting Center."""
 import json
 import os
+from contextlib import contextmanager
 from pathlib import Path
 import stat
 import subprocess
@@ -46,6 +47,7 @@ def snapshot_tree(root):
     return tuple(snapshot)
 
 
+@unittest.skipUnless(troubleshooting._DIRECTORY_FDS, "Anchored folder access unavailable")
 class GameTroubleshootingTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -315,7 +317,8 @@ class GameTroubleshootingTests(unittest.TestCase):
         real_scandir = os.scandir
 
         def deny_selected(path):
-            if Path(path) == inaccessible:
+            if ((isinstance(path, int) and os.fstat(path).st_ino == inaccessible.stat().st_ino)
+                    or (not isinstance(path, int) and Path(path) == inaccessible)):
                 raise PermissionError("synthetic denied root")
             return real_scandir(path)
 
@@ -325,6 +328,182 @@ class GameTroubleshootingTests(unittest.TestCase):
         self.assertEqual(finding(denied, "configuration.selected_root").status, "unknown")
         self.assertEqual(finding(denied, "mods.scan").status, "unknown")
         self.assertNotIn("synthetic denied root", denied.to_json())
+
+    def test_queued_directory_replacement_cannot_enumerate_outside_files(self):
+        for anchored in (True,):
+            with self.subTest(directory_descriptors=anchored):
+                queued = self.config / "queued"
+                queued.mkdir()
+                held = self.base / "held queued"
+                outside = self.base / "outside queued"
+                outside.mkdir()
+                (outside / "private.json").write_text(json.dumps({"secret": SECRET}))
+                original = troubleshooting._directory
+                replaced = False
+
+                @contextmanager
+                def replace_before_open(bindings):
+                    nonlocal replaced
+                    if bindings[-1][0] == queued and not replaced:
+                        queued.rename(held)
+                        try:
+                            queued.symlink_to(outside, target_is_directory=True)
+                        except OSError:
+                            held.rename(queued)
+                            self.skipTest("Directory symlinks unavailable")
+                        replaced = True
+                    with original(bindings) as descriptor:
+                        yield descriptor
+
+                try:
+                    with patch.object(troubleshooting, "_DIRECTORY_FDS", anchored), \
+                            patch.object(troubleshooting, "_directory", replace_before_open), \
+                            patch.object(troubleshooting, "_decode_config",
+                                         side_effect=AssertionError("Outside candidates must not be read")):
+                        report = self.diagnose(install=None, mods=None)
+                    self.assertTrue(replaced)
+                    self.assertEqual(finding(report, "configuration.scan_limits").status, "unknown")
+                    self.assertNotIn(SECRET, report.to_json())
+                finally:
+                    if queued.is_symlink():
+                        queued.unlink()
+                    if held.exists():
+                        held.rename(queued)
+                    queued.rmdir()
+                    (outside / "private.json").unlink()
+                    outside.rmdir()
+
+    def test_configuration_parent_replacement_is_rejected_before_content_read(self):
+        queued = self.config / "queued"
+        queued.mkdir()
+        (queued / "settings.json").write_text('{"selected": true}')
+        held = self.base / "held config"
+        outside = self.base / "outside config"
+        outside.mkdir()
+        (outside / "settings.json").write_text(json.dumps({"secret": SECRET}))
+        selected, state = troubleshooting._ordinary_root(self.config)
+        self.assertEqual(state, "ready")
+        files, _, _, truncated = troubleshooting._walk(selected)
+        self.assertFalse(truncated)
+        self.assertEqual(len(files), 1)
+        queued.rename(held)
+        try:
+            queued.symlink_to(outside, target_is_directory=True)
+        except OSError:
+            held.rename(queued)
+            self.skipTest("Directory symlinks unavailable")
+        for anchored in (True,):
+            with self.subTest(directory_descriptors=anchored):
+                with patch.object(troubleshooting, "_DIRECTORY_FDS", anchored), \
+                        patch.object(troubleshooting.os, "fdopen",
+                                     side_effect=AssertionError("No configuration content may be read")):
+                    self.assertEqual(troubleshooting._decode_config(files[0][0]), "unavailable")
+
+    def test_configuration_read_keeps_walk_identity_after_parent_aba_swap(self):
+        # Hold a qualified directory iterator while its pathname temporarily
+        # points outside. Its entries must keep the held directory's identity.
+        if not troubleshooting._DIRECTORY_FDS:
+            self.skipTest("Directory descriptors unavailable")
+        queued = self.config / "queued"
+        queued.mkdir()
+        (queued / "settings.json").write_text('{"selected": true}')
+        held = self.base / "held aba"
+        outside = self.base / "outside aba"
+        outside.mkdir()
+        (outside / "settings.json").write_text(json.dumps({"secret": SECRET}))
+        selected, _ = troubleshooting._ordinary_root(self.config)
+        original_scandir = os.scandir
+        queued_identity = queued.stat().st_ino
+        replaced = False
+
+        @contextmanager
+        def swap_during_enumeration(path):
+            nonlocal replaced
+            matches = isinstance(path, int) and os.fstat(path).st_ino == queued_identity
+            if matches:
+                queued.rename(held)
+                try:
+                    queued.symlink_to(outside, target_is_directory=True)
+                except OSError:
+                    held.rename(queued)
+                    self.skipTest("Directory symlinks unavailable")
+                replaced = True
+            try:
+                with original_scandir(path) as iterator:
+                    yield iterator
+            finally:
+                if matches:
+                    queued.unlink()
+                    held.rename(queued)
+
+        with patch.object(troubleshooting.os, "scandir", swap_during_enumeration):
+            files, _, _, truncated = troubleshooting._walk(selected)
+        self.assertTrue(replaced)
+        self.assertFalse(truncated)
+        self.assertEqual(len(files), 1)
+        self.assertEqual(files[0][0].info.st_ino, (queued / "settings.json").stat().st_ino)
+        self.assertNotEqual(files[0][0].info.st_ino, (outside / "settings.json").stat().st_ino)
+        self.assertEqual(troubleshooting._decode_config(files[0][0]), "valid")
+
+    def test_replaced_config_cannot_become_a_fresh_read_baseline(self):
+        path = self.config / "settings.json"
+        path.write_text('{"selected": true}')
+        selected, _ = troubleshooting._ordinary_root(self.config)
+        files, _, _, _ = troubleshooting._walk(selected)
+        path.rename(self.base / "original config")
+        path.write_text(json.dumps({"secret": SECRET}))
+        for anchored in (True,):
+            with self.subTest(directory_descriptors=anchored):
+                with patch.object(troubleshooting, "_DIRECTORY_FDS", anchored), \
+                        patch.object(troubleshooting.os, "fdopen",
+                                     side_effect=AssertionError("Replacement must be rejected before reading")):
+                    self.assertEqual(troubleshooting._decode_config(files[0][0]), "changed")
+
+    def test_replacement_between_stat_and_open_is_rejected_before_read(self):
+        path = self.config / "settings.json"
+        path.write_text('{"selected": true}')
+        selected, _ = troubleshooting._ordinary_root(self.config)
+        files, _, _, _ = troubleshooting._walk(selected)
+        held = self.base / "held original"
+        replacement = self.base / "outside replacement"
+        replacement.write_text(json.dumps({"secret": SECRET}))
+        original_open, original_fdopen = os.open, os.fdopen
+        for anchored in (True,):
+            with self.subTest(directory_descriptors=anchored):
+                replaced = False
+
+                def swap_on_open(target, flags, **kwargs):
+                    nonlocal replaced
+                    if Path(target).name != path.name:
+                        return original_open(target, flags, **kwargs)
+                    self.assertTrue(flags & getattr(os, "O_NONBLOCK", 0)
+                                    or not hasattr(os, "O_NONBLOCK"))
+                    path.rename(held)
+                    replacement.rename(path)
+                    try:
+                        descriptor = original_open(target, flags, **kwargs)
+                    finally:
+                        path.rename(replacement)
+                        held.rename(path)
+                    replaced = True
+                    return descriptor
+
+                @contextmanager
+                def forbid_content_read(descriptor, mode):
+                    with original_fdopen(descriptor, mode) as stream:
+                        class Guard:
+                            def fileno(self):
+                                return stream.fileno()
+
+                            def read(self, *_args):
+                                raise AssertionError("Replacement bytes were read")
+                        yield Guard()
+
+                with patch.object(troubleshooting, "_DIRECTORY_FDS", anchored), \
+                        patch.object(troubleshooting.os, "open", swap_on_open), \
+                        patch.object(troubleshooting.os, "fdopen", forbid_content_read):
+                    self.assertEqual(troubleshooting._decode_config(files[0][0]), "changed")
+                self.assertTrue(replaced)
 
     def test_missing_config_selection_is_not_treated_as_an_error(self):
         report = self.diagnose(config=None)
@@ -424,6 +603,25 @@ class GameTroubleshootingTests(unittest.TestCase):
                 report = troubleshooting.diagnose_game("origins", value)
                 self.assertEqual(finding(report, "installation.selected_root").status,
                                  "unknown")
+
+
+class UnsupportedFolderRuntimeTests(unittest.TestCase):
+    def test_unsupported_runtime_reads_no_selected_metadata_or_content(self):
+        selected = Path("synthetic-selected-folder")
+        with patch.object(troubleshooting, "_DIRECTORY_FDS", False), \
+                patch.object(Path, "lstat", side_effect=AssertionError("No selected metadata read")), \
+                patch.object(troubleshooting.os, "scandir", side_effect=AssertionError("No directory enumeration")), \
+                patch.object(troubleshooting.os, "open", side_effect=AssertionError("No selected file open")):
+            report = troubleshooting.diagnose_game("origins", selected, selected, selected)
+            with self.assertRaises(OSError):
+                with troubleshooting._directory(()):
+                    self.fail("Unsupported directory access was allowed")
+        for identifier in ("installation.selected_root", "configuration.selected_root", "mods.scan"):
+            result = finding(report, identifier)
+            self.assertEqual(result.status, "unknown")
+            self.assertIn("unavailable on this runtime", result.summary)
+        self.assertEqual(finding(report, "origins.directx12.system-requirement").status, "not_checked")
+        self.assertEqual(finding(report, "origins.steam.dlc-companion-frame-rate").status, "not_checked")
 
 
 if __name__ == "__main__":

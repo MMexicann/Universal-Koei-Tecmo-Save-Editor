@@ -1,5 +1,68 @@
 # Universal development validation
 
+## Game Version & Compatibility Tracker
+
+The tracker validation uses generated Steam library folders and manifests with
+synthetic app IDs/build IDs, procedural compatibility records, and temporary
+local history files. The fixtures cover exact `(game profile, Steam app ID,
+platform, build ID, artifact)` matches; unknown results for other apps/builds;
+verified-to-unsupported rechecks; per-category unlisted-artifact warnings;
+build-change history; malformed metadata; and path-free persistence. No game is
+launched and the fixture does not depend on a real Steam account or installed
+game.
+
+The packaged compatibility catalog currently has no exact-build records. In
+that state the tracker reports `unknown` for all categories. This is deliberate:
+there is no reviewed evidence in this checkout for a specific editor, mod,
+configuration tool, or asset format on an exact Steam build. The validator
+requires exact app/build identities and versioned evidence before showing
+`verified` or `unsupported`.
+
+```json
+{
+  "schema": "koei-version-tracker-validation/v1",
+  "status": "pass_with_gui_skips",
+  "base_commit": "f32aebd97171b6acbf0e32a61bb9faf5a496a265",
+  "commands": {
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia",
+    "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
+    "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
+  },
+  "unit_tests": {
+    "run": 99,
+    "passed": 68,
+    "skipped": 31,
+    "failures": 0,
+    "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
+  },
+  "source_manifest": {
+    "status": "passed",
+    "verified_public_files": 1195
+  },
+  "supported_game_inventory": {
+    "status": "passed",
+    "registered_adapters": 98
+  },
+  "syntax_and_diff_checks": {
+    "py_compile": "passed for changed Python modules and tests",
+    "git_diff_check": "passed"
+  },
+  "fixture": {
+    "type": "procedural Steam metadata and temporary path-free history",
+    "real_game_launched": false,
+    "real_steam_install_used": false,
+    "local_install_paths_persisted": false
+  },
+  "catalog": {
+    "exact_compatibility_records": 0,
+    "missing_exact_record_status": "unknown",
+    "verified_or_unsupported_claims_seeded": false
+  },
+  "release_created": false,
+  "version_bumped": false
+}
+```
+
 ## v3.1 common-core editing and resource transfers
 
 The new DW8 XL PS4 editor reuses the already-qualified CUSA00397 zero-extension

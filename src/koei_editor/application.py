@@ -524,7 +524,7 @@ class Application(Appearance):
 
     def _rebuild_help_menu(self):
         self.help_menu.delete(0, 'end')
-        for tab in ('help', 'compatibility', 'workflows', 'feedback', 'validation', 'plugins'):
+        for tab in ('help', 'compatibility', 'versions', 'workflows', 'feedback', 'validation', 'plugins'):
             self.help_menu.add_command(label=self.tr(tab), command=lambda name=tab: self.show_help(name))
 
     def _optional_tool_routes(self):
@@ -544,7 +544,7 @@ class Application(Appearance):
                                 'game', game.platform, game.id + ' ' + game.description)
                    for game in self.library_games]
         for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
-                    'troubleshooting', 'help', 'compatibility', 'workflows', 'feedback',
+                    'troubleshooting', 'help', 'compatibility', 'versions', 'workflows', 'feedback',
                     'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         listed_tools = {entry.id.removeprefix('tool:') for entry in entries if entry.id.startswith('tool:')}
@@ -626,6 +626,7 @@ class Application(Appearance):
         from koei_editor.shared.help_center import HelpCenter
         if self.help_center is None:
             self.help_center = HelpCenter(self.root, self.workspace, initial_tab=tab, language=self.language,
+                                          preferences_path=self.preferences_path,
                                           on_tab_changed=self._help_tab_changed)
         self.library.pack_forget()
         self._hide_tools()

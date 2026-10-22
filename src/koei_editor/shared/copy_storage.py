@@ -78,7 +78,10 @@ def _new_child_posix(data, directory, name, expected_identity):
                 0o600, dir_fd=directory_fd)
         except OSError as error:
             raise SaveError('The private output file already exists or cannot be created safely.') from error
+        output_identity = None
         try:
+            output_info = os.fstat(output_fd)
+            output_identity = (output_info.st_dev, output_info.st_ino)
             view = memoryview(data)
             while view:
                 count = os.write(output_fd, view)
@@ -86,38 +89,59 @@ def _new_child_posix(data, directory, name, expected_identity):
                     raise SaveError('The private output file could not be completed.')
                 view = view[count:]
             os.fsync(output_fd)
+        except BaseException:
+            if output_identity is not None:
+                _unlink_posix_child_if_same(directory_fd, name, output_identity)
+            raise
         finally:
             os.close(output_fd)
 
-        verify_fd = os.open(name, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)
-                            | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_CLOEXEC', 0),
-                            dir_fd=directory_fd)
         try:
-            file_info = os.fstat(verify_fd)
-            if not stat.S_ISREG(file_info.st_mode) or file_info.st_nlink != 1:
-                raise SaveError('The private output is not one ordinary file.')
-            blocks, length = [], 0
-            while length <= len(data):
-                block = os.read(verify_fd, min(65536, len(data) + 1 - length))
-                if not block:
-                    break
-                blocks.append(block)
-                length += len(block)
-            if b''.join(blocks) != data:
-                raise SaveError('The private output failed descriptor-bound read-back.')
-        finally:
-            os.close(verify_fd)
-        os.fsync(directory_fd)
-        try:
-            named_info = os.stat(directory, follow_symlinks=False)
-        except OSError as error:
-            raise SaveError('The private output directory path changed during the write.') from error
-        if (not stat.S_ISDIR(named_info.st_mode)
-                or (named_info.st_dev, named_info.st_ino) != identity):
-            raise SaveError('The private output directory path changed during the write.')
-        return directory / name
+            verify_fd = os.open(name, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)
+                                | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_CLOEXEC', 0),
+                                dir_fd=directory_fd)
+            try:
+                file_info = os.fstat(verify_fd)
+                if (not stat.S_ISREG(file_info.st_mode) or file_info.st_nlink != 1
+                        or (file_info.st_dev, file_info.st_ino) != output_identity):
+                    raise SaveError('The private output is not the created ordinary file.')
+                blocks, length = [], 0
+                while length <= len(data):
+                    block = os.read(verify_fd, min(65536, len(data) + 1 - length))
+                    if not block:
+                        break
+                    blocks.append(block)
+                    length += len(block)
+                if b''.join(blocks) != data:
+                    raise SaveError('The private output failed descriptor-bound read-back.')
+            finally:
+                os.close(verify_fd)
+            os.fsync(directory_fd)
+            try:
+                named_info = os.stat(directory, follow_symlinks=False)
+            except OSError as error:
+                raise SaveError('The private output directory path changed during the write.') from error
+            if (not stat.S_ISDIR(named_info.st_mode)
+                    or (named_info.st_dev, named_info.st_ino) != identity):
+                raise SaveError('The private output directory path changed during the write.')
+            return directory / name
+        except BaseException:
+            _unlink_posix_child_if_same(directory_fd, name, output_identity)
+            raise
     finally:
         os.close(directory_fd)
+
+
+def _unlink_posix_child_if_same(directory_fd, name, expected_identity):
+    """Remove only a failed child entry still naming the file this call created."""
+    try:
+        info = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        if ((expected_identity is None or (info.st_dev, info.st_ino) == expected_identity)
+                and stat.S_ISREG(info.st_mode) and info.st_nlink == 1):
+            os.unlink(name, dir_fd=directory_fd)
+            os.fsync(directory_fd)
+    except OSError:
+        pass
 
 
 def _new_child_windows(data, directory, name, expected_identity):
@@ -132,6 +156,7 @@ def _new_child_windows(data, directory, name, expected_identity):
     FILE_READ_ATTRIBUTES = 0x0080
     FILE_SHARE_READ = 0x00000001
     FILE_SHARE_WRITE = 0x00000002
+    DELETE = 0x00010000
     OPEN_EXISTING = 3
     FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
     FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
@@ -176,6 +201,9 @@ def _new_child_windows(data, directory, name, expected_identity):
     class IO_STATUS_BLOCK(ctypes.Structure):
         _anonymous_ = ('u',)
         _fields_ = [('u', IO_STATUS_BLOCK_UNION), ('Information', ctypes.c_size_t)]
+
+    class FILE_DISPOSITION_INFORMATION(ctypes.Structure):
+        _fields_ = [('DeleteFile', wintypes.BOOLEAN)]
 
     kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
     ntdll = ctypes.WinDLL('ntdll')
@@ -239,7 +267,7 @@ def _new_child_windows(data, directory, name, expected_identity):
                                        wintypes.ULONG, wintypes.LPVOID, wintypes.ULONG]
         ntdll.NtCreateFile.restype = ctypes.c_long
         status = ntdll.NtCreateFile(
-            ctypes.byref(child), GENERIC_READ | GENERIC_WRITE,
+            ctypes.byref(child), GENERIC_READ | GENERIC_WRITE | DELETE,
             ctypes.byref(object_attributes), ctypes.byref(iosb), None, 0x80,
             FILE_SHARE_READ, FILE_CREATE,
             FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT
@@ -247,45 +275,60 @@ def _new_child_windows(data, directory, name, expected_identity):
         if status < 0:
             raise SaveError(f'The private output file could not be created exclusively (NTSTATUS {status & 0xffffffff:08x}).')
 
-        written = 0
-        while written < len(data):
-            block = data[written:written + 65536]
-            buffer = ctypes.create_string_buffer(block)
-            count = wintypes.DWORD()
-            if not kernel32.WriteFile(child, buffer, len(block), ctypes.byref(count), None) or not count.value:
-                raise SaveError('The private output file could not be completed.')
-            written += count.value
-        if not kernel32.FlushFileBuffers(child):
-            raise SaveError('The private output file could not be flushed safely.')
-        position = ctypes.c_longlong()
-        if not kernel32.SetFilePointerEx(child, 0, ctypes.byref(position), 0):
-            raise SaveError('The private output file could not be verified.')
-        verified = bytearray()
-        while len(verified) <= len(data):
-            amount = min(65536, len(data) + 1 - len(verified))
-            buffer = ctypes.create_string_buffer(amount)
-            count = wintypes.DWORD()
-            if not kernel32.ReadFile(child, buffer, amount, ctypes.byref(count), None):
-                raise SaveError('The private output file could not be read back.')
-            if not count.value:
-                break
-            verified.extend(buffer.raw[:count.value])
-        if bytes(verified) != data:
-            raise SaveError('The private output failed handle-bound read-back.')
-        child_info = BY_HANDLE_FILE_INFORMATION()
-        if (not kernel32.GetFileInformationByHandle(child, ctypes.byref(child_info))
-                or child_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
-                or child_info.nNumberOfLinks != 1):
-            raise SaveError('The private output is not one ordinary file.')
         try:
-            path_info = directory.lstat()
-        except OSError as error:
-            raise SaveError('The private output directory path changed during the write.') from error
-        if ((path_info.st_dev, path_info.st_ino) != expected_identity
-                or stat.S_ISLNK(path_info.st_mode)
-                or getattr(path_info, 'st_file_attributes', 0) & FILE_ATTRIBUTE_REPARSE_POINT):
-            raise SaveError('The private output directory path changed during the write.')
-        return directory / name
+            written = 0
+            while written < len(data):
+                block = data[written:written + 65536]
+                buffer = ctypes.create_string_buffer(block)
+                count = wintypes.DWORD()
+                if not kernel32.WriteFile(child, buffer, len(block), ctypes.byref(count), None) or not count.value:
+                    raise SaveError('The private output file could not be completed.')
+                written += count.value
+            if not kernel32.FlushFileBuffers(child):
+                raise SaveError('The private output file could not be flushed safely.')
+            position = ctypes.c_longlong()
+            if not kernel32.SetFilePointerEx(child, 0, ctypes.byref(position), 0):
+                raise SaveError('The private output file could not be verified.')
+            verified = bytearray()
+            while len(verified) <= len(data):
+                amount = min(65536, len(data) + 1 - len(verified))
+                buffer = ctypes.create_string_buffer(amount)
+                count = wintypes.DWORD()
+                if not kernel32.ReadFile(child, buffer, amount, ctypes.byref(count), None):
+                    raise SaveError('The private output file could not be read back.')
+                if not count.value:
+                    break
+                verified.extend(buffer.raw[:count.value])
+            if bytes(verified) != data:
+                raise SaveError('The private output failed handle-bound read-back.')
+            child_info = BY_HANDLE_FILE_INFORMATION()
+            if (not kernel32.GetFileInformationByHandle(child, ctypes.byref(child_info))
+                    or child_info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
+                    or child_info.nNumberOfLinks != 1):
+                raise SaveError('The private output is not one ordinary file.')
+            try:
+                path_info = directory.lstat()
+            except OSError as error:
+                raise SaveError('The private output directory path changed during the write.') from error
+            if ((path_info.st_dev, path_info.st_ino) != expected_identity
+                    or stat.S_ISLNK(path_info.st_mode)
+                    or getattr(path_info, 'st_file_attributes', 0) & FILE_ATTRIBUTE_REPARSE_POINT):
+                raise SaveError('The private output directory path changed during the write.')
+            return directory / name
+        except BaseException as error:
+            disposition = FILE_DISPOSITION_INFORMATION(True)
+            delete_iosb = IO_STATUS_BLOCK()
+            ntdll.NtSetInformationFile.argtypes = [wintypes.HANDLE,
+                                                  ctypes.POINTER(IO_STATUS_BLOCK),
+                                                  wintypes.LPVOID, wintypes.ULONG,
+                                                  ctypes.c_int]
+            ntdll.NtSetInformationFile.restype = ctypes.c_long
+            status = ntdll.NtSetInformationFile(
+                child, ctypes.byref(delete_iosb), ctypes.byref(disposition),
+                ctypes.sizeof(disposition), 13)
+            if status < 0:
+                raise SaveError('The incomplete private output could not be removed safely.') from error
+            raise
     finally:
         if child.value:
             kernel32.CloseHandle(child)

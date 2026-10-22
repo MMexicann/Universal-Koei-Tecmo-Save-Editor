@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from koei_editor.games.deception4_ps3 import parser
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared import copy_storage as copy_storage_module
 from koei_editor.shared import playthrough_profiles as playthrough_profiles_module
 from koei_editor.shared.save_vault import SaveVault
 from koei_editor.shared.playthrough_profiles import (
@@ -291,6 +292,26 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
         self.assertTrue(race_injected, 'the test must swap the profile store before manifest creation')
         self.assertEqual(list(outside.iterdir()), [])
+        self.assertEqual(self.store.list_profiles(), ())
+
+    @unittest.skipUnless(os.name != 'nt', 'POSIX child-writer failure injection')
+    def test_failed_profile_manifest_write_removes_its_partial_child(self):
+        original_write = os.write
+        write_count = 0
+
+        def fail_after_partial_write(file_descriptor, data):
+            nonlocal write_count
+            if write_count == 0:
+                write_count += 1
+                return original_write(file_descriptor, bytes(data[:7]))
+            raise OSError('injected partial profile manifest write')
+
+        with patch.object(copy_storage_module.os, 'write', side_effect=fail_after_partial_write):
+            with self.assertRaises(OSError):
+                self.make_profile()
+
+        profile_directory = self.vault.root / 'playthrough_profiles'
+        self.assertEqual(list(profile_directory.iterdir()), [])
         self.assertEqual(self.store.list_profiles(), ())
 
     @unittest.skipUnless(os.name == 'nt', 'Windows native child writer coverage')

@@ -40,6 +40,10 @@ themes. No Python installation is needed for the Windows app.
 - **Manage mods:** import validated ZIP packages, keep separate profiles, check
   declared dependencies/conflicts, and safely manage Nioh 2 PC mods through its
   documented Mods folder method. [Mod Manager scope and safeguards](docs/MOD_MANAGER.md).
+- **Analyze game patches from source:** compare version/build metadata and
+  explicit file hashes, archive structures and supported-format metadata, then
+  check stated mod, tool and save requirements.
+  [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
 - **Inspect local assets:** browse standard ZIP containers, a bounded G1T texture
   subset, and common image, audio and model formats in a read-only workspace.
   Format recognition does not identify a game or edition.

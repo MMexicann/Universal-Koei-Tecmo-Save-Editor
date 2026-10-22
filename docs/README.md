@@ -77,6 +77,7 @@ Nioh 2 PC only.
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
 - [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
+- [Game Patch and Compatibility Analyzer](PATCH_COMPATIBILITY_ANALYZER.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Application performance benchmarks](PERFORMANCE.md)

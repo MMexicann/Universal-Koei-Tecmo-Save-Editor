@@ -16,6 +16,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
+- [Game Troubleshooting Center: read-only diagnostics and report evidence](GAME_TROUBLESHOOTING.md)
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)

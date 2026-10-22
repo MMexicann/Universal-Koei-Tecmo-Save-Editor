@@ -38,11 +38,13 @@ another build's result.
 
 Each exact-build entry identifies a save editor, mod, configuration tool, or
 asset format, its reviewed version, status, reason code, explanation, check time,
-and evidence references. `verified` and `unsupported` entries require an exact
-build, tool/format version, and evidence. `unknown` means no exact review is
-available; it is not a warning that the build is incompatible. An explicit
-`unsupported` result applies only to the matching profile/build/artifact tuple
-and explains the evidence and next steps. A record for an older build never
+and evidence references. The tracker does not detect installed mod/tool versions
+or inspect local assets; the version shown is the version in the catalog review.
+`verified` and `unsupported` entries require an exact build, artifact version,
+and evidence. `unknown` means no exact review is available; it is not a warning
+that the build is incompatible. An explicit `unsupported` result applies only
+to the matching profile/build/artifact tuple, requires a next step that resolves
+to a Help article, and explains the evidence. A record for an older build never
 marks a newly detected build unsupported.
 
 When a valid Steam build ID changes, local history records a first detection or
@@ -58,7 +60,10 @@ The packaged `data/version_compatibility.json` catalog is deliberately empty
 until exact-build evidence has been reviewed. To add an entry, use a registered
 Windows PC profile and mapped Steam app ID, exact decimal build ID, one of the
 four artifact kinds, the specific reviewed artifact version, a timezone-qualified check time, a stable reason
-code, concise explanation, and relative `docs/...` or HTTPS evidence references.
+code, concise explanation, relative `docs/...` or HTTPS evidence references,
+and Help article IDs from `evidence` and `troubleshooting` for unsupported
+entries. The UI displays the localized Help article titles for next steps.
+Open the matching topic from the Help tab to read the full guidance.
 Use `unknown` when evidence is absent. Do not turn editor file-scope evidence,
 Steam `LastUpdated`, install presence, or a community contribution into an exact
 compatibility claim. Add focused procedural fixtures for every catalog change.

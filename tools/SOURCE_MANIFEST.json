@@ -183,8 +183,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 11973,
-      "sha256": "cea136a36429d68cd2397efc22feff87c7a16973d285bb636f24425209873b63"
+      "bytes": 12968,
+      "sha256": "0711179db648127bc55589e3e4a4772418085bf7791e1eae4adaee454e955b7b"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -5697,6 +5697,11 @@
       "sha256": "0890352cbe373b2daf33d740721506bc6206e27788e2238a582e0a36efd9e734"
     },
     {
+      "path": "tests/test_numpy_build_provenance.py",
+      "bytes": 6776,
+      "sha256": "6a0aa7bc1cf12f17f4f88396bb90fd26cb7edec80a51087d4e2e35ddcab6baa9"
+    },
+    {
       "path": "tests/test_origins_codec.py",
       "bytes": 4437,
       "sha256": "46888e6bf7220e32dd54fb175b2cf60dbf3ad6e99ffd6039aaf79d2b4684e28c"
@@ -6812,9 +6817,24 @@
       "sha256": "e4b3d69f9106fa08234bc9056196e8ed7c65334638de1509fc51c96fb8eeed40"
     },
     {
+      "path": "tools/numpy_build_provenance.py",
+      "bytes": 4282,
+      "sha256": "3cef5df05be549086faef4bee1c0089f420ad0b0ff283e9ea07485cbb2c5a165"
+    },
+    {
       "path": "tools/package_release.py",
-      "bytes": 44836,
-      "sha256": "53d9db70dd00bb2dc43903aefd4e1a5a79202ff8ac81edb0b00c8808d9f8a639"
+      "bytes": 45022,
+      "sha256": "238cab388e94a6b9d00d377308c65f8d46da6110f65c5341696f7b432993839e"
+    },
+    {
+      "path": "tools/pyinstaller_hooks/hook-numpy.__config__.py",
+      "bytes": 148,
+      "sha256": "ce35a3c1b1b1fc8c29278b49f8258590e87d950213144a148f7a111f691358d5"
+    },
+    {
+      "path": "tools/pyinstaller_hooks/hook-numpy.lib._datasource.py",
+      "bytes": 148,
+      "sha256": "49076bee8b1ec35c7f15408c955927fc02cced4cbdabc6708d2efbcb56ad8981"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-trimesh.py",

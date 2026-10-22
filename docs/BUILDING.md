@@ -46,6 +46,22 @@ A reviewed pre-import hook preserves these exclusions when PyInstaller resolves
 the removed standard-library `distutils` name. It refuses to build if any of
 the three required compiler exclusions is missing.
 
+Two NumPy hooks also edit exact reviewed code objects before PYZ collection:
+five upstream build-path values in `numpy.__config__.CONFIG` receive explicit
+upstream-build labels, and only the historical absolute-path examples in three
+`numpy.lib._datasource` docstrings receive neutral example paths. NumPy's
+configuration keys, versions, CPU diagnostics, `show_config`, numerical code
+and file operations remain intact; installed package files are not rewritten.
+The accepted Windows wheel is SHA256
+`2ca144f15135b6212a5c47b1e2aeca6e412f102f95a2d5d88d8aec77eb255de3`.
+The original `numpy/__config__.py` member is SHA256
+`7484592aa3f8dc04c44d13ab7520d27429ee47b03090a49b6a6c7a221cf52130`;
+`numpy/lib/_datasource.py` is SHA256
+`dbbf26c57ccd4d2dc435304f4418f967411261230fa2f9850e1788f57db7ea1f`.
+Changed source members or optimization modes that bypass the reviewed graph
+code cache stop the build. Full frozen-module privacy scanning remains required;
+these hooks add no personal-path exception.
+
 `tools/build_windows.py` requires Windows for compilation. Inspect the build inputs on
 any OS with:
 

@@ -21,6 +21,9 @@ TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_rele
               'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
               'tools/requirements/build.txt', 'tools/requirements/dev.txt',
               'tools/pyinstaller_hooks/hook-trimesh.py',
+              'tools/numpy_build_provenance.py',
+              'tools/pyinstaller_hooks/hook-numpy.__config__.py',
+              'tools/pyinstaller_hooks/hook-numpy.lib._datasource.py',
               'tools/pyinstaller_hooks/pre_safe_import_module/hook-distutils.py'}
 COMMUNITY_TEMPLATE_FILES = frozenset(
     f'tools/community_package_templates/{kind}.koei-community.json'

@@ -24,6 +24,7 @@ import tempfile
 import threading
 import uuid
 import zipfile
+import zlib
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from pathlib import Path, PurePosixPath
@@ -51,9 +52,9 @@ _HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 _TRANSACTION_STAGE_RE = re.compile(r"^\.ktmm-transaction-[0-9a-f]{32}$")
 _REMOVAL_BACKUP_RE = re.compile(r"^\.ktmm-remove-[0-9a-f]{32}-([a-z0-9][a-z0-9._-]{1,47})$")
 _WINDOWS_RESERVED = {
-    "con", "prn", "aux", "nul",
-    *(f"com{i}" for i in range(1, 10)),
-    *(f"lpt{i}" for i in range(1, 10)),
+    "con", "prn", "aux", "nul", "conin$", "conout$",
+    *(f"com{i}" for i in "123456789¹²³"),
+    *(f"lpt{i}" for i in "123456789¹²³"),
 }
 
 
@@ -186,7 +187,8 @@ def _safe_relative_path(value: str) -> PurePosixPath:
     for part in parts:
         if ":" in part or any(ch in part for ch in '<>"|?*'):
             raise PackageError(f"Unsafe package path: {value!r}.")
-        if part.endswith((".", " ")) or part.split(".", 1)[0].casefold() in _WINDOWS_RESERVED:
+        if (part.endswith((".", " "))
+                or part.split(".", 1)[0].rstrip(" ").casefold() in _WINDOWS_RESERVED):
             raise PackageError(f"Windows cannot safely represent package path: {value!r}.")
     return PurePosixPath(*parts)
 
@@ -669,14 +671,17 @@ class ModManager:
                 try:
                     metadata = json.loads(archive.read(metadata_info).decode("utf-8"),
                                           object_pairs_hook=_unique_json_object)
-                except (UnicodeError, ValueError, OSError, RuntimeError) as exc:
+                except (UnicodeError, ValueError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error, EOFError) as exc:
                     raise PackageError(f"Cannot read koei-mod.json: {exc}") from exc
             fallback_name = source.stem.strip() or "Nioh 2 mod"
             fallback_id = _slug(fallback_name)
             mod_id, name, version, dependencies, conflicts = _metadata_value(
                 metadata, fallback_name, fallback_id
             )
-            return self._store_package(archive, payload, mod_id, name, version, dependencies, conflicts)
+            try:
+                return self._store_package(archive, payload, mod_id, name, version, dependencies, conflicts)
+            except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
+                raise PackageError(f"ZIP package failed integrity validation: {exc}") from exc
 
     def _store_package(self, archive: zipfile.ZipFile,
                        payload: list[tuple[PurePosixPath, zipfile.ZipInfo]],

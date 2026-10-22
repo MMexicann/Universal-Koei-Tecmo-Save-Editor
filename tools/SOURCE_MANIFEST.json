@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5829,
-      "sha256": "ac2d263949c8128ee38d2e6cf8660b201740b9427128637af10c691965b26302"
+      "bytes": 6073,
+      "sha256": "3713a14209bb712573032c3704be086b35a9d658605f0d9f9d1a4f6a73be4283"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -193,8 +193,13 @@
     },
     {
       "path": "docs/COMMUNITY_PLUGINS.md",
-      "bytes": 8346,
-      "sha256": "bf210b438dc3bdf44e25d8006c0ab4b40b51728852c1cf18c68eb62b6308eb76"
+      "bytes": 8568,
+      "sha256": "78b7c82233d05a502d63476daacadbd5f6c8d78145eed05c3ca0abaf5f148006"
+    },
+    {
+      "path": "docs/COMMUNITY_TOOLKIT.md",
+      "bytes": 11044,
+      "sha256": "eaa19aeb2a369afbdc5db27ff7734e8a9283cd43eb06d0d04d5ab77c78956ae9"
     },
     {
       "path": "docs/COMPATIBILITY_FIX.md",
@@ -678,8 +683,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 15856,
-      "sha256": "b042980c6e435d007d5e777633a93e5f5573459a7d82f80b9724086832ce0f53"
+      "bytes": 16010,
+      "sha256": "4da352c12079646dad6df442cacc51e7a2b57322ad8f5f4844781cf1fdf54a75"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1140,6 +1145,31 @@
       "path": "docs/releases/v3.0.md",
       "bytes": 8434,
       "sha256": "1fcbbaaf321c52fe0306c9cbb31b09de5b4c4b1824d4dfc8e8a4b716cc8c65dd"
+    },
+    {
+      "path": "docs/schemas/koei-community-character_build-v1.schema.json",
+      "bytes": 6061,
+      "sha256": "6a8ce394e04a689459636f06601b3cc1d60a786157ae3bc5dafd0bd416c3c7df"
+    },
+    {
+      "path": "docs/schemas/koei-community-compatibility_report-v1.schema.json",
+      "bytes": 3673,
+      "sha256": "c6d47d86921508a77eaca436f1744a15560e6be45829c02e4b6cad206088feca"
+    },
+    {
+      "path": "docs/schemas/koei-community-configuration_preset-v1.schema.json",
+      "bytes": 3534,
+      "sha256": "abfd2d5ef99718b2f8c1262046c028be6d6978c6c920388b7ca70e24c03993c1"
+    },
+    {
+      "path": "docs/schemas/koei-community-mod_list-v1.schema.json",
+      "bytes": 4610,
+      "sha256": "c254110587662570440463e5a3dd1d9db4486f2630d8af680b26726704c44402"
+    },
+    {
+      "path": "docs/schemas/koei-community-playthrough_manifest-v1.schema.json",
+      "bytes": 3955,
+      "sha256": "22ddfd7d0489c6c371a29ba6d5aab71aa8ed26dec11af6498839599a8d96b9bf"
     },
     {
       "path": "launch.pyw",
@@ -3722,6 +3752,11 @@
       "sha256": "03086ddcb8e24d581ea34e90b42acb7a47aca37faa7191b066312813d0d74e6c"
     },
     {
+      "path": "src/koei_editor/shared/community_packages.py",
+      "bytes": 22850,
+      "sha256": "d7b79b1175e0d2720c602df86bfe558fa23b5168621bf580876a39091a7ea381"
+    },
+    {
       "path": "src/koei_editor/shared/community_plugins.py",
       "bytes": 14137,
       "sha256": "e4c5f0e393421b4a90ca61e09b2a83c599a298b1860f6614d895dca4aae7edb0"
@@ -4155,6 +4190,16 @@
       "path": "tests/test_community_feedback.py",
       "bytes": 6124,
       "sha256": "7e3568e89a3fd2bced7333b8f67b545b4d6dcf6802dfc71aa3313cfbd85bc435"
+    },
+    {
+      "path": "tests/test_community_package_checker.py",
+      "bytes": 6038,
+      "sha256": "77267310a23f3d63c64f748f06c0ca4c7426b108287bdab4a895dc89addb0c09"
+    },
+    {
+      "path": "tests/test_community_packages.py",
+      "bytes": 20150,
+      "sha256": "46ef425232963a8a0b3333cb3b560f069f26b2144d361374e697cd067efc89cc"
     },
     {
       "path": "tests/test_community_plugins.py",
@@ -5038,8 +5083,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 31419,
-      "sha256": "00f2a9f149e7f182466a3e881f06bc2a5f340a97662adf68cd3631aefa5b70b5"
+      "bytes": 32157,
+      "sha256": "efc56566f5970cadb8256635531e3760e4073c6b36699a3da4fdb430fc432b28"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
@@ -5862,9 +5907,39 @@
       "sha256": "dca60490f2eb6883b3b69aa4549ac83f21d6550cb4cf36e16c598be78b44ffda"
     },
     {
+      "path": "tools/check_community_packages.py",
+      "bytes": 5239,
+      "sha256": "f71dd1092a4635f8329d26ad29911d6dfa67dd4947f3a3437da9f27f8a72fcbe"
+    },
+    {
       "path": "tools/check_community_plugins.py",
       "bytes": 1500,
       "sha256": "fa8336bf79891839882e721593941914d629bd6f09c230144be5913056e608a8"
+    },
+    {
+      "path": "tools/community_package_templates/character_build.koei-community.json",
+      "bytes": 748,
+      "sha256": "1d220c9b7af980dde429c31648a61e0052f93bdc4f1ad6969067d122604306a0"
+    },
+    {
+      "path": "tools/community_package_templates/compatibility_report.koei-community.json",
+      "bytes": 621,
+      "sha256": "d4c534cdf2935df2b22ff4ed84dbc8569fba1366e1eccfadbfae5e1be1beaf28"
+    },
+    {
+      "path": "tools/community_package_templates/configuration_preset.koei-community.json",
+      "bytes": 579,
+      "sha256": "7f8d20bb1ce5ef9afb5be18a2c0c7a7b8b9ebb098d8777b806280fb0c5d64860"
+    },
+    {
+      "path": "tools/community_package_templates/mod_list.koei-community.json",
+      "bytes": 710,
+      "sha256": "7bab7b2a60189b104ddbfbc489047229c42b60ebf061c226f6ae1178868d9bb8"
+    },
+    {
+      "path": "tools/community_package_templates/playthrough_manifest.koei-community.json",
+      "bytes": 818,
+      "sha256": "6455955599f430f917eb8ad21081c331f2b4df5e79edcf00ab8ee7c794fa5085"
     },
     {
       "path": "tools/community_plugin_template/example.plugin.json",
@@ -5878,8 +5953,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33059,
-      "sha256": "5fccec31ea962ed20b0a166cf09533f04cfc38a0018e4c57d318d4058d6aa374"
+      "bytes": 33805,
+      "sha256": "e5f2516d15c971c07365189271c22a76889f9c51f0cf64b00f0a5813a2e6f5c5"
     },
     {
       "path": "tools/refresh_manifest.py",

@@ -1,0 +1,32 @@
+{
+  "schema": "koei-tecmo-community-package",
+  "version": 1,
+  "kind": "playthrough_manifest",
+  "id": "community.sample-playthrough",
+  "title": "Fictional two-step checklist",
+  "author": "Community example",
+  "game_id": "sample_game",
+  "platform": "any",
+  "game_version": null,
+  "description": "A fictional checklist with a simple dependency.",
+  "payload": {
+    "objectives": [
+      {
+        "id": "objective.example-start",
+        "title": "Review the fictional starting plan",
+        "status": "planned",
+        "order": 0,
+        "depends_on": []
+      },
+      {
+        "id": "objective.example-next",
+        "title": "Continue to the fictional next step",
+        "status": "planned",
+        "order": 1,
+        "depends_on": [
+          "objective.example-start"
+        ]
+      }
+    ]
+  }
+}

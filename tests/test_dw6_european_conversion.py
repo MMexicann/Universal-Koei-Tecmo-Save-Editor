@@ -60,8 +60,8 @@ class EuropeanDW6ConversionTests(unittest.TestCase):
     def test_all_european_routes_have_distinct_scopes_and_actual_export_receipts(self):
         routes = [route for route in c.ROUTES if eu.GAME_ID in (route.source_id, route.target_id)]
         self.assertEqual(len(routes), 40)
-        self.assertEqual(len(c.ROUTES), 145)
-        self.assertEqual(len(set(route.label for route in c.ROUTES)), 145)
+        self.assertEqual(len(c.ROUTES), 146)
+        self.assertEqual(len(set(route.label for route in c.ROUTES)), 146)
         for route in routes:
             with self.subTest(route=route.id), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)

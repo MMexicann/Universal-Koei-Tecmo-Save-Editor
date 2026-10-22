@@ -1,4 +1,12 @@
-# SW4 PS4 transfer investigation — 2026-10-21
+# SW4 PS4 transfer investigation
+
+**2026-10-22 update:** a newly supplied decrypted US CUSA00919 `app.dat` and
+original metadata resolve the missing-plaintext blocker for that exact export.
+The development source adds a restricted one-way gold transfer to SW4 DX PC.
+Complete migration remains unqualified. See the [current source profile and
+remaining evidence](SW4_PS4_SOURCE.md). The investigation below records the
+earlier public-source search and its encrypted EU inputs; those inputs remain
+encrypted and are not admitted by the new US source profile.
 
 The investigation obtained two publicly shared **EU PS4 CUSA00783** save packages,
 but neither contains decrypted native gameplay. No PS4 conversion route is
@@ -77,8 +85,10 @@ acquired input contains the executable only, without that resource archive.
 A future converter might retain a fully qualified, PC-compatible legacy payload
 and revision in a native PC envelope, letting the destination game's existing
 loader perform migration using its installed assets. This is an **unqualified
-avenue**: no PS4 plaintext example yet establishes the framing, section geometry,
-checksum coverage or revision, and the current PC adapter rejects older revisions.
+avenue**. Before the 2026-10-22 supplied export, no PS4 plaintext example
+established those properties; the newly acquired source now establishes its
+own different framing and restricted checksum profile, not PC legacy geometry.
+The current PC adapter rejects older revisions.
 It does not justify changing a revision word or copying unclassified blocks.
 
 ## Additional original-edition source checks
@@ -87,10 +97,10 @@ It does not justify changing a revision word or copying unclassified blocks.
 - The original ShadPS4 report's complete log and comments provide no gameplay file, original SFO or native read/write-size/checksum evidence. Its `app.dat` filename event remains a preparation lead only. Public save-set preview attachments return HTTP 403 and were not accessed through alternate routes.
 - Original Vita regional identities are corroborated separately, but the [EU PCSB00592 VitaCheat file](https://github.com/r0ah/vitacheat/blob/master/db/PCSB00592.psv) contains runtime memory/pointer patches, not a disk decoder or checksum writer. The complete rinCheat and Apollo Vita/save catalogs checked supply no original-SW4 native save codec. Vita, PS3 and SW4-II facts cannot establish original PS4 compatibility.
 
-The next useful input is a complete **original SW4 PS4 decrypted gameplay file**
-with unchanged original title/revision metadata and a known game/update/DLC
-configuration. A low-progress copy and a single-action control pair would qualify
-integrity and typed fields. Broader custom-character migration additionally needs
+The supplied original US PS4 export now provides decrypted gameplay and title
+metadata. Additional nonzero large-section references, a known game/update/DLC
+configuration and a single-action control pair are needed to extend integrity
+coverage and typed fields. Broader custom-character migration additionally needs
 the exact resource `0x2591` correspondence or proof of native legacy handoff.
 Gold can avoid CAW/equipment references after source qualification; separately
 qualified standard-officer base stats may also form a scoped transfer. Whole

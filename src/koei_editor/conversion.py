@@ -42,6 +42,8 @@ from koei_editor.games.wo3u import ps4_conversion as wo3_ps4_conversion
 from koei_editor.games.wo3u_ps3 import parser as wo3_ps3
 from koei_editor.games.sw4dx import conversion as sw4_conversion
 from koei_editor.games.sw4dx import samurai4dx_parser as sw4_pc
+from koei_editor.games.sw4dx import ps4_export as sw4_ps4
+from koei_editor.games.sw4dx import ps4_conversion as sw4_ps4_conversion
 from koei_editor.games.sw4_ps3 import parser as sw4_ps3
 
 _FAMILIES = MappingProxyType({'dw8xl': dw8_conversion, 'p5s': p5_conversion,
@@ -51,7 +53,8 @@ _VARIANTS = MappingProxyType({('dw6', 'progress'): dw6_progression,
                               ('dw6', 'campaigns'): dw6_campaigns,
                               ('dw6', 'records'): dw6_records,
                               ('wo3u', 'ps4-materials'): wo3_ps4_conversion.TRANSFER,
-                              ('wo3u', 'ps4-stats-materials'): wo3_ps4_conversion.STATS_TRANSFER})
+                              ('wo3u', 'ps4-stats-materials'): wo3_ps4_conversion.STATS_TRANSFER,
+                              ('sw4', 'ps4-gold'): sw4_ps4_conversion.TRANSFER})
 
 
 def _transform(route):
@@ -125,6 +128,10 @@ ENDPOINTS = MappingProxyType({endpoint.id: endpoint for endpoint in (
     Endpoint('sw4_ps3', 'sw4', 'Samurai Warriors 4 · US PS3', 'DATA.BIN', sw4_ps3,
              'PARAM.SFO', 4096,
              'Decrypted NPUB31564 DATA.BIN with original PARAM.SFO. Resources only; reimport/resign externally.'),
+    Endpoint('sw4_ps4', 'sw4', 'Samurai Warriors 4 · US PS4 CUSA00919 gold source', 'app.dat', sw4_ps4,
+             'sce_sys/param.sfo', 4096,
+             'Decrypted CUSA00919 revision 0x2118 restricted zero-section profile with original '
+             'sce_sys/param.sfo. One-way gold transfer to SW4 DX PC only.', True),
 )})
 
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Development after v3.1
+
+- Add a restricted original SW4 US PS4 CUSA00919 source and one-way gold-only transfer to SW4 DX PC. Require exact revision/size, matching stored checksums, officer identities, zero large section and original metadata; retain all other PC gameplay and native framing. Development source has 146 routes; published v3.1 remains at 145.
+- Qualify supplied original-context DW8 XL and WO3U exports against their existing PC transfer scopes, including actual source/context backups and destination readback. DW8 XL reverses byte-exactly. Full WO3U/SW4 migration and converted game loading remain unverified.
+- Preserve exact unusual opened SW4 DX scalar values as typed no-ops instead of reapplying changed-value bounds. Changed assignments and dependencies retain their existing checks.
+
 ## v3.1 — 2026-10-21
 
 - Add an explicitly read-only Research Import workspace for five additional native game candidates, including original Uncharted Waters IV PK framing and existing Gundam 2/Atelier Plus record inspectors. Keep them outside the supported editing inventory, with bounded original-context/freshness checks, retained navigation, themes, keyboard search and bundled help.

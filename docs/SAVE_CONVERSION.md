@@ -10,7 +10,8 @@ the copied on-disk save, so first save any editor changes into another copy.
 
 ## Supported routes
 
-**145 directed routes** are available in v3.1, including 120 DW6 routes.
+**146 directed routes** are available in development source, including 120 DW6
+routes. Published v3.1 has 145 routes; the SW4 PS4 gold route is a subsequent source change.
 The expanded DW6 routes and new DW7 XL transfer are conversion previews; actual converted game loading
 remains unverified. Editor support alone does not establish a conversion route;
 each route shows its own transfer scope before review.
@@ -24,6 +25,7 @@ each route shows its own transfer scope before review.
 | Warriors Orochi 3 Ultimate | US PS3 NPUB31505-SAVEDATA ↔ Definitive Edition PC; two directions | Unallocated growth points and gems only (8 bytes); destination progression, equipment and markers retained. |
 | Warriors Orochi 3 Ultimate PS4 | US CUSA00588 exact serialized-marker profile → Definitive Edition PC; two one-way scopes | Rare crystals, 58 attribute orbs and 295 material balances (355 bytes); optionally also five base stats for 145 officers (1,805 bytes total). All other PC bytes retained; original PS4 metadata required. [Evidence](WO3U_PS4_RESOURCE_TRANSFER.md). |
 | Samurai Warriors 4 | US PS3 NPUB31564 ↔ SW4 DX PC revision `0x39EA`; two directions | Gold only (4 bytes); destination progression/content retained, native integrity rebuilt. |
+| Samurai Warriors 4 PS4 (development source) | US CUSA00919 revision `0x2118`, restricted zero-section profile → SW4 DX PC; one direction | Gold only (4 bytes); original PS4 metadata required, every other PC gameplay byte retained except native integrity. [Exact qualification](SW4_PS4_SOURCE.md). |
 
 **DW7 XL PC-to-PS3, base DW7 and other console regions are unavailable.** The
 [DW7 XL guide](DW7XL_CONVERSION.md) explains input preparation and the qualified
@@ -36,7 +38,9 @@ Console signing, export-container encryption, reimport and account reassignment
 are external. Converted loading/re-saving in the actual games remains untested.
 
 The six new scoped routes are partial balance replacements. They do not
-migrate full saves. WO3U PS4 supports only its documented material/resource scope; SW4 PS4 remains unavailable. See the [request scope and exact
+migrate full saves. WO3U PS4 supports its documented resources/base-stat scopes;
+SW4 PS4 development source supports only gold for its exact restricted profile.
+See the [request scope and exact
 resource mappings](WARRIORS_PS4_TRANSFERS.md). Higher incompatible balances are
 rejected without clamping; experimental editor limits do not widen these routes.
 

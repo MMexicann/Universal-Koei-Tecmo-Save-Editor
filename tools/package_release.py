@@ -36,6 +36,7 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
 # Repository/developer documentation remains confined to the Source ZIP.
 RUNTIME_GUIDES = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
                   'docs/WARRIORS_PS4_TRANSFERS.md',
+                  'docs/SW4_PS4_SOURCE.md',
                   'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
                   'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'docs/PROGRESSION_DASHBOARDS.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
                   'docs/SAVE_CONVERSION.md', 'docs/SAVE_COMPARISON.md',
@@ -48,6 +49,7 @@ RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
 WINDOWS_DOCS = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
                 'docs/WARRIORS_PS4_TRANSFERS.md',
+                'docs/SW4_PS4_SOURCE.md',
                 'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
                 'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
                 'docs/PROGRESSION_DASHBOARDS.md',

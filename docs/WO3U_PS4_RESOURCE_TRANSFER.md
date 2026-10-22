@@ -24,6 +24,16 @@ cannot be established from that file. No native original-context PS4 export is
 claimed. A separately posted SaveWizard-decrypted ZIP link is now expired and
 returns a parked-domain HTML page; it is not a second acquired reference.
 
+On 2026-10-22 a separate supplied decrypted export and accompanying original
+CUSA00588 metadata passed this same exact profile. Both transfer scopes passed
+actual native PC prepare/export/readback, original-context source backups and
+source preservation. The wider scope verified all 1,079 mapped values and kept
+every other PC byte intact, including the complete saved-state body. One unusual
+source stat was preserved as an exact existing target no-op; new assignments
+above supported bounds remain rejected. This is additional original-context
+file evidence, not an in-game load or controlled platform/action pair. Supplied
+gameplay and companion data remain private and are not packaged.
+
 The [public CUSA00588 PS4 cheat facts](https://www.patreon.com/chaoszage/posts/ps4-cusa00588-3-61894007)
 independently identify the US PS4 edition and numerous matching native disk
 locations: crystals `0xD5DC`, officer stats `0xECF2..0xECFA` with stride `0x2B0`,

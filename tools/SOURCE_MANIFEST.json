@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5829,
-      "sha256": "ac2d263949c8128ee38d2e6cf8660b201740b9427128637af10c691965b26302"
+      "bytes": 6454,
+      "sha256": "c827a9289d62f294f3d46a01ad05a8a2b0a625629f436c0cd6dfb082fd92ca10"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -178,8 +178,8 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "bytes": 32914,
-      "sha256": "07acceac4ec0a321b9fed010bbced5266fb058b73711a25cf2cdba608a824967"
+      "bytes": 33725,
+      "sha256": "1a9f06dec9e9c5bb426320b90e89c7cd0237677c293478f94d164b9068b13862"
     },
     {
       "path": "docs/CLASSIC_KOEI_NEXT_CANDIDATES.md",
@@ -678,8 +678,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 15856,
-      "sha256": "b042980c6e435d007d5e777633a93e5f5573459a7d82f80b9724086832ce0f53"
+      "bytes": 15957,
+      "sha256": "b4d968fc257e63929ab57cfd6845c70494692a987e4c93bea2556a44abd1ee48"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -813,8 +813,8 @@
     },
     {
       "path": "docs/SAVE_CONVERSION.md",
-      "bytes": 19204,
-      "sha256": "79ced78c21a2f7f982f9a1c5d4602ec3a6713cadc868efdb3346964ece12dce5"
+      "bytes": 19655,
+      "sha256": "50ff9aff3fc7921d0c7892994914782da02ec3a90d7295c3f74836e0e7eda8cd"
     },
     {
       "path": "docs/SAVE_FORMAT.md",
@@ -903,8 +903,13 @@
     },
     {
       "path": "docs/SW4_PS4_RESEARCH.md",
-      "bytes": 11085,
-      "sha256": "213bdced130f6bacb3c8b7838be52e4d97620042185a4eb7f37d790a72ea1669"
+      "bytes": 11702,
+      "sha256": "d3792fca333c6e8e0a6931e4d5983101c7796ddbecfd4cdf9ac12e984ba0d2be"
+    },
+    {
+      "path": "docs/SW4_PS4_SOURCE.md",
+      "bytes": 5031,
+      "sha256": "786294cfebdcfaa90498046ac17c01ea82aac68268157605faac799e4df86b5e"
     },
     {
       "path": "docs/SWITCH_WARRIORS_RESEARCH.md",
@@ -1003,8 +1008,8 @@
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
-      "bytes": 9643,
-      "sha256": "b97f3f3005129f5870f7653d9e395eaaa34f7ae8c6c54d246b1280738be5327c"
+      "bytes": 11157,
+      "sha256": "93892b7a3157c58dcc9b9670517efdfa9d96e049324bca64abad5fc469b8ca1b"
     },
     {
       "path": "docs/WARRIORS_V26_DEPTH.md",
@@ -1033,8 +1038,8 @@
     },
     {
       "path": "docs/WO3U_PS4_RESOURCE_TRANSFER.md",
-      "bytes": 12931,
-      "sha256": "43797ebbdae7042be88fb8b8d96e3a465237c1fd9dde23195ecf67dd432cbca1"
+      "bytes": 13624,
+      "sha256": "aa2b5766f5eca310df67e6868b92cba6ab318f45b172e15c96deb146c35a4e7a"
     },
     {
       "path": "docs/WO4_PC_FORMAT.md",
@@ -1223,8 +1228,8 @@
     },
     {
       "path": "src/koei_editor/conversion.py",
-      "bytes": 20294,
-      "sha256": "3649dc6fc77575254a61bbaee4c422ef243e9e6ccf2a93eff0d8adbd14201ba0"
+      "bytes": 20831,
+      "sha256": "ab5aeac44eb713f007e0b530a508325709fb606b09d48b95a689f547b2689b87"
     },
     {
       "path": "src/koei_editor/data/AGENTS.md",
@@ -3037,6 +3042,16 @@
       "sha256": "87d0e5a077361a7739941b4ab7710211926ded351db828057e3263feae22ed48"
     },
     {
+      "path": "src/koei_editor/games/sw4dx/ps4_conversion.py",
+      "bytes": 1990,
+      "sha256": "93b809e406bafab2ff0194c7caa0e168d563fe5231ed004cce40987679ae0c2e"
+    },
+    {
+      "path": "src/koei_editor/games/sw4dx/ps4_export.py",
+      "bytes": 8741,
+      "sha256": "51732f78d3de68371ad0e27d9151dc368d28864046fb40f6c199a7579607cbc3"
+    },
+    {
       "path": "src/koei_editor/games/sw4dx/samurai4dx_codec.py",
       "bytes": 3171,
       "sha256": "ce27acbd2155021a96a72e7564074a8cd2d62d1196be62e6bfb90604d7e63448"
@@ -3048,8 +3063,8 @@
     },
     {
       "path": "src/koei_editor/games/sw4dx/samurai4dx_parser.py",
-      "bytes": 18581,
-      "sha256": "ee6d6322552e247f5592c9ec2c772a79ed1e71527b227199196c2d6766d25e90"
+      "bytes": 18676,
+      "sha256": "573bf1cd50617f616c4d24de1b4bceedfd88f6a9ffa0dac2ee030533b126543a"
     },
     {
       "path": "src/koei_editor/games/sw4ii/__init__.py",
@@ -4208,8 +4223,8 @@
     },
     {
       "path": "tests/test_conversion.py",
-      "bytes": 15199,
-      "sha256": "0d51ebf416f6a4dcff8ee058c9a540315a9c81ff535022d8ef7ab9fc4a1761c9"
+      "bytes": 15535,
+      "sha256": "d5a19f1482c4a8a2112c63a41d35c28e3459dcf46d1e93afb3dedfdb436deb58"
     },
     {
       "path": "tests/test_conversion_filters_gui.py",
@@ -4319,7 +4334,7 @@
     {
       "path": "tests/test_dw6_european_conversion.py",
       "bytes": 9867,
-      "sha256": "cf03f97d9836a87015c9ed78f8606d9d0a3c398a13460bdeed1c844a678eaf29"
+      "sha256": "7cbf3d827ecd96248fcb9db9bf661b920243698d41ede975bd9609d60fb24f91"
     },
     {
       "path": "tests/test_dw6_format.py",
@@ -5532,6 +5547,16 @@
       "sha256": "33ddadb0cad3bdb6897cb91a8cb5a2f60fc95d87a857273152810b26cc06d547"
     },
     {
+      "path": "tests/test_sw4_ps4_conversion.py",
+      "bytes": 7199,
+      "sha256": "fff46e1d2a3de03e076623beb6a2583064099f95b65fc68088c5b8449fb372de"
+    },
+    {
+      "path": "tests/test_sw4_ps4_source.py",
+      "bytes": 9475,
+      "sha256": "6b009dcfc0bbe39b0fb5e40f2021fae3f267753f8d7f8af1249c98d8202bc4c8"
+    },
+    {
       "path": "tests/test_sw4ii_format.py",
       "bytes": 12642,
       "sha256": "277767df04cd25b8e9e552617f9f744625f5fbb8ffe2685e270b14fce9a4c114"
@@ -5878,8 +5903,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33059,
-      "sha256": "5fccec31ea962ed20b0a166cf09533f04cfc38a0018e4c57d318d4058d6aa374"
+      "bytes": 33145,
+      "sha256": "e3b728a95c38d45ac883311a0b94bf95b991621252a10b36d56754b60f4b4125"
     },
     {
       "path": "tools/refresh_manifest.py",

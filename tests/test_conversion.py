@@ -20,6 +20,9 @@ from tests import test_ps3_expansion as ps3_context
 
 @lru_cache(maxsize=12)
 def fixture(endpoint_id, variant=0):
+    if endpoint_id == 'sw4_ps4':
+        from tests.test_sw4_ps4_source import fixture as ps4_fixture
+        return ps4_fixture()
     if endpoint_id == 'wo3u_ps4':
         from tests.test_wo3u_ps4_stats_transfer import fixture as ps4_fixture
         return ps4_fixture()
@@ -86,6 +89,8 @@ def write_copy(folder, endpoint_id, variant=0):
                 metadata = metadata.replace(b'CUSA19640', b'CUSA00397')
             elif endpoint_id == 'wo3u_ps4':
                 metadata = metadata.replace(b'CUSA19640', b'CUSA00588')
+            elif endpoint_id == 'sw4_ps4':
+                metadata = metadata.replace(b'CUSA19640', b'CUSA00919')
         companion.write_bytes(metadata)
     return path
 
@@ -95,7 +100,7 @@ class ConversionTests(unittest.TestCase):
         from koei_editor.game_registry import get_game
         for endpoint in c.ENDPOINTS.values():
             if endpoint.conversion_only:
-                self.assertIn(endpoint.id, ('wo3u_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
+                self.assertIn(endpoint.id, ('sw4_ps4', 'wo3u_ps4', 'dw6_ps3_jp', 'dw6_ps3_eu',
                                             'dw6_xbox360_na', 'dw6_xbox360_eu'))
                 with self.assertRaises(SaveError):
                     get_game(endpoint.id)
@@ -151,7 +156,8 @@ class ConversionTests(unittest.TestCase):
                     self.assertEqual(reverse.raw, original)
                 else:
                     self.assertIn(route.id, ('dw7xl_ps3-to-dw7xl', 'wo3u_ps4-to-wo3u-ps4-materials',
-                                             'wo3u_ps4-to-wo3u-ps4-stats-materials'))
+                                             'wo3u_ps4-to-wo3u-ps4-stats-materials',
+                                             'sw4_ps4-to-samurai4dx-ps4-gold'))
                     with self.assertRaises(SaveError):
                         c.get_route(reverse_id)
 

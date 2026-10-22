@@ -45,6 +45,7 @@ class Application(Appearance):
         self.research_lab = None
         self.research_import = None
         self.workflow_builder = None
+        self.mod_workshop_window = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -185,6 +186,10 @@ class Application(Appearance):
         self.contact_button.pack(side='left')
         self.workflow_button = self._translated(ttk.Button(footer_buttons, command=self.show_workflow_builder), 'workflow_builder')
         self.workflow_button.pack(side='left', padx=10)
+        self.mod_workshop_button = self._translated(
+            ttk.Button(footer_buttons, command=self.show_mod_workshop), 'mod_workshop'
+        )
+        self.mod_workshop_button.pack(side='left', padx=(8, 0))
         cards = ttk.Frame(self.library)
         cards.pack(fill='both', expand=True)
         self.platform_frames = {platform: ttk.Frame(cards) for platform in (ALL_PLATFORMS,) + platforms}
@@ -1077,6 +1082,16 @@ class Application(Appearance):
         # Reuse the existing author dialog without starting a DW3 game session.
         Editor.show_contact(self)
 
+    def show_mod_workshop(self):
+        """Open the independent mod project workspace without selecting a save editor."""
+        if self.mod_workshop_window is not None and self.mod_workshop_window.window.winfo_exists():
+            self.mod_workshop_window.window.deiconify()
+            self.mod_workshop_window.window.lift()
+            return self.mod_workshop_window
+        from koei_editor.shared.mod_workshop.gui import ModWorkshopWindow
+        self.mod_workshop_window = ModWorkshopWindow(self.root)
+        return self.mod_workshop_window
+
     def close(self):
         tools = self._tool_workspaces()
         management = getattr(getattr(self, 'save_library', None), 'management', None)
@@ -1318,6 +1333,9 @@ def main():
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')
+        workshop = app.show_mod_workshop()
+        root.update_idletasks()
+        workshop.close()
         root.update_idletasks()
         root.destroy()
         print(f'Platform library, all registered interfaces, {dashboards} populated progression dashboards, '

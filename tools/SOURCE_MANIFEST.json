@@ -1223,8 +1223,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 74609,
-      "sha256": "b195377dc0183ba71e2bc73d7018818d4bad564e2ce0cca5cd40d31f6b025831"
+      "bytes": 75516,
+      "sha256": "08fe16840acf2e609942224af1b2ba9899efb985534ee91469cc3f913acbe3ee"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3813,8 +3813,48 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 5767,
-      "sha256": "8405d2f5b169fcbf460c5ccb1f26eff73ea81fdbe5ae114576c2ee849e0cd042"
+      "bytes": 5860,
+      "sha256": "8beee04dc629fcccaa28788e5ed91268e746c86d780b17b67730b8d03388ee04"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/__init__.py",
+      "bytes": 183,
+      "sha256": "b6dca2af47db2df02beb950d241b3d4c639eca282a70ceaa8994547ca540028e"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/asset_explorer.py",
+      "bytes": 14569,
+      "sha256": "ded5a3b984f9ea596cb7e130da3f9345f3a61d552dc36644abce5cd6ebc83d85"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/gui.py",
+      "bytes": 31270,
+      "sha256": "3e85d16db42346cdcae5ae18b718eeef102a8f254318ed1dda1abc51d1045e76"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/models.py",
+      "bytes": 4861,
+      "sha256": "a5c4a8a27263c6bfec05fcec2486822c0f198524441f4e00c8073bf1a806cdfa"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/packaging.py",
+      "bytes": 18585,
+      "sha256": "96d61c347d45665f3c67d454af9571356c913ed221a4c3ed540aac8e3ac64bf5"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/project_manager.py",
+      "bytes": 8017,
+      "sha256": "84e2653a2f67214cf0fdac1f39f83438a656c93ea93189043ba3e57e53704908"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/templates.py",
+      "bytes": 1920,
+      "sha256": "c12a30b5401d677a3bc0823e9db9d5e9473bcbbe4af5615ea683a4c5c2cddc73"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/validation.py",
+      "bytes": 10762,
+      "sha256": "0b9c427bf1b57c3a533372ceae293244c87719adbf51d8b1bf28f12a3e0e8540"
     },
     {
       "path": "src/koei_editor/shared/musou_presentations.py",

@@ -493,11 +493,11 @@ class Application(Appearance):
                 self._shell_location.grid(row=3 if stacked else 2, column=0, columnspan=2)
         available = max(1, self.navigation.winfo_width())
         requested = sum(button.winfo_reqwidth() + 8 for button in self._navigation_buttons)
-        columns = 3 if available < requested else 6
+        columns = 3 if available < requested else len(self._navigation_buttons)
         for index, button in enumerate(self._navigation_buttons):
             row, column = divmod(index, columns)
             button.grid(row=row, column=column, sticky='ew', padx=(0, 8), pady=(0, 4))
-        for column in range(6):
+        for column in range(len(self._navigation_buttons)):
             self.navigation.columnconfigure(column, weight=1 if column < columns else 0)
         if hasattr(self, 'session_bar'):
             self.refresh_sessions()
@@ -1171,6 +1171,9 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
+        if self.game_hub is not None and self.game_hub.frame.winfo_manager():
+            focus_search = getattr(self.game_hub, 'focus_search', None)
+            return focus_search() if callable(focus_search) else 'break'
         for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
                      self.nexus_mods, self.asset_explorer):
             if tool is not None and tool.frame.winfo_manager():

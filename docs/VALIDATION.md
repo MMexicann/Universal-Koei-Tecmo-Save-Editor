@@ -22,39 +22,39 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
+  "base_commit": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit tests.test_game_compatibility",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_help_center_integration tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_game_troubleshooting_gui tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit tests.test_game_compatibility tests.test_configuration_manager tests.test_configuration_gui",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 297,
-    "passed": 227,
-    "skipped": 70,
+    "run": 320,
+    "passed": 239,
+    "skipped": 81,
     "failures": 0,
-    "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
+    "gui_skips": "Tk display-dependent tests skipped because this environment has no display."
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1290
+    "verified_public_files": 1294
   },
   "supported_game_inventory": {
     "status": "passed",
     "registered_adapters": 98
   },
   "syntax_and_diff_checks": {
-    "py_compile": "passed for 12 changed Python modules and tests",
-    "git_diff_check": "passed against origin/main"
+    "compileall": "python -m compileall -q src tests passed",
+    "git_diff_check": "passed against origin/main after rebase"
   },
   "windows_ci": {
-    "status": "pending_current_head_after_main_sync",
+    "status": "pending_new_windows_run_on_rebased_tracker_head",
     "last_completed_head": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
     "last_completed_base": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
     "last_completed_run": "39856326664",
     "last_completed_result": "full_workflow_failed; test_version_tracker 15/15, test_save_discovery 47/47, Help Center 12/12, Troubleshooting 31/31, universal app 28/28, and analyzer 29 passed/1 skipped; unrelated failures were application shell, Mod Manager/Nexus, Emulator Hub, Completion Companion, Save Library, and Editing Tools; build/release skipped",
-    "integration_findings": "The related Game Hub Windows run 39849115110 passed discovery 5/5, GUI 8/8, and Save Discovery 47/47. Mod Manager PR #144 Windows run 39856097841 passed all changed modules: Application Shell 40/40, Mod Manager 12/12, Nexus 11/11, Editing Tools 8/8. Emulator Hub PR #145 run 39856060823 passed its target module 17/17; its branch is being synced after main advanced. Completion Companion PR #148 run 39856540396 is still in progress. The latest tracker head run 39856624878 is queued/running after the review wording change. Save Library viewport assertions remain unrelated to tracker.",
-    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; PRs #141 Troubleshooting Center, #121 patch compatibility analyzer, and #144 Windows test fixes are included in current main 8faac64.",
+    "integration_findings": "Game Hub run 39849115110 passed discovery 5/5, GUI 8/8, and Save Discovery 47/47 on its earlier stacked branch. PR #148 is merged at 8c6b870; run 39858226370 passed Completion Companion 9/9 on Windows, while the overall run was cancelled before remaining shards and build/release. PR #145 is merged at 9153438; current-base run 39859637192 passed Emulator Hub 17/17; shard 1 had four unrelated Save Library GUI failures, so build/release were skipped. PR #149 Game Configuration Manager is merged in current main 9fecbed; the combined local suite passed 320 tests with 81 display skips. Run 39861410034 was started on the superseded tracker head f4cbf2a and base 9153438; it is not validation for this rebased head.",
+    "merged_test_fixture_fixes": "PRs #137, #147, #141, #121, #144, #148, #145, and #149 are included in current main 9fecbed.",
     "required_before_merge": true,
     "last_completed_tracker_run_details": {
       "run_id": 39856326664,
@@ -244,8 +244,15 @@ requires exact app/build identities and versioned evidence before showing
       }
     ],
     "current_head_check": {
-      "status": "pending_after_main_sync",
-      "base_sha": "8faac64bf1601be00048248ef35bf6df9b74270b"
+      "status": "required_after_rebase_push",
+      "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
+      "superseded_run": {
+        "run_id": 39861410034,
+        "head_sha": "f4cbf2aaca1a2edc9ef9d46679b076bbd18b3683",
+        "base_sha": "915343810a03ece4306ca57ac671d5070a2e3c6b",
+        "status": "in_progress_when_rebase_completed",
+        "merge_eligible": false
+      }
     }
   },
   "fixture": {
@@ -270,8 +277,8 @@ requires exact app/build identities and versioned evidence before showing
       "skipped": 0,
       "failures": 0
     },
-    "source_manifest": "refreshed and verified 1,290 public source files",
-    "git_diff_check": "passed against origin/main"
+    "source_manifest": "refreshed and verified 1,294 public source files on the rebased tree",
+    "git_diff_check": "passed against origin/main after rebase"
   }
 }
 ```

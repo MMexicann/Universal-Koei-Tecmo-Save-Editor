@@ -75,6 +75,17 @@ class GameHubDiscoveryTests(unittest.TestCase):
         for local_path in (str(self.root), str(self.steam), str(library), str(install_path)):
             self.assertNotIn(local_path, portable)
 
+    def test_installed_game_keeps_legacy_positional_metadata_order(self):
+        item = save_discovery.InstalledGame(
+            'atelier_sophie', '527270', self.steam, 'legacy-source',
+            'legacy-confidence', 'legacy-evidence',
+        )
+
+        self.assertEqual(item.source, 'legacy-source')
+        self.assertEqual(item.confidence, 'legacy-confidence')
+        self.assertEqual(item.evidence, 'legacy-evidence')
+        self.assertIsNone(item.library_path)
+
     def test_missing_and_malformed_optional_metadata_keeps_valid_install_visible(self):
         install_path = self.install(
             self.steam,

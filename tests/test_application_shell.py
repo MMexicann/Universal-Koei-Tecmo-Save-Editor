@@ -65,6 +65,31 @@ class ShellPreferencesTests(unittest.TestCase):
         self.assertFalse(search_commands(entries, 'missing'))
 
 
+class EditingMenuCommandLookupTests(unittest.TestCase):
+    def test_registered_command_is_found_after_menu_insertions(self):
+        class Menu:
+            entries = (
+                ('command', 'other-command'),
+                ('separator', ''),
+                ('command', 'profile-command'),
+            )
+
+            def index(self, name):
+                return len(self.entries) - 1 if name == 'end' else name
+
+            def type(self, index):
+                return self.entries[index][0]
+
+            def entrycget(self, index, option):
+                return self.entries[index][1] if option == 'command' else ''
+
+        app = object.__new__(Application)
+        app._editing_tools_menu_commands = {'controller_profiles': 'profile-command'}
+        app.editing_tools_menu = Menu()
+        self.assertEqual(app._editing_tools_menu_index('controller_profiles'), 2)
+        self.assertIsNone(app._editing_tools_menu_index('missing'))
+
+
 class ApplicationShellTests(unittest.TestCase):
     def setUp(self):
         try:
@@ -212,7 +237,7 @@ class ApplicationShellTests(unittest.TestCase):
         self.app.change_language()
         self.root.update()
         self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
-        menu_command = self.app._editing_menu_localized_commands['controller_profiles']
+        menu_command = self.app._editing_tools_menu_commands['controller_profiles']
         localized_index = next(index for index in range(self.app.editing_tools_menu.index('end') + 1)
                                if self.app.editing_tools_menu.entrycget(index, 'command') == menu_command)
         self.assertEqual(self.app.editing_tools_menu.entrycget(localized_index, 'label'),

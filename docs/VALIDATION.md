@@ -22,7 +22,7 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "05c8bfed36589e76a9795f8b77ecf3cf1c652deb",
+  "base_commit": "04f1cb6f87fcda3bba04ba65b1f84e6bf0db2ca8",
   "commands": {
     "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
@@ -37,7 +37,7 @@ requires exact app/build identities and versioned evidence before showing
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1231
+    "verified_public_files": 1269
   },
   "supported_game_inventory": {
     "status": "passed",
@@ -46,6 +46,10 @@ requires exact app/build identities and versioned evidence before showing
   "syntax_and_diff_checks": {
     "py_compile": "passed for changed Python modules and tests",
     "git_diff_check": "passed"
+  },
+  "windows_ci": {
+    "status": "not_run_on_this_head",
+    "required_before_merge": true
   },
   "fixture": {
     "type": "procedural Steam metadata and temporary path-free history",

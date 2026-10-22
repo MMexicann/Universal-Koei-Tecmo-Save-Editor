@@ -239,6 +239,25 @@ class PackagingTests(unittest.TestCase):
         with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1), self.assertRaises(ValueError):
             release.package(self.root)
 
+    def test_localization_studio_is_in_source_archive_only(self):
+        additions = {name: b'Public localization studio source\n'
+                     for name in release.LOCALIZATION_STUDIO_FILES}
+        self.add_sources(additions)
+        self.write_manifest()
+        _version, verified = release.verified_sources(self.root)
+        self.assertTrue(release.LOCALIZATION_STUDIO_FILES.issubset(verified))
+        self.assertFalse(any(name.startswith('localization-studio/')
+                             for name in release.embedded_metadata(verified)))
+        with patch.object(release, 'verify_executable', return_value=1), \
+             patch.object(release, 'verify_standalone', return_value=1):
+            assets = release.package(self.root)
+        with zipfile.ZipFile(assets[1]) as archive:
+            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0-Source/'
+            for name, data in additions.items():
+                self.assertEqual(archive.read(prefix + name), data)
+        with zipfile.ZipFile(assets[0]) as archive:
+            self.assertFalse(any('/localization-studio/' in name for name in archive.namelist()))
+
     def test_actual_windows_zip_contains_exact_reviewed_guides_collected_by_builder(self):
         from tools import build_windows
         for source in release.RUNTIME_GUIDES:
@@ -338,6 +357,19 @@ class PackagingTests(unittest.TestCase):
                 self.assertEqual(release.public_path(name).as_posix(), name)
         for name in ('docs/schemas/private.schema.json', 'docs/schemas/../private.schema.json',
                      'tools/community_package_templates/private.json'):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                release.public_path(name)
+
+    def test_localization_studio_public_paths_are_narrow_and_text_only(self):
+        for name in release.LOCALIZATION_STUDIO_FILES:
+            with self.subTest(name=name):
+                self.assertEqual(release.public_path(name).as_posix(), name)
+        for name in ('localization-studio/.env', 'localization-studio/private.sav',
+                     'localization-studio/assets/game.bin', 'localization-studio/node_modules/pkg/index.js',
+                     'localization-studio/src/app.exe', 'localization-studio/src/injected.mjs',
+                     'localization-studio/reports/private.json', 'localization-studio/docs/private.md',
+                     'localization-studio/tests/extra.html', 'localization-studio/tests/fixtures/save.dat',
+                     'localization-studio/docs/../private.md'):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 release.public_path(name)
 

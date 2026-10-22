@@ -36,6 +36,22 @@ PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/__init__.py'}
 PUBLIC_GUIDES = {'src/koei_editor/AGENTS.md', 'src/koei_editor/games/AGENTS.md',
                 'src/koei_editor/shared/AGENTS.md', 'src/koei_editor/research/AGENTS.md',
                 'src/koei_editor/data/AGENTS.md', 'tests/README.md', 'licenses/README.md'}
+# Exact static-tool files are public in the Source ZIP, not Windows runtime data.
+LOCALIZATION_STUDIO_FILES = {
+    'localization-studio/LICENSE',
+    'localization-studio/README.md',
+    'localization-studio/index.html',
+    'localization-studio/package.json',
+    'localization-studio/styles.css',
+    'localization-studio/docs/RESEARCH.md',
+    'localization-studio/docs/SUPPORTED_FORMATS.md',
+    'localization-studio/reports/validation-report.json',
+    'localization-studio/src/app.mjs',
+    'localization-studio/src/formats.mjs',
+    'localization-studio/tests/browser-smoke.html',
+    'localization-studio/tests/formats.test.mjs',
+    'localization-studio/tests/run-browser-smoke.mjs',
+}
 RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json',
                 'verified_limits.json', 'item_limits.json', 'native_enums.json',
                 'bodyguard_growth.json', 'bodyguard_items.json', 'bodyguard_weapons.json',
@@ -152,6 +168,8 @@ def public_path(name):
         allowed = allowed or (len(parts) == 2 and parts[1].startswith('test_') and path.suffix == '.py')
     elif parts[0] == 'licenses':
         allowed = allowed or (len(parts) == 2 and path.suffix in {'.txt', '.terms'})
+    elif parts[0] == 'localization-studio':
+        allowed = name in LOCALIZATION_STUDIO_FILES
     elif parts[:2] == ('.github', 'workflows'):
         allowed = len(parts) == 3 and path.suffix in {'.yml', '.yaml'}
     if not allowed or name == MANIFEST:
@@ -263,6 +281,8 @@ def verified_sources(root=ROOT):
         required.add('.gitattributes')
     if (root / 'tools/adapter_template').exists():
         required.update(ADAPTER_TEMPLATE_FILES | {'tests/scalar_contract.py'})
+    if (root / 'localization-studio').is_dir():
+        required.update(LOCALIZATION_STUDIO_FILES)
     for codec, notice in CODEC_LICENSES.items():
         if codec in required or codec in sources:
             required.add(notice)

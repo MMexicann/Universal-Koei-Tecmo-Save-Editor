@@ -22,22 +22,22 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "8f05ba3fd14257daaf2b4a7c970f95a0ec567baa",
+  "base_commit": "e09ec112c91cddb3f0ee1f562bea9c01a9b97cb3",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 217,
-    "passed": 155,
-    "skipped": 62,
+    "run": 228,
+    "passed": 158,
+    "skipped": 70,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1270
+    "verified_public_files": 1272
   },
   "supported_game_inventory": {
     "status": "passed",

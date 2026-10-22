@@ -52,6 +52,7 @@ class Application(Appearance):
         self.nexus_mods = None
         # A Mod Manager integration may attach its typed Nexus handoff here.
         self.mod_manager_download_handoff = None
+        self.troubleshooting = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -105,11 +106,14 @@ class Application(Appearance):
         self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
         self.batch_button = self._translated(ttk.Button(self.navigation, command=self.show_batch), 'batch')
         self.save_library_button = self._translated(ttk.Button(self.navigation, command=self.show_save_library), 'save_library')
+        self.troubleshooting_button = self._translated(
+            ttk.Button(self.navigation, command=self.show_troubleshooting), 'troubleshooting')
         self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
         self.help_menu = tk.Menu(self.help_button, tearoff=False)
         self.help_button.configure(menu=self.help_menu)
         self._navigation_buttons = (self.home_button, self.converter_button, self.compare_button,
-                                    self.batch_button, self.save_library_button, self.help_button)
+                                    self.batch_button, self.save_library_button,
+                                    self.troubleshooting_button, self.help_button)
         self.navigation.bind('<Configure>', self._schedule_navigation)
         self._layout_navigation()
         location = ttk.Frame(top)
@@ -287,8 +291,10 @@ class Application(Appearance):
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'mod_manager', 'research_lab', 'research_import',
-                                            'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder')
+                                            'troubleshooting', 'editing_presets', 'mod_manager',
+                                            'research_lab', 'research_import', 'nexus_mods',
+                                            'emulator_hub', 'asset_explorer', 'workflow_builder',
+                                            'game_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -302,6 +308,8 @@ class Application(Appearance):
             set_language = getattr(self.asset_explorer, 'set_language', None)
             if callable(set_language):
                 set_language(self.language)
+        if self.troubleshooting is not None:
+            self.troubleshooting.set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
 
@@ -319,6 +327,8 @@ class Application(Appearance):
         if last_index is None:
             return
         for index in range(last_index + 1):
+            if self.editing_tools_menu.type(index) == 'separator':
+                continue
             key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
             if key is not None:
                 self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
@@ -336,8 +346,10 @@ class Application(Appearance):
         self.root.option_add('*Font', (self.font_family, size))
         self.style.configure('.', font=(self.font_family, size))
         self.style.configure('Treeview', rowheight=max(29, size * 2 + 9))
-        if self.help_center is not None:
-            self.help_center.set_text_size(size, self.font_family)
+        for tool in self._tool_workspaces():
+            set_text_size = getattr(tool, 'set_text_size', None)
+            if callable(set_text_size):
+                set_text_size(size, self.font_family)
         self._schedule_editor_width()
 
     def _workspace_changed(self, *_args):
@@ -518,7 +530,8 @@ class Application(Appearance):
             ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
-            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'))
+            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'),
+            ('game_hub', 'show_game_hub'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -526,10 +539,15 @@ class Application(Appearance):
                                 'game', game.platform, game.id + ' ' + game.description)
                    for game in self.library_games]
         for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
-                    'help', 'compatibility', 'versions', 'workflows', 'feedback', 'validation', 'plugins'):
+                    'troubleshooting', 'help', 'compatibility', 'versions', 'workflows',
+                    'feedback', 'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+        listed_tools = {entry.id.removeprefix('tool:') for entry in entries if entry.id.startswith('tool:')}
         for key in self._optional_tool_routes():
-            entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+            if key not in listed_tools:
+                catalog = CATALOGS.get(self.language, CATALOGS['en'])
+                label = self.tr(key) if key in catalog else key
+                entries.append(CommandEntry('tool:' + key, label, 'tool', keywords=key))
         for key in ('theme_light', 'theme_dark', 'search_fields', 'language_en', 'language_de',
                     'text_size_100', 'text_size_120', 'text_size_140'):
             entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
@@ -576,7 +594,8 @@ class Application(Appearance):
         if category == 'tool':
             methods = {'library': self.show_library, 'converter': self.show_converter,
                        'comparison': self.show_comparison, 'batch': self.show_batch,
-                       'save_library': self.show_save_library}
+                       'save_library': self.show_save_library,
+                       'troubleshooting': self.show_troubleshooting}
             methods.update(self._optional_tool_routes())
             if key in methods:
                 result = methods[key]()
@@ -883,9 +902,10 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'mod_manager', 'editing_presets', 'research_lab', 'research_import',
-                                       'nexus_mods', 'asset_explorer',
-                                       'workflow_builder', 'emulator_hub', 'help_center')
+                                       'troubleshooting', 'mod_manager', 'editing_presets',
+                                       'research_lab', 'research_import', 'nexus_mods',
+                                       'asset_explorer', 'workflow_builder', 'emulator_hub',
+                                       'game_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -1024,6 +1044,24 @@ class Application(Appearance):
         self._remember_workspace('tool:emulator_hub')
         return self.emulator_hub
 
+    def show_troubleshooting(self):
+        from koei_editor.shared.game_troubleshooting_gui import TroubleshootingWorkspace
+        if self.troubleshooting is None:
+            self.troubleshooting = TroubleshootingWorkspace(
+                self.root, self.workspace, language=self.language)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self._set_active_game(None)
+        self.troubleshooting.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(self.tr('troubleshooting'))
+        self._remember_workspace('tool:troubleshooting')
+        self.troubleshooting.apply_theme(THEMES[self.theme_name.get()])
+        size = round(10 * self.shell_settings.text_size / 100)
+        self.troubleshooting.set_text_size(size, self.font_family)
+        return self.troubleshooting
+
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace
         if self.workflow_builder is None:
@@ -1151,6 +1189,10 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
+        game_hub = getattr(self, 'game_hub', None)
+        if game_hub is not None and game_hub.frame.winfo_manager():
+            focus_search = getattr(game_hub, 'focus_search', None)
+            return focus_search() if callable(focus_search) else 'break'
         for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
                      self.nexus_mods, self.asset_explorer):
             if tool is not None and tool.frame.winfo_manager():
@@ -1168,6 +1210,9 @@ class Application(Appearance):
         if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
+        if (self.troubleshooting is not None
+                and self.troubleshooting.frame.winfo_manager()):
+            return 'break'
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
         self.library_search_entry.focus_set()
@@ -1206,7 +1251,13 @@ class Application(Appearance):
         management = getattr(getattr(self, 'save_library', None), 'management', None)
         if management is not None:
             tools += (management,)
-        if any(getattr(tool, 'busy', False) for tool in tools):
+        if any(
+                getattr(tool, 'busy', False)
+                and not (
+                    tool is self.troubleshooting
+                    and getattr(tool, 'shutdown_safe_while_busy', False)
+                )
+                for tool in tools):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return

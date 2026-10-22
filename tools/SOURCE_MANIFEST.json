@@ -1038,8 +1038,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 98997,
-      "sha256": "1cc7d39af9e7a2eee64fc830305ba415f5b3881409e57ad8ac0c6ffa4b55b3b5"
+      "bytes": 99033,
+      "sha256": "074c6d608ef8c8f54a7e5bfa3558db689f4f335cc8ebf672fb415fdcea03a1b1"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -1363,8 +1363,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 81198,
-      "sha256": "0356d8046932706d57d9da5529d1d6dcc7824bfe5c5686ec7d53c1cc097c9092"
+      "bytes": 83855,
+      "sha256": "86e8922e682b48f86f59d129a15e10a08e615992e80376ca6b7b0beece797284"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4027,6 +4027,11 @@
       "sha256": "e82ba951d840a0bf2833317089c168c027cbfd7b8e632db107e6303321d5d699"
     },
     {
+      "path": "src/koei_editor/shared/game_troubleshooting_gui.py",
+      "bytes": 28720,
+      "sha256": "bf81e0278491386c5f5898b25fcfb72b471e8c253a730b2232d9076ed729d9d2"
+    },
+    {
       "path": "src/koei_editor/shared/help_center.py",
       "bytes": 18280,
       "sha256": "9125c069d7e8f1ec9690d43c3cab03d71c4268e6449d53c2bb3252350c06a1f5"
@@ -4048,8 +4053,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 14478,
-      "sha256": "d6aa2d5e1d7824516d9fec82cf365e6e89e540486f9a6c56fca016bd3335b8cb"
+      "bytes": 14580,
+      "sha256": "ce89392bfd0c8e2ca20fba97102289da03c59be1d9fe4916afe215d638015658"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4353,8 +4358,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42283,
-      "sha256": "c036f9e1624b46544123fbbaf8cd40cf1d0012ef0de46bb0755a4d03965761ec"
+      "bytes": 42745,
+      "sha256": "1bcafd7f577d2510b1843ff0425fe229f900d98cfa76512641bc9750eb0498d5"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4995,6 +5000,11 @@
       "path": "tests/test_game_troubleshooting.py",
       "bytes": 21989,
       "sha256": "bf7d3b6db5c4862ebda7067a11b45e4133f6b4a305f9431ad823353f7a22e6bb"
+    },
+    {
+      "path": "tests/test_game_troubleshooting_gui.py",
+      "bytes": 17427,
+      "sha256": "76462afd25c0f36838c0a73396619296342e84e9272cd452c9b33ada67999151"
     },
     {
       "path": "tests/test_gemfire_battery.py",

@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import tkinter as tk
 import unittest
-from types import MappingProxyType
+from types import MappingProxyType, SimpleNamespace
 from unittest.mock import patch
 
 from koei_editor.game_registry import get_game
@@ -196,6 +196,49 @@ class ScalarFieldPagingTests(unittest.TestCase):
         next_labels = tuple(editor.fields.set(key, 'field') for key in editor.fields.get_children())
         self.assertTrue(next_labels)
         self.assertLessEqual(next_labels[0].casefold(), labels[-1].casefold())
+
+
+class ScalarUndoFocusTests(unittest.TestCase):
+    def setUp(self):
+        try:
+            self.root = tk.Tk()
+        except tk.TclError as error:
+            self.skipTest(str(error))
+        self.root.withdraw()
+        self.addCleanup(self.root.destroy)
+        self.area = tempfile.TemporaryDirectory()
+        self.addCleanup(self.area.cleanup)
+        self.source = Path(self.area.name) / 'origins.dat'
+        self.source.write_bytes(origins_fixture())
+
+        game = get_game('origins')
+        self.editors = []
+        for name in ('first', 'second'):
+            host = tk.Frame(self.root, name=f'{name}_editor_host')
+            host.pack(fill='both', expand=True)
+            editor = game.create_editor(self.root, host)
+            self.assertTrue(editor.open_path(self.source))
+            self.editors.append(editor)
+
+    def test_control_z_only_undos_the_focused_retained_editor(self):
+        first, second = self.editors
+        first.stage_values({'gold': 5000})
+        second.stage_values({'gold': 6000})
+
+        # Each retained editor registers a root-wide shortcut callback. Pass
+        # the actual focused widget through both callbacks, as Tk does, and
+        # verify only the callback whose editor host contains it handles Undo.
+        focused_second = SimpleNamespace(widget=second.search_entry)
+        self.assertIsNone(first._undo_shortcut(focused_second))
+        self.assertEqual(second._undo_shortcut(focused_second), 'break')
+        self.assertEqual(first.changes, {'gold': 5000})
+        self.assertEqual(second.changes, {})
+
+        focused_first = SimpleNamespace(widget=first.search_entry)
+        self.assertEqual(first._undo_shortcut(focused_first), 'break')
+        self.assertIsNone(second._undo_shortcut(focused_first))
+        self.assertEqual(first.changes, {})
+        self.assertEqual(second.changes, {})
 
 
 if __name__ == '__main__':

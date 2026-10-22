@@ -48,9 +48,11 @@ def adapter_for(game_id):
 def _definition(field):
     # Canonical preset metadata captures subclass validators, storage layout,
     # choices, mirrors and other semantic constraints. Numeric editing limits
-    # may depend on the opened save value, so they are not comparison identity.
+    # and exact opened-value validator context may depend on the save, so they
+    # are not comparison identity.
     return edit_presets.field_definition_metadata(
-        field, excluded_attributes=('minimum', 'maximum', 'maxable', 'experimental_maximum'))
+        field, excluded_attributes=('minimum', 'maximum', 'maxable',
+                                   'experimental_maximum', 'opened_value'))
 
 
 def _value(field, document):

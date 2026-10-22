@@ -42,6 +42,35 @@ class ComparisonDefinitionIdentityTests(unittest.TestCase):
         self.assertEqual((gold.left, gold.right), (3456, 7890))
         self.assertEqual(gold.status, 'definition_changed')
 
+    def test_opened_value_validator_context_does_not_change_field_identity(self):
+        from dataclasses import dataclass
+        from types import MappingProxyType
+        from koei_editor.games.origins import origins_parser
+        from koei_editor.shared import save_comparison
+
+        @dataclass(frozen=True)
+        class OpenedValueField(origins_parser.Field):
+            opened_value: int = 0
+
+        left = origins_parser.decode(origins_fixture(gold=3456))
+        right = origins_parser.decode(origins_fixture(gold=7890))
+        left_fields = dict(origins_parser.field_map(left))
+        right_fields = dict(origins_parser.field_map(right))
+        field = left_fields['gold']
+        left_fields['gold'] = OpenedValueField(
+            field.id, field.label, field.offset, field.size, field.maximum,
+            field.group, field.slot, field.minimum, field.maxable, 3456)
+        right_fields['gold'] = OpenedValueField(
+            field.id, field.label, field.offset, field.size, field.maximum,
+            field.group, field.slot, field.minimum, field.maxable, 7890)
+        with patch.object(origins_parser, 'field_map',
+                          side_effect=(MappingProxyType(left_fields),
+                                       MappingProxyType(right_fields))):
+            compared = save_comparison.compare_documents('origins', left, right)
+        gold = next(row for row in compared.rows if row.id == 'gold')
+        self.assertEqual((gold.left, gold.right), (3456, 7890))
+        self.assertEqual(gold.status, 'value_changed')
+
 
 class ComparisonTransferExperienceTests(unittest.TestCase):
     def setUp(self):

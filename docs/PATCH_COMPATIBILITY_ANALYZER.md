@@ -72,7 +72,9 @@ pins can state supported `supported_versions` / `supported_build_ids` exact
 allowlists, required file SHA-256 values, supported format IDs/revisions, and
 required archive entries. These are compatibility expectations supplied by
 the owning tool or mod; the analyzer does not infer them from the save editor's
-registered profiles. If both version and build allowlists are present, both
+registered profiles. Required file and archive-entry pins are matched against
+game-install snapshot observations; hashes of imported mod-package files are not
+used for these pins. If both version and build allowlists are present, both
 must match.
 
 When an explicit requirement matches the baseline but not the candidate, the

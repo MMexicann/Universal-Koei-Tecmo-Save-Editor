@@ -22,7 +22,7 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "04f1cb6f87fcda3bba04ba65b1f84e6bf0db2ca8",
+  "base_commit": "8f05ba3fd14257daaf2b4a7c970f95a0ec567baa",
   "commands": {
     "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
@@ -48,7 +48,9 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed"
   },
   "windows_ci": {
-    "status": "see_pull_request_checks",
+    "status": "pending_current_head",
+    "previous_remote_head": "c1b6dcb9e176e39e35fe7be91fcfe4897c6e54e8",
+    "previous_head_result": "tracker_and_help_center_modules_passed; unrelated_application_shell_editing_tools_and_mod_manager_failures",
     "required_before_merge": true
   },
   "fixture": {

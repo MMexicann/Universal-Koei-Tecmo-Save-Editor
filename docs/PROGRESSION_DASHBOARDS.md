@@ -1,8 +1,9 @@
 # Progression dashboards
 
 Open a separate, qualified save copy. **Progression Dashboard** is the first
-workspace tab in scalar editors; **Edit Fields** retains the existing editor.
-Dynasty Warriors 3 Remastered has a Dashboard tab beside its dedicated forms.
+workspace tab in scalar editors; **Completion Companion** and **Edit Fields** are
+separate tabs. Dynasty Warriors 3 Remastered has the same companion beside its
+Dashboard and dedicated editing forms.
 
 Choose a section, search for a record or value, or select a card. Large inventories
 are divided into pages so the interface stays responsive. Selected-record details
@@ -27,6 +28,25 @@ The dashboard is read only and shows the **opened snapshot**, not a preview of
 pending edits. Use Edit Fields and Review Changes for staged values. Save As
 refreshes the snapshot from the validated destination copy. Switching sessions,
 themes, searches and cards never writes a game save.
+
+## Completion Companion
+
+The companion keeps two sources separate. **Platform achievements** shows
+achievement names and locked/unlocked states only when a supported source returns
+verified data. Source and retrieval time are shown with those states; unknown or
+partial results remain **Unavailable**. A verified snapshot must include a
+nonempty source identity and retrieval time in UTC `YYYY-MM-DDTHH:MM:SSZ` format;
+otherwise its states remain **Unavailable**. A source-provided unlocked count
+appears only when all listed achievement states are verified. No aggregate
+completion percentage is calculated. When no supported source is connected, the
+companion states that achievement information is unavailable.
+
+**Manual checklist** is optional and starts empty. Add your own item text, then
+mark or remove entries as you like. Every row is labelled **Manual**; its checked
+state is not read from a save or platform. Entries are stored in the local
+`completion_checklists.json` settings file per exact game/platform. The checklist
+is separate from the immutable save dashboard and is not included in save editing
+or dashboard reports.
 
 ## Standalone HTML reports
 
@@ -71,3 +91,36 @@ Console editions retain their own explicit profiles and mapped generic dashboard
 unless a separate rich presentation is provided. A PC dashboard does not expand
 console editing support. Native qualification and in-game load/re-save validation
 remain separate; no dashboard implies a successful game load of an edited save.
+
+## Optional platform achievements
+
+Steam achievements are a separate source from opened-save records. The
+DW3 Remastered Steam mapping uses app ID `3841510`, verified from the
+[official Steam store page](https://store.steampowered.com/app/3841510/DYNASTY_WARRIORS_3_Complete_Edition_Remastered/).
+The [Steamworks ISteamUserStats API](https://partner.steamgames.com/doc/webapi/ISteamUserStats)
+provides the title schema and a player's achievement states. The provider
+requires a Steam Web API key and 17-digit SteamID64 for a lookup. It makes no
+requests until a caller explicitly invokes it with those values. The Completion
+Companion should invoke it only after an explicit user action. The provider
+does not save these values or include them in returned snapshots.
+
+The provider joins player state to the official schema by exact achievement API
+name. It displays `unlocked` only for an explicit API value of `1` and `locked`
+only for `0`. A private profile, API failure, malformed player row, missing or
+additional state, malformed schema flag, or a schema mismatch is `unavailable`;
+missing data is never treated as locked.
+Hidden achievements use a generic name and omit their descriptions. An unlocked
+count and total are shown only when every schema entry has a matching state.
+No percentage is calculated. Retrieval time and the `Steam Web API` source stay
+with the displayed snapshot; the profile identifier and API key do not.
+
+This mapping does not infer Steam achievements from save flags. DW3's existing
+save-backed characters, mission routes and gallery records remain sourced from
+the opened save. Other games without an explicit provider have no platform
+achievement mapping in this provider.
+
+| Claim | Public evidence | Limit |
+| --- | --- | --- |
+| DW3 Remastered maps to Steam app `3841510` and has Steam achievements | [Steam store listing](https://store.steampowered.com/app/3841510/DYNASTY_WARRIORS_3_Complete_Edition_Remastered/), [Steam achievements page](https://steamcommunity.com/achievements/3841510) | Platform achievements are not read from the game save. |
+| Steam provides game schema and player achievement APIs | [Steamworks ISteamUserStats documentation](https://partner.steamgames.com/doc/webapi/ISteamUserStats) | Requires a user-supplied Steam Web API key; player states may be private or unavailable. |
+| Save-backed DW3 progression comes from the registered opened-save mapping | [DW3 progression projection](../src/koei_editor/games/dw3/progression_dashboard.py), [save-format evidence](SAVE_FORMAT.md) | A saved flag does not imply a Steam achievement event. |

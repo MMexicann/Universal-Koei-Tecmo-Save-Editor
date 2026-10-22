@@ -10,7 +10,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, LibraryCatalog, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 from koei_editor.shared import shell_preferences
-from koei_editor.shared.localization import LANGUAGES, translate
+from koei_editor.shared.localization import CATALOGS, LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
 VERSION = '3.1'
@@ -41,21 +41,32 @@ class Application(Appearance):
         self.comparison = None
         self.batch = None
         self.save_library = None
+        self.mod_manager = None
         self.editing_presets = None
         self.research_lab = None
         self.research_import = None
         self.workflow_builder = None
+        self.emulator_hub = None
+        self.mod_workshop_window = None
+        self.nexus_mods = None
+        # A Mod Manager integration may attach its typed Nexus handoff here.
+        self.mod_manager_download_handoff = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
         self._owned_minimum = (780, 680)
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
-        self.editing_tools_menu.add_command(label=self.tr('editing_presets'), command=self.show_editing_presets)
-        self.editing_tools_menu.add_command(label=self.tr('transfer'), command=self.show_transfer)
+        self._editing_tools_menu_commands = {}
+        self._add_editing_tools_menu_command('editing_presets', self.show_editing_presets)
+        self._add_editing_tools_menu_command('transfer', self.show_transfer)
         self.editing_tools_menu.add_separator()
-        self.editing_tools_menu.add_command(label=self.tr('research_lab'), command=self.show_research_lab)
-        self.editing_tools_menu.add_command(label=self.tr('research_import'), command=self.show_research_import)
+        self._add_editing_tools_menu_command('mod_manager', self.show_mod_manager)
+        self.editing_tools_menu.add_separator()
+        self._add_editing_tools_menu_command('research_lab', self.show_research_lab)
+        self._add_editing_tools_menu_command('research_import', self.show_research_import)
+        self._add_editing_tools_menu_command('nexus_mods', self.show_nexus_mods)
+        self._add_editing_tools_menu_command('emulator_hub', self.show_emulator_hub)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -185,6 +196,10 @@ class Application(Appearance):
         self.contact_button.pack(side='left')
         self.workflow_button = self._translated(ttk.Button(footer_buttons, command=self.show_workflow_builder), 'workflow_builder')
         self.workflow_button.pack(side='left', padx=10)
+        self.mod_workshop_button = self._translated(
+            ttk.Button(footer_buttons, command=self.show_mod_workshop), 'mod_workshop'
+        )
+        self.mod_workshop_button.pack(side='left', padx=(8, 0))
         cards = ttk.Frame(self.library)
         cards.pack(fill='both', expand=True)
         self.platform_frames = {platform: ttk.Frame(cards) for platform in (ALL_PLATFORMS,) + platforms}
@@ -263,13 +278,15 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (3, 'research_lab'), (4, 'research_import')):
-            self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+        self._refresh_editing_menu_labels()
+        if self.nexus_mods is not None:
+            self.nexus_mods.set_language(self.language)
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'research_lab', 'research_import', 'workflow_builder')
+                                            'editing_presets', 'mod_manager', 'research_lab', 'research_import',
+                                            'workflow_builder', 'emulator_hub', 'nexus_mods')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -281,6 +298,24 @@ class Application(Appearance):
                 set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
+
+    def _refresh_editing_menu_labels(self):
+        """Translate menu commands through their stable Tk command tokens."""
+        commands = getattr(self, '_editing_tools_menu_commands', None)
+        if commands:
+            for key in commands:
+                index = self._editing_tools_menu_index(key)
+                if index is not None:
+                    self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+            return
+        labels = {label: key for catalog in CATALOGS.values() for key, label in catalog.items()}
+        last_index = self.editing_tools_menu.index('end')
+        if last_index is None:
+            return
+        for index in range(last_index + 1):
+            key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
+            if key is not None:
+                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
 
     def change_text_size(self, _event=None):
         self.shell_settings = replace(self.shell_settings, text_size=int(self.text_size_choice.get().rstrip('%')))
@@ -474,8 +509,10 @@ class Application(Appearance):
         """Discover retained tools supplied by the parallel integration PRs."""
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
+            ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
-            ('workflow_builder', 'show_workflow_builder'))
+            ('workflow_builder', 'show_workflow_builder'), ('emulator_hub', 'show_emulator_hub'),
+            ('nexus_mods', 'show_nexus_mods'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -839,7 +876,8 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'editing_presets', 'research_lab', 'research_import', 'workflow_builder', 'help_center')
+                                       'mod_manager', 'editing_presets', 'research_lab', 'research_import',
+                                       'workflow_builder', 'emulator_hub', 'nexus_mods', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -856,6 +894,32 @@ class Application(Appearance):
         self._show_editing_tool(self.editing_presets, self.tr('editing_presets'))
         self._remember_workspace('tool:editing_presets')
         return self.editing_presets
+
+    def show_mod_manager(self):
+        from koei_editor.shared.mod_manager_gui import ModManagerWorkspace
+        if self.mod_manager is None:
+            self.mod_manager = ModManagerWorkspace(self.root, self.workspace)
+        attach_handoff = getattr(self, 'set_mod_manager_download_handoff', None)
+        if callable(attach_handoff):
+            attach_handoff(self.mod_manager)
+        self._show_editing_tool(self.mod_manager, self.tr('mod_manager'))
+        self._remember_workspace('tool:mod_manager')
+        return self.mod_manager
+
+    def _add_editing_tools_menu_command(self, key, callback):
+        self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
+        self._editing_tools_menu_commands[key] = self.editing_tools_menu.entrycget('end', 'command')
+
+    def _editing_tools_menu_index(self, key):
+        command = self._editing_tools_menu_commands.get(key)
+        end = self.editing_tools_menu.index('end')
+        if command is None or end is None:
+            return None
+        for index in range(end + 1):
+            if (self.editing_tools_menu.type(index) == 'command'
+                    and self.editing_tools_menu.entrycget(index, 'command') == command):
+                return index
+        return None
 
     def show_transfer(self):
         from tkinter import messagebox
@@ -934,6 +998,15 @@ class Application(Appearance):
         self._remember_workspace('tool:save_library')
         self.save_library.apply_theme(THEMES[self.theme_name.get()])
 
+    def show_emulator_hub(self):
+        from koei_editor.shared.emulator_hub_gui import EmulatorHubWorkspace
+        if self.emulator_hub is None:
+            self.emulator_hub = EmulatorHubWorkspace(self.root, self.workspace, self.open_saved_copy,
+                                                     preferences_path=self.preferences_path)
+        self._show_editing_tool(self.emulator_hub, self.tr('emulator_hub'))
+        self._remember_workspace('tool:emulator_hub')
+        return self.emulator_hub
+
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace
         if self.workflow_builder is None:
@@ -947,6 +1020,29 @@ class Application(Appearance):
         self.breadcrumb.set(self.tr('workflow_builder'))
         self._remember_workspace('tool:workflow_builder')
         self.workflow_builder.apply_theme(THEMES[self.theme_name.get()])
+
+    def show_nexus_mods(self):
+        from koei_editor.mods.nexus_browser import NexusModsWorkspace
+        if self.nexus_mods is None:
+            self.nexus_mods = NexusModsWorkspace(
+                self.root, self.workspace,
+                application_name='Universal Koei Tecmo Save Editor',
+                application_version=VERSION,
+                language=self.language,
+                game_id=self.active_game,
+                download_handoff=self.mod_manager_download_handoff,
+            )
+        else:
+            self.nexus_mods.set_download_handoff(self.mod_manager_download_handoff)
+        self._show_editing_tool(self.nexus_mods, self.tr('nexus_mods'))
+        self._remember_workspace('tool:nexus_mods')
+        return self.nexus_mods
+
+    def set_mod_manager_download_handoff(self, handoff):
+        """Attach the Mod Manager's Nexus queue capability when that component is present."""
+        self.mod_manager_download_handoff = handoff
+        if self.nexus_mods is not None:
+            self.nexus_mods.set_download_handoff(handoff)
 
     def open_saved_copy(self, game_id, path):
         """Open a browser result through that profile's ordinary guarded editor."""
@@ -1038,7 +1134,8 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        for tool in (self.editing_presets, self.research_lab, self.research_import):
+        for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
+                     self.nexus_mods):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1076,6 +1173,16 @@ class Application(Appearance):
         from koei_editor.games.dw3.gui import Editor
         # Reuse the existing author dialog without starting a DW3 game session.
         Editor.show_contact(self)
+
+    def show_mod_workshop(self):
+        """Open the independent mod project workspace without selecting a save editor."""
+        if self.mod_workshop_window is not None and self.mod_workshop_window.window.winfo_exists():
+            self.mod_workshop_window.window.deiconify()
+            self.mod_workshop_window.window.lift()
+            return self.mod_workshop_window
+        from koei_editor.shared.mod_workshop.gui import ModWorkshopWindow
+        self.mod_workshop_window = ModWorkshopWindow(self.root)
+        return self.mod_workshop_window
 
     def close(self):
         tools = self._tool_workspaces()
@@ -1313,11 +1420,17 @@ def main():
         app.show_batch()
         app.show_save_library()
         app.show_editing_presets()
+        app.show_mod_manager()
         app.show_research_lab()
         app.show_research_import()
+        app.show_nexus_mods()
         app.show_library()
+        app.nexus_mods.close()
         app.select_game('dw3')
         app.apply_theme('Light')
+        workshop = app.show_mod_workshop()
+        root.update_idletasks()
+        workshop.close()
         root.update_idletasks()
         root.destroy()
         print(f'Platform library, all registered interfaces, {dashboards} populated progression dashboards, '

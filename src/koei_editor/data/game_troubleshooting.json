@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "ruleset_version": "2026.10.22",
+  "profiles": [
+    {
+      "game_id": "origins",
+      "prerequisites": [
+        {
+          "id": "origins.directx12.system-requirement",
+          "title": "DirectX 12 system requirement",
+          "summary": "KOEI TECMO lists DirectX 12 or over in the Steam system requirements. This scan does not check installed DirectX components, graphics feature support, or overall system compatibility.",
+          "evidence": "Official Steam specification: DirectX 12 or over.",
+          "source": "https://www.koeitecmoamerica.com/dw_origins/us/products/steam_spec.html",
+          "recommendation": "Compare the full system with the game's official requirements and use Windows or graphics-vendor tools to check DirectX feature support. Install prerequisites only through their publisher or operating-system vendor."
+        }
+      ],
+      "mod_conflicts": [],
+      "compatibility": [
+        {
+          "id": "origins.steam.dlc-companion-frame-rate",
+          "title": "Official frame-rate fix for a DLC companion issue",
+          "summary": "KOEI TECMO lists a Steam v1.0.1.1 update dated 2026-01-30 that fixed battle frame-rate drops after selecting a companion added in the Visions of Four Heroes DLC. The installed game version and symptom were not assessed, so this does not establish that this installation is affected.",
+          "evidence": "Official update note: Steam v1.0.1.1 fixed the described issue.",
+          "recommendation": "If this matches the symptom, check the installed version in Steam and allow the official client to install available updates. Recheck the game behavior yourself.",
+          "source": "https://www.koeitecmoamerica.com/dw_origins/us/update/"
+        }
+      ]
+    }
+  ]
+}

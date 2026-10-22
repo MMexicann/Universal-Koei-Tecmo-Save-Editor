@@ -20,6 +20,9 @@ themes. No Python installation is needed for the Windows app.
 
 - **Explore progression:** browse read-only cards for verified opened-save values,
   equipment and mapped collections. [Dashboards](docs/PROGRESSION_DASHBOARDS.md).
+- **Track completion:** check achievements only when a supported platform source
+  verifies them, or keep an optional manual checklist. Unavailable states remain
+  clearly marked.
 
 - **Edit saves:** search fields and records, adjust values, inspect equipment,
   review named before/after changes, and save a separate edited copy.
@@ -34,6 +37,9 @@ themes. No Python installation is needed for the Windows app.
   [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
 - **Compare saves:** inspect mapped changes and other payload differences across
   97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
+- **Manage mods:** import validated ZIP packages, keep separate profiles, check
+  declared dependencies/conflicts, and safely manage Nioh 2 PC mods through its
+  documented Mods folder method. [Mod Manager scope and safeguards](docs/MOD_MANAGER.md).
 - **Analyze game patches from source:** compare Tracker snapshots by version,
   file hash, archive structure and supported-format metadata, then check explicit
   mod, tool and save requirements. [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
@@ -45,10 +51,10 @@ only conservative reductions or specific equipment choices; the supported-games
 list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
 expands only explicitly mapped numeric fields.
 
-The initial [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
-intentionally scoped to verified Three Hopes Switch character and weapon
-ID/name mappings; it is not a complete gameplay reference or a Character
-Workshop interface.
+The [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
+intentionally scoped to verified Three Hopes Switch character/weapon mappings,
+Hyrule Warriors Wii U catalog names, and a few cited Hyrule mechanics; it is
+not a complete gameplay reference or a Character Workshop interface.
 
 ## New in v3.1
 
@@ -59,6 +65,12 @@ Workshop interface.
 - **Requested PS4 transfers:** DW8 XL PS4 → PC is available within its documented profile. WO3U adds a limited PS4 resource route; full WO3U/SW4 PS4 migration still needs broader format evidence and original exports. [Exact scope and remaining evidence](docs/WARRIORS_PS4_TRANSFERS.md).
 
 [Release notes and limits](docs/RELEASE_NOTES.md). The development source contains 98 profiles across 15 platforms and 145 scoped routes. Edited/converted game loading remains unverified.
+
+The mod manager is development-source functionality and currently supports only
+the documented Nioh 2 PC Mods folder method with an already installed mod
+loader. It never installs loader files or writes into original game files.
+Other Koei Tecmo titles remain unsupported until their installation methods and
+restoration behavior are verified.
 
 ## Quick start
 

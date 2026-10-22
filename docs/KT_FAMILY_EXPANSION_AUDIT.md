@@ -39,12 +39,12 @@ These are focused regression checks of current adapters, not proof of newly qual
 
 | Family | Reproducible command | Result |
 | --- | --- | --- |
-| Atelier | `PYTHONPATH=src python -m unittest tests.test_atelier_sophie2_format tests.test_sophie2_inventory tests.test_sophie2_audit tests.test_sophie_format tests.test_sophie_audit tests.test_firis_pc tests.test_ryza_format tests.test_ryza_audit tests.test_ryza_pc tests.test_ryza3_dx_pc tests.test_ryza_switch tests.test_ryza2_switch tests.test_meruru_plus_vita tests.test_meruru_dx_candidate tests.test_rorona_dx_candidate tests.test_totori_dx_ps4_candidate -v` | 129 passed; 20 skipped because private native saves or a graphical display were unavailable. |
+| Atelier | `PYTHONPATH=src python -m unittest tests.test_atelier_sophie2_format tests.test_sophie2_inventory tests.test_sophie2_audit tests.test_sophie_format tests.test_sophie_audit tests.test_firis_pc tests.test_ryza_format tests.test_ryza_audit tests.test_ryza_pc tests.test_ryza3_dx_pc tests.test_ryza_switch tests.test_ryza2_switch tests.test_meruru_plus_vita tests.test_meruru_dx_candidate tests.test_rorona_dx_candidate tests.test_totori_dx_ps4_candidate -v` | 129 tests run: 109 passed, 20 skipped because private native saves or a graphical display were unavailable. |
 | Fatal Frame | `PYTHONPATH=src python -m unittest tests.test_project_zero_ps2 -v` | 6 passed; 2 skipped because private native exports or a graphical display were unavailable. PR #115 repeats this check for the label change. |
 | Blue Reflection | `PYTHONPATH=src python -m unittest tests.test_brsl_pc -v` | 6 passed; 1 skipped because an independently copied native Second Light save was unavailable. |
 | Nights of Azure | `PYTHONPATH=src python -m unittest tests.test_nights_azure2_switch -v` | 12 passed; 2 skipped because native copies or a graphical display were unavailable. |
 
-The family audit runs were performed in family worktrees based on `cede8a9`. Current `main` is `1d86de1`; its only changes since that baseline are the separate game-data encyclopedia feed, so the audited family files are unchanged. PR #115 also records a focused rerun, `tools/package_release --verify-only`, manifest refresh and `git diff --check`. No full-suite run or edited in-game load/re-save is claimed here.
+The suites above were rerun on current `main` at `1d86de1` in the report worktree. Earlier audit runs used worktrees based on `cede8a9`; the only changes since that baseline are the separate game-data encyclopedia feed. PR #115 also records a focused rerun, `tools/package_release --verify-only`, manifest refresh and `git diff --check`. No full-suite run or edited in-game load/re-save is claimed here.
 
 ## Evidence gate for the next writable field
 

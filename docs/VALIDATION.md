@@ -29,8 +29,8 @@ requires exact app/build identities and versioned evidence before showing
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 320,
-    "passed": 239,
+    "run": 321,
+    "passed": 240,
     "skipped": 81,
     "failures": 0,
     "gui_skips": "Tk display-dependent tests skipped because this environment has no display."
@@ -48,12 +48,12 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed against origin/main after rebase"
   },
   "windows_ci": {
-    "status": "pending_new_windows_run_on_rebased_tracker_head",
+    "status": "pending_latest_head_after_artifact_version_validation_fix",
     "last_completed_head": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
     "last_completed_base": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
     "last_completed_run": "39856326664",
     "last_completed_result": "full_workflow_failed; test_version_tracker 15/15, test_save_discovery 47/47, Help Center 12/12, Troubleshooting 31/31, universal app 28/28, and analyzer 29 passed/1 skipped; unrelated failures were application shell, Mod Manager/Nexus, Emulator Hub, Completion Companion, Save Library, and Editing Tools; build/release skipped",
-    "integration_findings": "Game Hub run 39849115110 passed discovery 5/5, GUI 8/8, and Save Discovery 47/47 on its earlier stacked branch. PR #148 is merged at 8c6b870; run 39858226370 passed Completion Companion 9/9 on Windows, while the overall run was cancelled before remaining shards and build/release. PR #145 is merged at 9153438; current-base run 39859637192 passed Emulator Hub 17/17; shard 1 had four unrelated Save Library GUI failures, so build/release were skipped. PR #149 Game Configuration Manager is merged in current main 9fecbed; the combined local suite passed 320 tests with 81 display skips. Run 39861410034 was started on the superseded tracker head f4cbf2a and base 9153438; it is not validation for this rebased head.",
+    "integration_findings": "Game Hub PR #135 is rebased onto tracker head 37a6bc7 with a Hub-only 12-file diff; Windows run 39862649531 is in progress. PR #148 is merged at 8c6b870; run 39858226370 passed Completion Companion 9/9 on Windows, while the overall run was cancelled before remaining shards and build/release. PR #145 is merged at 9153438; current-base run 39859637192 passed Emulator Hub 17/17; shard 1 had four unrelated Save Library GUI failures, so build/release were skipped. PR #149 Game Configuration Manager is merged in current main 9fecbed; combined local tests passed. Windows run 39862253266 is still running on the preceding tracker commit 37a6bc7 and does not include the latest whitespace-only artifact-version validation fix.",
     "merged_test_fixture_fixes": "PRs #137, #147, #141, #121, #144, #148, #145, and #149 are included in current main 9fecbed.",
     "required_before_merge": true,
     "last_completed_tracker_run_details": {
@@ -244,13 +244,13 @@ requires exact app/build identities and versioned evidence before showing
       }
     ],
     "current_head_check": {
-      "status": "required_after_rebase_push",
+      "status": "required_after_latest_validator_fix_push",
       "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
       "superseded_run": {
-        "run_id": 39861410034,
-        "head_sha": "f4cbf2aaca1a2edc9ef9d46679b076bbd18b3683",
-        "base_sha": "915343810a03ece4306ca57ac671d5070a2e3c6b",
-        "status": "in_progress_when_rebase_completed",
+        "run_id": 39862253266,
+        "head_sha": "37a6bc7ffd1180532e12c89d763ecfa8ccd8e5d0",
+        "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
+        "status": "in_progress_on_pre-fix_head",
         "merge_eligible": false
       }
     }
@@ -272,13 +272,14 @@ requires exact app/build identities and versioned evidence before showing
     "finding": "Portable discovery report wording now distinguishes sanitized allowlisted Steam markers from omitted paths, filenames, account IDs, and unrecognized VDF values.",
     "focused_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery",
     "focused_test_result": {
-      "run": 62,
-      "passed": 62,
+      "run": 63,
+      "passed": 63,
       "skipped": 0,
       "failures": 0
     },
-    "source_manifest": "refreshed and verified 1,294 public source files on the rebased tree",
-    "git_diff_check": "passed against origin/main after rebase"
+    "source_manifest": "refreshed and verified 1,294 public source files after the validator and documentation updates",
+    "git_diff_check": "passed against origin/main after rebase",
+    "artifact_version_validation": "verified and unsupported records reject empty/whitespace-only artifact versions; surrounding whitespace is normalized"
   }
 }
 ```

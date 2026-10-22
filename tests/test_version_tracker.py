@@ -129,6 +129,16 @@ class VersionTrackerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unresolved next-step ID'):
             tracker._validate_record({**unsupported.__dict__, 'next_step_ids': ['unknown_target']})
 
+    def test_verified_and_unsupported_records_reject_blank_artifact_versions(self):
+        for status in ('verified', 'unsupported'):
+            record = self.record(status=status)
+            for version in ('', '   ', '\t'):
+                with self.subTest(status=status, version=repr(version)):
+                    with self.assertRaisesRegex(ValueError, 'invalid artifact version'):
+                        tracker._validate_record({**record.__dict__, 'artifact_version': version})
+            normalized = tracker._validate_record({**record.__dict__, 'artifact_version': '  3.1  '})
+            self.assertEqual(normalized.artifact_version, '3.1')
+
     def test_next_step_ids_render_as_localized_help_article_titles(self):
         from koei_editor.shared.version_tracker_gui import VersionTrackerPanel
 

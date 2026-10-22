@@ -225,9 +225,11 @@ def _validate_record(value):
             or any(ord(character) < 32 for character in name)):
         raise ValueError('Compatibility metadata has an invalid artifact name.')
     version = value['artifact_version']
-    if version is not None and (type(version) is not str or len(version) > 128
-                                or any(ord(character) < 32 for character in version)):
-        raise ValueError('Compatibility metadata has an invalid artifact version.')
+    if version is not None:
+        if (type(version) is not str or len(version) > 128 or not version.strip()
+                or any(ord(character) < 32 for character in version)):
+            raise ValueError('Compatibility metadata has an invalid artifact version.')
+        version = version.strip()
     if type(value['status']) is not str or value['status'] not in COMPATIBILITY_STATUSES:
         raise ValueError('Compatibility metadata has an invalid status.')
     reason = value['reason_code']

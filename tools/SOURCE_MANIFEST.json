@@ -473,8 +473,8 @@
     },
     {
       "path": "docs/HELP_AND_COMPATIBILITY.md",
-      "bytes": 5958,
-      "sha256": "575045d5343f0a3349f357e1646085cfffb9f07dd74c1f976b81915815eae7ce"
+      "bytes": 6319,
+      "sha256": "c3482c1240162f22e4eada190b246327226f24c3a3cb7d2a3df00ccf03d43697"
     },
     {
       "path": "docs/HYRULE_FIRE_EMBLEM_DEPTH.md",
@@ -1058,8 +1058,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 108775,
-      "sha256": "1e4dcc9d772d00580bba3d728b7132770627a59e67bceb398f0280e294de3c34"
+      "bytes": 108984,
+      "sha256": "c9a56126ae364aa8c029124bc58847bd38d9ee3a8d6c020fec6d9fa6eaceb547"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -4388,8 +4388,8 @@
     },
     {
       "path": "src/koei_editor/shared/version_tracker.py",
-      "bytes": 28025,
-      "sha256": "134a9e040734304325e808413ea4dac59f5009ec1831e1e95703d8b0eeeda376"
+      "bytes": 28078,
+      "sha256": "e4739e443730e91af565cc0d6b814f5a143bcfa5e535729517a0a601f9975205"
     },
     {
       "path": "src/koei_editor/shared/version_tracker_gui.py",

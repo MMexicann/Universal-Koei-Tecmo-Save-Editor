@@ -638,8 +638,8 @@
     },
     {
       "path": "docs/PROGRESSION_DASHBOARDS.md",
-      "bytes": 8059,
-      "sha256": "b9531814d7074aba155367d8c9989a351077cd5e427752b8018b86bbb0a33c25"
+      "bytes": 8089,
+      "sha256": "cd2fec3142ccbe74cad611ab40d2b45f5db04086a1a16dc8bbd93ba65a7b28f2"
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
@@ -3958,8 +3958,8 @@
     },
     {
       "path": "src/koei_editor/shared/steam_achievements.py",
-      "bytes": 8869,
-      "sha256": "5fd0911a6aae17582825e22514353e9e31ff2b719041847906f87f79d871963c"
+      "bytes": 9047,
+      "sha256": "1ab45b2d3a71c00c435fe32e3834763df3779ca258b49fec34c7bfc7efc27fe9"
     },
     {
       "path": "src/koei_editor/shared/steam_owner.py",
@@ -5523,8 +5523,8 @@
     },
     {
       "path": "tests/test_steam_achievements.py",
-      "bytes": 8176,
-      "sha256": "a10059ac5248f0d666bd6ea180912d4e16308e03b31908b29d7d1b2cc692c5eb"
+      "bytes": 9102,
+      "sha256": "c1fe6a63ed4e1867addbcbe0afa9b7ddf22a68034f9efd2c6642b9d8291d4171"
     },
     {
       "path": "tests/test_steam_owner.py",

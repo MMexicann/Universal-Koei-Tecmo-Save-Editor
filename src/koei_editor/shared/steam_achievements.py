@@ -95,7 +95,10 @@ def _schema_entries(response):
         if type(identity) is not str or not identity or identity in seen or len(identity) > 256:
             raise ValueError('Steam returned an ambiguous achievement schema.')
         seen.add(identity)
-        hidden = row.get('hidden') in (1, True, '1')
+        hidden_value = row.get('hidden')
+        if type(hidden_value) is not int or hidden_value not in (0, 1):
+            raise ValueError('Steam returned an invalid hidden-achievement flag.')
+        hidden = hidden_value == 1
         display_name = row.get('displayName')
         description = row.get('description')
         if hidden:

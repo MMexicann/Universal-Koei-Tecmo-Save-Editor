@@ -86,9 +86,9 @@ does not save these values or include them in returned snapshots.
 
 The provider joins player state to the official schema by exact achievement API
 name. It displays `unlocked` only for an explicit API value of `1` and `locked`
-only for `0`. A private profile, API failure, malformed row, missing or
-additional state, or a schema mismatch is `unavailable`; missing data is never
-treated as locked.
+only for `0`. A private profile, API failure, malformed player row, missing or
+additional state, malformed schema flag, or a schema mismatch is `unavailable`;
+missing data is never treated as locked.
 Hidden achievements use a generic name and omit their descriptions. An unlocked
 count and total are shown only when every schema entry has a matching state.
 No percentage is calculated. Retrieval time and the `Steam Web API` source stay

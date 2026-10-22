@@ -159,6 +159,24 @@ class SteamAchievementTests(unittest.TestCase):
         self.assertEqual(duplicate_schema.status, 'unavailable')
         self.assertEqual(duplicate_schema.achievements, ())
 
+    def test_malformed_hidden_flags_fail_closed_without_exposing_schema_text(self):
+        for malformed in ('true', True, 2, None):
+            with self.subTest(hidden=malformed):
+                response = schema()
+                response['game']['availableGameStats']['achievements'][0]['hidden'] = malformed
+                opened = Opener(Response(response))
+                result = self.fetch(opened)
+
+                self.assertEqual(result.status, 'unavailable')
+                self.assertEqual(result.achievements, ())
+                self.assertEqual(len(opened.requests), 1)
+                self.assertNotIn('First description', repr(result))
+        missing = schema()
+        del missing['game']['availableGameStats']['achievements'][0]['hidden']
+        result = self.fetch(Opener(Response(missing)))
+        self.assertEqual(result.status, 'unavailable')
+        self.assertEqual(result.achievements, ())
+
     def test_invalid_credentials_do_not_make_a_request(self):
         opened = Opener()
         result = fetch_steam_achievements('bad-key', STEAM_ID64, APP_ID, opener=opened)

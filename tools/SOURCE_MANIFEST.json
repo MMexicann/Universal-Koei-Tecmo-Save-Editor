@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 6124,
-      "sha256": "f9a1dccdf36192315a6764cd72ebc14296c3f80f76692bc37b8a014106296243"
+      "bytes": 6304,
+      "sha256": "87c0fc7dbc438478bfe97cb2415da8ccb24eb4ac2b2e61efe8e3b53587e2e91b"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -202,6 +202,11 @@
       "sha256": "ad7360798778300d7261dbbd4745d96e3966d7e8466eb7bd68d0154e0bc4eff8"
     },
     {
+      "path": "docs/COMPLETION_COMPANION_AI_EVIDENCE.md",
+      "bytes": 3960,
+      "sha256": "c9620ab9a61772b97412a85d3f5744f02369ad440cc2d2c5e1f1b8e100e2919e"
+    },
+    {
       "path": "docs/CONSOLE_PIRATE_STRATEGY_DEPTH.md",
       "bytes": 17073,
       "sha256": "74ad058ab8f456eeff21b5cfa43f1c0645958513ed7d03e886ea5a714b8398ea"
@@ -343,8 +348,8 @@
     },
     {
       "path": "docs/EDITOR_WORKSPACE.md",
-      "bytes": 4863,
-      "sha256": "d3c95d7adb248b33c2995fcc7b7d1f272df63e0fad73aa7fea2dd1c03db51631"
+      "bytes": 5111,
+      "sha256": "935b629831f91a770fb954620cee2430cf36963f89723e06a3be293834baa556"
     },
     {
       "path": "docs/EDIT_PRESETS.md",
@@ -638,8 +643,8 @@
     },
     {
       "path": "docs/PROGRESSION_DASHBOARDS.md",
-      "bytes": 8089,
-      "sha256": "cd2fec3142ccbe74cad611ab40d2b45f5db04086a1a16dc8bbd93ba65a7b28f2"
+      "bytes": 9272,
+      "sha256": "10defc3dd592951ae91e707bdffdfa0a5148414e8cf523bce565878265657d5b"
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
@@ -678,8 +683,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16051,
-      "sha256": "e487eee2536d7339708c118c7fe3f67dadcbb060cddec1b8de242d76f0744086"
+      "bytes": 16130,
+      "sha256": "2572185008b38fba3d99fbcfc5e4d69c428d55e6ec07dbf57662f14adef7afba"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1618,8 +1623,8 @@
     },
     {
       "path": "src/koei_editor/games/dw3/gui.py",
-      "bytes": 137057,
-      "sha256": "7874d975213911badb54b499cc339c4571fbf4ae05b1aedec1505a104fb43ac9"
+      "bytes": 137445,
+      "sha256": "c1ebae03db492dcc72a4a44a8707a4de7a52e982a50ade7b425b9447c1ccbc82"
     },
     {
       "path": "src/koei_editor/games/dw3/models.py",
@@ -3757,6 +3762,16 @@
       "sha256": "8eb68974489062a683b50bda6f5283a8153eef3b9a521f5593845806eada8099"
     },
     {
+      "path": "src/koei_editor/shared/completion_checklist.py",
+      "bytes": 6818,
+      "sha256": "62ad1ca743b4d162df970484d67ab948d9d16027a9175937e4cebc51d9668fa3"
+    },
+    {
+      "path": "src/koei_editor/shared/completion_checklist_view.py",
+      "bytes": 21311,
+      "sha256": "0423bc266344461b8e0b3d95255a5a7a2840732739bc5d6434d551790095447f"
+    },
+    {
       "path": "src/koei_editor/shared/conversion_gui.py",
       "bytes": 18958,
       "sha256": "9b3860f7e3d2654477afd19ebf452685ef81547c402fd774fbc56a305d6229bc"
@@ -4003,8 +4018,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 62399,
-      "sha256": "22d5cb95409b32e42eb127c66102f3c7cb79cbcf2fefbfd17647cba0059775c1"
+      "bytes": 62817,
+      "sha256": "e130a6fdb183cf3e2b7fff48832c8f9e8b7e5e6cc4780d46803507852caa376a"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4210,6 +4225,16 @@
       "path": "tests/test_compatible_presets_gui.py",
       "bytes": 16210,
       "sha256": "72ffc6383e5ff11c784304972fdf8a9193d0fccb2e7a098485a0db96edecdcbc"
+    },
+    {
+      "path": "tests/test_completion_checklist.py",
+      "bytes": 3986,
+      "sha256": "318239d02b7312661bdac327da674d05609ad689deda26009be731f15826d51a"
+    },
+    {
+      "path": "tests/test_completion_companion_view.py",
+      "bytes": 10899,
+      "sha256": "aa9c28420aae0a461c6d99d5d3129b2bff81e7d2b211f3efbc6121895ffd36e7"
     },
     {
       "path": "tests/test_console_context_regressions.py",

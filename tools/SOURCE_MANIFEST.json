@@ -513,13 +513,13 @@
     },
     {
       "path": "docs/MOD_MANAGER.md",
-      "bytes": 6144,
-      "sha256": "115a231a10a916f228a0de76297a61fb4bff51b2433ea609b7df313ec6fa9e00"
+      "bytes": 8518,
+      "sha256": "5ba165357d9bb2fad0a236d43c230b2eaa46fcebc5c6c2ccf19532b46889ead0"
     },
     {
       "path": "docs/MOD_MANAGER_VALIDATION.md",
-      "bytes": 2301,
-      "sha256": "d8e0e2b5e661cea70814fad4fe0fbba37792d913f7a27b5c5a308f60b452c814"
+      "bytes": 2694,
+      "sha256": "ff7ca3f247667c2053e22b02dc320ed4512d642a76f517f78d62d7756cabb007"
     },
     {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
@@ -1243,8 +1243,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 78395,
-      "sha256": "9a744939ae887cce9d947a9c09f6bd8550889d0dc58ea01f71b08dec15f02ec0"
+      "bytes": 78558,
+      "sha256": "8674efb8eeecb191eccb3dc27580304e203dbf4feab62a5a405cd906b6680e70"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3888,13 +3888,13 @@
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
-      "bytes": 68308,
-      "sha256": "9a65bead52d90c0e14c637b2a27e96d9c0013f84c19067c92cbc993ddda01f04"
+      "bytes": 82053,
+      "sha256": "a9e2f6bbf7f30faa68ad925ebfd766984bf46c2f7becff44fd33fdc7b7deff36"
     },
     {
       "path": "src/koei_editor/shared/mod_manager_gui.py",
-      "bytes": 26714,
-      "sha256": "9e71d908f3dd3ae28d0ba67bb89843a6e1421b4ba70eba42ca8b4ac7bbaca00a"
+      "bytes": 28119,
+      "sha256": "b5eaec7061bfb03ff69805ba9c02bed2e5bf288aa76350f32f2b2e23ed62f84c"
     },
     {
       "path": "src/koei_editor/shared/mod_workshop/__init__.py",
@@ -4178,8 +4178,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 38200,
-      "sha256": "0c3c505c6711a34e4e174ce56c9f483ed9beaa3238caaadeb52ecf0307a13e61"
+      "bytes": 39365,
+      "sha256": "b4f6b0e5d5d57b26eff2d2662857bf2bd1e05378a06f85dd3878be055d2fa1b6"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5000,6 +5000,11 @@
       "path": "tests/test_mod_manager.py",
       "bytes": 15240,
       "sha256": "755257bca198f08d978d666a5f24cdc5fd5cd8a927bb940799f1f5749d5ee5cf"
+    },
+    {
+      "path": "tests/test_mod_manager_nexus.py",
+      "bytes": 10941,
+      "sha256": "7967afb2f5350f8ae9523b568648c67488e5edf65f7c6110c880d243e2f22220"
     },
     {
       "path": "tests/test_monster_rancher_ds.py",

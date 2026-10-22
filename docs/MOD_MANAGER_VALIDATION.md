@@ -13,7 +13,7 @@ files, loader DLLs, or player mods are included.
 | `PYTHONPATH=src python -m unittest tests.test_application_shell -v` | 38 tests ran: 8 passed and 30 Tk tests skipped because this environment has no display (`$DISPLAY` is unset). A headless mocked assertion covers the manager handoff seam; visible workspace behavior needs a GUI-capable run. |
 | `PYTHONPATH=src python -m py_compile src/koei_editor/shared/mod_manager.py src/koei_editor/shared/mod_manager_gui.py src/koei_editor/application.py tests/test_mod_manager_nexus.py tests/test_application_shell.py` | Syntax compilation passed. |
 | `git diff --check` | Passed with no whitespace errors. |
-| `python -m tools.package_release --verify-only` | Passed: v3.1, 1,226 public source files verified. This validates manifest hashes only; it does not build or validate a Windows executable. |
+| `python -m tools.package_release --verify-only` | Passed: v3.1, 1,227 public source files verified. This validates manifest hashes only; it does not build or validate a Windows executable. |
 
 ## Audit limits
 

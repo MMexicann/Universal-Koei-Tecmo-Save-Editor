@@ -65,6 +65,7 @@ MOD_TESTING_SANDBOX_SOURCES = {
     'tools/mod_testing_sandbox/src/workspace-store.mjs',
     'tools/mod_testing_sandbox/test/security.test.mjs',
     'tools/mod_testing_sandbox/test/workspace-store.test.mjs',
+    'tools/mod_testing_sandbox/test/workshop-folder-ui.test.mjs',
 }
 RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json',
                 'verified_limits.json', 'item_limits.json', 'native_enums.json',

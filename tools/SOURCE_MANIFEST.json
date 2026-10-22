@@ -6687,14 +6687,19 @@
       "sha256": "8a2e015537234d7ff2ae80cad1b2a67ceb6b19ee6d02249f66bd107b6a98f78c"
     },
     {
+      "path": "tools/mod_testing_sandbox/test/workshop-folder-ui.test.mjs",
+      "bytes": 3279,
+      "sha256": "515e0ecd3a1976f2a7141b823906be211adea8123a0f93623a9c8d6ed99c0e4a"
+    },
+    {
       "path": "tools/mod_testing_sandbox/test/workspace-store.test.mjs",
       "bytes": 8450,
       "sha256": "e91ac1e98527ad1f6bd774120c747ab7a4bacd5bcae5fc437529b1ba26e84c4c"
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 37947,
-      "sha256": "c0586b23d0370bb0c9f250a870083fb2482fcff22546826b65d511a8624a2cab"
+      "bytes": 38013,
+      "sha256": "27253221b88beb727fab3e5b408741003b3339393bae634ce66749fe333d0840"
     },
     {
       "path": "tools/refresh_manifest.py",

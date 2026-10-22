@@ -290,7 +290,6 @@ class Application(Appearance):
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'editing_presets', 'mod_manager', 'research_lab', 'research_import',
-                                            'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder')
                                             'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder', 'game_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)

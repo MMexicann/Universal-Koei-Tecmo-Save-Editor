@@ -97,7 +97,6 @@ class TroubleshootingWorkspaceLifecycleTests(unittest.TestCase):
 
         workspace = object.__new__(TroubleshootingWorkspace)
         workspace._closed = False
-        workspace._revision = 0
         workspace._poll_id = "poll-1"
         workspace.root = Root()
 
@@ -105,7 +104,6 @@ class TroubleshootingWorkspaceLifecycleTests(unittest.TestCase):
         workspace.close()
 
         self.assertTrue(workspace._closed)
-        self.assertEqual(workspace._revision, 1)
         self.assertIsNone(workspace._poll_id)
         self.assertEqual(workspace.root.cancelled, ["poll-1"])
 

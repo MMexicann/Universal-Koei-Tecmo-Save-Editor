@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5829,
-      "sha256": "ac2d263949c8128ee38d2e6cf8660b201740b9427128637af10c691965b26302"
+      "bytes": 6073,
+      "sha256": "3713a14209bb712573032c3704be086b35a9d658605f0d9f9d1a4f6a73be4283"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -467,6 +467,11 @@
       "sha256": "8336b23e289669d1175ef7be9d6906cedcda7ba43e2000882668a2334bf851e3"
     },
     {
+      "path": "docs/KT_FAMILY_EXPANSION_AUDIT.md",
+      "bytes": 9373,
+      "sha256": "8f76e9b79bf9f8441728b885f49b67baacae3c78d23b68c1d3d6d892f08e34ee"
+    },
+    {
       "path": "docs/LICENSED_ACTION_RPG_STATUS.md",
       "bytes": 14441,
       "sha256": "6ccc36a8c019addd6df9438c7b2174c49dce7d584f1d23f230eaaabf9593983d"
@@ -678,8 +683,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 15856,
-      "sha256": "b042980c6e435d007d5e777633a93e5f5573459a7d82f80b9724086832ce0f53"
+      "bytes": 16033,
+      "sha256": "f41b147faad1d88cd296e52584e176a14593d2b8db464d94e7cd0e7d388922f9"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",

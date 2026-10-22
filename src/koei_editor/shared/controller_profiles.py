@@ -488,4 +488,3 @@ class ProfileStore:
         if len(raw) > MAX_STORE_BYTES:
             raise ProfileError('Profile data is larger than the supported limit.')
         return raw
-

@@ -559,4 +559,3 @@ class ControllerProfileWorkspace:
         style.map('ControllerProfile.Treeview',
                   background=[('selected', palette['accent'])],
                   foreground=[('selected', '#ffffff')])
-

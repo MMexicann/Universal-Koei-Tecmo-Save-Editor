@@ -10,7 +10,7 @@ from koei_editor.supported_games import SUPPORTED_GAMES
 from koei_editor.shared.library_catalog import ALL_PLATFORMS, ALL_SERIES, LibraryCatalog, matching_games, series_for
 import koei_editor.shared.preferences as preferences
 from koei_editor.shared import shell_preferences
-from koei_editor.shared.localization import LANGUAGES, translate
+from koei_editor.shared.localization import CATALOGS, LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
 VERSION = '3.1'
@@ -46,6 +46,8 @@ class Application(Appearance):
         self.research_import = None
         self.workflow_builder = None
         self.controller_profiles = None
+        self.emulator_hub = None
+        self.mod_workshop_window = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -58,7 +60,8 @@ class Application(Appearance):
                 ('transfer', self.show_transfer),
                 ('controller_profiles', self.show_controller_profiles),
                 ('research_lab', self.show_research_lab),
-                ('research_import', self.show_research_import)):
+                ('research_import', self.show_research_import),
+                ('emulator_hub', self.show_emulator_hub)):
             if key == 'research_lab':
                 self.editing_tools_menu.add_separator()
             self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
@@ -192,6 +195,10 @@ class Application(Appearance):
         self.contact_button.pack(side='left')
         self.workflow_button = self._translated(ttk.Button(footer_buttons, command=self.show_workflow_builder), 'workflow_builder')
         self.workflow_button.pack(side='left', padx=10)
+        self.mod_workshop_button = self._translated(
+            ttk.Button(footer_buttons, command=self.show_mod_workshop), 'mod_workshop'
+        )
+        self.mod_workshop_button.pack(side='left', padx=(8, 0))
         cards = ttk.Frame(self.library)
         cards.pack(fill='both', expand=True)
         self.platform_frames = {platform: ttk.Frame(cards) for platform in (ALL_PLATFORMS,) + platforms}
@@ -270,16 +277,14 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        for key in self._editing_tools_menu_commands:
-            index = self._editing_tools_menu_index(key)
-            if index is not None:
-                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+        self._refresh_editing_menu_labels()
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
-                                            'controller_profiles')
+                                            'editing_presets', 'research_lab', 'research_import',
+                                            'workflow_builder', 'controller_profiles', 'emulator_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -295,6 +300,25 @@ class Application(Appearance):
                 set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
+
+    def _refresh_editing_menu_labels(self):
+        """Translate named menu entries without relying on their Tk indices."""
+        labels = {label: key for catalog in CATALOGS.values() for key, label in catalog.items()}
+        last_index = self.editing_tools_menu.index('end')
+        if last_index is None:
+            return
+        translated = set()
+        for key in getattr(self, '_editing_tools_menu_commands', {}):
+            index = self._editing_tools_menu_index(key)
+            if index is not None:
+                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+                translated.add(index)
+        for index in range(last_index + 1):
+            if index in translated:
+                continue
+            key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
+            if key is not None:
+                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
 
     def change_text_size(self, _event=None):
         self.shell_settings = replace(self.shell_settings, text_size=int(self.text_size_choice.get().rstrip('%')))
@@ -489,8 +513,8 @@ class Application(Appearance):
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
-            ('workflow_builder', 'show_workflow_builder'),
-            ('controller_profiles', 'show_controller_profiles'))
+            ('workflow_builder', 'show_workflow_builder'), ('controller_profiles', 'show_controller_profiles'),
+            ('emulator_hub', 'show_emulator_hub'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -855,7 +879,7 @@ class Application(Appearance):
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
                                        'editing_presets', 'research_lab', 'research_import', 'workflow_builder',
-                                       'controller_profiles', 'help_center')
+                                       'controller_profiles', 'emulator_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -971,6 +995,15 @@ class Application(Appearance):
         self._remember_workspace('tool:save_library')
         self.save_library.apply_theme(THEMES[self.theme_name.get()])
 
+    def show_emulator_hub(self):
+        from koei_editor.shared.emulator_hub_gui import EmulatorHubWorkspace
+        if self.emulator_hub is None:
+            self.emulator_hub = EmulatorHubWorkspace(self.root, self.workspace, self.open_saved_copy,
+                                                     preferences_path=self.preferences_path)
+        self._show_editing_tool(self.emulator_hub, self.tr('emulator_hub'))
+        self._remember_workspace('tool:emulator_hub')
+        return self.emulator_hub
+
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace
         if self.workflow_builder is None:
@@ -1075,7 +1108,8 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        for tool in (self.editing_presets, self.research_lab, self.research_import, self.controller_profiles):
+        for tool in (self.editing_presets, self.research_lab, self.research_import, self.controller_profiles,
+                     self.emulator_hub):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1113,6 +1147,16 @@ class Application(Appearance):
         from koei_editor.games.dw3.gui import Editor
         # Reuse the existing author dialog without starting a DW3 game session.
         Editor.show_contact(self)
+
+    def show_mod_workshop(self):
+        """Open the independent mod project workspace without selecting a save editor."""
+        if self.mod_workshop_window is not None and self.mod_workshop_window.window.winfo_exists():
+            self.mod_workshop_window.window.deiconify()
+            self.mod_workshop_window.window.lift()
+            return self.mod_workshop_window
+        from koei_editor.shared.mod_workshop.gui import ModWorkshopWindow
+        self.mod_workshop_window = ModWorkshopWindow(self.root)
+        return self.mod_workshop_window
 
     def close(self):
         tools = self._tool_workspaces()
@@ -1353,9 +1397,13 @@ def main():
         app.show_research_lab()
         app.show_research_import()
         app.show_controller_profiles()
+        app.show_emulator_hub()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')
+        workshop = app.show_mod_workshop()
+        root.update_idletasks()
+        workshop.close()
         root.update_idletasks()
         root.destroy()
         print(f'Platform library, all registered interfaces, {dashboards} populated progression dashboards, '

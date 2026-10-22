@@ -362,6 +362,11 @@
       "sha256": "faa187fae89686578f293ae5a63c44979e3aff9c398cdb02a49e012832a72168"
     },
     {
+      "path": "docs/EMULATOR_HUB.md",
+      "bytes": 5236,
+      "sha256": "1c191afb6040e9e29c49b752f895a825d6c5d80d6714a96d8548fb28eef3490c"
+    },
+    {
       "path": "docs/EXISTING_EDITORS.md",
       "bytes": 10046,
       "sha256": "76cafd8e30ca3f229ebb1094abc2bcd76bac5daf284248f035f1913e91357f17"
@@ -425,6 +430,11 @@
       "path": "docs/GAME_SPECIFIC_EXPANSION.md",
       "bytes": 9499,
       "sha256": "0ade3f30887bb39b1d951fea6f66b58412d2d81b331abcb4e35d6221e6e1b9a1"
+    },
+    {
+      "path": "docs/GAME_TROUBLESHOOTING.md",
+      "bytes": 4692,
+      "sha256": "80b49f9bbbd9f0bdbb49299286379d4c8bbb19a82d2a025851aac7a8f7560d81"
     },
     {
       "path": "docs/GEMFIRE_BATTERY_FORMAT.md",
@@ -688,8 +698,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16359,
-      "sha256": "3c1ea04a4b4cc67b5f3e58a90cc55030be063d824bb2fbb00a64f1519dba1c00"
+      "bytes": 16559,
+      "sha256": "9389b131c5874b8e722f3246e38282db0fad8874ffc68e9f2342d4295cd427ea"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1228,8 +1238,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 76396,
-      "sha256": "a4f009fbfabeb0971e6ec8ad2c79c7a0f6530d59b30e15f23890a5fa29af8be8"
+      "bytes": 78926,
+      "sha256": "5d4617b18d4897bbb042b61f8af37bb90f306484eecb9ffb001e2b42ccdfdb30"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -1275,6 +1285,11 @@
       "path": "src/koei_editor/data/game_metadata.json",
       "bytes": 97413,
       "sha256": "86a2dacf4bb96e3685ce92f6f101e870807948ee439778e95721f41740643755"
+    },
+    {
+      "path": "src/koei_editor/data/game_troubleshooting.json",
+      "bytes": 1784,
+      "sha256": "6c83729a4d5df72d494f70f5df60942467f47dc073c61ed0d295d17fc2c9895e"
     },
     {
       "path": "src/koei_editor/data/item_limits.json",
@@ -3778,13 +3793,13 @@
     },
     {
       "path": "src/koei_editor/shared/controller_profiles.py",
-      "bytes": 20537,
-      "sha256": "1663638266d3facad5cf27ce903b2bb2630b792599d62ef8d92ce59636903770"
+      "bytes": 20536,
+      "sha256": "bcf7a84a398e9d1c9a05d05ca1bfdbb696c305436dfd93d44d1d6fcea498cd88"
     },
     {
       "path": "src/koei_editor/shared/controller_profiles_gui.py",
-      "bytes": 28831,
-      "sha256": "9aebdbccf99b945a21e9af9e13549a24a51e69f68e6e1a27eed4178208a33273"
+      "bytes": 28830,
+      "sha256": "8ee2ebc0029ef98154f43e31781c9d6f9c85724fccfa22f8da4a8c158bc3b4df"
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",
@@ -3802,9 +3817,54 @@
       "sha256": "d9f577e1af04af4fa6a7c33a2fbc5fe18ec6d43e86352a186a183fc7d27e6559"
     },
     {
+      "path": "src/koei_editor/shared/emulator_hub.py",
+      "bytes": 19842,
+      "sha256": "9ca9a1d3b8eebc3175956d2c528c405c0b79aa0178f23126df9d198171b248d3"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_hub_gui.py",
+      "bytes": 32744,
+      "sha256": "a0eb1af3a1a73ac67cf5cc0382db992a821f866266fdbf32ced80439fa60afbe"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_hub_preferences.py",
+      "bytes": 4076,
+      "sha256": "8b10dbb2b82a019de51b61bf6667c17cf84cdde40ad2a878291bad636e60ea09"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_provider_contract.py",
+      "bytes": 3764,
+      "sha256": "9dce3ea9a4558ebee49666133d5e6845d9bd3484c8dba03a6f150b2115ee8607"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/__init__.py",
+      "bytes": 57,
+      "sha256": "3276f3adbca09b42b05c3feb38f6b6f3eba67a550f613a85beacda8acb7fa1e0"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/nintendo.py",
+      "bytes": 5360,
+      "sha256": "71f6f7cdd9d9046f6cb304d077cc3dfb0676e5264353facdbd7b8e34c4068532"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/other.py",
+      "bytes": 7855,
+      "sha256": "96a976a30bd0c223ed66ccfd1cb46f4724cca13551fc4683c17d2432fd432f08"
+    },
+    {
+      "path": "src/koei_editor/shared/emulator_providers/sony.py",
+      "bytes": 4577,
+      "sha256": "6ebd18a3e75fa726a39d89c3530d88db159cb49d2b83d6af3c879116d4dd68d8"
+    },
+    {
       "path": "src/koei_editor/shared/experimental_limits.py",
       "bytes": 2991,
       "sha256": "0d5ddec115e7fa2aaf0a88e458153c6f37d5ffc3dafc94e1c563c518d5223484"
+    },
+    {
+      "path": "src/koei_editor/shared/game_troubleshooting.py",
+      "bytes": 32489,
+      "sha256": "e82ba951d840a0bf2833317089c168c027cbfd7b8e632db107e6303321d5d699"
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
@@ -3828,8 +3888,48 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 5886,
-      "sha256": "953d60430831a7edbb8b3e31b9ed3794cb89160bc1387fb8f37df8566d9d6257"
+      "bytes": 6080,
+      "sha256": "28f52b9a98e403567372206c9266718aec9706ffc22f556b2833ed43dfef4438"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/__init__.py",
+      "bytes": 183,
+      "sha256": "b6dca2af47db2df02beb950d241b3d4c639eca282a70ceaa8994547ca540028e"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/asset_explorer.py",
+      "bytes": 14569,
+      "sha256": "ded5a3b984f9ea596cb7e130da3f9345f3a61d552dc36644abce5cd6ebc83d85"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/gui.py",
+      "bytes": 31270,
+      "sha256": "3e85d16db42346cdcae5ae18b718eeef102a8f254318ed1dda1abc51d1045e76"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/models.py",
+      "bytes": 4861,
+      "sha256": "a5c4a8a27263c6bfec05fcec2486822c0f198524441f4e00c8073bf1a806cdfa"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/packaging.py",
+      "bytes": 18585,
+      "sha256": "96d61c347d45665f3c67d454af9571356c913ed221a4c3ed540aac8e3ac64bf5"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/project_manager.py",
+      "bytes": 8017,
+      "sha256": "84e2653a2f67214cf0fdac1f39f83438a656c93ea93189043ba3e57e53704908"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/templates.py",
+      "bytes": 1920,
+      "sha256": "c12a30b5401d677a3bc0823e9db9d5e9473bcbbe4af5615ea683a4c5c2cddc73"
+    },
+    {
+      "path": "src/koei_editor/shared/mod_workshop/validation.py",
+      "bytes": 10762,
+      "sha256": "0b9c427bf1b57c3a533372ceae293244c87719adbf51d8b1bf28f12a3e0e8540"
     },
     {
       "path": "src/koei_editor/shared/musou_presentations.py",
@@ -4048,8 +4148,8 @@
     },
     {
       "path": "tests/README.md",
-      "bytes": 11132,
-      "sha256": "6905d5ce21d1e94c509bba6e682c96428cb3452b079d0ee5b234d0c2eac3a05d"
+      "bytes": 11439,
+      "sha256": "2390020f3bdce1c324e334c48824d241e89ad0cdcff0e7c81b14f3926879fb58"
     },
     {
       "path": "tests/scalar_contract.py",
@@ -4073,8 +4173,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 34999,
-      "sha256": "b3e6c1bd33fbd2bd80853e9f3001f0b713a54cc3186338d105c3c9b1ae4fae86"
+      "bytes": 37291,
+      "sha256": "9f1ccd667f683a91b886ba463cf2d8e8d2111382f75e6560c7080313e85fa9a4"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4597,6 +4697,26 @@
       "sha256": "e08d25931eec3b4002d322a532dbf0bca12f375048cb6310c5f6cb7eb5de20dc"
     },
     {
+      "path": "tests/test_emulator_hub.py",
+      "bytes": 21654,
+      "sha256": "7250158e7d0599e2d90a805a0bd54c4b1b5e19e390b2448f4528f5e556e0ef37"
+    },
+    {
+      "path": "tests/test_emulator_nintendo_providers.py",
+      "bytes": 5646,
+      "sha256": "f2be12367cac9d73b41f9c0b9b2c94bfc076adc50bea6a79278191a21097b5e4"
+    },
+    {
+      "path": "tests/test_emulator_other_providers.py",
+      "bytes": 6600,
+      "sha256": "2683881430f1fb2e33296724b97f57a1158df1b84d13f29ec7df3a57785bc65a"
+    },
+    {
+      "path": "tests/test_emulator_sony_providers.py",
+      "bytes": 4850,
+      "sha256": "6a77834bebdd15143c5c502e46b88fa31e7d1f44f48d2e54caa738069f22c0eb"
+    },
+    {
       "path": "tests/test_expansion_candidates.py",
       "bytes": 7092,
       "sha256": "91507e6beb837d770d5b649d3292a86d3b25c21238c5a4470db9641622ad484c"
@@ -4675,6 +4795,11 @@
       "path": "tests/test_game_dashboard_context.py",
       "bytes": 5565,
       "sha256": "dc8dc7f4b140c69f35b6ee309a7409dad0918ca2676ce7e6ba162e84ed00c591"
+    },
+    {
+      "path": "tests/test_game_troubleshooting.py",
+      "bytes": 21989,
+      "sha256": "bf7d3b6db5c4862ebda7067a11b45e4133f6b4a305f9431ad823353f7a22e6bb"
     },
     {
       "path": "tests/test_gemfire_battery.py",
@@ -5958,8 +6083,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33167,
-      "sha256": "6604fdf3b9aab01162ccaf15e27e6bcfb71d62c471dc810584a05f21a9c632b1"
+      "bytes": 33294,
+      "sha256": "6d982141252a4ad56f4436db2a6433ef045a2f645ff9f9f2caae114c0ded2383"
     },
     {
       "path": "tools/refresh_manifest.py",

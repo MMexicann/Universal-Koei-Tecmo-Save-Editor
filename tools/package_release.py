@@ -31,11 +31,12 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'bodyguard_growth.json', 'bodyguard_items.json', 'bodyguard_weapons.json',
                 'weapon_bonus_rules.json', 'progression_routes.json', 'collection_unlocks.json',
                 'origins_evidence.json', 'dw6_migration_evidence.json', 'support_catalog.json',
-                'save_discovery.json')
+                'save_discovery.json', 'game_troubleshooting.json')
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
 RUNTIME_GUIDES = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md',
                   'docs/CONTROLLER_INPUT_PROFILES.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                  'docs/GAME_TROUBLESHOOTING.md',
                   'docs/WARRIORS_PS4_TRANSFERS.md',
                   'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
                   'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'docs/PROGRESSION_DASHBOARDS.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
@@ -49,6 +50,7 @@ RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
 WINDOWS_DOCS = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md',
                 'docs/CONTROLLER_INPUT_PROFILES.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                'docs/GAME_TROUBLESHOOTING.md',
                 'docs/WARRIORS_PS4_TRANSFERS.md',
                 'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
                 'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',

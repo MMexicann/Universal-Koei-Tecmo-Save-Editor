@@ -4138,8 +4138,8 @@
     },
     {
       "path": "src/koei_editor/shared/community_packages.py",
-      "bytes": 23203,
-      "sha256": "22d89126f16b9faab93ef508c8f529fd8bf1a452f7a1a8cfa112f9e358d9482c"
+      "bytes": 23915,
+      "sha256": "d12745075a57de9c5d92fdffc090f72593bcc2a363903f33a98f87f0ce688250"
     },
     {
       "path": "src/koei_editor/shared/community_plugins.py",
@@ -4818,8 +4818,8 @@
     },
     {
       "path": "tests/test_community_packages.py",
-      "bytes": 26707,
-      "sha256": "709553f66e7bc9efeccb60c5f91dc63ccbf2aff527965742c31d4013791231d0"
+      "bytes": 30940,
+      "sha256": "dea52b6f4b0fc6adc7745aa402fe1b36a722d7d79121466dfe8fdfdf4e72a18c"
     },
     {
       "path": "tests/test_community_plugins.py",

@@ -503,22 +503,34 @@ def _read_bytes(path):
             opened = os.fstat(descriptor)
             if not _ordinary(opened) or _shared_token(opened) != _shared_token(before):
                 _fail('The community package changed before it could be read.')
-            chunks = []
-            remaining = MAX_BYTES + 1
-            while remaining:
-                block = os.read(descriptor, min(65536, remaining))
-                if not block:
-                    break
-                chunks.append(block)
-                remaining -= len(block)
+            def read_snapshot():
+                chunks = []
+                remaining = MAX_BYTES + 1
+                while remaining:
+                    block = os.read(descriptor, min(65536, remaining))
+                    if not block:
+                        break
+                    chunks.append(block)
+                    remaining -= len(block)
+                return b''.join(chunks)
+
+            raw = read_snapshot()
             after_open = os.fstat(descriptor)
             after_path = selected.lstat()
             if (_token(after_open) != _token(opened) or _token(after_path) != _token(before)
                     or canonical != safe_path(selected)):
                 _fail('The community package changed while it was being read.')
-            raw = b''.join(chunks)
             if len(raw) != opened.st_size or len(raw) > MAX_BYTES:
                 _fail('The community package changed size while it was being read.')
+            # Same-size edits with restored mtime can leave the observed native
+            # metadata unchanged. Also compare bounded bytes from this same
+            # owned descriptor instead of relying only on timestamp updates.
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            verified = read_snapshot()
+            if (verified != raw or _token(os.fstat(descriptor)) != _token(opened)
+                    or _token(selected.lstat()) != _token(before)
+                    or canonical != safe_path(selected)):
+                _fail('The community package changed while it was being read.')
             return raw
         finally:
             os.close(descriptor)

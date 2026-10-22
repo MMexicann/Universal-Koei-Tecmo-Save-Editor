@@ -475,6 +475,82 @@ class CommunityPackageFileTests(unittest.TestCase):
         self.assertEqual(selected.stat().st_mtime_ns, before.st_mtime_ns)
         self.assertEqual(selected.read_bytes(), b'X' + expected[1:])
 
+    def test_bounded_readback_checks_content_when_change_times_stay_unchanged(self):
+        selected = self.folder / ('held-change-time' + packages.SUFFIX)
+        expected = packages.dumps(self.package)
+        native_fstat, native_lstat, native_read = os.fstat, Path.lstat, os.read
+        native_seek = os.lseek
+        for mutate in (False, True):
+            with self.subTest(mutate=mutate):
+                selected.write_bytes(expected)
+                before = selected.stat()
+                changed, descriptors, requests, seeks = [], set(), [], []
+
+                def handle_stat(descriptor):
+                    info = native_fstat(descriptor)
+                    self.assertEqual((info.st_dev, info.st_ino), (before.st_dev, before.st_ino))
+                    # Model native handle ChangeTime differing from path birthtime,
+                    # with neither source publishing a new ctime during this read.
+                    return self.stat_snapshot(info, st_ctime_ns=before.st_ctime_ns + 1000000000)
+
+                def path_stat(path, *args, **kwargs):
+                    info = native_lstat(path, *args, **kwargs)
+                    return (self.stat_snapshot(info, st_ctime_ns=before.st_ctime_ns)
+                            if path == selected else info)
+
+                def read(descriptor, count):
+                    descriptors.add(descriptor)
+                    requests.append(count)
+                    result = native_read(descriptor, count)
+                    if mutate and not changed:
+                        with selected.open('r+b') as stream:
+                            stream.write(b'X' + expected[1:])
+                        os.utime(selected, ns=(before.st_atime_ns, before.st_mtime_ns))
+                        changed.append(True)
+                    return result
+
+                def seek(descriptor, offset, whence):
+                    seeks.append((descriptor, offset, whence))
+                    return native_seek(descriptor, offset, whence)
+
+                with patch.object(packages.os, 'fstat', side_effect=handle_stat), \
+                        patch.object(Path, 'lstat', path_stat), \
+                        patch.object(packages.os, 'read', side_effect=read), \
+                        patch.object(packages.os, 'lseek', side_effect=seek):
+                    if mutate:
+                        with self.assertRaisesRegex(packages.CommunityPackageError, 'changed while'):
+                            packages.load(selected)
+                    else:
+                        self.assertEqual(packages.load(selected), self.package)
+                self.assertEqual(changed, [True] if mutate else [])
+                self.assertEqual(len(descriptors), 1, 'Both reads must use the same owned descriptor')
+                self.assertEqual(seeks, [(next(iter(descriptors)), 0, os.SEEK_SET)])
+                self.assertEqual(len(requests), 4, 'Both bounded passes must read through EOF')
+                self.assertTrue(all(0 < count <= 65536 for count in requests))
+                self.assertEqual(selected.stat().st_size, before.st_size)
+                self.assertEqual(selected.stat().st_mtime_ns, before.st_mtime_ns)
+                self.assertEqual(selected.read_bytes(), b'X' + expected[1:] if mutate else expected)
+
+    def test_readback_of_maximum_sized_package_stays_bounded(self):
+        selected = self.folder / ('maximum' + packages.SUFFIX)
+        expected = packages.dumps(self.package)
+        selected.write_bytes(expected + b' ' * (packages.MAX_BYTES - len(expected)))
+        native_read = os.read
+        requested, received = [], []
+
+        def read(descriptor, count):
+            requested.append(count)
+            result = native_read(descriptor, count)
+            received.append(len(result))
+            return result
+
+        with patch.object(packages.os, 'read', side_effect=read):
+            self.assertEqual(packages.load(selected), self.package)
+        self.assertEqual(sum(received), 2 * packages.MAX_BYTES)
+        self.assertEqual(received.count(0), 2, 'Both passes must reach EOF')
+        self.assertEqual(sum(requested), 2 * (packages.MAX_BYTES + 1))
+        self.assertTrue(all(0 < count <= 65536 for count in requested))
+
     def test_oversized_file_and_existing_hard_link_are_not_opened(self):
         selected = self.folder / ('bounded' + packages.SUFFIX)
         selected.write_bytes(b'X' * (packages.MAX_BYTES + 1))

@@ -138,6 +138,9 @@ class GameHubWorkspace:
 
     @staticmethod
     def _updated(timestamp):
+        if (type(timestamp) is str and timestamp.isascii()
+                and timestamp.isdecimal() and len(timestamp) <= 12):
+            timestamp = int(timestamp)
         if type(timestamp) is not int or timestamp <= 0:
             return 'Unknown'
         try:
@@ -154,7 +157,6 @@ class GameHubWorkspace:
     def discover(self):
         if self.busy or self._closed:
             return
-        from koei_editor.shared.save_discovery import discover_saves
         entered = self.steam_root.get().strip()
         roots = [entered] if entered else None
         self.busy = True
@@ -164,8 +166,7 @@ class GameHubWorkspace:
 
         def worker():
             try:
-                result = discover_saves(steam_roots=roots, cancel=self._cancel,
-                                        include_locations=False)
+                result = game_hub.discover_installations(steam_roots=roots, cancel=self._cancel)
             except Exception:
                 self._results.put((False, None))
             else:
@@ -259,7 +260,7 @@ class GameHubWorkspace:
                     self.table.insert('', 'end', iid=row_id, text=game.title,
                                       values=('Installed', installed.build_id or 'Unknown',
                                               self._updated(installed.last_updated),
-                                              self._size(installed.size_on_disk), note[:70]))
+                                              self._size(getattr(installed, 'size_on_disk', None)), note[:70]))
                     self._row_installations[row_id] = installed
             else:
                 status = self._not_detected_status()
@@ -305,11 +306,17 @@ class GameHubWorkspace:
                       f'Steam App ID: {app_id}\nInstallation: {state}\n'
                       'A missing row means no matching install was found in the scanned Steam libraries.')
         else:
+            library = getattr(installed, 'library_path', None)
+            if library is None:
+                try:
+                    library = installed.install_path.parents[2]
+                except IndexError:
+                    library = None
             detail = (f'{game.title} · {game.subtitle} [{game.platform}]\n'
-                      f'Steam App ID: {app_id}\nSteam library: {installed.library_path or "Unknown"}\n'
+                      f'Steam App ID: {app_id}\nSteam library: {library or "Unknown"}\n'
                       f'Install folder: {installed.install_path}\n'
                       f'Steam build ID: {installed.build_id or "Unknown"} (Steam metadata, not an in-game patch number)\n'
-                      f'Last updated: {self._updated(installed.last_updated)} UTC · Install size: {self._size(installed.size_on_disk)}')
+                      f'Last updated: {self._updated(installed.last_updated)} UTC · Install size: {self._size(getattr(installed, "size_on_disk", None))}')
         detail += f'\nLocal note: {note or "None"}'
         self._set_details(detail)
         enabled = installed is not None and not self.busy

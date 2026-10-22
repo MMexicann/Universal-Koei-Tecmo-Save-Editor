@@ -4,7 +4,7 @@
 {
   "schema_version": 1,
   "feature": "koei_tecmo_game_hub",
-  "base_commit": "0891838a7fc9e2642b6dc8a6a63470b7859813b3",
+  "base_commit": "d7c89e3e6180bfa3585940c00bd24e935e75fc94",
   "scope": {
     "steam_mappings": "Existing reviewed Windows PC profile mappings",
     "discovery": "Steam library and app manifest metadata only",
@@ -21,7 +21,8 @@
       "passed": 87,
       "skipped": 48,
       "failures": 0,
-      "skip_reason": "Tk display unavailable in this environment"
+      "skip_reason": "Tk display unavailable in this environment",
+      "covers_tracker_blank_artifact_version_regression": true
     },
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
@@ -55,9 +56,18 @@
           "head_sha": "6fef7dd62e49aa9bf44fc01ef684dd280e4fa117",
           "publish": false,
           "game_hub_tests": {
-            "test_game_hub_discovery.py": {"passed": 5, "failures": 0},
-            "test_game_hub_gui.py": {"passed": 8, "failures": 0},
-            "test_save_discovery.py": {"passed": 47, "failures": 0}
+            "test_game_hub_discovery.py": {
+              "passed": 5,
+              "failures": 0
+            },
+            "test_game_hub_gui.py": {
+              "passed": 8,
+              "failures": 0
+            },
+            "test_save_discovery.py": {
+              "passed": 47,
+              "failures": 0
+            }
           },
           "hub_unrelated_failures": [
             "test_application_shell.py: Mod Manager remove-button state expected normal but was disabled",

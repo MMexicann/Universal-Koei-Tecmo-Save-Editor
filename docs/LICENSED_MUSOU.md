@@ -253,8 +253,9 @@ is an additional Asian PS3 source-map lead. The community [GameFAQs PS3 release
 catalog](https://gamefaqs.gamespot.com/ps3/730646-dynasty-warriors-gundam-reborn/data)
 lists Asian product code `BLAS50671`; both sources identify an edition to
 investigate, not its native save structure. The patch names resource and
-progression targets, but supplies neither a native file nor
-checksum/serialization proof.
+progression targets and proposes an `add` checksum operation at `0x10` over
+size `0x5F947`, stored at `0x0C`. No Asian native sample is available to
+independently validate the algorithm, coverage or serialization.
 The registered PS3 profile still admits only EU `NPEB02060` and Japan
 `NPJB00533`. To qualify `BLAS50671`, provide its own complete decrypted
 `DATA.BIN` and original identity companion, exact build/DLC confirmed from native

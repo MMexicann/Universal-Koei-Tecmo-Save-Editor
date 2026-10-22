@@ -26,6 +26,20 @@ PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/__init__.py'}
 PUBLIC_GUIDES = {'src/koei_editor/AGENTS.md', 'src/koei_editor/games/AGENTS.md',
                 'src/koei_editor/shared/AGENTS.md', 'src/koei_editor/research/AGENTS.md',
                 'src/koei_editor/data/AGENTS.md', 'tests/README.md', 'licenses/README.md'}
+MOD_TESTING_SANDBOX_SOURCES = {
+    '.github/workflows/mod-testing-sandbox.yml',
+    'docs/MOD_TESTING_SANDBOX.md',
+    'tools/mod_testing_sandbox/README.md',
+    'tools/mod_testing_sandbox/index.html',
+    'tools/mod_testing_sandbox/package.json',
+    'tools/mod_testing_sandbox/scripts/build.mjs',
+    'tools/mod_testing_sandbox/src/main.mjs',
+    'tools/mod_testing_sandbox/src/sandbox-core.mjs',
+    'tools/mod_testing_sandbox/src/styles.css',
+    'tools/mod_testing_sandbox/src/workspace-store.mjs',
+    'tools/mod_testing_sandbox/test/security.test.mjs',
+    'tools/mod_testing_sandbox/test/workspace-store.test.mjs',
+}
 RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json',
                 'verified_limits.json', 'item_limits.json', 'native_enums.json',
                 'bodyguard_growth.json', 'bodyguard_items.json', 'bodyguard_weapons.json',
@@ -142,7 +156,9 @@ def public_path(name):
             or any(part.startswith('.') for part in path.parts) and path.parts[0] not in {'.github', '.gitignore', '.gitattributes'}):
         raise ValueError('Manifest path escapes or aliases the source tree.')
     parts = path.parts
-    allowed = name in ROOT_FILES or name in TOOL_FILES or name in ADAPTER_TEMPLATE_FILES or name in PUBLIC_TEST_HELPERS or name in PUBLIC_GUIDES
+    allowed = (name in ROOT_FILES or name in TOOL_FILES or name in ADAPTER_TEMPLATE_FILES
+               or name in PUBLIC_TEST_HELPERS or name in PUBLIC_GUIDES
+               or name in MOD_TESTING_SANDBOX_SOURCES)
     if parts[:2] == ('src', 'koei_editor'):
         if path.suffix == '.py':
             allowed = all(part.isidentifier() for part in parts[1:-1]) and path.stem.isidentifier()
@@ -258,6 +274,8 @@ def verified_sources(root=ROOT):
         sources[name] = data
     required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'docs/RELEASE_NOTES.md',
                                                 '.github/workflows/windows-release.yml'}
+    if (root / 'tools/mod_testing_sandbox').is_dir():
+        required.update(MOD_TESTING_SANDBOX_SOURCES)
     required.update(_required_runtime(root, sources))
     required.update(PACKAGE_ROOT + '/data/' + name for name in RUNTIME_DATA)
     required.update(RUNTIME_LICENSES)

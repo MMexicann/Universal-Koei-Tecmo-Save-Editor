@@ -40,6 +40,7 @@ class Application(Appearance):
         self.converter = None
         self.comparison = None
         self.batch = None
+        self.game_hub = None
         self.save_library = None
         self.mod_manager = None
         self.editing_presets = None
@@ -102,6 +103,7 @@ class Application(Appearance):
         self.navigation = ttk.Frame(top)
         self.navigation.grid(row=1, column=0, columnspan=2, sticky='ew', pady=(10, 0))
         self.home_button = self._translated(ttk.Button(self.navigation, command=self.show_library), 'library')
+        self.game_hub_button = self._translated(ttk.Button(self.navigation, command=self.show_game_hub), 'game_hub')
         self.converter_button = self._translated(ttk.Button(self.navigation, command=self.show_converter), 'converter')
         self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
         self.batch_button = self._translated(ttk.Button(self.navigation, command=self.show_batch), 'batch')
@@ -111,7 +113,7 @@ class Application(Appearance):
         self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
         self.help_menu = tk.Menu(self.help_button, tearoff=False)
         self.help_button.configure(menu=self.help_menu)
-        self._navigation_buttons = (self.home_button, self.converter_button, self.compare_button,
+        self._navigation_buttons = (self.home_button, self.game_hub_button, self.converter_button, self.compare_button,
                                     self.batch_button, self.save_library_button,
                                     self.troubleshooting_button, self.help_button)
         self.navigation.bind('<Configure>', self._schedule_navigation)
@@ -542,6 +544,7 @@ class Application(Appearance):
                     'troubleshooting', 'help', 'compatibility', 'versions', 'workflows',
                     'feedback', 'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+        entries.append(CommandEntry('tool:game_hub', self.tr('game_hub'), 'tool', keywords='game_hub'))
         listed_tools = {entry.id.removeprefix('tool:') for entry in entries if entry.id.startswith('tool:')}
         for key in self._optional_tool_routes():
             if key not in listed_tools:
@@ -595,7 +598,7 @@ class Application(Appearance):
             methods = {'library': self.show_library, 'converter': self.show_converter,
                        'comparison': self.show_comparison, 'batch': self.show_batch,
                        'save_library': self.show_save_library,
-                       'troubleshooting': self.show_troubleshooting}
+                       'game_hub': self.show_game_hub, 'troubleshooting': self.show_troubleshooting}
             methods.update(self._optional_tool_routes())
             if key in methods:
                 result = methods[key]()
@@ -901,11 +904,11 @@ class Application(Appearance):
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def _tool_workspaces(self):
-        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
+        return tuple(tool for name in ('converter', 'comparison', 'batch', 'game_hub', 'save_library',
                                        'troubleshooting', 'mod_manager', 'editing_presets',
                                        'research_lab', 'research_import', 'nexus_mods',
                                        'asset_explorer', 'workflow_builder', 'emulator_hub',
-                                       'game_hub', 'help_center')
+                                       'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -1061,6 +1064,23 @@ class Application(Appearance):
         size = round(10 * self.shell_settings.text_size / 100)
         self.troubleshooting.set_text_size(size, self.font_family)
         return self.troubleshooting
+
+    def show_game_hub(self):
+        from koei_editor.shared.game_hub_gui import GameHubWorkspace
+        if self.game_hub is None:
+            self.game_hub = GameHubWorkspace(self.root, self.workspace,
+                                             preferences_path=self.preferences_path)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self._set_active_game(None)
+        self.game_hub.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(self.tr('game_hub'))
+        self._remember_workspace('tool:game_hub')
+        self.game_hub.apply_theme(THEMES[self.theme_name.get()])
+        self.game_hub.on_show()
+        return self.game_hub
 
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace

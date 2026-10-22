@@ -29,7 +29,8 @@
     },
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
-      "status": "pending"
+      "status": "passed",
+      "public_source_entries": 1187
     },
     "windows_ci": {
       "status": "pending"

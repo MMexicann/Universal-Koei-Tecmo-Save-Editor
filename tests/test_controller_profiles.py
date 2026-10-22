@@ -65,7 +65,8 @@ class ControllerProfileValidationTests(unittest.TestCase):
 
     def test_default_path_is_in_application_configuration_storage(self):
         with tempfile.TemporaryDirectory() as directory:
-            with patch.dict(os.environ, {'XDG_CONFIG_HOME': directory}):
+            with patch.dict(os.environ, {'XDG_CONFIG_HOME': directory,
+                                         'APPDATA': directory, 'LOCALAPPDATA': directory}):
                 path = profiles.default_store_path()
         self.assertEqual(path, Path(directory) / 'UniversalKoeiTecmoSaveEditor' /
                          'controller_profiles.json')

@@ -144,6 +144,7 @@ def _new_child_windows(data, directory, name, expected_identity):
 
     GENERIC_READ = 0x80000000
     GENERIC_WRITE = 0x40000000
+    SYNCHRONIZE = 0x00100000
     FILE_LIST_DIRECTORY = 0x0001
     FILE_TRAVERSE = 0x0020
     FILE_READ_ATTRIBUTES = 0x0080
@@ -257,7 +258,8 @@ def _new_child_windows(data, directory, name, expected_identity):
                                        wintypes.ULONG, wintypes.LPVOID, wintypes.ULONG]
         ntdll.NtCreateFile.restype = ctypes.c_long
         status = ntdll.NtCreateFile(
-            ctypes.byref(child), GENERIC_READ | GENERIC_WRITE,
+            # Required explicitly by FILE_SYNCHRONOUS_IO_NONALERT at NT entry.
+            ctypes.byref(child), GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
             ctypes.byref(object_attributes), ctypes.byref(iosb), None, 0x80,
             FILE_SHARE_READ, FILE_CREATE,
             FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT

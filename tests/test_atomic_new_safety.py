@@ -16,7 +16,9 @@ class AtomicNewSafetyTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.folder = Path(temporary.name)
+        # Windows TemporaryDirectory may use an 8.3 alias; storage returns a
+        # canonical path. Resolve the existing parent before creating children.
+        self.folder = Path(temporary.name).resolve()
         self.destination = self.folder / 'copy.bin'
         self.staging = self.folder / '.copy.bin.owned-test.tmp'
         self.uuid_patch = patch.object(copy_storage.uuid, 'uuid4', return_value=SimpleNamespace(hex='owned-test'))

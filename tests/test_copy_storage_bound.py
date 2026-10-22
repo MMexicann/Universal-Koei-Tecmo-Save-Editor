@@ -60,6 +60,9 @@ class _WindowsKernel:
         assert name.MaximumLength == name.Length + 2
         assert disposition == 2  # FILE_CREATE must reject an existing child.
         assert options & 0x40 and options & 0x200000
+        # NtCreateFile requires this explicit access bit for synchronous I/O;
+        # argument validation can precede generic access-mask mapping.
+        assert not options & 0x20 or access & 0x00100000
         if self.created:
             return -1073741771  # STATUS_OBJECT_NAME_COLLISION
         self.created = True
@@ -167,6 +170,16 @@ class WindowsBoundNativeTests(unittest.TestCase):
                 b'new', self.directory, 'component.json',
                 (self.identity[0], self.identity[1] + 1))
         self.assertEqual(tuple(self.directory.iterdir()), ())
+
+    def test_native_ascii_and_empty_files_are_exclusive_and_read_back_exactly(self):
+        for name, data in (('component.json', b'{"inert":true}'), ('empty.json', b'')):
+            with self.subTest(name=name):
+                result = copy_storage.new_child_bound(data, self.directory, name, self.identity)
+                self.assertEqual(result.read_bytes(), data)
+                self.assertEqual(result.stat().st_nlink, 1)
+                with self.assertRaises(SaveError):
+                    copy_storage.new_child_bound(b'replacement', self.directory, name, self.identity)
+                self.assertEqual(result.read_bytes(), data)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ from pathlib import Path
 import socket
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -359,6 +360,139 @@ class CommunityPackageFileTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.folder = Path(self.temp.name)
         self.package = packages.loads(raw(document()))
+
+    @staticmethod
+    def stat_snapshot(info, **changes):
+        values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+        values.update(changes)
+        return SimpleNamespace(**values)
+
+    def test_windows_handle_change_time_can_differ_from_path_creation_time(self):
+        native_fstat = os.fstat
+
+        def handle_stat(descriptor):
+            info = native_fstat(descriptor)
+            return self.stat_snapshot(info, st_ctime_ns=info.st_ctime_ns + 86_400_000_000_000)
+
+        with patch.object(packages.os, 'fstat', side_effect=handle_stat):
+            created = packages.export(self.package, self.folder / 'windows-time-semantics')
+            self.assertEqual(packages.load(created), self.package)
+        self.assertEqual(created.read_bytes(), packages.dumps(self.package))
+
+    def test_shared_native_metadata_mismatch_is_rejected_before_reading(self):
+        selected = self.folder / ('identity' + packages.SUFFIX)
+        selected.write_bytes(packages.dumps(self.package))
+        native_fstat = os.fstat
+        for field in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_nlink'):
+            def changed_stat(descriptor, field=field):
+                info = native_fstat(descriptor)
+                return self.stat_snapshot(info, **{field: getattr(info, field) + 1})
+
+            with self.subTest(field=field), patch.object(packages.os, 'fstat', side_effect=changed_stat), \
+                    patch.object(packages.os, 'read') as read:
+                with self.assertRaises(packages.CommunityPackageError):
+                    packages.load(selected)
+                read.assert_not_called()
+
+    def test_same_origin_freshness_still_checks_ctime_links_and_attributes(self):
+        selected = self.folder / ('freshness' + packages.SUFFIX)
+        selected.write_bytes(packages.dumps(self.package))
+        native_fstat, native_lstat, native_read = os.fstat, Path.lstat, os.read
+        for origin in ('handle', 'path'):
+            for field in ('st_ctime_ns', 'st_nlink', 'st_file_attributes'):
+                read_started = False
+
+                def snapshot(info, source):
+                    if read_started and origin == source:
+                        return self.stat_snapshot(info, **{field: getattr(info, field, 0) + 1})
+                    return info
+
+                def read(descriptor, count):
+                    nonlocal read_started
+                    result = native_read(descriptor, count)
+                    read_started = True
+                    return result
+
+                def lstat(path, *args, **kwargs):
+                    info = native_lstat(path, *args, **kwargs)
+                    return snapshot(info, 'path') if path == selected else info
+
+                with self.subTest(origin=origin, field=field), \
+                        patch.object(packages.os, 'read', side_effect=read), \
+                        patch.object(packages.os, 'fstat', side_effect=lambda descriptor: snapshot(native_fstat(descriptor), 'handle')), \
+                        patch.object(Path, 'lstat', lstat):
+                    with self.assertRaisesRegex(packages.CommunityPackageError, 'changed while'):
+                        packages.load(selected)
+
+    def test_same_size_replacement_before_open_is_rejected_and_preserved(self):
+        selected = self.folder / ('selected' + packages.SUFFIX)
+        expected = packages.dumps(self.package)
+        selected.write_bytes(expected)
+        before = selected.stat()
+        replacement = self.folder / 'foreign-replacement'
+        foreign = b'X' * len(expected)
+        replacement.write_bytes(foreign)
+        os.utime(replacement, ns=(before.st_atime_ns, before.st_mtime_ns))
+        native_open = os.open
+        replaced = False
+
+        def replace_then_open(path, flags, *args, **kwargs):
+            nonlocal replaced
+            if Path(path) == selected and not replaced:
+                replaced = True
+                os.replace(replacement, selected)
+            return native_open(path, flags, *args, **kwargs)
+
+        with patch.object(packages.os, 'open', side_effect=replace_then_open):
+            with self.assertRaisesRegex(packages.CommunityPackageError, 'changed before'):
+                packages.load(selected)
+        self.assertTrue(replaced)
+        self.assertEqual(selected.read_bytes(), foreign)
+
+    def test_same_size_content_change_with_restored_mtime_is_rejected(self):
+        selected = self.folder / ('content-change' + packages.SUFFIX)
+        expected = packages.dumps(self.package)
+        selected.write_bytes(expected)
+        before = selected.stat()
+        native_read = os.read
+        changed = False
+
+        def change_after_read(descriptor, count):
+            nonlocal changed
+            result = native_read(descriptor, count)
+            if not changed:
+                changed = True
+                with selected.open('r+b') as stream:
+                    stream.write(b'X' + expected[1:])
+                os.utime(selected, ns=(before.st_atime_ns, before.st_mtime_ns))
+            return result
+
+        with patch.object(packages.os, 'read', side_effect=change_after_read):
+            with self.assertRaisesRegex(packages.CommunityPackageError, 'changed while'):
+                packages.load(selected)
+        self.assertTrue(changed)
+        self.assertEqual(selected.stat().st_size, before.st_size)
+        self.assertEqual(selected.stat().st_mtime_ns, before.st_mtime_ns)
+        self.assertEqual(selected.read_bytes(), b'X' + expected[1:])
+
+    def test_oversized_file_and_existing_hard_link_are_not_opened(self):
+        selected = self.folder / ('bounded' + packages.SUFFIX)
+        selected.write_bytes(b'X' * (packages.MAX_BYTES + 1))
+        with patch.object(packages.os, 'open') as opened:
+            with self.assertRaises(packages.CommunityPackageError):
+                packages.load(selected)
+            opened.assert_not_called()
+        selected.write_bytes(packages.dumps(self.package))
+        alias = self.folder / 'hard-linked-alias'
+        try:
+            os.link(selected, alias)
+        except (AttributeError, OSError, NotImplementedError):
+            self.skipTest('This filesystem cannot create hard links.')
+        with patch.object(packages.os, 'open') as opened:
+            with self.assertRaises(packages.CommunityPackageError):
+                packages.load(selected)
+            opened.assert_not_called()
+        self.assertEqual(alias.read_bytes(), selected.read_bytes())
 
     def test_load_and_new_file_export_use_the_dedicated_suffix(self):
         destination = self.folder / ('build' + packages.SUFFIX)

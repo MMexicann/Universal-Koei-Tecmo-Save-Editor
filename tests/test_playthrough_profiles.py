@@ -23,7 +23,8 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        # Canonicalize while the directory exists, before adversarial path swaps.
+        self.root = Path(temporary.name).resolve()
         self.source_dir = self.root / 'copied-save'
         self.source_dir.mkdir()
         self.source = self.source_dir / 'DATA.BIN'

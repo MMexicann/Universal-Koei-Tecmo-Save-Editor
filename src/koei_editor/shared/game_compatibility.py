@@ -33,6 +33,7 @@ SCHEMA_VERSION = 1
 _HEX_256 = re.compile(r"^[0-9a-fA-F]{64}$")
 _HEX_32 = re.compile(r"^[0-9a-fA-F]{1,8}$")
 _MAX_JSON_BYTES = 64 * 1024 * 1024
+_MAX_JSON_NESTING = 256
 _KINDS = ("mods", "tools", "saves")
 _ARCHIVE_STATUSES = ("parsed", "unsupported", "malformed")
 _UNKNOWN_EVIDENCE_VALUES = {"unknown", "unavailable", "unverified", "n/a", "none", "null", "?"}
@@ -49,6 +50,31 @@ def _object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, An
             raise CompatibilityInputError(f"Duplicate JSON object key: {key!r}")
         result[key] = value
     return result
+
+
+def _check_json_nesting(raw: str, source: Path) -> None:
+    """Reject excessive container depth consistently across JSON decoders."""
+    closing: list[str] = []
+    in_string = False
+    escaped = False
+    for character in raw:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+        elif character == '"':
+            in_string = True
+        elif character in "[{":
+            closing.append("]" if character == "[" else "}")
+            if len(closing) > _MAX_JSON_NESTING:
+                raise CompatibilityInputError(
+                    f"JSON input {source.name!r} exceeds the {_MAX_JSON_NESTING}-level nesting limit."
+                )
+        elif character in "]}" and closing and closing[-1] == character:
+            closing.pop()
 
 
 def load_json(path: str | Path) -> Any:
@@ -85,6 +111,7 @@ def load_json(path: str | Path) -> Any:
         raw = raw_bytes.decode("utf-8-sig")
     except UnicodeError as exc:
         raise CompatibilityInputError(f"Cannot read UTF-8 JSON input {source.name!r}: {exc}") from exc
+    _check_json_nesting(raw, source)
     try:
         return json.loads(raw, object_pairs_hook=_object_without_duplicate_keys)
     except CompatibilityInputError:

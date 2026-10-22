@@ -678,8 +678,8 @@
     },
     {
       "path": "docs/PATCH_COMPATIBILITY_ANALYZER.md",
-      "bytes": 7068,
-      "sha256": "bb6b4f81bcc13e672c3cdaec8562ff89d57939599933741748e55467d08a7b7d"
+      "bytes": 7116,
+      "sha256": "e6635bc6ca873902dfa18f9113abb2bad208911b99ef23be024960704b069473"
     },
     {
       "path": "docs/PC_EDITOR_ATTEMPTS.md",
@@ -4133,8 +4133,8 @@
     },
     {
       "path": "src/koei_editor/shared/community_packages.py",
-      "bytes": 22850,
-      "sha256": "d7b79b1175e0d2720c602df86bfe558fa23b5168621bf580876a39091a7ea381"
+      "bytes": 23203,
+      "sha256": "22d89126f16b9faab93ef508c8f529fd8bf1a452f7a1a8cfa112f9e358d9482c"
     },
     {
       "path": "src/koei_editor/shared/community_plugins.py",
@@ -4188,8 +4188,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 17824,
-      "sha256": "2ae580fcd36ed7d300e3ac03f5203abba39e4886b0713d0317fb3fa14b94dfc2"
+      "bytes": 17946,
+      "sha256": "620a48d89a6e69c838b4adcd728c443b39d73b95b6ce7ef4d8fa4f840b604ad0"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
@@ -4243,8 +4243,8 @@
     },
     {
       "path": "src/koei_editor/shared/game_compatibility.py",
-      "bytes": 60090,
-      "sha256": "8782a8a79ec865dbc1a6b188e60d170d287dc14a47aad2e5546e921be3b5ad70"
+      "bytes": 61067,
+      "sha256": "06dee567b19e1b869833aff661f5119e81de8ea58f5391d7b4b58400b723972f"
     },
     {
       "path": "src/koei_editor/shared/game_data_encyclopedia.py",
@@ -4558,8 +4558,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 76387,
-      "sha256": "b85964dd057d5f9dfc633eb585919f8a9def006474f158558e720ad043d1967a"
+      "bytes": 77283,
+      "sha256": "a408df50f114613be3f64e50ce1614267f4e95cbff3c92c643f72f8068d733b8"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4648,8 +4648,8 @@
     },
     {
       "path": "tests/test_atomic_new_safety.py",
-      "bytes": 5143,
-      "sha256": "788175e7d5883eaed62e29368a560582c8607bcfd415ab1895faf73eb11f1895"
+      "bytes": 5310,
+      "sha256": "b2cde19d27adbb802f00dc41d5580fb07a0e8bc422c2bb895c0429af1b39cc9b"
     },
     {
       "path": "tests/test_automation.py",
@@ -4803,8 +4803,8 @@
     },
     {
       "path": "tests/test_community_packages.py",
-      "bytes": 20150,
-      "sha256": "46ef425232963a8a0b3333cb3b560f069f26b2144d361374e697cd067efc89cc"
+      "bytes": 26697,
+      "sha256": "34699742635a9ac597c0a59c8c17e7a62fd48039639af0c6de6ef7340ed6b102"
     },
     {
       "path": "tests/test_community_plugins.py",
@@ -4828,8 +4828,8 @@
     },
     {
       "path": "tests/test_comparison_transfer_experience.py",
-      "bytes": 15784,
-      "sha256": "94e49a157168325ed2ab7fa6d54672b716530f4f8de8a4bf0ca74998b390a6a0"
+      "bytes": 15826,
+      "sha256": "72a4861b0b7f1ee090f34f37655e47932bb5396736227a7f979b23f8fadddbe0"
     },
     {
       "path": "tests/test_compatibility_v034.py",
@@ -4873,8 +4873,8 @@
     },
     {
       "path": "tests/test_controller_profiles.py",
-      "bytes": 28206,
-      "sha256": "1afd9cffdab30e5f9eb723052b7e65108178efa2e1768ef6e913029a8994c721"
+      "bytes": 28296,
+      "sha256": "2b53c169d14e222e9896dc020fcbb088aada751bed816dc03bd988c3e276719a"
     },
     {
       "path": "tests/test_conversion.py",
@@ -4903,8 +4903,8 @@
     },
     {
       "path": "tests/test_copy_storage_bound.py",
-      "bytes": 7483,
-      "sha256": "a820ea9564bc7300fe27c56d3b8868db8ecb50391548ceede7b60d3ef1ed8386"
+      "bytes": 8335,
+      "sha256": "c4fc3c115ef384ca242ee3ecda4b4d2f3f9423ce39a0affe535ab604e117e4a1"
     },
     {
       "path": "tests/test_dashboard_application_theme.py",
@@ -5303,8 +5303,8 @@
     },
     {
       "path": "tests/test_game_compatibility.py",
-      "bytes": 43238,
-      "sha256": "bce495b101e918c7bb41f118afa95dabbe506524675ee563beeac2b3bdb6bd1f"
+      "bytes": 45347,
+      "sha256": "3a3a1af9cda6223a3321632c9c4592a93a0532a32622003a1e94df2e9e01ed0e"
     },
     {
       "path": "tests/test_game_dashboard_context.py",
@@ -6128,8 +6128,8 @@
     },
     {
       "path": "tests/test_save_library_gui.py",
-      "bytes": 31535,
-      "sha256": "af1a709509d129dd9ce2d13298374890c00f906bb7fc498bb05b495d40d75b38"
+      "bytes": 32213,
+      "sha256": "18b1677972f77d98e5db19b40653a8ef5ffc5959ef4f3227beeec13492f9d59a"
     },
     {
       "path": "tests/test_save_management_cli.py",
@@ -6183,8 +6183,8 @@
     },
     {
       "path": "tests/test_scalar_workspace_gui.py",
-      "bytes": 18170,
-      "sha256": "8f36adeea872caa9b08ce290cb2a73f78facea3a82d5816a023ec3a3185ea734"
+      "bytes": 20931,
+      "sha256": "b7fcad6eaf80fec88a60a251100c3cd2446d6d799ddfb6f8f9b2e5f312b793bc"
     },
     {
       "path": "tests/test_scalar_workspace_navigation.py",

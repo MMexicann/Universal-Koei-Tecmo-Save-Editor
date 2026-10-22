@@ -479,6 +479,13 @@ def _token(info):
             info.st_ctime_ns, info.st_nlink, getattr(info, 'st_file_attributes', 0))
 
 
+def _shared_token(info):
+    # Windows path stat can expose creation time as ctime while handle fstat
+    # exposes native change time. Compare those only within the same API using
+    # the full _token; shared identity/size/mtime/link fields still bind the open.
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_nlink
+
+
 def _read_bytes(path):
     """Read an ordinary bounded file and detect path/file replacement races."""
     try:
@@ -494,7 +501,7 @@ def _read_bytes(path):
         descriptor = os.open(selected, flags)
         try:
             opened = os.fstat(descriptor)
-            if not _ordinary(opened) or _token(opened)[:-1] != _token(before)[:-1]:
+            if not _ordinary(opened) or _shared_token(opened) != _shared_token(before):
                 _fail('The community package changed before it could be read.')
             chunks = []
             remaining = MAX_BYTES + 1

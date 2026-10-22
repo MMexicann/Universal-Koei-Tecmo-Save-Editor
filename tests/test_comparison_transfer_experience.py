@@ -294,7 +294,7 @@ class ComparisonTransferExperienceTests(unittest.TestCase):
         app.show_comparison()
         workspace = app.comparison
         self.assertIs(workspace.target_editor, origins_editor)
-        self.assertEqual(workspace.first.get(), str(first_path))
+        self.assertEqual(workspace.first.get(), str(first_path.resolve(strict=True)))
         workspace.second.set(str(donor_path))
         workspace.compare()
         self.finish(workspace)
@@ -313,7 +313,7 @@ class ComparisonTransferExperienceTests(unittest.TestCase):
         self.assertIs(app.select_game('wo3u'), unopened)
         self.root.update()
         self.assertIs(workspace.target_editor, unopened)
-        self.assertEqual(workspace.first.get(), str(wo3u_path))
+        self.assertEqual(workspace.first.get(), str(wo3u_path.resolve(strict=True)))
         self.assertEqual(workspace._games[workspace.game.get()], 'wo3u')
         self.assertIsNone(workspace.prepared)
 

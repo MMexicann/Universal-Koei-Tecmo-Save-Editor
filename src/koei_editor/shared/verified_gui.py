@@ -138,13 +138,16 @@ class Editor(Appearance):
         header = self.header = ttk.Frame(host, padding=(18, 10))
         header.pack(fill='x')
         ttk.Label(header, text=self.layout.title, font=(self.font_family, 18, 'bold')).pack(anchor='w')
-        self.subtitle_label = ttk.Label(header, text=self.subtitle, style='Muted.TLabel')
-        self.subtitle_label.pack(anchor='w', pady=(5, 0))
+        self.header_metadata = ttk.Frame(header)
+        self.header_metadata.pack(fill='x')
+        self.header_metadata.columnconfigure(0, weight=1)
+        self.subtitle_label = ttk.Label(self.header_metadata, text=self.subtitle, style='Muted.TLabel')
+        self.subtitle_label.grid(row=0, column=0, columnspan=2, sticky='w', pady=(5, 0))
         summary = self.summary or 'Edit save values and review changes.'
         self.details_visible = tk.BooleanVar(root, value=False)
-        self.details_toggle = ttk.Checkbutton(header, text='Show editing guide',
+        self.details_toggle = ttk.Checkbutton(self.header_metadata, text='Show editing guide',
             variable=self.details_visible, command=self.toggle_details)
-        self.details_toggle.pack(anchor='w', pady=(5, 0))
+        self.details_toggle.grid(row=1, column=0, columnspan=2, sticky='w', pady=(5, 0))
         self.details_label = ttk.Label(header, text=summary, wraplength=990)
         bar = ttk.Frame(host, padding=(18, 0))
         bar.pack(fill='x')
@@ -386,12 +389,21 @@ class Editor(Appearance):
         if _event is not None and _event.widget is not self.header.master:
             return
         compact = self.root.winfo_height() < 800
+        # Native font metrics can consume another full field row in the
+        # compact workarea. Share the subtitle/guide row, wrapping only the
+        # subtitle when needed so neither text nor its control is clipped.
+        self.subtitle_label.configure(wraplength=max(1, self.header.master.winfo_width()
+            - 36 - self.details_toggle.winfo_reqwidth() - 12) if compact else 0)
         if compact == self._compact_header_spacing:
             return
         self._compact_header_spacing = compact
         self.header.configure(padding=(18, 2 if compact else 10))
-        self.subtitle_label.pack_configure(pady=(0 if compact else 5, 0))
-        self.details_toggle.pack_configure(pady=(0 if compact else 5, 0))
+        self.subtitle_label.grid_configure(columnspan=1 if compact else 2,
+            sticky='ew' if compact else 'w', pady=(0 if compact else 5, 0))
+        self.details_toggle.grid_configure(row=0 if compact else 1,
+            column=1 if compact else 0, columnspan=1 if compact else 2,
+            sticky='e' if compact else 'w', padx=(12 if compact else 0, 0),
+            pady=(0 if compact else 5, 0))
         self.filename_label.configure(padding=(18, 2 if compact else 8))
         # Paging adds a second control row. Recover space from margins while
         # preserving fonts, every control and each game's expanded spacing.

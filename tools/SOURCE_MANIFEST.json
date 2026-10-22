@@ -1048,8 +1048,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 99442,
-      "sha256": "32f91069234ec623a6518680d1349f1b184e680d23f18af0b7fda7ab4138fccc"
+      "bytes": 99522,
+      "sha256": "fed646d43ed89069405efbfcf575e72d183f01dcb122890f2bec83e0d27c1184"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -5073,8 +5073,8 @@
     },
     {
       "path": "tests/test_game_troubleshooting_gui.py",
-      "bytes": 17611,
-      "sha256": "3a028b6947b060ec896b3c25edeb2d76d41f0fa9223b14ef2487481015097bb0"
+      "bytes": 17622,
+      "sha256": "2b04a5cc1852bff08506e1b0935f289cead8e3f319667fc5b769a0ceec3a9b02"
     },
     {
       "path": "tests/test_gemfire_battery.py",

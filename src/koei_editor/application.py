@@ -1253,10 +1253,11 @@ class Application(Appearance):
             profile_window = getattr(management, 'profile_window', None)
             if profile_window is not None and not getattr(profile_window, '_closed', False):
                 tools += (profile_window,)
+        troubleshooting = getattr(self, 'troubleshooting', None)
         if any(
                 getattr(tool, 'busy', False)
                 and not (
-                    tool is self.troubleshooting
+                    tool is troubleshooting
                     and getattr(tool, 'shutdown_safe_while_busy', False)
                 )
                 for tool in tools):

@@ -5098,8 +5098,8 @@
     },
     {
       "path": "tests/test_game_troubleshooting_gui.py",
-      "bytes": 17427,
-      "sha256": "76462afd25c0f36838c0a73396619296342e84e9272cd452c9b33ada67999151"
+      "bytes": 17611,
+      "sha256": "3a028b6947b060ec896b3c25edeb2d76d41f0fa9223b14ef2487481015097bb0"
     },
     {
       "path": "tests/test_gemfire_battery.py",

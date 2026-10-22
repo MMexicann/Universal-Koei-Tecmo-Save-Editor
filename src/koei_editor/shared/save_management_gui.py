@@ -19,6 +19,9 @@ class SaveManagementWindow:
         self.window.minsize(820, 650)
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.busy, self._closed, self._poll_id = False, False, None
+        self.profile_window = None
+        self._palette = {'background': ttk.Style(root).lookup('TFrame', 'background') or '#ffffff',
+                         'text': ttk.Style(root).lookup('TLabel', 'foreground') or '#222222'}
         self._results, self._cancel = queue.SimpleQueue(), threading.Event()
         self._games = {f'{g.title} · {g.subtitle} [{g.platform}]': g.id for g in GAMES}
         self.frame = ttk.Frame(self.window, padding=16)
@@ -38,8 +41,7 @@ class SaveManagementWindow:
         self._doctor_form()
         self._discovery_form()
         self._vault_form()
-        self.apply_theme({'background': ttk.Style(root).lookup('TFrame', 'background') or '#ffffff',
-                          'text': ttk.Style(root).lookup('TLabel', 'foreground') or '#222222'})
+        self.apply_theme(self._palette)
         self.status = tk.StringVar(self.window, value='Choose a game/platform and separate save copies.')
         ttk.Label(self.frame, textvariable=self.status, wraplength=900).pack(anchor='w', pady=(10, 4))
         self.show(game_id=game_id, paths=paths)
@@ -159,6 +161,12 @@ class SaveManagementWindow:
         self._button(actions, 'Branch from selected', self.branch)
         self._button(actions, 'Update label', self.relabel)
         self._button(actions, 'Remove history entry…', self.delete)
+        profile_actions = ttk.Frame(self.vault_tab)
+        profile_actions.pack(fill='x', pady=(3, 0))
+        self._button(profile_actions, 'Smart Playthrough Profiles…', self.open_playthrough_profiles)
+        ttk.Label(profile_actions,
+                  text='Compose verified snapshots with exact-version metadata and optional manager exports.',
+                  style='Muted.TLabel').pack(side='left', padx=(4, 0))
         ttk.Label(self.vault_tab, text='Restores create a new directory and verify its exact bytes and original context. '
                   'Snapshots preserve local backups; live saves and existing destinations stay protected.',
                   wraplength=850, style='Muted.TLabel').pack(anchor='w')
@@ -409,6 +417,24 @@ class SaveManagementWindow:
                 self._vault_action(lambda vault: (vault.delete(snapshot_id), {'deleted': True})[1])
         self._invoke(prepare)
 
+    def open_playthrough_profiles(self):
+        if self.busy:
+            return
+        vault_path = self.vault_path.get().strip()
+        if not vault_path:
+            messagebox.showerror('Smart Playthrough Profiles', 'Choose or create a Save Vault first.', parent=self.window)
+            return
+        selected = self.history.selection()
+        selected_snapshot_id = selected[0] if len(selected) == 1 else None
+        if self.profile_window is not None and not getattr(self.profile_window, '_closed', False):
+            self.profile_window.show(selected_snapshot_id)
+            return
+        from koei_editor.shared.playthrough_profiles_gui import PlaythroughProfilesWindow
+        self.profile_window = PlaythroughProfilesWindow(
+            self.window, vault_path=vault_path, selected_snapshot_id=selected_snapshot_id,
+            palette=self._palette,
+        )
+
     def _destroyed(self, event):
         if event.widget is self.window:
             self._closed = True
@@ -417,9 +443,12 @@ class SaveManagementWindow:
     def apply_theme(self, palette):
         if self._closed:
             return
+        self._palette = dict(palette)
         for widget in (self.doctor_output, self.discovery_output, self.vault_output):
             widget.configure(background=palette['background'], foreground=palette['text'],
                              insertbackground=palette['text'])
+        if self.profile_window is not None and not getattr(self.profile_window, '_closed', False):
+            self.profile_window.apply_theme(palette)
 
     def close(self):
         if self._closed:
@@ -428,9 +457,15 @@ class SaveManagementWindow:
             self._cancel.set()
             messagebox.showinfo('Save management', 'Wait for the current save operation to finish before closing.', parent=self.window)
             return
+        if (self.profile_window is not None and not getattr(self.profile_window, '_closed', False)
+                and self.profile_window.busy):
+            messagebox.showinfo('Save management', 'Wait for the playthrough profile operation to finish before closing.', parent=self.window)
+            return
         self._closed = True
         self._cancel.set()
         if self._poll_id is not None:
             self.window.after_cancel(self._poll_id)
             self._poll_id = None
+        if self.profile_window is not None and not getattr(self.profile_window, '_closed', False):
+            self.profile_window.close()
         self.window.destroy()

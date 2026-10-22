@@ -30,10 +30,10 @@ manual notes, or an unrelated save field.
 For the Completion Companion branch, 11 focused tests passed and three were
 skipped: two require a graphical display, and the registry integration waits
 for provider PR #111. Fifteen progression contract, generic projection and game
-dashboard regression tests passed. The public source manifest verified 1,188
-entries on the branch's current main base; the supported-game inventory check
-covered 98 adapters. Provider-specific tests and evidence are recorded in PR
-[#111](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/111).
+dashboard regression tests passed. The public source manifest verified 1,193
+entries on the branch's current main base after PR #118; the supported-game
+inventory check covered 98 adapters. Provider-specific tests and evidence are
+recorded in PR [#111](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/111).
 
 This evidence does not claim an in-game load test, a complete catalogue for all
 Koei Tecmo games, or a completion percentage.

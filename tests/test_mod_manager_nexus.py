@@ -7,8 +7,9 @@ import threading
 import time
 import unittest
 import zipfile
+from unittest.mock import patch
 
-from koei_editor.shared.mod_manager import ModManager
+from koei_editor.shared.mod_manager import ModManager, _NexusDownloadJob
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,14 @@ class FakeDownloader:
         self.writer(self.destination)
 
 
+class RateLimitError(RuntimeError):
+    status = 429
+
+    def __init__(self, message, retry_after):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
 class NexusManagerHandoffTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -78,6 +87,7 @@ class NexusManagerHandoffTests(unittest.TestCase):
 
         self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
         self.assertLess(time.monotonic() - started, 1.25)
+        self.assertTrue(self.manager.nexus_downloads_pending)
         self.assertTrue(downloader.called.wait(2))
 
         result = self.wait_for_result()
@@ -93,21 +103,35 @@ class NexusManagerHandoffTests(unittest.TestCase):
         self.assertFalse(record.installed)
         self.assertFalse(record.enabled)
 
-    def test_request_provider_game_domain_and_zip_name_are_gated_before_queueing(self):
+    def test_request_provider_game_domain_and_unsafe_names_are_gated_before_queueing(self):
         downloader = FakeDownloader()
         unsupported = (
             replace(Request(), provider="other"),
             replace(Request(), game_id="dw8xl"),
             replace(Request(), game_domain="wolongfallendynasty"),
-            replace(Request(), file_name="sample-mod.7z"),
             replace(Request(), file_name="folder/sample-mod.zip"),
             replace(Request(), mod_page_url="https://www.nexusmods.com/nioh2/mods/1234?key=secret"),
+            replace(Request(), game_scoped_mod_id="../1234",
+                    mod_page_url="https://www.nexusmods.com/nioh2/mods/../1234"),
+            replace(Request(), mod_id="1234/../evil"),
+            replace(Request(), file_id="../98765"),
+            replace(Request(), file_version_id="version\\with-separator"),
+            replace(Request(), game_scoped_file_version_id="../45678"),
         )
         for request in unsupported:
             with self.subTest(request=request):
                 self.assertFalse(self.manager.enqueue_nexus_download(request, downloader))
         self.assertFalse(downloader.called.is_set())
         self.assertEqual(self.manager.mods(), ())
+
+    def test_logical_filename_does_not_control_archive_format(self):
+        request = replace(Request(), file_name="Nioh 2 appearance mod")
+        downloader = FakeDownloader()
+
+        self.assertTrue(self.manager.enqueue_nexus_download(request, downloader))
+        result = self.wait_for_result()
+
+        self.assertEqual(result.status, "imported")
 
     def test_downloader_error_is_sanitized_and_not_saved_to_manager_state(self):
         secret = "https://cdn.example.invalid/archive.zip?token=private-key"
@@ -122,6 +146,18 @@ class NexusManagerHandoffTests(unittest.TestCase):
         for path in self.manager.state_dir.glob("**/*"):
             if path.is_file():
                 self.assertNotIn(secret.encode(), path.read_bytes())
+
+    def test_rate_limit_result_preserves_safe_retry_after_without_retrying(self):
+        secret = "https://cdn.example.invalid/archive.zip?token=private-key"
+        downloader = FakeDownloader(error=RateLimitError(secret, "23"))
+
+        self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
+        result = self.wait_for_result()
+
+        self.assertEqual(result.status, "rate_limited")
+        self.assertEqual(result.retry_after_seconds, 23)
+        self.assertIn("Wait at least 23 seconds", result.message)
+        self.assertNotIn(secret, repr(result))
 
     def test_invalid_downloaded_zip_is_rejected_by_existing_import_validator(self):
         def invalid_zip(destination):
@@ -189,6 +225,31 @@ class NexusManagerHandoffTests(unittest.TestCase):
                 time.sleep(0.01)
         self.assertEqual(len(results), 4)
         self.assertTrue(all(result.status == "imported" for result in results))
+        deadline = time.monotonic() + 2
+        while self.manager.nexus_downloads_pending and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertFalse(self.manager.nexus_downloads_pending)
+
+    def test_repeated_enqueue_near_worker_shutdown_does_not_lose_accepted_jobs(self):
+        downloader = FakeDownloader()
+        for _ in range(30):
+            self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
+            self.assertEqual(self.wait_for_result().status, "imported")
+        deadline = time.monotonic() + 2
+        while self.manager.nexus_downloads_pending and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertFalse(self.manager.nexus_downloads_pending)
+
+    def test_thread_start_failure_preserves_older_queued_request(self):
+        older = _NexusDownloadJob(Request(file_id="older"), FakeDownloader())
+        self.manager._nexus_jobs.put_nowait(older)
+        with patch("koei_editor.shared.mod_manager.threading.Thread.start",
+                   side_effect=RuntimeError("thread start failed")):
+            self.assertFalse(self.manager.enqueue_nexus_download(Request(), FakeDownloader()))
+
+        self.assertEqual(self.manager._nexus_jobs.qsize(), 1)
+        self.assertIs(self.manager._nexus_jobs.get_nowait(), older)
+        self.manager._nexus_jobs.task_done()
 
 
 if __name__ == "__main__":

@@ -892,6 +892,9 @@ class Application(Appearance):
         from koei_editor.shared.mod_manager_gui import ModManagerWorkspace
         if self.mod_manager is None:
             self.mod_manager = ModManagerWorkspace(self.root, self.workspace)
+        attach_handoff = getattr(self, 'set_mod_manager_download_handoff', None)
+        if callable(attach_handoff):
+            attach_handoff(self.mod_manager)
         self._show_editing_tool(self.mod_manager, self.tr('mod_manager'))
         self._remember_workspace('tool:mod_manager')
         return self.mod_manager

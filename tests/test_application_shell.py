@@ -6,7 +6,7 @@ import tempfile
 import tkinter as tk
 from tkinter import ttk
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from koei_editor.application import Application, VERSION
 from koei_editor.shared.command_palette import CommandEntry, search_commands
@@ -15,6 +15,29 @@ from koei_editor.shared import shell_preferences as settings
 
 
 class ShellPreferencesTests(unittest.TestCase):
+    def test_show_mod_manager_attaches_workspace_to_existing_download_handoff_seam(self):
+        from types import SimpleNamespace
+        from koei_editor.shared import mod_manager_gui
+
+        workspace = object()
+        attach = Mock()
+        shell = SimpleNamespace(
+            mod_manager=None,
+            root=object(),
+            workspace=object(),
+            set_mod_manager_download_handoff=attach,
+            _show_editing_tool=Mock(),
+            _remember_workspace=Mock(),
+            tr=lambda key: key,
+        )
+        with patch.object(mod_manager_gui, 'ModManagerWorkspace', return_value=workspace):
+            result = Application.show_mod_manager(shell)
+
+        self.assertIs(result, workspace)
+        attach.assert_called_once_with(workspace)
+        shell._show_editing_tool.assert_called_once_with(workspace, 'mod_manager')
+        shell._remember_workspace.assert_called_once_with('tool:mod_manager')
+
     def test_longest_valid_namespaced_plugin_command_can_be_favorited(self):
         command = 'plugin:' + 'a.' + 'a' * 78 + ':' + 'b' * 80
         value = settings.toggle_favorite(settings.ShellPreferences(), command)
@@ -282,8 +305,11 @@ class ApplicationShellTests(unittest.TestCase):
         from koei_editor.shared import mod_manager_gui
         from types import SimpleNamespace
         state_dir = (Path(self.directory.name) / 'mod_manager').resolve()
+        attach_handoff = Mock()
+        self.app.set_mod_manager_download_handoff = attach_handoff
         with patch.object(mod_manager_gui, 'preference_path', return_value=self.path):
             workspace = self.app.show_mod_manager()
+            attach_handoff.assert_called_once_with(workspace)
             self.assertIsInstance(workspace, mod_manager_gui.ModManagerWorkspace)
             self.assertIs(self.app.mod_manager, workspace)
             self.assertEqual(workspace.manager.state_dir, state_dir)
@@ -294,6 +320,7 @@ class ApplicationShellTests(unittest.TestCase):
             self.app.show_library()
             self.assertEqual(workspace.frame.winfo_manager(), '')
             self.assertIs(self.app.show_mod_manager(), workspace)
+            self.assertEqual(attach_handoff.call_count, 2)
             self.assertEqual(workspace.frame.winfo_manager(), 'pack')
 
             candidate = str(Path(self.directory.name) / 'unreadable-game')

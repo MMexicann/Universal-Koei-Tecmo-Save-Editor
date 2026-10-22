@@ -10,9 +10,11 @@ for enable/disable operations.
 from __future__ import annotations
 
 import copy
+from datetime import datetime, timezone
 from functools import wraps
 import hashlib
 import json
+import math
 import os
 import queue
 import re
@@ -23,6 +25,7 @@ import threading
 import uuid
 import zipfile
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Protocol
 from urllib.parse import urlsplit
@@ -40,6 +43,7 @@ _MAX_ARCHIVE_FILE_BYTES = 512 * 1024 * 1024
 _MAX_ARCHIVE_BYTES = 1024 * 1024 * 1024
 _MAX_NEXUS_DOWNLOAD_BYTES = _MAX_ARCHIVE_BYTES
 _MAX_NEXUS_QUEUE_SIZE = 3
+_NEXUS_NUMERIC_ID_RE = re.compile(r"^[0-9]{1,20}$")
 _MAX_METADATA_BYTES = 1024 * 1024
 _MAX_STATE_BYTES = 16 * 1024 * 1024
 _ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{1,47}$")
@@ -111,6 +115,7 @@ class NexusDownloadResult:
     status: str
     message: str
     mod_id: str | None = None
+    retry_after_seconds: int | None = None
 
 
 class NexusDownloadRequestLike(Protocol):
@@ -772,7 +777,8 @@ class ModManager:
     def nexus_downloads_pending(self) -> bool:
         """Whether an accepted Nexus job is queued or currently being handled."""
         with self._nexus_worker_lock:
-            return bool(self._nexus_worker and self._nexus_worker.is_alive())
+            return (not self._nexus_jobs.empty()
+                    or bool(self._nexus_worker and self._nexus_worker.is_alive()))
 
     def enqueue_nexus_download(
         self,
@@ -795,11 +801,29 @@ class ModManager:
             return False
         if not callable(download_archive):
             return False
-        try:
-            self._nexus_jobs.put_nowait(_NexusDownloadJob(request, downloader))
-        except queue.Full:
-            return False
-        self._ensure_nexus_worker()
+        with self._nexus_worker_lock:
+            # Reject a full queue before starting a thread. For a new worker,
+            # start while holding this lock and enqueue before it can complete
+            # its empty-queue/shutdown handshake.
+            if self._nexus_jobs.full():
+                return False
+            if self._nexus_worker is None or not self._nexus_worker.is_alive():
+                worker = threading.Thread(
+                    target=self._drain_nexus_jobs,
+                    name="koei-nexus-import",
+                    daemon=True,
+                )
+                self._nexus_worker = worker
+                try:
+                    worker.start()
+                except Exception:
+                    # Leave any older accepted work in the queue untouched.
+                    self._nexus_worker = None
+                    return False
+            try:
+                self._nexus_jobs.put_nowait(_NexusDownloadJob(request, downloader))
+            except queue.Full:
+                return False
         return True
 
     @staticmethod
@@ -830,6 +854,12 @@ class ModManager:
             values["provider"] == "nexus"
             and values["game_id"] == GAME_ID
             and values["game_domain"] == "nioh2"
+            and bool(_NEXUS_NUMERIC_ID_RE.fullmatch(values["game_scoped_mod_id"]))
+            and bool(_NEXUS_NUMERIC_ID_RE.fullmatch(values["mod_id"]))
+            and bool(_NEXUS_NUMERIC_ID_RE.fullmatch(values["game_scoped_file_version_id"]))
+            and ModManager._is_safe_nexus_opaque_id(values["file_id"])
+            and ModManager._is_safe_nexus_opaque_id(values["file_version_id"])
+            and ModManager._is_safe_nexus_opaque_id(values["file_name"], max_length=256)
             and page.scheme == "https"
             and page.hostname == "www.nexusmods.com"
             and page.netloc == "www.nexusmods.com"
@@ -842,20 +872,19 @@ class ModManager:
             and filename not in (".", "..")
             and "/" not in filename
             and "\\" not in filename
-            and filename.casefold().endswith(".zip")
         )
 
-    def _ensure_nexus_worker(self) -> None:
-        with self._nexus_worker_lock:
-            if self._nexus_worker is not None and self._nexus_worker.is_alive():
-                return
-            worker = threading.Thread(
-                target=self._drain_nexus_jobs,
-                name="koei-nexus-import",
-                daemon=True,
-            )
-            self._nexus_worker = worker
-            worker.start()
+    @staticmethod
+    def _is_safe_nexus_opaque_id(value: str, *, max_length: int = 512) -> bool:
+        if (not value or len(value) > max_length or value in (".", "..")
+                or "/" in value or "\\" in value
+                or any(ord(char) < 0x20 or ord(char) == 0x7f for char in value)):
+            return False
+        try:
+            value.encode("utf-8", "strict")
+        except UnicodeEncodeError:
+            return False
+        return True
 
     def _drain_nexus_jobs(self) -> None:
         while True:
@@ -888,11 +917,8 @@ class ModManager:
                 destination = Path(temporary) / self._nexus_temp_archive_name(job.request)
                 try:
                     job.downloader.download_archive(job.request, destination)
-                except Exception:
-                    return NexusDownloadResult(
-                        "download_failed",
-                        "Nexus could not provide this archive. Check your Nexus access and try again.",
-                    )
+                except Exception as error:
+                    return self._nexus_download_error_result(error)
                 if (destination.is_symlink() or _is_reparse_point(destination)
                         or not destination.is_file()):
                     return NexusDownloadResult(
@@ -933,6 +959,48 @@ class ModManager:
                 "manager_error",
                 "The manager could not prepare a temporary download location.",
             )
+
+    @staticmethod
+    def _nexus_download_error_result(error: Exception) -> NexusDownloadResult:
+        try:
+            status = getattr(error, "status", None)
+        except Exception:
+            status = None
+        if status == 429:
+            try:
+                retry_header = getattr(error, "retry_after", None)
+            except Exception:
+                retry_header = None
+            retry_after = ModManager._parse_retry_after(retry_header)
+            if retry_after is None:
+                message = "Nexus rate limit reached. Wait before trying again."
+            else:
+                message = f"Nexus rate limit reached. Wait at least {retry_after} seconds before retrying."
+            return NexusDownloadResult("rate_limited", message, retry_after_seconds=retry_after)
+        return NexusDownloadResult(
+            "download_failed",
+            "Nexus could not provide this archive. Check your Nexus access and try again.",
+        )
+
+    @staticmethod
+    def _parse_retry_after(value) -> int | None:
+        """Parse a bounded RFC Retry-After value without echoing its raw text."""
+        if not isinstance(value, str) or not value or len(value) > 128:
+            return None
+        if any(ord(char) < 0x20 or ord(char) == 0x7f for char in value):
+            return None
+        text = value.strip()
+        if text.isascii() and text.isdigit():
+            seconds = int(text)
+            return seconds if 0 < seconds <= 7 * 24 * 60 * 60 else None
+        try:
+            retry_at = parsedate_to_datetime(text)
+            if retry_at.tzinfo is None:
+                return None
+            seconds = math.ceil((retry_at.astimezone(timezone.utc) - datetime.now(timezone.utc)).total_seconds())
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return seconds if 0 < seconds <= 7 * 24 * 60 * 60 else None
 
     @staticmethod
     def _nexus_temp_archive_name(request) -> str:

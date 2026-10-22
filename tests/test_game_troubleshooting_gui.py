@@ -86,6 +86,30 @@ class GameTroubleshootingExportTests(unittest.TestCase):
             self.assertEqual(existing.read_bytes(), b"keep this file")
 
 
+class TroubleshootingWorkspaceLifecycleTests(unittest.TestCase):
+    def test_close_is_idempotent_and_only_cancels_the_pending_poll(self):
+        class Root:
+            def __init__(self):
+                self.cancelled = []
+
+            def after_cancel(self, callback_id):
+                self.cancelled.append(callback_id)
+
+        workspace = object.__new__(TroubleshootingWorkspace)
+        workspace._closed = False
+        workspace._revision = 0
+        workspace._poll_id = "poll-1"
+        workspace.root = Root()
+
+        workspace.close()
+        workspace.close()
+
+        self.assertTrue(workspace._closed)
+        self.assertEqual(workspace._revision, 1)
+        self.assertIsNone(workspace._poll_id)
+        self.assertEqual(workspace.root.cancelled, ["poll-1"])
+
+
 class GameTroubleshootingGuiTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()

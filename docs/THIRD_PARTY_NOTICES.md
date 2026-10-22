@@ -11,7 +11,8 @@ The read-only Game Asset Explorer also uses G1T format facts from the MIT-
 licensed [three-houses-research-team/G1Tool](https://github.com/three-houses-research-team/G1Tool/tree/68c5a42b170d49ea03e3d0b138e7fa8c4a5bdb91)
 and includes a narrow independently adapted parser. Its preview stack uses
 miniaudio (MIT), trimesh (MIT), NumPy (BSD-3-Clause and component notices), cffi
-(MIT-0), and pycparser (BSD-3-Clause). The bounded PNG/DXT decoder is original
+(MIT-0), its statically compiled Windows x64 libffi components (MIT), and
+pycparser (BSD-3-Clause). The bounded PNG/DXT decoder is original
 code written against public format specifications. Full retained notices are
 listed in [licenses/README.md](../licenses/README.md); no G1Tool
 application, restricted implementation, game asset, or external command-line

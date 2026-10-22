@@ -26,6 +26,7 @@ def build_args(root=ROOT, *, standalone=False):
             f'UniversalKoeiTecmoSaveEditor-v{VERSION}', '--paths', str(root / 'src'),
             '--distpath', str(root / ('dist' + suffix)), '--workpath', str(root / ('build' + suffix)),
             '--specpath', str(root / ('build' + suffix))]
+    args.extend(['--additional-hooks-dir', str(root / 'tools' / 'pyinstaller_hooks')])
     for source, destination in DATA:
         args.extend(['--add-data', str(root / source) + os.pathsep + destination])
     for game in ALL_ADAPTERS:

@@ -1038,8 +1038,8 @@
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
-      "bytes": 15656,
-      "sha256": "55a6ddbebba7c7e97456c9ec65e596107bbf241ad17471f317dd4909b2234bbc"
+      "bytes": 15717,
+      "sha256": "e03155351a5609afb2f9607bee02f73026f9ae50067c601505c3b2b9c69a30bb"
     },
     {
       "path": "docs/THREE_HOPES_FORMAT.md",
@@ -1298,8 +1298,8 @@
     },
     {
       "path": "licenses/README.md",
-      "bytes": 692,
-      "sha256": "b7a8ada94b4ebccafce64e825d306f6b6b0f3f7ab185dd91b1bd3fb4a5122a86"
+      "bytes": 819,
+      "sha256": "4271e4b295ea5de11e60244600aca35bf3452eccc5ee0dfaa0d38796e4f11152"
     },
     {
       "path": "licenses/Tk-license.terms",
@@ -1315,6 +1315,11 @@
       "path": "licenses/cffi-MIT-0.txt",
       "bytes": 1109,
       "sha256": "ebb618637439262c8f3afd1837f7c69a2d13a69033caaf0e5cf534b260eed804"
+    },
+    {
+      "path": "licenses/cffi-libffi-MIT.txt",
+      "bytes": 7230,
+      "sha256": "3d915f12116f56746e2b7b7ccb35a06b4eadf5e3d92787c3e018f08ee46c0248"
     },
     {
       "path": "licenses/katana-save-data-resigner-MIT.txt",
@@ -5778,8 +5783,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 35701,
-      "sha256": "c28ef698e1e3e548c99893bec8c4fe03fcc0abfa4003af04ce155a58f6ac3c43"
+      "bytes": 37195,
+      "sha256": "95ecee72742c5d62fc1d1c9171a9d5749d4a4f56107415f00a4596ad7096bae9"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
@@ -6413,8 +6418,8 @@
     },
     {
       "path": "tests/test_universal_packaging.py",
-      "bytes": 16184,
-      "sha256": "6425c10d9549462919cde31ee51e61af162173ce848b39fbc6cb37a2dd12f075"
+      "bytes": 16711,
+      "sha256": "1f691321bc25b23cf75e9a09fcd6e3b8660b453b7de5f162900b0ebe6d29e4d2"
     },
     {
       "path": "tests/test_v27_dw8_wo3_dashboards.py",
@@ -6638,8 +6643,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 3817,
-      "sha256": "2b8f3bef3ce8af5e5a86fc4a6dc36287a2fda54697a83182ee24e97b9d15f8af"
+      "bytes": 3904,
+      "sha256": "77d3943a88daf28b5c8028dc1af034a849e4be7b743cedc8b4028770b603d482"
     },
     {
       "path": "tools/check_community_packages.py",
@@ -6743,8 +6748,13 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 38121,
-      "sha256": "5dce14175e1f9da0c2ae2abc17a5f2a2f65596fd68789a6bb1972ae47e32e6a2"
+      "bytes": 39342,
+      "sha256": "52fb59a26212e93429618a209cfa8407efda0c7d7a019a041c24f188a2553c8a"
+    },
+    {
+      "path": "tools/pyinstaller_hooks/hook-trimesh.py",
+      "bytes": 460,
+      "sha256": "925d273dc900034041dd2cbbb277326c6c26237f6d6180b15b5191cbc698870c"
     },
     {
       "path": "tools/refresh_manifest.py",

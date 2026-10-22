@@ -19,7 +19,8 @@ TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_rele
               'tools/check_community_plugins.py', 'tools/community_plugin_template/example.plugin.json',
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
               'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
-              'tools/requirements/build.txt', 'tools/requirements/dev.txt'}
+              'tools/requirements/build.txt', 'tools/requirements/dev.txt',
+              'tools/pyinstaller_hooks/hook-trimesh.py'}
 COMMUNITY_TEMPLATE_FILES = frozenset(
     f'tools/community_package_templates/{kind}.koei-community.json'
     for kind in ('character_build', 'mod_list', 'configuration_preset',
@@ -100,7 +101,8 @@ RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING
                    'licenses/numpy-random-distributions.txt', 'licenses/numpy-mt19937.txt',
                    'licenses/numpy-pcg64.txt', 'licenses/numpy-philox.txt',
                    'licenses/numpy-sfc64.txt', 'licenses/numpy-splitmix64.txt',
-                   'licenses/cffi-MIT-0.txt', 'licenses/pycparser-BSD-3-Clause.txt')
+                   'licenses/cffi-MIT-0.txt', 'licenses/cffi-libffi-MIT.txt',
+                   'licenses/pycparser-BSD-3-Clause.txt')
 WINDOWS_DOCS = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
                 'docs/CONTROLLER_INPUT_PROFILES.md',
                 'docs/GAME_TROUBLESHOOTING.md',
@@ -402,6 +404,14 @@ NUMPY_EXTENSION = re.compile(
     r'fft/_pocketfft_umath|linalg/(?:_umath_linalg|lapack_lite)|'
     r'random/(?:bit_generator|mtrand|_bounded_integers|_common|_generator|_mt19937|_pcg64|_philox|_sfc64))'
     r'(?:\.cp314-win_amd64)?\.pyd\Z', re.I)
+# Exact resources from the hash-locked trimesh 5.1.1 wheel. Optional viewers,
+# executable templates and format-schema archives are outside our preview scope.
+TRIMESH_RESOURCES = {
+    'trimesh/resources/creation.json': '8bbd9d1eec4d3a4da06e74a36215864c42fe5b37967564757b7b7fde20cfd18b',
+    'trimesh/resources/units_to_inches.json': 'aeaffb35476bfb1a6d168317f5a842bb838b3c62f171c2ab6a02a2e4f75b4f6c',
+    'trimesh/resources/color_map.json.gzip': 'd0476d6b5697444c8b359fd933e7effde10023329aeddbebf132d803ec031735',
+    'trimesh/resources/templates/ply.json': '3317874b902a0eac387906ff7eb900a32c31a642718d275c1eef43c8f5e93640',
+}
 TCL_PACKAGE_DLLS = frozenset({'_tcl_data/dde1.4/tcldde14.dll', '_tcl_data/reg1.3/tclreg13.dll'})
 TCL_RESOURCE_SUFFIXES = frozenset({'', '.tcl', '.tm', '.msg', '.enc', '.txt', '.n'})
 
@@ -459,6 +469,11 @@ def _verify_tcl_zip(label, data, prefix, entry):
 def _validate_runtime_file(name, data, expected):
     """Apply the same resource/native/privacy rules inside either distribution."""
     normalized, relative = _bundled_path(name)
+    if normalized in TRIMESH_RESOURCES:
+        if hashlib.sha256(data).hexdigest() != TRIMESH_RESOURCES[normalized]:
+            raise ValueError(f'Bundled trimesh resource differs from the pinned wheel: {name}')
+        scan_bundled_data(name, data)
+        return normalized
     if relative.suffix.casefold() == '.json' and normalized not in expected:
         raise ValueError(f'Unreviewed JSON data in runtime: {name}')
     if normalized in expected:
@@ -494,6 +509,7 @@ def _validate_runtime_inventory(entries, expected):
     else:
         required.update({'tcl86t.dll', 'tk86t.dll', '_tcl_data/init.tcl', '_tk_data/tk.tcl'})
     required.update(expected)
+    required.update(TRIMESH_RESOURCES)
     missing = required - entries.keys()
     if len([name for name in entries if re.fullmatch(r'python3\d+\.dll', name)]) != 1:
         missing.add('one versioned CPython runtime DLL')
@@ -554,7 +570,8 @@ def _verify_archive(executable, sources, archive_reader=None, require_complete_r
         if normalized.casefold() in seen:
             raise ValueError(f'Duplicate file in executable archive: {name}')
         seen.add(normalized.casefold())
-        if path.suffix.lower() == '.json' and normalized not in expected:
+        if (path.suffix.lower() == '.json' and normalized not in expected
+                and normalized not in TRIMESH_RESOURCES):
             raise ValueError(f'Unreviewed JSON data in executable archive: {name}')
         data = archive.extract(name)
         scan_bundled_data(name, data)
@@ -571,6 +588,8 @@ def _verify_archive(executable, sources, archive_reader=None, require_complete_r
                 raise ValueError(f'Invalid standalone embedded runtime data: {name}')
             internal = _validate_runtime_file(normalized, data, expected)
             runtime[internal] = data
+        elif normalized in TRIMESH_RESOURCES:
+            _validate_runtime_file(normalized, data, expected)
         elif path.suffix == '.zip':
             _verify_library_zip(name, data)
         elif path.suffix.casefold() in {'.dll', '.pyd'}:

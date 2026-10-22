@@ -22,6 +22,13 @@ class PackagingTests(unittest.TestCase):
         self.area.mkdir(parents=True, exist_ok=True)
         self.root = self.area / uuid.uuid4().hex
         self.root.mkdir()
+        self.trimesh_resources = {name: ('Synthetic reviewed resource: ' + name).encode()
+                                  for name in release.TRIMESH_RESOURCES}
+        resource_hashes = patch.dict(release.TRIMESH_RESOURCES,
+                                     {name: hashlib.sha256(data).hexdigest()
+                                      for name, data in self.trimesh_resources.items()}, clear=True)
+        resource_hashes.start()
+        self.addCleanup(resource_hashes.stop)
         self.sources = {name: b'Public document\n' for name in release.WINDOWS_DOCS}
         self.sources.update({name: b'# Public build helper\n' for name in release.TOOL_FILES})
         self.sources.update({name: b'# Public community schema or guide\n'
@@ -74,7 +81,8 @@ class PackagingTests(unittest.TestCase):
             self.write_runtime_resources()
 
     def write_runtime_resources(self):
-        for name, data in release.embedded_metadata(self.sources).items():
+        resources = {**release.embedded_metadata(self.sources), **self.trimesh_resources}
+        for name, data in resources.items():
             path = self.runtime / '_internal' / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data)
@@ -86,7 +94,7 @@ class PackagingTests(unittest.TestCase):
         (self.root / release.MANIFEST).write_text(json.dumps({'version': '1.0', 'files': entries}), encoding='utf-8')
 
     def archive_fixture(self):
-        blobs = dict(release.embedded_metadata(self.sources))
+        blobs = {**release.embedded_metadata(self.sources), **self.trimesh_resources}
         blobs['PYZ.pyz'] = b'compressed archive'
         module = [b'public Python module']
         pyz = SimpleNamespace(toc={'koei_editor.application': (0, 0, 0)}, extract=lambda name, raw=False: module[0])
@@ -116,7 +124,8 @@ class PackagingTests(unittest.TestCase):
         for name in ('python314.dll', '_tkinter.pyd', 'base_library.zip', 'tcl86t.dll',
                      'tk86t.dll', '_tcl_data/init.tcl', '_tk_data/tk.tcl',
                      'koei_editor/data/game_metadata.json', 'licenses/LICENSE',
-                     'licenses/THIRD_PARTY_NOTICES.md', *release.RUNTIME_LICENSES):
+                     'licenses/THIRD_PARTY_NOTICES.md', *release.RUNTIME_LICENSES,
+                     *release.TRIMESH_RESOURCES):
             entry = archive.toc.pop(name)
             with self.subTest(missing=name), self.assertRaisesRegex(ValueError, 'missing'):
                 release.verify_standalone(self.root, reader)
@@ -130,6 +139,19 @@ class PackagingTests(unittest.TestCase):
                 release.verified_sources(self.root)
             self.sources[name] = original
         self.write_manifest()
+
+    def test_trimesh_resources_require_exact_reviewed_bytes_and_exclude_viewers(self):
+        for name, data in self.trimesh_resources.items():
+            with self.subTest(name=name):
+                self.assertEqual(release._validate_runtime_file(name, data, {}), name)
+                with self.assertRaisesRegex(ValueError, 'differs from the pinned wheel'):
+                    release._validate_runtime_file(name, data + b'changed', {})
+        for name in ('trimesh/resources/private.json',
+                     'trimesh/resources/templates/viewer.zip',
+                     'trimesh/resources/templates/blender_boolean.py.tmpl',
+                     'trimesh/resources/schema/gltf2.schema.zip'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed'):
+                release._validate_runtime_file(name, b'unreviewed content', {})
 
     def test_only_the_pinned_asset_decoder_native_modules_are_allowed(self):
         for name in ('_miniaudio.pyd', '_miniaudio.cp314-win_amd64.pyd',

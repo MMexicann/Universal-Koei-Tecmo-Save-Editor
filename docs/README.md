@@ -162,6 +162,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [Original Samurai Warriors 2 Windows PC](SW2_PC_FORMAT.md)
 - [Pirate Warriors 4 and Abyss coverage](PIRATE_ABYSS_RESEARCH.md)
+- [Pirate Warriors edition and platform boundaries](PIRATE_WARRIORS_EDITION_SCOPE.md)
 - [All-Stars and WO4/Ultimate research](STARS_WO4_RESEARCH.md)
 - [Original WO4 PC resources and officers](WO4_PC_FORMAT.md)
 - [WO4 Ultimate PC resources and officer pools](WO4_ULTIMATE_PC_FORMAT.md)

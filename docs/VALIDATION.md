@@ -7,9 +7,10 @@ synthetic app IDs/build IDs, procedural compatibility records, and temporary
 local history files. The fixtures cover exact `(game profile, Steam app ID,
 platform, build ID, artifact)` matches; unknown results for other apps/builds;
 verified-to-unsupported rechecks; per-category unlisted-artifact warnings;
-build-change history; malformed metadata; and path-free persistence. No game is
-launched and the fixture does not depend on a real Steam account or installed
-game.
+build-change history; malformed metadata; blank artifact-version rejection for
+catalog rows (including `unknown` rows); and path-free persistence. Unknown rows
+may omit an artifact version. No game is launched and the fixture does not
+depend on a real Steam account or installed game.
 
 The packaged compatibility catalog currently has no exact-build records. In
 that state the tracker reports `unknown` for all categories. This is deliberate:
@@ -18,11 +19,21 @@ configuration tool, or asset format on an exact Steam build. The validator
 requires exact app/build identities and versioned evidence before showing
 `verified` or `unsupported`.
 
+On Windows, the current code head passed the Tracker, Save Discovery, Help
+Center, application shell, Troubleshooting Center, and configuration-manager
+test modules. The full matrix reported an unrelated Node subprocess timeout in
+Progression Report Security and four pre-existing Save Library GUI viewport
+assertions. Both tests and their implementation files are unchanged by this
+tracker; the Save Library failures also reproduce in the dependent Game Hub run
+and a prior main-based Windows run. Build and release jobs were skipped after
+the matrix failed.
+
 ```json
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
   "base_commit": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
+  "validated_code_commit": "d7c89e3e6180bfa3585940c00bd24e935e75fc94",
   "commands": {
     "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_help_center_integration tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_game_troubleshooting_gui tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit tests.test_game_compatibility tests.test_configuration_manager tests.test_configuration_gui",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
@@ -48,12 +59,12 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed against origin/main after rebase"
   },
   "windows_ci": {
-    "status": "pending_latest_head_after_artifact_version_validation_fix",
+    "status": "feature_modules_passed_full_matrix_failed_unrelated_tests",
     "last_completed_head": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
     "last_completed_base": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
     "last_completed_run": "39856326664",
     "last_completed_result": "full_workflow_failed; test_version_tracker 15/15, test_save_discovery 47/47, Help Center 12/12, Troubleshooting 31/31, universal app 28/28, and analyzer 29 passed/1 skipped; unrelated failures were application shell, Mod Manager/Nexus, Emulator Hub, Completion Companion, Save Library, and Editing Tools; build/release skipped",
-    "integration_findings": "Game Hub PR #135 is rebased onto tracker head 37a6bc7 with a Hub-only 12-file diff; Windows run 39862649531 is in progress. PR #148 is merged at 8c6b870; run 39858226370 passed Completion Companion 9/9 on Windows, while the overall run was cancelled before remaining shards and build/release. PR #145 is merged at 9153438; current-base run 39859637192 passed Emulator Hub 17/17; shard 1 had four unrelated Save Library GUI failures, so build/release were skipped. PR #149 Game Configuration Manager is merged in current main 9fecbed; combined local tests passed. Windows run 39862253266 is still running on the preceding tracker commit 37a6bc7 and does not include the latest whitespace-only artifact-version validation fix.",
+    "integration_findings": "Game Hub PR #135 is rebased onto tracker head d7c89e3 with a Hub-only 12-file diff; Windows run 39864091219 passed all Hub, Tracker, Save Discovery, Help Center, and Troubleshooting feature modules, with only the repeated unrelated Save Library GUI test failing in shard 2; build and release were skipped. PR #148 is merged at 8c6b870; run 39858226370 passed Completion Companion 9/9 on Windows, while the overall run was cancelled before remaining shards and build/release. PR #145 is merged at 9153438; current-base run 39859637192 passed Emulator Hub 17/17; shard 1 had the same four unrelated Save Library GUI failures, so build/release were skipped. PR #149 Game Configuration Manager is merged in current main 9fecbed; combined local tests passed.",
     "merged_test_fixture_fixes": "PRs #137, #147, #141, #121, #144, #148, #145, and #149 are included in current main 9fecbed.",
     "required_before_merge": true,
     "last_completed_tracker_run_details": {
@@ -243,14 +254,56 @@ requires exact app/build identities and versioned evidence before showing
         ]
       }
     ],
-    "current_head_check": {
-      "status": "required_after_latest_validator_fix_push",
+    "validated_code_head_check": {
+      "status": "feature_modules_passed_full_matrix_failed_unrelated_tests",
       "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
+      "head_sha": "d7c89e3e6180bfa3585940c00bd24e935e75fc94",
+      "run_id": 39863973271,
+      "workflow_conclusion": "failure",
+      "shard_counts": {
+        "tests": 3709,
+        "passed": 3196,
+        "skipped": 508,
+        "failures": 4,
+        "errors": 1
+      },
+      "feature_modules": [
+        { "module": "test_version_tracker.py", "tests": 16, "passed": 16 },
+        { "module": "test_save_discovery.py", "tests": 47, "passed": 47 },
+        { "module": "test_help_center.py", "tests": 7, "passed": 7 },
+        { "module": "test_help_center_integration.py", "tests": 5, "passed": 5 },
+        { "module": "test_application_shell.py", "tests": 40, "passed": 40 },
+        { "module": "test_game_troubleshooting.py", "tests": 20, "passed": 20 },
+        { "module": "test_game_troubleshooting_gui.py", "tests": 11, "passed": 11 },
+        { "module": "test_configuration_manager.py", "tests": 12, "passed": 12 },
+        { "module": "test_configuration_gui.py", "tests": 6, "passed": 6 },
+        { "module": "test_game_compatibility.py", "tests": 30, "passed": 29, "skipped": 1 },
+        { "module": "test_game_dashboard_context.py", "tests": 4, "passed": 4 },
+        { "module": "test_universal_app.py", "tests": 28, "passed": 28 },
+        { "module": "test_universal_packaging.py", "tests": 39, "passed": 39 }
+      ],
+      "unrelated_failures": [
+        {
+          "module": "test_progression_report_security.py",
+          "test": "ProgressionReportSecurityTests.test_report_comparison_rejects_ambiguous_labels_and_keeps_record_values",
+          "error": "Node subprocess exceeded its 10-second timeout; the same 9-test module passed in Game Hub run 39864091219",
+          "changed_by_tracker": false
+        },
+        {
+          "module": "test_save_library_gui.py",
+          "test": "SaveLibraryGuiTests.test_compact_header_scrolling_resize_state_theme_and_callback_cleanup",
+          "failures": 4,
+          "error": "Canvas yview assertions at line 534 observed clipped viewports; same four failures appeared in Game Hub run 39864091219 and main-based run 39859637192",
+          "changed_by_tracker": false
+        }
+      ],
+      "build": "skipped_after_test_failures",
+      "release": "skipped",
       "superseded_run": {
-        "run_id": 39862253266,
-        "head_sha": "37a6bc7ffd1180532e12c89d763ecfa8ccd8e5d0",
+        "run_id": 39863214490,
+        "head_sha": "0891838a7fc9e2642b6dc8a6a63470b7859813b3",
         "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
-        "status": "in_progress_on_pre-fix_head",
+        "status": "cancelled_after_test_design_review",
         "merge_eligible": false
       }
     }
@@ -279,7 +332,8 @@ requires exact app/build identities and versioned evidence before showing
     },
     "source_manifest": "refreshed and verified 1,294 public source files after the validator and documentation updates",
     "git_diff_check": "passed against origin/main after rebase",
-    "artifact_version_validation": "verified and unsupported records reject empty/whitespace-only artifact versions; surrounding whitespace is normalized"
+    "artifact_version_validation": "all catalog statuses reject empty/whitespace-only versions; unknown rows may omit a version; surrounding whitespace is normalized",
+    "artifact_version_regression_fixture": "unknown rows with empty, spaces, or tab versions are rejected through load_catalog; unknown plus null version is accepted"
   }
 }
 ```

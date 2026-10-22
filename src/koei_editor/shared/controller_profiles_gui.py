@@ -51,6 +51,31 @@ _TEXTS = {
                'Diese Profile speichert nur diese App. Sie ändern weder Spieldateien noch Steam Input. '
                'Vorlagen sind Vorschläge; überprüfe jede Tastenbelegung im ausgewählten Spiel.'),
 }
+_DIALOG_TEXTS = {
+    'edit_title': ('Edit controller profile', 'Controllerprofil bearbeiten'),
+    'new_title': ('New controller profile', 'Neues Controllerprofil'),
+    'profile_name': ('Profile name', 'Profilname'),
+    'starter_preset': ('Starter preset', 'Startvorlage'),
+    'controller_labels': ('Controller labels', 'Controller-Beschriftungen'),
+    'binding_prompt': ('Bindings · use the action names and button labels shown in your game.',
+                       'Belegungen · Verwende Aktionsnamen und Tastenbezeichnungen aus dem Spiel.'),
+    'action_label': ('Action label', 'Aktionsname'),
+    'keyboard_input': ('Keyboard input', 'Tastatureingabe'),
+    'controller_button': ('Controller button', 'Controller-Taste'),
+    'action': ('Action', 'Aktion'),
+    'keyboard': ('Keyboard', 'Tastatur'),
+    'controller': ('Controller', 'Controller'),
+    'add_update': ('Add / update binding', 'Belegung hinzufügen/aktualisieren'),
+    'remove_selected': ('Remove selected binding', 'Ausgewählte Belegung entfernen'),
+    'invalid_binding': ('Invalid binding', 'Ungültige Belegung'),
+    'duplicate_action': ('Duplicate action', 'Doppelte Aktion'),
+    'unique_action': ('Use a unique action label.', 'Verwende einen eindeutigen Aktionsnamen.'),
+    'save_error': ('Could not save profile', 'Profil konnte nicht gespeichert werden'),
+    'starter_note': ('Starter bindings are suggestions, not game-confirmed defaults.',
+                     'Vorlagen sind Vorschläge, keine im Spiel bestätigten Standardbelegungen.'),
+    'cancel': ('Cancel', 'Abbrechen'),
+    'save': ('Save profile', 'Profil speichern'),
+}
 
 
 class ControllerProfileWorkspace:
@@ -138,6 +163,10 @@ class ControllerProfileWorkspace:
 
     def _tr(self, key):
         value = _TEXTS[key]
+        return value[1] if self.language == 'de' else value[0]
+
+    def _dialog_text(self, key):
+        value = _DIALOG_TEXTS[key]
         return value[1] if self.language == 'de' else value[0]
 
     def _label(self, parent, key, **kwargs):
@@ -271,7 +300,7 @@ class ControllerProfileWorkspace:
 
     def _edit_dialog(self, existing):
         dialog = tk.Toplevel(self.root)
-        dialog.title('Edit controller profile' if existing else 'New controller profile')
+        dialog.title(self._dialog_text('edit_title' if existing else 'new_title'))
         dialog.transient(self.root)
         dialog.grab_set()
         dialog.geometry('720x600')
@@ -284,10 +313,10 @@ class ControllerProfileWorkspace:
         layout = tk.StringVar(dialog, value=existing.layout if existing else 'generic')
         header = ttk.Frame(body)
         header.pack(fill='x')
-        ttk.Label(header, text='Profile name').grid(row=0, column=0, sticky='w')
+        ttk.Label(header, text=self._dialog_text('profile_name')).grid(row=0, column=0, sticky='w')
         ttk.Entry(header, textvariable=name, width=34).grid(row=1, column=0, sticky='ew', padx=(0, 12))
-        ttk.Label(header, text='Starter preset').grid(row=0, column=1, sticky='w')
-        preset_values = tuple(PRESET_LABELS.values())
+        ttk.Label(header, text=self._dialog_text('starter_preset')).grid(row=0, column=1, sticky='w')
+        preset_values = tuple(self._preset_label(key) for key in PRESET_LABELS)
         if existing and preset_label not in preset_values:
             preset_values += (preset_label,)
         preset_selector = ttk.Combobox(header, textvariable=preset_choice, values=preset_values,
@@ -295,21 +324,21 @@ class ControllerProfileWorkspace:
         if existing:
             preset_selector.configure(state='disabled')
         preset_selector.grid(row=1, column=1, sticky='ew', padx=(0, 12))
-        ttk.Label(header, text='Controller labels').grid(row=0, column=2, sticky='w')
+        ttk.Label(header, text=self._dialog_text('controller_labels')).grid(row=0, column=2, sticky='w')
         layout_selector = ttk.Combobox(header, textvariable=layout,
                                        values=tuple(profiles.LAYOUTS), state='readonly', width=16)
         layout_selector.grid(row=1, column=2, sticky='ew')
         for column in range(3):
             header.columnconfigure(column, weight=1)
 
-        ttk.Label(body, text='Bindings · use the action names and button labels shown in your game.').pack(
+        ttk.Label(body, text=self._dialog_text('binding_prompt')).pack(
             anchor='w', pady=(14, 5))
         rows = list(existing.bindings) if existing else []
         tree = ttk.Treeview(body, columns=('keyboard', 'controller'), show='tree headings', height=11,
                             selectmode='browse')
-        tree.heading('#0', text='Action label')
-        tree.heading('keyboard', text='Keyboard input')
-        tree.heading('controller', text='Controller button')
+        tree.heading('#0', text=self._dialog_text('action_label'))
+        tree.heading('keyboard', text=self._dialog_text('keyboard_input'))
+        tree.heading('controller', text=self._dialog_text('controller_button'))
         tree.column('#0', width=210)
         tree.column('keyboard', width=140)
         tree.column('controller', width=150)
@@ -319,9 +348,10 @@ class ControllerProfileWorkspace:
         controller = tk.StringVar(dialog)
         fields = ttk.Frame(body)
         fields.pack(fill='x', pady=(8, 0))
-        for column, (label, variable, width) in enumerate((('Action', action, 22),
-                                                            ('Keyboard', keyboard, 16),
-                                                            ('Controller', controller, 18))):
+        field_labels = (self._dialog_text('action'), self._dialog_text('keyboard'),
+                        self._dialog_text('controller'))
+        for column, (label, variable, width) in enumerate(zip(
+                field_labels, (action, keyboard, controller), (22, 16, 18))):
             ttk.Label(fields, text=label).grid(row=0, column=column, sticky='w')
             ttk.Entry(fields, textvariable=variable, width=width).grid(row=1, column=column,
                                                                         sticky='ew', padx=(0, 8))
@@ -353,7 +383,7 @@ class ControllerProfileWorkspace:
                 profiles.create_profile(self.game_id, name.get().strip() or 'Profile',
                                         layout=layout.get(), bindings=(updated,))
             except profiles.ProfileError as error:
-                messagebox.showerror('Invalid binding', str(error), parent=dialog)
+                messagebox.showerror(self._dialog_text('invalid_binding'), str(error), parent=dialog)
                 return
             selected = tree.selection()
             if selected:
@@ -362,7 +392,8 @@ class ControllerProfileWorkspace:
                 redraw(index)
             else:
                 if any(row.action.casefold() == updated.action.casefold() for row in rows):
-                    messagebox.showerror('Duplicate action', 'Use a unique action label.', parent=dialog)
+                    messagebox.showerror(self._dialog_text('duplicate_action'),
+                                         self._dialog_text('unique_action'), parent=dialog)
                     return
                 rows.append(updated)
                 redraw(len(rows) - 1)
@@ -382,8 +413,9 @@ class ControllerProfileWorkspace:
         tree.bind('<<TreeviewSelect>>', select_row)
         row_buttons = ttk.Frame(body)
         row_buttons.pack(fill='x', pady=(8, 0))
-        ttk.Button(row_buttons, text='Add / update binding', command=upsert_row).pack(side='left')
-        ttk.Button(row_buttons, text='Remove selected binding', command=remove_row).pack(side='left', padx=(6, 0))
+        ttk.Button(row_buttons, text=self._dialog_text('add_update'), command=upsert_row).pack(side='left')
+        ttk.Button(row_buttons, text=self._dialog_text('remove_selected'), command=remove_row).pack(
+            side='left', padx=(6, 0))
         if existing:
             redraw()
         else:
@@ -393,34 +425,35 @@ class ControllerProfileWorkspace:
 
         def save():
             try:
-                selected_preset = (existing.preset_id if existing else next(
-                    (key for key, label in PRESET_LABELS.items()
-                     if label == preset_choice.get()), 'custom'))
+                selected_preset = (existing.preset_id if existing else
+                                   self._preset_id_from_label(preset_choice.get()))
                 profile = profiles.create_profile(
                     self.game_id, name.get(), layout=layout.get(), bindings=tuple(rows),
                     preset_id=selected_preset,
                     profile_id=existing.profile_id if existing else None)
                 self.store.save_profile(profile)
             except profiles.ProfileError as error:
-                messagebox.showerror('Could not save profile', str(error), parent=dialog)
+                messagebox.showerror(self._dialog_text('save_error'), str(error), parent=dialog)
                 return
             dialog.destroy()
             self._load_profiles(profile.profile_id)
 
         footer = ttk.Frame(body)
         footer.pack(fill='x', pady=(12, 0))
-        ttk.Label(footer, text='Starter bindings are suggestions, not game-confirmed defaults.',
+        ttk.Label(footer, text=self._dialog_text('starter_note'),
                   style='Muted.TLabel').pack(side='left')
-        ttk.Button(footer, text='Cancel', command=dialog.destroy).pack(side='right')
-        ttk.Button(footer, text='Save profile', command=save).pack(side='right', padx=(0, 6))
+        ttk.Button(footer, text=self._dialog_text('cancel'), command=dialog.destroy).pack(side='right')
+        ttk.Button(footer, text=self._dialog_text('save'), command=save).pack(side='right', padx=(0, 6))
 
     def _apply_preset_to_dialog(self, preset_choice, layout, rows, redraw):
-        preset_id = next((key for key, label in PRESET_LABELS.items()
-                          if label == preset_choice.get()), 'blank')
+        preset_id = self._preset_id_from_label(preset_choice.get())
         preset = profiles.PRESETS[preset_id]
         layout.set(preset['layout'])
         rows[:] = list(preset['bindings'])
         redraw()
+
+    def _preset_id_from_label(self, label):
+        return next((key for key in PRESET_LABELS if self._preset_label(key) == label), 'blank')
 
     def delete_profile(self):
         profile = self._selected_profile()

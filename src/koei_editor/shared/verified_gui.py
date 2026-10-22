@@ -152,8 +152,10 @@ class Editor(Appearance):
         self.workspace_tabs = ttk.Notebook(host)
         self.workspace_tabs.pack(fill='both', expand=True, padx=12, pady=(0, 8))
         self.dashboard_page = ttk.Frame(self.workspace_tabs)
+        self.completion_page = ttk.Frame(self.workspace_tabs)
         self.edit_page = ttk.Frame(self.workspace_tabs)
         self.workspace_tabs.add(self.dashboard_page, text='Progression Dashboard')
+        self.workspace_tabs.add(self.completion_page, text='Completion Companion')
         self.workspace_tabs.add(self.edit_page, text='Edit Fields')
         self.scenario_view = None
         scenario_title = getattr(self.presentation, 'scenario_view_title', None)
@@ -171,6 +173,10 @@ class Editor(Appearance):
             ProgressionDashboard(self.layout.title, note='Open a save copy to explore its verified values.'),
             on_navigate=self.navigate_dashboard_field, theme=theme)
         self.dashboard_view.pack(fill='both', expand=True)
+        from koei_editor.shared.completion_checklist_view import CompletionChecklistView
+        self.completion_companion_view = CompletionChecklistView(
+            self.completion_page, self.game_id)
+        self.completion_companion_view.pack(fill='both', expand=True)
         host = self.edit_page
         filter_bar = ttk.Frame(host, padding=(18, 0))
         filter_bar.pack(fill='x')

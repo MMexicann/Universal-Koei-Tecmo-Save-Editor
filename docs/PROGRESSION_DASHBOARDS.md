@@ -1,8 +1,9 @@
 # Progression dashboards
 
 Open a separate, qualified save copy. **Progression Dashboard** is the first
-workspace tab in scalar editors; **Edit Fields** retains the existing editor.
-Dynasty Warriors 3 Remastered has a Dashboard tab beside its dedicated forms.
+workspace tab in scalar editors; **Completion Companion** and **Edit Fields** are
+separate tabs. Dynasty Warriors 3 Remastered has the same companion beside its
+Dashboard and dedicated editing forms.
 
 Choose a section, search for a record or value, or select a card. Large inventories
 are divided into pages so the interface stays responsive. Selected-record details
@@ -27,6 +28,25 @@ The dashboard is read only and shows the **opened snapshot**, not a preview of
 pending edits. Use Edit Fields and Review Changes for staged values. Save As
 refreshes the snapshot from the validated destination copy. Switching sessions,
 themes, searches and cards never writes a game save.
+
+## Completion Companion
+
+The companion keeps two sources separate. **Platform achievements** shows
+achievement names and locked/unlocked states only when a supported source returns
+verified data. Source and retrieval time are shown with those states; unknown or
+partial results remain **Unavailable**. A verified snapshot must include a
+nonempty source identity and retrieval time in UTC `YYYY-MM-DDTHH:MM:SSZ` format;
+otherwise its states remain **Unavailable**. A source-provided unlocked count
+appears only when all listed achievement states are verified. No aggregate
+completion percentage is calculated. When no supported source is connected, the
+companion states that achievement information is unavailable.
+
+**Manual checklist** is optional and starts empty. Add your own item text, then
+mark or remove entries as you like. Every row is labelled **Manual**; its checked
+state is not read from a save or platform. Entries are stored in the local
+`completion_checklists.json` settings file per exact game/platform. The checklist
+is separate from the immutable save dashboard and is not included in save editing
+or dashboard reports.
 
 ## Standalone HTML reports
 

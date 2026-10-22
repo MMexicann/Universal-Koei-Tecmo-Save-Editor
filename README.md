@@ -20,6 +20,9 @@ themes. No Python installation is needed for the Windows app.
 
 - **Explore progression:** browse read-only cards for verified opened-save values,
   equipment and mapped collections. [Dashboards](docs/PROGRESSION_DASHBOARDS.md).
+- **Track completion:** check achievements only when a supported platform source
+  verifies them, or keep an optional manual checklist. Unavailable states remain
+  clearly marked.
 
 - **Edit saves:** search fields and records, adjust values, inspect equipment,
   review named before/after changes, and save a separate edited copy.

@@ -1,10 +1,15 @@
+import ctypes
 import hashlib
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from koei_editor.shared.mod_workshop.asset_explorer import (
     AssetSafetyError,
+    _is_link_or_reparse_point,
     hash_project_file,
     normalize_target_path,
     read_verified_replacement,
@@ -49,6 +54,23 @@ class AssetExplorerTests(unittest.TestCase):
         relative, digest = hash_project_file(self.root, self.source)
         self.assertEqual(relative, "assets/new-texture.bin")
         self.assertEqual(digest, hashlib.sha256(self.source.read_bytes()).hexdigest())
+
+    @unittest.skipUnless(os.name == "nt", "Windows short-path aliases are platform specific.")
+    def test_registration_accepts_windows_short_path_for_file_inside_project(self):
+        buffer = ctypes.create_unicode_buffer(32768)
+        get_short_path_name = ctypes.windll.kernel32.GetShortPathNameW
+        get_short_path_name.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint)
+        get_short_path_name.restype = ctypes.c_uint
+        length = get_short_path_name(str(self.source), buffer, len(buffer))
+        if not length:
+            self.skipTest("The temporary directory has no available 8.3 short path.")
+        short_source = Path(buffer.value)
+        if os.path.normcase(os.path.abspath(short_source)) == os.path.normcase(
+            os.path.abspath(self.source)
+        ):
+            self.skipTest("The temporary directory has no distinct 8.3 short-path alias.")
+        record = self.register(source_file=short_source)
+        self.assertEqual(record.source_path, "assets/new-texture.bin")
 
     def test_changed_source_is_detected(self):
         record = self.register()
@@ -123,6 +145,13 @@ class AssetExplorerTests(unittest.TestCase):
             self.skipTest("Symlinks are unavailable on this platform.")
         with self.assertRaisesRegex(AssetSafetyError, "project root cannot be a symbolic link"):
             self.register(project_root=selected_root)
+
+    def test_windows_reparse_point_attribute_is_rejected(self):
+        directory_reparse_point = SimpleNamespace(
+            st_mode=stat.S_IFDIR,
+            st_file_attributes=0x400,
+        )
+        self.assertTrue(_is_link_or_reparse_point(directory_reparse_point))
 
     def test_rights_status_must_be_explicit_and_allowed(self):
         for status in (None, "", "game-original", "game-extracted", "unknown"):

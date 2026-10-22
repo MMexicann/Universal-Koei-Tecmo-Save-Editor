@@ -187,9 +187,12 @@ def _resolve_project_file(
 ) -> tuple[Path, Path]:
     try:
         root_input = Path(project_root).expanduser()
-        if root_input.is_symlink():
-            raise AssetSafetyError("The selected project root cannot be a symbolic link.")
+        root_info = root_input.lstat()
+        if _is_link_or_reparse_point(root_info):
+            raise AssetSafetyError("The selected project root cannot be a symbolic link or junction.")
         root = root_input.resolve(strict=True)
+    except AssetSafetyError:
+        raise
     except (OSError, RuntimeError) as error:
         raise AssetSafetyError("The selected project directory does not exist.") from error
     if not root.is_dir():
@@ -203,7 +206,7 @@ def _resolve_project_file(
     candidate = raw_source if raw_source.is_absolute() else root / raw_source
     try:
         lexical = Path(os.path.abspath(candidate))
-        relative = lexical.relative_to(root)
+        relative = _relative_path_by_identity(root, lexical)
     except (OSError, ValueError) as error:
         raise AssetSafetyError("Replacement files must be inside the selected project directory.") from error
     if not relative.parts:
@@ -213,20 +216,62 @@ def _resolve_project_file(
     for part in relative.parts:
         current = current / part
         try:
-            mode = current.lstat().st_mode
+            source_info = current.lstat()
         except OSError as error:
             raise AssetSafetyError(f"Replacement source is missing: {relative.as_posix()}") from error
-        if stat.S_ISLNK(mode):
-            raise AssetSafetyError("Replacement paths cannot pass through symbolic links.")
+        if _is_link_or_reparse_point(source_info):
+            raise AssetSafetyError("Replacement paths cannot pass through symbolic links or junctions.")
 
     try:
         resolved = candidate.resolve(strict=True)
-        resolved_relative = resolved.relative_to(root)
+        resolved_relative = _relative_path_by_identity(root, resolved)
     except (OSError, RuntimeError, ValueError) as error:
         raise AssetSafetyError("Replacement files must resolve inside the selected project directory.") from error
     if not stat.S_ISREG(resolved.stat().st_mode):
         raise AssetSafetyError("Replacement sources must be regular files.")
     return resolved, resolved_relative
+
+
+def _relative_path_by_identity(root: Path, candidate: Path) -> Path:
+    """Return a path below root, tolerating filesystem aliases such as Windows 8.3 names.
+
+    pathlib's lexical relative check can reject two paths that refer to the
+    same directory when one uses a Windows short name. Walk the candidate's
+    parents by filesystem identity instead, then keep the existing lstat walk
+    below root responsible for rejecting symlink traversal.
+    """
+    parts: list[str] = []
+    current = candidate
+    while True:
+        try:
+            same_as_root = os.path.samefile(current, root)
+        except FileNotFoundError:
+            same_as_root = False
+        except OSError as error:
+            raise ValueError("Could not safely establish project path containment.") from error
+        if same_as_root:
+            try:
+                current_info = current.lstat()
+            except OSError as error:
+                raise ValueError("Could not safely inspect the selected project path.") from error
+            if _is_link_or_reparse_point(current_info):
+                raise ValueError("A symbolic link cannot stand in for the project root.")
+            return Path(*reversed(parts))
+
+        parent = current.parent
+        if parent == current:
+            break
+        parts.append(current.name)
+        current = parent
+
+    raise ValueError("Path is not below the selected project directory.")
+
+
+def _is_link_or_reparse_point(info: os.stat_result) -> bool:
+    if stat.S_ISLNK(info.st_mode):
+        return True
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    return bool(getattr(info, "st_file_attributes", 0) & reparse_flag)
 
 
 def _hash_open_project_file(source: Path) -> str:

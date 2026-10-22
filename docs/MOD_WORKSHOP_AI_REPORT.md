@@ -27,11 +27,20 @@ features:
     per_replacement_limit_bytes: 268435456
     total_uncompressed_limit_bytes: 1073741824
 tests:
-  command: "PYTHONPATH=src python -m unittest discover -s tests -p 'test_mod_workshop_*.py' -v"
-  passed: 43
+  command: "PYTHONPATH=src python -m unittest tests.test_mod_workshop_assets tests.test_mod_workshop_packaging tests.test_mod_workshop_projects tests.test_mod_workshop_validation tests.test_mod_workshop_gui"
+  passed: 44
   failed: 0
-  skipped: 2
-  skip_reason: "GUI integration needs a display, unavailable in the headless review environment."
+  skipped: 3
+  skip_reason: "Two GUI tests need a display; the Windows 8.3 path test runs only on Windows."
+full_repository_regression:
+  command: "PYTHONPATH=src python -m tools.run_tests --workers 4"
+  modules: 368
+  tests: 3405
+  assertion_failures: 0
+  errors: 1
+  skipped: 949
+  error_module: test_rotk3_dos.py
+  cause: "That existing GUI test opens Tk without checking for a display."
 review:
   independent_read_only_review: complete
   blocking_findings: 0

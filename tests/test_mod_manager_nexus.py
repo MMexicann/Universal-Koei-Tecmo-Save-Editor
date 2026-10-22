@@ -95,7 +95,7 @@ class NexusManagerHandoffTests(unittest.TestCase):
         self.assertEqual(result.status, "imported")
         self.assertEqual(result.mod_id, "downloaded-mod")
         self.assertIn("Review it before enabling or installing", result.message)
-        self.assertTrue(downloader.destination.parent.parent == self.state_dir)
+        self.assertEqual(downloader.destination.parent.parent, self.manager.state_dir)
         self.assertTrue(downloader.destination.name.startswith("sample-mod-"))
         self.assertEqual(downloader.destination.suffix, ".zip")
         self.assertFalse(downloader.destination.exists(), "manager-owned temporary archive should be removed")

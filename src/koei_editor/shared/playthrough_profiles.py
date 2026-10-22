@@ -18,7 +18,7 @@ import uuid
 
 from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.shared.copy_storage import atomic_new
+from koei_editor.shared.copy_storage import atomic_new, new_child_bound
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.save_vault import _ordinary, _profile_path, _read
 
@@ -85,7 +85,7 @@ class PreparedEnvironment:
 
 
 class PlaythroughPreparationError(SaveError):
-    """Preparation failed after a pre-switch copy backup was safely stored."""
+    """Preparation failed after creating a new environment directory."""
 
     def __init__(self, message, *, backup_snapshot_id, destination):
         super().__init__(message)
@@ -567,14 +567,17 @@ class PlaythroughProfileStore:
             if profile.components:
                 component_directory = destination / 'components'
                 component_directory.mkdir(mode=0o700)
-                _ordinary(component_directory, directory=True)
+                component_directory, component_info = _ordinary(
+                    component_directory, directory=True)
+                component_identity = (component_info.st_dev, component_info.st_ino)
                 for component in profile.components:
                     fields = _component_fields(component)
                     digest = _component_digest(fields)
                     document = dict(fields, sha256=digest)
                     raw = _pretty_json(document, MAX_COMPONENT_BYTES)
                     component_path = component_directory / (component.component + '.json')
-                    atomic_new(raw, component_path)
+                    new_child_bound(raw, component_directory, component_path.name,
+                                    component_identity)
                     if _read(component_path, MAX_COMPONENT_BYTES)[0] != raw:
                         raise SaveError('Staged manager component failed its local read-back check.')
                     component_rows.append({
@@ -609,7 +612,7 @@ class PlaythroughProfileStore:
             }
             report_raw = _pretty_json(report, MAX_REPORT_BYTES)
             report_path = destination / 'playthrough-report.json'
-            atomic_new(report_raw, report_path)
+            new_child_bound(report_raw, destination, report_path.name, created_identity)
             if _read(report_path, MAX_REPORT_BYTES)[0] != report_raw:
                 raise SaveError('Environment report failed its local read-back check.')
             if _directory_identity(destination) != created_identity:
@@ -617,12 +620,11 @@ class PlaythroughProfileStore:
             return PreparedEnvironment(destination, save_path, backup_snapshot_id,
                                       report_path, report)
         except Exception as error:
-            if backup_snapshot_id is not None:
-                raise PlaythroughPreparationError(
-                    f'Environment preparation failed after the separate-copy backup was stored. '
-                    f'Save Vault backup snapshot ID: {backup_snapshot_id}. '
-                    f'No live save was written. Review any partial new environment before reuse. '
-                    f'Preparation error: {error}',
-                    backup_snapshot_id=backup_snapshot_id, destination=destination,
-                ) from error
-            raise
+            backup_notice = (f' The separate-copy backup is Save Vault snapshot '
+                             f'{backup_snapshot_id}.' if backup_snapshot_id is not None else '')
+            raise PlaythroughPreparationError(
+                f'Environment preparation failed. No live save was written. '
+                f'Review the new environment at {destination} for partial files before reuse.'
+                f'{backup_notice} Preparation error: {error}',
+                backup_snapshot_id=backup_snapshot_id, destination=destination,
+            ) from error

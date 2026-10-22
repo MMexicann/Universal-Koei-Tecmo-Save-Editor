@@ -104,7 +104,8 @@ apply mods/settings/builds, or write a live save. An optional pre-switch backup
 accepts only a separate copied save and stores it in a new Vault history branch.
 Existing folders and Vault snapshots are never overwritten. An interrupted
 preparation can leave an incomplete new environment folder; its error identifies
-any backup snapshot that was completed before the interruption.
+the folder for review and any backup snapshot that was completed before the
+interruption.
 
 Each preview and prepared environment can export an AI-readable JSON report.
 Reports label the game version as user-asserted and record

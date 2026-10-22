@@ -35,7 +35,7 @@ is an optional separate input. Omit either
 output option to skip that file. The JSON report is deterministic and suitable
 for automated triage; the Markdown report is a readable summary. Both contain
 relative paths only. Inputs must be UTF-8 JSON regular files no larger than
-64 MiB each.
+64 MiB each, with no more than 256 nested objects or arrays.
 
 ## Snapshot contract
 

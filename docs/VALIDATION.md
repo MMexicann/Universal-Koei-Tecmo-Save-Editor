@@ -1470,3 +1470,31 @@ The official release workflow requires complete source/Windows coverage, actual
 portable and standalone startup, active updated Defender scans of exact payloads,
 and artifact integrity before publication. Individual optional native tests skip
 when their private inputs are absent; release CI does not contain player saves.
+
+## Mod Manager Windows path assertion — 2026-10-22
+
+Windows run `39844797122`, shard 0, exposed a stale `startswith()` assertion in
+`test_mod_manager_workspace_is_constructed_once_with_temporary_state`. On
+Windows, `TemporaryDirectory.name` may use an 8.3 alias while the manager stores
+the resolved long path. The test already checks equality with its resolved
+temporary `state_dir`; the redundant prefix assertion has been removed. The
+Mod Manager state path and product behavior are unchanged.
+
+The change is rebased onto `fd17633c45f695fe7d6055d607e579359f285760`.
+Validation after rebase:
+
+| Check | Result |
+| --- | --- |
+| `PYTHONPATH=src python -m unittest tests.test_mod_manager_nexus -v` | 11 passed |
+| Focused `test_mod_manager_workspace_is_constructed_once_with_temporary_state` | Skipped; this environment has no graphical display |
+| `PYTHONPATH=src python -m unittest tests.test_editing_tools_application -v` | 8 skipped; this environment has no graphical display |
+| `PYTHONPATH=src python -m tools.update_supported_games --check` | 98 adapters checked |
+| `python -m tools.package_release --verify-only` | v3.1; 1,283 public source files verified |
+| `git diff --check` | Passed |
+
+The earlier Windows run `39844797122`, before this rebase, passed the Remove
+button assertions, `test_editing_tools_application` (8 tests),
+`test_mod_manager` (12), `test_mod_manager_nexus` (11), and
+`test_mod_manager_transaction_concurrency` (1). Its only shard-0 failure was
+the removed path-prefix assertion. A fresh Windows run on this rebased head is
+pending; it will be queued after the tracker PR's four-shard run completes.

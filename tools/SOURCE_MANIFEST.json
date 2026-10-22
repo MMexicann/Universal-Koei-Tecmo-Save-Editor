@@ -1053,8 +1053,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 96055,
-      "sha256": "58e596914acad8f17923e5fd50be58913245cb49edb4f00d053ab31af0476e08"
+      "bytes": 97690,
+      "sha256": "a03f3e95ea7cadb04e4fa5575a3bc9eac2f4cd0f5163af4e8f5eef91c3d9bfc8"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -4398,8 +4398,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42731,
-      "sha256": "984be573cc025bcef4649d85328341e6e7e7b8a245ebb8cd3de89b76229fa041"
+      "bytes": 42971,
+      "sha256": "3f5777e63f6a85b61d96b1e9f89f2beff7d5350fe990a7dac43c8a87bc54ab5d"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4943,8 +4943,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 17628,
-      "sha256": "01a18be7456968c46b0d71d698896d3914552855d541e88d9e12d6895339422c"
+      "bytes": 18095,
+      "sha256": "bf3f24ae0dbf05c293ef1d0d49379f02c90abd5a99130a91619b078bc5dfd9b5"
     },
     {
       "path": "tests/test_editor.py",
@@ -5278,8 +5278,8 @@
     },
     {
       "path": "tests/test_mod_manager_nexus.py",
-      "bytes": 10941,
-      "sha256": "7967afb2f5350f8ae9523b568648c67488e5edf65f7c6110c880d243e2f22220"
+      "bytes": 10948,
+      "sha256": "8c3bea7dfba738cf0dbb52e8f38f71c5a12b32e2e570f36eff8a95687d657f8d"
     },
     {
       "path": "tests/test_mod_manager_transaction_concurrency.py",

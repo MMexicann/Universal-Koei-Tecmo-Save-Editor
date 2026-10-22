@@ -40,6 +40,7 @@ class Application(Appearance):
         self.converter = None
         self.comparison = None
         self.batch = None
+        self.game_hub = None
         self.save_library = None
         self.mod_manager = None
         self.editing_presets = None
@@ -101,6 +102,7 @@ class Application(Appearance):
         self.navigation = ttk.Frame(top)
         self.navigation.grid(row=1, column=0, columnspan=2, sticky='ew', pady=(10, 0))
         self.home_button = self._translated(ttk.Button(self.navigation, command=self.show_library), 'library')
+        self.game_hub_button = self._translated(ttk.Button(self.navigation, command=self.show_game_hub), 'game_hub')
         self.converter_button = self._translated(ttk.Button(self.navigation, command=self.show_converter), 'converter')
         self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
         self.batch_button = self._translated(ttk.Button(self.navigation, command=self.show_batch), 'batch')
@@ -108,7 +110,7 @@ class Application(Appearance):
         self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
         self.help_menu = tk.Menu(self.help_button, tearoff=False)
         self.help_button.configure(menu=self.help_menu)
-        self._navigation_buttons = (self.home_button, self.converter_button, self.compare_button,
+        self._navigation_buttons = (self.home_button, self.game_hub_button, self.converter_button, self.compare_button,
                                     self.batch_button, self.save_library_button, self.help_button)
         self.navigation.bind('<Configure>', self._schedule_navigation)
         self._layout_navigation()
@@ -288,7 +290,8 @@ class Application(Appearance):
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'editing_presets', 'mod_manager', 'research_lab', 'research_import',
-                                            'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder')
+                                            'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder',
+                                            'game_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -527,7 +530,7 @@ class Application(Appearance):
         entries = [CommandEntry('game:' + game.id, game.title + ' · ' + game.subtitle,
                                 'game', game.platform, game.id + ' ' + game.description)
                    for game in self.library_games]
-        for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
+        for key in ('library', 'game_hub', 'converter', 'comparison', 'batch', 'save_library',
                     'help', 'compatibility', 'versions', 'workflows', 'feedback', 'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         for key in self._optional_tool_routes():
@@ -578,7 +581,7 @@ class Application(Appearance):
         if category == 'tool':
             methods = {'library': self.show_library, 'converter': self.show_converter,
                        'comparison': self.show_comparison, 'batch': self.show_batch,
-                       'save_library': self.show_save_library}
+                       'game_hub': self.show_game_hub, 'save_library': self.show_save_library}
             methods.update(self._optional_tool_routes())
             if key in methods:
                 result = methods[key]()
@@ -884,7 +887,7 @@ class Application(Appearance):
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def _tool_workspaces(self):
-        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
+        return tuple(tool for name in ('converter', 'comparison', 'batch', 'game_hub', 'save_library',
                                        'mod_manager', 'editing_presets', 'research_lab', 'research_import',
                                        'nexus_mods', 'asset_explorer',
                                        'workflow_builder', 'emulator_hub', 'help_center')
@@ -1025,6 +1028,23 @@ class Application(Appearance):
         self._show_editing_tool(self.emulator_hub, self.tr('emulator_hub'))
         self._remember_workspace('tool:emulator_hub')
         return self.emulator_hub
+
+    def show_game_hub(self):
+        from koei_editor.shared.game_hub_gui import GameHubWorkspace
+        if self.game_hub is None:
+            self.game_hub = GameHubWorkspace(self.root, self.workspace,
+                                             preferences_path=self.preferences_path)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self._set_active_game(None)
+        self.game_hub.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(self.tr('game_hub'))
+        self._remember_workspace('tool:game_hub')
+        self.game_hub.apply_theme(THEMES[self.theme_name.get()])
+        self.game_hub.on_show()
+        return self.game_hub
 
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace

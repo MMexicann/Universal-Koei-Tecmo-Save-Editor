@@ -3,7 +3,7 @@
 LANGUAGES = {'en': 'English', 'de': 'Deutsch'}
 
 _EN = {
-    'library': '‹ Game Library', 'converter': 'Save Converter',
+    'library': '‹ Game Library', 'game_hub': 'Game Hub', 'converter': 'Save Converter',
     'comparison': 'Compare Saves', 'batch': 'Batch Converter', 'save_library': 'Save Library',
     'help': 'Help Center', 'compatibility': 'Compatibility Center', 'versions': 'Game Version Tracker', 'workflows': 'Guides',
     'editing_presets': 'Reusable Editing Presets', 'transfer': 'Transfer from Save Copy',
@@ -80,7 +80,7 @@ _EN = {
     'nexus_sort_updated': 'Recently updated', 'nexus_sort_endorsements': 'Endorsements',
 }
 _DE = {
-    'library': '‹ Spielebibliothek', 'converter': 'Spielstand konvertieren',
+    'library': '‹ Spielebibliothek', 'game_hub': 'Spielzentrale', 'converter': 'Spielstand konvertieren',
     'comparison': 'Spielstände vergleichen', 'batch': 'Stapelkonvertierung', 'save_library': 'Spielstandbibliothek',
     'help': 'Hilfezentrum', 'compatibility': 'Kompatibilität', 'versions': 'Spielversions-Tracker', 'workflows': 'Anleitungen',
     'editing_presets': 'Wiederverwendbare Bearbeitungsvorlagen', 'transfer': 'Aus Spielstandkopie übertragen',

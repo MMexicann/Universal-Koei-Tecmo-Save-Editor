@@ -1498,3 +1498,25 @@ button assertions, `test_editing_tools_application` (8 tests),
 `test_mod_manager_transaction_concurrency` (1). Its only shard-0 failure was
 the removed path-prefix assertion. A fresh Windows run on this rebased head is
 pending; it will be queued after the tracker PR's four-shard run completes.
+
+## Completion Companion Windows fixture assertions — 2026-10-22
+
+The Completion Companion GUI test expected old status wording and a singular
+entry label. The test now follows the current labels and verifies the actual
+entry collection. Product code is unchanged.
+
+This change is based on `8faac64bf1601be00048248ef35bf6df9b74270b`, which
+includes the merged Mod Manager Windows fixture fixes. Local validation on
+this base:
+
+| Check | Result |
+| --- | --- |
+| `PYTHONPATH=src python -m unittest tests.test_completion_companion_view -v` | 9 tests; 7 passed, 2 GUI tests skipped because this environment has no display |
+| `PYTHONPATH=src python -m tools.update_supported_games --check` | 98 adapters checked |
+| `python -m tools.package_release --verify-only` | v3.1; 1,286 public source files verified |
+| `git diff --check` | Passed |
+
+Windows run `39856540396` on the preceding `c5b7fdb` base passed
+`test_completion_companion_view.py` (9 tests, no failures or skips). A new
+Windows run is pending for this rebased head so the fixture change is checked
+with the current main branch.

@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 7664,
-      "sha256": "b5217815d37e3b9b76518ed1adfde09743bd538bd1eafa545dd11d41210820e1"
+      "bytes": 7971,
+      "sha256": "0d94593d71d329cbcdcef88f99075d5f76611c166733658feabefdeb675bce72"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -432,6 +432,11 @@
       "sha256": "c7fd0d517a4cac8b5c3411c91340b68589ce029a415a918478a8c5066e3bf5c2"
     },
     {
+      "path": "docs/GAME_CONFIGURATION.md",
+      "bytes": 10103,
+      "sha256": "db11584dd87c7a04250bda1a37be8739a3e188f92b3148e4224403f9527960a7"
+    },
+    {
       "path": "docs/GAME_MECHANICS.md",
       "bytes": 26436,
       "sha256": "9e3cdaed1ee5e58e98255e8fa9e62cbb54f9b75e300771131062cc1767d950da"
@@ -728,8 +733,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 17149,
-      "sha256": "a2df95a6f2cf60ea443663da3f946630119b95d6041c5f54ec13cbc46f82eaf8"
+      "bytes": 17255,
+      "sha256": "99111b07823ecf741160fe272c5dd628ed2a62dab718c53692ea0f83873b516a"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -898,8 +903,8 @@
     },
     {
       "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
-      "bytes": 4499,
-      "sha256": "537764dc77b14bc4a47ffd55738eebed31a4a86fda8a3c6a58fb920e66d96557"
+      "bytes": 4921,
+      "sha256": "364a0e401647b10a6bab8c938556fde4799e09d432999b42a1ec6d96e3552e8c"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -1058,8 +1063,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 97690,
-      "sha256": "a03f3e95ea7cadb04e4fa5575a3bc9eac2f4cd0f5163af4e8f5eef91c3d9bfc8"
+      "bytes": 98779,
+      "sha256": "a7354f48b20cdc36caad7306d17e879247409cc4a1d9ef6e1af147f88a44b187"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -1383,8 +1388,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 84104,
-      "sha256": "9a56cad23b99af74024779be4f9a31caf4f8397bcd942354e9e1eea97b322d51"
+      "bytes": 84946,
+      "sha256": "bb6e98863662d5c137b2c0df8b035757d5c94b4ac12ce0d88eba0cc94ed374cc"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4012,6 +4017,16 @@
       "sha256": "0423bc266344461b8e0b3d95255a5a7a2840732739bc5d6434d551790095447f"
     },
     {
+      "path": "src/koei_editor/shared/configuration_gui.py",
+      "bytes": 30969,
+      "sha256": "69e5bef94b6772490e44ed9a16fec0dd3bc009496a8fa1e7aaf09d75bd070ac6"
+    },
+    {
+      "path": "src/koei_editor/shared/configuration_manager.py",
+      "bytes": 47413,
+      "sha256": "983edcaf1ea91e1735006f68bd69c5d2387e71dcc258fb4b59bab8e925508feb"
+    },
+    {
       "path": "src/koei_editor/shared/conversion_gui.py",
       "bytes": 18958,
       "sha256": "9b3860f7e3d2654477afd19ebf452685ef81547c402fd774fbc56a305d6229bc"
@@ -4108,8 +4123,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 14507,
-      "sha256": "49e80db841931ca495f42f28b6164b4e2ad79f0c2a14078ff3279980b115919e"
+      "bytes": 14622,
+      "sha256": "a859da769978f2958ebd317a5f60920b8bfd9e704309a2055adbe3e499dbe1c4"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4413,8 +4428,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 43644,
-      "sha256": "35d77b5b52efc3f5200968b801a02f77900d1d9f73e3415315e230a9ec0600ea"
+      "bytes": 44126,
+      "sha256": "9b40f5d6d834bb848a2e42df3bc9ebf358f5c440afbe8adc087e49a25bc6dbed"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4633,8 +4648,18 @@
     },
     {
       "path": "tests/test_completion_companion_view.py",
-      "bytes": 10899,
-      "sha256": "aa9c28420aae0a461c6d99d5d3129b2bff81e7d2b211f3efbc6121895ffd36e7"
+      "bytes": 10949,
+      "sha256": "2b1594778ed2d566a9066475661af88ae6a68cd5bcb0137bf519bf27f72a780e"
+    },
+    {
+      "path": "tests/test_configuration_gui.py",
+      "bytes": 11412,
+      "sha256": "04cc50662e1b96f3a0c4e6c285a19708ef306ada2b6cd7feb06564e6ffbebbb0"
+    },
+    {
+      "path": "tests/test_configuration_manager.py",
+      "bytes": 17814,
+      "sha256": "c536157960ec8378e685eca1adaad505f77d86a5ecb81c8197c88a720a2f2352"
     },
     {
       "path": "tests/test_console_context_regressions.py",
@@ -4958,8 +4983,8 @@
     },
     {
       "path": "tests/test_editing_tools_application.py",
-      "bytes": 18095,
-      "sha256": "bf3f24ae0dbf05c293ef1d0d49379f02c90abd5a99130a91619b078bc5dfd9b5"
+      "bytes": 18684,
+      "sha256": "9d4228a3af167954b829311090e6401efc4af2fa6102d06ee0fd72a816f34be7"
     },
     {
       "path": "tests/test_editor.py",
@@ -4978,8 +5003,8 @@
     },
     {
       "path": "tests/test_emulator_hub.py",
-      "bytes": 21654,
-      "sha256": "7250158e7d0599e2d90a805a0bd54c4b1b5e19e390b2448f4528f5e556e0ef37"
+      "bytes": 21664,
+      "sha256": "3888a52fcc25ef573aebce2a4c147048333a7c9df7dedc1d824d4948446b6ca3"
     },
     {
       "path": "tests/test_emulator_nintendo_providers.py",
@@ -5577,6 +5602,11 @@
       "sha256": "b640f6fa5aaa1ddc3bab0ed143e6407bf37426856642def73564366b2bd33224"
     },
     {
+      "path": "tests/test_playthrough_profiles.py",
+      "bytes": 29822,
+      "sha256": "830c95b9e6771e04238f5c55a3d14f2d65e07d238f767eba6349e725aa01f7f5"
+    },
+    {
       "path": "tests/test_playthrough_profiles_gui.py",
       "bytes": 1603,
       "sha256": "4f47ce380f25ffe854a5ae7af2faca5c250398515d8b4d203a916d9e39b16e00"
@@ -5693,8 +5723,8 @@
     },
     {
       "path": "tests/test_research_import.py",
-      "bytes": 10588,
-      "sha256": "fac208448f26e6bc82d314261ab187c714b6ab9360bddae05e6f0004917a0597"
+      "bytes": 10963,
+      "sha256": "8ea39876b2abedc881b244b709124157ccd50237bec3c401ac2889d69989b97e"
     },
     {
       "path": "tests/test_research_lab.py",
@@ -6168,8 +6198,8 @@
     },
     {
       "path": "tests/test_universal_packaging.py",
-      "bytes": 16316,
-      "sha256": "929386603cfec325c945506551259d8c66ccdd9b7f949d759e76fa9e04399f7f"
+      "bytes": 16521,
+      "sha256": "1cfae2f2702a3c5892e30d8a4bb7df10970f89e79624fd780cd2123d72a8104b"
     },
     {
       "path": "tests/test_v27_dw8_wo3_dashboards.py",
@@ -6388,8 +6418,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 3817,
-      "sha256": "2b8f3bef3ce8af5e5a86fc4a6dc36287a2fda54697a83182ee24e97b9d15f8af"
+      "bytes": 4057,
+      "sha256": "15e304f2915bef627611a29c5d23b8b865b012d107decad43eea68c7e1b5f89e"
     },
     {
       "path": "tools/check_community_plugins.py",
@@ -6408,8 +6438,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 35361,
-      "sha256": "a05021f284f857c4f21c2151eb5d441c97711020b375fc4d9a07674d9a96f98a"
+      "bytes": 35439,
+      "sha256": "299c67dcf857869d71a6b9cf674082aa97cfc067d34799778497aac09544298a"
     },
     {
       "path": "tools/refresh_manifest.py",

@@ -59,11 +59,16 @@ An exported UTF-8 JSON component has this shape:
 The profile store validates bounded JSON, rejects duplicate keys and nonfinite
 numbers, checks the provider/component pair, and requires exact game and version
 matches. It binds a SHA-256 digest to each component in the profile manifest and
-staged artifact. Components are opaque data: this checkout does not include the
-Game Hub, Mod Manager, Configuration Manager or Character Workshop execution
-interfaces, so it cannot export from or apply to those managers. A future adapter
-can exchange the typed `ProfileComponentSnapshot` without treating a profile as
-an executable command.
+staged artifact. Components are opaque data and are not applied to the game.
+Profiles accept bounded JSON imports; they do not automatically export from or
+apply through the manager tools. The Configuration Manager is available as a
+separate tool, but it does not yet export this component envelope. Its current
+Arland DX PC catalog IDs do not match a registered save-game identity, and its
+profiles do not establish an exact installed game version, so those settings
+cannot yet be attached to a Save Vault playthrough. Do not substitute a
+configuration ID for a save ID or a settings format revision for a game version.
+A future adapter needs a shared registered game identity and exact version
+evidence before it can export a path-free `game_settings` snapshot.
 
 ## Reports
 

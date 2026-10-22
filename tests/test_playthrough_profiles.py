@@ -1,6 +1,7 @@
 """Integration coverage for safe, vault-backed playthrough environments."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -256,6 +257,54 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertFalse(destination.exists())
         self.assertEqual(self.source.read_bytes(), self.raw)
         self.assertEqual((self.source.parent / 'PARAM.SFO').read_bytes(), self.context)
+
+    def test_profile_manifest_writer_stays_bound_to_checked_store_directory(self):
+        profile_directory = self.vault.root / 'playthrough_profiles'
+        displaced_directory = self.root / 'displaced-playthrough-profiles'
+        outside = self.root / 'outside-profile-store'
+        outside.mkdir()
+        original_new_child_bound = playthrough_profiles_module.new_child_bound
+        race_injected = False
+
+        def replace_profile_store_before_manifest(data, directory, name, expected_identity):
+            nonlocal race_injected
+            if (not race_injected and Path(directory) == profile_directory
+                    and name.endswith('.json')):
+                Path(directory).rename(displaced_directory)
+                try:
+                    Path(directory).symlink_to(outside, target_is_directory=True)
+                except OSError as error:
+                    displaced_directory.rename(profile_directory)
+                    self.skipTest(f'Host cannot create a directory symlink: {error}')
+                race_injected = True
+                try:
+                    return original_new_child_bound(data, directory, name, expected_identity)
+                finally:
+                    Path(directory).unlink()
+                    displaced_directory.rename(profile_directory)
+            return original_new_child_bound(data, directory, name, expected_identity)
+
+        with patch.object(playthrough_profiles_module, 'new_child_bound',
+                          side_effect=replace_profile_store_before_manifest):
+            with self.assertRaises(SaveError):
+                self.make_profile()
+
+        self.assertTrue(race_injected, 'the test must swap the profile store before manifest creation')
+        self.assertEqual(list(outside.iterdir()), [])
+        self.assertEqual(self.store.list_profiles(), ())
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows native child writer coverage')
+    def test_windows_bound_child_writer_accepts_unicode_string_pointer(self):
+        from koei_editor.shared.copy_storage import new_child_bound
+
+        directory = self.root / 'windows-bound-writer'
+        directory.mkdir()
+        info = directory.stat()
+        data = b'playthrough report fixture'
+
+        output = new_child_bound(data, directory, 'report.json', (info.st_dev, info.st_ino))
+
+        self.assertEqual(output.read_bytes(), data)
 
     def test_components_parent_symlink_race_cannot_redirect_staging_outside_environment(self):
         profile = self.make_profile()

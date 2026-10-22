@@ -226,7 +226,8 @@ def _new_child_windows(data, directory, name, expected_identity):
 
         encoded_name = name.encode('utf-16-le')
         name_buffer = ctypes.create_unicode_buffer(name)
-        unicode_name = UNICODE_STRING(len(encoded_name), len(encoded_name) + 2, name_buffer)
+        name_pointer = ctypes.cast(name_buffer, wintypes.LPWSTR)
+        unicode_name = UNICODE_STRING(len(encoded_name), len(encoded_name) + 2, name_pointer)
         object_attributes = OBJECT_ATTRIBUTES(
             ctypes.sizeof(OBJECT_ATTRIBUTES), parent, ctypes.pointer(unicode_name),
             OBJ_CASE_INSENSITIVE, None, None)

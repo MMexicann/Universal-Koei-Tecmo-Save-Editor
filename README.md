@@ -116,9 +116,7 @@ release is published; the v3.1 downloads retain their published feature set.
 
 ## Run from source and contribute
 
-For the development features above, clone this repository or download and extract
-the [main source archive](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/archive/refs/heads/main.zip).
-With Python 3.10 or newer and Tkinter, run from the extracted repository root:
+Clone this repository or [download and extract main](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/archive/refs/heads/main.zip) for development features. With Python 3.10 or newer and Tkinter, run from the repository root:
 
 ```text
 python -m pip install -e .

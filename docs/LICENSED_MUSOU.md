@@ -230,9 +230,38 @@ PS2 Gundam 1/2 need extracted memory-card gameplay entries with native identity,
 revision, layout and integrity; exact entry filenames are not established here.
 Xbox 360 Gundam 1/2/3 and Ken's Rage 1/2 need separately extracted gameplay
 entries, exact title/region/build, endianness and game checksums; native filenames
-remain unqualified and CON/STFS signing stays external. Shin Gundam Musou Vita
-and Ken's Rage 2 Wii U similarly need their own complete decrypted/extracted
-gameplay files and platform-specific profiles. None can reuse PS3 offsets.
+remain unqualified and CON/STFS signing stays external. None can reuse PS3
+offsets.
+
+Bandai Namco Holdings' 2013 newsletter confirms Shin Gundam Musou for PS3 and
+PS Vita
+([publisher source](https://www.bandainamco.co.jp/files/ir/newsletter/pdf/bn_news34.pdf)).
+The community [GameFAQs Vita release catalog](https://gamefaqs.gamespot.com/vita/730646-shin-gundam-musou/data)
+lists Japanese Vita product code `PCSG-00278`; treat this as an edition
+identification lead, not native save identity. No Vita profile is registered
+here. Qualification needs that exact title/region/build confirmed from the save;
+a complete native Vita save export with all required companion files; an
+unchanged byte-exact roundtrip; evidence of native integrity behavior; and
+controlled resource, growth, equipment and reward action pairs. The PS3
+`DATA.BIN` layout, checksum and offsets do not qualify Vita data. Ken's Rage 2
+Wii U likewise needs its own complete extracted gameplay files and
+platform-specific profile.
+
+For Gundam Reborn, the public
+[Apollo `BLAS50671` patch](https://github.com/bucanero/apollo-patches/blob/0ccc07ed39ea378db83e9901dbfa610b04637d7d/PS3/BLAS50671.savepatch)
+is an additional Asian PS3 source-map lead. The community [GameFAQs PS3 release
+catalog](https://gamefaqs.gamespot.com/ps3/730646-dynasty-warriors-gundam-reborn/data)
+lists Asian product code `BLAS50671`; both sources identify an edition to
+investigate, not its native save structure. The patch names resource and
+progression targets, but supplies neither a native file nor
+checksum/serialization proof.
+The registered PS3 profile still admits only EU `NPEB02060` and Japan
+`NPJB00533`. To qualify `BLAS50671`, provide its own complete decrypted
+`DATA.BIN` and original identity companion, exact build/DLC confirmed from native
+metadata, an unchanged native control, the full integrity writer or independently
+controlled integrity evidence, and labelled resource plus progression/equipment
+action pairs. Neither catalog nor patch evidence justifies reusing another
+profile's offsets.
 
 ## Sources and licence boundary
 

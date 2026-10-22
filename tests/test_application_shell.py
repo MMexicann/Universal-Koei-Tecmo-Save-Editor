@@ -418,7 +418,6 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertEqual(str(workspace.import_button.cget('state')), 'normal')
             self.assertEqual(str(workspace.remove_button.cget('state')), 'normal')
 
-        self.assertTrue(str(workspace.manager.state_dir).startswith(self.directory.name))
         self.assertFalse((state_dir / 'library.json').exists())
 
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):

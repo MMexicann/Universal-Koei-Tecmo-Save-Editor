@@ -132,6 +132,32 @@ class GameHubGuiTests(unittest.TestCase):
         row = '527270:missing'
         self.assertEqual(hub.table.set(row, 'status'), 'Not detected (partial scan)')
 
+    def test_refresh_failure_preserves_prior_installations(self):
+        install = self.folder / 'Steam' / 'steamapps' / 'common' / 'Atelier Sophie'
+        install.mkdir(parents=True)
+        result = DiscoveryResult(
+            (InstalledGame('atelier_sophie', '527270', install,
+                           build_id='123456', last_updated='1700000000'),),
+            (), (), 'complete', 1, 10, ('atelier_sophie',))
+        hub = GameHubWorkspace(self.root, self.app.workspace,
+                               preferences_path=self.folder / 'preferences.json')
+        hub._result = result
+        hub._installed = {'527270': list(result.installed_games)}
+        hub.render()
+        hub.busy = True
+        hub._results.put((False, None))
+
+        with patch('koei_editor.shared.game_hub_gui.messagebox.showerror'):
+            hub._poll()
+
+        self.assertIs(hub._result, result)
+        self.assertEqual(hub.table.set('527270:0', 'status'), 'Installed')
+        self.assertIn('refresh failed', hub.status.get().casefold())
+
+    def test_tracker_timestamp_string_is_formatted_as_utc(self):
+        self.assertEqual(GameHubWorkspace._updated('1700000000'), '2023-11-14 22:13')
+        self.assertEqual(GameHubWorkspace._updated('not-a-timestamp'), 'Unknown')
+
     def test_cancelled_scan_does_not_report_a_limit(self):
         hub = GameHubWorkspace(self.root, self.app.workspace,
                                preferences_path=self.folder / 'preferences.json')

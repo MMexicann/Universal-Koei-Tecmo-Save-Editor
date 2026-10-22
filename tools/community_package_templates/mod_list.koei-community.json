@@ -1,0 +1,27 @@
+{
+  "schema": "koei-tecmo-community-package",
+  "version": 1,
+  "kind": "mod_list",
+  "id": "community.sample-mod-list",
+  "title": "Fictional mod references",
+  "author": "Community example",
+  "game_id": "sample_game",
+  "platform": "any",
+  "game_version": null,
+  "description": "Fictional metadata references only. No mod files are included or fetched.",
+  "payload": {
+    "mods": [
+      {
+        "id": "mod.example-quality-notes",
+        "title": "Example quality notes",
+        "version": "1.0",
+        "source_url": "https://mods.example.test/example-quality-notes",
+        "sha256": null,
+        "enabled": true
+      }
+    ],
+    "load_order": [
+      "mod.example-quality-notes"
+    ]
+  }
+}

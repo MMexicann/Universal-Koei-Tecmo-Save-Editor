@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Koei Tecmo Community Mod List v1",
+  "description": "A data-only community package. Runtime validation also checks JSON duplicate keys, byte/depth limits, and cross-record references.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "kind",
+    "id",
+    "title",
+    "author",
+    "game_id",
+    "platform",
+    "game_version",
+    "description",
+    "payload"
+  ],
+  "properties": {
+    "schema": {
+      "const": "koei-tecmo-community-package"
+    },
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "mod_list"
+    },
+    "id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "title": {
+      "$ref": "#/$defs/title_text"
+    },
+    "author": {
+      "$ref": "#/$defs/author_text"
+    },
+    "game_id": {
+      "$ref": "#/$defs/game_id"
+    },
+    "platform": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/platform_id"
+        },
+        {
+          "const": "any"
+        }
+      ]
+    },
+    "game_version": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/version_text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "description": {
+      "$ref": "#/$defs/description"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mods": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "version": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/version_text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source_url": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 9,
+                    "maxLength": 2048,
+                    "format": "uri",
+                    "pattern": "^https://[^/@?#]+(?:[/?#][^\\s]*)?$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sha256": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "version",
+              "source_url",
+              "sha256",
+              "enabled"
+            ]
+          },
+          "minItems": 1
+        },
+        "load_order": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+          }
+        }
+      },
+      "required": [
+        "mods",
+        "load_order"
+      ]
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    },
+    "version_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "title_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "author_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "game_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "platform_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    }
+  },
+  "$comment": "The runtime reader enforces a 1 MiB UTF-8 JSON byte limit, duplicate-key rejection, control-character checks, and the documented uniqueness and cross-reference rules."
+}

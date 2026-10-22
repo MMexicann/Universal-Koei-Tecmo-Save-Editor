@@ -58,6 +58,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
 - [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
+- [Koei Tecmo Community Toolkit formats](COMMUNITY_TOOLKIT.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)

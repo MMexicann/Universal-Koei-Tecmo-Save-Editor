@@ -4,6 +4,10 @@ Community plugins add plain-text help, preparation workflows and commands that
 open that content. They cannot edit saves, register a game, run Python, access
 application sessions, open a network connection or invoke operating-system
 commands. Their text is community guidance, not verified compatibility evidence.
+Portable character builds, mod lists, configuration presets, playthrough
+manifests and compatibility reports use the separate
+[Community Toolkit package formats](COMMUNITY_TOOLKIT.md); they do not add plugin
+capabilities.
 The existing explicit [game registry](../src/koei_editor/game_registry.py) and
 [scalar adapter contract](../src/koei_editor/shared/adapter_contract.py) remain
 authoritative for game support and editing.

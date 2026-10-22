@@ -24,6 +24,8 @@ class PackagingTests(unittest.TestCase):
         self.root.mkdir()
         self.sources = {name: b'Public document\n' for name in release.WINDOWS_DOCS}
         self.sources.update({name: b'# Public build helper\n' for name in release.TOOL_FILES})
+        self.sources.update({name: b'# Public community schema or guide\n'
+                             for name in release.COMMUNITY_SCHEMA_FILES | release.SOURCE_ONLY_GUIDES})
         self.sources.update({f'src/koei_editor/data/{name}': b'{}' for name in release.RUNTIME_DATA})
         self.sources.update({name: b'Reviewed runtime license text\n' for name in release.RUNTIME_LICENSES})
         self.sources.update({
@@ -327,6 +329,15 @@ class PackagingTests(unittest.TestCase):
                      'tools/adapter_template/INSTRUCTIONS.md/../private.dat', 'tools/adapter_template/.private.txt',
                      'tools/adapter_template/new_game_parser.py.bak', 'tests/another_helper.py',
                      'tests/scalar_contract.py/../private.dat', 'tests/helpers/scalar_contract.py'):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                release.public_path(name)
+
+    def test_community_schema_paths_are_explicitly_whitelisted(self):
+        for name in release.COMMUNITY_SCHEMA_FILES | release.COMMUNITY_TEMPLATE_FILES:
+            with self.subTest(name=name):
+                self.assertEqual(release.public_path(name).as_posix(), name)
+        for name in ('docs/schemas/private.schema.json', 'docs/schemas/../private.schema.json',
+                     'tools/community_package_templates/private.json'):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 release.public_path(name)
 

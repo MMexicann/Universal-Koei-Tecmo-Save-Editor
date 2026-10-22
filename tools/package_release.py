@@ -20,6 +20,16 @@ TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_rele
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
               'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
               'tools/requirements/build.txt', 'tools/requirements/dev.txt'}
+COMMUNITY_TEMPLATE_FILES = frozenset(
+    f'tools/community_package_templates/{kind}.koei-community.json'
+    for kind in ('character_build', 'mod_list', 'configuration_preset',
+                 'playthrough_manifest', 'compatibility_report'))
+TOOL_FILES.update({'tools/check_community_packages.py'} | COMMUNITY_TEMPLATE_FILES)
+COMMUNITY_SCHEMA_FILES = frozenset(
+    f'docs/schemas/koei-community-{kind}-v1.schema.json'
+    for kind in ('character_build', 'mod_list', 'configuration_preset',
+                 'playthrough_manifest', 'compatibility_report'))
+SOURCE_ONLY_GUIDES = frozenset({'docs/COMMUNITY_TOOLKIT.md'})
 ADAPTER_TEMPLATE_FILES = {'tools/adapter_template/new_game_parser.py', 'tools/adapter_template/new_game_editor.py',
                           'tools/adapter_template/contract_test.py', 'tools/adapter_template/INSTRUCTIONS.md'}
 PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/__init__.py'}
@@ -137,6 +147,7 @@ def public_path(name):
     elif parts[0] == 'docs':
         allowed = (len(parts) == 2 and path.suffix == '.md') or (
             len(parts) == 3 and parts[1] == 'releases' and bool(re.fullmatch(r'v\d+\.\d+(?:\.\d+)?\.md', parts[2])))
+        allowed = allowed or name in COMMUNITY_SCHEMA_FILES
     elif parts[0] == 'tests':
         allowed = allowed or (len(parts) == 2 and parts[1].startswith('test_') and path.suffix == '.py')
     elif parts[0] == 'licenses':
@@ -244,6 +255,7 @@ def verified_sources(root=ROOT):
         sources[name] = data
     required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'docs/RELEASE_NOTES.md',
                                                 '.github/workflows/windows-release.yml'}
+    required.update(SOURCE_ONLY_GUIDES | COMMUNITY_SCHEMA_FILES)
     required.update(_required_runtime(root, sources))
     required.update(PACKAGE_ROOT + '/data/' + name for name in RUNTIME_DATA)
     required.update(RUNTIME_LICENSES)

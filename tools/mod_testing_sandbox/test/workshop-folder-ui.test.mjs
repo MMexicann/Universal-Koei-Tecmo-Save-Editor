@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { createHash, webcrypto } from "node:crypto";
-import { LIMITS, parseManifest, normalizeFolderPaths, validateMod } from "../src/sandbox-core.mjs";
+import { LIMITS, parseManifest, normalizeFolderPaths, validateMod, createWorkshopValidationRecord } from "../src/sandbox-core.mjs";
 
 async function importHandler() {
   const source = await readFile(new URL("../src/main.mjs", import.meta.url), "utf8");
@@ -14,9 +14,9 @@ async function importHandler() {
   const state = { gameId: "wolong", gameVersion: "1.5.0", mods: [], demo: false };
   const saved = [];
   const notices = [];
-  const context = { LIMITS, parseManifest, normalizeFolderPaths, validateMod, state,
+  const context = { LIMITS, parseManifest, normalizeFolderPaths, validateMod, createWorkshopValidationRecord, state,
     crypto: webcrypto, COLOR_CLASSES: ["gold"],
-    MANIFEST_NAMES: new Set(["mod-manifest.json", "koei-mod.json", "manifest.json", "mod.json"]),
+    MANIFEST_NAMES: new Set(["mod-manifest.json", "manifest.json", "mod.json"]),
     toast: (message, options) => notices.push({ message, ...options }),
     saveStagedMod: async (mod) => { saved.push(mod); return false; }, render: () => {},
   };
@@ -59,4 +59,29 @@ test("native Workshop nested manifest is refused by actual folder handler", asyn
   assert.equal(handler.saved.length, 0);
   assert.equal(handler.state.mods.length, 0);
   assert.equal(handler.notices.at(-1).title, "Workshop manifest location");
+});
+
+test("ordinary Sandbox manifest reaches actual folder handler without Workshop classification", async () => {
+  const handler = await importHandler();
+  const manifest = { schemaVersion: 1, id: "ordinary-ui", name: "Ordinary UI", version: "1.0.0",
+    gameId: "wolong", gameVersion: "1.5.0", files: [{ source: "data/skin.bin", target: "Data/Skin.bin" }] };
+  await handler.run([uploaded(JSON.stringify(manifest), "project/mod-manifest.json"), uploaded("inert", "project/data/skin.bin")]);
+  assert.equal(handler.saved.length, 1, JSON.stringify(handler.notices));
+  assert.equal(handler.saved[0].manifestFormat, "koei-mod-sandbox.v1");
+});
+
+test("profile switch during actual folder reading cannot import into the newly selected profile", async () => {
+  const handler = await importHandler();
+  const files = workshopFiles();
+  const realText = files[0].text.bind(files[0]);
+  let release;
+  files[0].text = async () => { await new Promise((resolve) => { release = resolve; }); return realText(); };
+  const pending = handler.run(files);
+  handler.state.gameId = "dw8xl";
+  handler.state.gameVersion = "new-build";
+  release();
+  await pending;
+  assert.equal(handler.saved.length, 0);
+  assert.equal(handler.state.mods.length, 0);
+  assert.equal(handler.notices.at(-1).title, "Profile changed");
 });

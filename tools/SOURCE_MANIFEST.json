@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/mod-testing-sandbox.yml",
-      "bytes": 708,
-      "sha256": "330fbdf547c961d29cd622cf3adf3041a1fd1bf0d40fd55a694ee7f9ff522ced"
+      "bytes": 961,
+      "sha256": "43435910d7d97095eefa6a31c674643508f7efbfc7b77b6c88546466cdfc3b95"
     },
     {
       "path": ".github/workflows/windows-release.yml",
@@ -38,8 +38,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 7961,
-      "sha256": "d0d1495c73eab1d8c1fc5c5c86c8a2135e55e79328b9fe220048016858c9b3b0"
+      "bytes": 7986,
+      "sha256": "ceb2ef6560642541f61b86f00cc81a757b4d232eec26556526035ced223842c5"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -453,8 +453,8 @@
     },
     {
       "path": "docs/GAME_HUB_VALIDATION.md",
-      "bytes": 3302,
-      "sha256": "bb55c5010c9846e7cf8736ad0ddc317eb776697c7cdc389fcf9d9fd9da90507d"
+      "bytes": 2739,
+      "sha256": "fe21cf0bc365472a9b40121dbdeae8c05a8518805af36a5b16019d7731f5e5bf"
     },
     {
       "path": "docs/GAME_MECHANICS.md",
@@ -568,8 +568,8 @@
     },
     {
       "path": "docs/MOD_TESTING_SANDBOX.md",
-      "bytes": 5867,
-      "sha256": "a41210308688d4e845acd38e8116b067815e165f932ba15f84aec1fcdaa95864"
+      "bytes": 5730,
+      "sha256": "b3631668095dab8c294e8bc86cca874fcdf0d9cee5e12f758d1a1c878354a37d"
     },
     {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
@@ -678,8 +678,8 @@
     },
     {
       "path": "docs/PATCH_COMPATIBILITY_ANALYZER.md",
-      "bytes": 6770,
-      "sha256": "75ea8d28d359d5821ac632dad5e04cb32ce31c163bdc13120f91b4d303b51073"
+      "bytes": 7068,
+      "sha256": "bb6b4f81bcc13e672c3cdaec8562ff89d57939599933741748e55467d08a7b7d"
     },
     {
       "path": "docs/PC_EDITOR_ATTEMPTS.md",
@@ -798,8 +798,8 @@
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
-      "bytes": 4734,
-      "sha256": "2a580c77a1e1925f83167930cdf139a59de06e6900342228925c96bc4908c9e0"
+      "bytes": 5012,
+      "sha256": "9d9a2be0cdd52f1d85e3c731f6986af4bd6562c57433b186e4ced28f098e5de7"
     },
     {
       "path": "docs/RESEARCH_IMPORT.md",
@@ -1528,8 +1528,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 86612,
-      "sha256": "f7a9b758fe3e6d281bbc502aa6820d008f515bc9f544b5409f04be60bbba4bbc"
+      "bytes": 86749,
+      "sha256": "a85de2d3ee87f4bb71acdfc977aadbd21569eb29c85fd3835090f9a11783b87d"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4243,8 +4243,8 @@
     },
     {
       "path": "src/koei_editor/shared/game_compatibility.py",
-      "bytes": 59883,
-      "sha256": "75d5983ff346cfc6299adc3dd329850d1e1ba3b2b1263afefdc1d6f0963b8f0f"
+      "bytes": 60090,
+      "sha256": "8782a8a79ec865dbc1a6b188e60d170d287dc14a47aad2e5546e921be3b5ad70"
     },
     {
       "path": "src/koei_editor/shared/game_data_encyclopedia.py",
@@ -4258,8 +4258,8 @@
     },
     {
       "path": "src/koei_editor/shared/game_hub_gui.py",
-      "bytes": 19018,
-      "sha256": "479a300b8012d656c5427d78451f98ee24a49a6c00caf8c955310c009baed55a"
+      "bytes": 19175,
+      "sha256": "14021b6582ad16bb9c5bd8f1b1e0370497b7ae785f7ca8157b714592689929cd"
     },
     {
       "path": "src/koei_editor/shared/game_troubleshooting.py",
@@ -4273,8 +4273,8 @@
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
-      "bytes": 18122,
-      "sha256": "a9ab87527354a4bc324b334bc8fce06405f6c4c1957558d4e89dc38aacf09b45"
+      "bytes": 18280,
+      "sha256": "9125c069d7e8f1ec9690d43c3cab03d71c4268e6449d53c2bb3252350c06a1f5"
     },
     {
       "path": "src/koei_editor/shared/help_content.py",
@@ -4298,8 +4298,8 @@
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
-      "bytes": 91785,
-      "sha256": "4862fce74fb1e97ee10055b1eae8508d23a21da7b35c6839a224c85210519249"
+      "bytes": 92076,
+      "sha256": "e92c6934e2f694672cba0d7074d434302bd6bc7e79e11cc5b29bfc7f60644e74"
     },
     {
       "path": "src/koei_editor/shared/mod_manager_gui.py",
@@ -4587,6 +4587,11 @@
       "sha256": "90568b7463709181f3735baf8112b4153ca837f40a9c70f4df39007caccffc46"
     },
     {
+      "path": "tests/gui_paging.py",
+      "bytes": 1682,
+      "sha256": "2e0cf8dba54f4b4cac04190ffd3660a8f6e1f3509b53d7c379c65e8aac0d3ca9"
+    },
+    {
       "path": "tests/scalar_contract.py",
       "bytes": 5429,
       "sha256": "4054d4a9a19d98332b56bd2ffd2f1597a9870abc1e80c6cbca170b0a0730d597"
@@ -4608,8 +4613,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 50139,
-      "sha256": "cad482000cdf83becd01db394a0518485586e851bf8f031748b68bda7bd8babc"
+      "bytes": 50484,
+      "sha256": "27d36fa6d3c327d64ff665071c37e9e06cdbad561a1477e4dd60172b24b2042c"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4918,13 +4923,13 @@
     },
     {
       "path": "tests/test_dqb2_pc.py",
-      "bytes": 20781,
-      "sha256": "ca89b34280efdbe37658c145225693162667e9474d84bbc5d71be3433e533a4d"
+      "bytes": 21045,
+      "sha256": "d6b388567f0c5d916ddaeb98817045b66504f83f491d31946e08ef5ab0fd65aa"
     },
     {
       "path": "tests/test_dqb2_switch.py",
-      "bytes": 16247,
-      "sha256": "c20e4b9d282fc23fd07ed7962af7fd6cd03272df50ad3bbaff17d7671531d93a"
+      "bytes": 16511,
+      "sha256": "3534be7402dbefbecea1b332339fa3e8ca99eb9d1e850121c66289f7a9b94902"
     },
     {
       "path": "tests/test_dw3_targeted_expansion.py",
@@ -5278,8 +5283,8 @@
     },
     {
       "path": "tests/test_field_pins_review_csv.py",
-      "bytes": 27279,
-      "sha256": "71cf12198c73e2ec993e896580e93a9e3e6537c9c772c0643c48b468cb23a14e"
+      "bytes": 28359,
+      "sha256": "10a4507fe3f49693bf0fab6b6970406f0f0940225c553cb7f1ccfbc758befeaf"
     },
     {
       "path": "tests/test_fire_emblem_warriors.py",
@@ -5318,8 +5323,8 @@
     },
     {
       "path": "tests/test_game_hub_gui.py",
-      "bytes": 8634,
-      "sha256": "9b054e0a9df3115d2756314856b57395b98a5de316769c0363387f82423643d7"
+      "bytes": 8510,
+      "sha256": "c0f8a86802db22223fe20b4adcaa337c697043f7b5c3acc18f13d909b03cddfe"
     },
     {
       "path": "tests/test_game_troubleshooting.py",
@@ -5328,8 +5333,8 @@
     },
     {
       "path": "tests/test_game_troubleshooting_gui.py",
-      "bytes": 15483,
-      "sha256": "e3a182422c25b0446155c0a9908c234955a798d2b6b17361299d6f09734bd990"
+      "bytes": 17857,
+      "sha256": "c6c400bda635db7f69a630b6ef69897081254abb1773e0d80ae8da5d677592ee"
     },
     {
       "path": "tests/test_gemfire_battery.py",
@@ -5403,8 +5408,8 @@
     },
     {
       "path": "tests/test_help_center.py",
-      "bytes": 5226,
-      "sha256": "f1d87531e0836667fd9d8441b38c2d5b314e9e4873df0e7d1511be8ec3fdb42c"
+      "bytes": 5589,
+      "sha256": "84d244f9268fbec5602f5f0013c0cbb88a63d6d4f2f4c9eb8a35e200708a2dd9"
     },
     {
       "path": "tests/test_help_center_integration.py",
@@ -5528,8 +5533,8 @@
     },
     {
       "path": "tests/test_mod_manager.py",
-      "bytes": 26335,
-      "sha256": "d95c6399375fbd495a8e1031b6fb93a66227cdfde30e8a42f02f66df0cbc4263"
+      "bytes": 28943,
+      "sha256": "5c5f04fc0747ea52a707b098e4241d7a1c4b6ff7935ee3d0f9487afa4f1d6e85"
     },
     {
       "path": "tests/test_mod_manager_gui_lifecycle.py",
@@ -5538,8 +5543,8 @@
     },
     {
       "path": "tests/test_mod_manager_nexus.py",
-      "bytes": 13539,
-      "sha256": "04c4e15b1ffa10ac317f60a022eb8a4671072ec0f8d72d30f9772a0752fa93b4"
+      "bytes": 15392,
+      "sha256": "ad806dd0995dfcd7d684a7ab2eef6a6ffa61e28715b1dfefa520877436795b3c"
     },
     {
       "path": "tests/test_mod_manager_transaction_concurrency.py",
@@ -5548,8 +5553,8 @@
     },
     {
       "path": "tests/test_monster_rancher_ds.py",
-      "bytes": 18911,
-      "sha256": "156a590e5e26e79b637a718c2162e1951cdf5792e363ae1f59046f90a6bb0a8e"
+      "bytes": 19652,
+      "sha256": "64e3bcbbbcf0a1c75da85d00c93b1059a778e92d0ee7cf81701015ff52a3f643"
     },
     {
       "path": "tests/test_music_v10.py",
@@ -5698,8 +5703,8 @@
     },
     {
       "path": "tests/test_origins_tools.py",
-      "bytes": 9657,
-      "sha256": "db348f34c35bed8154b1aee891a9b0aeaaf7b5721abc88641ca3ec5aeb8511bf"
+      "bytes": 9782,
+      "sha256": "b385e8653db0cf4c5767ea922ef69bf0faa53fc2e2ced4b2b8e129cd4abb314f"
     },
     {
       "path": "tests/test_origins_weapons.py",
@@ -6068,8 +6073,8 @@
     },
     {
       "path": "tests/test_samurai5_pc.py",
-      "bytes": 16380,
-      "sha256": "4b79a1b00c9b2a375c65bc72da2402ae7e7c197319118bddfd61ba661c2dc278"
+      "bytes": 18352,
+      "sha256": "2ad69eda49e3f73935315caf035f9f1741dd4bdaecb3706fc842af73c5bc474a"
     },
     {
       "path": "tests/test_samurai_dw4_expansion.py",
@@ -6418,8 +6423,8 @@
     },
     {
       "path": "tests/test_universal_app.py",
-      "bytes": 53769,
-      "sha256": "6899e8f69081b12cc432018d5b63e047da9ac122b4f0d26baffe80219300e391"
+      "bytes": 56250,
+      "sha256": "92ed5b681f6a438afe6c589969bc90310dcabaaf555174e7a700957464dd4ad8"
     },
     {
       "path": "tests/test_universal_packaging.py",
@@ -6463,8 +6468,8 @@
     },
     {
       "path": "tests/test_version_tracker.py",
-      "bytes": 16676,
-      "sha256": "5085e6cfeeafc72e4bb4fdc04884da252f1b50866d9a06233cf95b156a638ed2"
+      "bytes": 18004,
+      "sha256": "3cd3f52c18ef4585145a08926db1e0b37210294ba2b3cfcc3f530b5e6486a94f"
     },
     {
       "path": "tests/test_weapon_attributes.py",
@@ -6698,13 +6703,13 @@
     },
     {
       "path": "tools/mod_testing_sandbox/README.md",
-      "bytes": 2456,
-      "sha256": "3a5b4789179ad2908707ac77e1b14911be5208ed5357499cf18a1cdfb37d29af"
+      "bytes": 3021,
+      "sha256": "05f9df1f90a6e9747dfd2ef4745359ec11df81fa21e4318df5374abc49ed28ee"
     },
     {
       "path": "tools/mod_testing_sandbox/index.html",
-      "bytes": 22710,
-      "sha256": "7d892835432b99dfde662f6185dbaf85d9474c47658813b4ef666231770482b6"
+      "bytes": 23038,
+      "sha256": "b3e7581885852c29930d358372e48db1b5e004570418f73f3d9816e3801ee246"
     },
     {
       "path": "tools/mod_testing_sandbox/package.json",
@@ -6718,13 +6723,13 @@
     },
     {
       "path": "tools/mod_testing_sandbox/src/main.mjs",
-      "bytes": 43868,
-      "sha256": "da54853c21cf9ccaeccc224d240e2af50dedc2752d183ed4f8eee175311dc6f6"
+      "bytes": 51611,
+      "sha256": "6ce640166503dcfceff919080f39d894ac0e63e5067e8a4504a75628e92d0f6b"
     },
     {
       "path": "tools/mod_testing_sandbox/src/sandbox-core.mjs",
-      "bytes": 42386,
-      "sha256": "0a243efb4f5086e627864251e5c7700f1e30e1c85c1d5945a55078cb152866e7"
+      "bytes": 48238,
+      "sha256": "e56e9a55f66e6405296f2deccb99dcde2be32e7726d7e82026c8a16859de2f6e"
     },
     {
       "path": "tools/mod_testing_sandbox/src/styles.css",
@@ -6733,28 +6738,28 @@
     },
     {
       "path": "tools/mod_testing_sandbox/src/workspace-store.mjs",
-      "bytes": 8969,
-      "sha256": "5c6e9b8f76f2e0ced86fcfd5d81ede01acf0e77eac8718d7fa164dbe825b365a"
+      "bytes": 9415,
+      "sha256": "9c9dff985d0be84b8e99b090a3fd5f1f95a95510b0f9b39757ed72d494607486"
     },
     {
       "path": "tools/mod_testing_sandbox/test/security.test.mjs",
-      "bytes": 27659,
-      "sha256": "8a2e015537234d7ff2ae80cad1b2a67ceb6b19ee6d02249f66bd107b6a98f78c"
+      "bytes": 40962,
+      "sha256": "231069a4132a1a2ed8daca586297240daff2b7b8054a414de2d9f46303d14d35"
     },
     {
       "path": "tools/mod_testing_sandbox/test/workshop-folder-ui.test.mjs",
-      "bytes": 3279,
-      "sha256": "515e0ecd3a1976f2a7141b823906be211adea8123a0f93623a9c8d6ed99c0e4a"
+      "bytes": 4628,
+      "sha256": "95edba23508d654efeec3feeef674b4150a086d21bc990456453d75b6b013fe4"
     },
     {
       "path": "tools/mod_testing_sandbox/test/workspace-store.test.mjs",
-      "bytes": 8450,
-      "sha256": "e91ac1e98527ad1f6bd774120c747ab7a4bacd5bcae5fc437529b1ba26e84c4c"
+      "bytes": 11538,
+      "sha256": "e4b3d69f9106fa08234bc9056196e8ed7c65334638de1509fc51c96fb8eeed40"
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 39342,
-      "sha256": "52fb59a26212e93429618a209cfa8407efda0c7d7a019a041c24f188a2553c8a"
+      "bytes": 39365,
+      "sha256": "736ccd9e91a94f9ab8f1a80ea3a5247fbce3130de988faf3ab772ec352d6cec4"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-trimesh.py",

@@ -1254,6 +1254,9 @@ class Application(Appearance):
         if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
+        if (self.troubleshooting is not None
+                and self.troubleshooting.frame.winfo_manager()):
+            return 'break'
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
         self.library_search_entry.focus_set()

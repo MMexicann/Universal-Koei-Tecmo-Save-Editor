@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { validateMod } from "../src/sandbox-core.mjs";
-import { clearStagedProfile, loadStagedMods, removeStagedMod, saveStagedMod } from "../src/workspace-store.mjs";
+import { clearStagedMods, clearStagedProfile, loadStagedMods, removeStagedMod, saveStagedMod } from "../src/workspace-store.mjs";
 
 const GAME = "wolong";
 
@@ -153,6 +153,83 @@ test("clearing a memory-only game profile preserves other stored profiles", asyn
   assert.equal(remaining.some((item) => item.storageKey === firstKey), false);
   assert.equal(remaining.some((item) => item.storageKey === secondKey), true);
   await removeStagedMod(secondKey);
+});
+
+test("an IndexedDB open failure refuses profile clear and preserves memory fallback records", async () => {
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const manifest = {
+    schemaVersion: 1,
+    id: `blocked-clear-${suffix}`,
+    name: "Blocked clear fixture",
+    version: "1.0",
+    game: GAME,
+    gameVersion: "blocked-build",
+    files: [{ source: "data/blocked.bin", target: "mods/blocked.bin" }],
+  };
+  const storageKey = `workspaces/${GAME}/blocked-build/${manifest.id}`;
+  const previousIndexedDB = globalThis.indexedDB;
+  try {
+    delete globalThis.indexedDB;
+    await saveStagedMod(stagedMod({ storageKey, manifest, bytes: "blocked clear payload", sha: null }));
+    globalThis.indexedDB = {
+      open() {
+        const request = {};
+        queueMicrotask(() => request.onblocked?.());
+        return request;
+      },
+    };
+    assert.equal(await clearStagedProfile(GAME, "blocked-build"), false);
+    assert.ok((await loadStagedMods()).some((item) => item.storageKey === storageKey));
+  } finally {
+    if (previousIndexedDB === undefined) delete globalThis.indexedDB;
+    else globalThis.indexedDB = previousIndexedDB;
+    await removeStagedMod(storageKey);
+  }
+});
+
+test("failed IndexedDB removal and global clear preserve memory fallback records", async () => {
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const manifest = {
+    schemaVersion: 1,
+    id: `blocked-remove-${suffix}`,
+    name: "Blocked removal fixture",
+    version: "1.0",
+    game: GAME,
+    gameVersion: "blocked-remove-build",
+    files: [{ source: "data/blocked.bin", target: "mods/blocked.bin" }],
+  };
+  const storageKey = `workspaces/${GAME}/blocked-remove-build/${manifest.id}`;
+  const previousIndexedDB = globalThis.indexedDB;
+  try {
+    delete globalThis.indexedDB;
+    await saveStagedMod(stagedMod({ storageKey, manifest, bytes: "blocked remove payload", sha: null }));
+
+    globalThis.indexedDB = { open() { const request = {}; queueMicrotask(() => request.onerror?.()); return request; } };
+    assert.equal(await removeStagedMod(storageKey), false);
+    assert.equal(await clearStagedMods(), false);
+
+    const database = {
+      transaction() {
+        const transaction = {
+          objectStore() { return { getAllKeys() { return {}; }, clear() {} }; },
+          close() {},
+        };
+        queueMicrotask(() => transaction.onabort?.());
+        return transaction;
+      },
+      close() {},
+    };
+    globalThis.indexedDB = { open() { const request = { result: database }; queueMicrotask(() => request.onsuccess?.()); return request; } };
+    assert.equal(await removeStagedMod(storageKey), false);
+    assert.equal(await clearStagedMods(), false);
+
+    delete globalThis.indexedDB;
+    assert.ok((await loadStagedMods()).some((item) => item.storageKey === storageKey));
+  } finally {
+    if (previousIndexedDB === undefined) delete globalThis.indexedDB;
+    else globalThis.indexedDB = previousIndexedDB;
+    if (previousIndexedDB === undefined) await removeStagedMod(storageKey);
+  }
 });
 
 test("same game and mod ID under different exact builds remain independently stored and removable", async () => {

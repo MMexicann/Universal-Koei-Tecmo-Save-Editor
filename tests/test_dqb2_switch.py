@@ -16,6 +16,7 @@ from koei_editor.games.dqb2_switch import parser
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from tests.scalar_contract import ScalarContractTests
+from tests.gui_paging import assert_paged_catalog
 from tests.test_dqb2_pc import fixture as pc_fixture
 
 
@@ -278,7 +279,10 @@ class Dqb2SwitchFormatTests(unittest.TestCase):
             with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
                 editor.open()
             root.update()
-            self.assertEqual(len(editor.fields.get_children()), len(fields))
+            assert_paged_catalog(self, editor, (field.id for field in fields))
+            self.assertEqual(editor.backup.read_bytes(), raw)
+            self.assertTrue(editor.navigate_dashboard_field(fields[-1].id))
+            self.assertEqual(editor.fields.selection(), (fields[-1].id,))
             editor.search.set(selected.label.removesuffix(' quantity'))
             root.update()
             self.assertIn(selected.id, editor.fields.get_children())

@@ -1,6 +1,8 @@
 """Mocked integration checks for the in-memory Nexus-to-manager handoff."""
 
 from dataclasses import dataclass, replace
+import ctypes
+import os
 from pathlib import Path
 import tempfile
 import threading
@@ -95,9 +97,37 @@ class NexusManagerHandoffTests(unittest.TestCase):
         self.assertEqual(result.status, "imported")
         self.assertEqual(result.mod_id, "downloaded-mod")
         self.assertIn("Review it before enabling or installing", result.message)
-        self.assertTrue(downloader.destination.parent.parent == self.state_dir)
+        self.assertEqual(downloader.destination.parent.parent, self.manager.state_dir)
         self.assertTrue(downloader.destination.name.startswith("sample-mod-"))
         self.assertEqual(downloader.destination.suffix, ".zip")
+        self.assertTrue(downloader.destination.exists(), "untrusted staging bytes must be retained")
+        record = next(item for item in self.manager.mods() if item.id == "downloaded-mod")
+        self.assertFalse(record.installed)
+        self.assertFalse(record.enabled)
+
+    @unittest.skipUnless(os.name == "nt", "Windows 8.3 aliases require a native Windows filesystem.")
+    def test_windows_short_state_alias_stages_under_canonical_manager_root(self):
+        state = Path(self.temporary.name) / "manager state with long folder name"
+        state.mkdir()
+        get_short_path = ctypes.windll.kernel32.GetShortPathNameW
+        get_short_path.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint)
+        get_short_path.restype = ctypes.c_uint
+        buffer = ctypes.create_unicode_buffer(32768)
+        length = get_short_path(str(state.resolve(strict=True)), buffer, len(buffer))
+        if not length or length >= len(buffer):
+            self.skipTest("The native temporary filesystem has no available 8.3 alias.")
+        alias = Path(buffer.value)
+        if os.path.normcase(os.path.abspath(alias)) == os.path.normcase(str(state.resolve(strict=True))):
+            self.skipTest("The native temporary filesystem has no distinct 8.3 alias.")
+        self.assertTrue(alias.samefile(state))
+        self.manager = ModManager(alias)
+        downloader = FakeDownloader()
+        self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
+        result = self.wait_for_result()
+        self.assertEqual(result.status, "imported")
+        self.assertEqual(self.manager.state_dir, state.resolve(strict=True))
+        self.assertEqual(downloader.destination.parent.parent, self.manager.state_dir)
+        self.assertTrue(downloader.destination.is_relative_to(self.manager.state_dir))
         self.assertTrue(downloader.destination.exists(), "untrusted staging bytes must be retained")
         record = next(item for item in self.manager.mods() if item.id == "downloaded-mod")
         self.assertFalse(record.installed)

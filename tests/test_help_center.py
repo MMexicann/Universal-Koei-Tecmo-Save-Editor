@@ -97,12 +97,19 @@ class HelpCenterGuiTests(unittest.TestCase):
         self.assertEqual(panel._scan_thread, None)
         self.assertIsNotNone(panel.search_entry)
 
+        panel.search_value.set('unknown build')
         self.center.set_language('de')
         self.assertEqual(panel.language, 'de')
         self.assertEqual(panel.search_label.cget('text'), 'Installierte Spiele filtern')
+        self.assertEqual(panel.search_value.get(), 'unknown build')
+        self.center.notebook.select(self.center.tabs['versions'])
+        self.root.focus_force()
+        self.root.update()
         self.center.focus_search()
         self.root.update()
-        self.assertEqual(self.root.focus_get(), panel.search_entry)
+        self.assertIs(self.root.focus_get(), panel.search_entry)
+        self.assertTrue(panel.search_entry.winfo_viewable())
+        self.assertTrue(panel.search_entry.selection_present())
 
 
 if __name__ == '__main__':

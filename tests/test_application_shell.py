@@ -496,7 +496,7 @@ class ApplicationShellTests(unittest.TestCase):
 
     def test_mod_manager_workspace_is_constructed_once_with_temporary_state(self):
         from koei_editor.shared import mod_manager_gui
-        from types import SimpleNamespace
+        from koei_editor.shared.mod_manager import ModRecord
         state_dir = (Path(self.directory.name) / 'mod_manager').resolve()
         attach_handoff = Mock()
         self.app.set_mod_manager_download_handoff = attach_handoff
@@ -524,37 +524,43 @@ class ApplicationShellTests(unittest.TestCase):
                   patch.object(workspace.manager, 'has_pending_transaction_for', return_value=True),
                   patch.object(workspace, '_error')):
                 workspace.choose_game_root()
-            workspace._mods['test-mod'] = SimpleNamespace(installed=False)
-            workspace.mod_table.insert('', 'end', iid='test-mod', text='Test mod')
+            test_mod = ModRecord(
+                id='test-mod', name='Test mod', version='1.0', dependencies=(), conflicts=(),
+                files=(), content_sha256='0' * 64, installed=False, enabled=False,
+            )
+            with patch.object(workspace.manager, 'mods', return_value=(test_mod,)):
+                workspace.refresh()
             workspace.mod_table.selection_set('test-mod')
             workspace._update_controls()
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
             self.assertEqual(str(workspace.import_button.cget('state')), 'disabled')
             self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
-            workspace.refresh()
-            self.assertTrue(workspace._recovery_blocked)
-            self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
+            with patch.object(workspace.manager, 'mods', return_value=(test_mod,)):
+                workspace.refresh()
+                self.assertTrue(workspace._recovery_blocked)
+                self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
 
-            def select_candidate(path):
-                workspace.manager.current_game_root = Path(path)
-                return Path(path)
-            with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
-                  patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
-                  patch.object(workspace, '_error')):
-                workspace.choose_game_root()
+                def select_candidate(path):
+                    workspace.manager.current_game_root = Path(path)
+                    return Path(path)
+                with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
+                      patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
+                      patch.object(workspace, '_error')):
+                    workspace.choose_game_root()
             self.assertFalse(workspace._recovery_blocked)
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')
             self.assertEqual(str(workspace.import_button.cget('state')), 'normal')
             # Refresh rebuilt the empty service library and cleared the synthetic
             # selection. Removal stays disabled until an uninstalled mod is selected.
             self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
-            workspace._mods['test-mod'] = SimpleNamespace(installed=False)
+            workspace._mods['test-mod'] = test_mod
             workspace.mod_table.insert('', 'end', iid='test-mod', text='Test mod')
             workspace.mod_table.selection_set('test-mod')
             workspace._update_controls()
             self.assertEqual(str(workspace.remove_button.cget('state')), 'normal')
 
-        self.assertTrue(str(workspace.manager.state_dir).startswith(self.directory.name))
+        self.assertTrue(workspace.manager.state_dir.is_relative_to(
+            Path(self.directory.name).resolve(strict=True)))
         self.assertFalse((state_dir / 'library.json').exists())
 
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):

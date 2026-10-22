@@ -120,9 +120,11 @@ class OriginsCopyTests(unittest.TestCase):
             target, original = 'rename', copy_storage.os.rename
         else:
             target, original = 'link', copy_storage.os.link
-        def race(source, dest):
+        def race(source, dest, **options):
+            if target == 'link':
+                self.assertEqual(options, {'follow_symlinks': False})
             Path(dest).write_bytes(b'other editor data')
-            return original(source, dest)
+            return original(source, dest, **options)
         with patch.object(copy_storage.os, target, side_effect=race):
             with self.assertRaises(FileExistsError):
                 origins.duplicate_copy(self.document, destination)

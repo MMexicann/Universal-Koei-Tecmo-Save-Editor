@@ -34,6 +34,59 @@ export function createImportGate() {
   };
 }
 
+/** Identify the newest asynchronous workspace load so an older result cannot replace it. */
+export function createRequestSequence() {
+  let current = 0;
+  return Object.freeze({
+    begin: () => ++current,
+    isCurrent: (request) => request === current,
+  });
+}
+
+export function isDemoWorkspace(mods) {
+  return mods.length > 0 && mods.every((mod) => mod.demoFixture === true);
+}
+
+export function isExportableMod(mod) {
+  return Boolean(mod?.valid && !mod.demoFixture);
+}
+
+/** Bound and retain a rejected native Workshop validation for its authoring handoff. */
+export function createWorkshopValidationRecord(manifest, errors, gameId, gameVersion) {
+  const rawModId = manifest?.mod_id ?? manifest?.id;
+  return {
+    gameId,
+    gameVersion,
+    modId: typeof rawModId === "string" ? rawModId.slice(0, 80) : null,
+    issues: (Array.isArray(errors) ? errors : []).slice(0, 50).map((item) => ({
+      code: String(item?.code || "validation_error").slice(0, 80),
+      message: String(item?.message || "Workshop project validation failed.").slice(0, 500),
+    })),
+  };
+}
+
+export function collectWorkshopValidationIssues(mods, rejected, gameId, gameVersion) {
+  const issues = [];
+  for (const mod of mods || []) {
+    for (const item of mod.validationErrors || []) {
+      if (issues.length >= 200) return issues;
+      issues.push({ modId: String(mod.id || "").slice(0, 80), code: String(item?.code || "validation_error").slice(0, 80), message: String(item?.message || "Workshop project validation failed.").slice(0, 500) });
+    }
+  }
+  if (rejected && rejected.gameId === gameId && rejected.gameVersion === gameVersion) {
+    for (const item of rejected.issues) {
+      if (issues.length >= 200) break;
+      issues.push({ modId: rejected.modId || "unaccepted-workshop-project", ...item });
+    }
+  }
+  return issues;
+}
+
+export function serializeBoundedHandoff(payload, limit = LIMITS.manifestBytes) {
+  const serialized = JSON.stringify(payload, null, 2);
+  return encoder.encode(serialized).byteLength <= limit ? serialized : null;
+}
+
 const encoder = new TextEncoder();
 
 function issue(code, message, extra = {}) {
@@ -48,14 +101,18 @@ export function sanitizeRelativePath(value) {
   if (path.startsWith("/") || path.startsWith("\\") || /^[a-z]:/i.test(path) || path.includes("\\")) {
     throw Object.assign(new Error("Use a relative path with forward slashes."), { code: "path_absolute" });
   }
-  if (/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069<>"|?*:]/.test(path)) {
-    throw Object.assign(new Error("Path contains a control character or reserved Windows path character."), { code: "path_characters" });
+  if (/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/.test(path) || path.includes(":")) {
+    throw Object.assign(new Error("Path contains a control character or alternate stream marker."), { code: "path_characters" });
   }
+  if (/[<>\"|?*]/.test(path)) throw Object.assign(new Error("Path contains a character Windows does not allow in filenames."), { code: "path_characters" });
   const parts = path.split("/");
   if (parts.some((part) => !part || part === "." || part === "..")) {
     throw Object.assign(new Error("Path contains an empty or traversal segment."), { code: "path_traversal" });
   }
-  if (parts.some((part) => /[. ]$/.test(part) || /^(con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(?:\.|$)/i.test(part))) {
+  if (parts.some((part) => {
+    const reservedStem = part.split(".", 1)[0].replace(/ +$/g, "");
+    return /[. ]$/.test(part) || /^(con|prn|aux|nul|conin\$|conout\$|com[1-9¹²³]|lpt[1-9¹²³])$/i.test(reservedStem);
+  })) {
     throw Object.assign(new Error("Path contains a reserved or ambiguous Windows name."), { code: "path_reserved" });
   }
   return parts.join("/");
@@ -97,7 +154,7 @@ export function parseManifest(text) {
 /** Normalize the native Mod Creation Workshop manifest without trusting its report. */
 export function normalizeModManifest(manifest) {
   if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return manifest;
-  if (!("schema_version" in manifest || "mod_id" in manifest || "replacements" in manifest)) return manifest;
+  if (!("mod_id" in manifest || "replacements" in manifest)) return manifest;
   const replacements = Array.isArray(manifest.replacements)
     ? manifest.replacements.map((replacement) => {
       if (!replacement || typeof replacement !== "object" || Array.isArray(replacement)) return replacement;
@@ -373,8 +430,9 @@ export function detectConflicts(mods, baselinePaths = []) {
       try {
         const path = sanitizeRelativePath(file.target ?? file.installPath ?? file.source ?? file.path);
         const key = path.toLocaleLowerCase("en-US");
-        const item = groups.get(key) || { path, mods: [] };
+        const item = groups.get(key) || { path, mods: [], modIds: [] };
         item.mods.push(mod.name || mod.id || "Unnamed mod");
+        item.modIds.push(String(mod.id || ""));
         groups.set(key, item);
       } catch (error) {
         conflicts.push(issue(error.code || "unsafe_target", `Unsafe destination in ${mod.name || mod.id}: ${error.message}`));
@@ -387,7 +445,7 @@ export function detectConflicts(mods, baselinePaths = []) {
     for (let i = 1; i < segments.length; i++) {
       const parent = segments.slice(0, i).join("/");
       const parentGroup = groups.get(parent);
-      if (parentGroup) conflicts.push(issue("file_directory_collision", `A mod writes a file where another destination needs a directory.`, { path: group.path, otherPath: parentGroup.path, mods: [...new Set([...group.mods, ...parentGroup.mods])] }));
+      if (parentGroup) conflicts.push(issue("file_directory_collision", `A mod writes a file where another destination needs a directory.`, { path: group.path, otherPath: parentGroup.path, mods: [...new Set([...group.mods, ...parentGroup.mods])], modIds: [...new Set([...group.modIds, ...parentGroup.modIds])] }));
     }
   }
   const changes = [];
@@ -397,11 +455,11 @@ export function detectConflicts(mods, baselinePaths = []) {
     const segments = key.split("/");
     for (let i = 1; i < segments.length; i++) {
       const parent = segments.slice(0, i).join("/");
-      if (baseline.has(parent)) conflicts.push(issue("baseline_file_directory_collision", "A staged destination is nested beneath an existing baseline file.", { path: group.path, otherPath: baseline.get(parent), mods: group.mods }));
+      if (baseline.has(parent)) conflicts.push(issue("baseline_file_directory_collision", "A staged destination is nested beneath an existing baseline file.", { path: group.path, otherPath: baseline.get(parent), mods: group.mods, modIds: group.modIds }));
     }
-    if (!existing && baselineDirectories.has(key)) conflicts.push(issue("baseline_file_directory_collision", "A staged file destination collides with a directory that contains baseline files.", { path: group.path, mods: group.mods }));
+    if (!existing && baselineDirectories.has(key)) conflicts.push(issue("baseline_file_directory_collision", "A staged file destination collides with a directory that contains baseline files.", { path: group.path, mods: group.mods, modIds: group.modIds }));
     if (group.mods.length > 1) {
-      conflicts.push(issue("destination_collision", `${group.mods.length} mods target the same install path.`, { path: group.path, mods: group.mods }));
+      conflicts.push(issue("destination_collision", `${group.mods.length} mods target the same install path.`, { path: group.path, mods: group.mods, modIds: group.modIds }));
     }
   }
   return { conflicts, changes };
@@ -432,6 +490,10 @@ export function buildWorkspacePlan(mods, baselinePaths = [], workspace = {}) {
       const found = byId.get(String(dependency.id || "").toLocaleLowerCase("en-US"));
       const row = !found
         ? issue("dependency_missing", `${mod.name || mod.id} requires ${dependency.id} ${dependency.version}, which is not staged in this workspace.`, { modId: mod.id, dependencyId: dependency.id })
+        : found.valid === false || found.status === "blocked"
+          ? issue("dependency_invalid", `${mod.name || mod.id} requires ${dependency.id}, but that staged package has not passed validation.`, { modId: mod.id, dependencyId: dependency.id })
+          : found.gameId !== expectedGameId || found.gameVersion !== expectedGameVersion
+            ? issue("dependency_profile", `${mod.name || mod.id} requires ${dependency.id}, but that staged package does not match the selected game/build profile.`, { modId: mod.id, dependencyId: dependency.id })
         : !versionSatisfies(found.version, dependency.version)
           ? issue("dependency_version", `${mod.name || mod.id} requires ${dependency.id} ${dependency.version}; staged version ${found.version} does not satisfy it.`, { modId: mod.id, dependencyId: dependency.id })
           : null;
@@ -445,6 +507,7 @@ export function buildWorkspacePlan(mods, baselinePaths = [], workspace = {}) {
     gameVersion: expectedGameVersion,
     modCount: mods.length,
     fileCount: changes.length,
+    stagedMods: mods.map((mod) => ({ id: mod.id, version: mod.version, gameId: mod.gameId, gameVersion: mod.gameVersion, valid: mod.valid !== false && mod.status !== "blocked", dependencies: (mod.dependencies || []).map((dependency) => ({ id: dependency.id, version: dependency.version, optional: Boolean(dependency.optional) })) })),
     validationIssues,
     compatibilityWarnings,
     conflicts,
@@ -498,7 +561,7 @@ export function createTroubleshootingCenterReport(plan, mods, gameId, gameVersio
     recommendation: "Use the Troubleshooting Center's read-only selected-folder checks and the game's normal validation process for installation-level evidence.",
     source: "Mod Testing Sandbox",
   }];
-  const overallStatus = status === "failed" ? "failed" : status === "warning" ? "warning" : "partial";
+  const overallStatus = !hasFindings ? "unknown" : status === "failed" ? "failed" : status === "warning" ? "warning" : "partial";
   return {
     schema: "koei-game-troubleshooting",
     schema_version: 1,
@@ -528,7 +591,7 @@ export function createAuditReport(plan, mods, selectedGameId, selectedGameVersio
     },
     compatibility: { source: "manifest declarations checked against the selected game/build; Workshop version ranges are supported", gameId: selectedGameId, gameVersion: selectedGameVersion || "unknown", independentlyVerified: false, nativeFormatDetection: false, modManagerValidated: false },
     summary: { ready: plan.ok, modCount: plan.modCount, fileCount: plan.fileCount, conflictCount: plan.conflicts.length },
-    mods: mods.map((mod) => ({ id: mod.id, name: mod.name, version: mod.version, gameId: mod.gameId, gameVersion: mod.gameVersion, compatibleGameVersion: mod.compatibleGameVersion || mod.gameVersion, platform: mod.platform || "Windows PC", manifestFormat: mod.manifestFormat || "koei-mod-sandbox.v1", dependencies: mod.dependencies || [], valid: mod.valid !== false && mod.status !== "blocked", files: (mod.files || []).map((file) => ({ source: file.source, target: file.target })) })),
+    mods: mods.map((mod) => ({ id: mod.id, name: mod.name, version: mod.version, gameId: mod.gameId, gameVersion: mod.gameVersion, compatibleGameVersion: mod.compatibleGameVersion || mod.gameVersion, platform: mod.platform || "Windows PC", manifestFormat: mod.manifestFormat || "koei-mod-sandbox.v1", dependencies: mod.dependencies || [], valid: mod.valid !== false && mod.status !== "blocked" && !mod.demoFixture, demoFixture: Boolean(mod.demoFixture), files: (mod.files || []).map((file) => ({ source: file.source, target: file.target })) })),
     validationIssues: plan.validationIssues,
     compatibilityWarnings: plan.compatibilityWarnings || [],
     conflicts: plan.conflicts,
@@ -665,16 +728,22 @@ export async function createZipBlob(entries) {
 }
 
 /** Build the Nioh 2 Mod Manager's inert import ZIP; the manager performs its own validation. */
-export async function createNioh2ManagerPackageBlob(mod) {
-  if (!mod || mod.gameId !== "nioh2_pc" || mod.valid === false || !Array.isArray(mod.files) || !mod.files.length) {
+export async function createNioh2ManagerPackageBlob(mod, plan) {
+  if (!mod || mod.gameId !== "nioh2_pc" || mod.valid !== true || !Array.isArray(mod.files) || !mod.files.length) {
     throw new Error("The Nioh 2 Mod Manager handoff requires one validated Nioh 2 package.");
   }
+  if (!plan || !Array.isArray(plan.validationIssues) || !Array.isArray(plan.conflicts)) throw new Error("Run sandbox preflight before creating a Nioh 2 Mod Manager package.");
+  const blockers = nioh2ManagerExportBlockers(mod, plan);
+  if (blockers.length) throw new Error(blockers[0]);
   const id = String(mod.id || "").toLocaleLowerCase("en-US");
   if (!/^[a-z0-9][a-z0-9._-]{1,47}$/.test(id) || id.includes("disabled")) {
     throw new Error("The Nioh 2 Mod Manager requires a 2–48 character safe mod ID without 'disabled'.");
   }
   if (typeof mod.name !== "string" || !mod.name.trim() || mod.name.trim().length > 120) throw new Error("The Nioh 2 Mod Manager requires a name of 1–120 characters.");
   if (typeof mod.version !== "string" || !mod.version.trim() || mod.version.length > 80) throw new Error("The Nioh 2 Mod Manager requires a version of 1–80 characters.");
+  if ((mod.dependencies || []).some((dependency) => !dependency.optional && dependency.version !== "*")) {
+    throw new Error("The Nioh 2 Mod Manager stores dependency IDs only; required version constraints cannot be preserved. Required dependency versions must be '*'.");
+  }
 
   const iniFiles = mod.files.filter((file) => typeof file.target === "string" && file.target.toLocaleLowerCase("en-US").endsWith(".ini"));
   const assetExtensions = new Set([".fmt", ".vb", ".ib", ".dds"]);
@@ -690,10 +759,6 @@ export async function createNioh2ManagerPackageBlob(mod) {
     name: mod.name.trim(),
     version: mod.version.trim(),
     dependencies: (mod.dependencies || []).filter((dependency) => !dependency.optional).map((dependency) => {
-      const requirement = dependency.version === undefined ? "*" : dependency.version;
-      if (typeof requirement !== "string" || requirement.trim() !== "*") {
-        throw new Error("The Nioh 2 Mod Manager cannot preserve required dependency version constraints. Keep this package in the Workshop/Sandbox until version-aware dependency support exists; only unconstrained '*' requirements can be exported.");
-      }
       const dependencyId = String(dependency.id || "").toLocaleLowerCase("en-US");
       if (!/^[a-z0-9][a-z0-9._-]{1,47}$/.test(dependencyId) || dependencyId.includes("disabled")) throw new Error("A required dependency cannot be represented by the Nioh 2 Mod Manager contract.");
       return dependencyId;
@@ -703,6 +768,7 @@ export async function createNioh2ManagerPackageBlob(mod) {
   for (const file of mod.files) {
     const target = sanitizeRelativePath(file.target);
     const key = target.toLocaleLowerCase("en-US");
+    if (key === "koei-mod.json") throw new Error("Nioh 2 package target collides with generated koei-mod.json metadata.");
     if (targets.has(key)) throw new Error(`Nioh 2 package contains colliding targets: ${target}`);
     targets.add(key);
     if (modRoot && !target.startsWith(`${modRoot}/`)) throw new Error("All Nioh 2 package files must be inside the folder containing the .ini marker.");
@@ -717,4 +783,41 @@ export async function createNioh2ManagerPackageBlob(mod) {
   if (!iniPayload) throw new Error(`Staged payload is missing: ${iniFiles[0].source}`);
   entries.push({ path: iniPath, data: iniPayload });
   return createZipBlob(entries);
+}
+
+/** Stop a Mod Manager handoff when sandbox checks for this package are unresolved. */
+export function nioh2ManagerExportBlockers(mod, plan) {
+  if (!mod || mod.gameId !== "nioh2_pc" || !mod.valid) return ["Select a validated Nioh 2 package."];
+  const blockers = [];
+  const modKey = String(mod.id || "").toLocaleLowerCase("en-US");
+  const stagedMods = plan?.stagedMods || [];
+  const stagedById = new Map(stagedMods.map((item) => [String(item.id || "").toLocaleLowerCase("en-US"), item]));
+  const reachable = new Set([modKey]);
+  const pending = [mod];
+  while (pending.length) {
+    const current = pending.pop();
+    const currentKey = String(current.id || "").toLocaleLowerCase("en-US");
+    if (reachable.has(currentKey) && currentKey !== modKey && !stagedById.has(currentKey)) continue;
+    reachable.add(currentKey);
+    const source = currentKey === modKey ? current : stagedById.get(currentKey);
+    for (const dependency of source?.dependencies || []) {
+      if (dependency.optional) continue;
+      if (dependency.version !== "*") blockers.push(`Required dependency ${dependency.id} uses a version constraint the Nioh 2 Mod Manager cannot preserve.`);
+      const dependencyKey = String(dependency.id || "").toLocaleLowerCase("en-US");
+      const found = stagedById.get(dependencyKey);
+      if (found && !reachable.has(dependencyKey)) pending.push(found);
+      reachable.add(dependencyKey);
+    }
+  }
+  for (const item of plan?.validationIssues || []) {
+    if (reachable.has(String(item.modId || "").toLocaleLowerCase("en-US"))
+      && ["dependency_missing", "dependency_version", "dependency_invalid", "dependency_profile", "mod_not_valid", "profile_mismatch", "duplicate_mod_id"].includes(item.code)) {
+      blockers.push(item.message);
+    }
+  }
+  for (const conflict of plan?.conflicts || []) {
+    if ((conflict.modIds || []).some((id) => reachable.has(String(id).toLocaleLowerCase("en-US")))
+      || (conflict.mods || []).some((name) => String(name).toLocaleLowerCase("en-US") === String(mod.name || "").toLocaleLowerCase("en-US"))) blockers.push(conflict.message);
+  }
+  return [...new Set(blockers)];
 }

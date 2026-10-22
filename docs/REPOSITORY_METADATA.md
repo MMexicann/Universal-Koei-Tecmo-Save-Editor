@@ -39,13 +39,17 @@ On 2026-10-22, the latest published release is **Save Editor v3.1**. Its assets 
 an EXE, Windows ZIP, Source ZIP, `SHA256SUMS.txt` and `DefenderScan-v3.1.json`.
 The README links to those existing assets and labels v1.0 as pending.
 
-The reviewed integration candidate is based on `d8f5516f2faaa3845457329637aed551dbfdc82d`
+The reviewed integration candidate is based on `1f89fc0c27989bbf53d5e9d92b09a974c723566c`
 ([integration PR #146](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/146)).
 It includes the new save, planning, mod, asset, installation and reference tools
 summarized in the pending notes. Coverage remains 98 game/platform profiles,
 15 save platforms and 145 scoped conversion routes. The full suite and native
-Windows qualification remain in progress; this is not evidence that all 26
-original workstreams have finished.
+Windows qualification remain in progress. The six independent review assignments
+have finished; the original 26-workstream roster remains unverified.
+
+**Publication is on hold at the user's request.** Continue reviewed development
+merges into `main`. Do not reset versions, create release tags or publish assets
+until release work resumes. This does not block ordinary development merges.
 
 **Historical tag conflict:** `v1.0` already points to
 `b18e57e149ede01967910887f8c2aa7d10b22140`. Preserve it. Use a distinct

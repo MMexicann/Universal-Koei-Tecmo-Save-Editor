@@ -150,6 +150,11 @@ class ModManagerTests(unittest.TestCase):
         invalid = (
             ("traversal", {"NiohMod/mod.ini": b"x", "../escape.fmt": b"x"}, ()),
             ("absolute", {"NiohMod/mod.ini": b"x", "/escape.fmt": b"x"}, ()),
+            ("console-device", {"NiohMod/mod.ini": b"x", "NiohMod/CONIN$.fmt": b"x"}, ()),
+            ("unicode-device", {"NiohMod/mod.ini": b"x", "NiohMod/COM¹.fmt": b"x"}, ()),
+            ("unicode-printer-device", {"NiohMod/mod.ini": b"x", "NiohMod/LPT³.fmt": b"x"}, ()),
+            ("spaced-device-stem", {"NiohMod/mod.ini": b"x", "NiohMod/COM1 .fmt": b"x"}, ()),
+            ("spaced-console-stem", {"NiohMod/mod.ini": b"x", "NiohMod/CONOUT$ .dds": b"x"}, ()),
             ("unknown-extension", {"NiohMod/mod.ini": b"x", "NiohMod/loader.dll": b"x"}, ()),
             ("loader-package", {"NiohMod/mod.ini": b"x", "NiohMod/d3d11.dll": b"x"}, ()),
             ("fomod", {"NiohMod/mod.ini": b"x", "NiohMod/module.fmt": b"x"},
@@ -194,6 +199,45 @@ class ModManagerTests(unittest.TestCase):
                     "NiohMod/mod.ini": b"x", f"NiohMod/{name}": b"generated asset",
                 })
                 self.assertIn(name, {Path(file.path).name for file in self.manager.import_archive(archive).files})
+
+    def test_import_rejects_truncated_corrupt_and_oversized_zip_entries(self):
+        truncated = self.package("truncated.zip", mod_id="truncated")
+        truncated.write_bytes(truncated.read_bytes()[:12])
+        with self.assertRaises(PackageError):
+            self.manager.import_archive(truncated)
+
+        corrupt = self.package("corrupt-crc.zip", mod_id="corrupt-crc")
+        with zipfile.ZipFile(corrupt) as archive:
+            info = archive.getinfo("NiohMod/assets/model.fmt")
+        raw = bytearray(corrupt.read_bytes())
+        local_offset = info.header_offset
+        name_length = int.from_bytes(raw[local_offset + 26:local_offset + 28], "little")
+        extra_length = int.from_bytes(raw[local_offset + 28:local_offset + 30], "little")
+        payload_offset = local_offset + 30 + name_length + extra_length
+        raw[payload_offset] ^= 0x01
+        corrupt.write_bytes(raw)
+        with self.assertRaisesRegex(PackageError, "integrity validation"):
+            self.manager.import_archive(corrupt)
+
+        oversized = self.package("oversized-entry.zip", mod_id="oversized-entry")
+        raw = bytearray(oversized.read_bytes())
+        central_offset = raw.find(b"PK\x01\x02")
+        while central_offset >= 0:
+            name_length = int.from_bytes(raw[central_offset + 28:central_offset + 30], "little")
+            name_start = central_offset + 46
+            name = bytes(raw[name_start:name_start + name_length]).decode("utf-8")
+            if name == "NiohMod/assets/model.fmt":
+                raw[central_offset + 24:central_offset + 28] = (512 * 1024 * 1024 + 1).to_bytes(4, "little")
+                break
+            central_offset = raw.find(b"PK\x01\x02", central_offset + 4)
+        else:
+            self.fail("test ZIP is missing the asset's central directory record")
+        oversized.write_bytes(raw)
+        with self.assertRaisesRegex(PackageError, "entry is too large"):
+            self.manager.import_archive(oversized)
+
+        self.assertEqual(self.manager.mods(), ())
+        self.assertFalse(any(path.name.startswith(".import-") for path in self.manager.packages_dir.iterdir()))
 
     def test_dependencies_conflicts_and_asset_collisions_block_profile_changes(self):
         core = self.import_mod("core.zip", mod_id="core-mod")

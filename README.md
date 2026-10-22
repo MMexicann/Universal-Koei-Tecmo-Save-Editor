@@ -9,7 +9,7 @@ Review changes before saving, with backups and Undo.
 · **[Getting started](docs/EDITOR_WORKSPACE.md)**
 · **[What's new](docs/TOOLKIT_V1_RELEASE_NOTES.md)**
 
-**Game Toolkit v1.0 is in preparation.** The current published download is
+**Game Toolkit v1.0 is in development; publication is on hold.** The current published download is
 **Save Editor v3.1**. The new name continues the same project; the planned
 version reset preserves earlier releases and repository history.
 
@@ -44,7 +44,7 @@ version reset preserves earlier releases and repository history.
   profiles, local controller-profile records and data-only community packages.
   [Automation](docs/AUTOMATION.md) · [Presets](docs/REUSABLE_PRESETS.md) · [Community formats](docs/COMMUNITY_TOOLKIT.md).
 
-Development source also includes a [browser-local Mod Testing Sandbox](docs/MOD_TESTING_SANDBOX.md)
+Development source also includes a [browser-local Mod Testing Sandbox](docs/MOD_TESTING_SANDBOX.md),
 an [offline Localization Studio](localization-studio/README.md) for supported plain-text tables,
 and a [snapshot-based patch analyzer](docs/PATCH_COMPATIBILITY_ANALYZER.md).
 These are separate source tools; their file handoffs require review in the

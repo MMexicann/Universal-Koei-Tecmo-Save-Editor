@@ -138,17 +138,19 @@ class MenuTranslationTests(unittest.TestCase):
         def entrycget(self, index, option):
             if option != 'label':
                 raise AssertionError(option)
-            if self.type(index) == 'separator':
-                raise AssertionError('separator entries have no label')
+            if not self.labels[index]:
+                raise tk.TclError('separator has no label')
             return self.labels[index]
 
         def entryconfigure(self, index, **options):
             self.labels[index] = options['label']
 
     def test_named_menu_entries_translate_after_other_routes_shift_indices(self):
-        menu = self.Menu((CATALOGS['en']['editing_presets'], CATALOGS['en']['transfer'], '',
-                          CATALOGS['en']['research_lab'], CATALOGS['en']['research_import'], '',
-                          'Game Asset Explorer', CATALOGS['en']['emulator_hub']))
+        menu = self.Menu((CATALOGS['en']['editing_presets'], CATALOGS['en']['transfer'],
+                          CATALOGS['en']['game_configuration'], '', CATALOGS['en']['mod_manager'], '',
+                          CATALOGS['en']['research_lab'], CATALOGS['en']['research_import'],
+                          CATALOGS['en']['nexus_mods'], CATALOGS['en']['emulator_hub'],
+                          CATALOGS['en']['asset_explorer']))
 
         class Shell:
             editing_tools_menu = menu
@@ -160,10 +162,14 @@ class MenuTranslationTests(unittest.TestCase):
         Application._refresh_editing_menu_labels(Shell())
 
         self.assertEqual(menu.labels[0], translate('editing_presets', 'de'))
+        self.assertEqual(menu.labels[2], translate('game_configuration', 'de'))
+        self.assertEqual(menu.labels[3], '')
+        self.assertEqual(menu.labels[4], translate('mod_manager', 'de'))
         self.assertEqual(menu.labels[5], '')
-        self.assertEqual(menu.labels[6], translate('asset_explorer', 'de')
-                         if 'asset_explorer' in CATALOGS['de'] else 'Game Asset Explorer')
-        self.assertEqual(menu.labels[7], translate('emulator_hub', 'de'))
+        self.assertEqual(menu.labels[6], translate('research_lab', 'de'))
+        self.assertEqual(menu.labels[7], translate('research_import', 'de'))
+        self.assertEqual(menu.labels[9], translate('emulator_hub', 'de'))
+        self.assertEqual(menu.labels[10], translate('asset_explorer', 'de'))
 
 
 class ApplicationShellTests(unittest.TestCase):
@@ -419,7 +425,8 @@ class ApplicationShellTests(unittest.TestCase):
                     return Path(path)
                 with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
                       patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
-                      patch.object(workspace, '_error')):
+                  patch.object(workspace, '_error'),
+                  patch.object(workspace.manager, 'mods', return_value=(test_mod,))):
                     workspace.choose_game_root()
             self.assertFalse(workspace._recovery_blocked)
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')

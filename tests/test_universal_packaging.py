@@ -236,6 +236,11 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
         legacy_modules = [legacy_args[index + 1] for index, value in enumerate(legacy_args)
                           if value == '--hidden-import']
         self.assertTrue({legacy_game.editor_module, legacy_game.parser_module}.issubset(legacy_modules))
+        manager_modules = {
+            'koei_editor.shared.configuration_gui',
+            'koei_editor.shared.configuration_manager',
+        }
+        self.assertTrue(manager_modules.issubset(modules))
 
     def test_conversion_only_native_backends_are_collected_without_scalar_registration(self):
         from tools import build_windows as build

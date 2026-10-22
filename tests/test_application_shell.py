@@ -425,17 +425,12 @@ class ApplicationShellTests(unittest.TestCase):
                     return Path(path)
                 with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
                       patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
-                      patch.object(workspace, '_error')):
+                  patch.object(workspace, '_error'),
+                  patch.object(workspace.manager, 'mods', return_value=(test_mod,))):
                     workspace.choose_game_root()
             self.assertFalse(workspace._recovery_blocked)
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')
             self.assertEqual(str(workspace.import_button.cget('state')), 'normal')
-            # Root selection refreshes the inventory, so add a selected
-            # candidate again before checking the selection-dependent action.
-            workspace._mods['test-mod'] = SimpleNamespace(installed=False)
-            workspace.mod_table.insert('', 'end', iid='test-mod', text='Test mod')
-            workspace.mod_table.selection_set('test-mod')
-            workspace._update_controls()
             self.assertEqual(str(workspace.remove_button.cget('state')), 'normal')
 
         self.assertFalse((state_dir / 'library.json').exists())

@@ -28,7 +28,10 @@ class VersionTrackerTests(unittest.TestCase):
     @staticmethod
     def record(build_id='123456789', *, game_id='atelier_sophie', platform='Windows PC', app_id=None,
                artifact_kind='save_editor', artifact_id='editor-a', status='verified',
-               checked_at='2026-10-22T11:00:00Z', artifact_version='3.1'):
+               checked_at='2026-10-22T11:00:00Z', artifact_version='3.1',
+               artifact_name='Reviewed editor', reason_code='exact_build_fixture',
+               explanation='Procedural catalog fixture for an exact installed build.',
+               evidence=('docs/HELP_AND_COMPATIBILITY.md',), next_step_ids=('evidence',)):
         if app_id is None:
             app_id = next(item.app_id for item in save_discovery.STEAM_MAPPINGS
                           if item.game_id == game_id)
@@ -39,14 +42,14 @@ class VersionTrackerTests(unittest.TestCase):
             build_id=build_id,
             artifact_kind=artifact_kind,
             artifact_id=artifact_id,
-            artifact_name='Reviewed editor',
+            artifact_name=artifact_name,
             artifact_version=artifact_version,
             status=status,
-            reason_code='exact_build_fixture',
-            explanation='Procedural catalog fixture for an exact installed build.',
-            evidence=('docs/HELP_AND_COMPATIBILITY.md',),
+            reason_code=reason_code,
+            explanation=explanation,
+            evidence=evidence,
             checked_at=checked_at,
-            next_step_ids=('evidence',),
+            next_step_ids=next_step_ids,
         )
 
     def test_exact_build_record_is_returned_and_unrecorded_kinds_stay_unknown(self):
@@ -72,7 +75,12 @@ class VersionTrackerTests(unittest.TestCase):
 
     def test_unlisted_artifact_warnings_cover_each_artifact_kind(self):
         observation = self.observation()
-        records = tuple(self.record(artifact_kind=kind, artifact_id=f'{kind}-review')
+        records = tuple(self.record(
+            artifact_kind=kind, artifact_id=f'{kind}-review', status='unknown',
+            artifact_name=f'Synthetic {kind} category fixture', artifact_version=None,
+            reason_code='procedural_category_fixture',
+            explanation='Synthetic category coverage only; no real compatibility claim.',
+            evidence=(), next_step_ids=())
                         for kind in tracker.ARTIFACT_KINDS)
         results = tracker.compatibility_for(observation, records=records)
         unlisted = {item.artifact_kind: item for item in results

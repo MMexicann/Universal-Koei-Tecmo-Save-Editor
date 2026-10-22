@@ -433,8 +433,8 @@
     },
     {
       "path": "docs/GAME_CONFIGURATION.md",
-      "bytes": 10103,
-      "sha256": "db11584dd87c7a04250bda1a37be8739a3e188f92b3148e4224403f9527960a7"
+      "bytes": 10101,
+      "sha256": "8d597adfac790a72e5b5390156bbb6c784a488ba56dc2797b00399f4ffe1a517"
     },
     {
       "path": "docs/GAME_MECHANICS.md",
@@ -473,8 +473,8 @@
     },
     {
       "path": "docs/HELP_AND_COMPATIBILITY.md",
-      "bytes": 2272,
-      "sha256": "b8ce0953e232bb2e9be58231f7658d6817e8d2754b9ca108001f7a9ac0b5a8b9"
+      "bytes": 6319,
+      "sha256": "c3482c1240162f22e4eada190b246327226f24c3a3cb7d2a3df00ccf03d43697"
     },
     {
       "path": "docs/HYRULE_FIRE_EMBLEM_DEPTH.md",
@@ -903,8 +903,8 @@
     },
     {
       "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
-      "bytes": 4921,
-      "sha256": "364a0e401647b10a6bab8c938556fde4799e09d432999b42a1ec6d96e3552e8c"
+      "bytes": 5075,
+      "sha256": "c35beedcaa6695e8a2161271f0e9dcc5e45fd7f603fe80366719c01eb42818b3"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -1063,8 +1063,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 98779,
-      "sha256": "a7354f48b20cdc36caad7306d17e879247409cc4a1d9ef6e1af147f88a44b187"
+      "bytes": 112221,
+      "sha256": "dabf92791e75bfc64abda7b8158834fbcd96be05700eb2be9ce133debf7af6bd"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -1388,8 +1388,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 84956,
-      "sha256": "3f6d0e6cd881db946d92356fcc294fd4d4aba2c25cd2f2503b21d62acc86dd6f"
+      "bytes": 85062,
+      "sha256": "beb8012bb2924cfa531304ad2e872859ea8d11a9df539e44e6adabe0bf3569cf"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -1485,6 +1485,11 @@
       "path": "src/koei_editor/data/verified_limits.json",
       "bytes": 656,
       "sha256": "492460447129e7a9270bc89d1c83095d319f919814732f2e5f3ea066438e8a63"
+    },
+    {
+      "path": "src/koei_editor/data/version_compatibility.json",
+      "bytes": 43,
+      "sha256": "246f867f77cfbe61fd392297925d4f498946eff28bcf3d66f62a6e22ed3c8209"
     },
     {
       "path": "src/koei_editor/data/weapon_bonus_rules.json",
@@ -4103,8 +4108,8 @@
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
-      "bytes": 17601,
-      "sha256": "ae22b563420b863107fdc63743dd49af0511eb682b783a624bfd1624f2cc7df8"
+      "bytes": 18280,
+      "sha256": "9125c069d7e8f1ec9690d43c3cab03d71c4268e6449d53c2bb3252350c06a1f5"
     },
     {
       "path": "src/koei_editor/shared/help_content.py",
@@ -4123,8 +4128,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 14622,
-      "sha256": "a859da769978f2958ebd317a5f60920b8bfd9e704309a2055adbe3e499dbe1c4"
+      "bytes": 14695,
+      "sha256": "6904b8b2eef9455dcbdddd3bd51676ff94038171886a26d8a7c3416991f96fb1"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4283,8 +4288,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_discovery.py",
-      "bytes": 25275,
-      "sha256": "070f1940ff2ce411ede6d561594267674326bb2b84e7ff7eba7d3b64c23d70eb"
+      "bytes": 29163,
+      "sha256": "99954956e35e4de3361f6df35f25e7b3172df95a74290e8f095ece3f0b52bf61"
     },
     {
       "path": "src/koei_editor/shared/save_doctor.py",
@@ -4397,6 +4402,16 @@
       "sha256": "bc5ca71cc34130ffe2ff9daf373c74c20efdb47a29ed13ecfb730daeb58dafe6"
     },
     {
+      "path": "src/koei_editor/shared/version_tracker.py",
+      "bytes": 28078,
+      "sha256": "e4739e443730e91af565cc0d6b814f5a143bcfa5e535729517a0a601f9975205"
+    },
+    {
+      "path": "src/koei_editor/shared/version_tracker_gui.py",
+      "bytes": 29178,
+      "sha256": "f1652c70ae137c6dee28cdeea1e9333361fba33c377f3b1925756ab2c1f12565"
+    },
+    {
       "path": "src/koei_editor/supported_games.py",
       "bytes": 10789,
       "sha256": "01e2a6991921686e9d7dd7690ede5477e029bb7ce1c5b3b66fc145a8acb08dc4"
@@ -4428,8 +4443,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 44126,
-      "sha256": "9b40f5d6d834bb848a2e42df3bc9ebf358f5c440afbe8adc087e49a25bc6dbed"
+      "bytes": 44140,
+      "sha256": "005cb446fb9c40ac93faee64a5192bea8b5d6593156a8c0587f3b6666202a4d5"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5113,8 +5128,8 @@
     },
     {
       "path": "tests/test_game_troubleshooting_gui.py",
-      "bytes": 17427,
-      "sha256": "76462afd25c0f36838c0a73396619296342e84e9272cd452c9b33ada67999151"
+      "bytes": 17622,
+      "sha256": "2b04a5cc1852bff08506e1b0935f289cead8e3f319667fc5b769a0ceec3a9b02"
     },
     {
       "path": "tests/test_gemfire_battery.py",
@@ -5188,8 +5203,8 @@
     },
     {
       "path": "tests/test_help_center.py",
-      "bytes": 4588,
-      "sha256": "74132b85a6fbb883c92ff361225f0b6bce4050ad7222e880218da1e9a9c0606e"
+      "bytes": 5589,
+      "sha256": "84d244f9268fbec5602f5f0013c0cbb88a63d6d4f2f4c9eb8a35e200708a2dd9"
     },
     {
       "path": "tests/test_help_center_integration.py",
@@ -5878,8 +5893,8 @@
     },
     {
       "path": "tests/test_save_discovery.py",
-      "bytes": 37393,
-      "sha256": "2e1c592e6a50f0e3e9ffb764e830d65c40b13814c89dc9106cd58dcf2df8b923"
+      "bytes": 41153,
+      "sha256": "1efefa2f4ace2f730be24303fff2a6770eca6ce5ab62733965c86bedd211cbba"
     },
     {
       "path": "tests/test_save_doctor.py",
@@ -6237,6 +6252,11 @@
       "sha256": "2c2ae35c99f22fe7507d301b82ef9259e8a7a51f6eb93a11eb0e29745e9ad580"
     },
     {
+      "path": "tests/test_version_tracker.py",
+      "bytes": 19548,
+      "sha256": "6058babe1a0fc7af3dd21d3e6138419c20f0f5207ac40f871811ecad05476854"
+    },
+    {
       "path": "tests/test_weapon_attributes.py",
       "bytes": 23157,
       "sha256": "477b58025f0be575bd27ef8e801d3e9fbb67794044d274a12dbcb930ef3a971d"
@@ -6438,8 +6458,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 35439,
-      "sha256": "299c67dcf857869d71a6b9cf674082aa97cfc067d34799778497aac09544298a"
+      "bytes": 35469,
+      "sha256": "a4866de518fbf715c27f639236ffccbe0522c1f5b0afdad3848ebfaf63c3e270"
     },
     {
       "path": "tools/refresh_manifest.py",

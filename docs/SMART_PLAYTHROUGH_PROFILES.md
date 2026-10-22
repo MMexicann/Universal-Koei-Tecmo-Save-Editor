@@ -12,11 +12,13 @@ you intend to use. The version is entered by the user; this application does not
 detect installed game builds. Optional component imports must identify the same
 registered game/platform and exact version as the selected save snapshot.
 
-The separate Game Patch Compatibility Analyzer compares two install snapshots
-and can evaluate explicit requirements, but Game Hub does not currently provide
-its product-version and file/archive/format evidence. Profile preview therefore
+The Game Version Tracker reads mapped Steam app manifests and can show exact
+Steam build IDs alongside reviewed compatibility records. A Steam build ID is
+installation metadata; it does not establish the game's product version or save
+format revision. The separate Game Patch Compatibility Analyzer compares two
+install snapshots and can evaluate explicit requirements. Profile preview still
 uses the exact user-entered version and labels it `user_asserted`; it does not
-treat a Steam build ID as a game patch or synthesize analyzer evidence.
+infer that value from a Steam build ID or synthesize analyzer evidence.
 
 Preview reports whether the profile version exactly matches the entered
 installed version and whether the referenced snapshot still passes Vault hash

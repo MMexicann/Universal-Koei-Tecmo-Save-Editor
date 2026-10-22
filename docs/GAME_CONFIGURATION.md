@@ -117,10 +117,10 @@ cataloged game and settings format; it is not a Game Version Tracker result.
 That tracker requires separate exact-build evidence before reporting a tool or
 format as verified for an installed build.
 
-No Game Hub or Playthrough Profiles integration code was present in the
-reviewed checkout when this implementation began. The current Playthrough
-Profiles component contract uses game-registry `game_id` and exact `game_version`
-fields, while this configuration catalog has independent IDs and
+The Game Version Tracker and Smart Playthrough Profiles are available, but the
+Configuration Manager has no Playthrough Profile adapter. The Playthrough
+component contract uses game-registry `game_id` and exact `game_version` fields,
+while this configuration catalog has independent IDs and
 `format_id`/`format_version` fields. The current Arland DX PC profiles have no
 matching save-registry identity, so their settings cannot be attached to a
 Playthrough Profile. Do not substitute a configuration ID for a save ID or a

@@ -280,11 +280,13 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
 
         class VersionsHelpCenterContract:
             """Stand-in for the parallel tracker PR's not-yet-merged Help tab."""
-            def __init__(self, root, parent, initial_tab, language, on_tab_changed):
+            def __init__(self, root, parent, initial_tab, language, on_tab_changed,
+                         preferences_path=None):
                 self.frame = tk.Frame(parent)
                 self.tab = initial_tab
                 self.language = language
                 self.on_tab_changed = on_tab_changed
+                self.preferences_path = preferences_path
                 self.palette = None
                 self.text_size = None
 
@@ -323,6 +325,7 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
             self.assertEqual(self.app.show_help("versions"), "break")
             versions = self.app.help_center
             self.assertEqual(versions.selected_tab(), "versions")
+            self.assertEqual(versions.preferences_path, self.folder / "preferences.json")
             self.assertIs(self.app.execute_command("tool:troubleshooting"), workspace)
             self.assertIs(workspace.report, report)
 

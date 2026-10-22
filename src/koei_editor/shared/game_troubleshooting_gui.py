@@ -586,7 +586,6 @@ class TroubleshootingWorkspace:
         if self._closed:
             return
         self._closed = True
-        self._revision += 1
         if self._poll_id is not None:
             try:
                 self.root.after_cancel(self._poll_id)

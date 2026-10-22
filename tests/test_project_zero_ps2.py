@@ -76,6 +76,13 @@ class ProjectZeroTests(unittest.TestCase):
         self.assertNotIn('slot_0_film_2', fields)
         self.assertNotIn('slot_0_film_4', fields)
         self.assertFalse(fields['slot_0_film_1'].maxable)
+        self.assertEqual(fields['slot_0_film_1'].label,
+                         'Type-14 film (reduce only; retain one)')
+        self.assertEqual(fields['slot_0_film_3'].label,
+                         'Type-74 film (reduce only; retain one)')
+        labeled = {row[1]: row[2] for row in parser.inventory_records(document) if row[1] in parser.FILM_LABELS}
+        self.assertEqual(labeled, {1: 'Type-14 film', 2: 'Type-37 film',
+                                   3: 'Type-74 film', 4: 'Type-90 film'})
         for bad in (0, -1, 31, True, 1.0):
             with self.assertRaises(SaveError):
                 parser.stage(document, {}, 'slot_0_film_1', bad)
@@ -84,7 +91,7 @@ class ProjectZeroTests(unittest.TestCase):
         self.assertEqual(parser.camera_records(document), parser.camera_records(reopened))
         self.assertEqual(parser.stage(document, changes, 'slot_0_film_1', 30), {'slot_1_film_3': 2})
         self.assertEqual(parser.limit_values(document, changes, changes), {})
-        self.assertEqual(parser.inventory_records(document)[1][2], 'Film stock 1')
+        self.assertEqual(parser.inventory_records(document)[1][2], 'Type-14 film')
 
     def test_variable_export_order_noop_and_each_field_surgery(self):
         for order in ((0, 1, 2), (2, 0, 1)):

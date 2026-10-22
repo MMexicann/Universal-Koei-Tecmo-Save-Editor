@@ -94,8 +94,13 @@ existing packed save map places `poss_item[200]` at `0x197c`.
 The independently implemented controls reduce each opened qualified stock to
 1–its opened quantity, with bulk Max disabled. Keeping one sheet avoids changing
 the existing film selection or acquisition/experience relationship. No ordinary
-film type name is assigned to a numeric stock without independent name-to-ID
-evidence. All other items, story and rewards remain untouched.
+film type name is assigned without independent name-to-ID evidence. The
+MIT-licensed Himuro source binds `poss_item[1]` through `poss_item[4]` to the
+named `film14`, `film37`, `film74` and `film90` debug values in
+[`g2d_debug.c`](https://github.com/Mikompilation/Himuro/blob/adcc35fb4602726ca9a692f2289bec816ce112db/src/graphics/graph2d/g2d_debug.c#L457-L460).
+The inspector and reduction-field labels now use those four title names while
+keeping the same qualified slots, bounds and one-sheet minimum. Other items,
+story and rewards remain untouched.
 
 Five distinct complete native PSU exports qualify twelve occupied slots and
 45 positive film stocks. Focused validation exercises each new native field,

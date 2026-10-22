@@ -643,8 +643,8 @@
     },
     {
       "path": "docs/PROJECT_ZERO_PS2_FORMAT.md",
-      "bytes": 7184,
-      "sha256": "e1e346544b4fa9e8c46fa4bf9cf3071a64e5b9644021a55825efbf9f8728eec6"
+      "bytes": 7596,
+      "sha256": "cb2fe66c4b35efc1da4eb9945e377fa347a2209ad1d3f9624ebe0eb87ed48614"
     },
     {
       "path": "docs/PS1_MONSTER_RANCHER_RESEARCH.md",
@@ -933,8 +933,8 @@
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
-      "bytes": 14856,
-      "sha256": "d5699c39676690ec34127919331f8558eb98939d2f714dd32acff8110a3d2c50"
+      "bytes": 14949,
+      "sha256": "d7c60c724974dc3942c62d39bbf080de780b5069c9e26190f45c31b5dfc7957f"
     },
     {
       "path": "docs/THREE_HOPES_FORMAT.md",
@@ -2658,13 +2658,13 @@
     },
     {
       "path": "src/koei_editor/games/project_zero_ps2/editor.py",
-      "bytes": 1675,
-      "sha256": "e108d7e10265c3ad99713168f326435efc458c459efc600bfdcd8d115700bc24"
+      "bytes": 1680,
+      "sha256": "74f001a0c998ac567abeb9313ef00ea72f0c4958a46b1fb5a3f96694173f4d70"
     },
     {
       "path": "src/koei_editor/games/project_zero_ps2/parser.py",
-      "bytes": 15779,
-      "sha256": "28a9106498f1dacc6622cc80c6f9a7102cc53bb4f4c3d8b141bab9d3f1c97851"
+      "bytes": 16056,
+      "sha256": "d8806fc696807e6d2819385583fc1639a8bc1556cac8f3c13fc7f411d183b295"
     },
     {
       "path": "src/koei_editor/games/pw1_ps3/__init__.py",
@@ -5128,8 +5128,8 @@
     },
     {
       "path": "tests/test_project_zero_ps2.py",
-      "bytes": 13676,
-      "sha256": "8d40ff0bf78cce96dbe8226b350f254759491125997ce1fb648724e1278fc086"
+      "bytes": 14182,
+      "sha256": "079d0b179ed975713be1794600a5e93f1cf4e5a1c34226eea854b0c828778a33"
     },
     {
       "path": "tests/test_ps3_expansion.py",

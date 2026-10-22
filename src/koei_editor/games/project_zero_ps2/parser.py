@@ -27,6 +27,14 @@ ITEMS = 0x197C
 # twelve and clamps these stacks to 99. Keep one sheet to preserve selection
 # and experience/ownership relationships without changing their other records.
 FILM_IDS = (1, 2, 3, 4)
+# Himuro's source-backed debug bindings name these exact native inventory
+# elements `film14`, `film37`, `film74` and `film90` (see format notes).
+FILM_LABELS = MappingProxyType({
+    1: 'Type-14 film',
+    2: 'Type-37 film',
+    3: 'Type-74 film',
+    4: 'Type-90 film',
+})
 EMPTY = bytes(48) + b'\xff' * (SIZE - 48)
 
 
@@ -224,7 +232,7 @@ def _fields(raw, experimental=False):
             if not 1 <= value <= (255 if experimental else 99):
                 continue  # Empty or unusual stock must not be acquired/normalized.
             field = Field(f'slot_{entry.slot}_film_{native_id}',
-                          f'Film stock {native_id} (reduce only; retain one)',
+                          f'{FILM_LABELS[native_id]} (reduce only; retain one)',
                           offset, 1, value,
                           f'Save slot {entry.slot + 1} · Film', entry.slot + 1,
                           minimum=1)
@@ -372,7 +380,7 @@ def item_records(document):
 def inventory_records(document):
     """Label independently mapped film stocks without guessing other item IDs."""
     return tuple((slot, position - 1,
-                  f'Film stock {position - 1}' if position - 1 in FILM_IDS
+                  FILM_LABELS[position - 1] if position - 1 in FILM_LABELS
                   else 'Unmapped item/status', value)
                  for slot, position, value in item_records(document))
 

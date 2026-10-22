@@ -197,7 +197,9 @@ No external implementation, initialized game file or game assets are distributed
 
 Original European Project Zero PS2 independently implements structure/checksum
 facts corroborated by karas84's MIT-licensed ProjectZeroSaveEditor parser and
-Himuro research. No upstream code, assets, icons or player export is distributed.
+Himuro research. The four film labels use factual native bindings from the
+MIT-licensed Himuro decompilation; no upstream code, assets, icons or player
+export is distributed.
 [Format and validation](PROJECT_ZERO_PS2_FORMAT.md).
 
 Ryza 3 DX PC reuses the existing MIT-attributed Gust envelope primitive after

@@ -48,6 +48,7 @@ class Application(Appearance):
         self.research_import = None
         self.asset_explorer = None
         self.workflow_builder = None
+        self.controller_profiles = None
         self.emulator_hub = None
         self.mod_workshop_window = None
         self.nexus_mods = None
@@ -63,6 +64,8 @@ class Application(Appearance):
         self._editing_tools_menu_commands = {}
         self._add_editing_tools_menu_command('editing_presets', self.show_editing_presets)
         self._add_editing_tools_menu_command('transfer', self.show_transfer)
+        self.editing_tools_menu.add_separator()
+        self._add_editing_tools_menu_command('controller_profiles', self.show_controller_profiles)
         self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('mod_manager', self.show_mod_manager)
         self.editing_tools_menu.add_separator()
@@ -295,7 +298,7 @@ class Application(Appearance):
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'editing_presets', 'mod_manager', 'research_lab', 'research_import',
                                             'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder',
-                                            'game_hub', 'troubleshooting')
+                                            'game_hub', 'troubleshooting', 'controller_profiles')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -311,6 +314,10 @@ class Application(Appearance):
                 set_language(self.language)
         if self.troubleshooting is not None:
             self.troubleshooting.set_language(self.language)
+        if self.controller_profiles is not None:
+            set_language = getattr(self.controller_profiles, 'set_language', None)
+            if callable(set_language):
+                set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
 
@@ -327,8 +334,14 @@ class Application(Appearance):
         last_index = self.editing_tools_menu.index('end')
         if last_index is None:
             return
+        translated = set()
+        for key in getattr(self, '_editing_tools_menu_commands', {}):
+            index = self._editing_tools_menu_index(key)
+            if index is not None:
+                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+                translated.add(index)
         for index in range(last_index + 1):
-            if self.editing_tools_menu.type(index) != 'command':
+            if index in translated or self.editing_tools_menu.type(index) != 'command':
                 continue
             key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
             if key is not None:
@@ -531,6 +544,7 @@ class Application(Appearance):
             ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
+            ('controller_profiles', 'show_controller_profiles'),
             ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'))
                 if callable(method := getattr(self, name, None))}
 
@@ -915,7 +929,7 @@ class Application(Appearance):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'game_hub', 'save_library',
                                        'mod_manager', 'editing_presets', 'research_lab', 'research_import',
                                        'nexus_mods', 'asset_explorer',
-                                       'workflow_builder', 'emulator_hub', 'troubleshooting', 'help_center')
+                                       'controller_profiles', 'workflow_builder', 'emulator_hub', 'troubleshooting', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -997,6 +1011,16 @@ class Application(Appearance):
         self._show_editing_tool(self.asset_explorer, self.tr('asset_explorer'))
         self._remember_workspace('tool:asset_explorer')
         return self.asset_explorer
+
+    def show_controller_profiles(self):
+        from koei_editor.shared.controller_profiles_gui import ControllerProfileWorkspace
+        if self.controller_profiles is None:
+            self.controller_profiles = ControllerProfileWorkspace(
+                self.root, self.workspace, language=self.language)
+        self._show_editing_tool(self.controller_profiles, self.tr('controller_profiles'))
+        self._remember_workspace('tool:controller_profiles')
+        return self.controller_profiles
+
 
     def _show_editing_tool(self, tool, title):
         self.library.pack_forget()
@@ -1217,7 +1241,7 @@ class Application(Appearance):
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
         for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
-                     self.nexus_mods, self.asset_explorer):
+                     self.controller_profiles, self.emulator_hub, self.nexus_mods, self.asset_explorer):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1511,6 +1535,8 @@ def main():
         app.show_mod_manager()
         app.show_research_lab()
         app.show_research_import()
+        app.show_controller_profiles()
+        app.show_emulator_hub()
         app.show_nexus_mods()
         app.show_library()
         app.nexus_mods.close()

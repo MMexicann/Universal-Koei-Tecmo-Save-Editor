@@ -23,6 +23,8 @@ class ModManagerWorkspace:
             state_dir = Path(state_dir) if state_dir is not None else preference_path().parent / 'mod_manager'
             manager = ModManager(state_dir, game_root=None)
         self.manager = manager
+        self._closed = False
+        self._nexus_poll_id = None
         self._profiles = {}
         self._profile_labels = {}
         self._selected_profile_id = None
@@ -32,6 +34,7 @@ class ModManagerWorkspace:
         self._recovery_blocked_root = None
 
         self.frame = ttk.Frame(parent, padding=(24, 16))
+        self.frame.bind('<Destroy>', self._on_frame_destroy, add='+')
         self.frame.columnconfigure(0, weight=1)
         self.frame.rowconfigure(3, weight=1)
 
@@ -141,6 +144,23 @@ class ModManagerWorkspace:
 
         self.refresh()
         self._schedule_nexus_download_poll()
+
+    def _on_frame_destroy(self, event):
+        if event.widget is self.frame:
+            self.close()
+
+    def close(self):
+        """Stop view polling without waiting on or changing manager jobs."""
+        if self._closed:
+            return
+        self._closed = True
+        poll_id = self._nexus_poll_id
+        self._nexus_poll_id = None
+        if poll_id is not None:
+            try:
+                self.root.after_cancel(poll_id)
+            except tk.TclError:
+                pass
 
     def apply_theme(self, palette):
         """Record the current theme; all widgets follow the shell's ttk styles."""
@@ -428,6 +448,8 @@ class ModManagerWorkspace:
 
     def enqueue_nexus_download(self, request, downloader):
         """Expose the manager service's same-process Nexus download handoff."""
+        if self._closed:
+            return False
         enqueue = getattr(self.manager, 'enqueue_nexus_download', None)
         accepted = bool(callable(enqueue) and enqueue(request, downloader))
         self.status.set(
@@ -438,13 +460,18 @@ class ModManagerWorkspace:
         return accepted
 
     def _schedule_nexus_download_poll(self):
+        if self._closed or self._nexus_poll_id is not None:
+            return
         if callable(getattr(self.manager, 'poll_nexus_download_results', None)):
             try:
-                self.root.after(500, self._poll_nexus_download_results)
+                self._nexus_poll_id = self.root.after(500, self._poll_nexus_download_results)
             except tk.TclError:
                 pass
 
     def _poll_nexus_download_results(self):
+        self._nexus_poll_id = None
+        if self._closed:
+            return
         poll = getattr(self.manager, 'poll_nexus_download_results', None)
         if callable(poll):
             try:

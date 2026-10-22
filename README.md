@@ -38,6 +38,10 @@ themes. No Python installation is needed for the Windows app.
 - **Personalize the workspace:** pin frequently used fields, keep multiple game
   sessions open, and export complete JSON or spreadsheet-friendly CSV reviews.
   [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
+- **Plan controller bindings:** keep game-specific keyboard/controller profiles,
+  layout labels, presets and recoverable profile backups in app-owned storage.
+  This does not write game settings or change Steam Input.
+  [Controller and input profiles](docs/CONTROLLER_INPUT_PROFILES.md).
 - **Compare saves:** inspect mapped changes and other payload differences across
   97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
 - **Analyze game patches from source:** compare explicit JSON snapshots by version,

@@ -77,6 +77,7 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
 RUNTIME_GUIDES = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/ASSET_EXPLORER.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                  'docs/CONTROLLER_INPUT_PROFILES.md',
                   'docs/GAME_TROUBLESHOOTING.md',
                   'docs/WARRIORS_PS4_TRANSFERS.md',
                   'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
@@ -101,6 +102,7 @@ RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING
                    'licenses/numpy-sfc64.txt', 'licenses/numpy-splitmix64.txt',
                    'licenses/cffi-MIT-0.txt', 'licenses/pycparser-BSD-3-Clause.txt')
 WINDOWS_DOCS = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                'docs/CONTROLLER_INPUT_PROFILES.md',
                 'docs/GAME_TROUBLESHOOTING.md',
                 'docs/WARRIORS_PS4_TRANSFERS.md',
                 'docs/WO3U_PS4_RESOURCE_TRANSFER.md',

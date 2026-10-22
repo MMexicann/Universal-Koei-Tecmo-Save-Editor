@@ -124,6 +124,31 @@ class ShellPreferencesTests(unittest.TestCase):
         self.assertFalse(search_commands(entries, 'missing'))
 
 
+class EditingMenuCommandLookupTests(unittest.TestCase):
+    def test_registered_command_is_found_after_menu_insertions(self):
+        class Menu:
+            entries = (
+                ('command', 'other-command'),
+                ('separator', ''),
+                ('command', 'profile-command'),
+            )
+
+            def index(self, name):
+                return len(self.entries) - 1 if name == 'end' else name
+
+            def type(self, index):
+                return self.entries[index][0]
+
+            def entrycget(self, index, option):
+                return self.entries[index][1] if option == 'command' else ''
+
+        app = object.__new__(Application)
+        app._editing_tools_menu_commands = {'controller_profiles': 'profile-command'}
+        app.editing_tools_menu = Menu()
+        self.assertEqual(app._editing_tools_menu_index('controller_profiles'), 2)
+        self.assertIsNone(app._editing_tools_menu_index('missing'))
+
+
 class MenuTranslationTests(unittest.TestCase):
     class Menu:
         def __init__(self, labels):
@@ -309,6 +334,7 @@ class ApplicationShellTests(unittest.TestCase):
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
                   'mod_manager': 'show_mod_manager', 'research_lab': 'show_research_lab',
                   'asset_explorer': 'show_asset_explorer',
+                  'controller_profiles': 'show_controller_profiles', 'nexus_mods': 'show_nexus_mods',
                   'workflow_builder': 'show_workflow_builder', 'emulator_hub': 'show_emulator_hub'}
         for key, method in routes.items():
             setattr(self.app, method, lambda tool=key: calls.append(tool))
@@ -324,6 +350,44 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertEqual(self.app.shell_settings.recent[0], command_id)
         self.app.command_palette.close()
         self.assertFalse(self.app.sessions)
+
+    def test_controller_profiles_tool_is_discoverable_retained_and_never_opens_a_save(self):
+        command_id = 'tool:controller_profiles'
+        self.assertIn(command_id, {entry.id for entry in self.app.command_entries()})
+        workspace = self.app.execute_command(command_id)
+        self.root.update()
+        self.assertIs(workspace, self.app.controller_profiles)
+        self.assertTrue(workspace.frame.winfo_viewable())
+        self.assertIsNone(self.app.active_game)
+        self.assertFalse(self.app.sessions)
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
+        self.assertEqual(self.app.shell_settings.recent[0], command_id)
+
+        # A new tool registered in the menu must not shift any localization target.
+        self.app.editing_tools_menu.insert_command(0, label='Injected tool', command=lambda: None)
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.root.update()
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
+        menu_command = self.app._editing_tools_menu_commands['controller_profiles']
+        localized_index = next(index for index in range(self.app.editing_tools_menu.index('end') + 1)
+                               if self.app.editing_tools_menu.type(index) == 'command'
+                                and self.app.editing_tools_menu.entrycget(index, 'command') == menu_command)
+        self.assertEqual(self.app.editing_tools_menu.entrycget(localized_index, 'label'),
+                         self.app.tr('controller_profiles'))
+        self.app.show_library()
+        self.root.update()
+        self.assertIs(self.app.controller_profiles, workspace)
+        self.assertFalse(workspace.frame.winfo_ismapped())
+        self.assertFalse(self.app.sessions)
+
+    def test_controller_profiles_start_in_the_shell_language(self):
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        workspace = self.app.show_controller_profiles()
+        self.root.update()
+        self.assertEqual(workspace.language, 'de')
+        self.assertEqual(workspace.title_label.cget('text'), 'Controller- und Eingabeprofile')
 
     def test_nexus_public_notice_is_localized_and_uses_active_pc_game(self):
         self.app.select_game('pw4')
@@ -364,7 +428,7 @@ class ApplicationShellTests(unittest.TestCase):
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
         for key in ('editing_presets', 'mod_manager', 'research_lab', 'asset_explorer',
-                    'workflow_builder', 'emulator_hub'):
+                    'controller_profiles', 'workflow_builder', 'emulator_hub'):
             with self.subTest(workspace=key):
                 self.app.show_library()
                 self.app.library.pack_forget()

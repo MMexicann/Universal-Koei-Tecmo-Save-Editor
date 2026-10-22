@@ -10,6 +10,11 @@ read-only asset workspace. It asks the user to choose a local file and stores
 only its stable workspace command ID in shell recents. It does not save paths or
 asset contents. See [its format and validation limits](ASSET_EXPLORER.md).
 
+Controller & Input Profiles is a retained global workspace available from
+**Editing and Research** and Ctrl+K. It stores user-defined mappings in
+application-owned profile storage; it does not apply them to game files or
+Steam Input.
+
 ## Keyboard and discovery
 
 - **Ctrl+K** opens the command palette from the library, tools or game editor.

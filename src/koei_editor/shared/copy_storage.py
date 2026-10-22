@@ -10,26 +10,43 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import reserved_windows_path, safe_path
 
 
-def atomic_new(data, destination):
+def atomic_new(data, destination, *, mode=0o666):
     destination = safe_path(destination)
     if destination.exists():
         raise FileExistsError('Choose a new file; existing files are never replaced.')
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name('.' + destination.name + '.' + uuid.uuid4().hex + '.tmp')
+    identity = None
     try:
-        with temporary.open('xb') as stream:
-            stream.write(data)
+        # Keep verification on our owned handle. A replacement of the staging
+        # pathname must not redirect verification into somebody else's file.
+        with open(temporary, 'x+b', opener=lambda name, flags: os.open(
+                name, flags | getattr(os, 'O_NOFOLLOW', 0), mode)) as stream:
+            owned = os.fstat(stream.fileno())
+            identity = (owned.st_dev, owned.st_ino)
+            if stream.write(data) != len(data):
+                raise SaveError('Temporary copy write was incomplete.')
             stream.flush()
             os.fsync(stream.fileno())
-        if temporary.read_bytes() != data:
-            raise SaveError('Temporary copy verification failed.')
+            stream.seek(0)
+            if stream.read(len(data) + 1) != data:
+                raise SaveError('Temporary copy verification failed.')
+            current = temporary.lstat()
+            if (not stat.S_ISREG(current.st_mode)
+                    or (current.st_dev, current.st_ino) != identity):
+                raise SaveError('Temporary copy changed before publication.')
         if os.name == 'nt':
             os.rename(temporary, destination)
         else:
-            os.link(temporary, destination)
-            temporary.unlink()
+            os.link(temporary, destination, follow_symlinks=False)
     finally:
-        temporary.unlink(missing_ok=True)
+        if identity is not None:
+            try:
+                current = temporary.lstat()
+                if stat.S_ISREG(current.st_mode) and (current.st_dev, current.st_ino) == identity:
+                    temporary.unlink()
+            except FileNotFoundError:
+                pass
     return destination
 
 

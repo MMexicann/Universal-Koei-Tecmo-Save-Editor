@@ -4,12 +4,13 @@ Source setup and contribution rules live in [CONTRIBUTING.md](../CONTRIBUTING.md
 and [AGENTS.md](../AGENTS.md). The application overview is in the
 [repository README](../README.md).
 
-The application's **Editing and Research** menu opens reusable presets and the
-Save Research Lab, Game Asset Explorer and related read-only tools. For selective
-transfer, open the destination save in its editor first, then choose **Transfer
-from Save Copy...** from that menu. The menu also opens the [Koei Tecmo Mod
-Manager](MOD_MANAGER.md), whose current verified installation adapter supports
-Nioh 2 PC only.
+The application's **Editing and Research** menu opens reusable presets,
+Controller & Input Profiles, Game Asset Explorer and the Save Research Lab. These input profiles are
+app-owned and do not modify game configuration files or Steam Input. For
+selective transfer, open the destination save in its editor first, then choose
+**Transfer from Save Copy...** from that menu.
+The menu also opens the [Koei Tecmo Mod Manager](MOD_MANAGER.md), whose current
+verified installation adapter supports Nioh 2 PC only.
 
 ## Development and releases
 
@@ -20,6 +21,8 @@ Nioh 2 PC only.
 - [Scenario and army editor: verified strategy record view and limits](SCENARIO_ARMY_EDITOR_REPORT.md)
 
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Controller and input profiles: app-owned bindings, presets and recovery](CONTROLLER_INPUT_PROFILES.md)
+- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
 - [Koei Tecmo Mod Manager: supported method and safeguards](MOD_MANAGER.md)
 - [Mod Manager tests and validation evidence](MOD_MANAGER_VALIDATION.md)
 - [Game Asset Explorer: supported subsets, safe reads and validation evidence](ASSET_EXPLORER.md)
@@ -83,7 +86,6 @@ Nioh 2 PC only.
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
-- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
 - [Game Patch and Compatibility Analyzer](PATCH_COMPATIBILITY_ANALYZER.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)

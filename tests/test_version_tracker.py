@@ -129,7 +129,7 @@ class VersionTrackerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unresolved next-step ID'):
             tracker._validate_record({**unsupported.__dict__, 'next_step_ids': ['unknown_target']})
 
-    def test_verified_and_unsupported_records_reject_blank_artifact_versions(self):
+    def test_records_reject_blank_artifact_versions_but_unknown_may_omit_one(self):
         for status in ('verified', 'unsupported'):
             record = self.record(status=status)
             for version in ('', '   ', '\t'):
@@ -138,6 +138,24 @@ class VersionTrackerTests(unittest.TestCase):
                         tracker._validate_record({**record.__dict__, 'artifact_version': version})
             normalized = tracker._validate_record({**record.__dict__, 'artifact_version': '  3.1  '})
             self.assertEqual(normalized.artifact_version, '3.1')
+
+        unknown = self.record(status='unknown', artifact_version=None, evidence=(), next_step_ids=())
+        self.assertIsNone(tracker._validate_record(unknown.__dict__).artifact_version)
+
+        class Resource:
+            def __init__(self, raw):
+                self.raw = raw
+
+            def open(self, _mode):
+                return io.BytesIO(self.raw)
+
+        for version in ('', '   ', '\t'):
+            with self.subTest(status='unknown', version=repr(version)):
+                raw_record = {**unknown.__dict__, 'artifact_version': version}
+                raw_catalog = json.dumps({'schema_version': 1, 'records': [raw_record]}).encode()
+                with mock.patch.object(tracker, 'data_file', return_value=Resource(raw_catalog)), \
+                        self.assertRaisesRegex(ValueError, 'invalid artifact version'):
+                    tracker.load_catalog()
 
     def test_next_step_ids_render_as_localized_help_article_titles(self):
         from koei_editor.shared.version_tracker_gui import VersionTrackerPanel

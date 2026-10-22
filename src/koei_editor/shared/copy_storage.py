@@ -110,6 +110,7 @@ def _publish_new_child_linux(data, directory, name, expected_identity):
         directory_fd = os.open(directory, flags)
     except OSError as error:
         raise SaveError('The private output directory changed or became linked.') from error
+    published = False
     try:
         directory_info = os.fstat(directory_fd)
         identity = (directory_info.st_dev, directory_info.st_ino)
@@ -121,7 +122,6 @@ def _publish_new_child_linux(data, directory, name, expected_identity):
                                 0o600, dir_fd=directory_fd)
         except OSError as error:
             raise SaveError('This filesystem cannot create a private unnamed staging file.') from error
-        published = False
         try:
             written = 0
             while written < len(data):
@@ -175,9 +175,19 @@ def _publish_new_child_linux(data, directory, name, expected_identity):
                 raise ChildPublishedUncertainError(directory / name) from error
             raise
         finally:
-            os.close(output_fd)
+            try:
+                os.close(output_fd)
+            except OSError as error:
+                if published:
+                    raise ChildPublishedUncertainError(directory / name) from error
+                raise
     finally:
-        os.close(directory_fd)
+        try:
+            os.close(directory_fd)
+        except OSError as error:
+            if published:
+                raise ChildPublishedUncertainError(directory / name) from error
+            raise
 
 
 def _read_descriptor(file_descriptor, maximum):
@@ -387,7 +397,12 @@ def _publish_child_windows(data, directory, temporary_name, name, expected_ident
     finally:
         if child.value:
             kernel32.CloseHandle(child)
-        os.close(parent_fd)
+        try:
+            os.close(parent_fd)
+        except OSError as error:
+            if published:
+                raise ChildPublishedUncertainError(directory / name) from error
+            raise
 
 
 def _new_child_posix(data, directory, name, expected_identity):

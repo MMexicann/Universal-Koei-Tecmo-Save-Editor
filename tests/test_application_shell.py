@@ -308,6 +308,7 @@ class ApplicationShellTests(unittest.TestCase):
         calls = []
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
                   'mod_manager': 'show_mod_manager', 'research_lab': 'show_research_lab',
+                  'asset_explorer': 'show_asset_explorer',
                   'workflow_builder': 'show_workflow_builder', 'emulator_hub': 'show_emulator_hub'}
         for key, method in routes.items():
             setattr(self.app, method, lambda tool=key: calls.append(tool))
@@ -362,7 +363,8 @@ class ApplicationShellTests(unittest.TestCase):
             open_site.assert_called_once_with('https://www.nexusmods.com/games/nioh2')
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
-        for key in ('editing_presets', 'mod_manager', 'research_lab', 'workflow_builder', 'emulator_hub'):
+        for key in ('editing_presets', 'mod_manager', 'research_lab', 'asset_explorer',
+                    'workflow_builder', 'emulator_hub'):
             with self.subTest(workspace=key):
                 self.app.show_library()
                 self.app.library.pack_forget()

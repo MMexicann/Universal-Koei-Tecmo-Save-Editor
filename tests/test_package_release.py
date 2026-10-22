@@ -131,6 +131,23 @@ class PackagingTests(unittest.TestCase):
             self.sources[name] = original
         self.write_manifest()
 
+    def test_only_the_pinned_asset_decoder_native_modules_are_allowed(self):
+        for name in ('_miniaudio.pyd', '_miniaudio.cp314-win_amd64.pyd',
+                     '_cffi_backend.cp314-win_amd64.pyd',
+                     'numpy/_core/_multiarray_umath.cp314-win_amd64.pyd',
+                     'numpy.libs/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
+                     'numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll'):
+            with self.subTest(name=name):
+                self.assertEqual(release._validate_runtime_file(name, b'MZ synthetic native code', {}), name)
+        for name in ('_unreviewed_codec.cp314-win_amd64.pyd',
+                     'unreviewed/_cffi_backend.cp314-win_amd64.pyd',
+                     'unreviewed/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
+                     'numpy/_core/_unreviewed.cp314-win_amd64.pyd',
+                     'numpy.libs/unreviewed.dll',
+                     'numpy.libs/libscipy_openblas64_-0123456789abcdef0123456789abcdef.dll'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed'):
+                release._validate_runtime_file(name, b'MZ synthetic native code', {})
+
     def test_standalone_checks_embedded_metadata_native_files_modules_and_privacy(self):
         archive, blobs, module = self.standalone_archive_fixture()
         for name, data in (('koei_editor/data/game_metadata.json', b'{"tampered": true}'),

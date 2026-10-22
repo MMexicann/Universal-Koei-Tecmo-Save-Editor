@@ -220,6 +220,7 @@ class Editor(Appearance):
         ttk.Checkbutton(filter_bar, textvariable=self.pin_count, variable=self.pinned_only,
                         command=self.field_filters_changed).pack(side='left', padx=(12, 0))
         navigation = ttk.Frame(host, padding=(18, 6, 18, 0))
+        self.navigation_bar = navigation
         navigation.pack(fill='x')
         ttk.Label(navigation, text='Record').pack(side='left', padx=(0, 8))
         self.record = tk.StringVar(root, value='All records')
@@ -357,6 +358,7 @@ class Editor(Appearance):
         self.fields.bind('<<TreeviewSelect>>', self.selected)
         self.search.trace_add('write', self.field_filters_changed)
         page_bar = ttk.Frame(table_frame, padding=(0, 5, 0, 0))
+        self.field_page_bar = page_bar
         page_bar.grid(row=2, column=0, sticky='ew')
         page_bar.columnconfigure(1, weight=1)
         self.previous_field_page = ttk.Button(page_bar, text='Previous page',
@@ -391,6 +393,16 @@ class Editor(Appearance):
         self.subtitle_label.pack_configure(pady=(0 if compact else 5, 0))
         self.details_toggle.pack_configure(pady=(0 if compact else 5, 0))
         self.filename_label.configure(padding=(18, 2 if compact else 8))
+        # Paging adds a second control row. Recover space from margins while
+        # preserving fonts, every control and each game's expanded spacing.
+        if not hasattr(self, '_expanded_edit_spacing'):
+            self._expanded_edit_spacing = tuple(
+                (widget, widget.cget('padding')) for widget in (
+                    self.navigation_bar, self.tools_bar, self.bulk_bar,
+                    self.field_page_bar, self.selection_label, self.status_label))
+        for widget, expanded in self._expanded_edit_spacing:
+            widget.configure(padding=(0 if widget is self.field_page_bar else (18, 0))
+                             if compact else expanded)
 
     def focus_field_search(self, _event=None):
         self.workspace_tabs.select(self.edit_page)

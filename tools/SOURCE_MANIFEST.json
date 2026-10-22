@@ -4548,8 +4548,8 @@
     },
     {
       "path": "src/koei_editor/shared/verified_gui.py",
-      "bytes": 75626,
-      "sha256": "3e3d4ad3cf9b6fd51bee9b9913c59c0da683df653a10d9efff7618231f126079"
+      "bytes": 76387,
+      "sha256": "b85964dd057d5f9dfc633eb585919f8a9def006474f158558e720ad043d1967a"
     },
     {
       "path": "src/koei_editor/shared/verified_self_test.py",
@@ -4598,8 +4598,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 48873,
-      "sha256": "c036cb8a694238c6713443de8cf07e5c03325ff9b179398604dffde68c32e58b"
+      "bytes": 49432,
+      "sha256": "4663489d528fb3129fcf70e1bd5b2b99d45a120e28c5428ceb1710a0a1c0796e"
     },
     {
       "path": "tests/test_arland_ps3.py",

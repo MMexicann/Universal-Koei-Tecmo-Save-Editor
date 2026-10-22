@@ -4,7 +4,7 @@
 {
   "schema_version": 1,
   "feature": "koei_tecmo_game_hub",
-  "base_commit": "f8eb321cd3830125c09c5de1c3b5f5ed3f6f91ce",
+  "base_commit": "c1b6dcb9e176e39e35fe7be91fcfe4897c6e54e8",
   "scope": {
     "steam_mappings": "Existing reviewed Windows PC profile mappings",
     "discovery": "Steam library and app manifest metadata only",
@@ -17,8 +17,8 @@
     "focused_tests": {
       "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center",
       "status": "passed_with_gui_skips",
-      "tests": 122,
-      "passed": 82,
+      "tests": 123,
+      "passed": 83,
       "skipped": 40,
       "failures": 0,
       "skip_reason": "Tk display unavailable in this environment"

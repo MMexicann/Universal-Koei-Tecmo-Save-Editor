@@ -68,6 +68,222 @@ def new_child_bound(data, directory, name, expected_identity):
     return _new_child_posix(data, directory, name, expected_identity)
 
 
+def new_directory_child_bound(directory, name, expected_identity):
+    """Create a new directory relative to a checked parent handle.
+
+    Linux uses ``openat2`` with ``RESOLVE_NO_XDEV`` when reopening the new
+    child, so a mountpoint cannot redirect nested restore data. Windows creates
+    the child with ``NtCreateFile`` rooted at a pinned parent handle. Other
+    POSIX systems fail closed if the new child crosses filesystems.
+    """
+    _validate_child_name(name)
+    directory = Path(directory)
+    if os.name == 'nt':
+        return _new_directory_child_windows(directory, name, expected_identity)
+    if sys.platform.startswith('linux'):
+        return _new_directory_child_linux(directory, name, expected_identity)
+    if os.name == 'posix':
+        return _new_directory_child_posix(directory, name, expected_identity)
+    raise SaveError('This system has no safe handle-bound directory creation primitive.')
+
+
+def _new_directory_child_posix(directory, name, expected_identity):
+    flags = (os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0)
+             | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_CLOEXEC', 0))
+    try:
+        parent_fd = os.open(directory, flags)
+    except OSError as error:
+        raise SaveError('The private output directory changed or became linked.') from error
+    try:
+        parent_info = os.fstat(parent_fd)
+        if (not stat.S_ISDIR(parent_info.st_mode)
+                or (parent_info.st_dev, parent_info.st_ino) != expected_identity):
+            raise SaveError('The private output directory changed identity.')
+        try:
+            os.mkdir(name, mode=0o700, dir_fd=parent_fd)
+            child_fd = os.open(name, flags, dir_fd=parent_fd)
+        except OSError as error:
+            raise SaveError('The private output subdirectory already exists or cannot be created safely.') from error
+        try:
+            child_info = os.fstat(child_fd)
+            if (not stat.S_ISDIR(child_info.st_mode)
+                    or child_info.st_dev != parent_info.st_dev):
+                raise SaveError('The private output subdirectory crossed a filesystem boundary.')
+            os.fsync(parent_fd)
+        finally:
+            os.close(child_fd)
+        return directory / name, child_info
+    finally:
+        os.close(parent_fd)
+
+
+def _new_directory_child_linux(directory, name, expected_identity):
+    """Create through mkdirat and reject mountpoints with openat2."""
+    import ctypes
+
+    flags = (os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0)
+             | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_CLOEXEC', 0))
+    try:
+        parent_fd = os.open(directory, flags)
+    except OSError as error:
+        raise SaveError('The private output directory changed or became linked.') from error
+    try:
+        parent_info = os.fstat(parent_fd)
+        if (not stat.S_ISDIR(parent_info.st_mode)
+                or (parent_info.st_dev, parent_info.st_ino) != expected_identity):
+            raise SaveError('The private output directory changed identity.')
+        try:
+            os.mkdir(name, mode=0o700, dir_fd=parent_fd)
+        except OSError as error:
+            raise SaveError('The private output subdirectory already exists or cannot be created safely.') from error
+
+        class OpenHow(ctypes.Structure):
+            _fields_ = [('flags', ctypes.c_uint64), ('mode', ctypes.c_uint64),
+                        ('resolve', ctypes.c_uint64)]
+
+        how = OpenHow(
+            flags,
+            0,
+            0x01 | 0x02 | 0x04 | 0x08,  # NO_XDEV | NO_MAGICLINKS | NO_SYMLINKS | BENEATH
+        )
+        libc = ctypes.CDLL(None, use_errno=True)
+        syscall = libc.syscall
+        syscall.restype = ctypes.c_long
+        syscall.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_char_p,
+                            ctypes.POINTER(OpenHow), ctypes.c_size_t]
+        child_fd = syscall(437, parent_fd, os.fsencode(name),
+                           ctypes.byref(how), ctypes.sizeof(how))
+        if child_fd < 0:
+            error = ctypes.get_errno()
+            raise SaveError(
+                'The private output subdirectory could not be reopened without following links or mounts.'
+            ) from OSError(error, os.strerror(error))
+        try:
+            child_info = os.fstat(child_fd)
+            if (not stat.S_ISDIR(child_info.st_mode)
+                    or child_info.st_dev != parent_info.st_dev):
+                raise SaveError('The private output subdirectory crossed a filesystem boundary.')
+            os.fsync(parent_fd)
+        finally:
+            os.close(child_fd)
+        return directory / name, child_info
+    finally:
+        os.close(parent_fd)
+
+
+def _new_directory_child_windows(directory, name, expected_identity):
+    """Create a directory child atomically relative to a pinned Windows handle."""
+    import ctypes
+    from ctypes import wintypes
+
+    FILE_LIST_DIRECTORY = 0x0001
+    FILE_ADD_SUBDIRECTORY = 0x0004
+    FILE_TRAVERSE = 0x0020
+    FILE_READ_ATTRIBUTES = 0x0080
+    FILE_SHARE_READ = 0x00000001
+    FILE_SHARE_WRITE = 0x00000002
+    SYNCHRONIZE = 0x00100000
+    OPEN_EXISTING = 3
+    FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+    FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+    FILE_ATTRIBUTE_DIRECTORY = 0x00000010
+    FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
+    FILE_DIRECTORY_FILE = 0x00000001
+    FILE_SYNCHRONOUS_IO_NONALERT = 0x00000020
+    FILE_CREATE = 2
+    OBJ_CASE_INSENSITIVE = 0x00000040
+
+    class BY_HANDLE_FILE_INFORMATION(ctypes.Structure):
+        _fields_ = [('dwFileAttributes', wintypes.DWORD), ('_rest', wintypes.DWORD * 12)]
+
+    class UNICODE_STRING(ctypes.Structure):
+        _fields_ = [('Length', wintypes.USHORT), ('MaximumLength', wintypes.USHORT),
+                    ('Buffer', wintypes.LPWSTR)]
+
+    class OBJECT_ATTRIBUTES(ctypes.Structure):
+        _fields_ = [('Length', wintypes.ULONG), ('RootDirectory', wintypes.HANDLE),
+                    ('ObjectName', ctypes.POINTER(UNICODE_STRING)), ('Attributes', wintypes.ULONG),
+                    ('SecurityDescriptor', wintypes.LPVOID),
+                    ('SecurityQualityOfService', wintypes.LPVOID)]
+
+    class IO_STATUS_BLOCK_UNION(ctypes.Union):
+        _fields_ = [('Status', ctypes.c_long), ('Pointer', wintypes.LPVOID)]
+
+    class IO_STATUS_BLOCK(ctypes.Structure):
+        _anonymous_ = ('u',)
+        _fields_ = [('u', IO_STATUS_BLOCK_UNION), ('Information', ctypes.c_size_t)]
+
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    ntdll = ctypes.WinDLL('ntdll')
+    kernel32.CreateFileW.restype = wintypes.HANDLE
+    kernel32.GetFileInformationByHandle.argtypes = [wintypes.HANDLE,
+                                                     ctypes.POINTER(BY_HANDLE_FILE_INFORMATION)]
+    kernel32.GetFileInformationByHandle.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    parent = kernel32.CreateFileW(
+        str(directory), FILE_LIST_DIRECTORY | FILE_ADD_SUBDIRECTORY | FILE_TRAVERSE | FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, None, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, None)
+    if parent == wintypes.HANDLE(-1).value:
+        raise SaveError('The private output directory could not be opened without following links.')
+    try:
+        import msvcrt
+        parent_fd = msvcrt.open_osfhandle(parent, os.O_RDONLY)
+    except OSError as error:
+        kernel32.CloseHandle(parent)
+        raise SaveError('The private output directory handle could not be bound safely.') from error
+    parent = msvcrt.get_osfhandle(parent_fd)
+    child = wintypes.HANDLE()
+    try:
+        parent_info = BY_HANDLE_FILE_INFORMATION()
+        if (not kernel32.GetFileInformationByHandle(parent, ctypes.byref(parent_info))
+                or not parent_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
+                or parent_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT):
+            raise SaveError('The private output directory changed identity or became linked.')
+        parent_stat = os.fstat(parent_fd)
+        if (parent_stat.st_dev, parent_stat.st_ino) != expected_identity:
+            raise SaveError('The private output directory changed identity or became linked.')
+
+        name_buffer = ctypes.create_unicode_buffer(name)
+        unicode_name = UNICODE_STRING(len(name.encode('utf-16-le')), len(name.encode('utf-16-le')) + 2,
+                                      ctypes.cast(name_buffer, wintypes.LPWSTR))
+        object_attributes = OBJECT_ATTRIBUTES(
+            ctypes.sizeof(OBJECT_ATTRIBUTES), parent, ctypes.pointer(unicode_name),
+            OBJ_CASE_INSENSITIVE, None, None)
+        iosb = IO_STATUS_BLOCK()
+        ntdll.NtCreateFile.argtypes = [ctypes.POINTER(wintypes.HANDLE), wintypes.ULONG,
+                                       ctypes.POINTER(OBJECT_ATTRIBUTES),
+                                       ctypes.POINTER(IO_STATUS_BLOCK), wintypes.LPVOID,
+                                       wintypes.ULONG, wintypes.ULONG, wintypes.ULONG,
+                                       wintypes.ULONG, wintypes.LPVOID, wintypes.ULONG]
+        ntdll.NtCreateFile.restype = ctypes.c_long
+        status = ntdll.NtCreateFile(
+            ctypes.byref(child), FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+            ctypes.byref(object_attributes), ctypes.byref(iosb), None, FILE_ATTRIBUTE_DIRECTORY,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_CREATE,
+            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_FLAG_OPEN_REPARSE_POINT,
+            None, 0)
+        if status < 0:
+            raise SaveError('The private output subdirectory already exists or cannot be created safely.')
+        child_info = BY_HANDLE_FILE_INFORMATION()
+        if (not kernel32.GetFileInformationByHandle(child, ctypes.byref(child_info))
+                or not child_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY
+                or child_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT):
+            raise SaveError('The private output subdirectory is not an ordinary directory.')
+        child_fd = msvcrt.open_osfhandle(child.value, os.O_RDONLY)
+        child = wintypes.HANDLE()
+        try:
+            child_stat = os.fstat(child_fd)
+        finally:
+            os.close(child_fd)
+        return directory / name, child_stat
+    finally:
+        if child.value:
+            kernel32.CloseHandle(child)
+        os.close(parent_fd)
+
+
 def publish_new_child_bound(data, directory, name, expected_identity):
     """Write, verify, then publish a new child without exposing partial bytes."""
     if type(data) is not bytes:

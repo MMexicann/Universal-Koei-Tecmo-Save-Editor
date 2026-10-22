@@ -177,6 +177,7 @@ class PlaythroughProfilesWindow:
     def _library_form(self):
         self.library_tab.columnconfigure(0, weight=1)
         self.library_tab.rowconfigure(1, weight=1)
+        self.library_tab.rowconfigure(7, weight=1)
         ttk.Label(self.library_tab, text='Local profiles', font=('TkDefaultFont', 10, 'bold')).grid(
             row=0, column=0, sticky='w')
         tree_frame = ttk.Frame(self.library_tab)
@@ -244,7 +245,9 @@ class PlaythroughProfilesWindow:
         self._button(actions, 'Preview compatibility', self.preview_profile)
         self.prepare_button = self._button(actions, 'Prepare isolated environment…', self.prepare_environment)
         self._button(actions, 'Export visible report…', self.export_report)
-        self.library_output = self._output(self.library_tab, height=7)
+        output_frame = ttk.Frame(self.library_tab)
+        output_frame.grid(row=7, column=0, sticky='nsew', pady=(8, 0))
+        self.library_output = self._output(output_frame, height=7)
         self.profile_tree.bind('<<TreeviewSelect>>', self._profile_selected)
 
     def _browse_active_save(self):

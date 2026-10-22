@@ -3,12 +3,14 @@ from dataclasses import asdict
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 from koei_editor.games.deception4_ps3 import parser
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared import copy_storage as copy_storage_module
 from koei_editor.shared import save_vault as vault
 from tests.test_ps3_new_families import fixture
 from tests.test_ps3_expansion import PS3ContextTests
@@ -841,6 +843,46 @@ class SaveVaultTests(unittest.TestCase):
         self.assertEqual(restored.read_bytes(), source.read_bytes())
         self.assertEqual((restored.parent / 'sce_sys/param.sfo').read_bytes(), original)
         self.assertTrue(self.store.verify(record.id)[0].valid)
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux openat2 mount-bound directory writer')
+    def test_nested_restore_rejects_symlink_replacement_before_openat2(self):
+        from koei_editor.games.aot1_vita import parser as vita
+        from tests.test_aot1_vita import fixture as vita_fixture
+        directory = self.folder / 'vita-nested-race-source'
+        directory.mkdir()
+        source = directory / 'app0000.dat'
+        source.write_bytes(vita_fixture())
+        (directory / 'sce_sys').mkdir()
+        original = vita.identity_metadata('/PCSB00898') + b'private-original-tail'
+        (directory / 'sce_sys' / 'param.sfo').write_bytes(original)
+        record = self.store.snapshot(vita.GAME_ID, source, branch='vita-race')
+        destination = self.folder / 'vita-nested-race-restore'
+        outside = self.folder / 'vita-nested-race-outside'
+        outside.mkdir()
+        original_mkdir = os.mkdir
+        race_injected = False
+
+        def replace_new_context_directory(name, *args, **kwargs):
+            nonlocal race_injected
+            result = original_mkdir(name, *args, **kwargs)
+            if not race_injected and name == 'sce_sys':
+                nested = destination / 'sce_sys'
+                nested.rmdir()
+                try:
+                    nested.symlink_to(outside, target_is_directory=True)
+                except OSError as error:
+                    self.skipTest(f'Host cannot create a directory symlink: {error}')
+                race_injected = True
+            return result
+
+        with patch.object(copy_storage_module.os, 'mkdir',
+                          side_effect=replace_new_context_directory):
+            with self.assertRaises(SaveError):
+                self.store.restore(record.id, destination)
+
+        self.assertTrue(race_injected, 'the test must swap nested context before its safe reopen')
+        self.assertEqual(tuple(outside.iterdir()), ())
+        self.assertTrue((destination / 'app0000.dat').is_file())
 
     def test_steam_owner_bound_native_context_preserved_without_synthesis(self):
         from koei_editor.games.samurai5_pc import parser as steam

@@ -120,9 +120,9 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         result = self.store.prepare_environment(profile.id, destination, '1.02')
 
         component_files = {
-            'mod_configuration': destination / 'components' / 'mod_configuration.json',
-            'game_settings': destination / 'components' / 'game_settings.json',
-            'character_build': destination / 'components' / 'character_build.json',
+            'mod_configuration': destination / 'component-mod_configuration.json',
+            'game_settings': destination / 'component-game_settings.json',
+            'character_build': destination / 'component-character_build.json',
         }
         self.assertEqual(set(component_files), {item.component for item in profile.components})
         for component in profile.components:
@@ -148,6 +148,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertFalse(report['live_save_written'])
         self.assertEqual(report['installed_game_version_source'], 'user_asserted')
         self.assertEqual(report['profile_id'], profile.id)
+        self.assertEqual(report['blockers'], [])
 
     def test_switch_backup_captures_only_an_independent_copy_and_restores_new_directory(self):
         profile = self.make_profile()
@@ -239,10 +240,10 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         active_save = self.copy(current_dir)
         destination = self.root / 'partial-environment'
 
-        def fail_restore(_snapshot_id, _destination):
+        def fail_restore(_snapshot_id, _destination, **_kwargs):
             raise SaveError('injected restore failure')
 
-        self.vault.restore = fail_restore
+        self.vault.restore_into_existing_directory = fail_restore
         with self.assertRaises(PlaythroughPreparationError) as caught:
             self.store.prepare_environment(
                 profile.id, destination, '1.02', active_save_copy=active_save)
@@ -412,43 +413,100 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
         self.assertEqual(output.read_bytes(), data)
 
-    def test_components_parent_symlink_race_cannot_redirect_staging_outside_environment(self):
+    def test_environment_swap_before_vault_restore_cannot_redirect_save_files(self):
         profile = self.make_profile()
-        destination = self.root / 'race-environment'
-        component_parent = destination / 'components'
-        outside = self.root / 'outside-components'
-        outside.mkdir()
-        original_ordinary = playthrough_profiles_module._ordinary
+        destination = self.root / 'restore-race-environment'
+        displaced_destination = self.root / 'displaced-restore-race-environment'
+        replacement = self.root / 'replacement-restore-race-environment'
+        replacement.mkdir()
+        original_restore = self.vault.restore_into_existing_directory
         race_injected = False
 
-        def replace_parent_after_preflight(path, **kwargs):
+        def replace_environment_before_restore(snapshot_id, restore_destination, **kwargs):
             nonlocal race_injected
-            checked = original_ordinary(path, **kwargs)
-            # Save Vault canonicalizes paths before returning them. On Windows
-            # this can also expand a short path spelling, so compare resolved
-            # locations rather than their original text.
-            if (not race_injected and Path(path).resolve() == component_parent.resolve()
-                    and kwargs.get('directory') is True):
-                # This hook runs after the service's parent preflight and
-                # before the first staged component is written.
-                component_parent.rmdir()
+            self.assertEqual(restore_destination, destination)
+            self.assertIn('expected_directory_identity', kwargs)
+            destination.rename(displaced_destination)
+            replacement.rename(destination)
+            race_injected = True
+            return original_restore(snapshot_id, restore_destination, **kwargs)
+
+        with patch.object(self.vault, 'restore_into_existing_directory',
+                          side_effect=replace_environment_before_restore):
+            with self.assertRaises(PlaythroughPreparationError):
+                self.store.prepare_environment(profile.id, destination, '1.02')
+
+        self.assertTrue(race_injected, 'the test must swap the environment immediately before restore')
+        self.assertTrue(displaced_destination.is_dir())
+        self.assertEqual(tuple(displaced_destination.iterdir()), ())
+        self.assertEqual(tuple(destination.iterdir()), ())
+
+    def test_environment_symlink_swap_before_component_staging_cannot_redirect_files(self):
+        profile = self.make_profile()
+        destination = self.root / 'race-environment'
+        displaced_destination = self.root / 'displaced-race-environment'
+        outside = self.root / 'outside-components'
+        outside.mkdir()
+        original_new_child_bound = playthrough_profiles_module.new_child_bound
+        race_injected = False
+
+        def replace_parent_before_component_write(data, directory, name, expected_identity):
+            nonlocal race_injected
+            if (not race_injected and Path(directory).resolve() == destination.resolve()
+                    and name == 'component-mod_configuration.json'):
+                # Save restoration has completed; replace the pinned root
+                # before the first component is staged.
+                destination.rename(displaced_destination)
                 try:
-                    component_parent.symlink_to(outside, target_is_directory=True)
+                    destination.symlink_to(outside, target_is_directory=True)
                 except OSError as error:
                     self.skipTest(f'Host cannot create a directory symlink: {error}')
                 race_injected = True
-            return checked
+            return original_new_child_bound(data, directory, name, expected_identity)
 
-        with patch.object(playthrough_profiles_module, '_ordinary',
-                          side_effect=replace_parent_after_preflight):
+        with patch.object(playthrough_profiles_module, 'new_child_bound',
+                          side_effect=replace_parent_before_component_write):
             with self.assertRaises(PlaythroughPreparationError) as caught:
                 self.store.prepare_environment(profile.id, destination, '1.02')
 
             self.assertEqual(caught.exception.destination.resolve(), destination.resolve())
         self.assertTrue(race_injected, 'the test must inject the race after parent preflight')
         self.assertEqual(list(outside.iterdir()), [])
-        self.assertFalse((outside / 'mod_configuration.json').exists())
         self.assertFalse((outside / 'playthrough-report.json').exists())
+        self.assertEqual((displaced_destination / 'DATA.BIN').read_bytes(), self.raw)
+
+    def test_environment_swap_before_component_staging_cannot_redirect_files(self):
+        profile = self.make_profile()
+        destination = self.root / 'directory-race-environment'
+        displaced_destination = self.root / 'displaced-directory-race-environment'
+        replacement = self.root / 'replacement-directory-race-environment'
+        replacement.mkdir()
+        original_new_child_bound = playthrough_profiles_module.new_child_bound
+        race_injected = False
+
+        def replace_environment_before_component_write(data, directory, name, expected_identity):
+            nonlocal race_injected
+            if (not race_injected and name == 'component-mod_configuration.json'
+                    and Path(directory).resolve() == destination.resolve()):
+                # Save restoration and identity capture have completed, but
+                # the first component file is not created yet.
+                destination.rename(displaced_destination)
+                replacement.rename(destination)
+                race_injected = True
+            return original_new_child_bound(data, directory, name, expected_identity)
+
+        with patch.object(
+                playthrough_profiles_module, 'new_child_bound',
+                side_effect=replace_environment_before_component_write):
+            with self.assertRaises(PlaythroughPreparationError) as caught:
+                self.store.prepare_environment(profile.id, destination, '1.02')
+
+            self.assertEqual(caught.exception.destination.resolve(), destination.resolve())
+
+        self.assertTrue(race_injected, 'the test must swap the environment before component file creation')
+        self.assertTrue(displaced_destination.is_dir())
+        self.assertEqual((displaced_destination / 'DATA.BIN').read_bytes(), self.raw)
+        self.assertEqual(tuple(destination.iterdir()), ())
 
     def test_environment_destination_symlink_race_cannot_redirect_report_outside(self):
         profile = self.make_profile(components=())

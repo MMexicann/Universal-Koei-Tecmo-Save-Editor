@@ -74,6 +74,8 @@ identify the installed version source as `user_asserted`, list compatibility
 blockers and record `components_applied: false` and `live_save_written: false`.
 Prepared reports additionally include the verified Vault snapshot ID, relative
 restored-save location, optional active-copy backup ID and component digests.
+Component JSON files are staged directly in the new environment folder as
+`component-<type>.json` beside `playthrough-report.json`.
 They omit absolute local paths and save bytes. These reports summarize this
 application's checks; they do not establish that the game loads the save or that
 manager data is compatible beyond matching the declared game/version strings.

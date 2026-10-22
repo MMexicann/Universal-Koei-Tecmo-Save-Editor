@@ -19,7 +19,7 @@ import uuid
 
 from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.shared.copy_storage import new_child_bound
+from koei_editor.shared.copy_storage import new_child_bound, new_directory_child_bound
 from koei_editor.shared.save_safety import safe_path, reserved_windows_path
 from koei_editor.shared.save_library import _identity, _handle_binding, _linked, _snapshot_digest
 
@@ -217,12 +217,17 @@ def _read(path, limit, *, companion=False):
         os.close(descriptor)
 
 
-def _new(raw, path, *, companion=False):
+def _new(raw, path, *, companion=False, expected_parent_identity=None):
     path, info = _ordinary(path, missing=True, companion=companion)
     if info is not None:
         raise FileExistsError('Save Vault never overwrites an existing destination.')
     parent, parent_info = _ordinary(path.parent, directory=True)
-    parent_identity = (parent_info.st_dev, parent_info.st_ino)
+    actual_parent_identity = (parent_info.st_dev, parent_info.st_ino)
+    if (expected_parent_identity is not None
+            and actual_parent_identity != expected_parent_identity):
+        raise SaveError('The restore parent directory changed identity.')
+    parent_identity = (actual_parent_identity if expected_parent_identity is None
+                       else expected_parent_identity)
     # Create the child relative to a pinned directory handle. The exclusive
     # create keeps the no-replace contract while avoiding a path-based staging
     # write that could be redirected by swapping the parent after preflight.
@@ -588,14 +593,31 @@ class SaveVault:
         # rebind it to a replacement directory before the first private write.
         identity = (_directory_identity(directory) if expected_identity is None
                     else expected_identity)
+        directory_identities = {directory: identity}
         for name, raw in bundle.items():
             _check_directory_identity(directory, identity)
             target = directory / name
-            if '/' in name:
-                if not target.parent.exists():
-                    target.parent.mkdir(mode=0o700)
-                _ordinary(target.parent, directory=True)
-            _new(raw, target, companion=True)
+            parent = target.parent
+            if parent != directory:
+                relative_parent = parent.relative_to(directory)
+                current = directory
+                for part in relative_parent.parts:
+                    current = current / part
+                    current_identity = directory_identities.get(current)
+                    if current_identity is None:
+                        parent_identity = directory_identities[current.parent]
+                        _check_directory_identity(current.parent, parent_identity)
+                        _, current_info = new_directory_child_bound(
+                            current.parent, current.name, parent_identity)
+                        _check_directory_identity(directory, identity)
+                        current_identity = (current_info.st_dev, current_info.st_ino)
+                        directory_identities[current] = current_identity
+                    _check_directory_identity(current, current_identity)
+                parent_identity = directory_identities[parent]
+            else:
+                parent_identity = identity
+            _new(raw, target, companion=True,
+                 expected_parent_identity=parent_identity)
             _check_directory_identity(directory, identity)
 
     def snapshot(self, game_id, source, *, branch='main', label='', parent_id=None):
@@ -709,6 +731,21 @@ class SaveVault:
                 results.append(result)
             return tuple(results)
 
+    def _restore_bundle_to_directory(self, snapshot, destination, bundle,
+                                     destination_identity):
+        self._materialize(bundle, destination, expected_identity=destination_identity)
+        _check_directory_identity(destination, destination_identity)
+        path = destination / snapshot.filename
+        _qualify(snapshot.game_id, path, bundle[snapshot.filename])
+        _check_directory_identity(destination, destination_identity)
+        for name, raw in bundle.items():
+            _check_directory_identity(destination, destination_identity)
+            if _read(destination / name, MAX_FILE_BYTES, companion=True)[0] != raw:
+                raise SaveError('The restored copy changed during native read-back.')
+        self._check_bundle_entries(destination, bundle)
+        _check_directory_identity(destination, destination_identity)
+        return path
+
     def restore(self, snapshot_id, destination):
         """Restore exact bytes into a NEW dedicated directory; return save path.
 
@@ -728,18 +765,34 @@ class SaveVault:
             _profile_path(snapshot.game_id, destination / snapshot.filename)
             destination.mkdir(mode=0o700)
             destination_identity = _directory_identity(destination)
-            self._materialize(bundle, destination, expected_identity=destination_identity)
-            _check_directory_identity(destination, destination_identity)
-            path = destination / snapshot.filename
-            _qualify(snapshot.game_id, path, bundle[snapshot.filename])
-            _check_directory_identity(destination, destination_identity)
-            for name, raw in bundle.items():
-                _check_directory_identity(destination, destination_identity)
-                if _read(destination / name, MAX_FILE_BYTES, companion=True)[0] != raw:
-                    raise SaveError('The restored copy changed during native read-back.')
-            self._check_bundle_entries(destination, bundle)
-            _check_directory_identity(destination, destination_identity)
-            return path
+            return self._restore_bundle_to_directory(
+                snapshot, destination, bundle, destination_identity)
+
+    def restore_into_existing_directory(self, snapshot_id, destination, *,
+                                        expected_directory_identity):
+        """Restore exact snapshot bytes into a checked, empty private directory.
+
+        This is for callers that already created and pinned an isolated output
+        directory. Every child write remains bound to that captured identity.
+        """
+        destination, info = _ordinary(destination, directory=True)
+        identity = (info.st_dev, info.st_ino)
+        if identity != expected_directory_identity:
+            raise SaveError('The restore destination changed identity.')
+        if self._contains(destination):
+            raise SaveError('Restore to a separate copied-save folder outside the vault.')
+        with self._locked():
+            snapshots, _ = self._load()
+            snapshot = self._find(snapshots, snapshot_id)
+            bundle, _ = self._bundle(snapshot)
+            _profile_path(snapshot.game_id, destination / snapshot.filename)
+            _check_directory_identity(destination, expected_directory_identity)
+            with os.scandir(destination) as entries:
+                if next(entries, None) is not None:
+                    raise FileExistsError('Restore into an existing directory requires it to be empty.')
+            _check_directory_identity(destination, expected_directory_identity)
+            return self._restore_bundle_to_directory(
+                snapshot, destination, bundle, expected_directory_identity)
 
     def relabel(self, snapshot_id, label):
         label = _label(label)

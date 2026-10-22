@@ -567,12 +567,10 @@ class PlaythroughProfileStore:
             raise SaveError('Choose a fresh environment folder outside the Save Vault.')
         parent, parent_info = _ordinary(destination.parent, directory=True)
         safe_path(destination)
-        save_destination = destination / 'save-copy'
-        # This nested directory cannot pass _ordinary until its new parent
-        # exists. Apply the lexical/live/cloud guard before creating anything;
-        # SaveVault.restore will recheck ordinary path identity after creation.
-        safe_path(save_destination)
-        _profile_path(profile.game_id, save_destination / snapshot.filename)
+        restored_save_destination = destination / snapshot.filename
+        # Apply the selected backend's live-save guard before creating anything.
+        safe_path(restored_save_destination)
+        _profile_path(profile.game_id, restored_save_destination)
 
         backup_snapshot_id = None
         if active_save_copy is not None:
@@ -596,37 +594,34 @@ class PlaythroughProfileStore:
                     != (parent_info.st_dev, parent_info.st_ino)):
                 raise SaveError('The environment parent changed identity during preparation.')
 
-            save_path = self.vault.restore(profile.save_snapshot_id, save_destination)
+            save_path = self.vault.restore_into_existing_directory(
+                profile.save_snapshot_id, destination,
+                expected_directory_identity=created_identity)
             if _directory_identity(destination) != created_identity:
                 raise SaveError('The new environment directory changed identity during preparation.')
 
             component_rows = []
             if profile.components:
-                component_directory = destination / 'components'
-                component_directory.mkdir(mode=0o700)
-                component_directory, component_info = _ordinary(
-                    component_directory, directory=True)
-                component_identity = (component_info.st_dev, component_info.st_ino)
                 for component in profile.components:
                     fields = _component_fields(component)
                     digest = _component_digest(fields)
                     document = dict(fields, sha256=digest)
                     raw = _pretty_json(document, MAX_COMPONENT_BYTES)
-                    component_path = component_directory / (component.component + '.json')
-                    new_child_bound(raw, component_directory, component_path.name,
-                                    component_identity)
+                    component_name = 'component-' + component.component + '.json'
+                    component_path = destination / component_name
+                    new_child_bound(raw, destination, component_name, created_identity)
                     if _read(component_path, MAX_COMPONENT_BYTES)[0] != raw:
                         raise SaveError('Staged manager component failed its local read-back check.')
                     component_rows.append({
                         'component': component.component,
                         'provider': component.provider,
                         'schema_version': component.schema_version,
-                        'path': 'components/' + component.component + '.json',
+                        'path': component_name,
                         'sha256': digest,
                         'applied': False,
                     })
 
-            relative_save = Path('save-copy') / snapshot.filename
+            relative_save = Path(snapshot.filename)
             report = {
                 'schema': 'koei-playthrough-environment-report',
                 'schema_version': 1,
@@ -638,6 +633,7 @@ class PlaythroughProfileStore:
                 'installed_game_version': installed_game_version,
                 'installed_game_version_source': 'user_asserted',
                 'compatible': True,
+                'blockers': [],
                 'save_snapshot_id': profile.save_snapshot_id,
                 'save_snapshot_verified': True,
                 'restored_save_path': relative_save.as_posix(),

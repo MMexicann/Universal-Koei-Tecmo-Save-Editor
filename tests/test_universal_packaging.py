@@ -222,7 +222,12 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
                 patch.object(build, 'RESEARCH_PROFILES', {}):
             args = build.build_args()
         modules = [args[index + 1] for index, value in enumerate(args) if value == '--hidden-import']
+        manager_modules = {
+            'koei_editor.shared.configuration_gui',
+            'koei_editor.shared.configuration_manager',
+        }
         self.assertTrue({game.editor_module, game.parser_module, game.scalar_backend}.issubset(modules))
+        self.assertTrue(manager_modules.issubset(modules))
 
     def test_conversion_only_native_backends_are_collected_without_scalar_registration(self):
         from tools import build_windows as build

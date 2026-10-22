@@ -30,6 +30,7 @@ Nioh 2 PC only.
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Emulator Integration Hub: documented launch profiles and exported-save handoff](EMULATOR_HUB.md)
+- [Koei Tecmo Game Configuration Manager: verified settings, profiles and backups](GAME_CONFIGURATION.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
 - [Save Doctor, automatic detection and local Save Vault](SAVE_MANAGEMENT.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)

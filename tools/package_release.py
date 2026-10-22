@@ -44,7 +44,7 @@ RUNTIME_GUIDES = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICA
                   'docs/DW7XL_CONVERSION.md', 'docs/DW7XL_WEAPONS.md',
                   'docs/DW7XL_PS3.md', 'docs/NOA2_SWITCH_FORMAT.md',
                   'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
-                  'docs/FIELD_PINS_AND_REVIEWS.md')
+                  'docs/FIELD_PINS_AND_REVIEWS.md', 'docs/GAME_CONFIGURATION.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt',
                    'licenses/G1Tool-MIT.txt', 'licenses/miniaudio-MIT.txt',
@@ -69,7 +69,7 @@ WINDOWS_DOCS = ('docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATI
                 'docs/DW6_CONVERSION.md', 'docs/DW6_PS3_FORMAT.md', 'docs/DW7XL_CONVERSION.md',
                 'docs/DW7XL_WEAPONS.md', 'docs/DW7XL_PS3.md', 'docs/NOA2_SWITCH_FORMAT.md',
                 'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
-                'docs/FIELD_PINS_AND_REVIEWS.md',
+                'docs/FIELD_PINS_AND_REVIEWS.md', 'docs/GAME_CONFIGURATION.md',
                 'docs/FATAL_FRAME2_PS2_FORMAT.md', 'docs/TROY_PS3_FORMAT.md', 'docs/WARRIORS_V26_DEPTH.md',
                 'docs/BUILDING.md', 'docs/ARCHITECTURE.md', 'docs/VALIDATION.md', 'docs/EXPANSION_COVERAGE.md',
                 'docs/DYNASTY_RESEARCH.md', 'docs/OROCHI_RESEARCH.md', 'docs/SAMURAI_RESEARCH.md',

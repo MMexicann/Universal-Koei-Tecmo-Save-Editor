@@ -48,6 +48,9 @@ def build_args(root=ROOT, *, standalone=False):
             'trimesh.exchange.obj', 'trimesh.exchange.stl',
             'trimesh.exchange.ply', 'trimesh.exchange.gltf'):
         args.extend(['--hidden-import', module])
+    # These tools are loaded only from Application's optional retained-tool route.
+    args.extend(['--hidden-import', 'koei_editor.shared.configuration_manager',
+                 '--hidden-import', 'koei_editor.shared.configuration_gui'])
     # The thin launcher uses an absolute package import. __main__.py remains
     # the module entry point, whose relative imports need python -m context.
     args.append(str(root / 'launch.pyw'))

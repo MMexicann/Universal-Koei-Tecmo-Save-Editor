@@ -513,13 +513,13 @@
     },
     {
       "path": "docs/MOD_MANAGER.md",
-      "bytes": 8518,
-      "sha256": "5ba165357d9bb2fad0a236d43c230b2eaa46fcebc5c6c2ccf19532b46889ead0"
+      "bytes": 9072,
+      "sha256": "82234496e5a83748cbde1c0010ec07c768c32df905851873e27cca02141d8a2b"
     },
     {
       "path": "docs/MOD_MANAGER_VALIDATION.md",
-      "bytes": 2694,
-      "sha256": "ff7ca3f247667c2053e22b02dc320ed4512d642a76f517f78d62d7756cabb007"
+      "bytes": 4233,
+      "sha256": "a495376e8be46b66534499c13975391f25a5db70b1aaaea2a609a2c681bdb6f8"
     },
     {
       "path": "docs/MONSTER_RANCHER_DS_FORMAT.md",
@@ -3908,8 +3908,8 @@
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
-      "bytes": 82053,
-      "sha256": "a9e2f6bbf7f30faa68ad925ebfd766984bf46c2f7becff44fd33fdc7b7deff36"
+      "bytes": 82512,
+      "sha256": "af45d85daf9f69148c1e770cc67ceeba6a6ecb6ab1e6fbacaae20a42507d12b9"
     },
     {
       "path": "src/koei_editor/shared/mod_manager_gui.py",
@@ -5025,6 +5025,11 @@
       "path": "tests/test_mod_manager_nexus.py",
       "bytes": 10941,
       "sha256": "7967afb2f5350f8ae9523b568648c67488e5edf65f7c6110c880d243e2f22220"
+    },
+    {
+      "path": "tests/test_mod_manager_transaction_concurrency.py",
+      "bytes": 7793,
+      "sha256": "b460c06e74c00aa1e0e0c3e92a5ecd39bc45305dee8d551d84092a229eca9350"
     },
     {
       "path": "tests/test_monster_rancher_ds.py",

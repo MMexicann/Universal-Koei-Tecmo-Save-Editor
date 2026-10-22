@@ -155,6 +155,15 @@ def _library_locked(method):
     return locked
 
 
+def _transaction_locked(method):
+    """Keep recovery checks and live installation transactions mutually exclusive."""
+    @wraps(method)
+    def locked(self, *args, **kwargs):
+        with self._transaction_lock:
+            return method(self, *args, **kwargs)
+    return locked
+
+
 def default_state_dir() -> Path:
     """Return a per-user application-data location for manager state."""
     local = os.environ.get("LOCALAPPDATA")
@@ -374,6 +383,7 @@ class ModManager:
         self.index_path = self.state_dir / "library.json"
         self.index: dict[str, Any] = {"schema_version": 1, "mods": {}}
         self._library_lock = threading.RLock()
+        self._transaction_lock = threading.RLock()
         self._nexus_jobs: queue.Queue[_NexusDownloadJob] = queue.Queue(maxsize=_MAX_NEXUS_QUEUE_SIZE)
         self._nexus_results: queue.Queue[NexusDownloadResult] = queue.Queue()
         self._nexus_worker_lock = threading.Lock()
@@ -436,6 +446,7 @@ class ModManager:
         except (KeyError, TypeError, ValueError, PackageError) as exc:
             raise SafetyError(f"The mod library record for {mod_id!r} is invalid.") from exc
 
+    @_transaction_locked
     def set_game_root(self, path: str | os.PathLike[str]) -> Path:
         root = _canonical_root(path)
         key_material = os.path.normcase(str(root)).casefold().encode("utf-8", "strict")
@@ -1046,6 +1057,7 @@ class ModManager:
         path = self.journal_path
         return bool(path and (path.exists() or path.is_symlink() or _is_reparse_point(path)))
 
+    @_transaction_locked
     def recover_pending_transaction(self) -> None:
         """Recover the selected installation's journal before refreshing state."""
         if self.has_pending_transaction:
@@ -1055,6 +1067,7 @@ class ModManager:
         """Recover the selected install before any operation reads or changes its state."""
         self.recover_pending_transaction()
 
+    @_transaction_locked
     def _ensure_no_pending_library_transactions(self) -> None:
         """Protect global library changes from journals belonging to any install."""
         self._ensure_transaction_recovered()
@@ -1404,6 +1417,7 @@ class ModManager:
             raise SafetyError(f"The Mods folder contains multiple case-insensitive matches for {name!r}.")
         return matches[0] if matches else None
 
+    @_transaction_locked
     def _run_transaction(self, old_state: dict[str, Any], new_state: dict[str, Any], *,
                          moves: list[dict[str, str]] | None = None,
                          installs: list[dict[str, str]] | None = None,
@@ -1664,6 +1678,7 @@ class ModManager:
         if errors:
             raise SafetyError("Transaction rollback needs attention: " + "; ".join(errors))
 
+    @_transaction_locked
     def _recover_transaction(self) -> None:
         if self.journal_path is None:
             return

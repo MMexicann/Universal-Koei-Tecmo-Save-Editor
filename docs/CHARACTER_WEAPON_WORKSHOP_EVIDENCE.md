@@ -12,7 +12,8 @@ The record below is machine-readable. The full local runner report is in the ign
       "name": "workshop-focused-unittest-suite",
       "command": "PYTHONPATH=src python -m unittest tests.test_character_weapon_workshop_model tests.test_character_weapon_workshop_dw3 tests.test_character_weapon_workshop_projections tests.test_character_weapon_workshop_staging tests.test_samurai4dx_workshop tests.test_character_weapon_workshop_gui tests.test_universal_packaging tests.test_package_release",
       "status": "passed",
-      "tested_base_commit": "6fa3cf0",
+      "tested_base_commit": "05c8bfe",
+      "tested_head_commit": "28afaa1",
       "tests": 96,
       "skipped": 7,
       "skip_reason": "Tk GUI tests require a display; this workspace has no DISPLAY or Xvfb."
@@ -27,8 +28,9 @@ The record below is machine-readable. The full local runner report is in the ign
       "name": "source-package-manifest",
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
-      "tested_base_commit": "6fa3cf0",
-      "verified_public_source_entries": 1242
+      "tested_base_commit": "05c8bfe",
+      "tested_head_commit": "28afaa1",
+      "verified_public_source_entries": 1248
     },
     {
       "name": "full-repository-unittest-suite",

@@ -67,7 +67,7 @@ class BuildWorkshopGuiTests(unittest.TestCase):
         self.assertIn("provider-supplied", stat["values"][1])
         attack = self.view.compare_tree.item("compare:0")
         self.assertEqual(attack["text"], "Attack")
-        self.assertEqual(attack["values"][-1], "-30")
+        self.assertEqual(str(attack["values"][-1]), "-30")
         self.assertIn("not a gameplay formula", self.view.compare_note.get())
         self.stage.assert_not_called()
         self.assertEqual(self.original.values["attack"], 100)
@@ -84,8 +84,10 @@ class BuildWorkshopGuiTests(unittest.TestCase):
         updated = self.view.selected_plan
         self.assertEqual(updated.values["attack"], 140)
         self.assertEqual(self.original.values["attack"], 100)
-        self.assertEqual(self.view.plan_tree.item("plan:0", "values")[2], "140")
-        self.assertEqual(self.view.compare_tree.item("compare:0", "values")[-1], "10")
+        attack_row = next(row for row, key in self.view._row_keys.items()
+                          if key == ("values", "attack"))
+        self.assertEqual(str(self.view.plan_tree.item(attack_row, "values")[2]), "140")
+        self.assertEqual(str(self.view.compare_tree.item("compare:0", "values")[-1]), "10")
         self.stage.assert_not_called()
 
     def test_equipment_uses_only_provider_choices_and_plan_export_roundtrips(self):

@@ -22,15 +22,15 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "e09ec112c91cddb3f0ee1f562bea9c01a9b97cb3",
+  "base_commit": "1ae3b3139ea5d6f5a664b66651c88bb849ee091d",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 228,
-    "passed": 158,
+    "run": 267,
+    "passed": 197,
     "skipped": 70,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
@@ -51,6 +51,7 @@ requires exact app/build identities and versioned evidence before showing
     "status": "pending_current_head",
     "previous_remote_head": "c1b6dcb9e176e39e35fe7be91fcfe4897c6e54e8",
     "previous_head_result": "tracker_and_help_center_modules_passed; unrelated_application_shell_editing_tools_and_mod_manager_failures",
+    "merged_test_fixture_fix": "PR #147; universal packaging fixture follows the optional achievement-source contract",
     "required_before_merge": true
   },
   "fixture": {

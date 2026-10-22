@@ -20,9 +20,9 @@
     "focused_tests": {
       "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center -v",
       "status": "passed",
-      "tests": 115,
-      "passed": 80,
-      "skipped": 35,
+      "tests": 120,
+      "passed": 82,
+      "skipped": 38,
       "failures": 0,
       "skip_reason": "Tk display unavailable in this environment"
     },
@@ -45,7 +45,7 @@
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
-      "public_source_entries": 1226
+      "public_source_entries": 1242
     },
     "supported_game_inventory": {
       "command": "PYTHONPATH=src python -m tools.update_supported_games --check",

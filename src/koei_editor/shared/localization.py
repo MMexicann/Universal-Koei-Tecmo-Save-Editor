@@ -5,7 +5,7 @@ LANGUAGES = {'en': 'English', 'de': 'Deutsch'}
 _EN = {
     'library': '‹ Game Library', 'converter': 'Save Converter',
     'comparison': 'Compare Saves', 'batch': 'Batch Converter', 'save_library': 'Save Library',
-    'help': 'Help Center', 'compatibility': 'Compatibility Center', 'workflows': 'Guides',
+    'help': 'Help Center', 'compatibility': 'Compatibility Center', 'versions': 'Game Version Tracker', 'workflows': 'Guides',
     'editing_presets': 'Reusable Editing Presets', 'transfer': 'Transfer from Save Copy',
     'mod_manager': 'Koei Tecmo Mod Manager',
     'research_import': 'Research Import', 'research_lab': 'Save Research Lab', 'workflow_builder': 'Workflow Builder',
@@ -78,7 +78,7 @@ _EN = {
 _DE = {
     'library': '‹ Spielebibliothek', 'converter': 'Spielstand konvertieren',
     'comparison': 'Spielstände vergleichen', 'batch': 'Stapelkonvertierung', 'save_library': 'Spielstandbibliothek',
-    'help': 'Hilfezentrum', 'compatibility': 'Kompatibilität', 'workflows': 'Anleitungen',
+    'help': 'Hilfezentrum', 'compatibility': 'Kompatibilität', 'versions': 'Spielversions-Tracker', 'workflows': 'Anleitungen',
     'editing_presets': 'Wiederverwendbare Bearbeitungsvorlagen', 'transfer': 'Aus Spielstandkopie übertragen',
     'mod_manager': 'Koei-Tecmo-Mod-Manager',
     'research_import': 'Forschungsimport', 'research_lab': 'Spielstand-Forschungslabor', 'workflow_builder': 'Ablaufeditor',

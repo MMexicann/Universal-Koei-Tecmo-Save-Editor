@@ -10,6 +10,7 @@ import tempfile
 import webbrowser
 
 from koei_editor.shared.preferences import preference_path
+from koei_editor.shared import save_discovery
 from koei_editor.shared.save_discovery import STEAM_MAPPINGS
 
 _APP_IDS = frozenset(item.app_id for item in STEAM_MAPPINGS)
@@ -17,6 +18,19 @@ _APP_ID = re.compile(r"[1-9][0-9]{0,11}\Z")
 _MAX_BYTES = 128 * 1024
 _MAX_NOTES = 128
 MAX_NOTE_LENGTH = 500
+
+
+def discover_installations(*, steam_roots=None, cancel=None):
+    """Use the install-only scanner when available, preserving older callers.
+
+    The version tracker owns the install-only API. The fallback keeps the Hub
+    usable on checkouts that have the earlier shared discovery contract.
+    """
+    scan = getattr(save_discovery, 'discover_installed_builds', None)
+    if callable(scan):
+        return scan(steam_roots=steam_roots, cancel=cancel)
+    return save_discovery.discover_saves(steam_roots=steam_roots, cancel=cancel,
+                                         include_locations=False)
 
 
 def _unique_object(pairs):

@@ -1470,3 +1470,21 @@ The official release workflow requires complete source/Windows coverage, actual
 portable and standalone startup, active updated Defender scans of exact payloads,
 and artifact integrity before publication. Individual optional native tests skip
 when their private inputs are absent; release CI does not contain player saves.
+
+## Mod Manager Windows path assertion — 2026-10-22
+
+Windows run `39844797122`, shard 0, exposed a stale `startswith()` assertion in
+`test_mod_manager_workspace_is_constructed_once_with_temporary_state`. On
+Windows, `TemporaryDirectory.name` may use an 8.3 alias while the manager stores
+the resolved long path. The test already checks equality with its resolved
+temporary `state_dir`; the redundant prefix assertion has been removed. The
+Mod Manager state path and product behavior are unchanged.
+
+The focused command
+`PYTHONPATH=src python -m unittest
+tests.test_application_shell.ApplicationShellTests.test_mod_manager_workspace_is_constructed_once_with_temporary_state
+-v` was attempted after the correction and skipped because this environment has
+no graphical display. Windows CI must verify the corrected assertion. The
+original shard also passed `test_editing_tools_application` (8 tests),
+`test_mod_manager` (12), `test_mod_manager_nexus` (11), and
+`test_mod_manager_transaction_concurrency` (1).

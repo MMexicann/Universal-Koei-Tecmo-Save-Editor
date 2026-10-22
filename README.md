@@ -37,6 +37,9 @@ themes. No Python installation is needed for the Windows app.
   [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
 - **Compare saves:** inspect mapped changes and other payload differences across
   97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
+- **Manage mods:** import validated ZIP packages, keep separate profiles, check
+  declared dependencies/conflicts, and safely manage Nioh 2 PC mods through its
+  documented Mods folder method. [Mod Manager scope and safeguards](docs/MOD_MANAGER.md).
 - **Convert saves:** 145 directed routes cover qualified DW6, DW7 XL, DW8 XL, Persona 5 Strikers and resource-only WO3U/SW4 transfers. Review one copy or queue multiple conversions.
   [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
 
@@ -59,6 +62,12 @@ not a complete gameplay reference or a Character Workshop interface.
 - **Requested PS4 transfers:** DW8 XL PS4 → PC is available within its documented profile. WO3U adds a limited PS4 resource route; full WO3U/SW4 PS4 migration still needs broader format evidence and original exports. [Exact scope and remaining evidence](docs/WARRIORS_PS4_TRANSFERS.md).
 
 [Release notes and limits](docs/RELEASE_NOTES.md). The development source contains 98 profiles across 15 platforms and 145 scoped routes. Edited/converted game loading remains unverified.
+
+The mod manager is development-source functionality and currently supports only
+the documented Nioh 2 PC Mods folder method with an already installed mod
+loader. It never installs loader files or writes into original game files.
+Other Koei Tecmo titles remain unsupported until their installation methods and
+restoration behavior are verified.
 
 ## Quick start
 

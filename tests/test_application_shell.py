@@ -6,7 +6,7 @@ import tempfile
 import tkinter as tk
 from tkinter import ttk
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from koei_editor.application import Application, VERSION
 from koei_editor.shared.command_palette import CommandEntry, search_commands
@@ -15,6 +15,29 @@ from koei_editor.shared import shell_preferences as settings
 
 
 class ShellPreferencesTests(unittest.TestCase):
+    def test_show_mod_manager_attaches_workspace_to_existing_download_handoff_seam(self):
+        from types import SimpleNamespace
+        from koei_editor.shared import mod_manager_gui
+
+        workspace = object()
+        attach = Mock()
+        shell = SimpleNamespace(
+            mod_manager=None,
+            root=object(),
+            workspace=object(),
+            set_mod_manager_download_handoff=attach,
+            _show_editing_tool=Mock(),
+            _remember_workspace=Mock(),
+            tr=lambda key: key,
+        )
+        with patch.object(mod_manager_gui, 'ModManagerWorkspace', return_value=workspace):
+            result = Application.show_mod_manager(shell)
+
+        self.assertIs(result, workspace)
+        attach.assert_called_once_with(workspace)
+        shell._show_editing_tool.assert_called_once_with(workspace, 'mod_manager')
+        shell._remember_workspace.assert_called_once_with('tool:mod_manager')
+
     def test_longest_valid_namespaced_plugin_command_can_be_favorited(self):
         command = 'plugin:' + 'a.' + 'a' * 78 + ':' + 'b' * 80
         value = settings.toggle_favorite(settings.ShellPreferences(), command)
@@ -214,8 +237,8 @@ class ApplicationShellTests(unittest.TestCase):
     def test_integrated_tool_commands_dispatch_exact_routes_and_remain_recent(self):
         calls = []
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
-                  'research_lab': 'show_research_lab', 'workflow_builder': 'show_workflow_builder',
-                  'emulator_hub': 'show_emulator_hub'}
+                  'mod_manager': 'show_mod_manager', 'research_lab': 'show_research_lab',
+                  'workflow_builder': 'show_workflow_builder', 'emulator_hub': 'show_emulator_hub'}
         for key, method in routes.items():
             setattr(self.app, method, lambda tool=key: calls.append(tool))
         self.app.open_command_palette()
@@ -232,7 +255,7 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertFalse(self.app.sessions)
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
-        for key in ('editing_presets', 'research_lab', 'workflow_builder', 'emulator_hub'):
+        for key in ('editing_presets', 'mod_manager', 'research_lab', 'workflow_builder', 'emulator_hub'):
             with self.subTest(workspace=key):
                 self.app.show_library()
                 self.app.library.pack_forget()
@@ -266,6 +289,74 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertIs(self.app.emulator_hub, hub)
         self.assertEqual(self.app.breadcrumb.get(), self.app.tr('emulator_hub'))
         self.assertEqual(hub.frame.winfo_manager(), 'pack')
+
+    def test_mod_manager_is_a_retained_command_and_localized_menu_tool(self):
+        from koei_editor.shared.localization import CATALOGS
+        self.assertEqual(set(CATALOGS['en']), set(CATALOGS['de']))
+        self.assertIn('tool:mod_manager', {entry.id for entry in self.app.command_entries()})
+        index = self.app._editing_tools_menu_index('mod_manager')
+        self.assertEqual(self.app.editing_tools_menu.entrycget(index, 'label'), 'Koei Tecmo Mod Manager')
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        index = self.app._editing_tools_menu_index('mod_manager')
+        self.assertEqual(self.app.editing_tools_menu.entrycget(index, 'label'), 'Koei-Tecmo-Mod-Manager')
+
+    def test_mod_manager_workspace_is_constructed_once_with_temporary_state(self):
+        from koei_editor.shared import mod_manager_gui
+        from types import SimpleNamespace
+        state_dir = (Path(self.directory.name) / 'mod_manager').resolve()
+        attach_handoff = Mock()
+        self.app.set_mod_manager_download_handoff = attach_handoff
+        with patch.object(mod_manager_gui, 'preference_path', return_value=self.path):
+            workspace = self.app.show_mod_manager()
+            attach_handoff.assert_called_once_with(workspace)
+            self.assertIsInstance(workspace, mod_manager_gui.ModManagerWorkspace)
+            self.assertIs(self.app.mod_manager, workspace)
+            self.assertEqual(workspace.manager.state_dir, state_dir)
+            self.assertIsNone(workspace.manager.current_game_root)
+            self.assertIn(workspace, self.app._tool_workspaces())
+            self.assertEqual(workspace.frame.winfo_manager(), 'pack')
+
+            self.app.show_library()
+            self.assertEqual(workspace.frame.winfo_manager(), '')
+            self.assertIs(self.app.show_mod_manager(), workspace)
+            self.assertEqual(attach_handoff.call_count, 2)
+            self.assertEqual(workspace.frame.winfo_manager(), 'pack')
+
+            candidate = str(Path(self.directory.name) / 'unreadable-game')
+            prior_root = Path(self.directory.name) / 'prior-game'
+            workspace.manager.current_game_root = prior_root
+            with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
+                  patch.object(workspace.manager, 'set_game_root', side_effect=OSError('recovery failed')),
+                  patch.object(workspace.manager, 'has_pending_transaction_for', return_value=True),
+                  patch.object(workspace, '_error')):
+                workspace.choose_game_root()
+            workspace._mods['test-mod'] = SimpleNamespace(installed=False)
+            workspace.mod_table.insert('', 'end', iid='test-mod', text='Test mod')
+            workspace.mod_table.selection_set('test-mod')
+            workspace._update_controls()
+            self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
+            self.assertEqual(str(workspace.import_button.cget('state')), 'disabled')
+            self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
+            workspace.refresh()
+            self.assertTrue(workspace._recovery_blocked)
+            self.assertEqual(str(workspace.create_profile_button.cget('state')), 'disabled')
+
+            def select_candidate(path):
+                workspace.manager.current_game_root = Path(path)
+                return Path(path)
+            with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
+                  patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
+                  patch.object(workspace, '_error')):
+                workspace.choose_game_root()
+            self.assertFalse(workspace._recovery_blocked)
+            self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')
+            self.assertEqual(str(workspace.import_button.cget('state')), 'normal')
+            self.assertEqual(str(workspace.remove_button.cget('state')), 'normal')
+
+        self.assertTrue(str(workspace.manager.state_dir).startswith(self.directory.name))
+        self.assertFalse((state_dir / 'library.json').exists())
+
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):
         editor = self.app.select_game('dw7xl')
         self.app.show_library()

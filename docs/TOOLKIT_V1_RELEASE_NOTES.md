@@ -1,6 +1,6 @@
 # Universal Koei Tecmo Game Toolkit v1.0
 
-**Pending release.** [Current Windows download: Save Editor v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest).
+**Development preview; publication is on hold.** [Current Windows download: Save Editor v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest).
 
 - **New name:** Save Editor becomes Game Toolkit. The v3.1 → v1.0 version reset
   preserves existing features, save compatibility and project history.
@@ -28,4 +28,4 @@ Edited/converted in-game loading remains unverified. Research edition leads do
 not imply editing support; Windows Troubleshooting folder scans remain unavailable.
 [Compatibility and limits](../README.md#compatibility).
 
-Publication awaits the remaining integration and release checks.
+These notes remain provisional while reviewed changes merge into `main`.

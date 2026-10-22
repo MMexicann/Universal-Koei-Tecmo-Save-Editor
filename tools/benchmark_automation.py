@@ -189,7 +189,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     report = {'schema_version': 1, 'success': False,
               'fixture_kind': 'procedural; not player saves or in-game qualification',
-              'application_version': version('universal-koei-tecmo-save-editor'),
+              'application_version': version('universal-koei-tecmo-game-toolkit'),
               'recorded_at_utc': datetime.now(timezone.utc).isoformat(),
               'machine': {'system': platform.system(), 'release': platform.release(),
                           'architecture': platform.machine(), 'processor': platform.processor(),

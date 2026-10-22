@@ -1058,8 +1058,8 @@
     },
     {
       "path": "docs/TOOLKIT_V1_RELEASE_NOTES.md",
-      "bytes": 1926,
-      "sha256": "3df887d3c30965c1dbc3ffe92e54a4aec62ff671294366d7580f272004bf8a13"
+      "bytes": 1962,
+      "sha256": "84d14564edf0200c729d47f7a0a4a1a71a7f501fe02f28c6ac26cfd7cebe60d8"
     },
     {
       "path": "docs/TOTORI_DX_PS4_FORMAT.md",
@@ -6648,8 +6648,8 @@
     },
     {
       "path": "tools/benchmark_automation.py",
-      "bytes": 10867,
-      "sha256": "ee9782666fbedd13890c631a9a1221ad5850f7240d1e12f3e008dff943a96a2c"
+      "bytes": 10868,
+      "sha256": "363dbf23e36cc36d0c11c673090ef8c6b8cda904bca520d4873f03efb7833c6f"
     },
     {
       "path": "tools/build_windows.py",

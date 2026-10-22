@@ -132,9 +132,14 @@ class MenuTranslationTests(unittest.TestCase):
         def index(self, end):
             return len(self.labels) - 1 if self.labels else None
 
+        def type(self, index):
+            return 'separator' if self.labels[index] == '' else 'command'
+
         def entrycget(self, index, option):
             if option != 'label':
                 raise AssertionError(option)
+            if self.type(index) == 'separator':
+                raise AssertionError('separator entries have no label')
             return self.labels[index]
 
         def entryconfigure(self, index, **options):

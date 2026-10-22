@@ -326,6 +326,8 @@ class Application(Appearance):
         if last_index is None:
             return
         for index in range(last_index + 1):
+            if self.editing_tools_menu.type(index) == 'separator':
+                continue
             key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
             if key is not None:
                 self.editing_tools_menu.entryconfigure(index, label=self.tr(key))

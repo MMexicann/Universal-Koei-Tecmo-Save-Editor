@@ -325,7 +325,7 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
             self.assertEqual(self.app.show_help("versions"), "break")
             versions = self.app.help_center
             self.assertEqual(versions.selected_tab(), "versions")
-            self.assertEqual(versions.preferences_path, self.preferences_path)
+            self.assertEqual(versions.preferences_path, self.folder / "preferences.json")
             self.assertIs(self.app.execute_command("tool:troubleshooting"), workspace)
             self.assertIs(workspace.report, report)
 

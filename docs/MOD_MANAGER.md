@@ -62,6 +62,11 @@ again before installation, and verifies staged bytes before deployment.
 
 ## Nexus download handoff
 
+The Nexus browser exposes a **Send to Mod Manager** action for a selected Nioh 2
+ZIP file after the Mod Manager workspace has been opened. Other supported
+Nexus games remain browse-only until a matching installation adapter is
+verified. Local ZIP import is available for all supported Nioh 2 packages.
+
 The Nioh 2 workspace can accept the browser's frozen `NexusDownloadRequest`
 through `enqueue_nexus_download(request, downloader)`. The manager checks that
 the request identifies provider `nexus`, Nexus domain `nioh2`, game ID
@@ -127,7 +132,10 @@ verification and rollback. On restart, uncommitted operations are rolled back;
 committed operations finish cleanup. If a folder changed outside the manager,
 or recovery cannot verify either side of a rename, the manager stops and keeps
 the journal for inspection rather than deleting or overwriting the changed
-folder.
+folder. Within one manager instance, recovery checks and a live file transaction
+share a lock. A background package import waits for an active transaction to
+finish before checking its journal, so it cannot treat that operation as an
+interrupted transaction.
 
 The manager never writes original game files beside nioh2.exe and never
 installs or replaces d3d11.dll. It does not keep a duplicate backup of an

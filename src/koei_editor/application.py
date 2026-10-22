@@ -45,6 +45,7 @@ class Application(Appearance):
         self.editing_presets = None
         self.research_lab = None
         self.research_import = None
+        self.asset_explorer = None
         self.workflow_builder = None
         self.emulator_hub = None
         self.mod_workshop_window = None
@@ -67,6 +68,7 @@ class Application(Appearance):
         self._add_editing_tools_menu_command('research_import', self.show_research_import)
         self._add_editing_tools_menu_command('nexus_mods', self.show_nexus_mods)
         self._add_editing_tools_menu_command('emulator_hub', self.show_emulator_hub)
+        self._add_editing_tools_menu_command('asset_explorer', self.show_asset_explorer)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -286,7 +288,7 @@ class Application(Appearance):
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'editing_presets', 'mod_manager', 'research_lab', 'research_import',
-                                            'workflow_builder', 'emulator_hub', 'nexus_mods')
+                                            'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -294,6 +296,10 @@ class Application(Appearance):
             self.breadcrumb.set(self.tr(visible or 'choose'))
         if self.help_center is not None:
             set_language = getattr(self.help_center, 'set_language', None)
+            if callable(set_language):
+                set_language(self.language)
+        if self.asset_explorer is not None:
+            set_language = getattr(self.asset_explorer, 'set_language', None)
             if callable(set_language):
                 set_language(self.language)
         self._layout_navigation()
@@ -511,8 +517,8 @@ class Application(Appearance):
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
             ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
-            ('workflow_builder', 'show_workflow_builder'), ('emulator_hub', 'show_emulator_hub'),
-            ('nexus_mods', 'show_nexus_mods'))
+            ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
+            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -877,7 +883,8 @@ class Application(Appearance):
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
                                        'mod_manager', 'editing_presets', 'research_lab', 'research_import',
-                                       'workflow_builder', 'emulator_hub', 'nexus_mods', 'help_center')
+                                       'nexus_mods', 'asset_explorer',
+                                       'workflow_builder', 'emulator_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -950,6 +957,15 @@ class Application(Appearance):
         self._show_editing_tool(self.research_import, self.tr('research_import'))
         self._remember_workspace('tool:research_import')
         return self.research_import
+
+    def show_asset_explorer(self):
+        from koei_editor.research.asset_explorer.gui import AssetExplorerWorkspace
+        if self.asset_explorer is None:
+            self.asset_explorer = AssetExplorerWorkspace(self.root, self.workspace, language=self.language)
+        self.asset_explorer.set_language(self.language)
+        self._show_editing_tool(self.asset_explorer, self.tr('asset_explorer'))
+        self._remember_workspace('tool:asset_explorer')
+        return self.asset_explorer
 
     def _show_editing_tool(self, tool, title):
         self.library.pack_forget()
@@ -1135,7 +1151,7 @@ class Application(Appearance):
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
         for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
-                     self.nexus_mods):
+                     self.nexus_mods, self.asset_explorer):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'

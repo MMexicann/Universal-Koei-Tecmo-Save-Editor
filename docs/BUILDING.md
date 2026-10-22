@@ -2,10 +2,11 @@
 
 Build releases on 64-bit Windows with Python 3.14.7 and Tkinter. Build/package tools
 and the development test suite use Python 3.11 or newer; the source application
-itself supports Python 3.10. The Windows workflow uses
-Python 3.14.7, and `tools/requirements/build.txt` hash-locks every build dependency.
-The application
-itself requires no third-party runtime package on Windows.
+itself supports Python 3.10. The Windows workflow uses Python 3.14.7, and
+`tools/requirements/build.txt` hash-locks the build and asset-preview wheel
+dependencies. The application uses pinned miniaudio, trimesh, NumPy, cffi, and
+pycparser packages for audio/model inspection; the build retains their complete
+runtime notices. PNG/DDS decoding and archive/G1T parsing use in-process code.
 
 ```powershell
 python -m pip install --force-reinstall --no-cache-dir -r tools/requirements/build.txt
@@ -20,7 +21,8 @@ portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
 **`dist-standalone/UniversalKoeiTecmoSaveEditor-v3.1.exe`**. That direct download
 needs no side files. Both modes use pinned Python 3.14.7 and `--noupx`, with the
-same 98 game/platform profiles, runtime metadata and required notices.
+same 98 game/platform profiles, runtime metadata, asset preview modules and
+required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
 

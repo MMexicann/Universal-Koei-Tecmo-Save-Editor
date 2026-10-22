@@ -43,6 +43,10 @@ themes. No Python installation is needed for the Windows app.
 - **Analyze game patches from source:** compare Tracker snapshots by version,
   file hash, archive structure and supported-format metadata, then check explicit
   mod, tool and save requirements. [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
+- **Inspect local assets:** browse standard ZIP containers, a bounded G1T texture
+  subset, and common image, audio and model formats in a read-only workspace.
+  Format recognition does not identify a game or edition.
+  [Game Asset Explorer](docs/ASSET_EXPLORER.md).
 - **Convert saves:** 145 directed routes cover qualified DW6, DW7 XL, DW8 XL, Persona 5 Strikers and resource-only WO3U/SW4 transfers. Review one copy or queue multiple conversions.
   [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
 

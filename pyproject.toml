@@ -10,6 +10,10 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{name = "Mexican"}]
+dependencies = [
+    "miniaudio>=1.71,<2",
+    "trimesh>=5.1.1,<6",
+]
 
 [project.scripts]
 universal-koei-editor = "koei_editor.application:main"

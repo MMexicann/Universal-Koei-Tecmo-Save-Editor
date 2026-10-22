@@ -37,6 +37,9 @@ themes. No Python installation is needed for the Windows app.
   [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
 - **Compare saves:** inspect mapped changes and other payload differences across
   97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
+- **Analyze game patches from source:** compare Tracker snapshots by version,
+  file hash, archive structure and supported-format metadata, then check explicit
+  mod, tool and save requirements. [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
 - **Convert saves:** 145 directed routes cover qualified DW6, DW7 XL, DW8 XL, Persona 5 Strikers and resource-only WO3U/SW4 transfers. Review one copy or queue multiple conversions.
   [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
 

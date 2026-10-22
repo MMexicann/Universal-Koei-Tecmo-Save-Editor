@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 6304,
-      "sha256": "87c0fc7dbc438478bfe97cb2415da8ccb24eb4ac2b2e61efe8e3b53587e2e91b"
+      "bytes": 6555,
+      "sha256": "531a69d711e09f2862ed232a938fb33c67bb46488dff150e66d3408a11c58846"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -617,6 +617,11 @@
       "sha256": "bc0a492b258374ab04cf783d1293ded2428e5fb4459c9928a7d168fe2947efdc"
     },
     {
+      "path": "docs/PATCH_COMPATIBILITY_ANALYZER.md",
+      "bytes": 6770,
+      "sha256": "75ea8d28d359d5821ac632dad5e04cb32ce31c163bdc13120f91b4d303b51073"
+    },
+    {
       "path": "docs/PC_EDITOR_ATTEMPTS.md",
       "bytes": 10196,
       "sha256": "777c4cc152daf959a412ac376ad49775dba62019923f9ee2c770c1fdad6e7bdd"
@@ -703,8 +708,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16402,
-      "sha256": "110b47c9c0b2d929e66e93449b2c0f5ce37890e00e584b5efc2ea215ac3cd60c"
+      "bytes": 16477,
+      "sha256": "a3437929c68c90056a89084ca2ffc82119026a9df1848b87cd84fc310821b6b1"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -3857,6 +3862,11 @@
       "sha256": "0d5ddec115e7fa2aaf0a88e458153c6f37d5ffc3dafc94e1c563c518d5223484"
     },
     {
+      "path": "src/koei_editor/shared/game_compatibility.py",
+      "bytes": 59883,
+      "sha256": "75d5983ff346cfc6299adc3dd329850d1e1ba3b2b1263afefdc1d6f0963b8f0f"
+    },
+    {
       "path": "src/koei_editor/shared/game_data_encyclopedia.py",
       "bytes": 12200,
       "sha256": "f80b9b12dd28c0d7016759df86db4470f6fe00203cd33d4f9a9686f5ef7ff30f"
@@ -4780,6 +4790,11 @@
       "path": "tests/test_firis_pc.py",
       "bytes": 8607,
       "sha256": "09e53bcd571519ae49a3c1e959e2bfa223455dfcf4554cabdba60dda8ce0026e"
+    },
+    {
+      "path": "tests/test_game_compatibility.py",
+      "bytes": 43238,
+      "sha256": "bce495b101e918c7bb41f118afa95dabbe506524675ee563beeac2b3bdb6bd1f"
     },
     {
       "path": "tests/test_game_dashboard_context.py",

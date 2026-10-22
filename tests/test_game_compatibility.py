@@ -744,6 +744,10 @@ class GameCompatibilityTests(unittest.TestCase):
         self.assertEqual(process.returncode, 2, process.stderr)
         self.assertIn("regular file", process.stderr)
 
+    def test_directory_is_rejected_as_non_regular_json_input(self):
+        with self.assertRaisesRegex(compatibility.CompatibilityInputError, "regular file"):
+            compatibility.load_json(self.folder)
+
     def test_unpaired_surrogate_is_rejected_before_cli_output_is_written(self):
         bad_snapshot = snapshot(version_label="1.0\ud800")
         with self.assertRaises(compatibility.CompatibilityInputError):

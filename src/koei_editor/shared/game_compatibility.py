@@ -50,6 +50,10 @@ def load_json(path: str | Path) -> Any:
     source = Path(path)
     descriptor: int | None = None
     try:
+        if not stat.S_ISREG(source.stat().st_mode):
+            raise CompatibilityInputError(
+                f"JSON input {source.name!r} must be a regular file."
+            )
         flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
         descriptor = os.open(source, flags)
         stream = os.fdopen(descriptor, "rb")

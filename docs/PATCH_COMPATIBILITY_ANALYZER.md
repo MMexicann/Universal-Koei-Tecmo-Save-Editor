@@ -28,7 +28,8 @@ The two snapshot files are the Tracker's before and after observations for the
 same `game_id` and `platform_id`. `--requirements` is optional. Omit either
 output option to skip that file. The JSON report is deterministic and suitable
 for automated triage; the Markdown report is a readable summary. Both contain
-relative paths only.
+relative paths only. Inputs must be UTF-8 JSON regular files no larger than
+64 MiB each.
 
 ## Snapshot contract
 

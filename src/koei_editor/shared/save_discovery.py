@@ -191,7 +191,7 @@ class DiscoveryResult:
 
 
 def report(result):
-    """Portable report: no paths, filenames, account IDs, or VDF values."""
+    """Portable report: no install paths, filenames, account IDs, or unrecognized VDF values."""
     return {
         'schema': 'save-discovery-v1',
         'stop_reason': result.stop_reason,

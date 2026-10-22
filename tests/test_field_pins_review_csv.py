@@ -1,5 +1,6 @@
 """Pinned navigation and complete, typed review exports on copied saves."""
 import csv
+from contextlib import contextmanager
 from dataclasses import replace
 import io
 import json
@@ -130,28 +131,50 @@ class ReviewExportVerificationTests(unittest.TestCase):
         names = ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns', 'st_mode', 'st_nlink')
         return SimpleNamespace(**{**{name: getattr(info, name) for name in names}, **changes})
 
-    def test_valid_path_and_handle_ctime_semantics_may_differ(self):
-        original = self.gui.os.fstat
-        calls = []
+    @contextmanager
+    def report_handle_stats(self, destination, change):
+        """Fault only the published report's readback handle, not owned staging."""
+        original_open, original_fstat = self.gui.os.open, self.gui.os.fstat
+        report_handles, calls = [], []
+
+        def open_report(path, *args, **kwargs):
+            descriptor = original_open(path, *args, **kwargs)
+            if Path(path) == destination:
+                # Verify that this fixture targets the actual destination,
+                # independent of descriptors reused after staging is closed.
+                actual, current = original_fstat(descriptor), destination.lstat()
+                self.assertEqual((actual.st_dev, actual.st_ino), (current.st_dev, current.st_ino))
+                report_handles.append(descriptor)
+            return descriptor
+
         def handle_stat(descriptor):
-            info = original(descriptor)
+            info = original_fstat(descriptor)
+            if descriptor not in report_handles:
+                return info
             calls.append(info)
+            return change(info, len(calls))
+
+        with patch.object(self.gui.os, 'open', side_effect=open_report), \
+                patch.object(self.gui.os, 'fstat', side_effect=handle_stat):
+            yield calls
+        self.assertEqual(len(report_handles), 1)
+        self.assertTrue(calls, 'The report readback handle must receive the injected fault')
+
+    def test_valid_path_and_handle_ctime_semantics_may_differ(self):
+        def handle_stat(info, _call):
             # Windows path stat uses legacy creation time, whereas CPython's
             # handle stat can expose the later native ChangeTime as ctime.
             return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 123456789)
-        with patch.object(self.gui.os, 'fstat', side_effect=handle_stat):
+        with self.report_handle_stats(self.destination, handle_stat) as calls:
             output = self.gui._export_review(self.data, self.destination)
         self.assertGreaterEqual(len(calls), 2)
         self.assertEqual(output.read_bytes(), self.data)
 
     def test_handle_ctime_change_still_rejects_without_path_stat_change(self):
-        original = self.gui.os.fstat
-        calls = []
-        def handle_stat(descriptor):
-            info = original(descriptor)
-            calls.append(info)
-            return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 123456789 + int(len(calls) > 1))
-        with patch.object(self.gui.os, 'fstat', side_effect=handle_stat), self.assertRaisesRegex(ValueError, 'changed during read-back'):
+        def handle_stat(info, call):
+            return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 123456789 + int(call > 1))
+        with self.report_handle_stats(self.destination, handle_stat) as calls, \
+                self.assertRaisesRegex(ValueError, 'changed during read-back'):
             self.gui._export_review(self.data, self.destination)
         self.assertEqual(len(calls), 2)
         self.assertEqual(self.destination.read_bytes(), self.data)
@@ -177,16 +200,13 @@ class ReviewExportVerificationTests(unittest.TestCase):
         self.assertEqual(self.destination.read_bytes(), self.data)
 
     def test_common_handle_identity_still_binds_to_current_path(self):
-        original = self.gui.os.fstat
         for attribute in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns'):
             with self.subTest(attribute=attribute):
                 destination = self.folder / (attribute + '.changes.json')
-                calls = []
-                def changed(descriptor):
-                    info = original(descriptor)
-                    calls.append(True)
+                def changed(info, _call):
                     return self.changed_stat(info, **{attribute: getattr(info, attribute) + 1})
-                with patch.object(self.gui.os, 'fstat', side_effect=changed), self.assertRaisesRegex(ValueError, 'changed before read-back'):
+                with self.report_handle_stats(destination, changed) as calls, \
+                        self.assertRaisesRegex(ValueError, 'changed before read-back'):
                     self.gui._export_review(self.data, destination)
                 self.assertEqual(len(calls), 1)
                 self.assertEqual(destination.read_bytes(), self.data)

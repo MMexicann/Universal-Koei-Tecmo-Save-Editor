@@ -4582,6 +4582,11 @@
       "sha256": "90568b7463709181f3735baf8112b4153ca837f40a9c70f4df39007caccffc46"
     },
     {
+      "path": "tests/gui_paging.py",
+      "bytes": 1682,
+      "sha256": "2e0cf8dba54f4b4cac04190ffd3660a8f6e1f3509b53d7c379c65e8aac0d3ca9"
+    },
+    {
       "path": "tests/scalar_contract.py",
       "bytes": 5429,
       "sha256": "4054d4a9a19d98332b56bd2ffd2f1597a9870abc1e80c6cbca170b0a0730d597"
@@ -4913,13 +4918,13 @@
     },
     {
       "path": "tests/test_dqb2_pc.py",
-      "bytes": 20781,
-      "sha256": "ca89b34280efdbe37658c145225693162667e9474d84bbc5d71be3433e533a4d"
+      "bytes": 21045,
+      "sha256": "d6b388567f0c5d916ddaeb98817045b66504f83f491d31946e08ef5ab0fd65aa"
     },
     {
       "path": "tests/test_dqb2_switch.py",
-      "bytes": 16247,
-      "sha256": "c20e4b9d282fc23fd07ed7962af7fd6cd03272df50ad3bbaff17d7671531d93a"
+      "bytes": 16511,
+      "sha256": "3534be7402dbefbecea1b332339fa3e8ca99eb9d1e850121c66289f7a9b94902"
     },
     {
       "path": "tests/test_dw3_targeted_expansion.py",
@@ -5273,8 +5278,8 @@
     },
     {
       "path": "tests/test_field_pins_review_csv.py",
-      "bytes": 27279,
-      "sha256": "71cf12198c73e2ec993e896580e93a9e3e6537c9c772c0643c48b468cb23a14e"
+      "bytes": 28359,
+      "sha256": "10a4507fe3f49693bf0fab6b6970406f0f0940225c553cb7f1ccfbc758befeaf"
     },
     {
       "path": "tests/test_fire_emblem_warriors.py",
@@ -5543,8 +5548,8 @@
     },
     {
       "path": "tests/test_monster_rancher_ds.py",
-      "bytes": 18911,
-      "sha256": "156a590e5e26e79b637a718c2162e1951cdf5792e363ae1f59046f90a6bb0a8e"
+      "bytes": 19652,
+      "sha256": "64e3bcbbbcf0a1c75da85d00c93b1059a778e92d0ee7cf81701015ff52a3f643"
     },
     {
       "path": "tests/test_music_v10.py",
@@ -6063,8 +6068,8 @@
     },
     {
       "path": "tests/test_samurai5_pc.py",
-      "bytes": 16380,
-      "sha256": "4b79a1b00c9b2a375c65bc72da2402ae7e7c197319118bddfd61ba661c2dc278"
+      "bytes": 18352,
+      "sha256": "2ad69eda49e3f73935315caf035f9f1741dd4bdaecb3706fc842af73c5bc474a"
     },
     {
       "path": "tests/test_samurai_dw4_expansion.py",
@@ -6748,8 +6753,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 39342,
-      "sha256": "52fb59a26212e93429618a209cfa8407efda0c7d7a019a041c24f188a2553c8a"
+      "bytes": 39365,
+      "sha256": "736ccd9e91a94f9ab8f1a80ea3a5247fbce3130de988faf3ab772ec352d6cec4"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-trimesh.py",

@@ -45,6 +45,18 @@ def fixture(size=32768):
     return reseal(raw)
 
 
+def full_roster_fixture():
+    """All 31 generated occupied records expose 251 fields, not native evidence."""
+    raw = bytearray(fixture())
+    for base in p.ENTRY_BASES:
+        first = base + p.MONSTER_BASE
+        record = raw[first:first + p.MONSTER_SIZE]
+        for slot in range(1, 31):
+            offset = first + slot * p.MONSTER_SIZE
+            raw[offset:offset + p.MONSTER_SIZE] = record
+    return reseal(raw)
+
+
 def modified_monster(raw, slot=0, stats=None, lifespan=None, name=None, replicas=(0, 1)):
     out = bytearray(raw)
     for replica in replicas:
@@ -321,6 +333,7 @@ class MonsterRancherDsTests(unittest.TestCase):
         self.assertTrue(full_name_width, 'Native occupied monster names prove all twelve bytes can be used without NUL.')
 
     def test_actual_tk_native_when_available_find_names_bulk_undo_review_inspect_save_restore(self):
+        from tests.gui_paging import assert_paged_catalog
         try:
             import tkinter as tk
             root = tk.Tk()
@@ -329,7 +342,7 @@ class MonsterRancherDsTests(unittest.TestCase):
         self.addCleanup(root.destroy)
         from koei_editor.games.monster_rancher_ds.editor import Editor
         raws = [path.read_bytes() for path in native_paths()]
-        raw = next((raw for raw in raws if p.fields_for(p.decode(raw))), fixture())
+        raw = next((raw for raw in raws if p.fields_for(p.decode(raw))), full_roster_fixture())
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             source = folder / 'copy.sav'
@@ -338,7 +351,11 @@ class MonsterRancherDsTests(unittest.TestCase):
             with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
                 editor.open()
             root.update()
-            self.assertEqual(len(editor.fields.get_children()), len(p.fields_for(editor.document)))
+            fields = p.fields_for(editor.document)
+            assert_paged_catalog(self, editor, (field.id for field in fields))
+            self.assertEqual(editor.backup.read_bytes(), raw)
+            self.assertTrue(editor.navigate_dashboard_field(fields[-1].id))
+            self.assertEqual(editor.fields.selection(), (fields[-1].id,))
             editor.search.set('lifespan')
             root.update()
             self.assertIn('monster_0_lifespan', editor.fields.get_children())

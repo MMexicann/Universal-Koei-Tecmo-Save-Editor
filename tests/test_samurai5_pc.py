@@ -16,6 +16,7 @@ from koei_editor.games.samurai5_pc.presentation import Presentation
 from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared.steam_owner import read_owner
 from tests.scalar_contract import ScalarContractTests
+from tests.gui_paging import assert_paged_catalog
 
 
 def sidecar(folder):
@@ -81,6 +82,44 @@ class Samurai5SafetyTests(unittest.TestCase):
         self.raw = procedural(self.owner)
         self.source.write_bytes(self.raw)
         self.doc = parser.read_save(self.source)
+
+    def test_generated_held_gem_catalog_pages_and_off_page_edit_undo_save(self):
+        """Generated held stacks qualify paging, not native player-save support."""
+        import tkinter as tk
+        from koei_editor.games.samurai5_pc.editor import Editor
+        try:
+            root = tk.Tk()
+        except tk.TclError:
+            self.skipTest('Tk display unavailable.')
+        self.addCleanup(root.destroy)
+        payload = bytearray(self.doc.payload)
+        for index in range(parser.GEM_COUNT):
+            payload[parser.GEM_BASE + index] = 1 if index % 10 else 0
+        raw = codec.encode_file(bytes(payload), self.owner.account_id, 7)
+        self.source.write_bytes(raw)
+        editor = Editor(root, parent=root)
+        with patch('koei_editor.shared.verified_gui.messagebox.showerror') as errors:
+            self.assertTrue(editor.open_path(self.source))
+            fields = parser.fields_for(editor.document)
+            self.assertEqual(len(fields), len(parser.FIELDS) + 900)
+            assert_paged_catalog(self, editor, (field.id for field in fields))
+            last = fields[-1]
+            self.assertTrue(editor.navigate_dashboard_field(last.id))
+            self.assertGreater(editor._field_page, 0)
+            self.assertEqual(editor.fields.selection(), (last.id,))
+            editor.value.set('2')
+            editor.apply_selected()
+            self.assertEqual(editor.changes, {last.id: 2})
+            editor.undo()
+            self.assertEqual(editor.changes, {})
+            editor.stage_values({last.id: 2})
+            destination = self.folder / 'paged-edited.bin'
+            editor.save_to(destination)
+        errors.assert_not_called()
+        saved = parser.read_save(destination)
+        self.assertEqual(last.value(saved.payload), 2)
+        self.assertEqual(self.source.read_bytes(), raw)
+        self.assertEqual(editor.backup.read_bytes(), raw)
 
     def test_seven_fields_surgical_checkpoint_unknowns_and_caps(self):
         self.assertEqual(len(parser.fields_for(self.doc)), 7)
@@ -284,7 +323,8 @@ class Samurai5GenuineTests(unittest.TestCase):
             with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
                 editor.open()
             root.update()
-            self.assertEqual(len(editor.fields.get_children()), len(parser.fields_for(editor.document)))
+            assert_paged_catalog(
+                self, editor, (field.id for field in parser.fields_for(editor.document)))
             editor.search.set('Lumber')
             root.update()
             self.assertEqual(len(editor.fields.get_children()), 1)

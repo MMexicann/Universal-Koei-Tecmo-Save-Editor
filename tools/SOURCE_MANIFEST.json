@@ -6128,8 +6128,8 @@
     },
     {
       "path": "tests/test_universal_app.py",
-      "bytes": 53704,
-      "sha256": "d80f8f1fbcf832017482b7b7197a39993acf36af6d2f4352f65d02f48e93cca2"
+      "bytes": 53769,
+      "sha256": "48026ff87d8703d646a7ddfa72b7acf3cf43c259ced2fdc2aa957fb63e2e342b"
     },
     {
       "path": "tests/test_universal_packaging.py",

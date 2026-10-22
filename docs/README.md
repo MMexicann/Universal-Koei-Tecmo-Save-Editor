@@ -115,6 +115,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
   [console/Pirate/strategy](CONSOLE_PIRATE_STRATEGY_DEPTH.md).
 
 - [Expansion coverage and remaining inputs](EXPANSION_COVERAGE.md)
+- [Koei Tecmo RPG and adventure editor expansion audit](KT_FAMILY_EXPANSION_AUDIT.md)
 - [Per-game supplier input checklist](REMAINING_INPUTS.md)
 - [DW3 save format](SAVE_FORMAT.md), [save variants](SAVE_COMPATIBILITY.md),
   [compatibility fixes](COMPATIBILITY_FIX.md), [bodyguards](BODYGUARDS.md),

@@ -293,7 +293,8 @@ class Application(Appearance):
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'troubleshooting', 'editing_presets', 'mod_manager',
                                             'research_lab', 'research_import', 'nexus_mods',
-                                            'emulator_hub', 'asset_explorer', 'workflow_builder')
+                                            'emulator_hub', 'asset_explorer', 'workflow_builder',
+                                            'game_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -529,7 +530,8 @@ class Application(Appearance):
             ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
-            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'))
+            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'),
+            ('game_hub', 'show_game_hub'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -540,8 +542,12 @@ class Application(Appearance):
                     'troubleshooting', 'help', 'compatibility', 'workflows', 'feedback',
                     'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+        listed_tools = {entry.id.removeprefix('tool:') for entry in entries if entry.id.startswith('tool:')}
         for key in self._optional_tool_routes():
-            entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
+            if key not in listed_tools:
+                catalog = CATALOGS.get(self.language, CATALOGS['en'])
+                label = self.tr(key) if key in catalog else key
+                entries.append(CommandEntry('tool:' + key, label, 'tool', keywords=key))
         for key in ('theme_light', 'theme_dark', 'search_fields', 'language_en', 'language_de',
                     'text_size_100', 'text_size_120', 'text_size_140'):
             entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
@@ -897,7 +903,8 @@ class Application(Appearance):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
                                        'troubleshooting', 'mod_manager', 'editing_presets',
                                        'research_lab', 'research_import', 'nexus_mods',
-                                       'asset_explorer', 'workflow_builder', 'emulator_hub', 'help_center')
+                                       'asset_explorer', 'workflow_builder', 'emulator_hub',
+                                       'game_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -1181,6 +1188,10 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
+        game_hub = getattr(self, 'game_hub', None)
+        if game_hub is not None and game_hub.frame.winfo_manager():
+            focus_search = getattr(game_hub, 'focus_search', None)
+            return focus_search() if callable(focus_search) else 'break'
         for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
                      self.nexus_mods, self.asset_explorer):
             if tool is not None and tool.frame.winfo_manager():
@@ -1198,6 +1209,9 @@ class Application(Appearance):
         if ((self.comparison is not None and self.comparison.frame.winfo_manager())
                 or (self.batch is not None and self.batch.frame.winfo_manager())):
             return
+        if (self.troubleshooting is not None
+                and self.troubleshooting.frame.winfo_manager()):
+            return 'break'
         self.platform_choice.set(ALL_PLATFORMS)
         self.show_platform()
         self.library_search_entry.focus_set()

@@ -282,6 +282,7 @@ class ApplicationShellTests(unittest.TestCase):
         calls = []
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
                   'mod_manager': 'show_mod_manager', 'research_lab': 'show_research_lab',
+                  'nexus_mods': 'show_nexus_mods', 'game_hub': 'show_game_hub',
                   'asset_explorer': 'show_asset_explorer',
                   'workflow_builder': 'show_workflow_builder', 'emulator_hub': 'show_emulator_hub'}
         for key, method in routes.items():
@@ -291,7 +292,9 @@ class ApplicationShellTests(unittest.TestCase):
             command_id = 'tool:' + key
             entries = self.app.command_entries()
             self.assertIn(command_id, {entry.id for entry in entries})
-            self.app.command_palette.query.set(self.app.tr(key))
+            self.assertEqual(sum(entry.id == command_id for entry in entries), 1)
+            title = next(entry.title for entry in entries if entry.id == command_id)
+            self.app.command_palette.query.set(title)
             self.assertIn(command_id, {entry.id for entry in self.app.command_palette.matches})
             self.app.execute_command(command_id)
             self.assertEqual(calls[-1], key)

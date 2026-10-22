@@ -1363,8 +1363,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 82923,
-      "sha256": "67f5550ec6af73bc38bb339760e0371b2f39b2723b60cb9bd4c8e58aed7dde61"
+      "bytes": 83749,
+      "sha256": "006b180ab2f1eea7f9057b51cdd66e7fc5c6be521fd830807b8b27fdc111ca6b"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4343,8 +4343,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42495,
-      "sha256": "3050f917f98ae8c57a36e80a9b52ecfbc67fa9edd0c529da376b7159647d94ed"
+      "bytes": 42731,
+      "sha256": "984be573cc025bcef4649d85328341e6e7e7b8a245ebb8cd3de89b76229fa041"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -4985,6 +4985,11 @@
       "path": "tests/test_game_troubleshooting.py",
       "bytes": 21989,
       "sha256": "bf7d3b6db5c4862ebda7067a11b45e4133f6b4a305f9431ad823353f7a22e6bb"
+    },
+    {
+      "path": "tests/test_game_troubleshooting_gui.py",
+      "bytes": 17427,
+      "sha256": "76462afd25c0f36838c0a73396619296342e84e9272cd452c9b33ada67999151"
     },
     {
       "path": "tests/test_gemfire_battery.py",

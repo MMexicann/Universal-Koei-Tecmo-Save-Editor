@@ -262,6 +262,91 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
         from tkinter import font
         self.assertEqual(font.Font(self.root, font=workspace.preview.cget("font")).actual("size"), 14)
 
+    def test_search_fields_is_consumed_when_troubleshooting_is_visible(self):
+        workspace = self.center()
+        self.root.focus_force()
+        with patch.object(self.app, "show_platform") as show_platform:
+            self.root.event_generate("<Control-f>")
+            self.root.update()
+            self.assertEqual(self.app.focus_library_search(), "break")
+            self.assertEqual(self.app.execute_command("command:search_fields"), "break")
+        show_platform.assert_not_called()
+        self.assertTrue(workspace.frame.winfo_ismapped())
+        self.assertFalse(self.app.library.winfo_ismapped())
+        self.assertIsNot(self.root.focus_get(), self.app.library_search_entry)
+
+    def test_versions_help_contract_coexists_with_troubleshooting_route_and_lifecycle(self):
+        from tkinter import font
+
+        class VersionsHelpCenterContract:
+            """Stand-in for the parallel tracker PR's not-yet-merged Help tab."""
+            def __init__(self, root, parent, initial_tab, language, on_tab_changed):
+                self.frame = tk.Frame(parent)
+                self.tab = initial_tab
+                self.language = language
+                self.on_tab_changed = on_tab_changed
+                self.palette = None
+                self.text_size = None
+
+            def show_tab(self, tab):
+                self.tab = tab
+
+            def selected_tab(self):
+                return self.tab
+
+            def focus_search(self):
+                return "break"
+
+            def set_language(self, language):
+                self.language = language
+
+            def apply_theme(self, palette):
+                self.palette = palette
+
+            def set_text_size(self, size, family):
+                self.text_size = (size, family)
+
+        workspace = self.center()
+        report = self.scan_with(workspace)
+        translate_original = self.app.tr
+
+        def translate_with_versions(key, **values):
+            if key == "versions":
+                return "Game Versions" if self.app.language == "en" else "Spielversionen"
+            return translate_original(key, **values)
+
+        with patch(
+            "koei_editor.shared.help_center.HelpCenter",
+            VersionsHelpCenterContract,
+        ), patch.object(self.app, "tr", side_effect=translate_with_versions):
+            # The tracker PR also contributes the `versions` localization key.
+            self.assertEqual(self.app.show_help("versions"), "break")
+            versions = self.app.help_center
+            self.assertEqual(versions.selected_tab(), "versions")
+            self.assertIs(self.app.execute_command("tool:troubleshooting"), workspace)
+            self.assertIs(workspace.report, report)
+
+            self.app.language_choice.set("Deutsch")
+            self.app.change_language()
+            self.assertEqual(versions.language, "de")
+            self.assertEqual(workspace.language, "de")
+            self.assertEqual(self.app.breadcrumb.get(), self.app.tr("troubleshooting"))
+
+            self.app.apply_theme("Dark")
+            self.app.text_size_choice.set("140%")
+            self.app.change_text_size()
+            self.root.update()
+            self.assertEqual(versions.palette, THEMES["Dark"])
+            self.assertEqual(versions.text_size[0], 14)
+            self.assertEqual(workspace.preview.cget("background"), THEMES["Dark"]["surface"])
+            self.assertEqual(font.Font(self.root, font=workspace.preview.cget("font")).actual("size"), 14)
+
+            self.assertEqual(self.app.show_help("versions"), "break")
+            self.assertEqual(versions.selected_tab(), "versions")
+            self.root.update()
+            self.assertTrue(versions.frame.winfo_ismapped())
+            self.assertFalse(workspace.frame.winfo_ismapped())
+
     def test_scan_errors_do_not_expose_exception_paths_or_values(self):
         workspace = self.center()
         workspace.game.set(workspace._game_labels["origins"])

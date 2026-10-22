@@ -38,8 +38,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 8191,
-      "sha256": "7d82c2d768f4b5c21afa746b0d9921647a63d682cc1d88d6fa8258facba7ed4f"
+      "bytes": 8209,
+      "sha256": "fc11389cb0b620be7861f5301db4c1821cd0f520110182177c94e4dabb386871"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -678,8 +678,8 @@
     },
     {
       "path": "docs/PATCH_COMPATIBILITY_ANALYZER.md",
-      "bytes": 6770,
-      "sha256": "75ea8d28d359d5821ac632dad5e04cb32ce31c163bdc13120f91b4d303b51073"
+      "bytes": 7068,
+      "sha256": "bb6b4f81bcc13e672c3cdaec8562ff89d57939599933741748e55467d08a7b7d"
     },
     {
       "path": "docs/PC_EDITOR_ATTEMPTS.md",
@@ -4238,8 +4238,8 @@
     },
     {
       "path": "src/koei_editor/shared/game_compatibility.py",
-      "bytes": 59883,
-      "sha256": "75d5983ff346cfc6299adc3dd329850d1e1ba3b2b1263afefdc1d6f0963b8f0f"
+      "bytes": 60090,
+      "sha256": "8782a8a79ec865dbc1a6b188e60d170d287dc14a47aad2e5546e921be3b5ad70"
     },
     {
       "path": "src/koei_editor/shared/game_data_encyclopedia.py",

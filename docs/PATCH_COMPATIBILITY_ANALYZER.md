@@ -8,12 +8,14 @@ matches the candidate snapshot.
 
 The analyzer does not find installations, read or write game files, manage mods,
 or decide compatibility from a file hash alone. The Game Version Tracker owns
-installation discovery; its current build observations do not supply the file,
-archive and format evidence required by this snapshot contract. Callers provide
-the documented snapshot and requirements JSON explicitly. Automatic Tracker
-snapshot creation and Mod Manager requirement export are not available here.
-The Mod Manager owns mod installation state. Reports describe
-evidence and possible impact; they do not certify a game load or save migration.
+installation discovery and bounded Steam build metadata. It does not currently
+hand off the product `version.value` or emit this analyzer's file, archive, or
+supported-format inventory arrays. All snapshot fields are explicit analyzer
+inputs. The Mod Manager owns
+mod installation state. Compatibility requirements are a separate optional
+input contract, and the current Nioh 2 manager does not generate that document
+automatically. Reports describe evidence and possible impact; they do not
+certify a game load or save migration.
 
 ## Run a comparison
 
@@ -27,8 +29,9 @@ python -m koei_editor.shared.game_compatibility baseline.json candidate.json \
   --markdown-out patch-report.md
 ```
 
-The two snapshot files contain explicit before and after observations for the
-same `game_id` and `platform_id`. `--requirements` is optional. Omit either
+The two snapshot files are explicit before and after observations that follow
+the contract below and share the same `game_id` and `platform_id`. `--requirements`
+is an optional separate input. Omit either
 output option to skip that file. The JSON report is deterministic and suitable
 for automated triage; the Markdown report is a readable summary. Both contain
 relative paths only. Inputs must be UTF-8 JSON regular files no larger than
@@ -70,7 +73,9 @@ pins can state supported `supported_versions` / `supported_build_ids` exact
 allowlists, required file SHA-256 values, supported format IDs/revisions, and
 required archive entries. These are compatibility expectations supplied by
 the owning tool or mod; the analyzer does not infer them from the save editor's
-registered profiles. If both version and build allowlists are present, both
+registered profiles. Required file and archive-entry pins are matched against
+game-install snapshot observations; hashes of imported mod-package files are not
+used for these pins. If both version and build allowlists are present, both
 must match.
 
 When an explicit requirement matches the baseline but not the candidate, the
@@ -118,7 +123,7 @@ produce an uncertain result; the report records the reason in
   "game_id": "example-game-pc",
   "platform_id": "windows",
   "captured_at": "2026-10-22T12:00:00Z",
-  "version": {"value": "1.2.0", "source": "tracker", "build_id": "12345"},
+  "version": {"value": "1.2.0", "source": "executable-metadata", "build_id": "12345"},
   "files": [
     {"relative_path": "data/example.bin", "size_bytes": 4096, "sha256": "<64 lowercase hex characters>"}
   ],

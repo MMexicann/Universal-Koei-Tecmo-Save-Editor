@@ -44,9 +44,10 @@ themes. No Python installation is needed for the Windows app.
   [Controller and input profiles](docs/CONTROLLER_INPUT_PROFILES.md).
 - **Compare saves:** inspect mapped changes and other payload differences across
   97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
-- **Analyze game patches from source:** compare explicit JSON snapshots by version,
-  file hash, archive structure and supported-format metadata, then check explicit
-  mod, tool and save requirements. [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
+- **Analyze game patches from source:** compare explicit JSON snapshots by
+  version/build metadata, file hashes, archive structures and supported-format
+  metadata, then check stated mod, tool and save requirements.
+  [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
 - **Manage mods:** import validated ZIP packages, keep separate profiles, check
   declared dependencies/conflicts, and safely manage Nioh 2 PC mods through its
   documented Mods folder method. [Mod Manager scope and safeguards](docs/MOD_MANAGER.md).

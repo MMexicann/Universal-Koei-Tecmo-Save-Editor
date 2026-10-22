@@ -328,10 +328,15 @@ class ControllerProfileWorkspaceTests(unittest.TestCase):
         pending = list(self.root.winfo_children())
         dialog = next(widget for widget in pending if isinstance(widget, tk.Toplevel))
         descendants = list(dialog.winfo_children())
+        preset_selector = None
         while descendants:
             widget = descendants.pop()
             descendants.extend(widget.winfo_children())
+            if isinstance(widget, ttk.Combobox) and widget.cget('state') == 'disabled':
+                preset_selector = widget
             if isinstance(widget, ttk.Button) and widget.cget('text') == 'Save profile':
+                self.assertIsNotNone(preset_selector)
+                self.assertEqual(preset_selector.get(), 'Custom')
                 widget.invoke()
                 break
         else:

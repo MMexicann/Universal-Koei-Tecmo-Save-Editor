@@ -48,14 +48,205 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed against origin/main"
   },
   "windows_ci": {
-    "status": "pending_current_head_after_review_wording_fix",
-    "last_completed_head": "e9c15535643c1d4dba22dcc2ce295b45f9555caf",
-    "last_completed_base": "fd17633c45f695fe7d6055d607e579359f285760",
-    "last_completed_run": "39854319696",
-    "last_completed_result": "full_workflow_failed; tracker tests 15/15, save discovery 47/47, Help Center 12/12, Troubleshooting 31/31, and universal app 28/28 passed; build/release skipped after unrelated module failures",
-    "integration_findings": "On prior tracker head e9c1553, Windows passed tracker 15/15, save discovery 47/47, Help Center 12/12, Troubleshooting 31/31, and universal app 28/28. Related Game Hub Windows run 39849115110 passed discovery 5/5, GUI 8/8, and save discovery 47/47. The full tracker run still failed in unrelated Mod Manager shell/Nexus assertions, Emulator Hub path normalization, Completion Companion assertions, Save Library viewport geometry, and Editing Tools menu expectations; build/release jobs were skipped. PRs #144 and #145 have fresh current-base checks in progress; #148 still needs a fresh focused Windows run.",
-    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; PRs #141 Troubleshooting Center and #121 patch compatibility analyzer are included in current main c5b7fdb.",
-    "required_before_merge": true
+    "status": "pending_current_head_after_main_sync",
+    "last_completed_head": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
+    "last_completed_base": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
+    "last_completed_run": "39856326664",
+    "last_completed_result": "full_workflow_failed; test_version_tracker 15/15, test_save_discovery 47/47, Help Center 12/12, Troubleshooting 31/31, universal app 28/28, and analyzer 29 passed/1 skipped; unrelated failures were application shell, Mod Manager/Nexus, Emulator Hub, Completion Companion, Save Library, and Editing Tools; build/release skipped",
+    "integration_findings": "The related Game Hub Windows run 39849115110 passed discovery 5/5, GUI 8/8, and Save Discovery 47/47. Mod Manager PR #144 Windows run 39856097841 passed all changed modules: Application Shell 40/40, Mod Manager 12/12, Nexus 11/11, Editing Tools 8/8. Emulator Hub PR #145 run 39856060823 passed its target module 17/17; its branch is being synced after main advanced. Completion Companion PR #148 run 39856540396 is still in progress. The latest tracker head run 39856624878 is queued/running after the review wording change. Save Library viewport assertions remain unrelated to tracker.",
+    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; PRs #141 Troubleshooting Center, #121 patch compatibility analyzer, and #144 Windows test fixes are included in current main 8faac64.",
+    "required_before_merge": true,
+    "last_completed_tracker_run_details": {
+      "run_id": 39856326664,
+      "head_sha": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
+      "base_sha": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
+      "workflow_conclusion": "failure",
+      "feature_modules": [
+        {
+          "module": "test_version_tracker.py",
+          "tests": 15,
+          "passed": 15,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_save_discovery.py",
+          "tests": 47,
+          "passed": 47,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_help_center.py",
+          "tests": 7,
+          "passed": 7,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_help_center_integration.py",
+          "tests": 5,
+          "passed": 5,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_game_troubleshooting.py",
+          "tests": 20,
+          "passed": 20,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_game_troubleshooting_gui.py",
+          "tests": 11,
+          "passed": 11,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_universal_app.py",
+          "tests": 28,
+          "passed": 28,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "module": "test_game_compatibility.py",
+          "tests": 30,
+          "passed": 29,
+          "skipped": 1,
+          "failures": 0,
+          "errors": 0
+        }
+      ],
+      "other_module_failures": [
+        {
+          "module": "test_application_shell.py",
+          "failures": 1,
+          "errors": 0,
+          "follow_up": "#144"
+        },
+        {
+          "module": "test_mod_manager_nexus.py",
+          "failures": 1,
+          "errors": 0,
+          "follow_up": "#144"
+        },
+        {
+          "module": "test_emulator_hub.py",
+          "failures": 1,
+          "errors": 0,
+          "follow_up": "#145"
+        },
+        {
+          "module": "test_completion_companion_view.py",
+          "failures": 2,
+          "errors": 0,
+          "follow_up": "#148"
+        },
+        {
+          "module": "test_save_library_gui.py",
+          "failures": 4,
+          "errors": 0,
+          "follow_up": null
+        },
+        {
+          "module": "test_editing_tools_application.py",
+          "failures": 3,
+          "errors": 1,
+          "follow_up": "#144"
+        }
+      ],
+      "build_job": "skipped_after_test_failures",
+      "release_job": "skipped"
+    },
+    "related_windows_runs": [
+      {
+        "component": "Game Hub",
+        "pr_number": 135,
+        "run_id": 39849115110,
+        "modules": [
+          {
+            "module": "test_game_hub_discovery.py",
+            "tests": 5,
+            "passed": 5
+          },
+          {
+            "module": "test_game_hub_gui.py",
+            "tests": 8,
+            "passed": 8
+          },
+          {
+            "module": "test_save_discovery.py",
+            "tests": 47,
+            "passed": 47
+          }
+        ]
+      },
+      {
+        "component": "Mod Manager Windows fixtures",
+        "pr_number": 144,
+        "run_id": 39856097841,
+        "modules": [
+          {
+            "module": "test_application_shell.py",
+            "tests": 40,
+            "passed": 40
+          },
+          {
+            "module": "test_mod_manager.py",
+            "tests": 12,
+            "passed": 12
+          },
+          {
+            "module": "test_mod_manager_nexus.py",
+            "tests": 11,
+            "passed": 11
+          },
+          {
+            "module": "test_editing_tools_application.py",
+            "tests": 8,
+            "passed": 8
+          }
+        ]
+      },
+      {
+        "component": "Emulator Hub Windows fixture",
+        "pr_number": 145,
+        "run_id": 39856060823,
+        "modules": [
+          {
+            "module": "test_emulator_hub.py",
+            "tests": 17,
+            "passed": 17
+          }
+        ]
+      },
+      {
+        "component": "Completion Companion Windows fixtures",
+        "pr_number": 148,
+        "run_id": 39856540396,
+        "modules": [
+          {
+            "module": "test_completion_companion_view.py",
+            "tests": 9,
+            "passed": 9
+          }
+        ]
+      }
+    ],
+    "current_head_check": {
+      "status": "pending_after_main_sync",
+      "base_sha": "8faac64bf1601be00048248ef35bf6df9b74270b"
+    }
   },
   "fixture": {
     "type": "procedural Steam metadata and temporary path-free history",

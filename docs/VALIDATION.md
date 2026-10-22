@@ -22,7 +22,7 @@ requires exact app/build identities and versioned evidence before showing
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "1ae3b3139ea5d6f5a664b66651c88bb849ee091d",
+  "base_commit": "fd17633c45f695fe7d6055d607e579359f285760",
   "commands": {
     "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_game_troubleshooting_gui tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
@@ -37,7 +37,7 @@ requires exact app/build identities and versioned evidence before showing
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1272
+    "verified_public_files": 1287
   },
   "supported_game_inventory": {
     "status": "passed",
@@ -49,9 +49,11 @@ requires exact app/build identities and versioned evidence before showing
   },
   "windows_ci": {
     "status": "pending_current_head",
-    "previous_remote_head": "c1b6dcb9e176e39e35fe7be91fcfe4897c6e54e8",
-    "previous_head_result": "tracker_and_help_center_modules_passed; unrelated_application_shell_editing_tools_and_mod_manager_failures",
-    "merged_test_fixture_fix": "PR #147; universal packaging fixture follows the optional achievement-source contract",
+    "previous_remote_head": "7414af9d7816c40ef44d82e27be72679478b0c32",
+    "previous_run": "39848899673",
+    "previous_head_result": "cancelled_after_base_advanced; tracker tests passed 15/15, save discovery passed 47/47, Windows build did not run",
+    "integration_findings": "unrelated Windows assertions are tracked in PRs #144, #145, and #148; the Help Center contract fixture is being corrected in this PR",
+    "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; they update the universal tab list and optional achievement-source packaging fixture",
     "required_before_merge": true
   },
   "fixture": {

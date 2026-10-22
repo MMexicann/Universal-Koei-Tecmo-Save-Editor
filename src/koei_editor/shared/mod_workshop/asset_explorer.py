@@ -21,6 +21,8 @@ WINDOWS_RESERVED_NAMES = frozenset({
     "con", "prn", "aux", "nul",
     *(f"com{number}" for number in range(1, 10)),
     *(f"lpt{number}" for number in range(1, 10)),
+    *(f"com{number}" for number in "¹²³"),
+    *(f"lpt{number}" for number in "¹²³"),
 })
 
 

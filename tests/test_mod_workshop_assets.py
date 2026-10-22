@@ -117,11 +117,13 @@ class AssetExplorerTests(unittest.TestCase):
         for target in (
             "assets/NUL.dds", "assets/COM1.fmt", "assets/lPt9.bin",
             "assets/CON/texture.dds", "assets/a.",
+            "assets/COM¹.dds", "assets/COM².dds", "assets/COM³.dds",
+            "assets/LPT¹.dds", "assets/LPT².dds", "assets/LPT³.dds",
             "assets/a./child.dds", "assets/a /child.dds",
         ):
             with self.subTest(target=target), self.assertRaises(AssetSafetyError):
                 self.register(target_path=target)
-        for target in ("assets/console.dds", "assets/COM10.dds", "assets/日本語.dds"):
+        for target in ("assets/console.dds", "assets/COM10.dds", "assets/LPT10.dds", "assets/日本語.dds"):
             with self.subTest(target=target):
                 self.assertEqual(self.register(target_path=target).target_path, target)
 

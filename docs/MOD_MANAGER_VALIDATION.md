@@ -1,6 +1,6 @@
 # Mod Manager validation report
 
-Validation was run on 2026-10-22 from the repository root. The test fixtures
+The original PR validation below was run on 2026-10-22 from the repository root. The test fixtures
 create synthetic ZIP packages and temporary Nioh 2-shaped directories; no game
 files, loader DLLs, or player mods are included.
 
@@ -19,6 +19,32 @@ files, loader DLLs, or player mods are included.
 | `git diff --check` | Passed with no whitespace errors. |
 | `python -m tools.package_release --verify-only` | Passed: v3.1, 1,234 public source files verified. This validates manifest hashes only; it does not build or validate a Windows executable. |
 
+## Integration review of state ownership and download staging
+
+The composed implementation uses the shared mutation guard for live
+transaction/recovery exclusion as well as state ownership; a second transaction
+lock is unnecessary. The concurrency regression observes that guard and its
+paused `_atomic_json` wrapper preserves the revision digest returned by the
+underlying write.
+
+On 2026-10-22, the composed `test_mod_manager`, `test_mod_manager_nexus` and
+`test_mod_manager_transaction_concurrency` suites passed **39 tests, no skips**
+(24 state/service, 14 download queue, 1 live-journal interleaving). Added checks
+include stale instances, process-crash recovery, persistent lock ownership,
+foreign lock preservation, background extraction responsiveness, newly appearing
+journals and retained incomplete/replaced downloads. A separate two-process
+probe refused an active writer, released ownership when the child exited,
+refused the stale instance afterward and preserved the child's profile and all
+original fixture files. With the separately reviewed Windows device-name and GUI
+selection-fixture corrections, the service/queue/live-journal/shell/Nexus suites
+also passed **100 tests under Xvfb, no skips**. These are synthetic local checks,
+not game loading.
+
+The source-manifest result above belongs to the original PR. Integration must
+regenerate and verify hashes after all reviewed patches are applied. Windows
+frozen packaging, native file-lock behavior and Defender qualification remain
+release checks.
+
 ## Audit limits
 
 - The service tests demonstrate operations against generated fixtures. They do
@@ -31,8 +57,9 @@ files, loader DLLs, or player mods are included.
 - The Nexus browser handoff only imports an explicitly selected Nioh 2 ZIP into
   the library. Other listed Nexus games are browse-only; the manager never
   enables or installs a downloaded package automatically.
-- Transaction/recovery serialization is within one `ModManager` instance. The
-  tests do not cover two separate app processes modifying the same game folder.
+- State-directory mutations have both an instance guard and nonblocking OS
+  ownership lock. The integration checks cover real process contention and
+  stale instances; they do not establish native Windows or game-load behavior.
 - Earlier service and UI reviews resolved transaction mutation and failed-root
   selection recovery gaps. A later safety review found a race between a live
   install journal and background import recovery; the follow-up lock and

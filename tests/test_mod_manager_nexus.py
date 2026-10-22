@@ -98,7 +98,7 @@ class NexusManagerHandoffTests(unittest.TestCase):
         self.assertTrue(downloader.destination.parent.parent == self.state_dir)
         self.assertTrue(downloader.destination.name.startswith("sample-mod-"))
         self.assertEqual(downloader.destination.suffix, ".zip")
-        self.assertFalse(downloader.destination.exists(), "manager-owned temporary archive should be removed")
+        self.assertTrue(downloader.destination.exists(), "untrusted staging bytes must be retained")
         record = next(item for item in self.manager.mods() if item.id == "downloaded-mod")
         self.assertFalse(record.installed)
         self.assertFalse(record.enabled)
@@ -146,6 +146,56 @@ class NexusManagerHandoffTests(unittest.TestCase):
         for path in self.manager.state_dir.glob("**/*"):
             if path.is_file():
                 self.assertNotIn(secret.encode(), path.read_bytes())
+
+    def test_failed_download_retains_partial_output_without_importing(self):
+        class PartialDownloader:
+            def download_archive(inner, request, destination):
+                inner.destination = Path(destination)
+                inner.destination.write_bytes(b"incomplete download")
+                raise RuntimeError("private signed URL")
+
+        downloader = PartialDownloader()
+        self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
+        result = self.wait_for_result()
+        self.assertEqual(result.status, "download_failed")
+        self.assertEqual(downloader.destination.read_bytes(), b"incomplete download")
+        self.assertEqual(self.manager.mods(), ())
+        self.assertNotIn("private signed URL", repr(result))
+
+    def test_failed_download_retains_foreign_replacement_and_extra_files(self):
+        class ReplacedDownloader:
+            def download_archive(inner, request, destination):
+                inner.destination = Path(destination)
+                inner.destination.write_bytes(b"partial")
+                inner.destination.unlink()
+                inner.destination.write_bytes(b"foreign replacement")
+                inner.extra = inner.destination.parent / "foreign-notes.txt"
+                inner.extra.write_bytes(b"foreign notes")
+                raise RuntimeError("failed")
+
+        downloader = ReplacedDownloader()
+        self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
+        self.assertEqual(self.wait_for_result().status, "download_failed")
+        self.assertEqual(downloader.destination.read_bytes(), b"foreign replacement")
+        self.assertEqual(downloader.extra.read_bytes(), b"foreign notes")
+        self.assertEqual(self.manager.mods(), ())
+
+    def test_successful_import_retains_replacement_created_during_import(self):
+        downloader = FakeDownloader()
+        real_import = self.manager.import_archive
+
+        def import_then_replace(destination):
+            record = real_import(destination)
+            Path(destination).unlink()
+            Path(destination).write_bytes(b"foreign replacement after import")
+            return record
+
+        with patch.object(self.manager, "import_archive", side_effect=import_then_replace):
+            self.assertTrue(self.manager.enqueue_nexus_download(Request(), downloader))
+            result = self.wait_for_result()
+        self.assertEqual(result.status, "imported")
+        self.assertEqual(downloader.destination.read_bytes(), b"foreign replacement after import")
+        self.assertEqual(len(self.manager.mods()), 1)
 
     def test_rate_limit_result_preserves_safe_retry_after_without_retrying(self):
         secret = "https://cdn.example.invalid/archive.zip?token=private-key"

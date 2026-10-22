@@ -553,13 +553,13 @@
     },
     {
       "path": "docs/MOD_MANAGER.md",
-      "bytes": 9072,
-      "sha256": "82234496e5a83748cbde1c0010ec07c768c32df905851873e27cca02141d8a2b"
+      "bytes": 10292,
+      "sha256": "02fdf54fc072d41e71eece303f23d2e18ccbd25c52b7e26a0d75b58bee2903fe"
     },
     {
       "path": "docs/MOD_MANAGER_VALIDATION.md",
-      "bytes": 4233,
-      "sha256": "a495376e8be46b66534499c13975391f25a5db70b1aaaea2a609a2c681bdb6f8"
+      "bytes": 5845,
+      "sha256": "7d759e91b377bfe09aa4e7a3e1b0b192437c6145d3da4bd0931d940cf350bbab"
     },
     {
       "path": "docs/MOD_TESTING_SANDBOX.md",
@@ -4268,8 +4268,8 @@
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
-      "bytes": 82512,
-      "sha256": "af45d85daf9f69148c1e770cc67ceeba6a6ecb6ab1e6fbacaae20a42507d12b9"
+      "bytes": 91785,
+      "sha256": "4862fce74fb1e97ee10055b1eae8508d23a21da7b35c6839a224c85210519249"
     },
     {
       "path": "src/koei_editor/shared/mod_manager_gui.py",
@@ -4283,8 +4283,8 @@
     },
     {
       "path": "src/koei_editor/shared/mod_workshop/asset_explorer.py",
-      "bytes": 14985,
-      "sha256": "4b03151a9fab24239b8181df15d08ba35dd216b845f394700f30761e04c607b2"
+      "bytes": 15077,
+      "sha256": "e8e4543ad3cc707ea25625920840dc0ae0c77d2166f8ec7d6c5b29b036755ed2"
     },
     {
       "path": "src/koei_editor/shared/mod_workshop/gui.py",
@@ -5483,18 +5483,18 @@
     },
     {
       "path": "tests/test_mod_manager.py",
-      "bytes": 15240,
-      "sha256": "755257bca198f08d978d666a5f24cdc5fd5cd8a927bb940799f1f5749d5ee5cf"
+      "bytes": 26335,
+      "sha256": "d95c6399375fbd495a8e1031b6fb93a66227cdfde30e8a42f02f66df0cbc4263"
     },
     {
       "path": "tests/test_mod_manager_nexus.py",
-      "bytes": 10941,
-      "sha256": "7967afb2f5350f8ae9523b568648c67488e5edf65f7c6110c880d243e2f22220"
+      "bytes": 13539,
+      "sha256": "04c4e15b1ffa10ac317f60a022eb8a4671072ec0f8d72d30f9772a0752fa93b4"
     },
     {
       "path": "tests/test_mod_manager_transaction_concurrency.py",
-      "bytes": 7793,
-      "sha256": "b460c06e74c00aa1e0e0c3e92a5ecd39bc45305dee8d551d84092a229eca9350"
+      "bytes": 7811,
+      "sha256": "1d3faad0e2570c7f63b1ed64332391ab6d2fa9298c5556a834f0ca74d149bd2b"
     },
     {
       "path": "tests/test_monster_rancher_ds.py",

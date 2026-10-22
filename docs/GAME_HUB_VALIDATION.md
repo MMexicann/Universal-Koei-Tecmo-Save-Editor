@@ -4,7 +4,7 @@
 {
   "schema_version": 1,
   "feature": "koei_tecmo_game_hub",
-  "base_commit": "445528e9becb5c2c49613e5173448a1a8a134024",
+  "base_commit": "60e70fe8c30ea76429a920a88a2b02ade9850244",
   "scope": {
     "steam_mappings": "Existing reviewed Windows PC profile mappings",
     "discovery": "Steam library and app manifest metadata only",
@@ -15,18 +15,18 @@
   },
   "checks": {
     "focused_tests": {
-      "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center",
+      "command": "PYTHONPATH=src python -m unittest tests.test_game_hub_discovery tests.test_game_hub_gui tests.test_save_discovery tests.test_application_shell tests.test_version_tracker tests.test_help_center tests.test_game_troubleshooting_gui",
       "status": "passed_with_gui_skips",
-      "tests": 123,
-      "passed": 83,
-      "skipped": 40,
+      "tests": 134,
+      "passed": 86,
+      "skipped": 48,
       "failures": 0,
       "skip_reason": "Tk display unavailable in this environment"
     },
     "package_verification": {
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
-      "public_source_entries": 1275
+      "public_source_entries": 1277
     },
     "supported_game_inventory": {
       "command": "PYTHONPATH=src python -m tools.update_supported_games --check",
@@ -40,7 +40,7 @@
     "source_validation": {
       "checks": [
         "git diff --check origin/codex/version-compatibility-tracker...HEAD",
-        "python -m py_compile src/koei_editor/application.py src/koei_editor/shared/game_hub.py src/koei_editor/shared/game_hub_gui.py"
+        "python -m py_compile src/koei_editor/application.py src/koei_editor/shared/localization.py src/koei_editor/shared/game_hub.py src/koei_editor/shared/game_hub_gui.py tests/test_game_hub_gui.py"
       ],
       "status": "passed"
     },

@@ -1053,8 +1053,8 @@
     },
     {
       "path": "docs/VALIDATION.md",
-      "bytes": 100136,
-      "sha256": "97748630ced0fe85688e72993d1199d9eb30880b884e5e61097865a31765ffa7"
+      "bytes": 100719,
+      "sha256": "12386a83b278999b1e6855382a2149bff664e563e33ad53a5549c5a9506227a3"
     },
     {
       "path": "docs/WARRIORS_PS4_TRANSFERS.md",
@@ -4258,8 +4258,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_discovery.py",
-      "bytes": 29142,
-      "sha256": "77544a4b6ccc8341b750fd68e0f55697012e00d164255528f77c7b683bda8631"
+      "bytes": 29163,
+      "sha256": "99954956e35e4de3361f6df35f25e7b3172df95a74290e8f095ece3f0b52bf61"
     },
     {
       "path": "src/koei_editor/shared/save_doctor.py",

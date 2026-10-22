@@ -48,7 +48,7 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed against origin/main"
   },
   "windows_ci": {
-    "status": "pending_current_head",
+    "status": "pending_current_head_after_review_wording_fix",
     "last_completed_head": "e9c15535643c1d4dba22dcc2ce295b45f9555caf",
     "last_completed_base": "fd17633c45f695fe7d6055d607e579359f285760",
     "last_completed_run": "39854319696",
@@ -69,7 +69,19 @@ requires exact app/build identities and versioned evidence before showing
     "verified_or_unsupported_claims_seeded": false
   },
   "release_created": false,
-  "version_bumped": false
+  "version_bumped": false,
+  "review_follow_up": {
+    "finding": "Portable discovery report wording now distinguishes sanitized allowlisted Steam markers from omitted paths, filenames, account IDs, and unrecognized VDF values.",
+    "focused_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery",
+    "focused_test_result": {
+      "run": 62,
+      "passed": 62,
+      "skipped": 0,
+      "failures": 0
+    },
+    "source_manifest": "refreshed and verified 1,290 public source files",
+    "git_diff_check": "passed against origin/main"
+  }
 }
 ```
 

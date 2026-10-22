@@ -89,14 +89,14 @@ class GameHubGuiTests(unittest.TestCase):
             calls.append(kwargs)
             return result
 
-        with patch('koei_editor.shared.save_discovery.discover_saves', side_effect=discover):
+        with patch('koei_editor.shared.save_discovery.discover_installed_builds', side_effect=discover):
             hub = self.app.show_game_hub()
             self.assertIsInstance(hub, GameHubWorkspace)
             self.assertEqual(hub.frame.winfo_manager(), 'pack')
             self.finish(hub)
 
         self.assertNotEqual(thread_ids[0], threading.get_ident())
-        self.assertEqual(calls[0].get('include_locations'), False)
+        self.assertIn('cancel', calls[0])
         self.assertEqual(hub.status_filter.get(), 'All tracked games')
         self.assertEqual(hub.table.set('527270:0', 'status'), 'Installed')
         self.assertEqual(hub.table.set('527270:0', 'build'), '123456')

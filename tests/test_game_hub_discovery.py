@@ -5,7 +5,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared import game_hub, save_discovery
 
 
@@ -34,10 +33,8 @@ class GameHubDiscoveryTests(unittest.TestCase):
         return install_path
 
     def scan(self):
-        return save_discovery.discover_saves(
+        return save_discovery.discover_installed_builds(
             home=self.home,
-            local_app_data=self.home / 'AppData/Local',
-            roaming_app_data=self.home / 'AppData/Roaming',
             steam_roots=(self.steam,),
         )
 
@@ -65,13 +62,13 @@ class GameHubDiscoveryTests(unittest.TestCase):
         self.assertEqual(game.library_path, library)
         self.assertEqual(game.install_path, install_path)
         self.assertEqual(game.build_id, '83921005')
-        self.assertEqual(game.last_updated, 1743511000)
+        self.assertEqual(game.last_updated, '1743511000')
         self.assertEqual(game.size_on_disk, 2430432)
 
         portable = json.dumps(save_discovery.report(result), sort_keys=True)
         safe_game, = save_discovery.report(result)['installed_games']
         self.assertEqual(safe_game['build_id'], '83921005')
-        self.assertEqual(safe_game['last_updated'], 1743511000)
+        self.assertEqual(safe_game['last_updated'], '1743511000')
         self.assertEqual(safe_game['size_on_disk'], 2430432)
         for local_path in (str(self.root), str(self.steam), str(library), str(install_path)):
             self.assertNotIn(local_path, portable)
@@ -115,31 +112,17 @@ class GameHubDiscoveryTests(unittest.TestCase):
         self.assertIsNone(game.build_id)
         self.assertIsNone(game.last_updated)
         self.assertIsNone(game.size_on_disk)
-        self.assertIn('invalid_install_metadata_skipped', result.issues)
+        self.assertIn('invalid_last_updated_ignored', result.issues)
+        self.assertIn('invalid_size_on_disk_ignored', result.issues)
 
-    def test_install_scan_can_skip_save_locations_and_rejects_non_boolean_flag(self):
+    def test_install_only_scanner_does_not_return_save_locations(self):
         self.install(self.steam, metadata='"buildid" "83921005"')
 
-        result = save_discovery.discover_saves(
-            home=self.home,
-            local_app_data=self.home / 'AppData/Local',
-            roaming_app_data=self.home / 'AppData/Roaming',
-            steam_roots=(self.steam,),
-            include_locations=False,
-        )
+        result = self.scan()
 
         self.assertEqual(len(result.installed_games), 1)
         self.assertEqual(result.installed_games[0].build_id, '83921005')
         self.assertEqual(result.locations, ())
-        for invalid in (0, 1, None, 'false'):
-            with self.subTest(value=invalid), self.assertRaises(SaveError):
-                save_discovery.discover_saves(
-                    home=self.home,
-                    local_app_data=self.home / 'AppData/Local',
-                    roaming_app_data=self.home / 'AppData/Roaming',
-                    steam_roots=(self.steam,),
-                    include_locations=invalid,
-                )
 
 
 if __name__ == '__main__':

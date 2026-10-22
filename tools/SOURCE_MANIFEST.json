@@ -728,8 +728,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 17017,
-      "sha256": "7cab9e908a7ed58b03ba3f93361e2734a300a3a90e19b6df0ecb795dcb88569d"
+      "bytes": 17149,
+      "sha256": "a2df95a6f2cf60ea443663da3f946630119b95d6041c5f54ec13cbc46f82eaf8"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -878,8 +878,8 @@
     },
     {
       "path": "docs/SAVE_MANAGEMENT.md",
-      "bytes": 5903,
-      "sha256": "7dd60a468319a949a6f9656321095f0f80946d70227c51e701895d41013f6019"
+      "bytes": 7529,
+      "sha256": "85afd50d789d00228f4cda7eebac3f01452fa739ee464f6c000ad06c2e6f1c78"
     },
     {
       "path": "docs/SAVE_RESEARCH_LAB.md",
@@ -895,6 +895,11 @@
       "path": "docs/SCENARIO_ARMY_EDITOR_REPORT.md",
       "bytes": 4723,
       "sha256": "21c6679913bed61c9b2d82ec10c3fb1356d890bbe40d5840c71d5a71f732b8d1"
+    },
+    {
+      "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
+      "bytes": 3977,
+      "sha256": "42bb390ef9cdd6e290059a6a84c206464133ec4c246d129f04427fd1bca06b35"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -1378,8 +1383,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 83749,
-      "sha256": "006b180ab2f1eea7f9057b51cdd66e7fc5c6be521fd830807b8b27fdc111ca6b"
+      "bytes": 84104,
+      "sha256": "9a56cad23b99af74024779be4f9a31caf4f8397bcd942354e9e1eea97b322d51"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4013,8 +4018,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 3510,
-      "sha256": "162970df5c7cc18b242877b699296631319c9245ef3b00cb53807a5f58052557"
+      "bytes": 35349,
+      "sha256": "9c722f2ed9d87972106da3ba4b91ef50230a46a53321ce20bbda0e6b2a6d6051"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
@@ -4167,6 +4172,16 @@
       "sha256": "9c068741f15f4f2326b2920ebba48d2d1dafb499f35223af28bc6b858a3b486c"
     },
     {
+      "path": "src/koei_editor/shared/playthrough_profiles.py",
+      "bytes": 30685,
+      "sha256": "42251eaf31cfa07c1b86fab6a4fc1d6712b6c2738379f2f9104e98539c126f28"
+    },
+    {
+      "path": "src/koei_editor/shared/playthrough_profiles_gui.py",
+      "bytes": 27494,
+      "sha256": "3a24f6358962fbb62d83e9264a56da6353c87205db65bfb2d989eb8d8cf6608f"
+    },
+    {
       "path": "src/koei_editor/shared/plugin_gui.py",
       "bytes": 13410,
       "sha256": "63956c839fb75065e9d97f7c6467ff255450c3289d11ac093922c7c99a9d5363"
@@ -4278,8 +4293,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_management_gui.py",
-      "bytes": 21785,
-      "sha256": "1570635827cdbe0b478eba1adbc21366aa790aeb047c742e38a455ec12779ed6"
+      "bytes": 26808,
+      "sha256": "cba356d2680279ef5056c4b84c44dda00c919ce956ca105157fedff4a692e68f"
     },
     {
       "path": "src/koei_editor/shared/save_safety.py",
@@ -4373,8 +4388,8 @@
     },
     {
       "path": "tests/README.md",
-      "bytes": 11439,
-      "sha256": "2390020f3bdce1c324e334c48824d241e89ad0cdcff0e7c81b14f3926879fb58"
+      "bytes": 11803,
+      "sha256": "90568b7463709181f3735baf8112b4153ca837f40a9c70f4df39007caccffc46"
     },
     {
       "path": "tests/scalar_contract.py",
@@ -4398,8 +4413,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42971,
-      "sha256": "3f5777e63f6a85b61d96b1e9f89f2beff7d5350fe990a7dac43c8a87bc54ab5d"
+      "bytes": 43644,
+      "sha256": "35d77b5b52efc3f5200968b801a02f77900d1d9f73e3415315e230a9ec0600ea"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5863,8 +5878,8 @@
     },
     {
       "path": "tests/test_save_management_gui.py",
-      "bytes": 12429,
-      "sha256": "8800bfc70e524650a6fe59306f3bf239b91ebf6895cdab374a008e17e64fb691"
+      "bytes": 18254,
+      "sha256": "9e4f7dd1433213f2fdb0262eac7b65b6cc972a6bcb0a59a8c1ece6074d937edb"
     },
     {
       "path": "tests/test_save_management_regressions.py",
@@ -6388,8 +6403,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 35269,
-      "sha256": "d21247609c4e1394e0bc83e52e9726c028402ffa3790179d3cde35322a3ca6d7"
+      "bytes": 35361,
+      "sha256": "a05021f284f857c4f21c2151eb5d441c97711020b375fc4d9a07674d9a96f98a"
     },
     {
       "path": "tools/refresh_manifest.py",

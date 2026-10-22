@@ -226,7 +226,9 @@ class HelpCenter:
         if widget is None:
             self.notebook.focus_set()
         else:
-            widget.focus_set()
+            # Ctrl+F is an explicit user action in the active window; force
+            # focus so Tk on Windows does not leave keyboard focus on the root.
+            widget.focus_force()
             widget.selection_range(0, 'end')
         return 'break'
 

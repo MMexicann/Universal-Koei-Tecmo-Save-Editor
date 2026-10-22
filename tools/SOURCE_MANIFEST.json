@@ -4028,8 +4028,8 @@
     },
     {
       "path": "src/koei_editor/shared/help_center.py",
-      "bytes": 18122,
-      "sha256": "a9ab87527354a4bc324b334bc8fce06405f6c4c1957558d4e89dc38aacf09b45"
+      "bytes": 18280,
+      "sha256": "9125c069d7e8f1ec9690d43c3cab03d71c4268e6449d53c2bb3252350c06a1f5"
     },
     {
       "path": "src/koei_editor/shared/help_content.py",

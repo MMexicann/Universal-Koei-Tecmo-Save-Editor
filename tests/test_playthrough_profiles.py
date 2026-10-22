@@ -17,6 +17,8 @@ from koei_editor.shared.playthrough_profiles import (
     PlaythroughProfileStore,
     PlaythroughPreparationError,
     ProfileComponentSnapshot,
+    dump_component_snapshot,
+    load_component_snapshot,
 )
 from tests import test_ps3_expansion
 from tests.test_ps3_new_families import fixture
@@ -81,6 +83,35 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertFalse(mismatch.compatible)
         self.assertEqual(mismatch.report['report_scope'], 'compatibility_preview')
         self.assertTrue(self.vault.verify(self.snapshot.id)[0].valid)
+
+    def test_public_component_snapshot_json_roundtrip_and_contract_validation(self):
+        for component in self.components():
+            with self.subTest(component=component.component):
+                path = self.root / f'{component.component}.json'
+                path.write_text(dump_component_snapshot(component), encoding='utf-8')
+                self.assertEqual(load_component_snapshot(path), component)
+
+        valid_component = self.components()[0]
+        valid_json = dump_component_snapshot(valid_component)
+        duplicate_key_path = self.root / 'duplicate-component.json'
+        duplicate_key_path.write_text(
+            valid_json.replace(
+                '"component": "mod_configuration",',
+                '"component": "mod_configuration",\n  "component": "mod_configuration",',
+                1,
+            ),
+            encoding='utf-8',
+        )
+        with self.assertRaises(SaveError):
+            load_component_snapshot(duplicate_key_path)
+
+        invalid_provider_path = self.root / 'invalid-provider.json'
+        invalid_provider_path.write_text(
+            valid_json.replace('"provider": "mod_manager"', '"provider": "unknown_manager"', 1),
+            encoding='utf-8',
+        )
+        with self.assertRaises(SaveError):
+            load_component_snapshot(invalid_provider_path)
 
     def test_all_component_kinds_are_digest_bound_and_staged_as_inert_json(self):
         profile = self.make_profile()

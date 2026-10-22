@@ -811,6 +811,9 @@ class Application(Appearance):
         frame, editor = self.sessions[game_id]
         frame.pack(fill='both', expand=True)
         self._set_active_game(game_id)
+        if self.comparison is not None:
+            document = getattr(editor, 'document', None)
+            self.comparison.bind_target_editor(editor if document is not None and hasattr(editor, 'adapter') else None)
         self._remember_workspace('game:' + game_id)
         self.refresh_sessions()
         self.breadcrumb.set(game.title + ' · ' + game.subtitle)
@@ -843,8 +846,19 @@ class Application(Appearance):
 
     def show_comparison(self):
         from koei_editor.shared.comparison_gui import ComparisonWorkspace
+        target_editor = None
+        if self.active_game is not None:
+            candidate = self.sessions[self.active_game][1]
+            if getattr(candidate, 'document', None) is not None and hasattr(candidate, 'adapter'):
+                target_editor = candidate
+        elif self.comparison is not None:
+            # The editor remains open while another retained workspace is shown.
+            # Keep its exact session binding until select_game chooses another one.
+            target_editor = self.comparison.target_editor
         if self.comparison is None:
-            self.comparison = ComparisonWorkspace(self.root, self.workspace)
+            self.comparison = ComparisonWorkspace(self.root, self.workspace, target_editor=target_editor)
+        else:
+            self.comparison.bind_target_editor(target_editor)
         self.library.pack_forget()
         self._hide_tools()
         for frame, _editor in self.sessions.values():

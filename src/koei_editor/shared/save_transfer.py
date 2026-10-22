@@ -77,6 +77,11 @@ def _profile(adapter):
             ('dw8xl', verified_editor): 'resources'}.get((adapter.game_id, adapter.backend))
 
 
+def supports_transfer(adapter):
+    """Return whether this exact registered scalar backend has a transfer policy."""
+    return _profile(adapter) is not None
+
+
 def _identities(adapter, document, kind):
     fields = adapter.field_map(document)
     excluded = []

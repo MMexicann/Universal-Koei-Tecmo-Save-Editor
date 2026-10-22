@@ -8,11 +8,14 @@ from koei_editor.shared.table_tools import attach_sorting
 
 
 class TransferDialog:
-    def __init__(self, editor):
+    def __init__(self, editor, *, source_path=None, selected_ids=(),
+                 comparison_selection_count=None, comparison_skipped_rows=(),
+                 expected_source_sha256=None):
         self.editor = editor
         self.adapter, self.target = editor.adapter, editor.document
         self.source = self.available = self.plan = None
         self.selected = set()
+        self.expected_source_sha256 = expected_source_sha256
         self.window = tk.Toplevel(editor.root)
         self.window.title('Selective Save-to-Save Transfer')
         self.window.geometry('1140x720')
@@ -64,6 +67,10 @@ class TransferDialog:
         self.query.trace_add('write', self.filter_rows)
         self.choices.bind('<<TreeviewSelect>>', self.selection_changed)
         editor.apply_theme(editor.theme_name.get())
+        if source_path is not None:
+            self.load_source(source_path, selected_ids=selected_ids,
+                             comparison_selection_count=comparison_selection_count,
+                             comparison_skipped_rows=comparison_skipped_rows)
 
     def _table(self, parent, columns, headings):
         body = ttk.Frame(parent)
@@ -99,10 +106,14 @@ class TransferDialog:
         path = filedialog.askopenfilename(parent=self.window, title='Open Separate Transfer Source Copy',
                 initialdir=self.target.source.parent, filetypes=[('Selected profile save copy', '*' + self.adapter.extension)])
         if path:
+            # A manually chosen source begins a fresh transfer selection and
+            # is no longer constrained to the earlier comparison snapshot.
+            self.expected_source_sha256 = None
             return self.load_source(path)
         return False
 
-    def load_source(self, path):
+    def load_source(self, path, *, selected_ids=(), comparison_selection_count=None,
+                    comparison_skipped_rows=()):
         self._clear_preview()
         for key in getattr(self, '_choice_ids', ()):
             if self.choices.exists(key):
@@ -114,21 +125,75 @@ class TransferDialog:
         self.count.set('0 selected')
         self.preview_button.configure(state='disabled')
         try:
+            if not isinstance(selected_ids, (tuple, list, set, frozenset)):
+                raise SaveError('Comparison handoff must contain distinct mapped field IDs.')
+            requested = tuple(selected_ids)
+            if (any(type(key) is not str for key in requested)
+                    or len(requested) != len(set(requested))):
+                raise SaveError('Comparison handoff must contain distinct mapped field IDs.')
+            if (comparison_selection_count is not None
+                    and (type(comparison_selection_count) is not int
+                         or comparison_selection_count < len(requested))):
+                raise SaveError('The comparison selection count is invalid.')
+            if (not isinstance(comparison_skipped_rows, (tuple, list))
+                    or any(not isinstance(row, (tuple, list)) or len(row) != 2
+                           or type(row[0]) is not str or type(row[1]) is not str
+                           or not row[0] or row[1] not in ('definition_changed', 'available_in_first',
+                                                          'available_in_second')
+                           for row in comparison_skipped_rows)):
+                raise SaveError('Skipped comparison rows must retain their mapped IDs and non-value-change status.')
+            skipped = tuple(comparison_skipped_rows)
+            if len({row[0] for row in skipped}) != len(skipped):
+                raise SaveError('Skipped comparison rows must contain distinct field IDs.')
+            if set(row[0] for row in skipped).intersection(requested):
+                raise SaveError('A comparison field cannot be both a value-change candidate and a skipped row.')
             self._session()
             source = self.adapter.read_save(path)
+            if (self.expected_source_sha256 is not None
+                    and source.sha256 != self.expected_source_sha256):
+                raise SaveError('The comparison source changed after review. Compare the copies again.')
             available = save_transfer.catalogue(self.adapter, source, self.target)
             self.source, self.available = source, available
+            choice_ids = {choice.id for choice in available.choices}
+            eligible = set(requested).intersection(choice_ids)
             for choice in available.choices:
                 label = choice.target_field.label + ' / ' + self.editor.record_name(choice.target_field)
                 self.choices.insert('', 'end', iid=choice.id, values=(choice.category, label, choice.source_value, choice.target_value))
                 self._choice_ids.append(choice.id)
             for item in available.exclusions:
                 self.exclusions.insert('', 'end', values=(item.field, item.reason))
+            for key in sorted(set(requested).difference(choice_ids)):
+                reason = next((item.reason for item in available.exclusions
+                               if item.field == key or item.field.endswith(' ' + key)),
+                              'This field ID is not present in the reviewed transfer catalogue.')
+                self.exclusions.insert('', 'end', values=('Comparison selection · ' + key, reason))
+            skipped_labels = {'definition_changed': 'Record definition changed',
+                              'available_in_first': 'Available in first',
+                              'available_in_second': 'Available in second'}
+            for key, status in skipped:
+                self.exclusions.insert(
+                    '', 'end',
+                    values=(f'Comparison selection · {key} ({skipped_labels[status]})',
+                            'This row is not an ordinary value change, so it was not sent to the transfer catalogue or preselected.'))
             self.source_name.set(source.source.name)
-            self.summary.set(f'{len(available.choices):,} compatible values; {len(available.exclusions):,} exclusions. '
-                             'Equipment entries transfer existing references only. Select the fields to copy.')
+            comparison_exclusions = len(set(requested).difference(choice_ids)) + len(skipped)
+            summary = (f'{len(available.choices):,} compatible values; {len(available.exclusions) + comparison_exclusions:,} exclusions. '
+                       'Equipment entries transfer existing references only. Select the fields to copy.')
+            if comparison_selection_count is not None:
+                value_changes = len(requested)
+                unsupported_rows = len(skipped)
+                if comparison_selection_count != value_changes + unsupported_rows:
+                    raise SaveError('Selected comparison rows do not match their handoff candidates and exclusions.')
+                summary += (f' Comparison handoff: {comparison_selection_count:,} rows selected; '
+                            f'{value_changes:,} value-change IDs checked; {len(eligible):,} IDs approved by the transfer catalogue and preselected; '
+                            f'{value_changes - len(eligible):,} candidates excluded. '
+                            f'{unsupported_rows:,} non-value-change rows were not considered for transfer. '
+                            'The catalogue and complete transfer preview control every staged value.')
             self.preview_button.configure(state='normal')
             self.filter_rows()
+            if eligible:
+                self._selection(eligible)
+                self.choices.selection_set(tuple(eligible & set(self.choices.get_children())))
             return True
         except Exception as error:
             self.source_name.set('No source selected')
@@ -223,8 +288,13 @@ class TransferDialog:
         return True
 
 
-def open_transfer(editor):
+def open_transfer(editor, *, source_path=None, selected_ids=(),
+                  comparison_selection_count=None, comparison_skipped_rows=(),
+                  expected_source_sha256=None):
     if editor.document is None:
         messagebox.showinfo('Save Transfer', 'Open a separate destination save copy first.', parent=editor.root)
         return None
-    return TransferDialog(editor)
+    return TransferDialog(editor, source_path=source_path, selected_ids=selected_ids,
+                          comparison_selection_count=comparison_selection_count,
+                          comparison_skipped_rows=comparison_skipped_rows,
+                          expected_source_sha256=expected_source_sha256)

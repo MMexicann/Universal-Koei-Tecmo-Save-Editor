@@ -2,7 +2,7 @@
 
 ```yaml
 report_schema: 1
-status: draft_pull_request_open
+status: pull_request_open
 base: main
 base_commit: 1955b73
 full_suite_base_commit: c851ee5
@@ -76,5 +76,5 @@ writer are intentionally bespoke.
 
 The full run report and per-module logs were written under the ignored local
 `work/` directory. Native saves and private fixtures were not added to the
-checkout. PR #138 is a draft for review; no release, version bump or merge was
+checkout. PR #138 is open for review; no release, version bump or merge was
 performed.

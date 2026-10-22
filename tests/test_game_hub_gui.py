@@ -136,6 +136,19 @@ class GameHubGuiTests(unittest.TestCase):
         row = '527270:missing'
         self.assertEqual(hub.table.set(row, 'status'), 'Not detected (partial scan)')
 
+    def test_control_f_focuses_and_selects_game_hub_search(self):
+        hub = GameHubWorkspace(self.root, self.app.workspace,
+                               preferences_path=self.folder / 'preferences.json')
+        self.app.game_hub = hub
+        hub.frame.pack(fill='both', expand=True)
+        self.root.update()
+        self.root.focus_force()
+        self.root.event_generate('<Control-f>')
+        self.root.update()
+
+        self.assertIs(self.root.focus_get(), hub.search_entry)
+        self.assertTrue(hub.search_entry.selection_present())
+
     def test_refresh_failure_preserves_prior_installations(self):
         install = self.folder / 'Steam' / 'steamapps' / 'common' / 'Atelier Sophie'
         install.mkdir(parents=True)

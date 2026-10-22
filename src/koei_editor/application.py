@@ -52,12 +52,18 @@ class Application(Appearance):
         self._owned_minimum = (780, 680)
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
-        self.editing_tools_menu.add_command(label=self.tr('editing_presets'), command=self.show_editing_presets)
-        self.editing_tools_menu.add_command(label=self.tr('transfer'), command=self.show_transfer)
-        self.editing_tools_menu.add_command(label=self.tr('controller_profiles'), command=self.show_controller_profiles)
-        self.editing_tools_menu.add_separator()
-        self.editing_tools_menu.add_command(label=self.tr('research_lab'), command=self.show_research_lab)
-        self.editing_tools_menu.add_command(label=self.tr('research_import'), command=self.show_research_import)
+        self._editing_menu_localized_commands = {}
+        for key, callback in (
+                ('editing_presets', self.show_editing_presets),
+                ('transfer', self.show_transfer),
+                ('controller_profiles', self.show_controller_profiles),
+                ('research_lab', self.show_research_lab),
+                ('research_import', self.show_research_import)):
+            if key == 'research_lab':
+                self.editing_tools_menu.add_separator()
+            self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
+            command = self.editing_tools_menu.entrycget('end', 'command')
+            self._editing_menu_localized_commands[command] = key
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -265,9 +271,12 @@ class Application(Appearance):
             widget.configure(text=self.tr(key))
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
-        for index, key in ((0, 'editing_presets'), (1, 'transfer'), (2, 'controller_profiles'),
-                           (4, 'research_lab'), (5, 'research_import')):
-            self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
+        last_entry = self.editing_tools_menu.index('end')
+        for index in range(last_entry + 1):
+            command = self.editing_tools_menu.entrycget(index, 'command')
+            key = self._editing_menu_localized_commands.get(command)
+            if key:
+                self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
@@ -900,7 +909,8 @@ class Application(Appearance):
     def show_controller_profiles(self):
         from koei_editor.shared.controller_profiles_gui import ControllerProfileWorkspace
         if self.controller_profiles is None:
-            self.controller_profiles = ControllerProfileWorkspace(self.root, self.workspace)
+            self.controller_profiles = ControllerProfileWorkspace(
+                self.root, self.workspace, language=self.language)
         self._show_editing_tool(self.controller_profiles, self.tr('controller_profiles'))
         self._remember_workspace('tool:controller_profiles')
         return self.controller_profiles
@@ -1333,6 +1343,7 @@ def main():
         app.show_editing_presets()
         app.show_research_lab()
         app.show_research_import()
+        app.show_controller_profiles()
         app.show_library()
         app.select_game('dw3')
         app.apply_theme('Light')

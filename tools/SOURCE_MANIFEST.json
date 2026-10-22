@@ -183,8 +183,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 11765,
-      "sha256": "7959f7bcb521ba31c782a9269c28d775ee00cd78c41a95cc9a71729c6a272c61"
+      "bytes": 11973,
+      "sha256": "cea136a36429d68cd2397efc22feff87c7a16973d285bb636f24425209873b63"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -5982,6 +5982,11 @@
       "sha256": "d52a373ee36edae3d96efda7c259af2412ce428273fa95bdab990eaa39d37a7c"
     },
     {
+      "path": "tests/test_pyinstaller_compiler_exclusions.py",
+      "bytes": 3147,
+      "sha256": "69e6c62189ae68814fb2ff839ee6db5916fed7968bbefc5bc819e4544c421d35"
+    },
+    {
       "path": "tests/test_reko3_dos.py",
       "bytes": 11148,
       "sha256": "5f3db99cf8ee484cd83c1f94cde8adbfb0d79bab64ef05b5af7281673fc88c8f"
@@ -6808,13 +6813,18 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 44754,
-      "sha256": "622025f4cc6d5772ef065db5d753199fb7d7b35a1de794b261f0f726652f1dc7"
+      "bytes": 44836,
+      "sha256": "53d9db70dd00bb2dc43903aefd4e1a5a79202ff8ac81edb0b00c8808d9f8a639"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-trimesh.py",
       "bytes": 460,
       "sha256": "925d273dc900034041dd2cbbb277326c6c26237f6d6180b15b5191cbc698870c"
+    },
+    {
+      "path": "tools/pyinstaller_hooks/pre_safe_import_module/hook-distutils.py",
+      "bytes": 756,
+      "sha256": "4dad0faa874f7b6eb48cb4a49b3618ddf6f76294bdb64b016082d05f90944851"
     },
     {
       "path": "tools/refresh_manifest.py",

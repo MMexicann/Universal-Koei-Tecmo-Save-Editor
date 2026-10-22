@@ -42,6 +42,9 @@ continues rejecting personal paths, unreviewed resources and native modules.
 Optional CFFI compilation helpers (`setuptools`, `distutils`, `pkg_resources`)
 are excluded from the frozen application; previews use the precompiled decoders.
 Build tools remain installed in the build environment.
+A reviewed pre-import hook preserves these exclusions when PyInstaller resolves
+the removed standard-library `distutils` name. It refuses to build if any of
+the three required compiler exclusions is missing.
 
 `tools/build_windows.py` requires Windows for compilation. Inspect the build inputs on
 any OS with:

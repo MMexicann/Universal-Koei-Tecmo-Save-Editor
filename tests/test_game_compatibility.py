@@ -711,6 +711,38 @@ class GameCompatibilityTests(unittest.TestCase):
                 self.assertEqual(process.returncode, 2, process.stderr)
                 self.assertFalse(output_path.exists())
 
+    def test_json_nesting_limit_accepts_boundary_and_rejects_excess_before_decoding(self):
+        input_path = self.folder / 'depth-boundary.json'
+        depth = compatibility._MAX_JSON_NESTING
+        for kind, prefix, suffix in (('array', '[', ']'), ('object', '{"child":', '}')):
+            with self.subTest(kind=kind):
+                input_path.write_text(prefix * depth + '0' + suffix * depth, encoding='utf-8')
+                value = compatibility.load_json(input_path)
+                for _level in range(depth):
+                    self.assertEqual(len(value), 1)
+                    value = value[0] if kind == 'array' else value['child']
+                self.assertEqual(value, 0)
+                input_path.write_text(prefix * (depth + 1) + '0' + suffix * (depth + 1), encoding='utf-8')
+                with patch.object(compatibility.json, 'loads', side_effect=AssertionError('Decoder reached before depth rejection')):
+                    with self.assertRaisesRegex(compatibility.CompatibilityInputError, '256-level nesting limit'):
+                        compatibility.load_json(input_path)
+
+    def test_json_nesting_scan_handles_escaped_quotes_backslashes_and_unicode_strings(self):
+        value = {'strings': ['[' * 600, ']' * 600, 'escaped quote: \" []',
+                             'backslashes: \\\\ ][', '\u005b\u005d']}
+        input_path = self.folder / 'escaped-brackets.json'
+        input_path.write_text(json.dumps(value), encoding='utf-8')
+        self.assertEqual(compatibility.load_json(input_path), value)
+        input_path.write_text(r'{"unicode": "\u005b\u005d"}', encoding='utf-8')
+        self.assertEqual(compatibility.load_json(input_path), {'unicode': '[]'})
+
+    def test_json_nesting_scanner_ignores_brackets_inside_strings(self):
+        value = "[" * (compatibility._MAX_JSON_NESTING + 1) + "]" * (compatibility._MAX_JSON_NESTING + 1)
+        input_path = self.folder / "brackets-in-string.json"
+        input_path.write_text(json.dumps({"value": value}), encoding="utf-8")
+
+        self.assertEqual(compatibility.load_json(input_path), {"value": value})
+
     def test_invalid_utf8_json_is_wrapped_for_loader_and_cli(self):
         baseline = snapshot("1.0")
         candidate_snapshot = snapshot("1.1")

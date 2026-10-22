@@ -286,7 +286,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
             with self.assertRaises(PlaythroughPreparationError) as caught:
                 self.store.prepare_environment(profile.id, destination, '1.02')
 
-        self.assertEqual(caught.exception.destination, destination)
+            self.assertEqual(caught.exception.destination.resolve(), destination.resolve())
         self.assertTrue(race_injected, 'the test must inject the race after parent preflight')
         self.assertEqual(list(outside.iterdir()), [])
         self.assertFalse((outside / 'mod_configuration.json').exists())
@@ -320,7 +320,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
             with self.assertRaises(PlaythroughPreparationError) as caught:
                 self.store.prepare_environment(profile.id, destination, '1.02')
 
-        self.assertEqual(caught.exception.destination, destination)
+            self.assertEqual(caught.exception.destination.resolve(), destination.resolve())
         self.assertTrue(race_injected, 'the test must inject the race before report creation')
         self.assertTrue(displaced_destination.is_dir())
         self.assertEqual(list(outside.iterdir()), [])

@@ -42,6 +42,11 @@ only conservative reductions or specific equipment choices; the supported-games
 list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
 expands only explicitly mapped numeric fields.
 
+The initial [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
+intentionally scoped to verified Three Hopes Switch character and weapon
+ID/name mappings; it is not a complete gameplay reference or a Character
+Workshop interface.
+
 ## New in v3.1
 
 - **DW8 XL PS4 editor:** resources, officer stats, weapon-action aptitudes and existing ranked attributes for decrypted CUSA00397 zero-extension copies, with original metadata, backups, Undo and reviewed Save As. Conversion to PC accepts both supported native PC template formats.

@@ -316,6 +316,11 @@ class ControllerProfileWorkspaceTests(unittest.TestCase):
         workspace = ControllerProfileWorkspace(self.root, self.root, self.store, language='de')
         self.assertEqual(workspace.language, 'de')
         self.assertEqual(workspace.title_label.cget('text'), 'Controller- und Eingabeprofile')
+        workspace._edit_dialog(None)
+        dialog = next(widget for widget in self.root.winfo_children() if isinstance(widget, tk.Toplevel))
+        self.assertEqual(dialog.title(), 'Neues Controllerprofil')
+        self.assertEqual(workspace._preset_id_from_label('Tastaturvorlage WASD'), 'keyboard_wasd')
+        dialog.destroy()
 
     def test_edit_preserves_an_imported_custom_preset_identity(self):
         custom = profiles.create_profile(
@@ -336,7 +341,7 @@ class ControllerProfileWorkspaceTests(unittest.TestCase):
                 preset_selector = widget
             if isinstance(widget, ttk.Button) and widget.cget('text') == 'Save profile':
                 self.assertIsNotNone(preset_selector)
-                self.assertEqual(preset_selector.get(), 'Custom')
+                self.assertEqual(preset_selector.get(), self.workspace._preset_label('custom'))
                 widget.invoke()
                 break
         else:

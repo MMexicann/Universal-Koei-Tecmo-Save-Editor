@@ -52,7 +52,7 @@ requires exact app/build identities and versioned evidence before showing
     "previous_remote_head": "7414af9d7816c40ef44d82e27be72679478b0c32",
     "previous_run": "39848899673",
     "previous_head_result": "cancelled_after_base_advanced; tracker tests passed 15/15, save discovery passed 47/47, Windows build did not run",
-    "integration_findings": "unrelated Windows assertions are tracked in PRs #144, #145, and #148; the Help Center contract fixture is being corrected in this PR",
+    "integration_findings": "unrelated Windows assertions are tracked in PRs #144, #145, and #148; the Help Center contract fixture mismatch was fixed in #119 commit 95275b8",
     "merged_test_fixture_fixes": "PRs #137 and #147 are in base fd17633; they update the universal tab list and optional achievement-source packaging fixture",
     "required_before_merge": true
   },

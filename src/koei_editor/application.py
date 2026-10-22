@@ -48,6 +48,9 @@ class Application(Appearance):
         self.workflow_builder = None
         self.emulator_hub = None
         self.mod_workshop_window = None
+        self.nexus_mods = None
+        # A Mod Manager integration may attach its typed Nexus handoff here.
+        self.mod_manager_download_handoff = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -62,6 +65,7 @@ class Application(Appearance):
         self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('research_lab', self.show_research_lab)
         self._add_editing_tools_menu_command('research_import', self.show_research_import)
+        self._add_editing_tools_menu_command('nexus_mods', self.show_nexus_mods)
         self._add_editing_tools_menu_command('emulator_hub', self.show_emulator_hub)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
@@ -275,12 +279,14 @@ class Application(Appearance):
         self._rebuild_help_menu()
         self.tools_menu_bar.entryconfigure('end', label=self.tr('editing_and_research'))
         self._refresh_editing_menu_labels()
+        if self.nexus_mods is not None:
+            self.nexus_mods.set_language(self.language)
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'editing_presets', 'mod_manager', 'research_lab', 'research_import',
-                                            'workflow_builder', 'emulator_hub')
+                                            'workflow_builder', 'emulator_hub', 'nexus_mods')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -505,7 +511,8 @@ class Application(Appearance):
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
             ('mod_manager', 'show_mod_manager'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
-            ('workflow_builder', 'show_workflow_builder'), ('emulator_hub', 'show_emulator_hub'))
+            ('workflow_builder', 'show_workflow_builder'), ('emulator_hub', 'show_emulator_hub'),
+            ('nexus_mods', 'show_nexus_mods'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -870,7 +877,7 @@ class Application(Appearance):
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
                                        'mod_manager', 'editing_presets', 'research_lab', 'research_import',
-                                       'workflow_builder', 'emulator_hub', 'help_center')
+                                       'workflow_builder', 'emulator_hub', 'nexus_mods', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -1014,6 +1021,29 @@ class Application(Appearance):
         self._remember_workspace('tool:workflow_builder')
         self.workflow_builder.apply_theme(THEMES[self.theme_name.get()])
 
+    def show_nexus_mods(self):
+        from koei_editor.mods.nexus_browser import NexusModsWorkspace
+        if self.nexus_mods is None:
+            self.nexus_mods = NexusModsWorkspace(
+                self.root, self.workspace,
+                application_name='Universal Koei Tecmo Save Editor',
+                application_version=VERSION,
+                language=self.language,
+                game_id=self.active_game,
+                download_handoff=self.mod_manager_download_handoff,
+            )
+        else:
+            self.nexus_mods.set_download_handoff(self.mod_manager_download_handoff)
+        self._show_editing_tool(self.nexus_mods, self.tr('nexus_mods'))
+        self._remember_workspace('tool:nexus_mods')
+        return self.nexus_mods
+
+    def set_mod_manager_download_handoff(self, handoff):
+        """Attach the Mod Manager's Nexus queue capability when that component is present."""
+        self.mod_manager_download_handoff = handoff
+        if self.nexus_mods is not None:
+            self.nexus_mods.set_download_handoff(handoff)
+
     def open_saved_copy(self, game_id, path):
         """Open a browser result through that profile's ordinary guarded editor."""
         from tkinter import messagebox
@@ -1104,7 +1134,8 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import):
+        for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
+                     self.nexus_mods):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1392,7 +1423,9 @@ def main():
         app.show_mod_manager()
         app.show_research_lab()
         app.show_research_import()
+        app.show_nexus_mods()
         app.show_library()
+        app.nexus_mods.close()
         app.select_game('dw3')
         app.apply_theme('Light')
         workshop = app.show_mod_workshop()

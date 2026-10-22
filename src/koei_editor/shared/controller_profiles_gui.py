@@ -56,10 +56,10 @@ _TEXTS = {
 class ControllerProfileWorkspace:
     """Reusable profile workspace; native game and Steam files are never opened."""
 
-    def __init__(self, root, parent, store=None):
+    def __init__(self, root, parent, store=None, language='en'):
         self.root = root
         self.store = store or profiles.ProfileStore()
-        self.language = 'en'
+        self.language = 'de' if language == 'de' else 'en'
         self._localized_widgets = []
         self.game_id = PC_GAMES[0].id if PC_GAMES else None
         self.profile_by_tree_id = {}
@@ -389,8 +389,9 @@ class ControllerProfileWorkspace:
 
         def save():
             try:
-                selected_preset = next((key for key, label in PRESET_LABELS.items()
-                                        if label == preset_choice.get()), 'custom')
+                selected_preset = (existing.preset_id if existing else next(
+                    (key for key, label in PRESET_LABELS.items()
+                     if label == preset_choice.get()), 'custom'))
                 profile = profiles.create_profile(
                     self.game_id, name.get(), layout=layout.get(), bindings=tuple(rows),
                     preset_id=selected_preset,

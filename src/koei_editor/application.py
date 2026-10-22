@@ -1234,7 +1234,13 @@ class Application(Appearance):
         management = getattr(getattr(self, 'save_library', None), 'management', None)
         if management is not None:
             tools += (management,)
-        if any(getattr(tool, 'busy', False) for tool in tools):
+        if any(
+                getattr(tool, 'busy', False)
+                and not (
+                    tool is self.troubleshooting
+                    and getattr(tool, 'shutdown_safe_while_busy', False)
+                )
+                for tool in tools):
             from tkinter import messagebox
             messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
             return

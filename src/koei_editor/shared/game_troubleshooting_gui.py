@@ -166,6 +166,10 @@ def export_json_report(report, destination):
 class TroubleshootingWorkspace:
     """A lazy shell workspace that presents reports without exposing local paths."""
 
+    # The scan worker is a daemon that performs filesystem reads and queue.put only.
+    # Application shutdown can cancel its Tk poll without waiting for slow disks.
+    shutdown_safe_while_busy = True
+
     def __init__(self, root, parent, language="en"):
         self.root = root
         self.language = "de" if str(language).lower().startswith("de") else "en"
@@ -176,6 +180,7 @@ class TroubleshootingWorkspace:
         self._revision = 0
         self._loading = True
         self._font_widgets = []
+        self._font_style_names = {}
         self._font_family = None
         self._font_size = None
         self._wrap_labels = []
@@ -276,7 +281,20 @@ class TroubleshootingWorkspace:
     def _register_font(self, widget, weight="normal", delta=0):
         self._font_widgets.append((widget, weight, delta))
         if self._font_family is not None and self._font_size is not None:
-            widget.configure(font=(self._font_family, max(8, self._font_size + delta), weight))
+            self._apply_widget_font(widget, weight, delta)
+
+    def _apply_widget_font(self, widget, weight, delta):
+        font = (self._font_family, max(8, self._font_size + delta), weight)
+        if isinstance(widget, ttk.Widget):
+            style_name = self._font_style_names.get(id(widget))
+            if style_name is None:
+                base_style = widget.cget("style") or widget.winfo_class()
+                style_name = f"Troubleshooting{weight.title()}{delta}.{base_style}"
+                self._font_style_names[id(widget)] = style_name
+                widget.configure(style=style_name)
+            ttk.Style(self.root).configure(style_name, font=font)
+        else:
+            widget.configure(font=font)
 
     def _label(self, parent, key, muted=False):
         label = ttk.Label(parent, text=self.text[key], wraplength=900,
@@ -422,7 +440,7 @@ class TroubleshootingWorkspace:
             return
         self.report = result
         self._render_findings()
-        self._set_preview(self.report.to_json())
+        self._set_preview(self.report.to_json().rstrip("\n"))
         status = _STATUS.get(self.report.overall_status, "status_unknown")
         self.overall.set(self._tr("overall", status=self._tr(status)))
         self.audit_key.set(self._tr("audit_key", schema_version=SCHEMA_VERSION,
@@ -532,7 +550,7 @@ class TroubleshootingWorkspace:
                                        font=(font_family, max(8, size + 1), "bold"))
         for widget, weight, delta in tuple(self._font_widgets):
             if widget.winfo_exists():
-                widget.configure(font=(font_family, max(8, size + delta), weight))
+                self._apply_widget_font(widget, weight, delta)
 
     def set_language(self, language):
         language = "de" if str(language).lower().startswith("de") else "en"

@@ -224,6 +224,7 @@ def _new_child_windows(data, directory, name, expected_identity):
         if (parent_stat.st_dev, parent_stat.st_ino) != expected_identity:
             raise SaveError('The private output directory changed identity or became linked.')
 
+        encoded_name = name.encode('utf-16-le')
         name_buffer = ctypes.create_unicode_buffer(name)
         unicode_name = UNICODE_STRING(len(encoded_name), len(encoded_name) + 2, name_buffer)
         object_attributes = OBJECT_ATTRIBUTES(

@@ -46,7 +46,7 @@ class VersionTrackerTests(unittest.TestCase):
             explanation='Procedural catalog fixture for an exact installed build.',
             evidence=('docs/HELP_AND_COMPATIBILITY.md',),
             checked_at=checked_at,
-            next_step_ids=('compatibility',),
+            next_step_ids=('evidence',),
         )
 
     def test_exact_build_record_is_returned_and_unrecorded_kinds_stay_unknown(self):
@@ -95,6 +95,41 @@ class VersionTrackerTests(unittest.TestCase):
         results = tracker.compatibility_for(no_detected_build, records=(unsupported,))
         self.assertTrue(all(item.status == 'unknown' for item in results))
         self.assertTrue(all(item.build_id is None for item in results))
+
+    def test_unsupported_records_require_resolved_help_next_steps(self):
+        unsupported = self.record(status='unsupported')
+        self.assertEqual(
+            tracker._validate_record({**unsupported.__dict__, 'next_step_ids': ['evidence']}).next_step_ids,
+            ('evidence',))
+        with self.assertRaisesRegex(ValueError, 'at least one resolved next step'):
+            tracker._validate_record({**unsupported.__dict__, 'next_step_ids': []})
+        with self.assertRaisesRegex(ValueError, 'unresolved next-step ID'):
+            tracker._validate_record({**unsupported.__dict__, 'next_step_ids': ['unknown_target']})
+
+    def test_next_step_ids_render_as_localized_help_article_titles(self):
+        from koei_editor.shared.version_tracker_gui import VersionTrackerPanel
+
+        panel = object.__new__(VersionTrackerPanel)
+        panel.language = 'en'
+        self.assertEqual(
+            panel._next_step_titles(('evidence', 'troubleshooting')),
+            ('What compatibility evidence means', 'Troubleshooting rejected files and exports'))
+        panel.language = 'de'
+        self.assertEqual(
+            panel._next_step_titles(('evidence', 'troubleshooting')),
+            ('Was Kompatibilitätsnachweise bedeuten', 'Fehler bei Dateien und Exporten beheben'))
+
+    def test_latest_reviewed_artifact_version_is_explicit_and_history_keeps_each_version(self):
+        older = self.record(status='unsupported', checked_at='2026-10-20T11:00:00Z',
+                            artifact_version='1.0')
+        newer = self.record(status='verified', checked_at='2026-10-22T11:00:00Z',
+                            artifact_version='2.0')
+        latest = tracker.compatibility_for(self.observation(), records=(older, newer))
+        editor = next(item for item in latest if item.artifact_id == 'editor-a')
+        self.assertEqual((editor.status, editor.artifact_version), ('verified', '2.0'))
+        history = tracker.compatibility_history('atelier_sophie', records=(older, newer),
+                                                app_id='527270')
+        self.assertEqual([item.artifact_version for item in history], ['1.0', '2.0'])
 
     def test_game_app_mapping_is_validated_and_app_id_participates_in_exact_join(self):
         # A registered Steam app for another profile cannot be attached to Atelier Sophie.

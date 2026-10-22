@@ -33,6 +33,7 @@ _LAST_UPDATED = re.compile(r'[0-9]{1,12}\Z')
 _ARTIFACT_ID = re.compile(r'[a-z][a-z0-9_.:-]{0,95}\Z')
 _REASON = re.compile(r'[a-z][a-z0-9_]{0,63}\Z')
 _NEXT_STEP = re.compile(r'[a-z][a-z0-9_]{0,63}\Z')
+_NEXT_STEP_IDS = frozenset(('evidence', 'troubleshooting'))
 _REFERENCE = re.compile(r'(?:docs/[A-Za-z0-9_./-]{1,240}|https://[^\s]{1,300})\Z')
 _GAMES = {game.id: game for game in GAMES}
 _STEAM_PROFILES = {(item.game_id, item.app_id) for item in save_discovery.STEAM_MAPPINGS}
@@ -245,11 +246,14 @@ def _validate_record(value):
         raise ValueError('Compatibility metadata requires a timezone-qualified check time.')
     next_steps = value['next_step_ids']
     if (type(next_steps) not in (list, tuple) or len(next_steps) > 20
-            or any(type(item) is not str or _NEXT_STEP.fullmatch(item) is None for item in next_steps)
+            or any(type(item) is not str or _NEXT_STEP.fullmatch(item) is None
+                   or item not in _NEXT_STEP_IDS for item in next_steps)
             or len(set(next_steps)) != len(next_steps)):
-        raise ValueError('Compatibility metadata has invalid next-step IDs.')
+        raise ValueError('Compatibility metadata has an unresolved next-step ID.')
     if value['status'] in ('verified', 'unsupported') and (not evidence or not version):
         raise ValueError('Verified or unsupported records require an artifact version and evidence.')
+    if value['status'] == 'unsupported' and not next_steps:
+        raise ValueError('Unsupported records require at least one resolved next step.')
     return CompatibilityRecord(
         value['game_id'], value['platform'], value['app_id'], value['build_id'],
         value['artifact_kind'], artifact_id,

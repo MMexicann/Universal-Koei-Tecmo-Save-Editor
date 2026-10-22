@@ -2,6 +2,7 @@
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
@@ -78,6 +79,13 @@ class ConfigurationWorkspaceTests(unittest.TestCase):
             self.workspace.profile_choice.set(self.workspace._profile_labels[saved.id])
             self.workspace.apply_profile()
             self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+            self.assertEqual(len(self.workspace.history), 1)
+            self.assertEqual(str(self.workspace.undo_button['state']), 'normal')
+            self.assertTrue(self.workspace.undo())
+            self.assertEqual(self.workspace.staged, {})
+            self.assertEqual(str(self.workspace.undo_button['state']), 'disabled')
+            self.workspace.apply_profile()
+            self.assertEqual(self.workspace.staged, {'fullscreen': 1})
 
             # A profile belongs to its game and cannot be applied to a different one.
             other = self.folder / 'other-title' / backend.MOD_FORMAT_FILENAME
@@ -88,14 +96,63 @@ class ConfigurationWorkspaceTests(unittest.TestCase):
                 backend.apply_profile(other_doc, saved)
 
             self.file.write_bytes(GAME_FIXTURE.replace(b'FullScreen=0', b'FullScreen=1'))
-            self.workspace.document = backend.inspect_config(self.file, 'arland_rorona_dx')
-            self.workspace.staged.clear()
-            self.workspace._refresh_records()
+            self.workspace.open_file()
             self.workspace.backup_choice.set(self.workspace._backup_labels[backup.id])
             with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=True):
                 self.workspace.restore_backup()
         self.assertEqual(self.file.read_bytes(), GAME_FIXTURE)
         self.assertIn('exact bytes were verified', self.workspace.status.get())
+
+    def test_duplicate_profile_labels_resolve_to_the_exact_profile_id(self):
+        self.open_game_fixture()
+        first = backend.ConfigProfile(
+            'a' * 32, 'same profile', 'arland_rorona_dx', backend.FORMAT_ID, 1,
+            '2026-10-22T12:00:00Z', (('fullscreen', 0),))
+        second = backend.ConfigProfile(
+            'b' * 32, 'same profile', 'arland_rorona_dx', backend.FORMAT_ID, 1,
+            '2026-10-22T12:01:00Z', (('fullscreen', 1),))
+        with patch.object(backend, 'configuration_data_dir', return_value=self._storage), \
+                patch.object(backend, 'list_profiles', return_value=(first, second)), \
+                patch.object(backend, 'list_backups', return_value=()):
+            self.workspace._refresh_records()
+            first_label = self.workspace._profile_labels[first.id]
+            second_label = self.workspace._profile_labels[second.id]
+            self.assertNotEqual(first_label, second_label)
+            self.workspace.profile_choice.set(second_label)
+            self.assertEqual(self.workspace._profile_by_selection().id, second.id)
+            self.workspace.apply_profile()
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+
+    def test_open_file_enables_manual_backup_and_review_undo_preserve_source_until_save(self):
+        self.open_game_fixture()
+        self.assertEqual(str(self.workspace.backup_button['state']), 'normal')
+        self.workspace.settings.selection_set('fullscreen')
+        self.workspace.select_setting()
+        self.workspace.value_choice.set('On')
+        self.workspace.stage_button.invoke()
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+        with self.assertRaises(TypeError):
+            self.workspace.staged['fullscreen'] = 0
+        self.assertEqual(str(self.workspace.review_button['state']), 'normal')
+        self.assertEqual(str(self.workspace.undo_button['state']), 'normal')
+        original = self.file.read_bytes()
+        dialog = self.workspace.review()
+        self.assertIsNotNone(dialog)
+        self.addCleanup(dialog.destroy)
+        tree = next(widget for widget in dialog.winfo_children()
+                    if isinstance(widget, ttk.Treeview))
+        self.assertEqual(tree.item('fullscreen', 'values'), ('Graphics', 'Off', 'On'))
+        self.assertEqual(self.file.read_bytes(), original)
+
+        with patch.object(backend, 'configuration_data_dir', return_value=self._storage):
+            self.workspace.backup_button.invoke()
+            backups = backend.list_backups(game_id='arland_rorona_dx')
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(self.file.read_bytes(), original)
+        self.assertTrue(self.workspace.undo())
+        self.assertEqual(self.workspace.staged, {})
+        self.assertEqual(str(self.workspace.review_button['state']), 'disabled')
+        self.assertEqual(self.file.read_bytes(), original)
 
     def test_mod_format_uses_exact_file_and_comparison_reports_opaque_changes(self):
         self.file = self.folder / backend.MOD_FORMAT_FILENAME

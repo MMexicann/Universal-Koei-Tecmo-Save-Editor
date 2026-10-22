@@ -4013,8 +4013,8 @@
     },
     {
       "path": "src/koei_editor/shared/configuration_gui.py",
-      "bytes": 25896,
-      "sha256": "3db7f31e9f01a3ff467fb9304e63ad1dc50db387bee361fd18dd63e45d0ef1fa"
+      "bytes": 30969,
+      "sha256": "69e5bef94b6772490e44ed9a16fec0dd3bc009496a8fa1e7aaf09d75bd070ac6"
     },
     {
       "path": "src/koei_editor/shared/configuration_manager.py",
@@ -4638,8 +4638,8 @@
     },
     {
       "path": "tests/test_configuration_gui.py",
-      "bytes": 8174,
-      "sha256": "d7b3993d1a4c291c7fd7e1287b576dd2e9841562351369a4da5118fc28566735"
+      "bytes": 11412,
+      "sha256": "04cc50662e1b96f3a0c4e6c285a19708ef306ada2b6cd7feb06564e6ffbebbb0"
     },
     {
       "path": "tests/test_configuration_manager.py",

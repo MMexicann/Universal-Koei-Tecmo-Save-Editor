@@ -1077,3 +1077,5 @@ def restore_backup(document, backup_id, backup_dir=None):
 
 def _masked_field_value(location):
     return b'<mapped>'
+
+

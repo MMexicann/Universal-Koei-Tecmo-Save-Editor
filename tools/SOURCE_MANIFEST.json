@@ -4023,8 +4023,8 @@
     },
     {
       "path": "src/koei_editor/shared/configuration_manager.py",
-      "bytes": 47413,
-      "sha256": "983edcaf1ea91e1735006f68bd69c5d2387e71dcc258fb4b59bab8e925508feb"
+      "bytes": 47415,
+      "sha256": "a92aa4687d43e781b9b5e949f03bf16ae63f2f83bc030c4c5abef129709d352c"
     },
     {
       "path": "src/koei_editor/shared/conversion_gui.py",

@@ -29,8 +29,8 @@ requires exact app/build identities and versioned evidence before showing
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 216,
-    "passed": 154,
+    "run": 217,
+    "passed": 155,
     "skipped": 62,
     "failures": 0,
     "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
@@ -48,7 +48,8 @@ requires exact app/build identities and versioned evidence before showing
     "git_diff_check": "passed"
   },
   "windows_ci": {
-    "status": "not_run_on_this_head",
+    "status": "incomplete_cancelled",
+    "run_id": 39845173291,
     "required_before_merge": true
   },
   "fixture": {

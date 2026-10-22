@@ -542,6 +542,11 @@
       "sha256": "561377c4ffa8dd1fc86471c22d61f935b67c8172d814c25e58f3d39574dd3b44"
     },
     {
+      "path": "docs/NEXUS_MODS_BROWSER.md",
+      "bytes": 9890,
+      "sha256": "9e5166bda6cdb468f69709d93071bf68bc5871fc9d47705faebbd8b2199f270b"
+    },
+    {
       "path": "docs/NG2B_PC_WRITER_RESEARCH.md",
       "bytes": 3461,
       "sha256": "b3b5921a25c546b13ba5ad441fdce31044aa96fc7c4db0e5ce208c60ede0a884"
@@ -708,8 +713,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 16843,
-      "sha256": "23cfc20d8c3628f2ca98f4257608cb226d520e91bbc4ccaba9e7d68a2f62415a"
+      "bytes": 16922,
+      "sha256": "0a4e343a6bf5502c466767beed343c0ae7b0251b7190b1ea52b6509e9cbafae5"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -1248,8 +1253,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 80623,
-      "sha256": "bce57f13cfaf058761658124fed4af03bdb59eedfe5a4bbcf08f6b862fdec757"
+      "bytes": 82213,
+      "sha256": "eccf498362354f590eff007e56f69fb95713e36d526c7e59a449456ab6fc47bd"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3382,6 +3387,21 @@
       "sha256": "6f00ff0fdcf98d9b4087b8f4c75e7cc8c43581d1a9241d73d9a973f2c2ac57e9"
     },
     {
+      "path": "src/koei_editor/mods/__init__.py",
+      "bytes": 54,
+      "sha256": "9f232436722aec4f1a50fa1117c5e3a922168dd423846cb9e6a85ca2de18d08a"
+    },
+    {
+      "path": "src/koei_editor/mods/nexus_api.py",
+      "bytes": 34806,
+      "sha256": "413e9745e2c14d1cd4b9dd2724a7b78c23d0c82ebbd4272ecf56593741dc7689"
+    },
+    {
+      "path": "src/koei_editor/mods/nexus_browser.py",
+      "bytes": 35926,
+      "sha256": "0326b8780f0b4c5c7d8e6ab470b9d862aae360ef870a1346469495c235a70992"
+    },
+    {
       "path": "src/koei_editor/research/AGENTS.md",
       "bytes": 726,
       "sha256": "7d3e168bdab60f59f14e17826c289169cd6f31ecb80497cdd67ea5255422f746"
@@ -3898,8 +3918,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 6170,
-      "sha256": "3c84fee1523a0666e392d7a082c2708229440353eef24da641ef4e4183c63142"
+      "bytes": 14429,
+      "sha256": "069c45f6b0e834ead493341fdf71ce28caf55e6d5ebd0bb8da7d9623e4b6a956"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4193,8 +4213,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42501,
-      "sha256": "30254b16a563fb7344765258e453f79103c5a12cdd24f78cb1287a333f86ff9d"
+      "bytes": 45398,
+      "sha256": "ea8213013a5919edcbb2a3ee8ac255f275e43e39ca56c955e2e74762a13eaa80"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5055,6 +5075,16 @@
       "path": "tests/test_new_game_integration.py",
       "bytes": 4358,
       "sha256": "7b87d17497e049f1c8ab6d76c1978ee787a886da20384433c03265d68901a9cb"
+    },
+    {
+      "path": "tests/test_nexus_contract_audit.py",
+      "bytes": 1706,
+      "sha256": "f5556f3397d30110e9ec3cc99e8a1541bc7134359cb8435b8847f3044a3ba6ab"
+    },
+    {
+      "path": "tests/test_nexus_mods.py",
+      "bytes": 27428,
+      "sha256": "039bd3a5642ba05f530f6f5a62096ec848474074253b361bc1190c34657ae654"
     },
     {
       "path": "tests/test_ng3_razors_edge_ps3_inspection.py",

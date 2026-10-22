@@ -898,8 +898,8 @@
     },
     {
       "path": "docs/SMART_PLAYTHROUGH_PROFILES.md",
-      "bytes": 3977,
-      "sha256": "42bb390ef9cdd6e290059a6a84c206464133ec4c246d129f04427fd1bca06b35"
+      "bytes": 4367,
+      "sha256": "25a1488e80b58ae93f7051b7b4234f5261e71a20729e2d14b33e6936dfb7e7e4"
     },
     {
       "path": "docs/SOL_EXPANSION.md",
@@ -4018,8 +4018,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 35349,
-      "sha256": "9c722f2ed9d87972106da3ba4b91ef50230a46a53321ce20bbda0e6b2a6d6051"
+      "bytes": 35435,
+      "sha256": "ed33a290e7d3e4c874675957c5ed4beccb3c1785765fe9b820b5ff82f46c762c"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",

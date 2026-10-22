@@ -212,6 +212,7 @@ def _publish_child_windows(data, directory, temporary_name, name, expected_ident
     FILE_TRAVERSE = 0x0020
     FILE_READ_ATTRIBUTES = 0x0080
     DELETE = 0x00010000
+    SYNCHRONIZE = 0x00100000
     FILE_SHARE_READ = 0x00000001
     FILE_SHARE_WRITE = 0x00000002
     OPEN_EXISTING = 3
@@ -324,7 +325,7 @@ def _publish_child_windows(data, directory, temporary_name, name, expected_ident
                                        wintypes.ULONG, wintypes.LPVOID, wintypes.ULONG]
         ntdll.NtCreateFile.restype = ctypes.c_long
         status = ntdll.NtCreateFile(
-            ctypes.byref(child), GENERIC_READ | DELETE,
+            ctypes.byref(child), GENERIC_READ | DELETE | SYNCHRONIZE,
             ctypes.byref(object_attributes), ctypes.byref(iosb), None, 0x80,
             FILE_SHARE_READ, FILE_OPEN,
             FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT
@@ -483,6 +484,7 @@ def _new_child_windows(data, directory, name, expected_identity):
     FILE_SHARE_READ = 0x00000001
     FILE_SHARE_WRITE = 0x00000002
     DELETE = 0x00010000
+    SYNCHRONIZE = 0x00100000
     OPEN_EXISTING = 3
     FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
     FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
@@ -593,7 +595,7 @@ def _new_child_windows(data, directory, name, expected_identity):
                                        wintypes.ULONG, wintypes.LPVOID, wintypes.ULONG]
         ntdll.NtCreateFile.restype = ctypes.c_long
         status = ntdll.NtCreateFile(
-            ctypes.byref(child), GENERIC_READ | GENERIC_WRITE | DELETE,
+            ctypes.byref(child), GENERIC_READ | GENERIC_WRITE | DELETE | SYNCHRONIZE,
             ctypes.byref(object_attributes), ctypes.byref(iosb), None, 0x80,
             FILE_SHARE_READ, FILE_CREATE,
             FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT

@@ -367,13 +367,17 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == 'nt', 'Windows native child writer coverage')
     def test_windows_bound_child_writer_accepts_unicode_string_pointer(self):
-        from koei_editor.shared.copy_storage import publish_new_child_bound
+        from koei_editor.shared.copy_storage import new_child_bound, publish_new_child_bound
 
-        directory = self.root / 'windows-bound-writer'
+        directory = self.root / 'windows-保存-bound-writer'
         directory.mkdir()
         info = directory.stat()
         data = b'playthrough report fixture'
-        output = publish_new_child_bound(data, directory, 'report.json', (info.st_dev, info.st_ino))
+        staged = new_child_bound(
+            data, directory, 'staging-保存.tmp', (info.st_dev, info.st_ino))
+        self.assertEqual(staged.read_bytes(), data)
+        output = publish_new_child_bound(
+            data, directory, 'report-保存.json', (info.st_dev, info.st_ino))
 
         self.assertEqual(output.read_bytes(), data)
 

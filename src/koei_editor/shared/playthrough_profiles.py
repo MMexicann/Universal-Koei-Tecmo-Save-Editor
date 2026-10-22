@@ -18,7 +18,7 @@ import uuid
 
 from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
-from koei_editor.shared.copy_storage import atomic_new, new_child_bound
+from koei_editor.shared.copy_storage import new_child_bound
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.save_vault import _ordinary, _profile_path, _read
 
@@ -438,7 +438,8 @@ class PlaythroughProfileStore:
                                      datetime.now(timezone.utc).isoformat(), game.id,
                                      game_version, save_snapshot_id, tuple(validated))
         raw = _profile_bytes(profile)
-        directory, _ = self._directory(create=True)
+        directory, directory_info = self._directory(create=True)
+        directory_identity = (directory_info.st_dev, directory_info.st_ino)
         with _store_lock(directory):
             existing = self._scan(directory)
             if len(existing) >= MAX_PROFILES:
@@ -448,9 +449,7 @@ class PlaythroughProfileStore:
             self._snapshot(game.id, save_snapshot_id)
             target = directory / (profile.id + '.json')
             _ordinary(target, missing=True)
-            result = atomic_new(raw, safe_path(target))
-            if _read(result, MAX_PROFILE_BYTES)[0] != raw:
-                raise SaveError('New playthrough profile failed its local read-back check.')
+            new_child_bound(raw, directory, target.name, directory_identity)
         return profile
 
     def list_profiles(self, game_id=None):

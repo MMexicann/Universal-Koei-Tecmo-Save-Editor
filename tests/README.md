@@ -181,3 +181,8 @@ New native-profile checks optionally use `RYZA1_SWITCH_NATIVE_DIR`,
 files/directories). Keep these files and variables private; missing fixture cases
 skip explicitly. Public procedural checks are distinct from native-file and
 edited in-game validation.
+
+`test_game_troubleshooting.py` uses temporary installation, configuration and
+mod folders to verify bounded read-only diagnostics, stable path-free reports,
+unknown/not-checked outcomes, catalog-backed prerequisite and compatibility
+notes, and unchanged input trees. It needs no game files or GUI display.

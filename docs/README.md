@@ -7,6 +7,8 @@ and [AGENTS.md](../AGENTS.md). The application overview is in the
 The application's **Editing and Research** menu opens reusable presets and the
 Save Research Lab. For selective transfer, open the destination save in its editor
 first, then choose **Transfer from Save Copy...** from that menu.
+The menu also opens the [Koei Tecmo Mod Manager](MOD_MANAGER.md), whose current
+verified installation adapter supports Nioh 2 PC only.
 
 ## Development and releases
 
@@ -15,7 +17,10 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Scenario and army editor: verified strategy record view and limits](SCENARIO_ARMY_EDITOR_REPORT.md)
 
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Koei Tecmo Mod Manager: supported method and safeguards](MOD_MANAGER.md)
+- [Mod Manager tests and validation evidence](MOD_MANAGER_VALIDATION.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
+- [Game Troubleshooting Center: read-only diagnostics and report evidence](GAME_TROUBLESHOOTING.md)
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
@@ -59,6 +64,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
 - [Koei Tecmo Community Toolkit formats](COMMUNITY_TOOLKIT.md)
+- [Nexus Mods browser, API use and Mod Manager handoff](NEXUS_MODS_BROWSER.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)

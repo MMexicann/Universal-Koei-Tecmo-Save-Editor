@@ -134,6 +134,9 @@ class DiscoveryMetadataTests(unittest.TestCase):
         from tools.package_release import RUNTIME_DATA
         self.assertEqual(RUNTIME_DATA.count('save_discovery.json'), 1)
         self.assertIn(('src/koei_editor/data/save_discovery.json', 'koei_editor/data'), DATA)
+        self.assertEqual(RUNTIME_DATA.count('version_compatibility.json'), 1)
+        self.assertEqual(DATA.count(
+            ('src/koei_editor/data/version_compatibility.json', 'koei_editor/data')), 1)
 
     def test_embedded_discovery_metadata_cannot_be_missing_or_changed_in_archives(self):
         from tests.test_package_release import PackagingTests
@@ -202,10 +205,15 @@ class DiscoveryTests(unittest.TestCase):
         path.write_text(text, encoding='utf-8')
         return path
 
-    def installation(self, app='527270', *, root=None, name='Game'):
+    def installation(self, app='527270', *, root=None, name='Game', build_id=None,
+                     last_updated=None, size_on_disk=None):
         root = root or self.steam
+        build_fields = ''.join(
+            f' "{key}" "{value}"' for key, value in
+            (('buildid', build_id), ('LastUpdated', last_updated),
+             ('SizeOnDisk', size_on_disk)) if value is not None)
         self.write(f'steamapps/appmanifest_{app}.acf',
-                   f'"AppState" {{ "appid" "{app}" "installdir" "{name}" }}', root=root)
+                   f'"AppState" {{ "appid" "{app}" "installdir" "{name}"{build_fields} }}', root=root)
         install = root / 'steamapps/common' / name
         install.mkdir(parents=True, exist_ok=True)
         return install
@@ -214,6 +222,67 @@ class DiscoveryTests(unittest.TestCase):
         path = (root or self.steam) / 'userdata' / account / app / 'remote'
         path.mkdir(parents=True)
         return path
+
+    def test_installed_build_markers_are_bounded_and_report_without_local_paths(self):
+        install = self.installation(build_id='123456789', last_updated='1761000000',
+                                    size_on_disk='2430432')
+        result = self.scan()
+        self.assertEqual(len(result.installed_games), 1)
+        item = result.installed_games[0]
+        self.assertEqual((item.build_id, item.last_updated), ('123456789', '1761000000'))
+        self.assertEqual((item.library_path, item.size_on_disk), (self.steam, 2430432))
+        portable = json.dumps(discovery.report(result), sort_keys=True)
+        self.assertIn('123456789', portable)
+        self.assertIn('1761000000', portable)
+        self.assertIn('2430432', portable)
+        self.assertNotIn(str(install), portable)
+        self.assertNotIn(str(self.steam), portable)
+
+    def test_malformed_build_markers_are_ignored_without_dropping_install(self):
+        self.installation(build_id='build-123', last_updated='-42')
+        result = self.scan()
+        self.assertEqual(len(result.installed_games), 1)
+        item = result.installed_games[0]
+        self.assertIsNone(item.build_id)
+        self.assertIsNone(item.last_updated)
+        self.assertIn('invalid_build_id_ignored', result.issues)
+        self.assertIn('invalid_last_updated_ignored', result.issues)
+
+        self.installation(build_id='123456789', last_updated='1761000000', size_on_disk='99999999999999999999')
+        invalid_size = self.scan()
+        self.assertIsNone(invalid_size.installed_games[0].size_on_disk)
+        self.assertIn('invalid_size_on_disk_ignored', invalid_size.issues)
+
+    def test_install_only_build_scan_does_not_follow_save_or_userdata_locations(self):
+        from koei_editor.shared import version_tracker
+
+        install = self.installation(build_id='123456789', last_updated='1761000000')
+        remote = self.remote()
+        remote_file = remote / 'SAVEDATA.BIN'
+        remote_file.write_bytes(b'private save bytes')
+        original_scandir = discovery.os.scandir
+
+        def guarded_scandir(path):
+            lowered = str(path).casefold()
+            if any(part in lowered for part in ('userdata', 'compatdata', 'documents', 'appdata')):
+                raise AssertionError('Installed-build discovery must not enumerate save or account locations.')
+            return original_scandir(path)
+
+        with mock.patch.object(discovery.os, 'scandir', side_effect=guarded_scandir):
+            scan = version_tracker.scan_installed_builds(
+                steam_roots=(self.steam,), home=self.home)
+
+        self.assertEqual(scan.stop_reason, 'complete')
+        self.assertFalse(hasattr(scan, 'locations'))
+        observations = scan.observations
+        self.assertEqual(len(observations), 1)
+        observation = observations[0]
+        self.assertEqual((observation.game_id, observation.app_id, observation.build_id),
+                         ('atelier_sophie', '527270', '123456789'))
+        self.assertFalse(hasattr(observation, 'install_path'))
+        self.assertNotIn('install_path', observation.__dict__)
+        self.assertNotIn(str(install), json.dumps(observation.__dict__))
+        self.assertNotIn(str(remote_file), json.dumps(observation.__dict__))
 
     def link(self, link, target):
         link.parent.mkdir(parents=True, exist_ok=True)

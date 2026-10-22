@@ -5523,8 +5523,8 @@
     },
     {
       "path": "tests/test_steam_achievements.py",
-      "bytes": 9102,
-      "sha256": "c1fe6a63ed4e1867addbcbe0afa9b7ddf22a68034f9efd2c6642b9d8291d4171"
+      "bytes": 9270,
+      "sha256": "a5d2834a706b79ef45aa3ac4a59bd2e0a3096188574b01468c663602f853d9fa"
     },
     {
       "path": "tests/test_steam_owner.py",

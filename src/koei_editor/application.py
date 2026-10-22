@@ -48,6 +48,7 @@ class Application(Appearance):
         self.workflow_builder = None
         self.emulator_hub = None
         self.mod_workshop_window = None
+        self.troubleshooting = None
         root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -99,11 +100,14 @@ class Application(Appearance):
         self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
         self.batch_button = self._translated(ttk.Button(self.navigation, command=self.show_batch), 'batch')
         self.save_library_button = self._translated(ttk.Button(self.navigation, command=self.show_save_library), 'save_library')
+        self.troubleshooting_button = self._translated(
+            ttk.Button(self.navigation, command=self.show_troubleshooting), 'troubleshooting')
         self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
         self.help_menu = tk.Menu(self.help_button, tearoff=False)
         self.help_button.configure(menu=self.help_menu)
         self._navigation_buttons = (self.home_button, self.converter_button, self.compare_button,
-                                    self.batch_button, self.save_library_button, self.help_button)
+                                    self.batch_button, self.save_library_button,
+                                    self.troubleshooting_button, self.help_button)
         self.navigation.bind('<Configure>', self._schedule_navigation)
         self._layout_navigation()
         location = ttk.Frame(top)
@@ -279,8 +283,9 @@ class Application(Appearance):
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'mod_manager', 'research_lab', 'research_import',
-                                            'workflow_builder', 'emulator_hub')
+                                            'troubleshooting', 'editing_presets', 'mod_manager',
+                                            'research_lab', 'research_import', 'workflow_builder',
+                                            'emulator_hub')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -290,6 +295,8 @@ class Application(Appearance):
             set_language = getattr(self.help_center, 'set_language', None)
             if callable(set_language):
                 set_language(self.language)
+        if self.troubleshooting is not None:
+            self.troubleshooting.set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
 
@@ -324,8 +331,10 @@ class Application(Appearance):
         self.root.option_add('*Font', (self.font_family, size))
         self.style.configure('.', font=(self.font_family, size))
         self.style.configure('Treeview', rowheight=max(29, size * 2 + 9))
-        if self.help_center is not None:
-            self.help_center.set_text_size(size, self.font_family)
+        for tool in self._tool_workspaces():
+            set_text_size = getattr(tool, 'set_text_size', None)
+            if callable(set_text_size):
+                set_text_size(size, self.font_family)
         self._schedule_editor_width()
 
     def _workspace_changed(self, *_args):
@@ -513,7 +522,8 @@ class Application(Appearance):
                                 'game', game.platform, game.id + ' ' + game.description)
                    for game in self.library_games]
         for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
-                    'help', 'compatibility', 'workflows', 'feedback', 'validation', 'plugins'):
+                    'troubleshooting', 'help', 'compatibility', 'workflows', 'feedback',
+                    'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         for key in self._optional_tool_routes():
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
@@ -563,7 +573,8 @@ class Application(Appearance):
         if category == 'tool':
             methods = {'library': self.show_library, 'converter': self.show_converter,
                        'comparison': self.show_comparison, 'batch': self.show_batch,
-                       'save_library': self.show_save_library}
+                       'save_library': self.show_save_library,
+                       'troubleshooting': self.show_troubleshooting}
             methods.update(self._optional_tool_routes())
             if key in methods:
                 result = methods[key]()
@@ -869,8 +880,9 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'mod_manager', 'editing_presets', 'research_lab', 'research_import',
-                                       'workflow_builder', 'emulator_hub', 'help_center')
+                                       'troubleshooting', 'mod_manager', 'editing_presets',
+                                       'research_lab', 'research_import', 'workflow_builder',
+                                       'emulator_hub', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -999,6 +1011,24 @@ class Application(Appearance):
         self._show_editing_tool(self.emulator_hub, self.tr('emulator_hub'))
         self._remember_workspace('tool:emulator_hub')
         return self.emulator_hub
+
+    def show_troubleshooting(self):
+        from koei_editor.shared.game_troubleshooting_gui import TroubleshootingWorkspace
+        if self.troubleshooting is None:
+            self.troubleshooting = TroubleshootingWorkspace(
+                self.root, self.workspace, language=self.language)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self._set_active_game(None)
+        self.troubleshooting.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(self.tr('troubleshooting'))
+        self._remember_workspace('tool:troubleshooting')
+        self.troubleshooting.apply_theme(THEMES[self.theme_name.get()])
+        size = round(10 * self.shell_settings.text_size / 100)
+        self.troubleshooting.set_text_size(size, self.font_family)
+        return self.troubleshooting
 
     def show_workflow_builder(self):
         from koei_editor.shared.automation_gui import WorkflowWorkspace

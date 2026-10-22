@@ -187,6 +187,8 @@ class ResearchImportGuiTests(unittest.TestCase):
             self.assertIsNotNone(index, f'Missing editing tool menu command: {key}')
             labels.append(self.app.editing_tools_menu.entrycget(index, 'label'))
         self.assertIn('Research Import', labels)
+        self.assertEqual(self.app.editing_tools_menu.entrycget(index, 'label'),
+                         self.app.tr('research_import'))
         self.select('gundam2_ps3')
         self.gui.inspect()
         self.wait()

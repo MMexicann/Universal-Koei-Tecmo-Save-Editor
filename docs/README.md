@@ -10,6 +10,9 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 ## Development and releases
 
+- [Game Toolkit v1.0 pending release notes](TOOLKIT_V1_RELEASE_NOTES.md)
+- [Published Save Editor v3.1 release notes](RELEASE_NOTES.md)
+
 - [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
 
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)

@@ -1,81 +1,110 @@
-# Universal Koei Tecmo Save Editor
+# Universal Koei Tecmo Game Toolkit
 
-A free Windows save editor by **Mexican**. Edit supported character, inventory,
-equipment and progression fields, compare saves, and convert between selected
-platforms. Searchable editors share backups, Undo, change reviews and Light/Dark
-themes. No Python installation is needed for the Windows app.
+A free Windows toolkit by **Mexican** for editing, comparing and converting
+supported Koei Tecmo saves. Browse progression, organize save copies and automate
+reviewed edits, with backups, Undo and a review before saving.
 
 **[Download for Windows](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest)**
 · **[Supported games](docs/SUPPORTED_GAMES.md)**
 · **[User guide](docs/EDITOR_WORKSPACE.md)**
-· **[What's new](docs/RELEASE_NOTES.md)**
+· **[Documentation](docs/README.md)**
+
+**Game Toolkit v1.0 is in preparation.** The latest published app is
+**Universal Koei Tecmo Save Editor v3.1**. The new name continues the same project;
+v1.0 will be a branding version reset, preserving earlier releases and history.
+[Planned release notes](docs/TOOLKIT_V1_RELEASE_NOTES.md).
 
 <!-- BEGIN SUPPORTED GAMES -->
 **98 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
 <!-- END SUPPORTED GAMES -->
 
-**Version 3.1 development source.** The download link always points to the latest published Windows build. Choose a supported edition below and keep a separate save copy.
+[Features](#features) · [Games](#supported-games) · [Downloads](#download-and-install)
+· [Compatibility](#compatibility) · [Contributing](#run-from-source-and-contribute)
 
-## What you can do
+## Features
 
-- **Explore progression:** browse read-only cards for verified opened-save values,
-  equipment and mapped collections. [Dashboards](docs/PROGRESSION_DASHBOARDS.md).
+- **Edit and review:** searchable character, inventory, equipment and progression
+  fields; presets, selective transfers, pinned fields and JSON/CSV change reports.
+- **Explore progression:** read-only dashboards for mapped save values and
+  collections, with offline HTML reports. [Dashboard guide](docs/PROGRESSION_DASHBOARDS.md).
+- **Manage save copies:** browse folders, find documented save locations, inspect issues
+  with Save Doctor and keep snapshots in the local Save Vault.
+  [Save management](docs/SAVE_MANAGEMENT.md).
+- **Compare and convert:** compare mapped values and payload differences; review
+  individual or queued conversions across **145 scoped routes**.
+  [Conversion scope](docs/SAVE_CONVERSION.md).
+- **Automate reviewed work:** build workflows, reuse presets and run batch jobs
+  from the command line. [Automation](docs/AUTOMATION.md).
+- **Use one workspace:** retained editor sessions, Light/Dark themes, English/German
+  shell controls, offline help and data-only community plugins.
+  [Community plugins](docs/COMMUNITY_PLUGINS.md).
 
-- **Edit saves:** search fields and records, adjust values, inspect equipment,
-  review named before/after changes, and save a separate edited copy.
-- **Browse copied saves:** choose an exact game/platform and scan a folder.
-  Search, sort and filter qualified copies and identical gameplay files.
-  [Save Library](docs/SAVE_LIBRARY.md).
-- **Reuse edits:** export a reviewed edit preset and apply it to the same
-  byte-identical source after previewing the complete resulting changes.
-  [Edit Presets](docs/EDIT_PRESETS.md).
-- **Personalize the workspace:** pin frequently used fields, keep multiple game
-  sessions open, and export complete JSON or spreadsheet-friendly CSV reviews.
-  [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
-- **Compare saves:** inspect mapped changes and other payload differences across
-  97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
-- **Convert saves:** 145 directed routes cover qualified DW6, DW7 XL, DW8 XL, Persona 5 Strikers and resource-only WO3U/SW4 transfers. Review one copy or queue multiple conversions.
-  [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
+## Supported games
 
-Editing scope varies by edition and save revision. Some newer profiles allow
-only conservative reductions or specific equipment choices; the supported-games
-list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
-expands only explicitly mapped numeric fields.
+Examples below refer to selected editions and save revisions, not every release
+in a series. **98 profiles does not mean 98 distinct games.**
 
-The initial [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
-intentionally scoped to verified Three Hopes Switch character and weapon
-ID/name mappings; it is not a complete gameplay reference or a Character
-Workshop interface.
+| Family | Examples with registered editing profiles |
+| --- | --- |
+| Dynasty Warriors | 3 Remastered, 4 Hyper/XL, 5 Special, 6, 7/XL/Empires, 8/XL/Empires, 9 Empires, Origins |
+| Samurai Warriors and Orochi | Samurai Warriors 2, 4/DX/4-II, 5; Warriors Orochi, Z, 3 Ultimate, 4/Ultimate |
+| Other Warriors titles | All-Stars, Abyss, Pirate Warriors 1–4, Gundam/3/Reborn, Legends of Troy |
+| Nintendo collaborations | Hyrule Warriors/Legends/Definitive Edition, Age of Calamity; Fire Emblem Warriors/Three Hopes; Three Houses |
+| Atelier and Gust | Selected Rorona, Totori, Meruru, Ayesha, Escha & Logy, Sophie/2, Firis, Ryza/2/3 DX; Nights of Azure 2; Blue Reflection: Second Light |
+| Action and RPG | Nioh 3, Ninja Gaiden Black/II, Wo Long, Persona 5 Strikers, Dragon Quest Builders 2, Berserk, Attack on Titan, Dead or Alive 5 |
+| Classics and more | Selected Romance of the Three Kingdoms, Nobunaga’s Ambition, Uncharted Waters, Gemfire, Monster Rancher DS, Pokémon Conquest, Tecmo Super Bowl, Project Zero/Fatal Frame |
 
-## New in v3.1
+Save profiles cover Windows and DOS PC, PlayStation 2/3/4/Vita, Xbox/Xbox 360,
+Switch/Wii U/3DS/DS, NES/SNES and Macintosh. **The distributed app is for Windows.**
+Use the [platform catalog](docs/SUPPORTED_GAMES.md) to check an exact edition,
+region, required files and available controls.
 
-- **DW8 XL PS4 editor:** resources, officer stats, weapon-action aptitudes and existing ranked attributes for decrypted CUSA00397 zero-extension copies, with original metadata, backups, Undo and reviewed Save As. Conversion to PC accepts both supported native PC template formats.
-- **Import five research candidates:** inspect Gundam 2, Totori/Rorona/Ayesha Plus Vita and original Uncharted Waters IV PK copies in a separate read-only workspace. These are research observations; editing support is not implied. [Research Import](docs/RESEARCH_IMPORT.md).
-- **Six new scoped conversion routes:** WO3 Ultimate PS3 ↔ Definitive Edition PC moves unallocated growth points and gems; SW4 US PS3 ↔ SW4 DX PC moves gold only. WO3U PS4 → PC transfers 354 directly mapped crystal/orb/material balances, with a separate wider scope adding five base stats for 145 playable officers. Destination progression and equipment remain intact.
-- **Clearer conversions:** exact source/destination filters, source/template filenames and companions, numeric before/after previews for the new routes, and an explicit reverse-route action that swaps copies and requires a fresh review.
-- **Requested PS4 transfers:** DW8 XL PS4 → PC is available within its documented profile. WO3U adds a limited PS4 resource route; full WO3U/SW4 PS4 migration still needs broader format evidence and original exports. [Exact scope and remaining evidence](docs/WARRIORS_PS4_TRANSFERS.md).
+## What's changing for v1.0
 
-[Release notes and limits](docs/RELEASE_NOTES.md). The development source contains 98 profiles across 15 platforms and 145 scoped routes. Edited/converted game loading remains unverified.
+- A new **Game Toolkit** identity for the existing save tools and workflows.
+- An initial [Three Hopes reference-data feed](docs/GAME_DATA_ENCYCLOPEDIA.md)
+  for character and weapon ID/name mappings in development source. It has no
+  browsing interface or Character Workshop integration yet.
 
-## Quick start
+No additional game profiles or platforms have been integrated since v3.1.
+Features still under review are excluded. See the [pending v1.0 notes](docs/TOOLKIT_V1_RELEASE_NOTES.md)
+and [published v3.1 notes](docs/RELEASE_NOTES.md) for their separate scopes.
 
-1. Download and extract the complete Windows ZIP, then run its EXE. Alternatively,
-   use the standalone EXE. Keep the ZIP's bundled files together.
-2. Make a separate copy of your save folder outside the live game/cloud location.
-   Choose its exact game, edition and platform, then **Open Save Copy**.
-3. Stage edits, check **Review Changes**, and choose **Save As...** to write a new
-   game-save copy. **Export Review** writes a report. Undo and automatic backups
-   are available.
+## Download and install
 
-Console profiles require supported extracted/decrypted exports and any original
-companion metadata specified in their guide. Decryption, console reimport and
-resigning use external save tools. File-level validation is tested; **edited or
-converted game loading and re-saving remain unverified**.
+No Python installation is needed for either Windows download.
 
-Origins proficiency-level and Old Coin writers remain unimplemented.
-[Request status](docs/ORIGINS_REQUEST_STATUS.md). DW7 XL PC weapon base attack,
-element and capacity live in game data; arbitrary save edits to those parameters
-remain unavailable. [Weapon scope](docs/DW7XL_WEAPONS.md).
+| Download | How to use it |
+| --- | --- |
+| [Standalone EXE · v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/UniversalKoeiTecmoSaveEditor-v3.1.exe) | Download and run the self-contained app. |
+| [Portable Windows ZIP · v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/UniversalKoeiTecmoSaveEditor-v3.1-Windows.zip) | Extract the entire ZIP and run its EXE; keep the bundled runtime beside it. |
+| [Source ZIP · v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/UniversalKoeiTecmoSaveEditor-v3.1-Source.zip) | Source code for the published release; requires Python to run. |
+
+[Checksums](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/SHA256SUMS.txt)
+· [Defender scan report](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/DefenderScan-v3.1.json)
+· [All releases](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases)
+
+1. Make a separate copy of your save folder outside the live game/cloud location.
+2. Choose the exact game, edition and platform, then **Open Save Copy**.
+3. Stage edits, check **Review Changes**, then **Save As...** to a new save copy.
+   **Export Review** creates a report, not a game save.
+
+## Compatibility
+
+- **Verified scope:** file-level validation and copy-preservation checks are
+  documented per profile. **Edited/converted in-game loading and re-saving remain
+  unverified.** [Validation evidence](docs/VALIDATION.md).
+- **Console saves:** use the required extracted/decrypted exports and original
+  companion metadata. Extraction, decryption, reimport and resigning use external tools.
+- **Partial conversions:** routes transfer only their listed fields. WO3U and SW4
+  routes do not provide complete migration. [Route limits](docs/SAVE_CONVERSION.md).
+- **Experimental and research:** opt-in experimental editing expands only mapped
+  numeric fields. Research Import is read-only and adds no supported editing profiles.
+  [Experimental scope](docs/EXPERIMENTAL_EDITING.md) · [Research Import](docs/RESEARCH_IMPORT.md).
+
+Editing controls vary by profile; some permit reductions only. Origins proficiency
+levels/Old Coins and arbitrary DW7 XL PC weapon base-parameter edits remain unavailable.
+[Origins status](docs/ORIGINS_REQUEST_STATUS.md) · [DW7 XL weapon scope](docs/DW7XL_WEAPONS.md).
 
 ## Run from source and contribute
 
@@ -87,7 +116,7 @@ python -m koei_editor
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [build instructions](docs/BUILDING.md),
-and the [documentation index](docs/README.md). AI coding agents should read
-[AGENTS.md](AGENTS.md).
+[technical documentation](docs/README.md) and [LICENSE](LICENSE).
+AI coding agents should read [AGENTS.md](AGENTS.md).
 
 Discord: `mexicannn` · [Mexican's Steam profile](https://steamcommunity.com/id/theonlyjuandeagingmexican/)

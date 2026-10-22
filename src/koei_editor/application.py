@@ -45,7 +45,7 @@ class Application(Appearance):
         self.research_lab = None
         self.research_import = None
         self.workflow_builder = None
-        root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
+        root.title(f'Universal Koei Tecmo Game Toolkit — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
         self._owned_minimum = (780, 680)
@@ -1143,7 +1143,7 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--automation':
         from koei_editor.automation_cli import main as automation_main
         raise SystemExit(automation_main(sys.argv[2:]))
-    parser = argparse.ArgumentParser(description='Universal Koei Tecmo Save Editor')
+    parser = argparse.ArgumentParser(description='Universal Koei Tecmo Game Toolkit')
     parser.epilog = 'Use --automation --help for reviewed batch editing and workflow commands.'
     parser.add_argument('--game', choices=[game.id for game in ALL_ADAPTERS], help='Open a registered editor or research tool.')
     parser.add_argument('--smoke-test', action='store_true', help='Initialize all registered interfaces and check switching.')

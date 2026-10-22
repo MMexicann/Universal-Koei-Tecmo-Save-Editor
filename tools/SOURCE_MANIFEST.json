@@ -18,8 +18,8 @@
     },
     {
       "path": "AGENTS.md",
-      "bytes": 7970,
-      "sha256": "40f0f5049da09a38282d5d1acedf666e7809878af30a9b3caaa01526f931b454"
+      "bytes": 7994,
+      "sha256": "604d4e6abda6edc09ad158b5725e7d491114e0250a1eab7befebfaa171542031"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5829,
-      "sha256": "ac2d263949c8128ee38d2e6cf8660b201740b9427128637af10c691965b26302"
+      "bytes": 7350,
+      "sha256": "4d44d26d24f7616991cd8a307ff0e76fc29b04295c7f9fef944ecb54e8745084"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -173,8 +173,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 10421,
-      "sha256": "9ba449f63e17c40b89dd3fe3ce20aa7116a64deb051036d52533c48e81cdd04a"
+      "bytes": 10731,
+      "sha256": "e428856b83f37980d74e970bb21e2a2084b973d988e28c8f43684cacccb23af9"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -405,6 +405,11 @@
       "path": "docs/FIRIS_PC_FORMAT.md",
       "bytes": 7327,
       "sha256": "c7fd0d517a4cac8b5c3411c91340b68589ce029a415a918478a8c5066e3bf5c2"
+    },
+    {
+      "path": "docs/GAME_DATA_ENCYCLOPEDIA.md",
+      "bytes": 4739,
+      "sha256": "03535c500e4f0fb3c1eb164536e2f8803db636e349c55cc370ca3351211b8d62"
     },
     {
       "path": "docs/GAME_MECHANICS.md",
@@ -678,8 +683,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 15856,
-      "sha256": "b042980c6e435d007d5e777633a93e5f5573459a7d82f80b9724086832ce0f53"
+      "bytes": 16084,
+      "sha256": "abc0aa4206a4c1fa009de68206d33ddc442e5cec41a8532cf9f1d602fd556e91"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -708,8 +713,8 @@
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
-      "bytes": 1636,
-      "sha256": "5fcdd902c9a0a45b58ad79de78c00e4e168e54a2dc89b4f0b5b40db507c0f853"
+      "bytes": 4461,
+      "sha256": "0c31eaf8bbde03431fdee59f0d45a2f6de1e61a0aad432c46d0b6a53beb29a7a"
     },
     {
       "path": "docs/RESEARCH_IMPORT.md",
@@ -952,6 +957,11 @@
       "sha256": "0a7eef78a59fe25d5d97e9cc781a64b36dafcb9ab83a24cdc1f2ccf42d2a7a74"
     },
     {
+      "path": "docs/TOOLKIT_V1_RELEASE_NOTES.md",
+      "bytes": 1618,
+      "sha256": "1b412e6cc4868f3c3d5594cdb275e8260a516d25ca9baee7c0b92a3059fc760c"
+    },
+    {
       "path": "docs/TOTORI_DX_PS4_FORMAT.md",
       "bytes": 14453,
       "sha256": "b1c5e93de6f8c915774abe23e281a64e589c192de747f191a9adac00d8a8ea0a"
@@ -1188,8 +1198,8 @@
     },
     {
       "path": "pyproject.toml",
-      "bytes": 706,
-      "sha256": "60a60f2c8f83c9d4b5a437fafdfd0e4a8137d7de11b4a6395c3bc989380698dc"
+      "bytes": 1056,
+      "sha256": "acde96065a8da70b285b89589a3aa58646010db560c4e458ceab5bbb2e0ec1ba"
     },
     {
       "path": "src/koei_editor/AGENTS.md",
@@ -1213,8 +1223,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 74609,
-      "sha256": "b195377dc0183ba71e2bc73d7018818d4bad564e2ce0cca5cd40d31f6b025831"
+      "bytes": 74611,
+      "sha256": "c5f3144f985c9700cbffce5749103b0613d4fb53afba0511d57a067324e02ba0"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -1255,6 +1265,11 @@
       "path": "src/koei_editor/data/dw6_migration_evidence.json",
       "bytes": 9683,
       "sha256": "b86b4e52173b1eda79cb3fe81dc1cc82f82668762129361111e205ae8400b764"
+    },
+    {
+      "path": "src/koei_editor/data/game_data_encyclopedia.json",
+      "bytes": 103852,
+      "sha256": "c2256770a2fef72d89a74bb1835b5a2fa0a0e3e5220e9ea238fcce5b7fe5a48c"
     },
     {
       "path": "src/koei_editor/data/game_metadata.json",
@@ -3767,6 +3782,11 @@
       "sha256": "0d5ddec115e7fa2aaf0a88e458153c6f37d5ffc3dafc94e1c563c518d5223484"
     },
     {
+      "path": "src/koei_editor/shared/game_data_encyclopedia.py",
+      "bytes": 7480,
+      "sha256": "164b28e4fab3931fbacef88bcaad364d0e05edf4e31d1ea0aa366c695ed89100"
+    },
+    {
       "path": "src/koei_editor/shared/help_center.py",
       "bytes": 17601,
       "sha256": "ae22b563420b863107fdc63743dd49af0511eb682b783a624bfd1624f2cc7df8"
@@ -4610,6 +4630,11 @@
       "path": "tests/test_game_dashboard_context.py",
       "bytes": 5565,
       "sha256": "dc8dc7f4b140c69f35b6ee309a7409dad0918ca2676ce7e6ba162e84ed00c591"
+    },
+    {
+      "path": "tests/test_game_data_encyclopedia.py",
+      "bytes": 5918,
+      "sha256": "37b156bc98b23fa124326660972d2d94dd5979b69998d4cc5a36d8bfbd794797"
     },
     {
       "path": "tests/test_gemfire_battery.py",
@@ -5878,8 +5903,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 33059,
-      "sha256": "5fccec31ea962ed20b0a166cf09533f04cfc38a0018e4c57d318d4058d6aa374"
+      "bytes": 33158,
+      "sha256": "5320988c9b4a74630f3bce5cb53c29c325291541d3ad52236e05d9939ac137cf"
     },
     {
       "path": "tools/refresh_manifest.py",

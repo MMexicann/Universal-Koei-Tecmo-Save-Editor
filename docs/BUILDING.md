@@ -1,5 +1,10 @@
 # Building the Windows executable
 
+This development source prepares the **Universal Koei Tecmo Game Toolkit** name.
+The technical version and artifact filenames remain at **3.1** until the v1.0
+release gates pass. See the [branding and release handoff](REPOSITORY_METADATA.md)
+before changing versions, filenames, tags or publication settings.
+
 Build releases on 64-bit Windows with Python 3.14.7 and Tkinter. Build/package tools
 and the development test suite use Python 3.11 or newer; the source application
 itself supports Python 3.10. The Windows workflow uses

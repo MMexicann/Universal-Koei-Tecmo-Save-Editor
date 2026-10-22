@@ -25,6 +25,7 @@ verified installation adapter supports Nioh 2 PC only.
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
 - [Completion Companion evidence for Sol](COMPLETION_COMPANION_AI_EVIDENCE.md)
+- [Character & Weapon Workshop: mapped builds, comparisons and presets](CHARACTER_WEAPON_WORKSHOP.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
 - [Emulator Integration Hub: documented launch profiles and exported-save handoff](EMULATOR_HUB.md)

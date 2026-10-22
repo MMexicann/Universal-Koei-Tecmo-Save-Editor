@@ -203,7 +203,8 @@ def _required_runtime(root, sources):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'Game':
             values = list(node.args[7:9])
             values.extend(keyword.value for keyword in node.keywords
-                          if keyword.arg in ('editor_module', 'parser_module', 'scalar_backend'))
+                          if keyword.arg in ('editor_module', 'parser_module', 'scalar_backend',
+                                             'workshop_module'))
             pending.extend(value.value for value in values if isinstance(value, ast.Constant) and type(value.value) is str)
     required, visited = set(), set()
     while pending:

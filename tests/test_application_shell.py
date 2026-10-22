@@ -206,17 +206,30 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
         self.assertEqual(self.app.shell_settings.recent[0], command_id)
 
+        # A new tool registered in the menu must not shift any localization target.
+        self.app.editing_tools_menu.insert_command(0, label='Injected tool', command=lambda: None)
         self.app.language_choice.set('Deutsch')
         self.app.change_language()
         self.root.update()
         self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
-        self.assertEqual(self.app.editing_tools_menu.entrycget(2, 'label'),
+        menu_command = self.app._editing_menu_localized_commands['controller_profiles']
+        localized_index = next(index for index in range(self.app.editing_tools_menu.index('end') + 1)
+                               if self.app.editing_tools_menu.entrycget(index, 'command') == menu_command)
+        self.assertEqual(self.app.editing_tools_menu.entrycget(localized_index, 'label'),
                          self.app.tr('controller_profiles'))
         self.app.show_library()
         self.root.update()
         self.assertIs(self.app.controller_profiles, workspace)
         self.assertFalse(workspace.frame.winfo_ismapped())
         self.assertFalse(self.app.sessions)
+
+    def test_controller_profiles_start_in_the_shell_language(self):
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        workspace = self.app.show_controller_profiles()
+        self.root.update()
+        self.assertEqual(workspace.language, 'de')
+        self.assertEqual(workspace.title_label.cget('text'), 'Controller- und Eingabeprofile')
 
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
         for key in ('editing_presets', 'research_lab', 'workflow_builder'):

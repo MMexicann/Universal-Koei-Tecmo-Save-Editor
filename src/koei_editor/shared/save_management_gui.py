@@ -20,6 +20,7 @@ class SaveManagementWindow:
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.busy, self._closed, self._poll_id = False, False, None
         self.profile_window = None
+        self._reverting_vault_path = False
         self._palette = {'background': ttk.Style(root).lookup('TFrame', 'background') or '#ffffff',
                          'text': ttk.Style(root).lookup('TLabel', 'foreground') or '#222222'}
         self._results, self._cancel = queue.SimpleQueue(), threading.Event()
@@ -174,8 +175,36 @@ class SaveManagementWindow:
         self.vault_path.trace_add('write', self._vault_changed)
 
     def _vault_changed(self, *_args):
+        if self._reverting_vault_path:
+            return
+        profile_window = self.profile_window
+        selected_vault_path = self.vault_path.get().strip()
+        if profile_window is not None and not getattr(profile_window, '_closed', False):
+            if profile_window.busy:
+                if selected_vault_path != profile_window.vault_path:
+                    self._reverting_vault_path = True
+                    try:
+                        self.vault_path.set(profile_window.vault_path)
+                    finally:
+                        self._reverting_vault_path = False
+                    messagebox.showinfo(
+                        'Profile operation running',
+                        'Wait for the current profile operation to finish before changing Save Vaults.',
+                        parent=self.window,
+                    )
+                return
+            if selected_vault_path != profile_window.vault_path:
+                profile_window.close()
+                self.profile_window = None
+                self.status.set('Vault changed. Reopen Smart Playthrough Profiles to use the selected Vault.')
         self.history.delete(*self.history.get_children())
         self._set_output(self.vault_output, 'Load this vault to view its history.')
+
+    def _profile_operation_busy(self):
+        profile_window = self.profile_window
+        return (profile_window is not None
+                and not getattr(profile_window, '_closed', False)
+                and bool(getattr(profile_window, 'busy', False)))
 
     def show(self, *, game_id=None, paths=()):
         if self._closed:
@@ -315,19 +344,45 @@ class SaveManagementWindow:
         self._set_output(self.vault_output, f'{len(snapshots)} local snapshots. Select a snapshot to restore or manage it.')
 
     def create_vault(self):
+        if self._profile_operation_busy():
+            messagebox.showinfo(
+                'Profile operation running',
+                'Wait for the current profile operation to finish before creating or loading a Vault.',
+                parent=self.window,
+            )
+            return
         parent = filedialog.askdirectory(parent=self.window, title='Choose parent folder for a NEW SaveVault directory', mustexist=True)
         if not parent:
             return
         destination = Path(parent) / 'SaveVault'
-        self.vault_path.set(str(destination))
+        destination_text = str(destination)
+        self.vault_path.set(destination_text)
+        if (self._profile_operation_busy()
+                or self.vault_path.get().strip() != destination_text):
+            return
         def prepare():
+            if (self._profile_operation_busy()
+                    or self.vault_path.get().strip() != destination_text):
+                return
             from koei_editor.shared.save_vault import SaveVault
             self._start(lambda: SaveVault.create(destination).list_snapshots(), self._history_result)
         self._invoke(prepare)
 
     def load_vault(self):
+        if self._profile_operation_busy():
+            messagebox.showinfo(
+                'Profile operation running',
+                'Wait for the current profile operation to finish before creating or loading a Vault.',
+                parent=self.window,
+            )
+            return
+        selected_vault_path = self.vault_path.get().strip()
         def prepare():
+            if self._profile_operation_busy():
+                return
             path = self.vault_path.get().strip()
+            if path != selected_vault_path:
+                return
             if not path:
                 raise ValueError('Choose a local vault folder first.')
             from koei_editor.shared.save_vault import SaveVault
@@ -427,8 +482,18 @@ class SaveManagementWindow:
         selected = self.history.selection()
         selected_snapshot_id = selected[0] if len(selected) == 1 else None
         if self.profile_window is not None and not getattr(self.profile_window, '_closed', False):
-            self.profile_window.show(selected_snapshot_id)
-            return
+            if self.profile_window.vault_path == vault_path:
+                self.profile_window.show(selected_snapshot_id)
+                return
+            if self.profile_window.busy:
+                messagebox.showinfo(
+                    'Profile operation running',
+                    'Wait for the current profile operation to finish before changing Save Vaults.',
+                    parent=self.window,
+                )
+                return
+            self.profile_window.close()
+            self.profile_window = None
         from koei_editor.shared.playthrough_profiles_gui import PlaythroughProfilesWindow
         self.profile_window = PlaythroughProfilesWindow(
             self.window, vault_path=vault_path, selected_snapshot_id=selected_snapshot_id,

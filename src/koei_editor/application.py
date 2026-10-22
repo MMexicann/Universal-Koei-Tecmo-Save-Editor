@@ -1205,9 +1205,16 @@ class Application(Appearance):
         management = getattr(getattr(self, 'save_library', None), 'management', None)
         if management is not None:
             tools += (management,)
+            profile_window = getattr(management, 'profile_window', None)
+            if profile_window is not None and not getattr(profile_window, '_closed', False):
+                tools += (profile_window,)
         if any(getattr(tool, 'busy', False) for tool in tools):
             from tkinter import messagebox
-            messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
+            messagebox.showinfo(
+                'Operation running',
+                'Wait for the save or playthrough profile operation to finish before closing.',
+                parent=self.root,
+            )
             return
         if (all(editor.dirty_ok() for _frame, editor in self.sessions.values())
                 and all(tool.dirty_ok() for tool in tools if callable(getattr(tool, 'dirty_ok', None)))):

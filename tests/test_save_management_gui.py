@@ -7,12 +7,137 @@ import threading
 import time
 import tkinter as tk
 import unittest
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from koei_editor.application import Application
 from koei_editor.shared.save_management_gui import SaveManagementWindow
 from koei_editor.shared.save_vault import SaveVault
 from tests.test_wo1_pc_format import procedural_raw
+
+
+class SaveManagementProfileVaultBindingTests(unittest.TestCase):
+    class VaultPath:
+        def __init__(self, value):
+            self.value = value
+            self.trace = None
+
+        def get(self):
+            return self.value
+
+        def set(self, value):
+            self.value = value
+            if self.trace is not None:
+                self.trace()
+
+    @staticmethod
+    def manager_with_profile(profile_window):
+        manager = SimpleNamespace(
+            busy=False,
+            _closed=False,
+            _reverting_vault_path=False,
+            profile_window=profile_window,
+            history=Mock(),
+            vault_output=Mock(),
+            _set_output=Mock(),
+            status=Mock(),
+            window=object(),
+            _palette={'background': '#fff', 'text': '#000'},
+            _start=Mock(),
+            _history_result=Mock(),
+        )
+        manager._profile_operation_busy = lambda: SaveManagementWindow._profile_operation_busy(manager)
+        manager._invoke = lambda prepare: prepare()
+        manager.history.get_children.return_value = ()
+        manager.history.selection.return_value = ()
+        manager.vault_path = SaveManagementProfileVaultBindingTests.VaultPath(
+            profile_window.vault_path if profile_window is not None else '')
+        manager.vault_path.trace = lambda: SaveManagementWindow._vault_changed(manager)
+        return manager
+
+    def test_vault_change_closes_old_profile_window_and_reopens_with_new_vault(self):
+        old_profile = SimpleNamespace(vault_path='/old-vault', busy=False, _closed=False)
+        old_profile.close = Mock(side_effect=lambda: setattr(old_profile, '_closed', True))
+        manager = self.manager_with_profile(old_profile)
+        manager.vault_path.value = '/new-vault'
+        new_profile = SimpleNamespace(vault_path='/new-vault', _closed=False)
+
+        with patch('koei_editor.shared.save_management_gui.messagebox.showinfo'), \
+                patch('koei_editor.shared.save_management_gui.SaveManagementWindow._set_output'), \
+                patch('koei_editor.shared.playthrough_profiles_gui.PlaythroughProfilesWindow',
+                      return_value=new_profile) as create_window:
+            SaveManagementWindow._vault_changed(manager)
+            self.assertIsNone(manager.profile_window)
+            SaveManagementWindow.open_playthrough_profiles(manager)
+
+        old_profile.close.assert_called_once_with()
+        create_window.assert_called_once_with(
+            manager.window, vault_path='/new-vault', selected_snapshot_id=None,
+            palette=manager._palette,
+        )
+        self.assertIs(manager.profile_window, new_profile)
+
+    def test_vault_change_is_reverted_while_profile_worker_is_busy(self):
+        profile = SimpleNamespace(vault_path='/old-vault', busy=True, _closed=False)
+        profile.close = Mock()
+        manager = self.manager_with_profile(profile)
+        manager.vault_path.value = '/new-vault'
+
+        with patch('koei_editor.shared.save_management_gui.messagebox.showinfo') as showinfo, \
+                patch('koei_editor.shared.save_management_gui.SaveManagementWindow._set_output'):
+            SaveManagementWindow._vault_changed(manager)
+
+        self.assertEqual(manager.vault_path.get(), '/old-vault')
+        self.assertIs(manager.profile_window, profile)
+        profile.close.assert_not_called()
+        manager.history.delete.assert_not_called()
+        manager._set_output.assert_not_called()
+        showinfo.assert_called_once()
+
+    def test_create_and_load_vault_do_not_start_during_profile_operation(self):
+        profile = SimpleNamespace(vault_path='/old-vault', busy=True, _closed=False)
+        manager = self.manager_with_profile(profile)
+
+        with patch('koei_editor.shared.save_management_gui.filedialog.askdirectory') as choose_directory, \
+                patch('koei_editor.shared.save_vault.SaveVault') as save_vault, \
+                patch('koei_editor.shared.save_management_gui.messagebox.showinfo') as showinfo:
+            SaveManagementWindow.create_vault(manager)
+            SaveManagementWindow.load_vault(manager)
+
+        choose_directory.assert_not_called()
+        save_vault.assert_not_called()
+        save_vault.create.assert_not_called()
+        save_vault.list_snapshots.assert_not_called()
+        manager._start.assert_not_called()
+        manager._history_result.assert_not_called()
+        manager.history.delete.assert_not_called()
+        manager._set_output.assert_not_called()
+        self.assertEqual(showinfo.call_count, 2)
+
+    def test_create_vault_rechecks_path_if_profile_work_starts_during_picker(self):
+        profile = SimpleNamespace(vault_path='/old-vault', busy=False, _closed=False)
+        manager = self.manager_with_profile(profile)
+
+        def start_profile_work(*_args, **_kwargs):
+            profile.busy = True
+            return '/new-parent'
+
+        with patch('koei_editor.shared.save_management_gui.filedialog.askdirectory',
+                   side_effect=start_profile_work) as choose_directory, \
+                patch('koei_editor.shared.save_vault.SaveVault') as save_vault, \
+                patch('koei_editor.shared.save_management_gui.messagebox.showinfo') as showinfo:
+            SaveManagementWindow.create_vault(manager)
+
+        choose_directory.assert_called_once()
+        self.assertEqual(manager.vault_path.get(), '/old-vault')
+        save_vault.assert_not_called()
+        save_vault.create.assert_not_called()
+        save_vault.list_snapshots.assert_not_called()
+        manager._start.assert_not_called()
+        manager._history_result.assert_not_called()
+        manager.history.delete.assert_not_called()
+        manager._set_output.assert_not_called()
+        showinfo.assert_called_once()
 
 
 class SaveManagementGuiTests(unittest.TestCase):

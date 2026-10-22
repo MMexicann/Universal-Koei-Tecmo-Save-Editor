@@ -1243,8 +1243,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 78558,
-      "sha256": "8674efb8eeecb191eccb3dc27580304e203dbf4feab62a5a405cd906b6680e70"
+      "bytes": 80336,
+      "sha256": "9b3392aefb365c4ce6d560f080999f4043b77c5ffa337475c1f49e39e93c160e"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -3862,6 +3862,11 @@
       "sha256": "e82ba951d840a0bf2833317089c168c027cbfd7b8e632db107e6303321d5d699"
     },
     {
+      "path": "src/koei_editor/shared/game_troubleshooting_gui.py",
+      "bytes": 28720,
+      "sha256": "bf81e0278491386c5f5898b25fcfb72b471e8c253a730b2232d9076ed729d9d2"
+    },
+    {
       "path": "src/koei_editor/shared/help_center.py",
       "bytes": 17601,
       "sha256": "ae22b563420b863107fdc63743dd49af0511eb682b783a624bfd1624f2cc7df8"
@@ -3883,8 +3888,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 6051,
-      "sha256": "c62079abf5cbedbd05dbc3cfd56d084132c71c6dd41496f8d5a03b002feec90e"
+      "bytes": 6153,
+      "sha256": "20104ec7c7fb044512864b61795cfce6a2def16f827306e8e2d93a6563b872b7"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4800,6 +4805,11 @@
       "path": "tests/test_game_troubleshooting.py",
       "bytes": 21989,
       "sha256": "bf7d3b6db5c4862ebda7067a11b45e4133f6b4a305f9431ad823353f7a22e6bb"
+    },
+    {
+      "path": "tests/test_game_troubleshooting_gui.py",
+      "bytes": 13654,
+      "sha256": "fe82cb6ba0dce27393b4fd2ffc1eefb8ea0f70f696bfbf7eb677afc1e3e9845f"
     },
     {
       "path": "tests/test_gemfire_battery.py",

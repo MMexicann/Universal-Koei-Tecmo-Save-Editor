@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import tempfile
+import threading
 import tkinter as tk
 import time
 import unittest
@@ -274,6 +275,59 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
         self.assertIsNone(workspace.report)
         self.assertNotIn(secret, workspace.status.get())
         self.assertNotIn(secret, workspace.preview.get("1.0", "end"))
+
+    def test_application_shutdown_proceeds_while_read_only_scan_worker_is_pending(self):
+        workspace = self.center()
+        workspace.game.set(workspace._game_labels["origins"])
+        worker_started = threading.Event()
+        release_worker = threading.Event()
+        self.addCleanup(release_worker.set)
+
+        def stalled_read_only_scan(*_args, **_kwargs):
+            worker_started.set()
+            release_worker.wait(timeout=10)
+            return sample_report()
+
+        with patch(
+            "koei_editor.shared.game_troubleshooting_gui.diagnose_game",
+            side_effect=stalled_read_only_scan,
+        ):
+            workspace.scan()
+            self.assertTrue(worker_started.wait(timeout=2), "Scan worker did not start.")
+            self.assertTrue(workspace.busy)
+            self.assertTrue(workspace.shutdown_safe_while_busy)
+
+            shutdown_state = []
+            original_destroy = self.root.destroy
+
+            def verify_close_before_destroy():
+                shutdown_state.append((workspace._closed, workspace._poll_id))
+                original_destroy()
+
+            self.root.destroy = verify_close_before_destroy
+            self.app.close()
+            self.root.destroy = original_destroy
+
+        self.assertEqual(shutdown_state, [(True, None)])
+
+    def test_application_close_still_blocks_for_unrelated_copied_save_work(self):
+        class BusyCopiedSaveWorkspace:
+            busy = True
+            shutdown_safe_while_busy = True
+
+            def close(self):
+                raise AssertionError("Application close must wait for copied-save work.")
+
+        self.app.save_library = BusyCopiedSaveWorkspace()
+        with (
+            patch("tkinter.messagebox.showinfo") as show_info,
+            patch.object(self.root, "destroy") as destroy,
+        ):
+            self.app.close()
+
+        show_info.assert_called_once()
+        self.assertIn("copied-save operation", show_info.call_args.args[1])
+        destroy.assert_not_called()
 
 
 if __name__ == "__main__":

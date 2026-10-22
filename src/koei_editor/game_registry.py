@@ -22,6 +22,7 @@ class Game:
     platform: str = 'Windows PC'
     scalar_backend: str | None = None
     achievement_source: str | None = None
+    workshop_module: str | None = None
 
     def get_scalar_adapter(self, *, experimental=False):
         if self not in ALL_ADAPTERS:
@@ -50,7 +51,10 @@ class Game:
                 raise SaveError('The registered editor and scalar backend do not match.')
             if getattr(Editor, 'save_extension', None) != self.extension:
                 raise SaveError('The registered editor and save extension do not match.')
-        return validate_session(Editor(root, parent=parent, theme=theme, on_theme=on_theme), self.id)
+        options = {'parent': parent, 'theme': theme, 'on_theme': on_theme}
+        if self.workshop_module is not None:
+            options['workshop_provider'] = self.workshop_module
+        return validate_session(Editor(root, **options), self.id)
 
     def read_save(self, path):
         # Extension check happens before invoking a game's decryption code.
@@ -69,10 +73,12 @@ GAMES = (
     Game('dw3', 'DYNASTY WARRIORS 3', 'Complete Edition Remastered',
          'Character progression, owned weapon bonus transfer, filtered elements, companions and targeted gallery unlocks.',
          '', '.sav', '#92353b', 'koei_editor.games.dw3.gui', 'koei_editor.games.dw3.save_parser', True, 'III',
-         achievement_source='koei_editor.games.dw3.achievements'),
+         achievement_source='koei_editor.games.dw3.achievements',
+         workshop_module='koei_editor.games.dw3.workshop'),
     Game('dw8xl', 'DYNASTY WARRIORS 8', 'Xtreme Legends Complete Edition · PC',
          'Resources, officer stats, weapon compatibility, affinity, existing ranked attribute replacement and equipped weapon order.',
-         '', '.dat', '#475f8d', 'koei_editor.games.dw8xl.dw8xl_editor', 'koei_editor.games.dw8xl.dw8xl_editor', True, 'VIII', scalar_backend='koei_editor.shared.verified_editor'),
+         '', '.dat', '#475f8d', 'koei_editor.games.dw8xl.dw8xl_editor', 'koei_editor.games.dw8xl.dw8xl_editor', True, 'VIII', scalar_backend='koei_editor.shared.verified_editor',
+         workshop_module='koei_editor.games.dw8xl.workshop'),
     Game('dw7xl', 'DYNASTY WARRIORS 7', 'Xtreme Legends Definitive Edition · PC',
          'Gold, officer stats, source-witnessed weapon loadouts, learned applied-seal replacement/removal and unlearned seal-meter reductions.',
          '', '.dat', '#526985', 'koei_editor.games.dw7xl.dw7xl_editor', 'koei_editor.games.dw7xl.dw7xl_parser', True, 'VII',
@@ -146,7 +152,7 @@ GAMES = (
     Game('wo3u', 'WARRIORS OROCHI 3 ULTIMATE', 'Definitive Edition · PC',
          'Officer stats, gems, rare crystals, weapon attributes, conservative raw compatibility, owned ordinary-item equipment and two owned-mount loadouts.',
          '', '.bin', '#775c82', 'koei_editor.games.wo3u.wo3u_editor', 'koei_editor.games.wo3u.wo3u_parser', True, 'WO3',
-         scalar_backend='koei_editor.games.wo3u.wo3u_parser'),
+         scalar_backend='koei_editor.games.wo3u.wo3u_parser', workshop_module='koei_editor.games.wo3u.workshop'),
     Game('wo1', 'WARRIORS OROCHI', 'Original Windows PC · save revision 2',
          'Growth Points, weapon bonuses, attribute capacity, effect ranks and existing own-pool weapon selection.',
          '', '.dat', '#775c82', 'koei_editor.games.wo1_pc.wo1_editor', 'koei_editor.games.wo1_pc.wo1_parser',
@@ -154,7 +160,7 @@ GAMES = (
     Game('samurai4dx', 'SAMURAI WARRIORS 4 DX', 'Windows PC edition',
          'Gold, gems, officers, existing weapons and attached skills.',
          '', '.dat', '#91613d', 'koei_editor.games.sw4dx.samurai4dx_editor', 'koei_editor.games.sw4dx.samurai4dx_parser', True, 'SW4',
-         scalar_backend='koei_editor.games.sw4dx.samurai4dx_parser'),
+         scalar_backend='koei_editor.games.sw4dx.samurai4dx_parser', workshop_module='koei_editor.games.sw4dx.workshop'),
     Game('sw4ii', 'SAMURAI WARRIORS 4-II', 'Windows PC edition',
          'Gold, tomes, officer stats, existing weapons, mount stats and occupied-mount selection.',
          '', '.dat', '#91613d', 'koei_editor.games.sw4ii.sw4ii_editor', 'koei_editor.games.sw4ii.sw4ii_parser', True, 'SW4-II',

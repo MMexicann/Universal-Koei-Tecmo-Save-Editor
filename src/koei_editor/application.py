@@ -43,6 +43,7 @@ class Application(Appearance):
         self.game_hub = None
         self.save_library = None
         self.mod_manager = None
+        self.game_configuration = None
         self.editing_presets = None
         self.research_lab = None
         self.research_import = None
@@ -64,6 +65,7 @@ class Application(Appearance):
         self._editing_tools_menu_commands = {}
         self._add_editing_tools_menu_command('editing_presets', self.show_editing_presets)
         self._add_editing_tools_menu_command('transfer', self.show_transfer)
+        self._add_editing_tools_menu_command('game_configuration', self.show_game_configuration)
         self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('controller_profiles', self.show_controller_profiles)
         self.editing_tools_menu.add_separator()
@@ -296,7 +298,7 @@ class Application(Appearance):
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'editing_presets', 'mod_manager', 'research_lab', 'research_import',
+                                            'game_configuration', 'editing_presets', 'mod_manager', 'research_lab', 'research_import',
                                             'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder',
                                             'game_hub', 'troubleshooting', 'controller_profiles')
                             if getattr(self, key, None) is not None
@@ -536,6 +538,7 @@ class Application(Appearance):
         return {key: method for key, name in (
             ('editing_presets', 'show_editing_presets'), ('transfer', 'show_transfer'),
             ('mod_manager', 'show_mod_manager'),
+            ('game_configuration', 'show_game_configuration'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
             ('controller_profiles', 'show_controller_profiles'),
@@ -921,7 +924,7 @@ class Application(Appearance):
 
     def _tool_workspaces(self):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'game_hub', 'save_library',
-                                       'mod_manager', 'editing_presets', 'research_lab', 'research_import',
+                                       'game_configuration', 'mod_manager', 'editing_presets', 'research_lab', 'research_import',
                                        'nexus_mods', 'asset_explorer',
                                        'controller_profiles', 'workflow_builder', 'emulator_hub', 'troubleshooting', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
@@ -966,6 +969,15 @@ class Application(Appearance):
                     and self.editing_tools_menu.entrycget(index, 'command') == command):
                 return index
         return None
+
+    def show_game_configuration(self):
+        """Open the isolated, evidence-backed PC configuration workspace."""
+        from koei_editor.shared.configuration_gui import ConfigurationWorkspace
+        if self.game_configuration is None:
+            self.game_configuration = ConfigurationWorkspace(self.root, self.workspace)
+        self._show_editing_tool(self.game_configuration, self.tr('game_configuration'))
+        self._remember_workspace('tool:game_configuration')
+        return self.game_configuration
 
     def show_transfer(self):
         from tkinter import messagebox
@@ -1539,6 +1551,7 @@ def main():
         app.show_comparison()
         app.show_batch()
         app.show_save_library()
+        app.show_game_configuration()
         app.show_editing_presets()
         app.show_mod_manager()
         app.show_research_lab()

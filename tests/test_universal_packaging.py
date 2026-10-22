@@ -223,7 +223,9 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
                 patch.object(build, 'RESEARCH_PROFILES', {}):
             args = build.build_args()
         modules = [args[index + 1] for index, value in enumerate(args) if value == '--hidden-import']
-        asset_modules = {'koei_editor.research.asset_explorer.gui',
+        asset_modules = {'koei_editor.shared.configuration_gui',
+                         'koei_editor.shared.configuration_manager',
+                         'koei_editor.research.asset_explorer.gui',
                          'koei_editor.research.asset_explorer.media',
                          'miniaudio', '_miniaudio', 'cffi', '_cffi_backend', 'pycparser',
                          'numpy', 'trimesh', 'trimesh.exchange.load',

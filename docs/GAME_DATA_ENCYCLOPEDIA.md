@@ -4,20 +4,34 @@ The repository bundles an edition-scoped JSON reference feed at
 `src/koei_editor/data/game_data_encyclopedia.json` as a data contract for search
 and comparison surfaces. Its initial coverage is intentionally narrow: exact
 native ID/name mappings for Three Hopes Switch characters and weapons; Hyrule
-Warriors Wii U materials, weapons, and skills; and four short, source-linked
+Warriors Wii U materials, weapons, and skills; and three short, source-linked
 Hyrule Warriors mechanics summaries. It does not claim complete character,
 item, skill, equipment, or gameplay coverage.
 
 ## Coverage and limits
 
 The Three Hopes portion contains 68 character mappings and 150 weapon mappings.
-The Hyrule Warriors Wii U portion contains the 77 material, 153 weapon, and 49
-skill entries from its existing named catalog, plus four paraphrased summaries
-of weapon skill and Adventure Mode mechanics. Each mapped entry carries a stable
-feed ID, catalog position/native ID, exact registered profile edition label,
-and source reference for each fact. Catalog names identify records in the
-mapped format; by themselves they do not establish ownership, unlock state,
-playability, or a complete progression model.
+The Hyrule Warriors Wii U portion contains 77 materials, 147 named weapons,
+and 48 named skills from its existing catalog, plus three paraphrased summaries
+of weapon skill and Adventure Mode mechanics. Six reserved or unknown weapon
+labels and the blank skill label are omitted from player-facing entities. These
+exact catalog rows are excluded:
+
+| Kind | Native ID | Catalog label |
+| --- | ---: | --- |
+| Weapon | 60 | `[unknown weapon]` |
+| Weapon | 109 | `*** Ganon's Rage (Ganon) RESERVED, DO NOT USE ***` |
+| Weapon | 110 | `*** Cucco's Spirit (Cucco) RESERVED, DO NOT USE ***` |
+| Weapon | 150 | `Unknown (Unk - Unk Level 1)` |
+| Weapon | 151 | `Unknown (Unk - Unk Level 2)` |
+| Weapon | 152 | `Unknown (Unk - Unk Level 3)` |
+| Skill | 0 | `(blank)` |
+
+Those IDs are intentionally absent; other catalog IDs remain unchanged. Each
+mapped entry carries a stable feed ID, catalog position/native ID, exact
+registered profile edition label, and source reference for each fact. Catalog
+names identify records in the mapped format; by themselves they do not
+establish ownership, unlock state, playability, or a complete progression model.
 
 The shared validator in `koei_editor.shared.game_data_encyclopedia` checks the
 schema version, profile edition, unique IDs, field-level source/license
@@ -32,9 +46,14 @@ The JSON envelope has `schema_version`, `dataset_license`,
 `dataset_license_note`, `sources`, `games`, and `entities`. `dataset_license`
 names a uniform license when one applies to the full feed, or is
 `source-specific` for this mixed-license feed. A source carries `id`, `title`,
-`uri`, `license`, `license_uri`, `attribution`, `scope`, applicable `game_ids`,
-and at least one pin: `revision` or `accessed_on` (or both). Source applicability
-is checked against every fact it backs. A game profile carries `id`,
+`uri`, `license`, `license_uri`, `attribution`, `scope`, and at least one pin:
+`revision` or `accessed_on` (or both). New scoped source rows may also declare
+applicable `game_ids` and machine-readable `claim_scopes`; if `claim_scopes` is
+present, `game_ids` is required and both are checked against each fact. These
+fields remain optional for older schema v1 source records. License names must
+use their canonical license URI (MIT: `https://opensource.org/license/mit`;
+CC BY-SA 3.0: `https://creativecommons.org/licenses/by-sa/3.0/`). A game profile
+carries `id`,
 `title`, `edition`, `platform`, `profile_source_id`, and `scope_note`; title,
 edition, and platform mirror the registered profile exactly. An entity carries
 stable `id`, `game_id`, `edition`, `kind`, `name`, and `field_sources`, plus

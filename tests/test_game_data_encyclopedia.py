@@ -1,5 +1,6 @@
 """Contract and source-parity checks for the bundled reference feed."""
 from copy import deepcopy
+from pathlib import Path
 import unittest
 
 from koei_editor.game_registry import get_game
@@ -11,6 +12,15 @@ from koei_editor.shared.game_data_encyclopedia import (
     load_game_data_encyclopedia,
     validate_dataset,
 )
+
+EXCLUDED_HYRULE_WEAPONS = {
+    60: '[unknown weapon]',
+    109: "*** Ganon's Rage (Ganon) RESERVED, DO NOT USE ***",
+    110: "*** Cucco's Spirit (Cucco) RESERVED, DO NOT USE ***",
+    150: 'Unknown (Unk - Unk Level 1)',
+    151: 'Unknown (Unk - Unk Level 2)',
+    152: 'Unknown (Unk - Unk Level 3)',
+}
 
 
 class GameDataEncyclopediaTests(unittest.TestCase):
@@ -55,8 +65,11 @@ class GameDataEncyclopediaTests(unittest.TestCase):
             self.assertTrue(source['uri'].startswith('https://'))
             self.assertTrue(source['license_uri'].startswith('https://'))
             self.assertTrue(source.get('revision') or source.get('accessed_on'))
-            self.assertTrue(source['game_ids'])
-            self.assertTrue(set(source['game_ids']) <= {game['id'] for game in self.dataset['games']})
+            if 'game_ids' in source:
+                self.assertTrue(source['game_ids'])
+                self.assertTrue(set(source['game_ids']) <= {game['id'] for game in self.dataset['games']})
+            if 'claim_scopes' in source:
+                self.assertTrue(source['game_ids'])
         game = next(game for game in self.dataset['games'] if game['id'] == 'three_hopes')
         self.assertIn(game['profile_source_id'], source_map)
         self.assertEqual(source_map[game['profile_source_id']]['license'], 'MIT')
@@ -69,8 +82,17 @@ class GameDataEncyclopediaTests(unittest.TestCase):
                 expected_fields.add('summary')
             self.assertEqual(set(entity['field_sources']), expected_fields)
             self.assertTrue(set(entity['field_sources'].values()) <= set(source_map))
-            for source_id in entity['field_sources'].values():
-                self.assertIn(entity['game_id'], source_map[source_id]['game_ids'])
+            for field, source_id in entity['field_sources'].items():
+                source = source_map[source_id]
+                if 'game_ids' in source:
+                    self.assertIn(entity['game_id'], source['game_ids'])
+                if 'claim_scopes' in source:
+                    claim_scope = f'entity.{field}'
+                    self.assertTrue(
+                        claim_scope in source['claim_scopes']
+                        or (field.startswith('attributes.')
+                            and 'entity.attributes' in source['claim_scopes'])
+                    )
 
     def test_character_and_weapon_labels_match_pinned_source_catalog(self):
         expected = {
@@ -104,9 +126,11 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         }
         expected.update({
             ('weapon', native_id): name for native_id, name in enumerate(HYRULE_WEAPONS)
+            if native_id not in EXCLUDED_HYRULE_WEAPONS
         })
         expected.update({
             ('skill', native_id): name for native_id, name in enumerate(HYRULE_SKILLS)
+            if native_id != 0
         })
         hyrule_entities = [
             entity for entity in self.dataset['entities']
@@ -121,7 +145,35 @@ class GameDataEncyclopediaTests(unittest.TestCase):
             {entity['kind'] for entity in hyrule_entities},
             {'material', 'weapon', 'skill'},
         )
-        self.assertEqual(len(hyrule_entities), len(MATERIALS) + len(HYRULE_WEAPONS) + len(HYRULE_SKILLS))
+        self.assertEqual(len(hyrule_entities), len(MATERIALS) + len(HYRULE_WEAPONS)
+                         - len(EXCLUDED_HYRULE_WEAPONS) + len(HYRULE_SKILLS) - 1)
+        self.assertFalse(any(entity['name'] == '(blank)' for entity in hyrule_entities))
+        for entity in hyrule_entities:
+            if entity['kind'] == 'weapon':
+                self.assertNotIn(entity['native_id'], EXCLUDED_HYRULE_WEAPONS)
+
+    def test_excluded_catalog_placeholders_are_exact_and_documented(self):
+        self.assertEqual(
+            {native_id: HYRULE_WEAPONS[native_id] for native_id in EXCLUDED_HYRULE_WEAPONS},
+            EXCLUDED_HYRULE_WEAPONS,
+        )
+        self.assertEqual(HYRULE_SKILLS[0], '(blank)')
+        docs = (Path(__file__).parents[1] / 'docs/GAME_DATA_ENCYCLOPEDIA.md').read_text(encoding='utf-8')
+        for native_id, label in EXCLUDED_HYRULE_WEAPONS.items():
+            self.assertIn(f'| Weapon | {native_id} | `{label}` |', docs)
+        self.assertIn('| Skill | 0 | `(blank)` |', docs)
+        player_facing = [
+            entity for entity in self.dataset['entities']
+            if entity['game_id'] == 'hyrule_warriors' and 'native_id' in entity
+        ]
+        self.assertFalse(any(
+            entity['kind'] == 'weapon' and entity['native_id'] in EXCLUDED_HYRULE_WEAPONS
+            for entity in player_facing
+        ))
+        self.assertFalse(any(
+            entity['kind'] == 'skill' and entity['native_id'] == 0
+            for entity in player_facing
+        ))
 
     def test_hyrule_provenance_covers_license_revision_access_and_mechanics(self):
         sources = {source['id']: source for source in self.dataset['sources']}
@@ -134,7 +186,9 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         self.assertEqual(mapping_source['revision'], 'b4db8cd11157c6d5ae54a0a5edc88dba82aebe9d')
         self.assertIn('Marc Robledo', mapping_source['attribution'])
         self.assertEqual(mapping_source['game_ids'], ['hyrule_warriors'])
+        self.assertEqual(mapping_source['claim_scopes'], ['entity.kind', 'entity.native_id', 'entity.name'])
         self.assertEqual(profile_source['game_ids'], ['hyrule_warriors'])
+        self.assertEqual(profile_source['claim_scopes'], ['game.profile', 'entity.game_id', 'entity.edition'])
 
         wiki_sources = {
             source_id: sources[source_id]
@@ -158,7 +212,7 @@ class GameDataEncyclopediaTests(unittest.TestCase):
             entity for entity in self.dataset['entities']
             if entity['game_id'] == 'hyrule_warriors' and entity['kind'] == 'mechanic'
         ]
-        self.assertEqual(len(mechanics), 4)
+        self.assertEqual(len(mechanics), 3)
         for entity in mechanics:
             source = sources[entity['field_sources']['summary']]
             self.assertIn(source['id'], wiki_sources)
@@ -170,12 +224,22 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         entities = {entity['id']: entity for entity in self.dataset['entities']}
         for entity in entities.values():
             for source_id in entity['field_sources'].values():
-                self.assertIn(entity['game_id'], sources[source_id]['game_ids'])
+                source = sources[source_id]
+                if 'game_ids' in source:
+                    self.assertIn(entity['game_id'], source['game_ids'])
+            for field, source_id in entity['field_sources'].items():
+                source = sources[source_id]
+                if 'claim_scopes' in source:
+                    self.assertIn(f'entity.{field}', source['claim_scopes'])
             for relation in entity.get('relationships', []):
                 target = entities[relation['entity_id']]
                 self.assertEqual((target['game_id'], target['edition']),
                                  (entity['game_id'], entity['edition']))
-                self.assertIn(entity['game_id'], sources[relation['source_id']]['game_ids'])
+                relation_source = sources[relation['source_id']]
+                if 'game_ids' in relation_source:
+                    self.assertIn(entity['game_id'], relation_source['game_ids'])
+                if 'claim_scopes' in relation_source:
+                    self.assertIn('entity.relationships', relation_source['claim_scopes'])
 
         wrong_source = deepcopy(self.dataset)
         hyrule_item = next(
@@ -186,6 +250,15 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'not applicable to the entity game ID'):
             validate_dataset(wrong_source)
 
+        wrong_claim = deepcopy(self.dataset)
+        mechanic = next(
+            entity for entity in wrong_claim['entities']
+            if entity['game_id'] == 'hyrule_warriors' and entity['kind'] == 'mechanic'
+        )
+        mechanic['field_sources']['summary'] = 'hyrule-wiiu-catalog'
+        with self.assertRaisesRegex(ValueError, 'claim scope does not cover entity.summary'):
+            validate_dataset(wrong_claim)
+
         wrong_relationship_source = deepcopy(self.dataset)
         hyrule_entity = next(
             entity for entity in wrong_relationship_source['entities']
@@ -194,10 +267,17 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         hyrule_entity['relationships'] = [{
             'type': 'related-to',
             'entity_id': 'hyrule_warriors:material:001',
-            'source_id': 'few2-binary-templates',
+            'source_id': 'hyrule-wiiu-catalog',
         }]
-        with self.assertRaisesRegex(ValueError, 'relationship source is not applicable'):
+        with self.assertRaisesRegex(ValueError, 'relationship source claim scope'):
             validate_dataset(wrong_relationship_source)
+
+    def test_v1_legacy_sources_may_omit_game_ids_and_claim_scopes(self):
+        legacy = deepcopy(self.dataset)
+        for source in legacy['sources']:
+            if 'claim_scopes' not in source:
+                source.pop('game_ids', None)
+        self.assertEqual(validate_dataset(legacy), legacy)
 
     def test_validator_enforces_dataset_license_consistency(self):
         mixed_claim = deepcopy(self.dataset)
@@ -209,8 +289,48 @@ class GameDataEncyclopediaTests(unittest.TestCase):
         wrong_uniform_claim['dataset_license'] = 'CC BY-SA 3.0'
         for source in wrong_uniform_claim['sources']:
             source['license'] = 'MIT'
+            source['license_uri'] = 'https://opensource.org/license/mit'
         with self.assertRaisesRegex(ValueError, 'must match every source license'):
             validate_dataset(wrong_uniform_claim)
+
+    def test_validator_rejects_noncanonical_license_uri(self):
+        wrong_uri = deepcopy(self.dataset)
+        source = next(source for source in wrong_uri['sources'] if source['id'] == 'hyrule-wiiu-catalog')
+        source['license_uri'] = 'https://creativecommons.org/licenses/by-sa/3.0/'
+        with self.assertRaisesRegex(ValueError, 'license or URL is not allowed'):
+            validate_dataset(wrong_uri)
+
+    def test_validator_requires_claim_scoped_sources_to_declare_game_ids(self):
+        missing_scope_ids = deepcopy(self.dataset)
+        source = next(
+            source for source in missing_scope_ids['sources']
+            if source['id'] == 'hyrule-wiiu-catalog'
+        )
+        del source['game_ids']
+        with self.assertRaisesRegex(ValueError, 'must declare applicable game IDs'):
+            validate_dataset(missing_scope_ids)
+
+    def test_validator_rejects_unknown_or_mismatched_registry_profiles(self):
+        for field, value in (
+            ('title', 'Hyrule Warriors'),
+            ('edition', 'Wii U'),
+            ('platform', 'Nintendo Switch'),
+        ):
+            with self.subTest(profile_field=field):
+                mismatch = deepcopy(self.dataset)
+                hyrule_profile = next(game for game in mismatch['games'] if game['id'] == 'hyrule_warriors')
+                hyrule_profile[field] = value
+                with self.assertRaisesRegex(ValueError, 'mismatches the registry'):
+                    validate_dataset(mismatch)
+
+        unknown_profile = deepcopy(self.dataset)
+        three_hopes = next(game for game in unknown_profile['games'] if game['id'] == 'three_hopes')
+        three_hopes['id'] = 'unregistered_profile'
+        for source in unknown_profile['sources']:
+            if source['id'] in {'local-profile-registry', 'few2-binary-templates'}:
+                source.pop('game_ids', None)
+        with self.assertRaisesRegex(ValueError, 'profile is not registered'):
+            validate_dataset(unknown_profile)
 
     def test_validator_requires_strict_iso_access_dates(self):
         for invalid_date in ('20261022', '2026-2-02', '2026-02-30'):
@@ -260,6 +380,11 @@ class GameDataEncyclopediaTests(unittest.TestCase):
             'entity_id': 'three_hopes:character:000',
             'source_id': 'koeitecmo-wiki-adventure-mode',
         }]
+        relation_source = next(
+            source for source in cross_edition['sources']
+            if source['id'] == 'koeitecmo-wiki-adventure-mode'
+        )
+        relation_source['claim_scopes'].append('entity.relationships')
         with self.assertRaisesRegex(ValueError, 'crosses game editions'):
             validate_dataset(cross_edition)
 

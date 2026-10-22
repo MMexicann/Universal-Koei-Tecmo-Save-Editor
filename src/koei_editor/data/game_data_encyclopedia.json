@@ -40,6 +40,11 @@
       "scope": "Exact Hyrule Warriors game ID, title, Wii U edition label, and platform for the reviewed profile.",
       "game_ids": [
         "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "game.profile",
+        "entity.game_id",
+        "entity.edition"
       ]
     },
     {
@@ -50,9 +55,14 @@
       "license_uri": "https://opensource.org/license/mit",
       "revision": "b4db8cd11157c6d5ae54a0a5edc88dba82aebe9d",
       "attribution": "Copyright (c) 2017-2023 Marc Robledo",
-      "scope": "Native item/material, weapon, and weapon-skill numeric ID/name mappings only; implementation code is not redistributed.",
+      "scope": "Native item/material, named weapon, and weapon-skill numeric ID/name mappings; source-marked unknown/reserved weapons and the blank skill slot are excluded. Implementation code is not redistributed.",
       "game_ids": [
         "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "entity.kind",
+        "entity.native_id",
+        "entity.name"
       ]
     },
     {
@@ -67,6 +77,11 @@
       "revision": "525135",
       "game_ids": [
         "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "entity.kind",
+        "entity.name",
+        "entity.summary"
       ]
     },
     {
@@ -77,10 +92,15 @@
       "license_uri": "https://creativecommons.org/licenses/by-sa/3.0/",
       "accessed_on": "2026-10-22",
       "attribution": "Koei Tecmo Wiki contributors: Sake neko, Humble Novice, Kyosei, Ixbran, Jarie Suisen, Catonfire26, Lapideus, Tailikku.",
-      "scope": "Short paraphrased factual summaries of Wii U Adventure Mode progression; no prose copied verbatim.",
+      "scope": "Short paraphrased fact about Adventure Mode board structure and objective for the Wii U profile; no prose copied verbatim.",
       "revision": "513185",
       "game_ids": [
         "hyrule_warriors"
+      ],
+      "claim_scopes": [
+        "entity.kind",
+        "entity.name",
+        "entity.summary"
       ]
     }
   ],
@@ -99,7 +119,7 @@
       "edition": "Wii U · APP.BIN",
       "platform": "Wii U",
       "profile_source_id": "hyrule-wiiu-profile-registry",
-      "scope_note": "Mapped material, weapon, and skill native ID/name entries plus short source-linked mechanics summaries only; this is not complete gameplay coverage or a claim about other editions."
+      "scope_note": "Player-facing material, named weapon, and nonblank skill ID/name mappings plus three source-linked mechanics summaries. Placeholder/reserved catalog entries are excluded; this is not complete gameplay coverage or a claim about other editions."
     }
   ],
   "entities": [
@@ -5429,21 +5449,6 @@
       }
     },
     {
-      "id": "hyrule_warriors:weapon:060",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "weapon",
-      "native_id": 60,
-      "name": "[unknown weapon]",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
       "id": "hyrule_warriors:weapon:061",
       "game_id": "hyrule_warriors",
       "edition": "Wii U · APP.BIN",
@@ -6164,36 +6169,6 @@
       }
     },
     {
-      "id": "hyrule_warriors:weapon:109",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "weapon",
-      "native_id": 109,
-      "name": "*** Ganon's Rage (Ganon) RESERVED, DO NOT USE ***",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
-      "id": "hyrule_warriors:weapon:110",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "weapon",
-      "native_id": 110,
-      "name": "*** Cucco's Spirit (Cucco) RESERVED, DO NOT USE ***",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
       "id": "hyrule_warriors:weapon:111",
       "game_id": "hyrule_warriors",
       "edition": "Wii U · APP.BIN",
@@ -6770,66 +6745,6 @@
       "kind": "weapon",
       "native_id": 149,
       "name": "Demon King's Frame (Yuga - Picture Frame Level 3)",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
-      "id": "hyrule_warriors:weapon:150",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "weapon",
-      "native_id": 150,
-      "name": "Unknown (Unk - Unk Level 1)",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
-      "id": "hyrule_warriors:weapon:151",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "weapon",
-      "native_id": 151,
-      "name": "Unknown (Unk - Unk Level 2)",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
-      "id": "hyrule_warriors:weapon:152",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "weapon",
-      "native_id": 152,
-      "name": "Unknown (Unk - Unk Level 3)",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "hyrule-wiiu-catalog",
-        "native_id": "hyrule-wiiu-catalog",
-        "name": "hyrule-wiiu-catalog"
-      }
-    },
-    {
-      "id": "hyrule_warriors:skill:000",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "skill",
-      "native_id": 0,
-      "name": "(blank)",
       "field_sources": {
         "game_id": "hyrule-wiiu-profile-registry",
         "edition": "hyrule-wiiu-profile-registry",
@@ -7595,21 +7510,6 @@
       "kind": "mechanic",
       "name": "Adventure Mode map objective",
       "summary": "Adventure Mode places battles on a 16-by-8 board modeled on the original Zelda map. The described goal on each map is to find the key to the boss dungeon and defeat its boss.",
-      "field_sources": {
-        "game_id": "hyrule-wiiu-profile-registry",
-        "edition": "hyrule-wiiu-profile-registry",
-        "kind": "koeitecmo-wiki-adventure-mode",
-        "name": "koeitecmo-wiki-adventure-mode",
-        "summary": "koeitecmo-wiki-adventure-mode"
-      }
-    },
-    {
-      "id": "hyrule_warriors:mechanic:adventure-map-unlocks",
-      "game_id": "hyrule_warriors",
-      "edition": "Wii U · APP.BIN",
-      "kind": "mechanic",
-      "name": "Adventure Mode map unlock sequence",
-      "summary": "Clearing the first Adventure Map opens the Great Sea Map; clearing Great Sea opens Master Quest, and completing Master Quest opens both Termina and Twilight Maps.",
       "field_sources": {
         "game_id": "hyrule-wiiu-profile-registry",
         "edition": "hyrule-wiiu-profile-registry",

@@ -63,6 +63,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
+- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Application performance benchmarks](PERFORMANCE.md)

@@ -611,6 +611,39 @@ class SaveVaultTests(unittest.TestCase):
         self.assertEqual(self.store.list_snapshots(), (record,))
         self.assertTrue(self.store.verify(record.id)[0].valid)
 
+    def test_restore_child_writer_rejects_parent_symlink_swap_after_preflight(self):
+        record = self.snapshot()
+        destination = self.folder / 'raced-restore'
+        displaced = self.folder / 'displaced-raced-restore'
+        outside = self.folder / 'outside-restore-target'
+        outside.mkdir()
+        original_new_child = vault.new_child_bound
+        race_injected = False
+
+        def replace_parent_before_child_write(raw, directory, name, expected_identity):
+            nonlocal race_injected
+            if (not race_injected
+                    and Path(directory).resolve() == destination.resolve()):
+                Path(directory).rename(displaced)
+                try:
+                    Path(directory).symlink_to(outside, target_is_directory=True)
+                except OSError as error:
+                    displaced.rename(destination)
+                    self.skipTest(f'Host cannot create a directory symlink: {error}')
+                race_injected = True
+            return original_new_child(raw, directory, name, expected_identity)
+
+        with patch.object(vault, 'new_child_bound',
+                          side_effect=replace_parent_before_child_write):
+            with self.assertRaises(SaveError):
+                self.store.restore(record.id, destination)
+
+        self.assertTrue(race_injected, 'the test must swap the parent after _new preflight')
+        self.assertEqual(tuple(outside.iterdir()), ())
+        destination.unlink()
+        displaced.rename(destination)
+        self.assertEqual(tuple(destination.iterdir()), ())
+
     def test_restore_stops_between_files_when_created_directory_is_replaced(self):
         record = self.snapshot()
         destination = self.folder / 'restored'

@@ -4308,8 +4308,8 @@
     },
     {
       "path": "src/koei_editor/shared/save_vault.py",
-      "bytes": 39722,
-      "sha256": "ca067abac38baece134e32a0ea4992049ac25fa5caeb73b9f035ac4613e0e662"
+      "bytes": 39530,
+      "sha256": "c74b0bd7855edb2003ef3cf06acd37b2f801be44fd84350a344087522409f4af"
     },
     {
       "path": "src/koei_editor/shared/scalar_presentation.py",

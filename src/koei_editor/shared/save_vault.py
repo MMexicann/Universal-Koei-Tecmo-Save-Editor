@@ -19,6 +19,7 @@ import uuid
 
 from koei_editor.game_registry import get_game
 from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.copy_storage import new_child_bound
 from koei_editor.shared.save_safety import safe_path, reserved_windows_path
 from koei_editor.shared.save_library import _identity, _handle_binding, _linked, _snapshot_digest
 
@@ -221,24 +222,14 @@ def _new(raw, path, *, companion=False):
     if info is not None:
         raise FileExistsError('Save Vault never overwrites an existing destination.')
     parent, parent_info = _ordinary(path.parent, directory=True)
-    temporary = parent / ('.vault-' + uuid.uuid4().hex + '.tmp')
-    # Temp files stay beside their destination, so the final creation is atomic.
-    with temporary.open('xb') as stream:
-        stream.write(raw)
-        stream.flush()
-        os.fsync(stream.fileno())
-    if _read(temporary, len(raw))[0] != raw:
-        raise SaveError('The temporary vault copy failed integrity verification.')
-    _check_directory_identity(parent, (parent_info.st_dev, parent_info.st_ino))
-    if os.name == 'nt':
-        os.rename(temporary, path)
-    else:
-        os.link(temporary, path)
-        temporary.unlink()
+    parent_identity = (parent_info.st_dev, parent_info.st_ino)
+    # Create the child relative to a pinned directory handle. The exclusive
+    # create keeps the no-replace contract while avoiding a path-based staging
+    # write that could be redirected by swapping the parent after preflight.
+    new_child_bound(raw, parent, path.name, parent_identity)
     if _read(path, len(raw), companion=companion)[0] != raw:
         raise SaveError('The created vault copy failed integrity verification.')
     return path
-
 
 def _raw(document):
     raw = getattr(document, 'raw', getattr(document, 'encrypted', None))

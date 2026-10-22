@@ -4603,8 +4603,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 50139,
-      "sha256": "cad482000cdf83becd01db394a0518485586e851bf8f031748b68bda7bd8babc"
+      "bytes": 50374,
+      "sha256": "b45479cf239260f9d161ce5b69a2134f8772d8a976aa1721e12b0d14e8c6d455"
     },
     {
       "path": "tests/test_arland_ps3.py",
@@ -5533,8 +5533,8 @@
     },
     {
       "path": "tests/test_mod_manager_nexus.py",
-      "bytes": 13539,
-      "sha256": "04c4e15b1ffa10ac317f60a022eb8a4671072ec0f8d72d30f9772a0752fa93b4"
+      "bytes": 15392,
+      "sha256": "ad806dd0995dfcd7d684a7ab2eef6a6ffa61e28715b1dfefa520877436795b3c"
     },
     {
       "path": "tests/test_mod_manager_transaction_concurrency.py",
@@ -5693,8 +5693,8 @@
     },
     {
       "path": "tests/test_origins_tools.py",
-      "bytes": 9657,
-      "sha256": "db348f34c35bed8154b1aee891a9b0aeaaf7b5721abc88641ca3ec5aeb8511bf"
+      "bytes": 9782,
+      "sha256": "b385e8653db0cf4c5767ea922ef69bf0faa53fc2e2ced4b2b8e129cd4abb314f"
     },
     {
       "path": "tests/test_origins_weapons.py",
@@ -6413,8 +6413,8 @@
     },
     {
       "path": "tests/test_universal_app.py",
-      "bytes": 53769,
-      "sha256": "6899e8f69081b12cc432018d5b63e047da9ac122b4f0d26baffe80219300e391"
+      "bytes": 56250,
+      "sha256": "92ed5b681f6a438afe6c589969bc90310dcabaaf555174e7a700957464dd4ad8"
     },
     {
       "path": "tests/test_universal_packaging.py",

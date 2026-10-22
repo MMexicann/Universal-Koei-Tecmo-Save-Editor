@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -264,13 +265,12 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         displaced_directory = self.root / 'displaced-playthrough-profiles'
         outside = self.root / 'outside-profile-store'
         outside.mkdir()
-        original_new_child_bound = playthrough_profiles_module.new_child_bound
+        original_publish_new_child_bound = playthrough_profiles_module.publish_new_child_bound
         race_injected = False
 
         def replace_profile_store_before_manifest(data, directory, name, expected_identity):
             nonlocal race_injected
-            if (not race_injected and Path(directory) == profile_directory
-                    and name.endswith('.json')):
+            if not race_injected and Path(directory) == profile_directory:
                 Path(directory).rename(displaced_directory)
                 try:
                     Path(directory).symlink_to(outside, target_is_directory=True)
@@ -279,13 +279,13 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
                     self.skipTest(f'Host cannot create a directory symlink: {error}')
                 race_injected = True
                 try:
-                    return original_new_child_bound(data, directory, name, expected_identity)
+                    return original_publish_new_child_bound(data, directory, name, expected_identity)
                 finally:
                     Path(directory).unlink()
                     displaced_directory.rename(profile_directory)
-            return original_new_child_bound(data, directory, name, expected_identity)
+            return original_publish_new_child_bound(data, directory, name, expected_identity)
 
-        with patch.object(playthrough_profiles_module, 'new_child_bound',
+        with patch.object(playthrough_profiles_module, 'publish_new_child_bound',
                           side_effect=replace_profile_store_before_manifest):
             with self.assertRaises(SaveError):
                 self.make_profile()
@@ -295,7 +295,7 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertEqual(self.store.list_profiles(), ())
 
     @unittest.skipUnless(os.name != 'nt', 'POSIX child-writer failure injection')
-    def test_failed_profile_manifest_write_removes_its_partial_child(self):
+    def test_failed_profile_manifest_write_leaves_no_named_partial_file(self):
         original_write = os.write
         write_count = 0
 
@@ -314,16 +314,66 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertEqual(list(profile_directory.iterdir()), [])
         self.assertEqual(self.store.list_profiles(), ())
 
+    def test_creation_stops_before_exceeding_interrupted_manifest_bound(self):
+        profile_directory, _ = self.store._directory(create=True)
+        for index in range(playthrough_profiles_module.MAX_PENDING_MANIFESTS):
+            (profile_directory / f'.pending-{index:032x}.tmp').write_bytes(b'partial')
+
+        with self.assertRaisesRegex(SaveError, 'too many interrupted'):
+            self.make_profile()
+
+        self.assertEqual(
+            len([item for item in profile_directory.iterdir()
+                 if playthrough_profiles_module._PENDING_MANIFEST.fullmatch(item.name)]),
+            playthrough_profiles_module.MAX_PENDING_MANIFESTS,
+        )
+        self.assertFalse(any(item.suffix == '.json' for item in profile_directory.iterdir()))
+
+    def test_profile_manifest_publish_never_replaces_existing_child(self):
+        from koei_editor.shared.copy_storage import publish_new_child_bound
+
+        directory = self.root / 'manifest-publish'
+        directory.mkdir()
+        info = directory.stat()
+        identity = (info.st_dev, info.st_ino)
+        target = directory / 'existing.json'
+        target.write_bytes(b'keep existing bytes')
+
+        with self.assertRaises(SaveError):
+            publish_new_child_bound(b'new profile bytes', directory, target.name, identity)
+
+        self.assertEqual(target.read_bytes(), b'keep existing bytes')
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux handle-linked manifest writer coverage')
+    def test_post_publish_failure_reports_profile_id_and_keeps_valid_manifest_visible(self):
+        original_fsync = os.fsync
+        calls = 0
+
+        def fail_directory_fsync(file_descriptor):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise OSError('injected directory fsync failure')
+            return original_fsync(file_descriptor)
+
+        with patch.object(copy_storage_module.os, 'fsync', side_effect=fail_directory_fsync):
+            with self.assertRaises(playthrough_profiles_module.ProfilePublicationUncertainError) as caught:
+                self.make_profile()
+
+        profile_id = caught.exception.profile_id
+        self.assertRegex(profile_id, playthrough_profiles_module._PROFILE_ID)
+        self.assertIn(profile_id, str(caught.exception))
+        self.assertEqual(tuple(item.id for item in self.store.list_profiles()), (profile_id,))
+
     @unittest.skipUnless(os.name == 'nt', 'Windows native child writer coverage')
     def test_windows_bound_child_writer_accepts_unicode_string_pointer(self):
-        from koei_editor.shared.copy_storage import new_child_bound
+        from koei_editor.shared.copy_storage import publish_new_child_bound
 
         directory = self.root / 'windows-bound-writer'
         directory.mkdir()
         info = directory.stat()
         data = b'playthrough report fixture'
-
-        output = new_child_bound(data, directory, 'report.json', (info.st_dev, info.st_ino))
+        output = publish_new_child_bound(data, directory, 'report.json', (info.st_dev, info.st_ino))
 
         self.assertEqual(output.read_bytes(), data)
 

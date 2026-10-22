@@ -1,0 +1,9 @@
+{
+  "name": "koei-mod-testing-sandbox",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

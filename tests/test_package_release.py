@@ -317,16 +317,20 @@ class PackagingTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 release.public_path(name)
 
-    def test_contributor_scaffold_and_test_helper_paths_are_narrowly_allowed(self):
+    def test_public_helper_and_sandbox_paths_are_narrowly_allowed(self):
         self.assertEqual(release.public_path('.gitattributes').as_posix(), '.gitattributes')
-        for name in release.ADAPTER_TEMPLATE_FILES | release.PUBLIC_TEST_HELPERS | release.PUBLIC_GUIDES:
+        for name in (release.ADAPTER_TEMPLATE_FILES | release.PUBLIC_TEST_HELPERS | release.PUBLIC_GUIDES
+                     | release.MOD_TESTING_SANDBOX_SOURCES):
             with self.subTest(name=name):
                 self.assertEqual(release.public_path(name).as_posix(), name)
         for name in ('tools/adapter_template/private.dat', 'tools/adapter_template/fixture.json',
                      'tools/adapter_template/another_parser.py', 'tools/adapter_template/nested/new_game_parser.py',
                      'tools/adapter_template/INSTRUCTIONS.md/../private.dat', 'tools/adapter_template/.private.txt',
                      'tools/adapter_template/new_game_parser.py.bak', 'tests/another_helper.py',
-                     'tests/scalar_contract.py/../private.dat', 'tests/helpers/scalar_contract.py'):
+                     'tests/scalar_contract.py/../private.dat', 'tests/helpers/scalar_contract.py',
+                     'tools/mod_testing_sandbox/private.dat',
+                     'tools/mod_testing_sandbox/src/unreviewed.mjs',
+                     'tools/mod_testing_sandbox/test/fixture.json'):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 release.public_path(name)
 

@@ -1,0 +1,30 @@
+name: Mod Testing Sandbox
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/mod_testing_sandbox/**'
+      - 'docs/MOD_TESTING_SANDBOX.md'
+      - '.github/workflows/mod-testing-sandbox.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/mod_testing_sandbox/**'
+      - 'docs/MOD_TESTING_SANDBOX.md'
+      - '.github/workflows/mod-testing-sandbox.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run sandbox security and storage tests
+        run: npm test --prefix tools/mod_testing_sandbox

@@ -1363,8 +1363,8 @@
     },
     {
       "path": "src/koei_editor/application.py",
-      "bytes": 81092,
-      "sha256": "c17a5f11e56d12965bcff8a21ad91c2707219c187b7fae068dc306f7b91d60b7"
+      "bytes": 82923,
+      "sha256": "67f5550ec6af73bc38bb339760e0371b2f39b2723b60cb9bd4c8e58aed7dde61"
     },
     {
       "path": "src/koei_editor/automation_cli.py",
@@ -4022,6 +4022,11 @@
       "sha256": "e82ba951d840a0bf2833317089c168c027cbfd7b8e632db107e6303321d5d699"
     },
     {
+      "path": "src/koei_editor/shared/game_troubleshooting_gui.py",
+      "bytes": 28720,
+      "sha256": "bf81e0278491386c5f5898b25fcfb72b471e8c253a730b2232d9076ed729d9d2"
+    },
+    {
       "path": "src/koei_editor/shared/help_center.py",
       "bytes": 17601,
       "sha256": "ae22b563420b863107fdc63743dd49af0511eb682b783a624bfd1624f2cc7df8"
@@ -4043,8 +4048,8 @@
     },
     {
       "path": "src/koei_editor/shared/localization.py",
-      "bytes": 14405,
-      "sha256": "d88ac6887c68c47be3cd7363bee2885d311bd2026b15fa2a596341488607b0c4"
+      "bytes": 14507,
+      "sha256": "49e80db841931ca495f42f28b6164b4e2ad79f0c2a14078ff3279980b115919e"
     },
     {
       "path": "src/koei_editor/shared/mod_manager.py",
@@ -4338,8 +4343,8 @@
     },
     {
       "path": "tests/test_application_shell.py",
-      "bytes": 42269,
-      "sha256": "9795601b6867b0a073ac1df5893a4f908dadba2069a357d4cde8052ca25aef82"
+      "bytes": 42495,
+      "sha256": "3050f917f98ae8c57a36e80a9b52ecfbc67fa9edd0c529da376b7159647d94ed"
     },
     {
       "path": "tests/test_arland_ps3.py",

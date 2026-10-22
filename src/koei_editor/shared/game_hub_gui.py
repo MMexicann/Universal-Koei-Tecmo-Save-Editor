@@ -120,7 +120,9 @@ class GameHubWorkspace:
             self.discover()
 
     def focus_search(self):
-        self.search_entry.focus_set()
+        # Ctrl+F is an explicit focus request. On Windows, focus_set can leave
+        # focus on the root after a toplevel key binding handles the event.
+        self.search_entry.focus_force()
         self.search_entry.selection_range(0, 'end')
         return 'break'
 

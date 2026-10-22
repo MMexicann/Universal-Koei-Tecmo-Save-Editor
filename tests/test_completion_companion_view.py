@@ -208,7 +208,8 @@ class CompletionCompanionViewTests(unittest.TestCase):
 
     def test_achievement_status_is_unavailable_until_a_provider_snapshot_arrives(self):
         self.assertIn("Unavailable", self.view.achievement_status.get())
-        self.assertIn("No achievement states are claimed", self.view.achievement_summary.get())
+        self.assertIn("Check the source to retrieve verified achievement states.",
+                      self.view.achievement_summary.get())
         self.assertEqual(self.view.achievement_tree.get_children(), ())
 
     def test_manual_checklist_add_toggle_and_remove_are_persisted_as_manual(self):
@@ -218,7 +219,7 @@ class CompletionCompanionViewTests(unittest.TestCase):
         entry_id = self.view.tree.get_children()[0]
         self.assertEqual(self.view.tree.item(entry_id, "values"),
                          ("Manual", "Not checked", "Clear the final chapter"))
-        self.assertEqual(self.view.status.get(), "1 manual entries · 0 manually checked")
+        self.assertEqual(self.view.status.get(), "1 manual entry · 0 manually checked")
         self.view.tree.selection_set(entry_id)
         self.assertTrue(self.view.toggle_selected())
         self.assertEqual(self.store.load("dw3")[0].checked, True)

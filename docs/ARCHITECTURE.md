@@ -17,7 +17,7 @@ developer guides remain in the Source ZIP.
 | `src/koei_editor/game_registry.py` | Explicit implemented adapters, extensions, platform and qualified module paths |
 | `src/koei_editor/supported_games.py` | Canonical supported-game inventory derived from the registry |
 | `src/koei_editor/games/<game>/` | Dedicated codecs, parsers, editing rules and presentations |
-| `src/koei_editor/shared/` | Scalar contract/GUI, ciphers, appearance, preferences, copied-save safety/storage |
+| `src/koei_editor/shared/` | Scalar contract/GUI, ciphers, appearance, preferences, controller profiles, copied-save safety/storage |
 | `src/koei_editor/research/<game>/` | Unregistered inspection and codec candidates |
 | `src/koei_editor/data/` | Reviewed runtime JSON definitions and support metadata |
 | `tools/` | Windows build, package verification, manifest and inventory maintenance |

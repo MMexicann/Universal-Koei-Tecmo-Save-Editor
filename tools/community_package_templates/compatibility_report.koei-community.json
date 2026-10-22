@@ -1,0 +1,22 @@
+{
+  "schema": "koei-tecmo-community-package",
+  "version": 1,
+  "kind": "compatibility_report",
+  "id": "community.sample-compatibility-report",
+  "title": "Fictional compatibility note",
+  "author": "Community example",
+  "game_id": "sample_game",
+  "platform": "any",
+  "game_version": null,
+  "description": "Fictional author note; it is not independently verified.",
+  "payload": {
+    "entries": [
+      {
+        "component": "mod.example-quality-notes",
+        "version": "1.0",
+        "status": "unknown",
+        "details": "Fictional example only; no compatibility testing was performed."
+      }
+    ]
+  }
+}

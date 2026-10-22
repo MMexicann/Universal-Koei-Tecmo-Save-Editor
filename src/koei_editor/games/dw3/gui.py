@@ -71,9 +71,14 @@ def weapon_bonus_label(item):
 
 class Editor(Appearance):
     def __init__(self, root, parent=None, theme=None, on_theme=None,
-                 preferences_path=None, persist_preferences=True):
+                 preferences_path=None, persist_preferences=True,
+                 workshop_provider=None):
         self.root = root
         self.on_theme = on_theme
+        if isinstance(workshop_provider, str):
+            from importlib import import_module
+            workshop_provider = import_module(workshop_provider)
+        self.workshop_provider = workshop_provider
         self.preferences_path = preferences_path
         self._persist_theme = parent is None and persist_preferences
         if theme is None:
@@ -157,11 +162,24 @@ class Editor(Appearance):
         self.notebook = ttk.Notebook(outer, height=360)
         self.notebook.pack(fill='both', expand=True)
         self.tabs = {}
-        for name in ('Dashboard', 'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves'):
+        tab_names = ('Dashboard', 'Completion Companion', 'Officers', 'Items', 'Weapons',
+                     'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves')
+        if self.workshop_provider is not None:
+            tab_names += ('Character & Weapon Workshop',)
+        for name in tab_names:
             tab = ttk.Frame(self.notebook, padding=12)
             self.notebook.add(tab, text=name)
             self.tabs[name] = tab
+        self.workshop_view = None
+        if self.workshop_provider is not None:
+            from koei_editor.shared.build_workshop_gui import BuildWorkshopView
+            self.workshop_view = BuildWorkshopView(
+                self.tabs['Character & Weapon Workshop'], game_id='dw3',
+                platform_id=self.workshop_provider.PLATFORM_ID,
+                on_stage=self.stage_workshop_plan, theme=self.theme_name.get())
+            self.workshop_view.pack(fill='both', expand=True)
         self.build_dashboard()
+        self.build_completion_companion()
         self.build_officers()
         self.build_items()
         self.build_weapons()
@@ -230,6 +248,12 @@ class Editor(Appearance):
             on_navigate=self.navigate_dashboard, theme=self.theme_name.get())
         self.dashboard_view.pack(fill='both', expand=True)
 
+    def build_completion_companion(self):
+        from koei_editor.shared.completion_checklist_view import CompletionChecklistView
+        self.completion_companion_view = CompletionChecklistView(
+            self.tabs['Completion Companion'], 'dw3')
+        self.completion_companion_view.pack(fill='both', expand=True)
+
     def refresh_dashboard(self):
         from koei_editor.shared.progression import ProgressionDashboard
         if self.document is None:
@@ -247,6 +271,39 @@ class Editor(Appearance):
                                         note='Dashboard unavailable for this layout. Existing editing forms remain available.')
         self.dashboard_view.set_dashboard(data)
         self._dashboard_document = self.document
+
+    def refresh_workshop(self):
+        if self.workshop_view is None:
+            return
+        if self.document is None:
+            self.workshop_view.set_provider_data((), {})
+            return
+        try:
+            plans, metadata, stats = self.workshop_provider.workshop_view_data(self.document)
+            self.workshop_view.set_provider_data(plans, metadata, stats)
+        except Exception:
+            # Keep optional projections isolated from the validated editor.
+            self.workshop_view.set_provider_data((), {})
+            self.workshop_view.status.set(
+                'Mapped workshop data is unavailable for this opened save. Existing editing forms remain available.')
+
+    def stage_workshop_plan(self, plan):
+        if self.document is None:
+            raise ValueError('Open a qualified save copy before staging a build plan.')
+        changes = self.workshop_provider.changes_from_build_plan(
+            self.document, plan, self.changes.values())
+        conflicts = [change for change in changes
+                     if (change.category, change.index, change.field) in self.changes
+                     and self.changes[(change.category, change.index, change.field)].value != change.value]
+        if conflicts and not messagebox.askyesno(
+                'Replace Pending Fields',
+                'This plan will replace pending edits to these mapped fields:\n\n'
+                + '\n'.join(f'{change.category} {change.index} · {change.field}'
+                            for change in conflicts[:12])
+                + (f'\n...and {len(conflicts) - 12:,} more.' if len(conflicts) > 12 else '')
+                + '\n\nOther pending edits remain staged. You can Undo after staging and Review Changes before saving.'):
+            return False
+        return self.stage_many(changes)
 
     @experimental_session
     def navigate_dashboard(self, field_id):
@@ -1395,6 +1452,7 @@ class Editor(Appearance):
     @experimental_session
     def refresh(self):
         self.refresh_dashboard()
+        self.refresh_workshop()
         if self.document is None: return
         self.refresh_officers(); self.refresh_items(); self.refresh_weapons(); self.refresh_bodyguards()
         self.refresh_story_status()

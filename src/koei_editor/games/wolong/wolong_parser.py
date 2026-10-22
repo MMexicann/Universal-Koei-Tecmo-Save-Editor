@@ -80,8 +80,9 @@ FORMAT = Format(GAME_ID, 'Wo Long: Fallen Dynasty (PC)', SAVE_SIZE, (),
                 'ordinary stacks use reduction limits by default while retaining at least one. '
                 'Experimental numeric editing permits increases within the native '
                 'integer widths, with unverified gameplay capacity. '
-                'Enabled existing battle sets may receive a custom printable ASCII '
-                'name of up to 16 bytes (a conservative editor limit). '
+                'Experimental custom-name editing for enabled existing battle sets '
+                'uses up to 16 printable ASCII bytes (a conservative editor limit); '
+                'a positive native enabled-set rename remains unverified. '
                 'Equipment, skills, level, stored Qi and story are inspected without '
                 'changing their identities, dependencies or history. Genuine parsing '
                 'and no-op reconstruction are verified; edited game-load testing '
@@ -395,7 +396,9 @@ def record_label(slot, group='Available currencies'):
 def field_hint(document, key):
     field = field_map(document)[key if isinstance(key, str) else key.id]
     if field.group == 'Battle set names':
-        return ('Rename this enabled existing battle set using 1..16 printable ASCII bytes. '
+        return ('Experimental custom-name edit: no native enabled-set rename '
+                'or controlled rename pair has been validated. '
+                'Rename this enabled existing battle set using 1..16 printable ASCII bytes. '
                 'This is a conservative editor limit, not a recovered game maximum. '
                 'The official update history warns that unsupported characters may not '
                 'save. Gear, Virtues, spells and enable flags stay intact. Max is disabled; '

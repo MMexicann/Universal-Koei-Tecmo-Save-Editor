@@ -26,17 +26,29 @@ def build_args(root=ROOT, *, standalone=False):
             f'UniversalKoeiTecmoSaveEditor-v{VERSION}', '--paths', str(root / 'src'),
             '--distpath', str(root / ('dist' + suffix)), '--workpath', str(root / ('build' + suffix)),
             '--specpath', str(root / ('build' + suffix))]
+    args.extend(['--additional-hooks-dir', str(root / 'tools' / 'pyinstaller_hooks')])
     for source, destination in DATA:
         args.extend(['--add-data', str(root / source) + os.pathsep + destination])
     for game in ALL_ADAPTERS:
         for module in dict.fromkeys((game.editor_module, game.parser_module,
-                                     game.scalar_backend, game.achievement_source)):
+                                     game.scalar_backend, getattr(game, 'achievement_source', None),
+                                     getattr(game, 'workshop_module', None))):
             if module is not None:
                 args.extend(['--hidden-import', module])
     for endpoint in ENDPOINTS.values():
         if endpoint.conversion_only:
             args.extend(['--hidden-import', endpoint.backend.__name__])
     for module in dict.fromkeys(profile.backend.__name__ for profile in RESEARCH_PROFILES.values()):
+        args.extend(['--hidden-import', module])
+    # These adapters are loaded on demand. Pin the dynamically selected
+    # decoders/loaders so both frozen builds contain only the supported formats.
+    for module in (
+            'koei_editor.research.asset_explorer.gui',
+            'koei_editor.research.asset_explorer.media',
+            'miniaudio', '_miniaudio', 'cffi', '_cffi_backend', 'pycparser', 'numpy', 'trimesh',
+            'trimesh.exchange.load',
+            'trimesh.exchange.obj', 'trimesh.exchange.stl',
+            'trimesh.exchange.ply', 'trimesh.exchange.gltf'):
         args.extend(['--hidden-import', module])
     # The thin launcher uses an absolute package import. __main__.py remains
     # the module entry point, whose relative imports need python -m context.

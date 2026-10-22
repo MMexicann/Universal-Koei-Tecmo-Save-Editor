@@ -19,22 +19,67 @@ TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_rele
               'tools/check_community_plugins.py', 'tools/community_plugin_template/example.plugin.json',
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
               'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
-              'tools/requirements/build.txt', 'tools/requirements/dev.txt'}
+              'tools/requirements/build.txt', 'tools/requirements/dev.txt',
+              'tools/pyinstaller_hooks/hook-trimesh.py'}
+COMMUNITY_TEMPLATE_FILES = frozenset(
+    f'tools/community_package_templates/{kind}.koei-community.json'
+    for kind in ('character_build', 'mod_list', 'configuration_preset',
+                 'playthrough_manifest', 'compatibility_report'))
+TOOL_FILES.update({'tools/check_community_packages.py'} | COMMUNITY_TEMPLATE_FILES)
+COMMUNITY_SCHEMA_FILES = frozenset(
+    f'docs/schemas/koei-community-{kind}-v1.schema.json'
+    for kind in ('character_build', 'mod_list', 'configuration_preset',
+                 'playthrough_manifest', 'compatibility_report'))
+SOURCE_ONLY_GUIDES = frozenset({'docs/COMMUNITY_TOOLKIT.md'})
 ADAPTER_TEMPLATE_FILES = {'tools/adapter_template/new_game_parser.py', 'tools/adapter_template/new_game_editor.py',
                           'tools/adapter_template/contract_test.py', 'tools/adapter_template/INSTRUCTIONS.md'}
 PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/__init__.py'}
 PUBLIC_GUIDES = {'src/koei_editor/AGENTS.md', 'src/koei_editor/games/AGENTS.md',
                 'src/koei_editor/shared/AGENTS.md', 'src/koei_editor/research/AGENTS.md',
                 'src/koei_editor/data/AGENTS.md', 'tests/README.md', 'licenses/README.md'}
+# Exact static-tool files are public in the Source ZIP, not Windows runtime data.
+LOCALIZATION_STUDIO_FILES = {
+    'localization-studio/LICENSE',
+    'localization-studio/README.md',
+    'localization-studio/index.html',
+    'localization-studio/package.json',
+    'localization-studio/styles.css',
+    'localization-studio/docs/RESEARCH.md',
+    'localization-studio/docs/SUPPORTED_FORMATS.md',
+    'localization-studio/reports/validation-report.json',
+    'localization-studio/src/app.mjs',
+    'localization-studio/src/formats.mjs',
+    'localization-studio/tests/browser-smoke.html',
+    'localization-studio/tests/formats.test.mjs',
+    'localization-studio/tests/run-browser-smoke.mjs',
+}
+MOD_TESTING_SANDBOX_SOURCES = {
+    '.github/workflows/mod-testing-sandbox.yml',
+    'docs/MOD_TESTING_SANDBOX.md',
+    'tools/mod_testing_sandbox/README.md',
+    'tools/mod_testing_sandbox/index.html',
+    'tools/mod_testing_sandbox/package.json',
+    'tools/mod_testing_sandbox/scripts/build.mjs',
+    'tools/mod_testing_sandbox/src/main.mjs',
+    'tools/mod_testing_sandbox/src/sandbox-core.mjs',
+    'tools/mod_testing_sandbox/src/styles.css',
+    'tools/mod_testing_sandbox/src/workspace-store.mjs',
+    'tools/mod_testing_sandbox/test/security.test.mjs',
+    'tools/mod_testing_sandbox/test/workspace-store.test.mjs',
+    'tools/mod_testing_sandbox/test/workshop-folder-ui.test.mjs',
+}
 RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json',
                 'verified_limits.json', 'item_limits.json', 'native_enums.json',
                 'bodyguard_growth.json', 'bodyguard_items.json', 'bodyguard_weapons.json',
                 'weapon_bonus_rules.json', 'progression_routes.json', 'collection_unlocks.json',
                 'origins_evidence.json', 'dw6_migration_evidence.json', 'support_catalog.json',
-                'save_discovery.json', 'game_data_encyclopedia.json')
+                'save_discovery.json', 'game_data_encyclopedia.json',
+                'game_troubleshooting.json', 'version_compatibility.json')
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
-RUNTIME_GUIDES = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+RUNTIME_GUIDES = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/ASSET_EXPLORER.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                  'docs/CONTROLLER_INPUT_PROFILES.md',
+                  'docs/GAME_TROUBLESHOOTING.md',
                   'docs/WARRIORS_PS4_TRANSFERS.md',
                   'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
                   'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'docs/PROGRESSION_DASHBOARDS.md', 'docs/EDITOR_WORKSPACE.md', 'docs/ORIGINS_REQUEST_STATUS.md',
@@ -43,10 +88,24 @@ RUNTIME_GUIDES = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', '
                   'docs/DW7XL_CONVERSION.md', 'docs/DW7XL_WEAPONS.md',
                   'docs/DW7XL_PS3.md', 'docs/NOA2_SWITCH_FORMAT.md',
                   'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
-                  'docs/FIELD_PINS_AND_REVIEWS.md')
+                  'docs/FIELD_PINS_AND_REVIEWS.md', 'docs/SMART_PLAYTHROUGH_PROFILES.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
-                   'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt')
-WINDOWS_DOCS = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                   'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt',
+                   'licenses/G1Tool-MIT.txt', 'licenses/miniaudio-MIT.txt',
+                   'licenses/trimesh-MIT.txt', 'licenses/numpy-BSD-3-Clause.txt',
+                   'licenses/numpy-libdivide.txt', 'licenses/numpy-pythoncapi-compat.txt',
+                   'licenses/numpy-highway.txt', 'licenses/numpy-dragon4.txt',
+                   'licenses/numpy-x86-simd-sort.txt', 'licenses/numpy-svml.txt',
+                   'licenses/numpy-pocketfft.txt', 'licenses/numpy-lapack-lite.txt',
+                   'licenses/numpy-ma.txt', 'licenses/numpy-random.txt',
+                   'licenses/numpy-random-distributions.txt', 'licenses/numpy-mt19937.txt',
+                   'licenses/numpy-pcg64.txt', 'licenses/numpy-philox.txt',
+                   'licenses/numpy-sfc64.txt', 'licenses/numpy-splitmix64.txt',
+                   'licenses/cffi-MIT-0.txt', 'licenses/cffi-libffi-MIT.txt',
+                   'licenses/pycparser-BSD-3-Clause.txt')
+WINDOWS_DOCS = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
+                'docs/CONTROLLER_INPUT_PROFILES.md',
+                'docs/GAME_TROUBLESHOOTING.md',
                 'docs/WARRIORS_PS4_TRANSFERS.md',
                 'docs/WO3U_PS4_RESOURCE_TRANSFER.md',
                 'docs/COMMUNITY_PLUGINS.md', 'docs/REAL_GAME_VALIDATION.md', 'README.md', 'LICENSE', 'docs/CHANGELOG.md', 'docs/THIRD_PARTY_NOTICES.md',
@@ -57,6 +116,7 @@ WINDOWS_DOCS = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'do
                 'docs/DW7XL_WEAPONS.md', 'docs/DW7XL_PS3.md', 'docs/NOA2_SWITCH_FORMAT.md',
                 'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
                 'docs/FIELD_PINS_AND_REVIEWS.md',
+                'docs/SMART_PLAYTHROUGH_PROFILES.md',
                 'docs/FATAL_FRAME2_PS2_FORMAT.md', 'docs/TROY_PS3_FORMAT.md', 'docs/WARRIORS_V26_DEPTH.md',
                 'docs/BUILDING.md', 'docs/ARCHITECTURE.md', 'docs/VALIDATION.md', 'docs/EXPANSION_COVERAGE.md',
                 'docs/DYNASTY_RESEARCH.md', 'docs/OROCHI_RESEARCH.md', 'docs/SAMURAI_RESEARCH.md',
@@ -70,6 +130,7 @@ MODULE_NAME = re.compile(r'koei_editor(?:\.[A-Za-z_]\w*)*\Z')
 CODEC_LICENSES = {
     'src/koei_editor/games/sophie2/atelier_sophie2_codec.py': 'licenses/atelier-sophie2-save-editor-MIT.txt',
     'src/koei_editor/research/katana/katana_codec.py': 'licenses/katana-save-data-resigner-MIT.txt',
+    'src/koei_editor/research/asset_explorer/g1t.py': 'licenses/G1Tool-MIT.txt',
 }
 
 
@@ -128,7 +189,9 @@ def public_path(name):
             or any(part.startswith('.') for part in path.parts) and path.parts[0] not in {'.github', '.gitignore', '.gitattributes'}):
         raise ValueError('Manifest path escapes or aliases the source tree.')
     parts = path.parts
-    allowed = name in ROOT_FILES or name in TOOL_FILES or name in ADAPTER_TEMPLATE_FILES or name in PUBLIC_TEST_HELPERS or name in PUBLIC_GUIDES
+    allowed = (name in ROOT_FILES or name in TOOL_FILES or name in ADAPTER_TEMPLATE_FILES
+               or name in PUBLIC_TEST_HELPERS or name in PUBLIC_GUIDES
+               or name in MOD_TESTING_SANDBOX_SOURCES)
     if parts[:2] == ('src', 'koei_editor'):
         if path.suffix == '.py':
             allowed = all(part.isidentifier() for part in parts[1:-1]) and path.stem.isidentifier()
@@ -137,10 +200,13 @@ def public_path(name):
     elif parts[0] == 'docs':
         allowed = (len(parts) == 2 and path.suffix == '.md') or (
             len(parts) == 3 and parts[1] == 'releases' and bool(re.fullmatch(r'v\d+\.\d+(?:\.\d+)?\.md', parts[2])))
+        allowed = allowed or name in COMMUNITY_SCHEMA_FILES
     elif parts[0] == 'tests':
         allowed = allowed or (len(parts) == 2 and parts[1].startswith('test_') and path.suffix == '.py')
     elif parts[0] == 'licenses':
         allowed = allowed or (len(parts) == 2 and path.suffix in {'.txt', '.terms'})
+    elif parts[0] == 'localization-studio':
+        allowed = name in LOCALIZATION_STUDIO_FILES
     elif parts[:2] == ('.github', 'workflows'):
         allowed = len(parts) == 3 and path.suffix in {'.yml', '.yaml'}
     if not allowed or name == MANIFEST:
@@ -201,7 +267,8 @@ def _required_runtime(root, sources):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'Game':
             values = list(node.args[7:9])
             values.extend(keyword.value for keyword in node.keywords
-                          if keyword.arg in ('editor_module', 'parser_module', 'scalar_backend'))
+                          if keyword.arg in ('editor_module', 'parser_module', 'scalar_backend',
+                                             'workshop_module'))
             pending.extend(value.value for value in values if isinstance(value, ast.Constant) and type(value.value) is str)
     required, visited = set(), set()
     while pending:
@@ -244,6 +311,9 @@ def verified_sources(root=ROOT):
         sources[name] = data
     required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'docs/RELEASE_NOTES.md',
                                                 '.github/workflows/windows-release.yml'}
+    required.update(SOURCE_ONLY_GUIDES | COMMUNITY_SCHEMA_FILES)
+    if (root / 'tools/mod_testing_sandbox').is_dir():
+        required.update(MOD_TESTING_SANDBOX_SOURCES)
     required.update(_required_runtime(root, sources))
     required.update(PACKAGE_ROOT + '/data/' + name for name in RUNTIME_DATA)
     required.update(RUNTIME_LICENSES)
@@ -251,6 +321,8 @@ def verified_sources(root=ROOT):
         required.add('.gitattributes')
     if (root / 'tools/adapter_template').exists():
         required.update(ADAPTER_TEMPLATE_FILES | {'tests/scalar_contract.py'})
+    if (root / 'localization-studio').is_dir():
+        required.update(LOCALIZATION_STUDIO_FILES)
     for codec, notice in CODEC_LICENSES.items():
         if codec in required or codec in sources:
             required.add(notice)
@@ -309,19 +381,37 @@ def _bundled_path(name):
     return normalized, path
 
 
-# The application has no third-party Windows runtime packages. External native
-# libraries are CPython, Tcl/Tk and their ordinary Windows dependencies; a game
-# binary or arbitrary extension is not admitted just because it has a DLL suffix.
+# External native runtime modules remain an explicit allowlist. The asset
+# inspection stack needs pinned miniaudio, cffi and NumPy extensions in addition
+# to CPython/Tcl/Tk; an arbitrary extension is never admitted by its suffix.
 NATIVE_DLL = re.compile(
     r'(?:python(?:3|3\d+)\.dll|vcruntime140(?:_1)?\.dll|msvcp140\.dll|ucrtbase\.dll|'
     r'api-ms-win-[a-z0-9-]+\.dll|lib(?:crypto|ssl)-\d+(?:-x64)?\.dll|'
     r'libffi-\d+\.dll|(?:lib)?(?:tcl|tk)\d+t?\.dll|tcl9tk90\.dll|'
     r'libtommath\.dll|zlib1\.dll|sqlite3\.dll)\Z', re.I)
+NUMPY_DLLS = frozenset({
+    'numpy.libs/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
+    'numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll',
+})
 STDLIB_EXTENSIONS = frozenset({
     '_asyncio', '_bz2', '_ctypes', '_decimal', '_elementtree', '_hashlib', '_lzma',
     '_multiprocessing', '_overlapped', '_queue', '_socket', '_sqlite3', '_ssl',
     '_tkinter', '_uuid', '_wmi', '_zoneinfo', '_zstd', 'pyexpat', 'select', 'unicodedata', 'zlib',
 })
+ASSET_EXTENSION = re.compile(r'(?:_miniaudio|_cffi_backend)(?:\.cp314-win_amd64)?\.pyd\Z', re.I)
+NUMPY_EXTENSION = re.compile(
+    r'numpy/(?:_core/(?:_multiarray_umath|_multiarray_tests|_operand_flag_tests|_rational_tests|_simd|_struct_ufunc_tests|_umath_tests)|'
+    r'fft/_pocketfft_umath|linalg/(?:_umath_linalg|lapack_lite)|'
+    r'random/(?:bit_generator|mtrand|_bounded_integers|_common|_generator|_mt19937|_pcg64|_philox|_sfc64))'
+    r'(?:\.cp314-win_amd64)?\.pyd\Z', re.I)
+# Exact resources from the hash-locked trimesh 5.1.1 wheel. Optional viewers,
+# executable templates and format-schema archives are outside our preview scope.
+TRIMESH_RESOURCES = {
+    'trimesh/resources/creation.json': '8bbd9d1eec4d3a4da06e74a36215864c42fe5b37967564757b7b7fde20cfd18b',
+    'trimesh/resources/units_to_inches.json': 'aeaffb35476bfb1a6d168317f5a842bb838b3c62f171c2ab6a02a2e4f75b4f6c',
+    'trimesh/resources/color_map.json.gzip': 'd0476d6b5697444c8b359fd933e7effde10023329aeddbebf132d803ec031735',
+    'trimesh/resources/templates/ply.json': '3317874b902a0eac387906ff7eb900a32c31a642718d275c1eef43c8f5e93640',
+}
 TCL_PACKAGE_DLLS = frozenset({'_tcl_data/dde1.4/tcldde14.dll', '_tcl_data/reg1.3/tclreg13.dll'})
 TCL_RESOURCE_SUFFIXES = frozenset({'', '.tcl', '.tm', '.msg', '.enc', '.txt', '.n'})
 
@@ -379,6 +469,11 @@ def _verify_tcl_zip(label, data, prefix, entry):
 def _validate_runtime_file(name, data, expected):
     """Apply the same resource/native/privacy rules inside either distribution."""
     normalized, relative = _bundled_path(name)
+    if normalized in TRIMESH_RESOURCES:
+        if hashlib.sha256(data).hexdigest() != TRIMESH_RESOURCES[normalized]:
+            raise ValueError(f'Bundled trimesh resource differs from the pinned wheel: {name}')
+        scan_bundled_data(name, data)
+        return normalized
     if relative.suffix.casefold() == '.json' and normalized not in expected:
         raise ValueError(f'Unreviewed JSON data in runtime: {name}')
     if normalized in expected:
@@ -387,10 +482,14 @@ def _validate_runtime_file(name, data, expected):
     elif normalized == 'base_library.zip':
         _verify_library_zip(name, data, require_stdlib=True)
     elif relative.suffix.casefold() in {'.dll', '.pyd'}:
-        approved = (normalized in TCL_PACKAGE_DLLS or (len(relative.parts) == 1
-                    and (NATIVE_DLL.fullmatch(relative.name)
-                         if relative.suffix.casefold() == '.dll'
-                         else relative.stem in STDLIB_EXTENSIONS)))
+        approved = (normalized in TCL_PACKAGE_DLLS
+                    or (relative.suffix.casefold() == '.dll' and len(relative.parts) == 1
+                        and NATIVE_DLL.fullmatch(relative.name))
+                    or (relative.suffix.casefold() == '.dll' and normalized in NUMPY_DLLS)
+                    or (relative.suffix.casefold() == '.pyd' and (
+                        len(relative.parts) == 1 and relative.stem in STDLIB_EXTENSIONS
+                        or len(relative.parts) == 1 and ASSET_EXTENSION.fullmatch(relative.name)
+                        or NUMPY_EXTENSION.fullmatch(normalized))))
         if not approved or not data.startswith(b'MZ'):
             raise ValueError(f'Unreviewed or invalid native runtime dependency: {name}')
         if normalized == 'tcl90.dll':
@@ -410,6 +509,7 @@ def _validate_runtime_inventory(entries, expected):
     else:
         required.update({'tcl86t.dll', 'tk86t.dll', '_tcl_data/init.tcl', '_tk_data/tk.tcl'})
     required.update(expected)
+    required.update(TRIMESH_RESOURCES)
     missing = required - entries.keys()
     if len([name for name in entries if re.fullmatch(r'python3\d+\.dll', name)]) != 1:
         missing.add('one versioned CPython runtime DLL')
@@ -470,7 +570,8 @@ def _verify_archive(executable, sources, archive_reader=None, require_complete_r
         if normalized.casefold() in seen:
             raise ValueError(f'Duplicate file in executable archive: {name}')
         seen.add(normalized.casefold())
-        if path.suffix.lower() == '.json' and normalized not in expected:
+        if (path.suffix.lower() == '.json' and normalized not in expected
+                and normalized not in TRIMESH_RESOURCES):
             raise ValueError(f'Unreviewed JSON data in executable archive: {name}')
         data = archive.extract(name)
         scan_bundled_data(name, data)
@@ -487,6 +588,8 @@ def _verify_archive(executable, sources, archive_reader=None, require_complete_r
                 raise ValueError(f'Invalid standalone embedded runtime data: {name}')
             internal = _validate_runtime_file(normalized, data, expected)
             runtime[internal] = data
+        elif normalized in TRIMESH_RESOURCES:
+            _validate_runtime_file(normalized, data, expected)
         elif path.suffix == '.zip':
             _verify_library_zip(name, data)
         elif path.suffix.casefold() in {'.dll', '.pyd'}:

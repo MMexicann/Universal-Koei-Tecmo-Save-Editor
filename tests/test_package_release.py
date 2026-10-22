@@ -22,8 +22,17 @@ class PackagingTests(unittest.TestCase):
         self.area.mkdir(parents=True, exist_ok=True)
         self.root = self.area / uuid.uuid4().hex
         self.root.mkdir()
+        self.trimesh_resources = {name: ('Synthetic reviewed resource: ' + name).encode()
+                                  for name in release.TRIMESH_RESOURCES}
+        resource_hashes = patch.dict(release.TRIMESH_RESOURCES,
+                                     {name: hashlib.sha256(data).hexdigest()
+                                      for name, data in self.trimesh_resources.items()}, clear=True)
+        resource_hashes.start()
+        self.addCleanup(resource_hashes.stop)
         self.sources = {name: b'Public document\n' for name in release.WINDOWS_DOCS}
         self.sources.update({name: b'# Public build helper\n' for name in release.TOOL_FILES})
+        self.sources.update({name: b'# Public community schema or guide\n'
+                             for name in release.COMMUNITY_SCHEMA_FILES | release.SOURCE_ONLY_GUIDES})
         self.sources.update({f'src/koei_editor/data/{name}': b'{}' for name in release.RUNTIME_DATA})
         self.sources.update({name: b'Reviewed runtime license text\n' for name in release.RUNTIME_LICENSES})
         self.sources.update({
@@ -72,7 +81,8 @@ class PackagingTests(unittest.TestCase):
             self.write_runtime_resources()
 
     def write_runtime_resources(self):
-        for name, data in release.embedded_metadata(self.sources).items():
+        resources = {**release.embedded_metadata(self.sources), **self.trimesh_resources}
+        for name, data in resources.items():
             path = self.runtime / '_internal' / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data)
@@ -84,7 +94,7 @@ class PackagingTests(unittest.TestCase):
         (self.root / release.MANIFEST).write_text(json.dumps({'version': '1.0', 'files': entries}), encoding='utf-8')
 
     def archive_fixture(self):
-        blobs = dict(release.embedded_metadata(self.sources))
+        blobs = {**release.embedded_metadata(self.sources), **self.trimesh_resources}
         blobs['PYZ.pyz'] = b'compressed archive'
         module = [b'public Python module']
         pyz = SimpleNamespace(toc={'koei_editor.application': (0, 0, 0)}, extract=lambda name, raw=False: module[0])
@@ -114,7 +124,8 @@ class PackagingTests(unittest.TestCase):
         for name in ('python314.dll', '_tkinter.pyd', 'base_library.zip', 'tcl86t.dll',
                      'tk86t.dll', '_tcl_data/init.tcl', '_tk_data/tk.tcl',
                      'koei_editor/data/game_metadata.json', 'licenses/LICENSE',
-                     'licenses/THIRD_PARTY_NOTICES.md', *release.RUNTIME_LICENSES):
+                     'licenses/THIRD_PARTY_NOTICES.md', *release.RUNTIME_LICENSES,
+                     *release.TRIMESH_RESOURCES):
             entry = archive.toc.pop(name)
             with self.subTest(missing=name), self.assertRaisesRegex(ValueError, 'missing'):
                 release.verify_standalone(self.root, reader)
@@ -128,6 +139,36 @@ class PackagingTests(unittest.TestCase):
                 release.verified_sources(self.root)
             self.sources[name] = original
         self.write_manifest()
+
+    def test_trimesh_resources_require_exact_reviewed_bytes_and_exclude_viewers(self):
+        for name, data in self.trimesh_resources.items():
+            with self.subTest(name=name):
+                self.assertEqual(release._validate_runtime_file(name, data, {}), name)
+                with self.assertRaisesRegex(ValueError, 'differs from the pinned wheel'):
+                    release._validate_runtime_file(name, data + b'changed', {})
+        for name in ('trimesh/resources/private.json',
+                     'trimesh/resources/templates/viewer.zip',
+                     'trimesh/resources/templates/blender_boolean.py.tmpl',
+                     'trimesh/resources/schema/gltf2.schema.zip'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed'):
+                release._validate_runtime_file(name, b'unreviewed content', {})
+
+    def test_only_the_pinned_asset_decoder_native_modules_are_allowed(self):
+        for name in ('_miniaudio.pyd', '_miniaudio.cp314-win_amd64.pyd',
+                     '_cffi_backend.cp314-win_amd64.pyd',
+                     'numpy/_core/_multiarray_umath.cp314-win_amd64.pyd',
+                     'numpy.libs/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
+                     'numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll'):
+            with self.subTest(name=name):
+                self.assertEqual(release._validate_runtime_file(name, b'MZ synthetic native code', {}), name)
+        for name in ('_unreviewed_codec.cp314-win_amd64.pyd',
+                     'unreviewed/_cffi_backend.cp314-win_amd64.pyd',
+                     'unreviewed/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
+                     'numpy/_core/_unreviewed.cp314-win_amd64.pyd',
+                     'numpy.libs/unreviewed.dll',
+                     'numpy.libs/libscipy_openblas64_-0123456789abcdef0123456789abcdef.dll'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed'):
+                release._validate_runtime_file(name, b'MZ synthetic native code', {})
 
     def test_standalone_checks_embedded_metadata_native_files_modules_and_privacy(self):
         archive, blobs, module = self.standalone_archive_fixture()
@@ -237,6 +278,25 @@ class PackagingTests(unittest.TestCase):
         with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1), self.assertRaises(ValueError):
             release.package(self.root)
 
+    def test_localization_studio_is_in_source_archive_only(self):
+        additions = {name: b'Public localization studio source\n'
+                     for name in release.LOCALIZATION_STUDIO_FILES}
+        self.add_sources(additions)
+        self.write_manifest()
+        _version, verified = release.verified_sources(self.root)
+        self.assertTrue(release.LOCALIZATION_STUDIO_FILES.issubset(verified))
+        self.assertFalse(any(name.startswith('localization-studio/')
+                             for name in release.embedded_metadata(verified)))
+        with patch.object(release, 'verify_executable', return_value=1), \
+             patch.object(release, 'verify_standalone', return_value=1):
+            assets = release.package(self.root)
+        with zipfile.ZipFile(assets[1]) as archive:
+            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0-Source/'
+            for name, data in additions.items():
+                self.assertEqual(archive.read(prefix + name), data)
+        with zipfile.ZipFile(assets[0]) as archive:
+            self.assertFalse(any('/localization-studio/' in name for name in archive.namelist()))
+
     def test_actual_windows_zip_contains_exact_reviewed_guides_collected_by_builder(self):
         from tools import build_windows
         for source in release.RUNTIME_GUIDES:
@@ -317,16 +377,42 @@ class PackagingTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 release.public_path(name)
 
-    def test_contributor_scaffold_and_test_helper_paths_are_narrowly_allowed(self):
+    def test_public_helper_and_sandbox_paths_are_narrowly_allowed(self):
         self.assertEqual(release.public_path('.gitattributes').as_posix(), '.gitattributes')
-        for name in release.ADAPTER_TEMPLATE_FILES | release.PUBLIC_TEST_HELPERS | release.PUBLIC_GUIDES:
+        for name in (release.ADAPTER_TEMPLATE_FILES | release.PUBLIC_TEST_HELPERS | release.PUBLIC_GUIDES
+                     | release.MOD_TESTING_SANDBOX_SOURCES):
             with self.subTest(name=name):
                 self.assertEqual(release.public_path(name).as_posix(), name)
         for name in ('tools/adapter_template/private.dat', 'tools/adapter_template/fixture.json',
                      'tools/adapter_template/another_parser.py', 'tools/adapter_template/nested/new_game_parser.py',
                      'tools/adapter_template/INSTRUCTIONS.md/../private.dat', 'tools/adapter_template/.private.txt',
                      'tools/adapter_template/new_game_parser.py.bak', 'tests/another_helper.py',
-                     'tests/scalar_contract.py/../private.dat', 'tests/helpers/scalar_contract.py'):
+                     'tests/scalar_contract.py/../private.dat', 'tests/helpers/scalar_contract.py',
+                     'tools/mod_testing_sandbox/private.dat',
+                     'tools/mod_testing_sandbox/src/unreviewed.mjs',
+                     'tools/mod_testing_sandbox/test/fixture.json'):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                release.public_path(name)
+
+    def test_community_schema_paths_are_explicitly_whitelisted(self):
+        for name in release.COMMUNITY_SCHEMA_FILES | release.COMMUNITY_TEMPLATE_FILES:
+            with self.subTest(name=name):
+                self.assertEqual(release.public_path(name).as_posix(), name)
+        for name in ('docs/schemas/private.schema.json', 'docs/schemas/../private.schema.json',
+                     'tools/community_package_templates/private.json'):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                release.public_path(name)
+
+    def test_localization_studio_public_paths_are_narrow_and_text_only(self):
+        for name in release.LOCALIZATION_STUDIO_FILES:
+            with self.subTest(name=name):
+                self.assertEqual(release.public_path(name).as_posix(), name)
+        for name in ('localization-studio/.env', 'localization-studio/private.sav',
+                     'localization-studio/assets/game.bin', 'localization-studio/node_modules/pkg/index.js',
+                     'localization-studio/src/app.exe', 'localization-studio/src/injected.mjs',
+                     'localization-studio/reports/private.json', 'localization-studio/docs/private.md',
+                     'localization-studio/tests/extra.html', 'localization-studio/tests/fixtures/save.dat',
+                     'localization-studio/docs/../private.md'):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 release.public_path(name)
 

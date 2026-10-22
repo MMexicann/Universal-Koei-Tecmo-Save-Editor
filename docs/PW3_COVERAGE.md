@@ -1,5 +1,8 @@
 # Pirate Warriors 3 PC coverage and remaining maps
 
+Officially released platform editions and their save-format qualification
+boundaries are tracked in [Pirate Warriors edition scope](PIRATE_WARRIORS_EDITION_SCOPE.md).
+
 The native PC adapter retains existing stat/bar/skill-slot editing, genuine
 sample qualification, read-only level/EXP/Beli/costume associations and the
 copy-only backup/Undo/Review Changes/Save As workflow. This pass does not enable

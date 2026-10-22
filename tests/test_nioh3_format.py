@@ -84,6 +84,42 @@ class Nioh3FormatTests(unittest.TestCase):
         rows = parser.inspection_rows(edited)
         self.assertTrue(any('Level 16; pre-forge level 8; +value 3' in row['value'] for row in rows))
 
+    def test_equipment_modifier_view_is_numeric_read_only_and_preserved_by_edits(self):
+        equipment = inventory.POOLS[0]
+        equipment_offset = equipment.start
+        payload = bytearray(self.raw)
+        struct.pack_into('<H', payload, equipment_offset + 0x30, 0x0123)
+        first_slot = equipment_offset + 0x38
+        struct.pack_into('<H', payload, first_slot, 0xBEEF)
+        struct.pack_into('<I', payload, first_slot + 4, 0x12345678)
+        payload[first_slot + 9:first_slot + 0x0B] = b'\x04\x05'
+        last_slot = equipment_offset + 0x38 + 6 * 0x18
+        struct.pack_into('<H', payload, last_slot, 0x8001)
+        struct.pack_into('<I', payload, last_slot + 4, 0xA0B0C0D0)
+        payload[last_slot + 9:last_slot + 0x0B] = b'\xFE\x7F'
+
+        document = parser.decode(resign(payload))
+        rows = parser.inspection_rows(document)
+        equipment_row = next(row for row in rows
+                             if row['group'] == 'Equipment' and row['label'].startswith('Slot 1:'))
+        self.assertIn('source-reported rarity u16=0x0123', equipment_row['value'])
+        self.assertIn('1:id=0xBEEF,value=0x12345678,metadata=0x04/0x05', equipment_row['value'])
+        self.assertIn('7:id=0x8001,value=0xA0B0C0D0,metadata=0xFE/0x7F', equipment_row['value'])
+
+        mapping = parser.field_map(document)
+        self.assertFalse(any(field_id.startswith('equipment_') for field_id in mapping))
+        for key in ('equipment_0_rarity', 'equipment_0_modifier_0_id'):
+            with self.subTest(key=key), self.assertRaises(SaveError):
+                parser.stage(document, {}, key, 1)
+
+        balance = mapping['amrita']
+        item = mapping['inventory_0_quantity']
+        changes = parser.stage(document, {}, balance.id, balance.value(document.payload) - 1)
+        changes = parser.stage(document, changes, item.id, item.value(document.payload) - 1)
+        edited = parser.decode(parser.serialize(document, changes))
+        self.assertEqual(edited.payload[equipment.start:equipment.end],
+                         document.payload[equipment.start:equipment.end])
+
     def test_no_increases_zero_or_bulk_max_and_all_pending_maps_validated(self):
         field = self.adapter.fields_for(self.document)[0]
         for value in (0, -1, field.maximum + 1, 65536, True, '2', 2.0):

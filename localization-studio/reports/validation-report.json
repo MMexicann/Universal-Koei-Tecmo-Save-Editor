@@ -1,0 +1,259 @@
+{
+  "schema": "codex.validation-report/v1",
+  "project": "Koei Tecmo Localization Studio",
+  "validated_at_utc": "2026-10-22T19:16:39Z",
+  "status": "validated_for_review",
+  "branch": "codex/localization-studio-game-toolkit",
+  "release_created": false,
+  "version_bumped": false,
+  "product_scope": {
+    "runtime": "offline static browser app; no runtime dependencies, account, or translation-service calls",
+    "supported_profiles": [
+      "UTF-8 CSV catalog with unique source and target headers and optional id/context columns",
+      "UTF-8 TSV catalog with the same headers",
+      "Studio JSON {segments:[{id?,source,target,context?}]} catalog",
+      "Basic SubRip SRT cues with comma millisecond timestamps and increasing time ranges",
+      "WebVTT header and text cues, preserving cue identifiers/settings and NOTE/STYLE/REGION blocks",
+      "Line-oriented UTF-8 TXT catalog"
+    ],
+    "explicitly_unsupported": [
+      "Koei Tecmo native packages, archives, executables, proprietary string tables, and saves",
+      "legacy text encodings",
+      "automatic machine translation"
+    ],
+    "limits": {
+      "file_bytes": 5242880,
+      "segments": 5000,
+      "physical_lines": 50000,
+      "delimited_columns_or_json_properties": 64,
+      "json_nesting_levels": 64,
+      "json_values_and_object_keys": 65000
+    }
+  },
+  "preservation_checks": [
+    "No-op exports are byte-identical for CSV, TSV, JSON, SRT, WebVTT, and TXT fixtures, including BOM and original line endings.",
+    "CSV, TSV, and JSON translations patch only target value spans; other source spans remain unchanged.",
+    "Subtitle edits preserve cue timing, identifiers, metadata blocks, and line endings; blank cue lines are rejected.",
+    "The browser reads an uploaded File and always downloads a new .localized copy; it has no path or game-folder write operation.",
+    "Unknown extensions, malformed profiles, invalid UTF-8, NUL-containing files, and oversized inputs fail closed."
+  ],
+  "validation": [
+    {
+      "command": "npm test",
+      "status": "passed",
+      "passed": 12,
+      "failed": 0,
+      "coverage_notes": [
+        "Six documented profile parsers and round trips",
+        "Target-only edits and token checks",
+        "Malformed input and bounded resource rejection"
+      ]
+    },
+    {
+      "command": "npm run test:browser",
+      "status": "passed",
+      "environment": "Chromium headless through local DevTools; Node.js 22+",
+      "checked": [
+        "Import, edit, token warning and filter",
+        "Untrusted strings render as text",
+        "Separate-copy export and imported-file immutability"
+      ]
+    },
+    {
+      "command": "node --check src/app.mjs && node --check src/formats.mjs && node --check tests/run-browser-smoke.mjs",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONPATH=src python -m unittest tests.test_package_release -v",
+      "status": "passed",
+      "tests": 24,
+      "skipped": 0,
+      "coverage_notes": [
+        "Exact localization-studio public path allowlist",
+        "Unlisted same-extension files are rejected",
+        "Localization Studio is source-archive-only, not Windows runtime data"
+      ]
+    },
+    {
+      "command": "python -m tools.package_release --verify-only",
+      "status": "passed",
+      "public_source_files_verified": 1217,
+      "release_created": false
+    },
+    {
+      "command": "PYTHONPATH=src python -m tools.update_supported_games --check",
+      "status": "passed",
+      "registered_game_platform_adapters": 98,
+      "tested_base_commit": "048563c1f9f608c9b0572560176093fe6a72834d"
+    },
+    {
+      "command": "PYTHONPATH=src python -m tools.run_tests --workers 4",
+      "status": "environment_limited",
+      "modules": 363,
+      "tests": 3364,
+      "skipped": 947,
+      "initial_failures": 6,
+      "initial_errors": 1,
+      "notes": [
+        "Five modules had six CLI subprocess failures because the checkout was not installed in the Python environment.",
+        "After python -m pip install --no-deps -e ., the five affected modules were rerun: 40 tests passed, 14 skipped, 0 failures.",
+        "The remaining test_rotk3_dos.py error requires a graphical display; xvfb-run is unavailable in this environment.",
+        "This full run completed before main advanced to c851ee5; after rebasing, the current base received targeted packaging and Completion Companion/application-shell tests below."
+      ],
+      "tested_base_commit": "1d86de1b78195d873a59bffb2c1de20befe6c473"
+    },
+    {
+      "command": "python -m py_compile tools/package_release.py tests/test_package_release.py",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "command": "PYTHONPATH=src python -m unittest tests.test_package_release tests.test_completion_checklist tests.test_completion_companion_view tests.test_application_shell -v",
+      "status": "passed",
+      "tests": 71,
+      "skipped": 29,
+      "failures": 0,
+      "tested_base_commit": "c851ee5c24ba814658ecb219f4aa35179e6413a9",
+      "coverage_notes": [
+        "Exact localization-studio source allowlist and source-only packaging",
+        "Current-main Completion Companion storage/projection and application shell regression checks"
+      ]
+    },
+    {
+      "command": "PYTHONPATH=src python -m unittest tests.test_package_release tests.test_completion_checklist tests.test_completion_companion_view tests.test_application_shell tests.test_mod_workshop_validation tests.test_mod_workshop_projects tests.test_mod_workshop_gui tests.test_mod_workshop_packaging tests.test_mod_workshop_assets",
+      "status": "passed",
+      "tests": 118,
+      "skipped": 32,
+      "failures": 0,
+      "tested_base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
+      "coverage_notes": [
+        "Localization Studio source-only package allowlist and manifest checks against the current base",
+        "Mod Creation Workshop, application shell, and Completion Companion regressions after PR #123 merged"
+      ]
+    }
+  ],
+  "independent_review": {
+    "status": "passed_after_revision",
+    "findings_resolved": [
+      "Public source paths are restricted to the exact reviewed localization-studio file set; regressions reject unlisted files with otherwise allowed extensions.",
+      "The Windows runtime builder and embedded metadata do not include localization-studio files; source-only packaging is tested.",
+      "Validation provenance now identifies the toolkit repository/base and the source manifest instead of a standalone scratch branch."
+    ],
+    "remaining_blockers": []
+  },
+  "research_and_reuse": {
+    "notes": "docs/RESEARCH.md",
+    "permissively_licensed_references_reviewed": [
+      "SWERY Localization Tool (MIT)",
+      "Toucan (MIT)",
+      "Supervertaler Workbench (MIT)",
+      "Papa Parse (MIT)",
+      "subtitle.js (MIT)",
+      "W3C webvtt.js (CC0-1.0)"
+    ],
+    "third_party_runtime_code_copied": false,
+    "koei_community_tools": "Kybernes-Tools and GokonSoftworks mention game-specific binary families but use restrictive terms; no implementation or game data was copied.",
+    "native_format_support_enabled": false
+  },
+  "parallel_pr_inspection": {
+    "repository": "MMexicann/Universal-Koei-Tecmo-Save-Editor",
+    "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
+    "pull_requests_reviewed": [
+      {
+        "number": 121,
+        "title": "Add game patch compatibility analyzer",
+        "finding": "Compares format/version metadata; it does not parse or edit text."
+      },
+      {
+        "number": 123,
+        "title": "Add verified Koei Tecmo mod creation workshop",
+        "finding": "App UI label localization and user-declared replacement assets; no translation catalog/parser. Its mod package is not a Studio format."
+      },
+      {
+        "number": 125,
+        "title": "Prepare Game Toolkit main page and concise v1.0 release notes",
+        "finding": "Presentation/docs and package metadata; no localization parser. This PR avoids its root README and application-shell changes."
+      },
+      {
+        "number": 126,
+        "title": "Add dedicated Nexus Mods browser",
+        "finding": "Mod listing and download handoff IDs; remote descriptions are rendered as plain text, not translation files."
+      },
+      {
+        "number": 127,
+        "title": "Add safe Koei Tecmo controller input profiles",
+        "finding": "Own controller-profile JSON schema and user labels; not a general translation catalog."
+      },
+      {
+        "number": 129,
+        "title": "Add safe Nioh 2 PC mod manager",
+        "finding": "Nioh 2 installation/package lifecycle; does not parse localization text."
+      },
+      {
+        "number": 132,
+        "title": "Add versioned Koei Tecmo community toolkit packages",
+        "finding": "Five data-only schemas cover character builds, mods, presets, playthroughs, and compatibility; none defines a localization catalog. This PR also edits package_release.py and SOURCE_MANIFEST.json."
+      },
+      {
+        "number": 133,
+        "title": "Add isolated Koei Tecmo mod testing sandbox",
+        "finding": "A separate browser-local mod staging and ZIP app, architecturally similar but with no text parser/catalog API. It also edits package_release.py, SOURCE_MANIFEST.json, and packaging tests."
+      },
+      {
+        "number": 134,
+        "title": "Add read-only Koei Tecmo game asset explorer",
+        "finding": "Generic archives plus G1T textures, audio, and model previews; no localization text parser or game string table support."
+      },
+      {
+        "number": 135,
+        "title": "Add Koei Tecmo Steam Game Hub",
+        "finding": "Steam install discovery and launch metadata; no game text formats."
+      },
+      {
+        "number": 136,
+        "title": "Add documented Emulator Integration Hub",
+        "finding": "Emulator discovery and existing save-copy handoff; no localization text formats."
+      },
+      {
+        "number": 138,
+        "title": "Improve shared save editor navigation and comparisons",
+        "finding": "Shared save-editor UI behavior only; this static studio does not attach to that shell."
+      }
+    ],
+    "finding": "No existing Koei Tecmo dialogue/subtitle parser, translation catalog schema, or shared localization editor interface is relevant to reuse. The Studio JSON profile is its own generic interchange schema. The static studio remains separate and does not claim Workshop, Community Package, Mod Manager, Asset Explorer, or native game package support.",
+    "external_reference": {
+      "repository": "SteamDatabase/FileDetectionRuleSets",
+      "pull_request": 352,
+      "finding": "Soft Engine 2 suffix detection only; it does not extract or edit localization text."
+    },
+    "branch_coordination": "Rebased onto current main after PR #123 merged at 048563c and refreshed the source manifest. PRs #132 and #133 also edit package_release.py and SOURCE_MANIFEST.json; if either lands first, resolve the packaging allowlist and regenerate the manifest against merged main.",
+    "main_update_after_pr_opened": {
+      "merged_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
+      "pull_request": 123,
+      "finding": "Mod Creation Workshop changes the desktop application shell, shared localization labels, and source manifest. It adds no localization parser or translation catalog; the standalone Studio interface is unchanged."
+    }
+  },
+  "pull_request": {
+    "destination": "MMexicann/Universal-Koei-Tecmo-Save-Editor:main",
+    "branch": "codex/localization-studio-game-toolkit",
+    "merge_performed": false,
+    "release_created": false,
+    "version_bumped": false,
+    "branch_protection": "No merge was attempted; branch-protection details were unavailable to this API session.",
+    "status": "open",
+    "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
+    "number": 139,
+    "url": "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/139"
+  },
+  "repository": {
+    "name": "MMexicann/Universal-Koei-Tecmo-Save-Editor",
+    "base_branch": "main",
+    "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
+    "source_manifest": "tools/SOURCE_MANIFEST.json",
+    "source_manifest_entries": 1217,
+    "integration": "Standalone static subproject under localization-studio/; not imported by or bundled in the Windows app runtime. Based on current main commit 048563c1f9f608c9b0572560176093fe6a72834d."
+  }
+}

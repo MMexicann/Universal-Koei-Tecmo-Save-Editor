@@ -5,6 +5,16 @@ discovery. Game dashboards and their save/edit contracts remain in the game
 editors. Returning to a workspace reuses the same editor instance and pending
 changes. Navigation never opens a file automatically.
 
+**Tools → Editing & Research → Game Asset Explorer** opens an optional,
+read-only asset workspace. It asks the user to choose a local file and stores
+only its stable workspace command ID in shell recents. It does not save paths or
+asset contents. See [its format and validation limits](ASSET_EXPLORER.md).
+
+Controller & Input Profiles is a retained global workspace available from
+**Editing and Research** and Ctrl+K. It stores user-defined mappings in
+application-owned profile storage; it does not apply them to game files or
+Steam Input.
+
 ## Keyboard and discovery
 
 - **Ctrl+K** opens the command palette from the library, tools or game editor.
@@ -15,6 +25,9 @@ changes. Navigation never opens a file automatically.
 - **Ctrl+D**, or the visible favorite button, toggles a command favorite.
   Search `favorites` or `recent` to filter those groups. German equivalents
   also work when German is selected.
+- **Koei Tecmo Mod Manager** is available in the Editing and Research menu and
+  the Ctrl+K command palette. The manager is a retained workspace; its Nioh 2
+  installation and profile controls are independent of save-editor sessions.
 - **Ctrl+F** keeps the existing workspace-specific search behavior. **F1** opens
   the Help Center. Its menu includes compatibility, preparation guides, feedback,
   real-game validation and plugin documentation.
@@ -33,6 +46,27 @@ not automatically translated. Text sizes of 100%, 120% and 140% apply to shared
 standard controls. Tk's platform DPI scaling remains enabled and is not replaced
 with a hardcoded scaling factor.
 
+## Game Hub
+
+Game Hub is available from the main navigation and Ctrl+K. It reuses the bounded
+Steam discovery scanner and its reviewed mappings for supported Windows PC
+profiles. The first visit scans Steam's known install roots and any additional
+libraries listed by `libraryfolders.vdf`; **Refresh installations** repeats the
+scan, and **Browse** can select a Steam root directly. Detection reads install
+manifests only. It does not inspect save folders or game files.
+
+Installed rows show the Steam build ID, manifest update time, install size,
+Steam library and installation folder. Steam's build ID is not necessarily the
+game's displayed patch version. Launch explicitly asks the operating system to
+open the known game's `steam://run/` link. **Open install folder** uses the local
+file manager. Notes are optional local text saved beside the app's preferences;
+they do not change Steam metadata or game files. A not-detected row describes
+the current scan, and a partial scan is labelled as such.
+
+The hub lists only game profiles with reviewed Steam install mappings. It does
+not claim that profiles without a mapping are uninstalled. The separate Save
+Library continues to handle copied save discovery and validation.
+
 ## Preferences and privacy
 
 `shared/shell_preferences.py` stores a separate `preferences.shell.json` beside
@@ -45,6 +79,9 @@ preferences without changing existing theme/pin preferences or saves.
 Unknown, malformed, duplicate or oversized preferences fall back to defaults.
 Writes use an atomic replacement. Read-only sessions using
 `Application(..., persist_preferences=False)` keep changes in memory.
+Game Hub notes use a separate bounded local settings file and contain no install
+paths. Steam install paths stay in the local view and are omitted from portable
+discovery reports.
 
 ## Extending global commands
 

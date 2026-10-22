@@ -16,7 +16,7 @@ from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.preferences import normalize_pins
 from koei_editor.shared.adapter_contract import BoundScalarAdapter, validate_pending_values
 from koei_editor.shared.scalar_presentation import ScalarPresentation
-from koei_editor.shared.table_tools import attach_sorting, sort_table, copy_selected
+from koei_editor.shared.table_tools import attach_sorting, sort_table, sort_key, copy_selected
 from koei_editor.shared.experimental_limits import (
     EXPERIMENTAL_WARNING, above_supported, experimental_maximum, experimental_operation,
     experimental_limits)
@@ -110,20 +110,31 @@ class Editor(Appearance):
     summary = ''
     presentation_type = ScalarPresentation
 
-    def __init__(self, root, parent=None, theme='Light', on_theme=None):
+    def __init__(self, root, parent=None, theme='Light', on_theme=None,
+                 workshop_provider=None):
         self.root, self.on_theme = root, on_theme
+        self.editor_host = parent if parent is not None else root
         self.adapter = BoundScalarAdapter(self.game_id, self.save_extension, self.backend)
         self.layout = self.adapter.get_format()
         self.presentation = self.presentation_type(self.backend, self.game_id)
+        if isinstance(workshop_provider, str):
+            from importlib import import_module
+            workshop_provider = import_module(workshop_provider)
+        self.workshop_provider = workshop_provider
         self.style = ttk.Style(root)
         self.theme_name = tk.StringVar(root, value=theme)
         self.document, self.backup = None, None
         self.changes, self.history = {}, []
+        self.field_page_size, self._field_page = 250, 0
+        self._filtered_field_ids = ()
+        self._changing_field_filters = False
+        self._reset_field_scroll = False
+        self._pending_field_restore = None
         self.pinned_fields = frozenset()
         self._on_pins = None
         self.experimental_mode = tk.BooleanVar(root, value=False)
         self.apply_theme(theme)
-        host = parent if parent is not None else root
+        host = self.editor_host
         header = self.header = ttk.Frame(host, padding=(18, 10))
         header.pack(fill='x')
         ttk.Label(header, text=self.layout.title, font=(self.font_family, 18, 'bold')).pack(anchor='w')
@@ -152,8 +163,10 @@ class Editor(Appearance):
         self.workspace_tabs = ttk.Notebook(host)
         self.workspace_tabs.pack(fill='both', expand=True, padx=12, pady=(0, 8))
         self.dashboard_page = ttk.Frame(self.workspace_tabs)
+        self.completion_page = ttk.Frame(self.workspace_tabs)
         self.edit_page = ttk.Frame(self.workspace_tabs)
         self.workspace_tabs.add(self.dashboard_page, text='Progression Dashboard')
+        self.workspace_tabs.add(self.completion_page, text='Completion Companion')
         self.workspace_tabs.add(self.edit_page, text='Edit Fields')
         self.scenario_view = None
         scenario_title = getattr(self.presentation, 'scenario_view_title', None)
@@ -163,6 +176,20 @@ class Editor(Appearance):
             from koei_editor.shared.territory_visualization import TerritoryOverview
             self.scenario_view = TerritoryOverview(self.scenario_page, theme=theme)
             self.scenario_view.pack(fill='both', expand=True)
+        self.workshop_view = None
+        if self.workshop_provider is not None:
+            from koei_editor.shared.build_workshop_gui import BuildWorkshopView
+            self.workshop_page = ttk.Frame(self.workspace_tabs)
+            self.workspace_tabs.add(self.workshop_page, text='Character & Weapon Workshop')
+            self.workshop_view = BuildWorkshopView(
+                self.workshop_page, game_id=self.game_id,
+                platform_id=self.workshop_provider.PLATFORM_ID,
+                on_stage=self._stage_workshop_plan,
+                on_compare_records=(self._compare_workshop_records
+                                    if callable(getattr(self.workshop_provider,
+                                                        'compare_weapon_records', None)) else None),
+                theme=theme)
+            self.workshop_view.pack(fill='both', expand=True)
         from koei_editor.shared.progression import ProgressionDashboard
         from koei_editor.shared.progression_view import ProgressionView
         self._dashboard_document = None
@@ -171,6 +198,10 @@ class Editor(Appearance):
             ProgressionDashboard(self.layout.title, note='Open a save copy to explore its verified values.'),
             on_navigate=self.navigate_dashboard_field, theme=theme)
         self.dashboard_view.pack(fill='both', expand=True)
+        from koei_editor.shared.completion_checklist_view import CompletionChecklistView
+        self.completion_companion_view = CompletionChecklistView(
+            self.completion_page, self.game_id)
+        self.completion_companion_view.pack(fill='both', expand=True)
         host = self.edit_page
         filter_bar = ttk.Frame(host, padding=(18, 0))
         filter_bar.pack(fill='x')
@@ -183,19 +214,20 @@ class Editor(Appearance):
         ttk.Button(filter_bar, text='Clear', command=lambda: self.search.set('')).pack(side='left', padx=(8, 0))
         self.pending_only = tk.BooleanVar(root, value=False)
         ttk.Checkbutton(filter_bar, text='Pending only', variable=self.pending_only,
-                        command=self.refresh).pack(side='left', padx=(12, 0))
+                        command=self.field_filters_changed).pack(side='left', padx=(12, 0))
         self.pinned_only = tk.BooleanVar(root, value=False)
         self.pin_count = tk.StringVar(root, value='Pinned only (0)')
         ttk.Checkbutton(filter_bar, textvariable=self.pin_count, variable=self.pinned_only,
-                        command=self.refresh).pack(side='left', padx=(12, 0))
+                        command=self.field_filters_changed).pack(side='left', padx=(12, 0))
         navigation = ttk.Frame(host, padding=(18, 6, 18, 0))
+        self.navigation_bar = navigation
         navigation.pack(fill='x')
         ttk.Label(navigation, text='Record').pack(side='left', padx=(0, 8))
         self.record = tk.StringVar(root, value='All records')
         self.record_selector = ttk.Combobox(navigation, textvariable=self.record,
                                            values=('All records',), state='readonly', width=35)
         self.record_selector.pack(side='left')
-        self.record_selector.bind('<<ComboboxSelected>>', lambda _event: self.refresh())
+        self.record_selector.bind('<<ComboboxSelected>>', self.field_filters_changed)
         self._record_keys = {}
         self.field_count = tk.StringVar(root, value='No save opened.')
         ttk.Label(navigation, textvariable=self.field_count, style='Muted.TLabel').pack(side='left', padx=12)
@@ -222,7 +254,7 @@ class Editor(Appearance):
         self.group_selector = select
         # Category navigation lives beside the fields; keep the variable and
         # selector available to existing presentations and session callbacks.
-        select.bind('<<ComboboxSelected>>', lambda _event: self.refresh())
+        select.bind('<<ComboboxSelected>>', self.field_filters_changed)
         ttk.Label(tools, text='Value').pack(side='left', padx=(0, 8))
         self.value = tk.StringVar(root)
         value_frame = ttk.Frame(tools)
@@ -320,13 +352,33 @@ class Editor(Appearance):
         self.fields.configure(yscrollcommand=scroll.set, xscrollcommand=self.field_horizontal_scroll.set)
         self.fields._pending_edits_style = True
         self._style_pending_rows()
-        attach_sorting(self.fields)
+        self.fields._sort_state = None
+        for column in self.fields.cget('columns'):
+            self.fields.heading(column, command=lambda name=column: self.sort_fields(name))
         self.fields.bind('<<TreeviewSelect>>', self.selected)
-        self.search.trace_add('write', lambda *_args: self.refresh())
+        self.search.trace_add('write', self.field_filters_changed)
+        page_bar = ttk.Frame(table_frame, padding=(0, 5, 0, 0))
+        self.field_page_bar = page_bar
+        page_bar.grid(row=2, column=0, sticky='ew')
+        page_bar.columnconfigure(1, weight=1)
+        self.previous_field_page = ttk.Button(page_bar, text='Previous page',
+                                               command=lambda: self.change_field_page(-1), state='disabled')
+        self.previous_field_page.grid(row=0, column=0, sticky='w')
+        self.page_info = tk.StringVar(root, value='No save opened.')
+        ttk.Label(page_bar, textvariable=self.page_info, style='Muted.TLabel').grid(
+            row=0, column=1, sticky='ew', padx=10)
+        self.next_field_page = ttk.Button(page_bar, text='Next page',
+                                           command=lambda: self.change_field_page(1), state='disabled')
+        self.next_field_page.grid(row=0, column=2, sticky='e')
+        ttk.Label(page_bar, text='Max Visible Fields and selected actions use this page only.',
+                  style='Muted.TLabel').grid(
+            row=1, column=0, columnspan=3, sticky='w', pady=(3, 0))
         self._compact_header_spacing = False
         self.header.master.bind('<Configure>', self._layout_header_spacing, add='+')
         if parent is None:
             root.bind('<Control-f>', self.focus_field_search, add='+')
+        root.bind_all('<Control-z>', self._undo_shortcut, add='+')
+        if parent is None:
             root.title(self.layout.title + ' — Save Editor')
             root.protocol('WM_DELETE_WINDOW', self.close)
 
@@ -341,6 +393,16 @@ class Editor(Appearance):
         self.subtitle_label.pack_configure(pady=(0 if compact else 5, 0))
         self.details_toggle.pack_configure(pady=(0 if compact else 5, 0))
         self.filename_label.configure(padding=(18, 2 if compact else 8))
+        # Paging adds a second control row. Recover space from margins while
+        # preserving fonts, every control and each game's expanded spacing.
+        if not hasattr(self, '_expanded_edit_spacing'):
+            self._expanded_edit_spacing = tuple(
+                (widget, widget.cget('padding')) for widget in (
+                    self.navigation_bar, self.tools_bar, self.bulk_bar,
+                    self.field_page_bar, self.selection_label, self.status_label))
+        for widget, expanded in self._expanded_edit_spacing:
+            widget.configure(padding=(0 if widget is self.field_page_bar else (18, 0))
+                             if compact else expanded)
 
     def focus_field_search(self, _event=None):
         self.workspace_tabs.select(self.edit_page)
@@ -356,14 +418,14 @@ class Editor(Appearance):
         if identity in self.adapter.field_map(self.document):
             self.navigate_dashboard_field(identity)
         else:
-            visible = self.fields.get_children()
-            if len(visible) == 1:
-                self.fields.selection_set(visible[0])
-                self.fields.focus(visible[0])
-                self.fields.see(visible[0])
+            matches = self._filtered_field_ids
+            if len(matches) == 1 and self.fields.exists(matches[0]):
+                self.fields.selection_set(matches[0])
+                self.fields.focus(matches[0])
+                self.fields.see(matches[0])
                 self.selected()
             else:
-                self.status.set(f'{len(visible):,} matching fields. Enter an exact field ID or narrow the search.')
+                self.status.set(f'{len(matches):,} matching fields. Enter an exact field ID or narrow the search.')
         return 'break'
 
     def next_pending_field(self):
@@ -393,13 +455,77 @@ class Editor(Appearance):
                               if self.options_visible.get() else ('slot', 'field', 'original', 'pending', 'limit'))
 
     def clear_field_filters(self):
-        self.group.set('All fields')
-        self.record.set('All records')
-        self.pending_only.set(False)
-        self.pinned_only.set(False)
-        self.search.set('')
+        self._changing_field_filters = True
+        try:
+            self.group.set('All fields')
+            self.record.set('All records')
+            self.pending_only.set(False)
+            self.pinned_only.set(False)
+            self.search.set('')
+        finally:
+            self._changing_field_filters = False
+        self._field_page = 0
+        self._reset_field_scroll = True
         self.refresh()
         return 'break'
+
+    def field_filters_changed(self, *_args):
+        """Start filtered results at page one after a query or filter changes."""
+        if self._changing_field_filters:
+            return None
+        self._field_page = 0
+        self._reset_field_scroll = True
+        self.refresh()
+
+    def change_field_page(self, direction):
+        if self.document is None:
+            return
+        page_count = max(1, (len(self._filtered_field_ids) + self.field_page_size - 1)
+                         // self.field_page_size)
+        self._field_page = max(0, min(page_count - 1, self._field_page + direction))
+        self._reset_field_scroll = True
+        self.refresh()
+
+    def sort_fields(self, column):
+        selection = self.fields.selection()
+        focus = self.fields.focus()
+        anchor = focus if self.fields.exists(focus) else (selection[0] if selection else None)
+        previous = self.fields._sort_state
+        reverse = previous is not None and previous[0] == column and not previous[1]
+        self.fields._sort_state = (column, reverse)
+        self._field_page = 0
+        self._reset_field_scroll = True
+        self.refresh()
+        if anchor in self._filtered_field_ids:
+            page = self._filtered_field_ids.index(anchor) // self.field_page_size
+            if page != self._field_page:
+                self._pending_field_restore = (selection, focus)
+                self._field_page = page
+                self._reset_field_scroll = True
+                self.refresh()
+
+    def _undo_shortcut(self, _event=None):
+        """Undo only when focus is inside this editor's own top-level/session."""
+        try:
+            focused = getattr(_event, 'widget', None) if _event is not None else None
+            focused = focused or self.root.focus_get()
+            if focused is None or focused.winfo_toplevel() is not self.root:
+                return None
+            if self.editor_host is self.root:
+                self.undo()
+                return 'break'
+            current = focused
+            while current is not None and current is not self.root:
+                if current is self.editor_host:
+                    self.undo()
+                    return 'break'
+                parent_name = current.winfo_parent()
+                if not parent_name:
+                    break
+                current = current.nametowidget(parent_name)
+        except (AttributeError, tk.TclError, KeyError):
+            return None
+        return None
 
     def configure_pins(self, field_ids=(), on_change=None):
         """Inject exact-game navigation preferences without touching staged edits.
@@ -456,7 +582,7 @@ class Editor(Appearance):
         if group is not None and group != self.group.get():
             self.group.set(group)
             self.record.set('All records')
-            self.refresh()
+            self.field_filters_changed()
 
     def _refresh_categories(self, fields):
         counts = {'All fields': len(fields)}
@@ -507,6 +633,12 @@ class Editor(Appearance):
             return False
         self.workspace_tabs.select(self.edit_page)
         self.clear_field_filters()
+        try:
+            index = self._filtered_field_ids.index(field_id)
+        except ValueError:
+            return False
+        self._field_page = index // self.field_page_size
+        self.refresh()
         if not self.fields.exists(field_id):
             return False
         self.fields.selection_set(field_id)
@@ -549,6 +681,75 @@ class Editor(Appearance):
             self.scenario_view.set_tables(())
             self.status.set('Scenario records could not be displayed. Verified editing remains in Edit Fields.')
 
+    def _refresh_workshop(self):
+        if self.workshop_view is None:
+            return
+        if self.document is None:
+            self.workshop_view.set_provider_data((), {}, (), ())
+            return
+        try:
+            from koei_editor.shared.build_workshop_context import scalar_projection_context
+            projection = self.workshop_provider.workshop_projection(
+                self.document, backend=self.backend)
+            plans, metadata, stats = scalar_projection_context(projection)
+            options = getattr(self.workshop_provider, 'weapon_record_options', None)
+            record_options = options(self.document, backend=self.backend) if callable(options) else ()
+            self.workshop_view.set_provider_data(plans, metadata, stats, record_options)
+        except Exception:
+            # A workshop projection is optional UI; a provider fault must not
+            # interrupt opening, reviewing, or staging through the editor.
+            self.workshop_view.set_provider_data((), {}, (), ())
+            self.workshop_view.status.set(
+                'Mapped workshop data is unavailable for this opened save. Existing editor fields remain available.')
+
+    def _compare_workshop_records(self, left_slot, right_slot):
+        """Delegate read-only native record comparison to the qualified provider."""
+        comparer = getattr(self.workshop_provider, 'compare_weapon_records', None)
+        if self.document is None or not callable(comparer):
+            raise SaveError('Open a qualified save copy with mapped weapon records.')
+        return comparer(self.document, left_slot, right_slot, backend=self.backend)
+
+    def _stage_workshop_plan(self, plan):
+        """Send an explicitly chosen plan through the ordinary field validator."""
+        if self.document is None:
+            raise SaveError('Open a qualified save copy before staging a build plan.')
+        if (plan.game_id, plan.platform_id) != (
+                self.game_id, self.workshop_provider.PLATFORM_ID):
+            raise SaveError('This build plan belongs to a different game or platform.')
+        from koei_editor.shared.build_workshop_context import (
+            assignments_from_plan, scalar_projection_context,
+        )
+        projection = self.workshop_provider.workshop_projection(
+            self.document, backend=self.backend)
+        _plans, metadata, _stats = scalar_projection_context(projection)
+        assignments = assignments_from_plan(
+            plan, game_id=self.game_id,
+            platform_id=self.workshop_provider.PLATFORM_ID,
+            field_metadata=metadata)
+        try:
+            candidate = self._prepare_pending_values(assignments)
+        except Exception as error:
+            self.status.set('Edit was not staged. ' + str(error))
+            messagebox.showerror('Cannot Stage Edit', str(error))
+            return False
+        fields = self.adapter.field_map(self.document)
+        conflicts = []
+        for field_id, pending_value in self.changes.items():
+            field = fields[field_id]
+            candidate_value = candidate.get(field_id, field.value(self.document.payload))
+            if (type(pending_value) is not type(candidate_value)
+                    or pending_value != candidate_value):
+                conflicts.append(field_id)
+        if conflicts and not messagebox.askyesno(
+                'Replace Pending Fields',
+                'This plan will replace pending edits to these mapped fields:\n\n'
+                + '\n'.join(fields[key].label for key in conflicts[:12])
+                + (f'\n...and {len(conflicts) - 12:,} more.' if len(conflicts) > 12 else '')
+                + '\n\nOther pending edits remain staged. You can Undo after staging and Review Changes before saving.'):
+            return False
+        self._accept_pending(candidate)
+        return True
+
     def dirty_ok(self):
         return not self.changes or messagebox.askyesno('Pending Edits', 'Discard pending edits and continue?')
 
@@ -578,6 +779,7 @@ class Editor(Appearance):
         self.experimental_mode.set(False)
         self.experimental_toggle.configure(state='normal')
         self.changes, self.history = {}, []
+        self._field_page = 0
         self.record.set('All records')
         self.pending_only.set(False)
         self.choice_search.set('')
@@ -601,15 +803,25 @@ class Editor(Appearance):
     def refresh(self):
         self._refresh_dashboard()
         self._refresh_scenario_view()
+        self._refresh_workshop()
         selected = self.fields.selection()
         focus = self.fields.focus()
-        position = self.fields.yview()[0]
+        if self._pending_field_restore is not None:
+            selected, focus = self._pending_field_restore
+            self._pending_field_restore = None
+        position = 0 if self._reset_field_scroll else self.fields.yview()[0]
+        self._reset_field_scroll = False
         self.fields.delete(*self.fields.get_children())
         self.selection_info.set('Select a record to inspect its values.')
         self.value_choice.pack_forget()
         self.value_entry.pack(side='left')
         self._choice_values = {}
         if self.document is None:
+            self._filtered_field_ids = ()
+            self.field_count.set('No save opened.')
+            self.page_info.set('No save opened.')
+            self.previous_field_page.configure(state='disabled')
+            self.next_field_page.configure(state='disabled')
             return
         fields = self.adapter.fields_for(self.document)
         available_pins = self.pinned_fields.intersection(field.id for field in fields)
@@ -632,6 +844,7 @@ class Editor(Appearance):
             self.record.set('All records')
         record_key = self._record_keys.get(self.record.get())
         tokens = self.search.get().casefold().split()
+        matches = []
         for field in fields:
             if self.group.get() not in ('All fields', field.group):
                 continue
@@ -643,26 +856,68 @@ class Editor(Appearance):
                 continue
             original = field.value(self.document.payload)
             record = self.record_name(field)
+            pending_value = self.changes.get(field.id)
+            searchable = (f'{field.label} {field.group} {record} {field.id} {original} '
+                          f'{pending_value if pending_value is not None else ""}').casefold()
+            if tokens and any(token not in searchable for token in tokens):
+                # Most searches match stable IDs, names, records or raw values.
+                # Only look up choice labels when the raw index cannot satisfy
+                # the query; some equipment fields expose thousands of choices.
+                opened = self.display_value(field, original, changes={})
+                pending = (self.display_value(field, pending_value)
+                           if pending_value is not None else '-')
+                searchable += f' {opened} {pending}'.casefold()
+                if any(token not in searchable for token in tokens):
+                    continue
+            matches.append((field, record, original))
+        sort_state = self.fields._sort_state
+        if sort_state is not None:
+            column, reverse = sort_state
+            def sort_value(row):
+                field, record, original = row
+                if column == 'slot':
+                    value = record
+                elif column == 'field':
+                    value = ('* ' if field.id in self.pinned_fields else '') + field.label
+                elif column == 'original':
+                    value = original
+                elif column == 'pending':
+                    value = self.changes.get(field.id, '')
+                elif column == 'limit':
+                    value = (f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
+                             else f'{field.maximum:,}')
+                else:
+                    value = self.storage_display(field)
+                return sort_key(value), field.id.casefold()
+            matches.sort(key=sort_value, reverse=reverse)
+        self._filtered_field_ids = tuple(field.id for field, _record, _original in matches)
+        page_count = max(1, (len(matches) + self.field_page_size - 1) // self.field_page_size)
+        self._field_page = max(0, min(page_count - 1, self._field_page))
+        start = self._field_page * self.field_page_size
+        end = min(len(matches), start + self.field_page_size)
+        for field, record, original in matches[start:end]:
             opened = self.display_value(field, original, changes={})
-            pending = self.display_value(field, self.changes[field.id]) if field.id in self.changes else '-'
-            searchable = (f'{field.label} {field.group} {record} {field.id} {opened} {pending} '
-                          f'{original} {self.changes.get(field.id, "")}').casefold()
-            if any(token not in searchable for token in tokens):
-                continue
-            self.fields.insert('', 'end', iid=field.id, tags=('pending',) if field.id in self.changes else (),
-                               values=(record, ('* ' if field.id in self.pinned_fields else '') + field.label, opened, pending,
-                                       f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
-                                        else f'{field.maximum:,}',
-                                        self.storage_display(field)))
+            pending = (self.display_value(field, self.changes[field.id])
+                       if field.id in self.changes else '-')
+            values = (record, ('* ' if field.id in self.pinned_fields else '') + field.label,
+                      opened, pending,
+                      f'{field.maximum:,} bytes' if getattr(field, 'kind', 'int') == 'text'
+                       else f'{field.maximum:,}',
+                      self.storage_display(field))
+            self.fields.insert('', 'end', iid=field.id,
+                               tags=('pending',) if field.id in self.changes else (), values=values)
         self.fields.selection_set([key for key in selected if self.fields.exists(key)])
-        sort_table(self.fields)
         if focus and self.fields.exists(focus):
             self.fields.focus(focus)
         self.fields.yview_moveto(position)
-        visible = self.fields.get_children()
-        hidden = len(set(self.changes).difference(visible))
-        self.field_count.set(f'{len(visible):,} visible fields · {len(self.changes):,} pending edits'
+        hidden = len(set(self.changes).difference(self._filtered_field_ids))
+        self.field_count.set(f'{len(matches):,} matching fields · {len(self.changes):,} pending edits'
                              + (f' ({hidden:,} hidden)' if hidden else ''))
+        span = f'{start + 1:,}–{end:,}' if matches else '0'
+        self.page_info.set(f'{span} of {len(matches):,} matching fields · '
+                           f'page {self._field_page + 1:,}/{page_count:,}')
+        self.previous_field_page.configure(state='normal' if self._field_page else 'disabled')
+        self.next_field_page.configure(state='normal' if self._field_page + 1 < page_count else 'disabled')
         count = len(self.experimental_changes())
         self.limit_status.set(
             f'EXPERIMENTAL: save or game may break. {count:,} pending edits above supported limits.'
@@ -852,34 +1107,40 @@ class Editor(Appearance):
         ttk.Button(dialog, text='Close', command=dialog.destroy).pack(pady=10)
         self.apply_theme(self.theme_name.get())
 
+    def _prepare_pending_values(self, values):
+        """Validate assignments and return their complete native staged result."""
+        values = dict(values)
+        fields = self.adapter.field_map(self.document)
+        failures = []
+        for key, value in values.items():
+            try:
+                with experimental_limits(self.adapter.experimental):
+                    validate_pending_values(self.document, {key: value}, fields)
+            except SaveError as error:
+                label = f'{fields[key].label} [{key}]' if key in fields else str(key)
+                failures.append(f'{label}: {error}')
+        if failures:
+            shown = '\n'.join(failures[:12])
+            remaining = f'\n...and {len(failures) - 12:,} more.' if len(failures) > 12 else ''
+            raise SaveError(f'{len(failures):,} selected values failed validation.\n{shown}{remaining}')
+        result = dict(self.changes)
+        for key, value in values.items():
+            result = self.adapter.stage(self.document, result, key, value)
+        # Native staging can update another reference as a side effect.
+        # Every explicitly requested assignment must survive the full batch.
+        for key, value in values.items():
+            actual = result.get(key, fields[key].value(self.document.payload))
+            if type(actual) is not type(value) or actual != value:
+                raise SaveError(f'{fields[key].label} [{key}] was changed by another selected assignment. '
+                                'Review the dependent fields and apply a compatible selection.')
+        self.adapter.changed_payload(self.document, result)
+        return result
+
     def stage_values(self, values):
         if self.document is None:
             return False
         try:
-            values = dict(values)
-            fields = self.adapter.field_map(self.document)
-            failures = []
-            for key, value in values.items():
-                try:
-                    with experimental_limits(self.adapter.experimental):
-                        validate_pending_values(self.document, {key: value}, fields)
-                except SaveError as error:
-                    label = f'{fields[key].label} [{key}]' if key in fields else str(key)
-                    failures.append(f'{label}: {error}')
-            if failures:
-                shown = '\n'.join(failures[:12])
-                remaining = f'\n...and {len(failures) - 12:,} more.' if len(failures) > 12 else ''
-                raise SaveError(f'{len(failures):,} selected values failed validation.\n{shown}{remaining}')
-            result = dict(self.changes)
-            for key, value in values.items():
-                result = self.adapter.stage(self.document, result, key, value)
-            # Native staging can update another reference as a side effect.
-            # Every explicitly requested assignment must survive the full batch.
-            for key, value in values.items():
-                actual = result.get(key, fields[key].value(self.document.payload))
-                if type(actual) is not type(value) or actual != value:
-                    raise SaveError(f'{fields[key].label} [{key}] was changed by another selected assignment. '
-                                    'Review the dependent fields and apply a compatible selection.')
+            result = self._prepare_pending_values(values)
             self._accept_pending(result)
         except Exception as error:
             self.status.set('Edit was not staged. ' + str(error))

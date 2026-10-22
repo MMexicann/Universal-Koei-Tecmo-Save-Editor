@@ -7,6 +7,7 @@ from pathlib import Path
 from koei_editor.game_registry import GAMES, get_game
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.copy_storage import atomic_new
+from koei_editor.shared import edit_presets
 from koei_editor.shared.save_safety import safe_path
 from koei_editor.shared.scalar_presentation import ScalarPresentation
 
@@ -45,9 +46,13 @@ def adapter_for(game_id):
 
 
 def _definition(field):
-    # Dynamic editing limits depend on the opened value; they are not identity.
-    return tuple(getattr(field, key, None) for key in
-                 ('offset', 'size', 'group', 'slot', 'label', 'kind', 'encoding'))
+    # Canonical preset metadata captures subclass validators, storage layout,
+    # choices, mirrors and other semantic constraints. Numeric editing limits
+    # and exact opened-value validator context may depend on the save, so they
+    # are not comparison identity.
+    return edit_presets.field_definition_metadata(
+        field, excluded_attributes=('minimum', 'maximum', 'maxable',
+                                   'experimental_maximum', 'opened_value'))
 
 
 def _value(field, document):

@@ -217,12 +217,29 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
     def test_distinct_registered_scalar_backend_is_collected(self):
         from tools import build_windows as build
         game = SimpleNamespace(editor_module='koei_editor.games.new.gui', parser_module='koei_editor.games.new.reader',
-                               scalar_backend='koei_editor.games.new.native')
+                               scalar_backend='koei_editor.games.new.native',
+                               workshop_module='koei_editor.games.new.workshop', achievement_source=None)
         with patch.object(build, 'ALL_ADAPTERS', (game,)), patch.object(build, 'ENDPOINTS', {}), \
                 patch.object(build, 'RESEARCH_PROFILES', {}):
             args = build.build_args()
         modules = [args[index + 1] for index, value in enumerate(args) if value == '--hidden-import']
-        self.assertEqual(set(modules), {game.editor_module, game.parser_module, game.scalar_backend})
+        asset_modules = {'koei_editor.research.asset_explorer.gui',
+                         'koei_editor.research.asset_explorer.media',
+                         'miniaudio', '_miniaudio', 'cffi', '_cffi_backend', 'pycparser',
+                         'numpy', 'trimesh', 'trimesh.exchange.load',
+                         'trimesh.exchange.obj', 'trimesh.exchange.stl',
+                         'trimesh.exchange.ply', 'trimesh.exchange.gltf'}
+        self.assertEqual(set(modules), {game.editor_module, game.parser_module,
+                                        game.scalar_backend, game.workshop_module} | asset_modules)
+        legacy_game = SimpleNamespace(editor_module='koei_editor.games.legacy.gui',
+                                      parser_module='koei_editor.games.legacy.reader',
+                                      scalar_backend=None, achievement_source=None)
+        with patch.object(build, 'ALL_ADAPTERS', (legacy_game,)), patch.object(build, 'ENDPOINTS', {}), \
+                patch.object(build, 'RESEARCH_PROFILES', {}):
+            legacy_args = build.build_args()
+        legacy_modules = [legacy_args[index + 1] for index, value in enumerate(legacy_args)
+                          if value == '--hidden-import']
+        self.assertEqual(set(legacy_modules), {legacy_game.editor_module, legacy_game.parser_module} | asset_modules)
 
     def test_conversion_only_native_backends_are_collected_without_scalar_registration(self):
         from tools import build_windows as build

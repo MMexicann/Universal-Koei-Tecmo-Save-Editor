@@ -11,7 +11,7 @@ class Nioh3Presentation(ScalarPresentation):
                                      tuple((row['label'], row['value']) for row in rows
                                            if row['group'] == group),
                                      'Unknown IDs and equipment remain read only. '
-                                     'Equipment level and pre-forge level are distinct.')
+                                     'Equipment level and pre-forge level are distinct; raw modifier slots are numeric inspection only.')
                      for group in ('Balances', 'Item box', 'Storehouse', 'Equipment', 'Native profile'))
 
 
@@ -22,7 +22,7 @@ class Editor(ScalarEditor):
     presentation_type = Nioh3Presentation
     subtitle = 'Native PC USER balance and common-item reductions'
     summary = ('Edit existing Amrita/Gold balances and common-item quantities; inspect equipment level, '
-               'pre-forge level and reinforcement separately. Default limits allow reductions; '
+               'pre-forge level, reinforcement and raw modifier slots separately. Default limits allow reductions; '
                'increases require experimental editing. Max is unavailable.')
 
 

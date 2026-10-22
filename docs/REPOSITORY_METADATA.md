@@ -39,19 +39,23 @@ On 2026-10-22, the latest published release is **Save Editor v3.1**. Its assets 
 an EXE, Windows ZIP, Source ZIP, `SHA256SUMS.txt` and `DefenderScan-v3.1.json`.
 The README links to those existing assets and labels v1.0 as pending.
 
-The reviewed source baseline is `c77e1beeddc195298c68ce18301d27373408d46e`.
-It includes read-only Scenario View cards for six existing strategy profiles,
-the opt-in DW3 Steam achievement backend, and Three Hopes/Hyrule Warriors Wii U
-reference data. There is no achievement-lookup UI, encyclopedia browser or
-Character Workshop yet. Coverage remains 98 game/platform editing profiles,
-15 save platforms and 145 scoped conversion routes. Other development PRs
-remain outside these notes until accepted and reviewed.
-This is a presentation review, not completion evidence for all 26 workstreams.
+The reviewed integration candidate is based on `d8f5516f2faaa3845457329637aed551dbfdc82d`
+([integration PR #146](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/146)).
+It includes the new save, planning, mod, asset, installation and reference tools
+summarized in the pending notes. Coverage remains 98 game/platform profiles,
+15 save platforms and 145 scoped conversion routes. The full suite and native
+Windows qualification remain in progress; this is not evidence that all 26
+original workstreams have finished.
 
 **Historical tag conflict:** `v1.0` already points to
-`b18e57e149ede01967910887f8c2aa7d10b22140`. Preserve it. A distinct new Toolkit
-release tag and the corresponding workflow checks must be agreed before
-publication; never move/delete the historical tag or release.
+`b18e57e149ede01967910887f8c2aa7d10b22140`. Preserve it. Use a distinct
+`toolkit-v1.0` namespace for the new product's release and update official
+workflow tag checks consistently before publication. Never move or delete the
+historical tag or release.
+
+GitHub About settings require repository administration access. The connected
+integration returned HTTP 403 for those settings; the exact description,
+website and topics above remain the handoff for an authorized administrator.
 
 ## Final release checklist
 
@@ -64,7 +68,7 @@ publication; never move/delete the historical tag or release.
 3. In a dedicated release-preparation change, set application, builder, project
    and source-manifest versions to `1.0` together. Change the build/package prefix,
    workflow asset paths, commit/title strings, tag validation and packaging tests
-   together for the new Toolkit identity and agreed non-conflicting tag.
+   together for the new Toolkit identity and non-conflicting Toolkit tag.
 4. Archive the v3.1 workflow notes under `docs/releases/v3.1.md`, then put the
    reviewed final Toolkit notes in `docs/RELEASE_NOTES.md`. Update the docs index
    and source manifest. Remove pending language only when its claims are true.

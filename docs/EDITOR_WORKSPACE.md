@@ -13,6 +13,9 @@ a different file or discard changes. Game Library still provides platform,
 series and name/feature search, with the existing illustrated/compact layouts.
 
 **Progression Dashboard** opens first and shows verified opened-save cards.
+**Completion Companion** separates supported platform achievement snapshots from
+your optional manual checklist. Manual entries are saved locally per game/platform
+and do not read or change a save. Missing achievement data is labelled unavailable.
 Use **Edit Fields** for the existing editing controls. Dashboard field links reveal
 the matching editable field without staging edits. [Coverage and use](PROGRESSION_DASHBOARDS.md).
 

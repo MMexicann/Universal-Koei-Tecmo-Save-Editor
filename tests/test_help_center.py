@@ -90,6 +90,20 @@ class HelpCenterGuiTests(unittest.TestCase):
         self.assertEqual(self.center.guide_platform.get(), 'PlayStation Vita')
         self.assertFalse(self.center._panels)
 
+    def test_versions_tab_loads_tracker_lazily_and_preserves_language_search(self):
+        self.assertNotIn('versions', self.center._panels)
+        self.center.show_tab('versions')
+        panel = self.center._panels['versions']
+        self.assertEqual(panel._scan_thread, None)
+        self.assertIsNotNone(panel.search_entry)
+
+        self.center.set_language('de')
+        self.assertEqual(panel.language, 'de')
+        self.assertEqual(panel.search_label.cget('text'), 'Installierte Spiele filtern')
+        self.center.focus_search()
+        self.root.update()
+        self.assertEqual(self.root.focus_get(), panel.search_entry)
+
 
 if __name__ == '__main__':
     unittest.main()

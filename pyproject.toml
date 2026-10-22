@@ -5,11 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "universal-koei-tecmo-game-toolkit"
 version = "3.1"
-description = "Mexican's Windows toolkit for supported Koei Tecmo saves: editing, dashboards, comparison, scoped conversion, save management and reviewed automation."
+description = "Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management and read-only asset tools, with backups and Undo."
 requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{name = "Mexican"}]
+dependencies = [
+    "miniaudio>=1.71,<2",
+    "trimesh>=5.1.1,<6",
+]
 
 [project.scripts]
 universal-koei-toolkit = "koei_editor.application:main"

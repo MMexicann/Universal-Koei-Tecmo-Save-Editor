@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111c1a">
+    <meta name="description" content="An offline-first studio for reviewing and translating verified game text interchange formats.">
+    <title>Koei Tecmo Localization Studio</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./src/app.mjs"></script>
+  </head>
+  <body>
+    <div class="app-frame">
+      <header class="topbar">
+        <a class="brand" href="#home" aria-label="Koei Tecmo Localization Studio home">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="brand-type"><span class="brand-kicker">KOEI TECMO</span><strong>LOCALIZATION STUDIO</strong></span>
+        </a>
+        <div class="privacy-pill"><span class="status-dot"></span><span>Offline workspace</span></div>
+        <div class="topbar-spacer"></div>
+        <label class="locale-control">
+          <span>Source</span>
+          <select id="source-language" aria-label="Source language">
+            <option value="ja-JP">Japanese</option><option value="en-US">English</option><option value="zh-Hans">Chinese (Simplified)</option><option value="zh-Hant">Chinese (Traditional)</option><option value="ko-KR">Korean</option><option value="fr-FR">French</option><option value="de-DE">German</option><option value="es-ES">Spanish</option><option value="other">Other</option>
+          </select>
+        </label>
+        <span class="locale-arrow" aria-hidden="true">→</span>
+        <label class="locale-control">
+          <span>Target</span>
+          <select id="target-language" aria-label="Target language">
+            <option value="en-US">English</option><option value="ja-JP">Japanese</option><option value="zh-Hans">Chinese (Simplified)</option><option value="zh-Hant">Chinese (Traditional)</option><option value="ko-KR">Korean</option><option value="fr-FR">French</option><option value="de-DE">German</option><option value="es-ES">Spanish</option><option value="other">Other</option>
+          </select>
+        </label>
+        <button class="button button-primary top-export" id="export-button" type="button" disabled>
+          <span class="download-icon" aria-hidden="true"></span> Export copy
+        </button>
+      </header>
+
+      <div class="body-layout">
+        <aside class="sidebar" aria-label="Workspace navigation">
+          <div class="sidebar-caption">WORKSPACE</div>
+          <button class="nav-item is-current" id="nav-project" type="button"><span class="nav-icon icon-grid" aria-hidden="true"></span><span>Project</span><span class="nav-count" id="nav-count">—</span></button>
+          <button class="nav-item" id="nav-untranslated" type="button"><span class="nav-icon icon-lines" aria-hidden="true"></span><span>Needs translation</span><span class="nav-count" id="nav-untranslated-count">—</span></button>
+          <button class="nav-item" id="nav-attention" type="button"><span class="nav-icon icon-alert" aria-hidden="true">!</span><span>Needs review</span><span class="nav-count" id="nav-attention-count">—</span></button>
+          <div class="sidebar-rule"></div>
+          <div class="sidebar-caption">PROJECT FILE</div>
+          <div class="file-card" id="file-card">
+            <span class="file-icon" aria-hidden="true">TXT</span>
+            <span class="file-card-copy"><strong id="file-card-name">No file loaded</strong><small id="file-card-format">Choose a supported file</small></span>
+          </div>
+          <button class="nav-item muted-nav" id="replace-file" type="button"><span class="nav-icon icon-plus" aria-hidden="true">+</span><span>Import another file</span></button>
+          <input id="file-input" type="file" accept=".csv,.tsv,.json,.srt,.vtt,.txt,text/csv,application/json,text/plain" hidden>
+          <div class="sidebar-bottom">
+            <div class="safe-note-icon" aria-hidden="true">✓</div>
+            <strong>Your original stays untouched</strong>
+            <p>Edits live in this browser tab. Export always creates a separate copy.</p>
+            <a href="./docs/SUPPORTED_FORMATS.md" target="_blank" rel="noreferrer">Supported formats</a>
+          </div>
+        </aside>
+
+        <main class="main-content" id="main-content">
+          <section class="welcome-panel" id="welcome-panel" aria-labelledby="welcome-title">
+            <div class="welcome-eyebrow"><span class="eyebrow-mark"></span> TRANSLATION WORKSPACE</div>
+            <h1 id="welcome-title">Bring your strings<br><em>into focus.</em></h1>
+            <p class="welcome-intro">Inspect dialogue, menus, and subtitles in a calm, structured workspace. Your files stay on this device.</p>
+
+            <div class="dropzone" id="dropzone" role="region" aria-label="Drop a supported localization file">
+              <div class="upload-symbol" aria-hidden="true"><span>↑</span></div>
+              <div class="dropzone-copy"><strong>Drop a localization file here</strong><span>or browse your device · UTF-8 text files only</span></div>
+              <button class="button button-dark" id="browse-button" type="button">Browse files</button>
+            </div>
+
+            <div class="welcome-actions">
+              <button class="text-button" id="demo-button" type="button"><span aria-hidden="true">✳</span> Explore with a sample project</button>
+              <span class="welcome-hint">No account · no upload · no machine-translation calls</span>
+            </div>
+
+            <div class="format-strip" aria-label="Supported format profiles">
+              <span class="format-strip-title">VERIFIED PROFILES</span>
+              <span class="format-chip">CSV / TSV catalog</span><span class="format-chip">JSON catalog</span><span class="format-chip">SubRip</span><span class="format-chip">WebVTT</span><span class="format-chip">Line text</span>
+            </div>
+            <p class="boundary-note">This studio reads text interchange files. It does not open Koei Tecmo game packages or executables.</p>
+          </section>
+
+          <section class="studio-panel" id="studio-panel" hidden aria-labelledby="project-title">
+            <div class="project-heading">
+              <div>
+                <div class="breadcrumb"><span>LOCALIZATION PROJECT</span><span class="crumb-slash">/</span><span id="project-format-label">TEXT CATALOG</span></div>
+                <h1 id="project-title">Untitled localization project</h1>
+                <p class="project-subtitle" id="project-subtitle">Review source strings, add translations, and export a new copy.</p>
+              </div>
+              <div class="project-heading-actions">
+                <button class="button button-quiet" id="clear-project" type="button">Close project</button>
+                <button class="button button-primary" id="export-button-secondary" type="button"><span class="download-icon" aria-hidden="true"></span> Export copy</button>
+              </div>
+            </div>
+
+            <div class="metrics-row" aria-label="Project progress">
+              <article class="metric-card metric-total"><span class="metric-label">TOTAL STRINGS</span><strong id="metric-total">0</strong><span class="metric-foot">in this file</span></article>
+              <article class="metric-card metric-translated"><span class="metric-label">TRANSLATED</span><strong id="metric-translated">0</strong><span class="metric-foot"><span class="tiny-dot green-dot"></span><span id="translated-percent">0% complete</span></span></article>
+              <article class="metric-card metric-untranslated"><span class="metric-label">NEEDS TRANSLATION</span><strong id="metric-untranslated">0</strong><span class="metric-foot">source text only</span></article>
+              <article class="metric-card metric-review"><span class="metric-label">TOKEN CHECKS</span><strong id="metric-review">0</strong><span class="metric-foot"><span class="tiny-dot amber-dot"></span>strings to review</span></article>
+              <div class="progress-card"><div class="progress-copy"><span>Translation progress</span><strong id="progress-label">0%</strong></div><div class="progress-track" role="progressbar" aria-label="Translation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progress-bar"></span></div><div class="progress-foot"><span id="progress-complete">0 translated</span><span id="progress-remaining">0 remaining</span></div></div>
+            </div>
+
+            <div class="content-toolbar">
+              <div class="filter-tabs" role="group" aria-label="Filter strings">
+                <button class="filter-tab is-selected" type="button" aria-pressed="true" data-filter="all">All strings <span id="filter-all-count">0</span></button>
+                <button class="filter-tab" type="button" aria-pressed="false" data-filter="untranslated">Needs translation <span id="filter-untranslated-count">0</span></button>
+                <button class="filter-tab" type="button" aria-pressed="false" data-filter="review">Needs review <span id="filter-review-count">0</span></button>
+              </div>
+              <label class="search-field"><span class="search-icon" aria-hidden="true"></span><input id="search-input" type="search" placeholder="Search source, target, or ID" autocomplete="off"><kbd>Ctrl K</kbd></label>
+              <button class="icon-button" id="reset-filter" type="button" aria-label="Clear search and filters" title="Clear search and filters">Reset</button>
+            </div>
+
+            <div class="studio-grid">
+              <section class="segment-pane" aria-label="String list">
+                <div class="table-header"><span>KEY / CONTEXT</span><span>SOURCE TEXT</span><span id="target-heading">TARGET TEXT</span><span>STATUS</span></div>
+                <div class="segment-list" id="segment-list" role="list"></div>
+                <div class="empty-filter" id="empty-filter" hidden>No strings match this view.</div>
+                <div class="list-footer"><span id="list-count">0 strings</span><span class="list-footer-note"><span class="tiny-dot green-dot"></span> saved in this tab</span></div>
+              </section>
+
+              <aside class="inspector" aria-label="Selected string details">
+                <div class="inspector-empty" id="inspector-empty">
+                  <div class="inspector-empty-mark" aria-hidden="true">i</div>
+                  <strong>Select a string to inspect</strong>
+                  <p>Source text, context, and token checks will appear here.</p>
+                </div>
+                <div class="inspector-content" id="inspector-content" hidden>
+                  <div class="inspector-heading"><div><span class="inspector-kicker">STRING INSPECTOR</span><h2 id="inspector-id">—</h2></div><span class="status-badge" id="inspector-status">UNTRANSLATED</span></div>
+                  <div class="inspector-context" id="inspector-context" hidden></div>
+                  <label class="field-label" for="inspector-source">SOURCE TEXT <span id="source-language-label">Japanese</span></label>
+                  <textarea class="source-textarea" id="inspector-source" rows="5" readonly spellcheck="false"></textarea>
+                  <div class="translation-label-row"><label class="field-label" for="inspector-target">TRANSLATION <span id="target-language-label">English</span></label><span class="char-counter" id="char-counter">0 chars</span></div>
+                  <textarea class="target-textarea" id="inspector-target" rows="6" placeholder="Write a translation…" spellcheck="true"></textarea>
+                  <div class="validation-box" id="validation-box" aria-live="polite"></div>
+                  <div class="inspector-actions"><button class="button button-quiet" id="copy-source" type="button">Copy source</button><span id="inspector-position">—</span></div>
+                </div>
+              </aside>
+            </div>
+            <p class="workspace-footnote"><span class="safe-note-icon small-safe" aria-hidden="true">✓</span> Working locally. This browser never writes to your original file or a game folder.</p>
+          </section>
+
+          <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+        </main>
+      </div>
+
+      <dialog class="export-dialog" id="export-dialog" aria-labelledby="export-dialog-title">
+        <div class="dialog-topline"><span class="dialog-icon" aria-hidden="true"><span class="download-icon"></span></span><button class="dialog-close" id="close-export-dialog" type="button" aria-label="Close">×</button></div>
+        <p class="dialog-kicker">EXPORT REVIEW</p>
+        <h2 id="export-dialog-title">Create a new localized copy</h2>
+        <p class="dialog-description" id="export-summary">Your imported file remains unchanged. The exported file will contain your translations.</p>
+        <div class="dialog-checks" id="export-checks"></div>
+        <div class="dialog-actions"><button class="button button-quiet" id="cancel-export" type="button">Go back</button><button class="button button-primary" id="confirm-export" type="button">Export separate copy</button></div>
+      </dialog>
+      <div class="dialog-backdrop" id="dialog-backdrop" hidden></div>
+    </div>
+  </body>
+</html>

@@ -79,8 +79,9 @@ class UniversalGuiTests(unittest.TestCase):
         self.assertIsNot(dw3.changes, origins.changes)
         self.assertIsNone(dw3.document)
         self.assertIsNone(origins.document)
-        self.assertEqual(set(dw3.tabs), {'Dashboard', 'Officers', 'Items', 'Weapons', 'Bodyguards', 'Unlocks',
-                                         'Collections', 'Musou Saves'})
+        self.assertEqual(set(dw3.tabs), {'Dashboard', 'Completion Companion', 'Officers', 'Items',
+                                         'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves',
+                                         'Character & Weapon Workshop'})
         self.assertFalse(origins.fields.get_children())
 
     def test_additional_native_profiles_use_their_registered_backend_and_retain_sessions(self):

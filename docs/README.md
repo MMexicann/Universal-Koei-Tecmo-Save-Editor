@@ -4,34 +4,53 @@ Source setup and contribution rules live in [CONTRIBUTING.md](../CONTRIBUTING.md
 and [AGENTS.md](../AGENTS.md). The application overview is in the
 [repository README](../README.md).
 
-The application's **Editing and Research** menu opens reusable presets and the
-Save Research Lab. For selective transfer, open the destination save in its editor
-first, then choose **Transfer from Save Copy...** from that menu.
+The application's **Editing and Research** menu opens reusable presets,
+Controller & Input Profiles, Game Asset Explorer and the Save Research Lab. These input profiles are
+app-owned and do not modify game configuration files or Steam Input. For
+selective transfer, open the destination save in its editor first, then choose
+**Transfer from Save Copy...** from that menu.
+The menu also opens the [Koei Tecmo Mod Manager](MOD_MANAGER.md), whose current
+verified installation adapter supports Nioh 2 PC only.
 
 ## Development and releases
 
 - [Game Toolkit v1.0 pending release notes](TOOLKIT_V1_RELEASE_NOTES.md)
 - [Published Save Editor v3.1 release notes](RELEASE_NOTES.md)
+- [Offline Localization Studio: supported plain-text formats and separate exports](../localization-studio/README.md)
+- [Browser-local Mod Testing Sandbox: staging, contracts, reports and safety limits](MOD_TESTING_SANDBOX.md)
 
 - [v3.0 editing, save management, automation and community tools](releases/v3.0.md)
 
 - [Scenario and army editor: verified strategy record view and limits](SCENARIO_ARMY_EDITOR_REPORT.md)
 
 - [Application shell, command palette and localization](APPLICATION_SHELL.md)
+- [Controller and input profiles: app-owned bindings, presets and recovery](CONTROLLER_INPUT_PROFILES.md)
+- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
+- [Koei Tecmo Mod Manager: supported method and safeguards](MOD_MANAGER.md)
+- [Mod Manager tests and validation evidence](MOD_MANAGER_VALIDATION.md)
+- [Game Asset Explorer: supported subsets, safe reads and validation evidence](ASSET_EXPLORER.md)
+- [Game Hub: supported Steam installations, build metadata and launch](APPLICATION_SHELL.md#game-hub)
+- [Game Hub validation report](GAME_HUB_VALIDATION.md)
 - [Offline help, compatibility and preparation guides](HELP_AND_COMPATIBILITY.md)
+- [Game Troubleshooting Center: read-only diagnostics and report evidence](GAME_TROUBLESHOOTING.md)
 
 - [v2.7 graphical progression dashboards](releases/v2.7.md)
 - [Progression dashboard coverage and use](PROGRESSION_DASHBOARDS.md)
+- [Completion Companion evidence for Sol](COMPLETION_COMPANION_AI_EVIDENCE.md)
+- [Character & Weapon Workshop: mapped builds, comparisons and presets](CHARACTER_WEAPON_WORKSHOP.md)
 - [v2.6 new titles, Save Library and editor tools](releases/v2.6.md)
 - [Save Library: copied-folder browsing and identical gameplay files](SAVE_LIBRARY.md)
+- [Emulator Integration Hub: documented launch profiles and exported-save handoff](EMULATOR_HUB.md)
 - [Selective save-to-save transfer: identity, dependencies and Undo](SAVE_TRANSFER.md)
 - [Save Doctor, automatic detection and local Save Vault](SAVE_MANAGEMENT.md)
+- [Smart Playthrough Profiles: verified snapshots, compatibility previews and isolated environments](SMART_PLAYTHROUGH_PROFILES.md)
 - [Source-bound edit presets: preview, apply and Undo](EDIT_PRESETS.md)
 - [Reusable resource editing presets: compatible copies and selected batches](REUSABLE_PRESETS.md)
 - [Bulk edit validation and exact field navigation](EDITING_WORKFLOWS.md)
 - [Reviewed automation, Workflow Builder, batch CLI and recovery](AUTOMATION.md)
 - [Seeded automation regression properties and repeatable benchmarks](AUTOMATION_BENCHMARKS.md)
 - [Pinned fields and complete JSON/CSV reviews](FIELD_PINS_AND_REVIEWS.md)
+- [Sol save-editing UX report: shared field paging and safe comparison handoff](SOL_SAVE_EDITOR_UX.md)
 
 - [v2.5.4 review-export filename fix](releases/v2.5.4.md)
 - [v2.5.3 equipment, new profiles and shared refinements](releases/v2.5.3.md)
@@ -59,6 +78,8 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Experimental numeric limits and warnings](EXPERIMENTAL_EDITING.md)
 
 - [Community plugins and contribution API](COMMUNITY_PLUGINS.md)
+- [Koei Tecmo Community Toolkit formats](COMMUNITY_TOOLKIT.md)
+- [Nexus Mods browser, API use and Mod Manager handoff](NEXUS_MODS_BROWSER.md)
 - [Architecture and package boundaries](ARCHITECTURE.md)
 - [Supported games and platforms](SUPPORTED_GAMES.md)
 - [Current Sol expansion on main](SOL_EXPANSION.md)
@@ -68,7 +89,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 - [Prepared unreleased update](PREPARED_UPDATE.md)
 - [Existing editor expansion and whole-library review](RICH_EDITOR_EXPANSION.md)
 - [Public Koei Tecmo save-editor sources and profile evidence](EDITOR_SOURCE_CATALOG.md)
-- [Game data encyclopedia feed: contract, scope and provenance](GAME_DATA_ENCYCLOPEDIA.md)
+- [Game Patch and Compatibility Analyzer](PATCH_COMPATIBILITY_ANALYZER.md)
 - [Combined pull-request review](INTEGRATION_REVIEW.md)
 - [Windows build and packaging](BUILDING.md)
 - [Application performance benchmarks](PERFORMANCE.md)
@@ -116,6 +137,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
   [console/Pirate/strategy](CONSOLE_PIRATE_STRATEGY_DEPTH.md).
 
 - [Expansion coverage and remaining inputs](EXPANSION_COVERAGE.md)
+- [Koei Tecmo RPG and adventure editor expansion audit](KT_FAMILY_EXPANSION_AUDIT.md)
 - [Per-game supplier input checklist](REMAINING_INPUTS.md)
 - [DW3 save format](SAVE_FORMAT.md), [save variants](SAVE_COMPATIBILITY.md),
   [compatibility fixes](COMPATIBILITY_FIX.md), [bodyguards](BODYGUARDS.md),
@@ -162,6 +184,7 @@ first, then choose **Transfer from Save Copy...** from that menu.
 
 - [Original Samurai Warriors 2 Windows PC](SW2_PC_FORMAT.md)
 - [Pirate Warriors 4 and Abyss coverage](PIRATE_ABYSS_RESEARCH.md)
+- [Pirate Warriors edition and platform boundaries](PIRATE_WARRIORS_EDITION_SCOPE.md)
 - [All-Stars and WO4/Ultimate research](STARS_WO4_RESEARCH.md)
 - [Original WO4 PC resources and officers](WO4_PC_FORMAT.md)
 - [WO4 Ultimate PC resources and officer pools](WO4_ULTIMATE_PC_FORMAT.md)

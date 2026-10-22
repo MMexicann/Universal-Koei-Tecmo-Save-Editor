@@ -144,6 +144,29 @@ class InstalledGame:
     source: str = 'steam_manifest'
     confidence: str = 'installation_metadata'
     evidence: str = ''
+    build_id: str | None = None
+    last_updated: str | None = None
+    # Local-only installation context for UI consumers such as the Game Hub.
+    library_path: Path | None = field(default=None, repr=False)
+    size_on_disk: int | None = None
+
+
+def _build_marker(value):
+    """Accept only small decimal Steam build/time markers, never arbitrary VDF text."""
+    return value if type(value) is str and re.fullmatch(r'[0-9]{1,20}', value) else None
+
+
+def _last_updated_marker(value):
+    """Accept Steam's bounded Unix-seconds marker separately from its build ID."""
+    return value if type(value) is str and re.fullmatch(r'[0-9]{1,12}', value) else None
+
+
+def _size_on_disk_marker(value):
+    """Parse Steam's install-size estimate without retaining arbitrary VDF text."""
+    if type(value) is not str or re.fullmatch(r'[0-9]{1,20}', value) is None:
+        return None
+    number = int(value)
+    return number if number <= (1 << 63) - 1 else None
 
 
 @dataclass(frozen=True)
@@ -176,7 +199,9 @@ def report(result):
         'metadata_bytes': result.metadata_bytes,
         'issues': list(result.issues),
         'installed_games': [dict(game_id=item.game_id, app_id=item.app_id,
-                                 source=item.source, confidence=item.confidence)
+                                 source=item.source, confidence=item.confidence,
+                                 build_id=item.build_id, last_updated=item.last_updated,
+                                 size_on_disk=item.size_on_disk)
                             for item in result.installed_games],
         'locations': [dict(game_id=item.game_id, source=item.source,
                            confidence=item.confidence, live=item.live)
@@ -432,7 +457,7 @@ class _Scanner:
                                   'proton_reviewed_location' if proton else 'reviewed_native_location',
                                   mapping.evidence)
 
-    def scan_root(self, root):
+    def scan_root(self, root, *, include_save_locations=True, include_userdata=True):
         metadata = self.metadata(root / 'steamapps/libraryfolders.vdf')
         if metadata is None:
             # Older clients kept the same bounded KeyValues metadata here.
@@ -469,20 +494,33 @@ class _Scanner:
             installation = self.directory(root / 'steamapps/common' / name)
             if installation is None:
                 continue
+            build_id = _build_marker(app.get('buildid'))
+            last_updated = _last_updated_marker(app.get('lastupdated'))
+            size_on_disk = _size_on_disk_marker(app.get('sizeondisk'))
+            if app.get('buildid') is not None and build_id is None:
+                self.issues.add('invalid_build_id_ignored')
+            if app.get('lastupdated') is not None and last_updated is None:
+                self.issues.add('invalid_last_updated_ignored')
+            if app.get('sizeondisk') is not None and size_on_disk is None:
+                self.issues.add('invalid_size_on_disk_ignored')
             self.reserve_result()
             self.installed.append(InstalledGame(mapping.game_id, mapping.app_id, installation,
-                                               evidence=mapping.evidence))
+                                               evidence=mapping.evidence, build_id=build_id,
+                                               last_updated=last_updated, library_path=root,
+                                               size_on_disk=size_on_disk))
             user = root / f'steamapps/compatdata/{mapping.app_id}/pfx/drive_c' / 'users' / 'steamuser'
-            self.native(user / 'Documents', user / 'AppData/Local', user / 'AppData/Roaming',
-                        game_id=mapping.game_id, proton=True)
+            if include_save_locations:
+                self.native(user / 'Documents', user / 'AppData/Local', user / 'AppData/Roaming',
+                            game_id=mapping.game_id, proton=True)
         # App-scoped remote directories are candidates even when an installation
         # was removed. Never enumerate remote contents or read Cloud metadata.
-        for account in self.children(root / 'userdata'):
-            if not re.fullmatch(r'[0-9]{1,20}', account):
-                continue
-            for mapping in STEAM_MAPPINGS:
-                self.add_location(mapping.game_id, root / 'userdata' / account / mapping.app_id / 'remote',
-                                  'steam_userdata', mapping.evidence)
+        if include_userdata:
+            for account in self.children(root / 'userdata'):
+                if not re.fullmatch(r'[0-9]{1,20}', account):
+                    continue
+                for mapping in STEAM_MAPPINGS:
+                    self.add_location(mapping.game_id, root / 'userdata' / account / mapping.app_id / 'remote',
+                                      'steam_userdata', mapping.evidence)
 
 
 def _windows_roots():
@@ -594,4 +632,41 @@ def discover_saves(*, steam_roots=None, home=None, documents=None, local_app_dat
     except _Stop:
         pass
     return DiscoveryResult(tuple(scanner.installed), tuple(scanner.locations), tuple(sorted(scanner.issues)),
+                           scanner.stop_reason, scanner.entries, scanner.bytes, mapped)
+
+
+def discover_installed_builds(*, steam_roots=None, home=None, limits=DiscoveryLimits(), cancel=None):
+    """Read only mapped Steam installation manifests for installed-build tracking.
+
+    Unlike ``discover_saves``, this path never checks Documents, native save
+    locations, Proton save folders, or Steam ``userdata``. It reads bounded
+    library/manifests metadata and verifies that the mapped installation folder
+    is an ordinary directory. The returned paths are local in-memory values;
+    portable callers should use ``report`` which excludes them.
+    """
+    if type(limits) is not DiscoveryLimits:
+        raise SaveError('Choose fixed bounded discovery limits.')
+    limits.validate()
+    home = Path.home() if home is None else Path(home)
+    scanner = _Scanner(limits, cancel)
+    registered = {game.id for game in GAMES}
+    mapped = tuple(sorted({item.game_id for item in STEAM_MAPPINGS} & registered))
+    if any(item.game_id not in registered for item in STEAM_MAPPINGS):
+        raise SaveError('A Steam discovery mapping is not a registered game/platform.')
+    try:
+        scanner.check()
+        roots = _default_roots(home) if steam_roots is None else steam_roots
+        for index, root in enumerate(roots):
+            scanner.check()
+            if index >= limits.max_roots:
+                scanner.stop('root_limit')
+            scanner.add_root(root)
+        index = 0
+        while index < len(scanner.roots):
+            scanner.scan_root(scanner.roots[index], include_save_locations=False,
+                              include_userdata=False)
+            index += 1
+    except _Stop:
+        pass
+    return DiscoveryResult(tuple(scanner.installed), (), tuple(sorted(scanner.issues)),
                            scanner.stop_reason, scanner.entries, scanner.bytes, mapped)

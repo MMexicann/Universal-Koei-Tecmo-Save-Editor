@@ -344,6 +344,8 @@ SETUPTOOLS_LOREM_RESOURCE = 'setuptools/_vendor/jaraco/text/Lorem ipsum.txt'
 SETUPTOOLS_LOREM_SHA256 = '37fedcffbf73c4eb9f058f47677cb33203a436ff9390e4d38a8e01c9dad28e0b'
 TRIMESH_TYPED_MARKER = 'trimesh/py.typed'
 TRIMESH_TYPED_MARKER_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+TRIMESH_COLOR_MAP = 'trimesh/resources/color_map.json.gzip'
+TRIMESH_COLOR_MAP_SHA256 = 'd0476d6b5697444c8b359fd933e7effde10023329aeddbebf132d803ec031735'
 STDLIB_EXTENSIONS = frozenset({
     '_asyncio', '_bz2', '_ctypes', '_decimal', '_elementtree', '_hashlib', '_lzma',
     '_multiprocessing', '_overlapped', '_queue', '_socket', '_sqlite3', '_ssl',
@@ -426,6 +428,17 @@ def _validate_runtime_file(name, data, expected):
     elif normalized == TRIMESH_TYPED_MARKER:
         if hashlib.sha256(data).hexdigest() != TRIMESH_TYPED_MARKER_SHA256:
             raise ValueError(f'Unreviewed trimesh package marker: {name}')
+    elif normalized == TRIMESH_COLOR_MAP:
+        if hashlib.sha256(data).hexdigest() != TRIMESH_COLOR_MAP_SHA256:
+            raise ValueError(f'Unreviewed trimesh color map: {name}')
+        decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+        try:
+            content = decoder.decompress(data, 128 * 1024 + 1)
+        except zlib.error as error:
+            raise ValueError(f'Invalid compressed trimesh color map: {name}') from error
+        if len(content) > 128 * 1024 or not decoder.eof or decoder.unused_data:
+            raise ValueError(f'Unbounded compressed trimesh color map: {name}')
+        scan_bundled_data(name, content)
     elif normalized == 'base_library.zip':
         _verify_library_zip(name, data, require_stdlib=True)
     elif relative.suffix.casefold() in {'.dll', '.pyd'}:

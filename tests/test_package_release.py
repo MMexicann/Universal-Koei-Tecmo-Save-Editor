@@ -1,4 +1,5 @@
 """Release archive integrity and publication boundaries; synthetic files only."""
+import gzip
 import hashlib
 import importlib.util
 from importlib.metadata import version
@@ -191,15 +192,38 @@ class PackagingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
             release._validate_runtime_file('trimesh/unreviewed.txt', b'', {})
 
+    def test_only_the_pinned_trimesh_color_map_is_allowed_and_scanned(self):
+        resource = gzip.compress(b'{"magma": [], "inferno": [], "plasma": [], "viridis": []}')
+        digest = hashlib.sha256(resource).hexdigest()
+        with patch.object(release, 'TRIMESH_COLOR_MAP_SHA256', digest):
+            self.assertEqual(release._validate_runtime_file(release.TRIMESH_COLOR_MAP, resource, {}),
+                             release.TRIMESH_COLOR_MAP)
+            with self.assertRaisesRegex(ValueError, 'Unreviewed trimesh color map'):
+                release._validate_runtime_file(release.TRIMESH_COLOR_MAP, resource + b'changed', {})
+
+        home_path = b'C:' + bytes([92]) + bytes([92]).join(
+            (b'Users', b'runneradmin', b'private'))
+        personal_resource = gzip.compress(b'{"path": "' + home_path + b'"}')
+        with patch.object(release, 'TRIMESH_COLOR_MAP_SHA256',
+                          hashlib.sha256(personal_resource).hexdigest()):
+            with self.assertRaisesRegex(ValueError, 'Personal home path'):
+                release._validate_runtime_file(release.TRIMESH_COLOR_MAP, personal_resource, {})
+        with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
+            release._validate_runtime_file('trimesh/resources/unreviewed.json.gzip', resource, {})
+
     @unittest.skipUnless(importlib.util.find_spec('trimesh') is not None,
                          'The optional trimesh package is installed by the Windows build lock.')
     def test_pinned_trimesh_marker_digest_matches_the_installed_distribution(self):
         if version('trimesh') != '5.1.1':
             self.skipTest('The Windows build lock pins trimesh 5.1.1.')
         import trimesh
-        marker = Path(trimesh.__file__).resolve().parent / 'py.typed'
+        package = Path(trimesh.__file__).resolve().parent
+        marker = package / 'py.typed'
         self.assertEqual(hashlib.sha256(marker.read_bytes()).hexdigest(),
                          release.TRIMESH_TYPED_MARKER_SHA256)
+        color_map = package / 'resources' / 'color_map.json.gzip'
+        self.assertEqual(hashlib.sha256(color_map.read_bytes()).hexdigest(),
+                         release.TRIMESH_COLOR_MAP_SHA256)
 
     def test_pinned_setuptools_lorem_digest_matches_the_installed_distribution(self):
         if version('setuptools') != '84.0.0':

@@ -146,6 +146,28 @@ class PackagingTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed'):
                 release._validate_runtime_file(name, b'MZ synthetic native code', {})
 
+    def test_numpy_build_metadata_with_runner_paths_is_rejected(self):
+        runner_path = b'C:' + bytes([92]) + bytes([92]).join(
+            (b'Users', b'runneradmin', b'AppData', b'Local', b'Temp', b'build'))
+        delvewheel = b"Version: 1.11.2\nArguments: ['" + runner_path + b"']\n"
+        with self.assertRaisesRegex(ValueError, 'Personal home path'):
+            release.scan_bundled_data('numpy-2.5.4.dist-info/DELVEWHEEL', delvewheel)
+        with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
+            release._validate_runtime_file('numpy-2.5.4.dist-info/DELVEWHEEL',
+                                           b'Version: 1.11.2\n', {})
+
+    def test_only_the_pinned_numpy_distribution_metadata_is_allowed(self):
+        metadata = b'Metadata-Version: 2.4\nName: numpy\nVersion: 2.5.4\n'
+        digest = hashlib.sha256(metadata).hexdigest()
+        with patch.object(release, 'NUMPY_METADATA_SHA256', digest):
+            self.assertEqual(release._validate_runtime_file(release.NUMPY_METADATA, metadata, {}),
+                             release.NUMPY_METADATA)
+            with self.assertRaisesRegex(ValueError, 'Unreviewed NumPy distribution metadata'):
+                release._validate_runtime_file(release.NUMPY_METADATA, metadata + b'Unreviewed: yes\n', {})
+        for name in ('numpy-2.5.4.dist-info/RECORD', 'numpy-2.5.4.dist-info/licenses/LICENSE.txt'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
+                release._validate_runtime_file(name, b'reviewed package notice', {})
+
     def test_standalone_checks_embedded_metadata_native_files_modules_and_privacy(self):
         archive, blobs, module = self.standalone_archive_fixture()
         for name, data in (('koei_editor/data/game_metadata.json', b'{"tampered": true}'),

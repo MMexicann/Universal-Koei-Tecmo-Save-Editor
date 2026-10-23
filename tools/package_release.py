@@ -338,6 +338,8 @@ NUMPY_DLLS = frozenset({
     'numpy.libs/libscipy_openblas64_-ed4f167a5330424524f45258e7ca2c8d.dll',
     'numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll',
 })
+NUMPY_METADATA = 'numpy-2.5.4.dist-info/METADATA'
+NUMPY_METADATA_SHA256 = 'e2b909d6a37d76c2bc130f528d7fed0c517322bce16dc7846b6a6df30e200403'
 STDLIB_EXTENSIONS = frozenset({
     '_asyncio', '_bz2', '_ctypes', '_decimal', '_elementtree', '_hashlib', '_lzma',
     '_multiprocessing', '_overlapped', '_queue', '_socket', '_sqlite3', '_ssl',
@@ -411,6 +413,9 @@ def _validate_runtime_file(name, data, expected):
     if normalized in expected:
         if data != expected[normalized]:
             raise ValueError(f'Bundled metadata differs from manifest: {name}')
+    elif normalized == NUMPY_METADATA:
+        if hashlib.sha256(data).hexdigest() != NUMPY_METADATA_SHA256:
+            raise ValueError(f'Unreviewed NumPy distribution metadata: {name}')
     elif normalized == 'base_library.zip':
         _verify_library_zip(name, data, require_stdlib=True)
     elif relative.suffix.casefold() in {'.dll', '.pyd'}:

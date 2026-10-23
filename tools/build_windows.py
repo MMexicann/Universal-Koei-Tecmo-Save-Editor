@@ -1,8 +1,10 @@
 """Build the portable folder or a complete standalone Windows executable."""
 import argparse
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
+import tempfile
 
 from koei_editor.game_registry import ALL_ADAPTERS
 from koei_editor.conversion import ENDPOINTS
@@ -17,6 +19,47 @@ DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME
     ('licenses/katana-save-data-resigner-MIT.txt', 'licenses')]
 DATA += [(source, 'licenses') for source in RUNTIME_LICENSES]
 DATA += [(source, 'guides') for source in RUNTIME_GUIDES]
+
+
+@contextmanager
+def with_numpy_metadata_only(site_packages=None):
+    """Expose only NumPy's version metadata to PyInstaller, then restore its install."""
+    if site_packages is None:
+        import numpy
+        site_packages = Path(numpy.__file__).resolve().parent.parent
+    else:
+        site_packages = Path(site_packages).resolve()
+
+    candidates = tuple(site_packages.glob('numpy-*.dist-info'))
+    if len(candidates) > 1:
+        raise RuntimeError('Multiple NumPy distribution metadata directories found.')
+    if not candidates or candidates[0].is_symlink() or not candidates[0].is_dir():
+        raise RuntimeError('NumPy distribution metadata directory is missing or unsafe.')
+
+    metadata_dir = candidates[0]
+    version_metadata = metadata_dir / 'METADATA'
+    if version_metadata.is_symlink() or not version_metadata.is_file():
+        raise RuntimeError('NumPy version metadata is missing or unsafe.')
+    # PyInstaller may copy the complete dist-info directory. Keep METADATA for
+    # its build-time version lookup, but exclude runner paths, RECORD, and
+    # unreviewed package data from both frozen payloads.
+    with tempfile.TemporaryDirectory(prefix='koei-numpy-metadata-', dir=site_packages) as temporary:
+        saved_dir = Path(temporary) / metadata_dir.name
+        saved_dir.mkdir()
+        hidden = []
+        try:
+            for entry in metadata_dir.iterdir():
+                if entry.name == 'METADATA':
+                    continue
+                if entry.is_symlink():
+                    raise RuntimeError('NumPy distribution metadata contains a symlink.')
+                saved = saved_dir / entry.name
+                os.replace(entry, saved)
+                hidden.append((saved, entry))
+            yield
+        finally:
+            for saved, original in reversed(hidden):
+                os.replace(saved, original)
 
 
 def build_args(root=ROOT, *, standalone=False):
@@ -72,7 +115,8 @@ def main():
     from tools.package_release import verified_sources
     verified_sources(ROOT)
     from PyInstaller.__main__ import run
-    run(build_args(standalone=arguments.standalone))
+    with with_numpy_metadata_only():
+        run(build_args(standalone=arguments.standalone))
 
 
 if __name__ == '__main__':

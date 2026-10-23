@@ -4572,6 +4572,11 @@
       "sha256": "a17fcc5ff971bec1e06aed903581c5123c2c39aa48b551ef78ee32ccaf464cce"
     },
     {
+      "path": "tests/test_build_windows.py",
+      "bytes": 3371,
+      "sha256": "ee0999d9a72241fbed8f56aab402b18546b0bdcb709cff9d239b0dffd6403dd5"
+    },
+    {
       "path": "tests/test_character_weapon_workshop_dw3.py",
       "bytes": 7193,
       "sha256": "a7a45c11e483862ee61decf50c909f61582ee122a43bb6864b598f40927c33b7"
@@ -5583,8 +5588,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 32643,
-      "sha256": "b0747f8cd62382f33522ada238a054c3f608d61bf89f19d5ed93fffe45489184"
+      "bytes": 34237,
+      "sha256": "c215112b2f91e1bc1bd856838df1f014b81fe763d5b84720bfc7b63d51a0e4c0"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
@@ -6438,8 +6443,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 4057,
-      "sha256": "15e304f2915bef627611a29c5d23b8b865b012d107decad43eea68c7e1b5f89e"
+      "bytes": 6020,
+      "sha256": "e78d8c441ef1dd582aaf278516f495a3b252c49d44a708dc9626564027cc9d4d"
     },
     {
       "path": "tools/check_community_plugins.py",
@@ -6458,8 +6463,8 @@
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 35469,
-      "sha256": "a4866de518fbf715c27f639236ffccbe0522c1f5b0afdad3848ebfaf63c3e270"
+      "bytes": 35799,
+      "sha256": "e8df724c812ba9ae3335650744a299404f618e65c1b6aea1cb3a65680a2d47ff"
     },
     {
       "path": "tools/refresh_manifest.py",

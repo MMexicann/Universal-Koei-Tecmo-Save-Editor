@@ -232,6 +232,13 @@ def _component_digest(fields):
     return hashlib.sha256(_canonical_json(fields)).hexdigest()
 
 
+def _staged_component_bytes(component):
+    """Validate the exact bounded component envelope prepared environments stage."""
+    fields = _component_fields(component)
+    document = dict(fields, sha256=_component_digest(fields))
+    return _pretty_json(document, MAX_COMPONENT_BYTES)
+
+
 def _component_from_fields(value, *, require_digest=False):
     if type(value) is not dict or not _COMPONENT_FIELDS <= set(value):
         raise SaveError('Manager component snapshot has an invalid structure.')
@@ -249,6 +256,10 @@ def _component_from_fields(value, *, require_digest=False):
     if 'sha256' in value and (type(value['sha256']) is not str
                               or value['sha256'] != _component_digest(fields)):
         raise SaveError('Manager component snapshot hash does not match its JSON payload.')
+    # A compact import can fit the component bound even though its digest-bound
+    # staged form does not. Reject it on import/load rather than after restoring
+    # a save into a newly created environment.
+    _staged_component_bytes(item)
     return item
 
 
@@ -461,6 +472,7 @@ class PlaythroughProfileStore:
         validated, seen = [], set()
         for component in components:
             fields = _component_fields(component)
+            _staged_component_bytes(component)
             if fields['game_id'] != game.id or fields['game_version'] != game_version:
                 raise SaveError('Each manager component must match the profile game and exact game version.')
             if fields['component'] in seen:
@@ -606,8 +618,7 @@ class PlaythroughProfileStore:
                 for component in profile.components:
                     fields = _component_fields(component)
                     digest = _component_digest(fields)
-                    document = dict(fields, sha256=digest)
-                    raw = _pretty_json(document, MAX_COMPONENT_BYTES)
+                    raw = _staged_component_bytes(component)
                     component_name = 'component-' + component.component + '.json'
                     component_path = destination / component_name
                     new_child_bound(raw, destination, component_name, created_identity)

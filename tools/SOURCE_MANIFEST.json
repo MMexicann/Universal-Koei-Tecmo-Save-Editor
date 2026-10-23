@@ -4193,8 +4193,8 @@
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles.py",
-      "bytes": 30464,
-      "sha256": "ef9df1d0817e1294c60e11a3f206354aec965c8ea6cf5a220463c7890b31da80"
+      "bytes": 30971,
+      "sha256": "b47574dcee60164d14b42efce6b2f30041b04fce09b9729b7c2bdff42a8dc3e6"
     },
     {
       "path": "src/koei_editor/shared/playthrough_profiles_gui.py",
@@ -4573,8 +4573,8 @@
     },
     {
       "path": "tests/test_build_windows.py",
-      "bytes": 3371,
-      "sha256": "ee0999d9a72241fbed8f56aab402b18546b0bdcb709cff9d239b0dffd6403dd5"
+      "bytes": 4622,
+      "sha256": "d043a3edc4bf42bb6eee172e31c8c36af962f931363f8bdd33649c3565e64bc8"
     },
     {
       "path": "tests/test_character_weapon_workshop_dw3.py",
@@ -5623,8 +5623,8 @@
     },
     {
       "path": "tests/test_playthrough_profiles.py",
-      "bytes": 29839,
-      "sha256": "bbb41285f93569dc4a48fa55b74111cbd03fe24bf8dd6a14a680d9e6a0a1295d"
+      "bytes": 31020,
+      "sha256": "30e6dcd836a6915462f1d0b7edef601cb4c596d13f61dc7ac3d248058cb374b5"
     },
     {
       "path": "tests/test_playthrough_profiles_gui.py",
@@ -6443,8 +6443,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 6020,
-      "sha256": "e78d8c441ef1dd582aaf278516f495a3b252c49d44a708dc9626564027cc9d4d"
+      "bytes": 5927,
+      "sha256": "cf39ae683921dd8a9841590a9c2dcb4c87717d7424784644b5f63534ff578598"
     },
     {
       "path": "tools/check_community_plugins.py",

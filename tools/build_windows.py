@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 
 from koei_editor.game_registry import ALL_ADAPTERS
@@ -23,7 +24,7 @@ DATA += [(source, 'guides') for source in RUNTIME_GUIDES]
 
 @contextmanager
 def with_numpy_metadata_only(site_packages=None):
-    """Expose only NumPy's version metadata to PyInstaller, then restore its install."""
+    """Expose an isolated, metadata-only NumPy distribution to PyInstaller."""
     if site_packages is None:
         import numpy
         site_packages = Path(numpy.__file__).resolve().parent.parent
@@ -40,26 +41,24 @@ def with_numpy_metadata_only(site_packages=None):
     version_metadata = metadata_dir / 'METADATA'
     if version_metadata.is_symlink() or not version_metadata.is_file():
         raise RuntimeError('NumPy version metadata is missing or unsafe.')
-    # PyInstaller may copy the complete dist-info directory. Keep METADATA for
-    # its build-time version lookup, but exclude runner paths, RECORD, and
-    # unreviewed package data from both frozen payloads.
-    with tempfile.TemporaryDirectory(prefix='koei-numpy-metadata-', dir=site_packages) as temporary:
-        saved_dir = Path(temporary) / metadata_dir.name
-        saved_dir.mkdir()
-        hidden = []
+    # copy_metadata() follows importlib.metadata discovery. Place a private
+    # dist-info copy first on sys.path so PyInstaller sees only METADATA while
+    # the installed site-packages tree stays untouched, even if the build is
+    # killed before this context manager can exit.
+    with tempfile.TemporaryDirectory(prefix='koei-numpy-metadata-') as temporary:
+        staging_root = Path(temporary)
+        staged_metadata_dir = staging_root / metadata_dir.name
+        staged_metadata_dir.mkdir()
+        (staged_metadata_dir / 'METADATA').write_bytes(version_metadata.read_bytes())
+        staging_path = str(staging_root)
+        sys.path.insert(0, staging_path)
         try:
-            for entry in metadata_dir.iterdir():
-                if entry.name == 'METADATA':
-                    continue
-                if entry.is_symlink():
-                    raise RuntimeError('NumPy distribution metadata contains a symlink.')
-                saved = saved_dir / entry.name
-                os.replace(entry, saved)
-                hidden.append((saved, entry))
-            yield
+            yield staging_root
         finally:
-            for saved, original in reversed(hidden):
-                os.replace(saved, original)
+            try:
+                sys.path.remove(staging_path)
+            except ValueError:
+                pass
 
 
 def build_args(root=ROOT, *, standalone=False):
@@ -114,8 +113,8 @@ def main():
         raise SystemExit('Build the Windows EXE on 64-bit Windows for the native CNG/Tk runtime.')
     from tools.package_release import verified_sources
     verified_sources(ROOT)
-    from PyInstaller.__main__ import run
     with with_numpy_metadata_only():
+        from PyInstaller.__main__ import run
         run(build_args(standalone=arguments.standalone))
 
 

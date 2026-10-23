@@ -194,6 +194,27 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         with self.assertRaises((SaveError, ValueError)):
             self.make_profile(components=self.components(game_version='1.03'))
 
+    def test_component_is_rejected_if_digest_bound_staging_would_exceed_size_limit(self):
+        component = ProfileComponentSnapshot(
+            'mod_configuration', 'mod_manager', 1, parser.GAME_ID, '1.02',
+            {'x': 'a' * (playthrough_profiles_module.MAX_COMPONENT_BYTES - 259)})
+        fields = playthrough_profiles_module._component_fields(component)
+        compact = playthrough_profiles_module._canonical_json(fields)
+        self.assertLessEqual(len(compact), playthrough_profiles_module.MAX_COMPONENT_BYTES)
+        with self.assertRaisesRegex(SaveError, 'size bound'):
+            playthrough_profiles_module._staged_component_bytes(component)
+
+        compact_path = self.root / 'compact-near-bound-component.json'
+        compact_path.write_bytes(compact)
+        with self.assertRaisesRegex(SaveError, 'size bound'):
+            load_component_snapshot(compact_path)
+
+        with self.assertRaisesRegex(SaveError, 'size bound'):
+            self.store.create_profile(
+                'Oversized staged component', parser.GAME_ID, '1.02', self.snapshot.id,
+                components=(component,))
+        self.assertEqual(self.store.list_profiles(), ())
+
     def test_restore_never_targets_existing_vault_or_live_destinations(self):
         profile = self.make_profile(components=())
         existing = self.root / 'existing'

@@ -3,8 +3,10 @@ from dataclasses import asdict
 import json
 import os
 from pathlib import Path
+import stat
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -301,6 +303,13 @@ class SaveVaultTests(unittest.TestCase):
                 parent, destination.name, (info.st_dev, info.st_ino))
 
         self.assertFalse(destination.exists())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux handle-bound directory writer')
+    def test_linux_directory_child_rejects_untrusted_sticky_parent_owner(self):
+        parent_info = SimpleNamespace(st_mode=stat.S_IFDIR | 0o1777, st_uid=2000)
+        with patch.object(copy_storage_module.os, 'geteuid', return_value=1000):
+            with self.assertRaisesRegex(SaveError, 'writable by another user'):
+                copy_storage_module._require_linux_private_parent(parent_info)
 
     @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux handle-bound directory writer')
     def test_linux_directory_child_rejects_replacement_after_identity_capture(self):

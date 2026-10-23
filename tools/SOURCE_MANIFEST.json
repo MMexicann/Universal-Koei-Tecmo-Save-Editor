@@ -4038,8 +4038,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 46022,
-      "sha256": "2c13742d8f87e12eaaf7c01a5c4a07b6bc17411544f22368fb45a83fd428ab93"
+      "bytes": 46183,
+      "sha256": "80cbaeeadde5f9d2904b00c41f3f04cf64351c0409592e68dcd233a787e12991"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
@@ -5958,8 +5958,8 @@
     },
     {
       "path": "tests/test_save_vault.py",
-      "bytes": 53981,
-      "sha256": "c1d033d43c14ee4cad24355fc45220980cbdeb2d9f5530fd41bd2e129e4a0d60"
+      "bytes": 54528,
+      "sha256": "3a31ebe1e698316ec1c9852d9abb6b4ed9ea0a225a26777e50bc1a4090d28400"
     },
     {
       "path": "tests/test_scalar_bulk_actions.py",

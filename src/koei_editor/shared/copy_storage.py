@@ -154,14 +154,17 @@ def _require_linux_private_parent(parent_info):
     """Exclude cross-user replacement races in writable POSIX parents.
 
     A user-owned parent must not grant write access to its group or others.
-    A sticky shared directory such as ``/tmp`` also protects entries created
-    by this user from rename or removal by other users.
+    A trusted sticky shared directory such as root-owned ``/tmp`` also protects
+    entries created by this user from rename or removal by other users.
     """
     mode = stat.S_IMODE(parent_info.st_mode)
-    owner = parent_info.st_uid == os.geteuid()
+    effective_user = os.geteuid()
+    owner = parent_info.st_uid == effective_user
     others_can_write = bool(mode & 0o022)
     sticky = bool(mode & stat.S_ISVTX)
-    if not ((owner and not others_can_write) or (sticky and others_can_write)):
+    trusted_sticky_owner = parent_info.st_uid in {0, effective_user}
+    if not ((owner and not others_can_write)
+            or (sticky and others_can_write and trusted_sticky_owner)):
         raise SaveError('The private output parent is writable by another user.')
 
 

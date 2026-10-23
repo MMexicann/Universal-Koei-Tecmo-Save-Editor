@@ -1,110 +1,122 @@
-# Universal Koei Tecmo Save Editor
+# Universal Koei Tecmo Game Toolkit
 
-A free Windows save editor by **Mexican**. Edit supported character, inventory,
-equipment and progression fields, compare saves, and convert between selected
-platforms. Searchable editors share backups, Undo, change reviews and Light/Dark
-themes. No Python installation is needed for the Windows app.
+A free Windows toolkit by **Mexican** for editing, comparing and converting
+supported Koei Tecmo saves, planning builds and organizing copied saves.
+Review changes before saving, with backups and Undo.
 
 **[Download for Windows](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest)**
 · **[Supported games](docs/SUPPORTED_GAMES.md)**
-· **[User guide](docs/EDITOR_WORKSPACE.md)**
-· **[What's new](docs/RELEASE_NOTES.md)**
+· **[Getting started](docs/EDITOR_WORKSPACE.md)**
+· **[What's new](docs/TOOLKIT_V1_RELEASE_NOTES.md)**
+
+**Game Toolkit v1.0 is in development; publication is on hold.** The current published download is
+**Save Editor v3.1**. The new name continues the same project; the planned
+version reset preserves earlier releases and repository history.
 
 <!-- BEGIN SUPPORTED GAMES -->
 **98 game/platform profiles across 15 platforms.** [Browse the full supported-games list](docs/SUPPORTED_GAMES.md) for editions, platforms and exact editing scope.
 <!-- END SUPPORTED GAMES -->
 
-**Version 3.1 development source.** The download link always points to the latest published Windows build. Choose a supported edition below and keep a separate save copy.
+[Features](#features) · [Games](#supported-games) · [Install](#download-and-install)
+· [Compatibility](#compatibility) · [Documentation](docs/README.md)
 
-## What you can do
+## Features
 
-- **Explore progression:** browse read-only cards for verified opened-save values,
-  equipment and mapped collections. [Dashboards](docs/PROGRESSION_DASHBOARDS.md).
-- **Track completion:** check achievements only when a supported platform source
-  verifies them, or keep an optional manual checklist. Unavailable states remain
-  clearly marked.
+- **Edit and review saves:** searchable character, equipment, inventory and
+  progression controls, side-by-side comparisons, presets and JSON/CSV reviews.
+  [Editor guide](docs/EDITOR_WORKSPACE.md).
+- **Keep playthroughs organized:** browse save copies, use Save Doctor and Save
+  Vault, and prepare isolated copies with Smart Playthrough Profiles.
+  [Save tools](docs/SAVE_MANAGEMENT.md) · [Playthrough profiles](docs/SMART_PLAYTHROUGH_PROFILES.md).
+- **Plan character and weapon builds:** compare mapped values and stage reviewed
+  plans for DW3 Remastered, DW8 XL PC, WO3 Ultimate PC and SW4 DX PC.
+  [Character & Weapon Workshop](docs/CHARACTER_WEAPON_WORKSHOP.md).
+- **Explore progress and convert copies:** dashboards, separate manual checklists
+  and optional DW3 Remastered Steam achievements; individual or queued conversion across
+  **145 scoped routes**. [Progression](docs/PROGRESSION_DASHBOARDS.md) · [Conversions](docs/SAVE_CONVERSION.md).
+- **Create and manage mods:** package user-provided replacements in Mod Creation
+  Workshop; import and manage **Nioh 2 PC** mods with separate profiles and
+  dependency/conflict checks. [Creation Workshop](docs/MOD_CREATION_WORKSHOP.md) · [Mod Manager](docs/MOD_MANAGER.md).
+- **Find games and inspect files:** Steam Game Hub, documented emulator launch
+  profiles and a read-only Asset Explorer for supported ZIP, G1T and media subsets.
+  [Game Hub](docs/APPLICATION_SHELL.md#game-hub) · [Emulators](docs/EMULATOR_HUB.md) · [Assets](docs/ASSET_EXPLORER.md).
+- **Manage selected PC settings:** review supported Atelier Arland DX game and
+  installed-mod settings, save profiles and keep verified backups.
+  [Configuration Manager](docs/GAME_CONFIGURATION.md).
+- **Reuse and share reviewed work:** automation, resource presets for qualified
+  profiles, local controller-profile records and data-only community packages.
+  [Automation](docs/AUTOMATION.md) · [Presets](docs/REUSABLE_PRESETS.md) · [Community formats](docs/COMMUNITY_TOOLKIT.md).
 
-- **Edit saves:** search fields and records, adjust values, inspect equipment,
-  review named before/after changes, and save a separate edited copy.
-- **Browse copied saves:** choose an exact game/platform and scan a folder.
-  Search, sort and filter qualified copies and identical gameplay files.
-  [Save Library](docs/SAVE_LIBRARY.md).
-- **Reuse edits:** export a reviewed edit preset and apply it to the same
-  byte-identical source after previewing the complete resulting changes.
-  [Edit Presets](docs/EDIT_PRESETS.md).
-- **Personalize the workspace:** pin frequently used fields, keep multiple game
-  sessions open, and export complete JSON or spreadsheet-friendly CSV reviews.
-  [Pins and reviews](docs/FIELD_PINS_AND_REVIEWS.md).
-- **Compare saves:** inspect mapped changes and other payload differences across
-  97 scalar profiles. [Compare Saves](docs/SAVE_COMPARISON.md).
-- **Manage mods:** import validated ZIP packages, keep separate profiles, check
-  declared dependencies/conflicts, and safely manage Nioh 2 PC mods through its
-  documented Mods folder method. [Mod Manager scope and safeguards](docs/MOD_MANAGER.md).
-- **Analyze game patches from source:** compare version/build metadata and
-  explicit file hashes, archive structures and supported-format metadata, then
-  check stated mod, tool and save requirements.
-  [Analyzer guide](docs/PATCH_COMPATIBILITY_ANALYZER.md).
-- **Inspect local assets:** browse standard ZIP containers, a bounded G1T texture
-  subset, and common image, audio and model formats in a read-only workspace.
-  Format recognition does not identify a game or edition.
-  [Game Asset Explorer](docs/ASSET_EXPLORER.md).
-- **Convert saves:** 145 directed routes cover qualified DW6, DW7 XL, DW8 XL, Persona 5 Strikers and resource-only WO3U/SW4 transfers. Review one copy or queue multiple conversions.
-  [Routes and limits](docs/SAVE_CONVERSION.md) · [Batch Converter](docs/BATCH_CONVERSION.md).
+Development source also includes a [browser-local Mod Testing Sandbox](docs/MOD_TESTING_SANDBOX.md),
+an [offline Localization Studio](localization-studio/README.md) for supported plain-text tables,
+and a [snapshot-based patch analyzer](docs/PATCH_COMPATIBILITY_ANALYZER.md).
+These are separate source tools; their file handoffs require review in the
+receiving application.
 
-Editing scope varies by edition and save revision. Some newer profiles allow
-only conservative reductions or specific equipment choices; the supported-games
-list describes each one. Optional [experimental editing](docs/EXPERIMENTAL_EDITING.md)
-expands only explicitly mapped numeric fields.
+## Supported games
 
-The [game data encyclopedia feed](docs/GAME_DATA_ENCYCLOPEDIA.md) is
-intentionally scoped to verified Three Hopes Switch character/weapon mappings,
-Hyrule Warriors Wii U catalog names, and a few cited Hyrule mechanics; it is
-not a complete gameplay reference or a Character Workshop interface.
+Examples below cover **selected editions and save revisions**. Profiles count
+individual game/platform combinations, not distinct games or complete series.
 
-## New in v3.1
+| Family | Examples with registered editing profiles |
+| --- | --- |
+| Dynasty Warriors | 3 Remastered, 4 Hyper/XL, 5 Special, 6, 7/XL/Empires, 8/XL/Empires, 9 Empires, Origins |
+| Samurai Warriors and Orochi | Samurai Warriors 2, 4/DX/4-II, 5; Warriors Orochi, Z, 3 Ultimate, 4/Ultimate |
+| Other Warriors titles | Pirate Warriors 1–4, Gundam/3/Reborn, All-Stars, Abyss, Legends of Troy |
+| Nintendo collaborations | Hyrule Warriors and Age of Calamity; Fire Emblem Warriors, Three Hopes and Three Houses |
+| Atelier and Gust | Selected Arland, Dusk, Sophie, Firis and Ryza editions; Nights of Azure 2; Blue Reflection: Second Light |
+| Action and RPG | Nioh 3, Ninja Gaiden Black/II, Wo Long, Persona 5 Strikers, Dragon Quest Builders 2, Berserk, Attack on Titan, Dead or Alive 5 |
+| Strategy and classics | Selected Romance of the Three Kingdoms, Nobunaga’s Ambition, Uncharted Waters, Gemfire, Monster Rancher DS, Pokémon Conquest, Tecmo Super Bowl and Project Zero/Fatal Frame |
 
-- **DW8 XL PS4 editor:** resources, officer stats, weapon-action aptitudes and existing ranked attributes for decrypted CUSA00397 zero-extension copies, with original metadata, backups, Undo and reviewed Save As. Conversion to PC accepts both supported native PC template formats.
-- **Import five research candidates:** inspect Gundam 2, Totori/Rorona/Ayesha Plus Vita and original Uncharted Waters IV PK copies in a separate read-only workspace. These are research observations; editing support is not implied. [Research Import](docs/RESEARCH_IMPORT.md).
-- **Six new scoped conversion routes:** WO3 Ultimate PS3 ↔ Definitive Edition PC moves unallocated growth points and gems; SW4 US PS3 ↔ SW4 DX PC moves gold only. WO3U PS4 → PC transfers 354 directly mapped crystal/orb/material balances, with a separate wider scope adding five base stats for 145 playable officers. Destination progression and equipment remain intact.
-- **Clearer conversions:** exact source/destination filters, source/template filenames and companions, numeric before/after previews for the new routes, and an explicit reverse-route action that swaps copies and requires a fresh review.
-- **Requested PS4 transfers:** DW8 XL PS4 → PC is available within its documented profile. WO3U adds a limited PS4 resource route; full WO3U/SW4 PS4 migration still needs broader format evidence and original exports. [Exact scope and remaining evidence](docs/WARRIORS_PS4_TRANSFERS.md).
+Save profiles span PC, PlayStation, Xbox, Nintendo and classic platforms.
+**The downloadable application runs on Windows.** Save Vault and Playthrough Profiles
+also require Windows when running from source. Use the [full platform catalog](docs/SUPPORTED_GAMES.md)
+for exact editions, regions, required files and available controls. Research on additional ports or editions
+adds no new editing support; the inventory remains 98 profiles and 15 platforms.
 
-[Release notes and limits](docs/RELEASE_NOTES.md). The development source contains 98 profiles across 15 platforms and 145 scoped routes. Edited/converted game loading remains unverified.
+## Download and install
 
-The mod manager is development-source functionality and currently supports only
-the documented Nioh 2 PC Mods folder method with an already installed mod
-loader. It never installs loader files or writes into original game files.
-Other Koei Tecmo titles remain unsupported until their installation methods and
-restoration behavior are verified.
+The published Windows downloads require no Python installation.
 
-The unreleased development source also includes a Koei Tecmo Game Configuration
-Manager for a small, source-verified set of Atelier Arland DX PC settings.
-Existing downloads do not include it; its supported file list and evidence are
-documented in [Game Configuration Manager](docs/GAME_CONFIGURATION.md).
+| Download | Installation |
+| --- | --- |
+| [Standalone EXE · v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/UniversalKoeiTecmoSaveEditor-v3.1.exe) | Download and run. |
+| [Portable Windows ZIP · v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/UniversalKoeiTecmoSaveEditor-v3.1-Windows.zip) | Extract everything and run the EXE; keep bundled files together. |
+| [Source ZIP · v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/UniversalKoeiTecmoSaveEditor-v3.1-Source.zip) | Source for the published release; Python is required. |
 
-## Quick start
+[Checksums](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/SHA256SUMS.txt)
+· [Defender report](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/v3.1/DefenderScan-v3.1.json)
+· [All releases](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases)
 
-1. Download and extract the complete Windows ZIP, then run its EXE. Alternatively,
-   use the standalone EXE. Keep the ZIP's bundled files together.
-2. Make a separate copy of your save folder outside the live game/cloud location.
-   Choose its exact game, edition and platform, then **Open Save Copy**.
-3. Stage edits, check **Review Changes**, and choose **Save As...** to write a new
-   game-save copy. **Export Review** writes a report. Undo and automatic backups
-   are available.
+1. Copy your save folder outside the live game/cloud location.
+2. Select its exact game, edition and platform, then **Open Save Copy**.
+3. Stage edits, check **Review Changes**, then **Save As…** to a new copy.
+   **Export Review** creates a report.
 
-Console profiles require supported extracted/decrypted exports and any original
-companion metadata specified in their guide. Decryption, console reimport and
-resigning use external save tools. File-level validation is tested; **edited or
-converted game loading and re-saving remain unverified**.
+The v1.0 features described above are development-source changes until that
+release is published; the v3.1 downloads retain their published feature set.
 
-Origins proficiency-level and Old Coin writers remain unimplemented.
-[Request status](docs/ORIGINS_REQUEST_STATUS.md). DW7 XL PC weapon base attack,
-element and capacity live in game data; arbitrary save edits to those parameters
-remain unavailable. [Weapon scope](docs/DW7XL_WEAPONS.md).
+## Compatibility
+
+- **Save support is profile-specific.** Some controls allow reductions only.
+  File-level checks are documented; edited/converted game loading and re-saving
+  remain unverified. [Evidence and limits](docs/VALIDATION.md).
+- **Console saves need prepared exports.** Use the required extracted/decrypted
+  files and original companions. Decryption, reimport and resigning use external tools.
+- **Conversions transfer listed fields only.** WO3U and SW4 routes do not provide
+  complete migration. Experimental editing is opt-in; Research Import is read-only.
+- **Mod support is separate from save support.** Mod Manager supports Nioh 2 PC’s
+  documented Mods folder method with an existing loader. It does not install
+  loaders. Nexus currently provides website links; its API workspace is gated
+  pending application registration. [Nexus availability](docs/NEXUS_MODS_BROWSER.md).
+- **Other tools retain their limits.** Controller profiles store bindings without
+  applying them to games. Troubleshooting folder scans currently fail closed on
+  Windows and report unavailable evidence; no diagnosis is inferred.
+  [Controller scope](docs/CONTROLLER_INPUT_PROFILES.md) · [Troubleshooting](docs/GAME_TROUBLESHOOTING.md).
 
 ## Run from source and contribute
 
-With Python 3.10 or newer and Tkinter, run from the repository root:
+Clone this repository or [download and extract main](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/archive/refs/heads/main.zip) for development features. With Python 3.10 or newer and Tkinter, run from the repository root:
 
 ```text
 python -m pip install -e .
@@ -112,11 +124,6 @@ python -m koei_editor
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [build instructions](docs/BUILDING.md),
-and the [documentation index](docs/README.md). AI coding agents should read
-[AGENTS.md](AGENTS.md).
-
-The development source also includes a [Character & Weapon Workshop](docs/CHARACTER_WEAPON_WORKSHOP.md)
-for mapped Dynasty Warriors, Samurai Warriors and Warriors Orochi profiles.
-This feature is not part of the published v3.1 binaries.
+[documentation](docs/README.md) and [LICENSE](LICENSE).
 
 Discord: `mexicannn` · [Mexican's Steam profile](https://steamcommunity.com/id/theonlyjuandeagingmexican/)

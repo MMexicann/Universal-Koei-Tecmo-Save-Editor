@@ -7,10 +7,9 @@ synthetic app IDs/build IDs, procedural compatibility records, and temporary
 local history files. The fixtures cover exact `(game profile, Steam app ID,
 platform, build ID, artifact)` matches; unknown results for other apps/builds;
 verified-to-unsupported rechecks; per-category unlisted-artifact warnings;
-build-change history; malformed metadata; blank artifact-version rejection for
-catalog rows (including `unknown` rows); and path-free persistence. Unknown rows
-may omit an artifact version. No game is launched and the fixture does not
-depend on a real Steam account or installed game.
+build-change history; malformed metadata; and path-free persistence. No game is
+launched and the fixture does not depend on a real Steam account or installed
+game.
 
 The packaged compatibility catalog currently has no exact-build records. In
 that state the tracker reports `unknown` for all categories. This is deliberate:
@@ -19,294 +18,34 @@ configuration tool, or asset format on an exact Steam build. The validator
 requires exact app/build identities and versioned evidence before showing
 `verified` or `unsupported`.
 
-On Windows, the current code head passed the Tracker, Save Discovery, Help
-Center, application shell, Troubleshooting Center, and configuration-manager
-test modules. The full matrix reported an unrelated Node subprocess timeout in
-Progression Report Security and four pre-existing Save Library GUI viewport
-assertions. Both tests and their implementation files are unchanged by this
-tracker; the Save Library failures also reproduce in the dependent Game Hub run
-and a prior main-based Windows run. Build and release jobs were skipped after
-the matrix failed.
-
 ```json
 {
   "schema": "koei-version-tracker-validation/v1",
   "status": "pass_with_gui_skips",
-  "base_commit": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
-  "validated_code_commit": "d7c89e3e6180bfa3585940c00bd24e935e75fc94",
+  "base_commit": "05c8bfed36589e76a9795f8b77ecf3cf1c652deb",
   "commands": {
-    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_help_center_integration tests.test_universal_app tests.test_universal_packaging tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_game_troubleshooting_gui tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit tests.test_game_compatibility tests.test_configuration_manager tests.test_configuration_gui",
+    "unit_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery tests.test_help_center tests.test_universal_app tests.test_game_data_encyclopedia tests.test_game_troubleshooting tests.test_application_shell tests.test_mod_manager tests.test_mod_manager_nexus tests.test_nexus_mods tests.test_nexus_contract_audit",
     "source_manifest": "PYTHONPATH=src python -m tools.package_release --verify-only",
     "supported_game_inventory": "PYTHONPATH=src python -m tools.update_supported_games --check"
   },
   "unit_tests": {
-    "run": 321,
-    "passed": 240,
-    "skipped": 81,
+    "run": 216,
+    "passed": 154,
+    "skipped": 62,
     "failures": 0,
-    "gui_skips": "Tk display-dependent tests skipped because this environment has no display."
+    "gui_skips": "Tk display tests skipped because DISPLAY and xvfb-run are unavailable."
   },
   "source_manifest": {
     "status": "passed",
-    "verified_public_files": 1294
+    "verified_public_files": 1231
   },
   "supported_game_inventory": {
     "status": "passed",
     "registered_adapters": 98
   },
   "syntax_and_diff_checks": {
-    "compileall": "python -m compileall -q src tests passed",
-    "git_diff_check": "passed against origin/main after rebase"
-  },
-  "windows_ci": {
-    "status": "feature_modules_passed_full_matrix_failed_unrelated_tests",
-    "last_completed_head": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
-    "last_completed_base": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
-    "last_completed_run": "39856326664",
-    "last_completed_result": "full_workflow_failed; test_version_tracker 15/15, test_save_discovery 47/47, Help Center 12/12, Troubleshooting 31/31, universal app 28/28, and analyzer 29 passed/1 skipped; unrelated failures were application shell, Mod Manager/Nexus, Emulator Hub, Completion Companion, Save Library, and Editing Tools; build/release skipped",
-    "integration_findings": "Game Hub PR #135 is rebased onto tracker head d7c89e3 with a Hub-only 12-file diff; Windows run 39864091219 passed all Hub, Tracker, Save Discovery, Help Center, and Troubleshooting feature modules, with only the repeated unrelated Save Library GUI test failing in shard 2; build and release were skipped. PR #148 is merged at 8c6b870; run 39858226370 passed Completion Companion 9/9 on Windows, while the overall run was cancelled before remaining shards and build/release. PR #145 is merged at 9153438; current-base run 39859637192 passed Emulator Hub 17/17; shard 1 had the same four unrelated Save Library GUI failures, so build/release were skipped. PR #149 Game Configuration Manager is merged in current main 9fecbed; combined local tests passed.",
-    "merged_test_fixture_fixes": "PRs #137, #147, #141, #121, #144, #148, #145, and #149 are included in current main 9fecbed.",
-    "required_before_merge": true,
-    "last_completed_tracker_run_details": {
-      "run_id": 39856326664,
-      "head_sha": "188e8761a498c65562ddc73202d1e71f2f2ac9cb",
-      "base_sha": "c5b7fdb0e410125e6dcb2d6076ac18768d827049",
-      "workflow_conclusion": "failure",
-      "feature_modules": [
-        {
-          "module": "test_version_tracker.py",
-          "tests": 15,
-          "passed": 15,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_save_discovery.py",
-          "tests": 47,
-          "passed": 47,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_help_center.py",
-          "tests": 7,
-          "passed": 7,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_help_center_integration.py",
-          "tests": 5,
-          "passed": 5,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_game_troubleshooting.py",
-          "tests": 20,
-          "passed": 20,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_game_troubleshooting_gui.py",
-          "tests": 11,
-          "passed": 11,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_universal_app.py",
-          "tests": 28,
-          "passed": 28,
-          "skipped": 0,
-          "failures": 0,
-          "errors": 0
-        },
-        {
-          "module": "test_game_compatibility.py",
-          "tests": 30,
-          "passed": 29,
-          "skipped": 1,
-          "failures": 0,
-          "errors": 0
-        }
-      ],
-      "other_module_failures": [
-        {
-          "module": "test_application_shell.py",
-          "failures": 1,
-          "errors": 0,
-          "follow_up": "#144"
-        },
-        {
-          "module": "test_mod_manager_nexus.py",
-          "failures": 1,
-          "errors": 0,
-          "follow_up": "#144"
-        },
-        {
-          "module": "test_emulator_hub.py",
-          "failures": 1,
-          "errors": 0,
-          "follow_up": "#145"
-        },
-        {
-          "module": "test_completion_companion_view.py",
-          "failures": 2,
-          "errors": 0,
-          "follow_up": "#148"
-        },
-        {
-          "module": "test_save_library_gui.py",
-          "failures": 4,
-          "errors": 0,
-          "follow_up": null
-        },
-        {
-          "module": "test_editing_tools_application.py",
-          "failures": 3,
-          "errors": 1,
-          "follow_up": "#144"
-        }
-      ],
-      "build_job": "skipped_after_test_failures",
-      "release_job": "skipped"
-    },
-    "related_windows_runs": [
-      {
-        "component": "Game Hub",
-        "pr_number": 135,
-        "run_id": 39849115110,
-        "modules": [
-          {
-            "module": "test_game_hub_discovery.py",
-            "tests": 5,
-            "passed": 5
-          },
-          {
-            "module": "test_game_hub_gui.py",
-            "tests": 8,
-            "passed": 8
-          },
-          {
-            "module": "test_save_discovery.py",
-            "tests": 47,
-            "passed": 47
-          }
-        ]
-      },
-      {
-        "component": "Mod Manager Windows fixtures",
-        "pr_number": 144,
-        "run_id": 39856097841,
-        "modules": [
-          {
-            "module": "test_application_shell.py",
-            "tests": 40,
-            "passed": 40
-          },
-          {
-            "module": "test_mod_manager.py",
-            "tests": 12,
-            "passed": 12
-          },
-          {
-            "module": "test_mod_manager_nexus.py",
-            "tests": 11,
-            "passed": 11
-          },
-          {
-            "module": "test_editing_tools_application.py",
-            "tests": 8,
-            "passed": 8
-          }
-        ]
-      },
-      {
-        "component": "Emulator Hub Windows fixture",
-        "pr_number": 145,
-        "run_id": 39856060823,
-        "modules": [
-          {
-            "module": "test_emulator_hub.py",
-            "tests": 17,
-            "passed": 17
-          }
-        ]
-      },
-      {
-        "component": "Completion Companion Windows fixtures",
-        "pr_number": 148,
-        "run_id": 39856540396,
-        "modules": [
-          {
-            "module": "test_completion_companion_view.py",
-            "tests": 9,
-            "passed": 9
-          }
-        ]
-      }
-    ],
-    "validated_code_head_check": {
-      "status": "feature_modules_passed_full_matrix_failed_unrelated_tests",
-      "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
-      "head_sha": "d7c89e3e6180bfa3585940c00bd24e935e75fc94",
-      "run_id": 39863973271,
-      "workflow_conclusion": "failure",
-      "shard_counts": {
-        "tests": 3709,
-        "passed": 3196,
-        "skipped": 508,
-        "failures": 4,
-        "errors": 1
-      },
-      "feature_modules": [
-        { "module": "test_version_tracker.py", "tests": 16, "passed": 16 },
-        { "module": "test_save_discovery.py", "tests": 47, "passed": 47 },
-        { "module": "test_help_center.py", "tests": 7, "passed": 7 },
-        { "module": "test_help_center_integration.py", "tests": 5, "passed": 5 },
-        { "module": "test_application_shell.py", "tests": 40, "passed": 40 },
-        { "module": "test_game_troubleshooting.py", "tests": 20, "passed": 20 },
-        { "module": "test_game_troubleshooting_gui.py", "tests": 11, "passed": 11 },
-        { "module": "test_configuration_manager.py", "tests": 12, "passed": 12 },
-        { "module": "test_configuration_gui.py", "tests": 6, "passed": 6 },
-        { "module": "test_game_compatibility.py", "tests": 30, "passed": 29, "skipped": 1 },
-        { "module": "test_game_dashboard_context.py", "tests": 4, "passed": 4 },
-        { "module": "test_universal_app.py", "tests": 28, "passed": 28 },
-        { "module": "test_universal_packaging.py", "tests": 39, "passed": 39 }
-      ],
-      "unrelated_failures": [
-        {
-          "module": "test_progression_report_security.py",
-          "test": "ProgressionReportSecurityTests.test_report_comparison_rejects_ambiguous_labels_and_keeps_record_values",
-          "error": "Node subprocess exceeded its 10-second timeout; the same 9-test module passed in Game Hub run 39864091219",
-          "changed_by_tracker": false
-        },
-        {
-          "module": "test_save_library_gui.py",
-          "test": "SaveLibraryGuiTests.test_compact_header_scrolling_resize_state_theme_and_callback_cleanup",
-          "failures": 4,
-          "error": "Canvas yview assertions at line 534 observed clipped viewports; same four failures appeared in Game Hub run 39864091219 and main-based run 39859637192",
-          "changed_by_tracker": false
-        }
-      ],
-      "build": "skipped_after_test_failures",
-      "release": "skipped",
-      "superseded_run": {
-        "run_id": 39863214490,
-        "head_sha": "0891838a7fc9e2642b6dc8a6a63470b7859813b3",
-        "base_sha": "9fecbedaa0c5a1855411aefddea168c727d24aa0",
-        "status": "cancelled_after_test_design_review",
-        "merge_eligible": false
-      }
-    }
+    "py_compile": "passed for changed Python modules and tests",
+    "git_diff_check": "passed"
   },
   "fixture": {
     "type": "procedural Steam metadata and temporary path-free history",
@@ -320,23 +59,16 @@ the matrix failed.
     "verified_or_unsupported_claims_seeded": false
   },
   "release_created": false,
-  "version_bumped": false,
-  "review_follow_up": {
-    "finding": "Portable discovery report wording now distinguishes sanitized allowlisted Steam markers from omitted paths, filenames, account IDs, and unrecognized VDF values.",
-    "focused_tests": "PYTHONPATH=src python -m unittest tests.test_version_tracker tests.test_save_discovery",
-    "focused_test_result": {
-      "run": 63,
-      "passed": 63,
-      "skipped": 0,
-      "failures": 0
-    },
-    "source_manifest": "refreshed and verified 1,294 public source files after the validator and documentation updates",
-    "git_diff_check": "passed against origin/main after rebase",
-    "artifact_version_validation": "all catalog statuses reject empty/whitespace-only versions; unknown rows may omit a version; surrounding whitespace is normalized",
-    "artifact_version_regression_fixture": "unknown rows with empty, spaces, or tab versions are rejected through load_catalog; unknown plus null version is accepted"
-  }
+  "version_bumped": false
 }
 ```
+
+## Sol save-editing UX — 2026-10-22
+
+The [structured UX report](SOL_SAVE_EDITOR_UX.md) covers the shared scalar
+editor changes, comparison-to-transfer safety boundary, full automated test
+results and the headless GUI limitations. The 97 scalar profiles share the
+updated editor; DW3 retains its existing dedicated tagged-schema workflow.
 
 ## v3.1 common-core editing and resource transfers
 
@@ -1808,53 +1540,3 @@ The official release workflow requires complete source/Windows coverage, actual
 portable and standalone startup, active updated Defender scans of exact payloads,
 and artifact integrity before publication. Individual optional native tests skip
 when their private inputs are absent; release CI does not contain player saves.
-
-## Mod Manager Windows path assertion — 2026-10-22
-
-Windows run `39844797122`, shard 0, exposed a stale `startswith()` assertion in
-`test_mod_manager_workspace_is_constructed_once_with_temporary_state`. On
-Windows, `TemporaryDirectory.name` may use an 8.3 alias while the manager stores
-the resolved long path. The test already checks equality with its resolved
-temporary `state_dir`; the redundant prefix assertion has been removed. The
-Mod Manager state path and product behavior are unchanged.
-
-The change is rebased onto `fd17633c45f695fe7d6055d607e579359f285760`.
-Validation after rebase:
-
-| Check | Result |
-| --- | --- |
-| `PYTHONPATH=src python -m unittest tests.test_mod_manager_nexus -v` | 11 passed |
-| Focused `test_mod_manager_workspace_is_constructed_once_with_temporary_state` | Skipped; this environment has no graphical display |
-| `PYTHONPATH=src python -m unittest tests.test_editing_tools_application -v` | 8 skipped; this environment has no graphical display |
-| `PYTHONPATH=src python -m tools.update_supported_games --check` | 98 adapters checked |
-| `python -m tools.package_release --verify-only` | v3.1; 1,283 public source files verified |
-| `git diff --check` | Passed |
-
-The earlier Windows run `39844797122`, before this rebase, passed the Remove
-button assertions, `test_editing_tools_application` (8 tests),
-`test_mod_manager` (12), `test_mod_manager_nexus` (11), and
-`test_mod_manager_transaction_concurrency` (1). Its only shard-0 failure was
-the removed path-prefix assertion. A fresh Windows run on this rebased head is
-pending; it will be queued after the tracker PR's four-shard run completes.
-
-## Completion Companion Windows fixture assertions — 2026-10-22
-
-The Completion Companion GUI test expected old status wording and a singular
-entry label. The test now follows the current labels and verifies the actual
-entry collection. Product code is unchanged.
-
-This change is based on `8faac64bf1601be00048248ef35bf6df9b74270b`, which
-includes the merged Mod Manager Windows fixture fixes. Local validation on
-this base:
-
-| Check | Result |
-| --- | --- |
-| `PYTHONPATH=src python -m unittest tests.test_completion_companion_view -v` | 9 tests; 7 passed, 2 GUI tests skipped because this environment has no display |
-| `PYTHONPATH=src python -m tools.update_supported_games --check` | 98 adapters checked |
-| `python -m tools.package_release --verify-only` | v3.1; 1,286 public source files verified |
-| `git diff --check` | Passed |
-
-Windows run `39856540396` on the preceding `c5b7fdb` base passed
-`test_completion_companion_view.py` (9 tests, no failures or skips). A new
-Windows run is pending for this rebased head so the fixture change is checked
-with the current main branch.

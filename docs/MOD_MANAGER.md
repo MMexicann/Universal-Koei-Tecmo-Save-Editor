@@ -62,10 +62,13 @@ again before installation, and verifies staged bytes before deployment.
 
 ## Nexus download handoff
 
-The Nexus browser exposes a **Send to Mod Manager** action for a selected Nioh 2
-ZIP file after the Mod Manager workspace has been opened. Other supported
-Nexus games remain browse-only until a matching installation adapter is
-verified. Local ZIP import is available for all supported Nioh 2 packages.
+The source/testing Nexus browser implements **Send to Mod Manager** for a
+selected Nioh 2 file once a manager workspace is attached. Nexus file names are
+logical labels; the manager checks downloaded bytes as actual ZIP content.
+The public application's Nexus entry stays unavailable for API use until
+application registration is verified. Users can browse/download through the
+ordinary website and import a local ZIP for validation and review. Other Nexus
+games have no verified manager importer. No path automatically installs a mod.
 
 The Nioh 2 workspace can accept the browser's frozen `NexusDownloadRequest`
 through `enqueue_nexus_download(request, downloader)`. The manager checks that
@@ -86,8 +89,13 @@ active. The manager verifies that the downloader produced a regular file at
 the temporary ZIP path within the existing 1 GiB limit, then passes it through
 the same `import_archive` ZIP validation used by local imports. A safe temporary filename derived from
 the selected Nexus filename keeps the existing filename-based fallback
-metadata useful for packages that do not include `koei-mod.json`. The manager removes the temporary download
-after processing and only adds a validated package to the library; it never
+metadata useful for packages that do not include `koei-mod.json`. Download staging
+under the local manager state directory (`.nexus-*`) is retained whenever it
+contains files, including after successful imports. Empty staging directories
+are removed without recursive cleanup. Failed/partial downloads and foreign
+replacement files must not be deleted or imported automatically. Users may
+review and remove retained staging folders after closing the toolkit.
+The manager only adds a validated package to the library; it never
 enables, installs, applies, or removes a mod as part of the download.
 
 `poll_nexus_download_results()` returns completed jobs without blocking. The
@@ -132,10 +140,19 @@ verification and rollback. On restart, uncommitted operations are rolled back;
 committed operations finish cleanup. If a folder changed outside the manager,
 or recovery cannot verify either side of a rename, the manager stops and keeps
 the journal for inspection rather than deleting or overwriting the changed
-folder. Within one manager instance, recovery checks and a live file transaction
-share a lock. A background package import waits for an active transaction to
-finish before checking its journal, so it cannot treat that operation as an
-interrupted transaction.
+folder. Within one manager instance, recovery checks and installation changes
+share the same mutation guard. A background package import waits for an active
+transaction before checking its journal, so it cannot recover an operation that
+is still running. ZIP extraction remains outside this guard; final library
+publication rechecks pending journals and state revisions while holding it.
+
+Only one manager may change a shared state directory at a time. A second active
+writer is refused immediately. An instance whose library or installation state
+changed in another window/process must be reopened before making further changes;
+it cannot overwrite that newer state. The short-lived OS ownership lock releases
+after a process exits, so pending transactions can still recover after a crash.
+An unrecognized or replaced lock file is preserved for inspection rather than
+deleted as a purported stale lock.
 
 The manager never writes original game files beside nioh2.exe and never
 installs or replaces d3d11.dll. It does not keep a duplicate backup of an

@@ -36,6 +36,75 @@ class _NexusArchiveDownloader:
         return self.__client.download_archive(download_request, destination)
 
 
+class NexusRegistrationNotice:
+    """Public entry point: website/manual ZIP use while registration is pending.
+
+    This surface deliberately has no API client, credential inputs, executor or
+    download capability. The testing workspace below is not routed by the app.
+    Enabling an API workspace in a public release requires reviewed registration
+    evidence and the corresponding release integration change, not a UI switch.
+    """
+
+    def __init__(self, root, parent, *, application_name, application_version,
+                 language='en', game_id=None, download_handoff=None, transport=None):
+        self.root = root
+        self.language = language
+        self.frame = ttk.Frame(parent, padding=18)
+        self.frame.columnconfigure(0, weight=1)
+        self.title_label = ttk.Label(self.frame, style='Section.TLabel')
+        self.title_label.grid(row=0, column=0, sticky='w')
+        self.status_label = ttk.Label(self.frame, style='Section.TLabel')
+        self.status_label.grid(row=1, column=0, sticky='w', pady=(14, 5))
+        self.intro_label = ttk.Label(self.frame, wraplength=960, justify='left')
+        self.intro_label.grid(row=2, column=0, sticky='ew', pady=(0, 8))
+        self.manual_note = ttk.Label(self.frame, wraplength=960, justify='left')
+        self.manual_note.grid(row=3, column=0, sticky='ew', pady=(0, 18))
+        self._game_by_label = {game.title: game for game in SUPPORTED_NEXUS_GAMES}
+        selected = nexus_game_for_id(game_id)
+        self.game_var = tk.StringVar(root, value=(selected or SUPPORTED_NEXUS_GAMES[0]).title)
+        self.game_selector = ttk.Combobox(
+            self.frame, textvariable=self.game_var, values=tuple(self._game_by_label),
+            state='readonly', width=60)
+        self.game_selector.grid(row=4, column=0, sticky='w')
+        self.website_button = ttk.Button(self.frame, command=self.open_website)
+        self.website_button.grid(row=5, column=0, sticky='w', pady=(10, 0))
+        self.set_language(language)
+
+    def set_language(self, language):
+        self.language = language
+        for widget, key in (
+            (self.title_label, 'nexus_title'),
+            (self.status_label, 'nexus_public_unavailable'),
+            (self.intro_label, 'nexus_registration_note'),
+            (self.manual_note, 'nexus_manual_zip_note'),
+            (self.website_button, 'nexus_open_website'),
+        ):
+            widget.configure(text=translate(key, language))
+
+    def _selected_game(self):
+        return self._game_by_label.get(self.game_var.get())
+
+    def open_website(self):
+        game = self._selected_game()
+        if game is not None:
+            webbrowser.open('https://www.nexusmods.com/games/' + game.domain)
+
+    def set_download_handoff(self, _handoff):
+        # Attaching a manager must not reopen a public API/credential path.
+        return None
+
+    def apply_theme(self, _palette):
+        # All controls use the application's shared ttk styles.
+        return None
+
+    def focus_search(self):
+        self.game_selector.focus_set()
+        return 'break'
+
+    def close(self):
+        return None
+
+
 class NexusModsWorkspace:
     """Dedicated mod browser; archive downloads and installation stay with a manager."""
 

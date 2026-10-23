@@ -80,10 +80,8 @@ class ConfigurationWorkspaceTests(unittest.TestCase):
             self.workspace.apply_profile()
             self.assertEqual(self.workspace.staged, {'fullscreen': 1})
             self.assertEqual(len(self.workspace.history), 1)
-            self.assertEqual(str(self.workspace.undo_button['state']), 'normal')
             self.assertTrue(self.workspace.undo())
             self.assertEqual(self.workspace.staged, {})
-            self.assertEqual(str(self.workspace.undo_button['state']), 'disabled')
             self.workspace.apply_profile()
             self.assertEqual(self.workspace.staged, {'fullscreen': 1})
 
@@ -96,12 +94,66 @@ class ConfigurationWorkspaceTests(unittest.TestCase):
                 backend.apply_profile(other_doc, saved)
 
             self.file.write_bytes(GAME_FIXTURE.replace(b'FullScreen=0', b'FullScreen=1'))
-            self.workspace.open_file()
+            with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=True):
+                self.workspace.open_file()
             self.workspace.backup_choice.set(self.workspace._backup_labels[backup.id])
             with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=True):
                 self.workspace.restore_backup()
         self.assertEqual(self.file.read_bytes(), GAME_FIXTURE)
         self.assertIn('exact bytes were verified', self.workspace.status.get())
+
+    def stage_fullscreen(self):
+        self.open_game_fixture()
+        self.workspace.settings.selection_set('fullscreen')
+        self.workspace.select_setting()
+        self.workspace.value_choice.set('On')
+        self.workspace.stage_value()
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+
+    def test_application_close_keeps_staged_configuration_when_discard_is_cancelled(self):
+        self.stage_fullscreen()
+        app = Application(self.root, persist_preferences=False,
+                          preferences_path=self.folder / 'preferences.json')
+        app.game_configuration = self.workspace
+        with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=False) as ask, \
+                patch.object(self.root, 'destroy') as destroy:
+            app.close()
+            ask.assert_called_once()
+            destroy.assert_not_called()
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+        self.assertEqual(self.file.read_bytes(), GAME_FIXTURE)
+        with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=True), \
+                patch.object(self.root, 'destroy') as destroy:
+            app.close()
+            destroy.assert_called_once()
+
+    def test_cancelled_selection_change_restores_path_game_and_pending_values(self):
+        self.stage_fullscreen()
+        document = self.workspace.document
+        with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=False) as ask:
+            self.workspace.path.set(str(self.folder / 'other' / backend.FORMAT_FILENAME))
+            self.assertEqual(ask.call_count, 1)
+            self.assertEqual(self.workspace.path.get(), str(document.path))
+            self.workspace.game.set(self.workspace._game_labels['arland_totori_dx'])
+            self.workspace._selection_changed()
+            self.assertEqual(ask.call_count, 2)
+        self.assertEqual(self.workspace.selected_game_id, 'arland_rorona_dx')
+        self.assertIs(self.workspace.document, document)
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+
+    def test_cancelled_reopen_or_browse_does_not_read_or_discard_pending_changes(self):
+        self.stage_fullscreen()
+        document = self.workspace.document
+        with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=False) as ask, \
+                patch.object(backend, 'inspect_config', side_effect=AssertionError('Cancelled selection read a file')):
+            self.workspace.open_file()
+            self.assertEqual(ask.call_count, 1)
+            with patch('koei_editor.shared.configuration_gui.filedialog.askopenfilename',
+                       return_value=str(self.folder / 'other' / backend.FORMAT_FILENAME)):
+                self.workspace.browse()
+            self.assertEqual(ask.call_count, 2)
+        self.assertIs(self.workspace.document, document)
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
 
     def test_duplicate_profile_labels_resolve_to_the_exact_profile_id(self):
         self.open_game_fixture()
@@ -122,6 +174,7 @@ class ConfigurationWorkspaceTests(unittest.TestCase):
             self.assertEqual(self.workspace._profile_by_selection().id, second.id)
             self.workspace.apply_profile()
         self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+
 
     def test_open_file_enables_manual_backup_and_review_undo_preserve_source_until_save(self):
         self.open_game_fixture()
@@ -153,6 +206,119 @@ class ConfigurationWorkspaceTests(unittest.TestCase):
         self.assertEqual(self.workspace.staged, {})
         self.assertEqual(str(self.workspace.review_button['state']), 'disabled')
         self.assertEqual(self.file.read_bytes(), original)
+
+
+    def test_invalid_staging_is_atomic_and_undo_restores_unstaged_values(self):
+        self.open_game_fixture()
+        candidate = {'fullscreen': 1}
+        self.assertTrue(self.workspace._accept_staged(candidate))
+        candidate['fullscreen'] = 0
+        staged, history = self.workspace.staged, self.workspace.history
+        self.assertEqual(staged, {'fullscreen': 1})
+        for invalid in ({'fullscreen': 1, 'unknown': 0}, {'screen_width': 1920},
+                        {'fullscreen': False}, {'fullscreen': 9}, None):
+            with self.subTest(invalid=invalid):
+                self.assertFalse(self.workspace._accept_staged(invalid))
+                self.assertIs(self.workspace.staged, staged)
+                self.assertEqual(self.workspace.history, history)
+        self.assertTrue(self.workspace._accept_staged({'fullscreen': 1}))
+        self.assertEqual(self.workspace.history, history)
+        self.assertTrue(self.workspace._accept_staged({'fullscreen': 0}))
+        self.assertEqual(self.workspace.staged, {})
+        self.assertTrue(self.workspace.undo())
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+        self.assertTrue(self.workspace.undo())
+        self.assertEqual(self.workspace.staged, {})
+        self.assertFalse(self.workspace.undo())
+        self.assertEqual(self.file.read_bytes(), GAME_FIXTURE)
+
+    def test_review_is_frozen_and_cancelled_selection_preserves_undo_history(self):
+        self.stage_fullscreen()
+        document = self.workspace.document
+        dialog = self.workspace.review()
+        self.addCleanup(dialog.destroy)
+        tree = next(widget for widget in dialog.winfo_children() if isinstance(widget, ttk.Treeview))
+        self.assertTrue(self.workspace._accept_staged({'fullscreen': 1, 'outline': 0}))
+        staged, history = self.workspace.staged, self.workspace.history
+        self.assertEqual(tree.get_children(), ('fullscreen',))
+        self.assertEqual(tree.item('fullscreen', 'values'), ('Graphics', 'Off', 'On'))
+        with patch('koei_editor.shared.configuration_gui.messagebox.askyesno', return_value=False):
+            self.workspace.path.set(str(self.folder / 'other' / backend.FORMAT_FILENAME))
+        self.assertIs(self.workspace.document, document)
+        self.assertIs(self.workspace.staged, staged)
+        self.assertEqual(self.workspace.history, history)
+        self.assertTrue(self.workspace.undo())
+        self.assertEqual(self.workspace.staged, {'fullscreen': 1})
+        self.assertEqual(tree.item('fullscreen', 'values'), ('Graphics', 'Off', 'On'))
+        self.assertEqual(self.file.read_bytes(), GAME_FIXTURE)
+
+    def test_failed_save_preserves_history_and_successful_save_clears_it(self):
+        self.stage_fullscreen()
+        staged, history = self.workspace.staged, self.workspace.history
+        with patch.object(backend, 'save_config', side_effect=backend.ConfigurationChangedError('changed')):
+            self.workspace.save()
+        self.assertIs(self.workspace.staged, staged)
+        self.assertEqual(self.workspace.history, history)
+        self.assertEqual(self.file.read_bytes(), GAME_FIXTURE)
+        with patch.object(backend, 'configuration_data_dir', return_value=self._storage):
+            self.workspace.save()
+        self.assertEqual(self.workspace.staged, {})
+        self.assertEqual(self.workspace.history, ())
+        self.assertEqual(str(self.workspace.undo_button['state']), 'disabled')
+        self.assertEqual(str(self.workspace.review_button['state']), 'disabled')
+        self.assertEqual(self.file.read_bytes(), GAME_FIXTURE.replace(b'FullScreen=0', b'FullScreen=1'))
+
+    def test_compact_themed_actions_and_review_footer_remain_reachable(self):
+        app = Application(self.root, persist_preferences=False,
+                          preferences_path=self.folder / 'preferences.json')
+        app.apply_theme('Dark')
+        self.workspace = app.show_game_configuration()
+        self.file = self.folder / backend.MOD_FORMAT_FILENAME
+        self.file.write_bytes(MOD_FIXTURE)
+        self.open_game_fixture()
+        pending = {field.id: next(value for value, _label in field.choices
+                                 if value != field.value)
+                   for field in self.workspace.document.fields
+                   if field.writable and field.choices}
+        self.assertEqual(len(pending), 9)
+        self.assertTrue(self.workspace._accept_staged(pending))
+        self.root.deiconify()
+        for width in (1028, 780, 729):
+            with self.subTest(width=width):
+                self.root.maxsize(width, 729)
+                self.root.geometry(f'{width}x729')
+                self.root.update()
+                for button in (self.workspace.stage_button, self.workspace.undo_button,
+                               self.workspace.review_button, self.workspace.save_button,
+                               self.workspace.backup_button):
+                    self.workspace.viewport.reveal(button)
+                    self.root.update()
+                    self.assertTrue(button.winfo_ismapped())
+                    self.assertGreaterEqual(button.winfo_width(), button.winfo_reqwidth())
+                    self.assertGreaterEqual(button.winfo_rootx(), button.master.winfo_rootx())
+                    self.assertLessEqual(button.winfo_rootx() + button.winfo_width(),
+                                         button.master.winfo_rootx() + button.master.winfo_width())
+                    canvas = self.workspace.viewport.canvas
+                    self.assertGreaterEqual(button.winfo_rooty(), canvas.winfo_rooty())
+                    self.assertLessEqual(button.winfo_rooty() + button.winfo_height(),
+                                         canvas.winfo_rooty() + canvas.winfo_height())
+        dialog = self.workspace.review()
+        self.addCleanup(dialog.destroy)
+        self.root.update()
+        self.assertGreaterEqual(int(app.style.lookup('Treeview', 'rowheight')), 29)
+        close = next(widget for widget in dialog.winfo_children()
+                     if isinstance(widget, ttk.Button) and widget.cget('text') == 'Close')
+        tree = next(widget for widget in dialog.winfo_children() if isinstance(widget, ttk.Treeview))
+        self.assertTrue(close.winfo_ismapped())
+        self.assertGreaterEqual(close.winfo_height(), close.winfo_reqheight())
+        self.assertLessEqual(close.winfo_y() + close.winfo_height(), dialog.winfo_height())
+        self.assertLess(tree.yview()[1], 1.0)
+        tree.see(tree.get_children()[-1])
+        self.root.update()
+        self.assertGreater(tree.yview()[0], 0.0)
+        self.assertTrue(close.winfo_ismapped())
+        self.assertEqual(dict(self.workspace.staged), pending)
+        self.assertEqual(self.file.read_bytes(), MOD_FIXTURE)
 
     def test_mod_format_uses_exact_file_and_comparison_reports_opaque_changes(self):
         self.file = self.folder / backend.MOD_FORMAT_FILENAME

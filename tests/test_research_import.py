@@ -181,9 +181,13 @@ class ResearchImportGuiTests(unittest.TestCase):
 
     def test_menu_palette_retained_state_themes_and_useful_readonly_records(self):
         self.assertIn('tool:research_import', {entry.id for entry in self.app.command_entries()})
-        menu_index = self.app._editing_tools_menu_index('research_import')
-        self.assertIsNotNone(menu_index)
-        self.assertEqual(self.app.editing_tools_menu.entrycget(menu_index, 'label'),
+        labels = []
+        for key in ('editing_presets', 'transfer', 'research_lab', 'research_import'):
+            index = self.app._editing_tools_menu_index(key)
+            self.assertIsNotNone(index, f'Missing editing tool menu command: {key}')
+            labels.append(self.app.editing_tools_menu.entrycget(index, 'label'))
+        self.assertIn('Research Import', labels)
+        self.assertEqual(self.app.editing_tools_menu.entrycget(index, 'label'),
                          self.app.tr('research_import'))
         keys = ('editing_presets', 'transfer', 'game_configuration', 'research_lab', 'research_import')
         indices = (self.app._editing_tools_menu_index(key) for key in keys)

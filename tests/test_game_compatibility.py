@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from koei_editor.shared import game_compatibility as compatibility
 
@@ -71,6 +72,39 @@ class GameCompatibilityTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.folder = Path(temporary.name)
+
+    def test_report_alias_created_after_preflight_cannot_overwrite_snapshot(self):
+        for option in ("--json-out", "--markdown-out"):
+            with self.subTest(option=option):
+                before = self.folder / (option[2:] + "-before.json")
+                after = self.folder / (option[2:] + "-after.json")
+                output = self.folder / (option[2:] + "-report.txt")
+                original = json.dumps(snapshot("1.0")).encode("utf-8")
+                before.write_bytes(original)
+                after.write_text(json.dumps(snapshot("1.1")), encoding="utf-8")
+                analyze = compatibility.analyze_snapshots
+
+                def create_alias(*args):
+                    os.link(before, output)
+                    return analyze(*args)
+
+                with patch.object(compatibility, "analyze_snapshots", side_effect=create_alias):
+                    result = compatibility.main([str(before), str(after), option, str(output)])
+                self.assertEqual(result, 2)
+                self.assertEqual(before.read_bytes(), original)
+                self.assertEqual(output.read_bytes(), original)
+
+    def test_existing_report_is_preserved_when_new_report_is_requested(self):
+        before = self.folder / "before.json"
+        after = self.folder / "after.json"
+        output = self.folder / "existing-report.json"
+        before.write_text(json.dumps(snapshot("1.0")), encoding="utf-8")
+        after.write_text(json.dumps(snapshot("1.1")), encoding="utf-8")
+        original = b"An existing independent report"
+        output.write_bytes(original)
+        result = compatibility.main([str(before), str(after), "--json-out", str(output)])
+        self.assertEqual(result, 2)
+        self.assertEqual(output.read_bytes(), original)
 
     def test_file_version_archive_and_format_changes_are_reported_deterministically(self):
         baseline = snapshot(
@@ -676,6 +710,31 @@ class GameCompatibilityTests(unittest.TestCase):
                 )
                 self.assertEqual(process.returncode, 2, process.stderr)
                 self.assertFalse(output_path.exists())
+
+    def test_json_nesting_limit_accepts_boundary_and_rejects_excess_before_decoding(self):
+        input_path = self.folder / 'depth-boundary.json'
+        depth = compatibility._MAX_JSON_NESTING
+        for kind, prefix, suffix in (('array', '[', ']'), ('object', '{"child":', '}')):
+            with self.subTest(kind=kind):
+                input_path.write_text(prefix * depth + '0' + suffix * depth, encoding='utf-8')
+                value = compatibility.load_json(input_path)
+                for _level in range(depth):
+                    self.assertEqual(len(value), 1)
+                    value = value[0] if kind == 'array' else value['child']
+                self.assertEqual(value, 0)
+                input_path.write_text(prefix * (depth + 1) + '0' + suffix * (depth + 1), encoding='utf-8')
+                with patch.object(compatibility.json, 'loads', side_effect=AssertionError('Decoder reached before depth rejection')):
+                    with self.assertRaisesRegex(compatibility.CompatibilityInputError, '256-level nesting limit'):
+                        compatibility.load_json(input_path)
+
+    def test_json_nesting_scan_handles_escaped_quotes_backslashes_and_unicode_strings(self):
+        value = {'strings': ['[' * 600, ']' * 600, 'escaped quote: \" []',
+                             'backslashes: \\\\ ][', '\u005b\u005d']}
+        input_path = self.folder / 'escaped-brackets.json'
+        input_path.write_text(json.dumps(value), encoding='utf-8')
+        self.assertEqual(compatibility.load_json(input_path), value)
+        input_path.write_text(r'{"unicode": "\u005b\u005d"}', encoding='utf-8')
+        self.assertEqual(compatibility.load_json(input_path), {'unicode': '[]'})
 
     def test_json_nesting_scanner_ignores_brackets_inside_strings(self):
         value = "[" * (compatibility._MAX_JSON_NESTING + 1) + "]" * (compatibility._MAX_JSON_NESTING + 1)

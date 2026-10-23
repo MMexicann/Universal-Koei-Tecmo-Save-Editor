@@ -271,7 +271,7 @@ GAMES = (
          '', '.bin', '#775c82', 'koei_editor.games.wo3u_ps3.editor', 'koei_editor.games.wo3u_ps3.parser',
          True, 'WO3U PS3', True, 'PlayStation 3', scalar_backend='koei_editor.games.wo3u_ps3.parser'),
     Game('nioh3', 'NIOH 3', 'Windows PC · USER revisions 0x01030001 / 0x01040000',
-         'Amrita and Gold deductions, thirty-two named ordinary consumable reductions; separate equipment inspection.',
+         'Amrita and Gold deductions, thirty-two named ordinary consumable reductions; read-only equipment levels and raw modifier slots.',
          '', '.bin', '#806126', 'koei_editor.games.nioh3.editor', 'koei_editor.games.nioh3.parser',
          True, 'NIOH 3', True, scalar_backend='koei_editor.games.nioh3.parser'),
     Game('ninjagaiden2_x360', 'NINJA GAIDEN II', 'Original Xbox 360 / Xenia · extracted revision-6 story',

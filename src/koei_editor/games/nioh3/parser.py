@@ -259,8 +259,34 @@ def inspection_rows(document):
             name = inventory.COMMON_ITEMS.get(identity, f'Item ID 0x{identity:04X}')
             description = (f'Quantity {quantity:,}; editable reduction: {offset in writable}'
                            if pool.id != 'equipment' else
-                           f'Level {level:,}; pre-forge level {pre_forge:,}; +value {plus:,}; '
-                           f'appearance ID 0x{appearance:04X} (read only)')
+                           _equipment_inspection(document.payload, offset, appearance,
+                                                 level, pre_forge, plus))
             result.append({'group': pool.title, 'label': f'Slot {slot + 1}: {name}',
                            'value': description})
     return tuple(result)
+
+
+def _equipment_inspection(payload, offset, appearance, level, pre_forge, plus):
+    """Return numeric-only hints for an existing equipment record.
+
+    The relative layout follows the pinned Apache-2.0 Nioh 3 editor source,
+    https://github.com/alfizari/Nioh-3-Save-Editor/blob/
+    b5d0789791fe31d06ad325d4012aa0333c60cd8f/main.py. No catalog is imported
+    and none of these subfields are writable here. Effect IDs and metadata are
+    intentionally left uninterpreted.
+    """
+    rarity = struct.unpack_from('<H', payload, offset + 0x30)[0]
+    raw_slots = []
+    for index in range(7):
+        slot_offset = offset + 0x38 + index * 0x18
+        effect_id = struct.unpack_from('<H', payload, slot_offset)[0]
+        value = struct.unpack_from('<I', payload, slot_offset + 4)[0]
+        metadata = (payload[slot_offset + 9], payload[slot_offset + 0x0A])
+        if effect_id or value or any(metadata):
+            raw_slots.append(
+                f'{index + 1}:id=0x{effect_id:04X},value=0x{value:08X},'
+                f'metadata=0x{metadata[0]:02X}/0x{metadata[1]:02X}')
+    slots = ', '.join(raw_slots) if raw_slots else 'none observed'
+    return (f'Level {level:,}; pre-forge level {pre_forge:,}; +value {plus:,}; '
+            f'appearance ID 0x{appearance:04X}; source-reported rarity u16=0x{rarity:04X}; '
+            f'raw modifier slots (read only): {slots}')

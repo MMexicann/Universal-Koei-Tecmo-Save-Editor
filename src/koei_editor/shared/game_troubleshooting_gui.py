@@ -1,7 +1,6 @@
 """Read-only, retained UI for the Koei Tecmo Game Troubleshooting Center."""
 
 from pathlib import Path
-import os
 import queue
 import threading
 import tkinter as tk
@@ -9,6 +8,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from koei_editor.game_registry import GAMES
 from koei_editor.shared.game_troubleshooting import CATEGORY_ORDER, SCHEMA_VERSION, diagnose_game
+from koei_editor.shared.copy_storage import atomic_new
 from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 
@@ -141,26 +141,9 @@ def export_json_report(report, destination):
     if destination.suffix.casefold() != ".json":
         raise ValueError("Troubleshooting reports require a .json filename.")
     content = report.to_json().encode("utf-8")
-    identity = None
-    try:
-        with destination.open("xb") as stream:
-            info = os.fstat(stream.fileno())
-            identity = (info.st_dev, info.st_ino)
-            stream.write(content)
-            stream.flush()
-            os.fsync(stream.fileno())
-        if destination.read_bytes() != content:
-            raise OSError("Troubleshooting report read-back differed.")
-    except Exception:
-        if identity is not None:
-            try:
-                current = destination.lstat()
-                if (current.st_dev, current.st_ino) == identity:
-                    destination.unlink()
-            except OSError:
-                pass
-        raise
-    return destination
+    # Verify a private staging file before exclusive publication. Never reopen
+    # the destination, which another application may replace after publication.
+    return atomic_new(content, destination)
 
 
 class TroubleshootingWorkspace:

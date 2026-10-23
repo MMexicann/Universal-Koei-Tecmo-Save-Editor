@@ -52,7 +52,7 @@ The Save Converter has explicit platform/region routes and transfer scopes; see 
 | WO LONG: FALLEN DYNASTY — Windows PC · USERDATA | Windows PC | Genuine Qi, copper, accolades, ordinary stack reductions, existing battle-set names and equipment inspection. |
 | PERSONA 5 STRIKERS — Windows PC · SAVEDATA.BIN | Windows PC | Money, Persona/BOND points and existing consumables, cooking supplies, incenses, remedies and selected skill cards. |
 | DYNASTY WARRIORS 5 SPECIAL — Shin Sangokumusou 4 Special · Windows PC | Windows PC | Existing item ranks, stored officer attack/defense, weapon attack/weight and attributes; named records. |
-| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, thirty-two named ordinary consumable reductions; separate equipment inspection. |
+| NIOH 3 — Windows PC · USER revisions 0x01030001 / 0x01040000 | Windows PC | Amrita and Gold deductions, thirty-two named ordinary consumable reductions; read-only equipment levels and raw modifier slots. |
 | ROMANCE OF THE THREE KINGDOMS XIII — Original PC · revision 14 · TC | Windows PC | City gold, supplies, population, wounded troops, fealty, commerce, farming, culture and troop proficiencies. |
 | DRAGON QUEST BUILDERS 2 — Original Steam PC · CMNDAT.BIN | Windows PC | Existing named medicine/seed stack reductions; searchable pockets, bag and player/equipment status. |
 | NOBUNAGA'S AMBITION: TENSHOUKI — Original Japanese Windows Power-Up Kit · SAVEDAT.n6p | Windows PC | Existing district Gold, Rice, Horses and Firearms reductions; searchable generals, castles, clans, treasures and slots. |

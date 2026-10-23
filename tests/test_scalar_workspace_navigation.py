@@ -166,12 +166,11 @@ class ScalarWorkspaceNavigationTests(unittest.TestCase):
         self.assertNotIn('78 · Opened value (preserved)', editor.value_choice.cget('values'))
 
     def test_edit_refresh_retains_sort_selection_focus_and_scroll_position(self):
-        from koei_editor.shared.table_tools import sort_table
         editor = self.open_editor()
         self.root.geometry('1200x760')
         self.root.deiconify()
         self.root.update()
-        sort_table(editor.fields, 'slot', reverse=False)
+        editor.sort_fields('slot')
         key = editor.fields.get_children()[-20]
         editor.fields.selection_set(key)
         editor.fields.focus(key)

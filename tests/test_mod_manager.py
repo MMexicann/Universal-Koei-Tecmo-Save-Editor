@@ -2,9 +2,14 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import stat
+import subprocess
+import sys
+from types import SimpleNamespace
 import tempfile
+import threading
 import unittest
 import zipfile
 from unittest.mock import patch
@@ -145,6 +150,11 @@ class ModManagerTests(unittest.TestCase):
         invalid = (
             ("traversal", {"NiohMod/mod.ini": b"x", "../escape.fmt": b"x"}, ()),
             ("absolute", {"NiohMod/mod.ini": b"x", "/escape.fmt": b"x"}, ()),
+            ("console-device", {"NiohMod/mod.ini": b"x", "NiohMod/CONIN$.fmt": b"x"}, ()),
+            ("unicode-device", {"NiohMod/mod.ini": b"x", "NiohMod/COM¹.fmt": b"x"}, ()),
+            ("unicode-printer-device", {"NiohMod/mod.ini": b"x", "NiohMod/LPT³.fmt": b"x"}, ()),
+            ("spaced-device-stem", {"NiohMod/mod.ini": b"x", "NiohMod/COM1 .fmt": b"x"}, ()),
+            ("spaced-console-stem", {"NiohMod/mod.ini": b"x", "NiohMod/CONOUT$ .dds": b"x"}, ()),
             ("unknown-extension", {"NiohMod/mod.ini": b"x", "NiohMod/loader.dll": b"x"}, ()),
             ("loader-package", {"NiohMod/mod.ini": b"x", "NiohMod/d3d11.dll": b"x"}, ()),
             ("fomod", {"NiohMod/mod.ini": b"x", "NiohMod/module.fmt": b"x"},
@@ -174,6 +184,60 @@ class ModManagerTests(unittest.TestCase):
         with self.assertRaises(PackageError):
             self.manager.import_archive(symlink)
         self.assertEqual(self.manager.mods(), ())
+
+    def test_import_rejects_superscript_device_aliases_but_accepts_near_neighbors(self):
+        for index, name in enumerate(("COM¹.dds", "COM².dds", "COM³.dds", "LPT¹.dds", "LPT².dds", "LPT³.dds")):
+            with self.subTest(name=name):
+                archive = self.package(f"device-{index}.zip", files={
+                    "NiohMod/mod.ini": b"x", f"NiohMod/{name}": b"generated asset",
+                })
+                with self.assertRaises(PackageError):
+                    self.manager.import_archive(archive)
+        for index, name in enumerate(("COM10.dds", "LPT10.dds", "日本語.dds")):
+            with self.subTest(name=name):
+                archive = self.package(f"valid-{index}.zip", files={
+                    "NiohMod/mod.ini": b"x", f"NiohMod/{name}": b"generated asset",
+                })
+                self.assertIn(name, {Path(file.path).name for file in self.manager.import_archive(archive).files})
+
+    def test_import_rejects_truncated_corrupt_and_oversized_zip_entries(self):
+        truncated = self.package("truncated.zip", mod_id="truncated")
+        truncated.write_bytes(truncated.read_bytes()[:12])
+        with self.assertRaises(PackageError):
+            self.manager.import_archive(truncated)
+
+        corrupt = self.package("corrupt-crc.zip", mod_id="corrupt-crc")
+        with zipfile.ZipFile(corrupt) as archive:
+            info = archive.getinfo("NiohMod/assets/model.fmt")
+        raw = bytearray(corrupt.read_bytes())
+        local_offset = info.header_offset
+        name_length = int.from_bytes(raw[local_offset + 26:local_offset + 28], "little")
+        extra_length = int.from_bytes(raw[local_offset + 28:local_offset + 30], "little")
+        payload_offset = local_offset + 30 + name_length + extra_length
+        raw[payload_offset] ^= 0x01
+        corrupt.write_bytes(raw)
+        with self.assertRaisesRegex(PackageError, "integrity validation"):
+            self.manager.import_archive(corrupt)
+
+        oversized = self.package("oversized-entry.zip", mod_id="oversized-entry")
+        raw = bytearray(oversized.read_bytes())
+        central_offset = raw.find(b"PK\x01\x02")
+        while central_offset >= 0:
+            name_length = int.from_bytes(raw[central_offset + 28:central_offset + 30], "little")
+            name_start = central_offset + 46
+            name = bytes(raw[name_start:name_start + name_length]).decode("utf-8")
+            if name == "NiohMod/assets/model.fmt":
+                raw[central_offset + 24:central_offset + 28] = (512 * 1024 * 1024 + 1).to_bytes(4, "little")
+                break
+            central_offset = raw.find(b"PK\x01\x02", central_offset + 4)
+        else:
+            self.fail("test ZIP is missing the asset's central directory record")
+        oversized.write_bytes(raw)
+        with self.assertRaisesRegex(PackageError, "entry is too large"):
+            self.manager.import_archive(oversized)
+
+        self.assertEqual(self.manager.mods(), ())
+        self.assertFalse(any(path.name.startswith(".import-") for path in self.manager.packages_dir.iterdir()))
 
     def test_dependencies_conflicts_and_asset_collisions_block_profile_changes(self):
         core = self.import_mod("core.zip", mod_id="core-mod")
@@ -312,6 +376,202 @@ class ModManagerTests(unittest.TestCase):
 
         self.assertEqual(sentinel.read_text(encoding="utf-8"), "preserve")
         self.assertTrue(self.manager.journal_path.exists())
+
+
+class ModManagerConcurrentStateTests(unittest.TestCase):
+    """Independent windows must not overwrite one another's persisted state."""
+
+    setUp = ModManagerTests.setUp
+    package = ModManagerTests.package
+    import_mod = ModManagerTests.import_mod
+
+    def test_handle_and_path_ctime_may_have_different_windows_semantics(self):
+        from koei_editor.shared.mod_manager import _read_regular_bytes
+        path = self.manager.install_state_dir / "state.json"
+        expected = path.read_bytes()
+        native_fstat = os.fstat
+
+        def handle_stat(descriptor):
+            info = native_fstat(descriptor)
+            return SimpleNamespace(st_dev=info.st_dev, st_ino=info.st_ino,
+                                   st_mode=info.st_mode, st_size=info.st_size,
+                                   st_mtime_ns=info.st_mtime_ns,
+                                   st_ctime_ns=info.st_ctime_ns + 1_000_000_000)
+
+        with patch("koei_editor.shared.mod_manager.os.fstat", side_effect=handle_stat):
+            self.assertEqual(_read_regular_bytes(path), expected)
+
+    def test_stale_profile_writer_preserves_first_writers_profile(self):
+        stale = ModManager(self.state_dir, self.game)
+        first = self.manager.create_profile("First writer")
+        with self.assertRaisesRegex(SafetyError, "state changed.*Reopen"):
+            stale.create_profile("Second writer")
+        reopened = ModManager(self.state_dir, self.game)
+        self.assertIn(first.id, {profile.id for profile in reopened.profiles()})
+        self.assertNotIn("Second writer", {profile.name for profile in reopened.profiles()})
+
+    def test_import_rechecks_other_install_journal_after_extraction(self):
+        import koei_editor.shared.mod_manager as service
+        archive = self.package("blocked-import.zip", mod_id="blocked-import")
+        native_iter_tree = service._iter_tree
+        pending = self.manager.installations_dir / "other-install" / "transaction.json"
+
+        def journal_appears_during_extraction(path):
+            if Path(path).name == "payload":
+                pending.parent.mkdir()
+                pending.write_text('{"retained":"pending other installation"}', encoding="utf-8")
+            return native_iter_tree(path)
+
+        with patch.object(service, "_iter_tree", side_effect=journal_appears_during_extraction):
+            with self.assertRaisesRegex(InstallationError, "pending transaction.*another"):
+                self.manager.import_archive(archive)
+        self.assertEqual(self.manager.mods(), ())
+        self.assertFalse((self.manager.packages_dir / "blocked-import").exists())
+        self.assertEqual(pending.read_text(encoding="utf-8"), '{"retained":"pending other installation"}')
+
+    def test_async_import_extraction_does_not_block_library_reads(self):
+        import koei_editor.shared.mod_manager as service
+        archive = self.package("background-import.zip", mod_id="background-import")
+        extraction_started = threading.Event()
+        release_extraction = threading.Event()
+        read_completed = threading.Event()
+        errors = []
+        native_iter_tree = service._iter_tree
+
+        def blocked_extraction(path):
+            if Path(path).name == "payload":
+                extraction_started.set()
+                if not release_extraction.wait(5):
+                    raise RuntimeError("Timed out waiting for extraction release")
+            return native_iter_tree(path)
+
+        def run_import():
+            try:
+                self.manager.import_archive(archive)
+            except Exception as error:
+                errors.append(error)
+
+        def read_library():
+            try:
+                self.manager.mods()
+            finally:
+                read_completed.set()
+
+        with patch.object(service, "_iter_tree", side_effect=blocked_extraction):
+            worker = threading.Thread(target=run_import)
+            reader = threading.Thread(target=read_library)
+            worker.start()
+            try:
+                self.assertTrue(extraction_started.wait(2))
+                reader.start()
+                self.assertTrue(read_completed.wait(1), "background extraction must not own the library read lock")
+            finally:
+                release_extraction.set()
+                worker.join(5)
+                if reader.ident is not None:
+                    reader.join(5)
+        self.assertFalse(worker.is_alive())
+        self.assertFalse(reader.is_alive())
+        self.assertEqual(errors, [])
+        self.assertEqual({mod.id for mod in self.manager.mods()}, {"background-import"})
+
+    def test_stale_library_writer_does_not_orphan_first_writers_package(self):
+        stale = ModManager(self.state_dir, self.game)
+        first = self.import_mod("first-writer.zip", mod_id="first-writer")
+        with self.assertRaisesRegex(SafetyError, "state changed.*Reopen"):
+            stale.import_archive(self.package("second-writer.zip", mod_id="second-writer"))
+        reopened = ModManager(self.state_dir, self.game)
+        self.assertEqual({record.id for record in reopened.mods()}, {first.id})
+        self.assertFalse((self.state_dir / "packages" / "second-writer").exists())
+
+    def test_stale_install_writer_cannot_overwrite_managed_ownership(self):
+        mod = self.import_mod(mod_id="installed-once")
+        stale = ModManager(self.state_dir, self.game)
+        self.manager.install_mod(mod.id, loader_confirmed=True)
+        with self.assertRaisesRegex(SafetyError, "state changed.*Reopen"):
+            stale.install_mod(mod.id, loader_confirmed=True)
+        reopened = ModManager(self.state_dir, self.game)
+        self.assertEqual(reopened.installation["installed"], {mod.id: False})
+        self.assertTrue((self.game / MODS_DIR / (mod.id + DISABLED_SUFFIX)).is_dir())
+
+    def test_active_writer_is_rejected_without_removing_its_lock(self):
+        second = ModManager(self.state_dir, self.game)
+        with self.manager._mutation_guard():
+            lock = self.manager._writer_path()
+            token = lock.read_bytes() if os.name != "nt" else self.manager._writer_owner[3]
+            with self.assertRaisesRegex(SafetyError, "writer is active"):
+                second.create_profile("Blocked writer")
+            self.manager._assert_writer_owned()
+        self.assertEqual(lock.read_bytes(), token)
+
+    def test_empty_regular_lock_can_be_reused_without_rewriting_or_removal(self):
+        lock = self.manager._writer_path()
+        lock.write_bytes(b"")
+        before = lock.stat()
+        self.manager.create_profile("Valid empty lock")
+        self.assertEqual(lock.read_bytes(), b"")
+        self.assertEqual((lock.stat().st_dev, lock.stat().st_ino), (before.st_dev, before.st_ino))
+
+    @unittest.skipIf(os.name == "nt", "POSIX flock interleaving; empty lock reuse is separately portable.")
+    def test_initial_creator_losing_os_lock_does_not_strand_empty_file(self):
+        import fcntl
+        lock = self.manager._writer_path()
+        lock.unlink()  # Test setup: no operation currently owns this known lock.
+        native_flock = fcntl.flock
+        contenders = []
+
+        def acquire_before_creator(descriptor, operation):
+            if not contenders:
+                competing = os.open(lock, os.O_RDWR)
+                contenders.append(competing)
+                native_flock(competing, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return native_flock(descriptor, operation)
+
+        try:
+            with patch.object(fcntl, "flock", side_effect=acquire_before_creator):
+                with self.assertRaisesRegex(SafetyError, "writer is active"):
+                    self.manager.create_profile("Lost initialization race")
+            self.assertEqual(lock.read_bytes(), b"")
+        finally:
+            for descriptor in contenders:
+                os.close(descriptor)
+        self.manager.create_profile("Writer after initialization race")
+        self.assertEqual(lock.read_bytes(), b"")
+
+    def test_foreign_lock_content_is_preserved(self):
+        lock = self.manager._writer_path()
+        lock.write_bytes(b"unrelated user replacement")
+        with self.assertRaisesRegex(SafetyError, "unrecognized"):
+            self.manager.create_profile("Refused")
+        self.assertEqual(lock.read_bytes(), b"unrelated user replacement")
+
+    @unittest.skipIf(os.name == "nt", "Windows disallows replacing a file with an open locked handle.")
+    def test_foreign_lock_replacement_is_never_unlinked(self):
+        replacement = self.folder / "foreign-lock"
+        replacement.write_bytes(b"foreign lock must remain")
+        with self.assertRaisesRegex(SafetyError, "replacement lock was preserved"):
+            with self.manager._mutation_guard():
+                os.replace(replacement, self.manager._writer_path())
+        self.assertEqual(self.manager._writer_path().read_bytes(), b"foreign lock must remain")
+
+    def test_process_exit_releases_lock_and_pending_install_rolls_back(self):
+        mod = self.import_mod(mod_id="crashed-install")
+        code = (
+            "import os,sys; from koei_editor.shared.mod_manager import ModManager; "
+            "manager=ModManager(sys.argv[1],sys.argv[2]); "
+            "manager._save_installation=lambda: os._exit(0); "
+            "manager.install_mod(sys.argv[3],loader_confirmed=True)"
+        )
+        result = subprocess.run([sys.executable, "-c", code, str(self.state_dir),
+                                 str(self.game), mod.id], capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self.manager.journal_path.exists())
+        reopened = ModManager(self.state_dir, self.game)
+        self.assertEqual(reopened.installation["installed"], {})
+        self.assertFalse(reopened.journal_path.exists())
+        self.assertFalse((self.game / MODS_DIR).exists())
+        self.assertEqual((self.game / GAME_EXE).read_bytes(), b"original Nioh 2 executable fixture")
+        self.assertEqual((self.game / LOADER_FILE).read_bytes(), b"user-installed loader fixture")
 
 
 if __name__ == "__main__":

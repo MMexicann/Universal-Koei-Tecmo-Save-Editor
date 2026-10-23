@@ -1,7 +1,24 @@
 # Nexus Mods browser
 
-The Editing and Research menu opens a read-only browser for confirmed Nexus game
-domains associated with supported Windows PC profiles. It uses the documented
+## Public release availability
+
+The public application's **Nexus Mods** entry currently shows a registration
+notice and ordinary website links. It has no API-key or download-key input,
+constructs no API client and makes no API requests. Download archives through
+the official website and use the Mod Manager's ordinary local ZIP import and
+review workflow. This does not enable automatic installation.
+
+The API implementation and testing workspace described below remain source
+components for development testing. They are not routed by the public GUI.
+There is no user-facing registration toggle or credential-based bypass. A future
+release may route the API workspace only after actual Nexus application
+registration is evidenced and that integration is reviewed. No registration,
+support contact, or permission is implied by this source change.
+
+## Development/testing API workspace
+
+The source/testing workspace implements a read-only browser for confirmed Nexus
+game domains associated with Windows PC profiles. It uses the documented
 Nexus Mods v3 API over HTTPS. The API's current mod search, detail, file, version
 and dependency endpoints are marked **Experimental**, so the integration is
 isolated in `koei_editor.mods.nexus_api` and should be rechecked against the

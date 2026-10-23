@@ -6,6 +6,12 @@ and mod folders that the user selects. It never launches a game, installer,
 mod, shell command or repair tool, and it never writes into selected game or
 configuration folders.
 
+Folder scans require anchored, no-follow directory access. They are currently
+unavailable on Windows Python runtimes, which leave folder findings **Unknown**
+without reading selected folders. Informational prerequisite and compatibility
+notes remain available. Windows folder scans need a separately qualified native
+implementation before they can be enabled.
+
 ## Reading a report
 
 Reports use schema `koei-game-troubleshooting` version `1` and include the

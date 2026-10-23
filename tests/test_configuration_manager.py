@@ -151,6 +151,14 @@ class ConfigurationManagerTests(unittest.TestCase):
             config.inspect_config(oversized, GAME)
         self.assertEqual(oversized.stat().st_size, config.MAX_CONFIG_BYTES + 1)
 
+    def test_unsupported_section_header_never_inherits_a_known_section(self):
+        for header in (b'[Other] ; section comment', b'[Other] trailing text', b'[Other'):
+            raw = b'[Window]\nUnknown=keep\n' + header + b'\nFullScreen=1\n'
+            path = self._write('ArlandDX_Settings.ini', raw)
+            with self.subTest(header=header), self.assertRaises(config.UnsupportedConfigurationError):
+                config.inspect_config(path, GAME)
+            self.assertEqual(path.read_bytes(), raw)
+
     def test_unknown_values_are_read_only_and_missing_keys_are_never_created(self):
         document = self._inspect_game(b'[Window]\nFullScreen=9\n')
         self.assertEqual(document.fields[0].value, 9)

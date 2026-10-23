@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 
 from koei_editor.shared.mod_workshop.asset_explorer import register_replacement
@@ -101,6 +102,16 @@ class VerifiedPackageTests(unittest.TestCase):
         with self.assertRaises(PackageError):
             build_package(self.project, output, bad_context)
         self.assertFalse(output.exists())
+
+    def test_handwritten_windows_unsafe_target_cannot_produce_a_verified_package(self):
+        for index, target in enumerate(("assets/NUL.dds", "assets/a./child.dds", "assets/a /child.dds")):
+            with self.subTest(target=target):
+                unsafe = replace(self.manifest.replacements[0], target_path=target)
+                save_manifest(self.project, replace(self.manifest, replacements=(unsafe,)))
+                output = self.root / f"unsafe-{index}.zip"
+                with self.assertRaises(PackageError):
+                    build_package(self.project, output, self.context)
+                self.assertFalse(output.exists())
 
     def test_replacement_change_after_registration_blocks_packaging(self):
         self.source.write_bytes(b"different bytes")

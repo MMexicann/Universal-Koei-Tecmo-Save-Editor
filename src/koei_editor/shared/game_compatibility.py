@@ -22,6 +22,9 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
+from koei_editor.games.dw3.models import SaveError
+from koei_editor.shared.copy_storage import atomic_new
+
 
 SNAPSHOT_SCHEMA_ID = "org.koei-tecmo.game-install-snapshot"
 REQUIREMENTS_SCHEMA_ID = "org.koei-tecmo.compatibility-requirements"
@@ -1231,9 +1234,8 @@ def render_markdown(report: Mapping[str, Any]) -> str:
 
 def _write_report(path: Path, content: str) -> None:
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8", newline="\n")
-    except OSError as exc:
+        atomic_new(content.encode("utf-8"), path)
+    except (OSError, SaveError, UnicodeError) as exc:
         raise CompatibilityInputError(f"Cannot write report {path.name!r}: {exc}") from exc
 
 

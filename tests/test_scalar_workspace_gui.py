@@ -119,6 +119,56 @@ class ScalarWorkspaceGuiTests(unittest.TestCase):
         self.root.update()
         self.assertFalse(editor.mode_banner.winfo_ismapped())
 
+    def test_compact_native_font_metrics_keep_the_full_field_viewport_and_edits(self):
+        from tkinter import font
+        from koei_editor.shared.appearance import ui_font
+
+        native_root = tk.Tk()
+        self.addCleanup(native_root.destroy)
+        # Model the runner's 729px client workarea with a 17px normal line.
+        # Segoe UI reaches it at 96dpi; Helvetica needs the next native DPI.
+        for scaling in (1.333005, 1.3894):
+            native_root.tk.call('tk', 'scaling', scaling)
+            if font.Font(native_root, font=(ui_font(native_root), 10)).metrics('linespace') >= 17:
+                break
+        native_root.maxsize(1028, 729)
+        app = Application(native_root, preferences_path=self.folder / 'native-prefs.json',
+                          persist_preferences=False)
+        native_root.geometry('1080x820')
+        editor = app.select_game('origins')
+        self.assertTrue(editor.open_path(self.source))
+        editor.stage_values({'gold': 4321})
+        editor.workspace_tabs.select(editor.edit_page)
+        native_root.update()
+        pending, history = dict(editor.changes), list(editor.history)
+        normal_font = app.style.lookup('.', 'font')
+        native_scaling = float(native_root.tk.call('tk', 'scaling'))
+        self.assertLessEqual(native_root.winfo_height(), 729)
+        self.assertGreater(editor.fields.winfo_height(), 220)
+        self.assertEqual(int(editor.subtitle_label.grid_info()['row']),
+                         int(editor.details_toggle.grid_info()['row']))
+        for widget in (editor.subtitle_label, editor.details_toggle,
+                       editor.previous_field_page, editor.next_field_page):
+            self.assertTrue(widget.winfo_viewable())
+            self.assertGreaterEqual(widget.winfo_width(), widget.winfo_reqwidth())
+            self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
+        editor.details_visible.set(True)
+        editor.toggle_details()
+        native_root.update()
+        self.assertTrue(editor.details_label.winfo_viewable())
+        editor.details_visible.set(False)
+        editor.toggle_details()
+        native_root.maxsize(1800, 1400)
+        native_root.geometry('1180x930')
+        native_root.update()
+        self.assertNotEqual(int(editor.subtitle_label.grid_info()['row']),
+                            int(editor.details_toggle.grid_info()['row']))
+        self.assertEqual(app.style.lookup('.', 'font'), normal_font)
+        self.assertEqual(float(native_root.tk.call('tk', 'scaling')), native_scaling)
+        self.assertEqual(app.shell_settings.text_size, 100)
+        self.assertEqual((editor.changes, editor.history), (pending, history))
+        self.assertEqual(self.source.read_bytes(), fixture())
+
     def test_search_keyboard_filters_and_library_switch_preserve_pending(self):
         editor = self.editor
         editor.stage_values({"gold": 999})

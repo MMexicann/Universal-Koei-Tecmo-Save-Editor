@@ -83,10 +83,12 @@ class BuildWorkshopGuiTests(unittest.TestCase):
         self.root.update()
         updated = self.view.selected_plan
         self.assertEqual(updated.values["attack"], 140)
+        self.assertIs(type(updated.values["attack"]), int)
         self.assertEqual(self.original.values["attack"], 100)
-        attack_row = next(row for row, key in self.view._row_keys.items()
-                          if key == ("values", "attack"))
-        self.assertEqual(str(self.view.plan_tree.item(attack_row, "values")[2]), "140")
+        attack_rows = [row for row, key in self.view._row_keys.items()
+                       if key == ("values", "attack")]
+        self.assertEqual(len(attack_rows), 1)
+        self.assertEqual(str(self.view.plan_tree.item(attack_rows[0], "values")[2]), "140")
         self.assertEqual(str(self.view.compare_tree.item("compare:0", "values")[-1]), "10")
         self.stage.assert_not_called()
 

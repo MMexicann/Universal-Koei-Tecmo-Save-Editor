@@ -210,6 +210,8 @@ class CompletionCompanionViewTests(unittest.TestCase):
         self.assertIn("Unavailable", self.view.achievement_status.get())
         self.assertEqual(self.view.achievement_summary.get(),
                          "Check the source to retrieve verified achievement states.")
+        self.assertEqual(str(self.view.achievement_action.cget("state")), "normal")
+        self.assertFalse(self.view._achievement_busy)
         self.assertEqual(self.view.achievement_tree.get_children(), ())
 
     def test_manual_checklist_add_toggle_and_remove_are_persisted_as_manual(self):
@@ -227,6 +229,95 @@ class CompletionCompanionViewTests(unittest.TestCase):
         self.view.tree.selection_set(entry_id)
         self.assertTrue(self.view.remove_selected())
         self.assertEqual(self.store.load("dw3"), ())
+
+
+    def test_supported_fetch_requires_a_click_runs_in_background_and_redacts_credentials(self):
+        import threading
+        import time
+        from unittest.mock import patch
+
+        api_key, steam_id = "a" * 32, "76561198000000000"
+        calls = []
+        ui_thread = threading.get_ident()
+
+        def fetch(key, profile):
+            calls.append((key, profile, threading.get_ident()))
+            return {
+                "status": "verified", "source": "Steam Web API",
+                "retrieved_at": "2026-10-22T12:00:00Z",
+                "achievements": [{"id": "CLEAR", "name": f"Profile {profile}",
+                                  "description": f"Request key {key}", "state": "locked"}],
+            }
+
+        self.view._achievement_source = SimpleNamespace(fetch_achievements=fetch)
+        self.root.update()
+        self.assertEqual(calls, [])
+        with patch("koei_editor.shared.completion_checklist_view.simpledialog.askstring",
+                   side_effect=(api_key, steam_id)):
+            self.view.achievement_action.invoke()
+        deadline = time.monotonic() + 3
+        while self.view._achievement_busy and time.monotonic() < deadline:
+            self.root.update()
+            time.sleep(0.005)
+        self.assertFalse(self.view._achievement_busy, "The asynchronous result was not delivered.")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][:2], (api_key, steam_id))
+        self.assertNotEqual(calls[0][2], ui_thread)
+        self.assertIn("Verified from Steam Web API", self.view.achievement_status.get())
+        rows = tuple(self.view.achievement_tree.item(iid, "values")
+                     for iid in self.view.achievement_tree.get_children())
+        self.assertEqual(rows[0][2], "Locked")
+        self.assertIn("[redacted]", rows[0][1])
+        self.assertIn("[redacted]", rows[0][4])
+        self.assertNotIn(api_key, repr(rows))
+        self.assertNotIn(steam_id, repr(rows))
+        self.assertEqual(self.view.entries, ())
+        self.assertFalse(self.store.path.exists())
+
+    def test_cancelled_credentials_do_not_start_a_request_or_write_checklist_data(self):
+        from unittest.mock import Mock, patch
+        fetch = Mock()
+        self.view._achievement_source = SimpleNamespace(fetch_achievements=fetch)
+        with patch("koei_editor.shared.completion_checklist_view.simpledialog.askstring",
+                   side_effect=("a" * 32, None)):
+            self.assertFalse(self.view.check_achievements())
+        self.assertFalse(self.view._achievement_busy)
+        fetch.assert_not_called()
+        self.assertFalse(self.store.path.exists())
+
+
+    def test_closing_a_companion_cancels_polling_without_targeting_deleted_widgets(self):
+        import threading
+        import time
+        from unittest.mock import patch
+
+        release = threading.Event()
+        finished = threading.Event()
+        self.addCleanup(release.set)
+        self.root.tk.eval(
+            'set ::completion_background_errors {}; '
+            'proc bgerror {msg} {lappend ::completion_background_errors $msg}')
+
+        def fetch(_key, _profile):
+            try:
+                release.wait(2)
+                return {"status": "unavailable"}
+            finally:
+                finished.set()
+
+        self.view._achievement_source = SimpleNamespace(fetch_achievements=fetch)
+        with patch("koei_editor.shared.completion_checklist_view.simpledialog.askstring",
+                   side_effect=("a" * 32, "76561198000000000")):
+            self.assertTrue(self.view.check_achievements())
+        self.view.destroy()
+        release.set()
+        self.assertTrue(finished.wait(1))
+        deadline = time.monotonic() + 0.12
+        while time.monotonic() < deadline:
+            self.root.update()
+            time.sleep(0.005)
+        self.assertEqual(self.root.tk.call("set", "::completion_background_errors"), "")
+        self.assertFalse(self.store.path.exists())
 
 
 if __name__ == "__main__":

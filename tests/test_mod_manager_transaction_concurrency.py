@@ -54,8 +54,8 @@ class _Downloader:
         return Path(destination).stat().st_size
 
 
-class _ObservedTransactionLock:
-    """Expose that the Nexus worker found a live transaction lock held."""
+class _ObservedMutationLock:
+    """Expose that the Nexus worker found a live mutation lock held."""
 
     def __init__(self):
         self._lock = threading.RLock()
@@ -92,8 +92,8 @@ class ModManagerTransactionConcurrencyTests(unittest.TestCase):
                 (game / name).write_bytes(contents)
 
             manager = ModManager(base / "state", game)
-            transaction_lock = _ObservedTransactionLock()
-            manager._transaction_lock = transaction_lock
+            mutation_lock = _ObservedMutationLock()
+            manager._library_lock = mutation_lock
             source_package = base / "selected-mod.zip"
             write_package(source_package, "selected-mod", "Selected Mod")
             selected = manager.import_archive(source_package)
@@ -106,13 +106,14 @@ class ModManagerTransactionConcurrencyTests(unittest.TestCase):
             original_atomic_json = mod_manager_module._atomic_json
 
             def pause_after_uncommitted_journal(path, value):
-                original_atomic_json(path, value)
+                revision = original_atomic_json(path, value)
                 if (Path(path) == manager.journal_path
                         and value.get("committed") is False
                         and not journal_written.is_set()):
                     journal_written.set()
                     if not release_transaction.wait(5):
                         raise TimeoutError("test did not release the live transaction")
+                return revision
 
             downloader = _Downloader()
 
@@ -137,8 +138,8 @@ class ModManagerTransactionConcurrencyTests(unittest.TestCase):
                     self.assertTrue(manager.enqueue_nexus_download(NexusRequest(), downloader))
                     self.assertTrue(downloader.started.wait(5), "Nexus downloader did not start")
                     self.assertTrue(
-                        transaction_lock.nexus_worker_blocked.wait(5),
-                        "Nexus import did not wait for the live transaction lock",
+                        mutation_lock.nexus_worker_blocked.wait(5),
+                        "Nexus import did not wait for the live mutation lock",
                     )
                     self.assertTrue(manager.has_pending_transaction)
                     self.assertFalse(json.loads(manager.journal_path.read_text(encoding="utf-8"))["committed"])

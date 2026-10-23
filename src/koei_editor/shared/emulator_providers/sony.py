@@ -120,4 +120,3 @@ PROVIDERS = (
 
 for _provider in PROVIDERS:
     _provider.validate()
-

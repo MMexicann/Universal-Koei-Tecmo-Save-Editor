@@ -6,15 +6,15 @@ The record below is machine-readable. The full local runner report is in the ign
 {
   "schema": "koei-editor-test-evidence/v1",
   "feature": "Character & Weapon Workshop",
-  "evidence_type": "local-validation-and-windows-pr-ci",
+  "evidence_type": "local-validation",
   "checks": [
     {
       "name": "workshop-focused-unittest-suite",
       "command": "PYTHONPATH=src python -m unittest tests.test_character_weapon_workshop_model tests.test_character_weapon_workshop_dw3 tests.test_character_weapon_workshop_projections tests.test_character_weapon_workshop_staging tests.test_samurai4dx_workshop tests.test_character_weapon_workshop_gui tests.test_universal_packaging tests.test_package_release",
       "status": "passed",
-      "tested_base_commit": "1ae3b31",
-      "tested_head_commit": "f045d63",
-      "tests": 98,
+      "tested_base_commit": "05c8bfe",
+      "tested_head_commit": "28afaa1",
+      "tests": 96,
       "skipped": 7,
       "skip_reason": "Tk GUI tests require a display; this workspace has no DISPLAY or Xvfb."
     },
@@ -28,41 +28,9 @@ The record below is machine-readable. The full local runner report is in the ign
       "name": "source-package-manifest",
       "command": "python -m tools.package_release --verify-only",
       "status": "passed",
-      "tested_base_commit": "1ae3b31",
-      "tested_head_commit": "e9375a6",
-      "verified_public_source_entries": 1283
-    },
-    {
-      "name": "windows-pr-workflow-before-latest-mainline-rebase",
-      "command": "GitHub Actions Windows build and release workflow run 39842751104",
-      "status": "failed-with-unrelated-mainline-tests",
       "tested_base_commit": "05c8bfe",
-      "tested_head_commit": "f59ea7c",
-      "tests": 3587,
-      "skipped": 507,
-      "failures": 9,
-      "errors": 2,
-      "passed_shards": [1],
-      "workshop_test_modules_passed": {
-        "tests/test_character_weapon_workshop_dw3.py": 6,
-        "tests/test_character_weapon_workshop_gui.py": 7,
-        "tests/test_character_weapon_workshop_model.py": 6,
-        "tests/test_character_weapon_workshop_projections.py": 7,
-        "tests/test_character_weapon_workshop_staging.py": 6,
-        "tests/test_samurai4dx_workshop.py": 4,
-        "tests/test_universal_packaging.py": 38,
-        "tests/test_package_release.py": 22
-      },
-      "integration_test_failure_fixed_after_run": "tests/test_universal_app.py expected set omitted the existing Completion Companion tab; corrected in the latest head.",
-      "other_failing_modules_unchanged_by_feature": [
-        "tests/test_application_shell.py",
-        "tests/test_emulator_hub.py",
-        "tests/test_research_import.py",
-        "tests/test_completion_companion_view.py",
-        "tests/test_editing_tools_application.py",
-        "tests/test_mod_manager_nexus.py"
-      ],
-      "release_jobs": "skipped; no release was produced"
+      "tested_head_commit": "28afaa1",
+      "verified_public_source_entries": 1248
     },
     {
       "name": "full-repository-unittest-suite",

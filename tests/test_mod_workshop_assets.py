@@ -113,6 +113,20 @@ class AssetExplorerTests(unittest.TestCase):
         with self.assertRaisesRegex(AssetSafetyError, "inside the selected project"):
             self.register(source_file=outside)
 
+    def test_registration_rejects_windows_device_and_aliased_target_components(self):
+        for target in (
+            "assets/NUL.dds", "assets/COM1.fmt", "assets/lPt9.bin",
+            "assets/CON/texture.dds", "assets/a.",
+            "assets/COM¹.dds", "assets/COM².dds", "assets/COM³.dds",
+            "assets/LPT¹.dds", "assets/LPT².dds", "assets/LPT³.dds",
+            "assets/a./child.dds", "assets/a /child.dds",
+        ):
+            with self.subTest(target=target), self.assertRaises(AssetSafetyError):
+                self.register(target_path=target)
+        for target in ("assets/console.dds", "assets/COM10.dds", "assets/LPT10.dds", "assets/日本語.dds"):
+            with self.subTest(target=target):
+                self.assertEqual(self.register(target_path=target).target_path, target)
+
     def test_parent_traversal_in_source_path_is_rejected(self):
         with self.assertRaisesRegex(AssetSafetyError, "parent traversal"):
             self.register(source_file="assets/../assets/new-texture.bin")

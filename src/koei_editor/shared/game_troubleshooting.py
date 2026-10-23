@@ -5,6 +5,7 @@ into an installation, repair configuration, install prerequisites, or infer a
 fault when the reviewed metadata cannot support one.
 """
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 import configparser
 import json
@@ -261,8 +262,63 @@ def _linked(info):
                     & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)))
 
 
+def _directory_identity(info):
+    return info.st_dev, info.st_ino
+
+
+def _file_identity(info):
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
+
+
+@dataclass(frozen=True)
+class _SelectedRoot:
+    path: Path
+    bindings: tuple
+
+
+@dataclass(frozen=True)
+class _ScannedFile:
+    path: Path
+    bindings: tuple
+    info: object
+
+
+# Path-only pre/post checks cannot detect an ABA directory replacement.
+# Abstain on runtimes without equivalent anchored, no-follow directory access.
+_DIRECTORY_FDS = (os.open in os.supports_dir_fd and os.scandir in os.supports_fd
+                  and os.stat in os.supports_dir_fd
+                  and os.stat in os.supports_follow_symlinks
+                  and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW"))
+
+
+@contextmanager
+def _directory(bindings):
+    """Reopen a qualified directory chain without following replacement links."""
+    if not _DIRECTORY_FDS:
+        raise OSError("Safe folder access is unavailable on this runtime.")
+    descriptor = None
+    try:
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        for path, expected in bindings:
+            opened = os.open(path if descriptor is None else path.name, flags,
+                             **({} if descriptor is None else {"dir_fd": descriptor}))
+            if descriptor is not None:
+                os.close(descriptor)
+            descriptor = opened
+            current = os.fstat(descriptor)
+            if (not stat.S_ISDIR(current.st_mode) or _linked(current)
+                    or _directory_identity(current) != _directory_identity(expected)):
+                raise OSError("Selected directory changed.")
+        yield descriptor
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
 def _ordinary_root(value):
-    """Return an accessible ordinary directory, rejecting links in its path."""
+    """Qualify all selected path components and retain their original identity."""
+    if not _DIRECTORY_FDS:
+        return None, "unsupported"
     try:
         if isinstance(value, bool) or not isinstance(value, (str, os.PathLike)):
             return None, "missing"
@@ -274,20 +330,20 @@ def _ordinary_root(value):
             selected = Path.cwd() / selected
         if ".." in selected.parts:
             return None, "unsafe"
-        # Reject a symlink/reparse point in any selected path component.
         cursor = Path(selected.anchor)
+        bindings = [(cursor, cursor.lstat())]
         for part in selected.parts[1:]:
             cursor = cursor / part
             info = cursor.lstat()
             if _linked(info):
                 return None, "unsafe"
-        info = selected.lstat()
-        if not stat.S_ISDIR(info.st_mode):
-            return None, "not_directory"
-        # Open the directory to distinguish readable from merely present.
-        with os.scandir(selected) as iterator:
-            next(iterator, None)
-        return selected, "ready"
+            if not stat.S_ISDIR(info.st_mode):
+                return None, "not_directory"
+            bindings.append((cursor, info))
+        with _directory(tuple(bindings)) as descriptor:
+            with os.scandir(descriptor) as iterator:
+                next(iterator, None)
+        return _SelectedRoot(selected, tuple(bindings)), "ready"
     except FileNotFoundError:
         return None, "missing"
     except (PermissionError, OSError, RuntimeError, ValueError):
@@ -295,48 +351,49 @@ def _ordinary_root(value):
 
 
 def _walk(root):
-    """Enumerate names only; never follow links and stop at fixed limits."""
+    """Enumerate bounded names with identities anchored to qualified directories."""
     files = []
-    directories = [(root, 0)]
+    directories = [(root.bindings, 0)]
     visited = 0
     skipped_links = 0
     truncated = False
     while directories:
-        directory, depth = directories.pop(0)
+        bindings, depth = directories.pop(0)
+        directory = bindings[-1][0]
         if depth > MAX_DEPTH:
             truncated = True
             continue
         try:
-            with os.scandir(directory) as iterator:
-                entries = []
-                for entry in iterator:
-                    if visited + len(entries) >= MAX_ENTRIES:
-                        truncated = True
-                        directories.clear()
-                        break
-                    entries.append(entry)
-                entries.sort(key=lambda item: (item.name.casefold(), item.name))
+            with _directory(bindings) as descriptor:
+                with os.scandir(descriptor) as iterator:
+                    entries = []
+                    for entry in iterator:
+                        if visited + len(entries) >= MAX_ENTRIES:
+                            truncated = True
+                            directories.clear()
+                            break
+                        # Capture stat while the enumerated directory handle is
+                        # still open. A later path lookup must never establish a
+                        # fresh baseline from an outside/replacement directory.
+                        entries.append((entry.name, entry.stat(follow_symlinks=False)))
+                    entries.sort(key=lambda item: (item[0].casefold(), item[0]))
         except OSError:
             truncated = True
             continue
-        for entry in entries:
+        for name, info in entries:
             if visited >= MAX_ENTRIES:
                 truncated = True
                 directories.clear()
                 break
             visited += 1
-            try:
-                info = entry.stat(follow_symlinks=False)
-            except OSError:
-                truncated = True
-                continue
+            path = directory / name
             if _linked(info):
                 skipped_links += 1
                 continue
             if stat.S_ISDIR(info.st_mode):
-                directories.append((Path(entry.path), depth + 1))
+                directories.append((bindings + ((path, info),), depth + 1))
             elif stat.S_ISREG(info.st_mode):
-                files.append((Path(entry.path), entry.name, info.st_size))
+                files.append((_ScannedFile(path, bindings, info), name, info.st_size))
     files.sort(key=lambda item: (item[1].casefold(), item[1]))
     return files, visited, skipped_links, truncated
 
@@ -354,6 +411,7 @@ def _scan_installation(game, path, findings):
             "unsafe": "The selected folder or one of its parent folders is a symbolic link or reparse point.",
             "not_directory": "The selected installation path is not a directory.",
             "unreadable": "The selected installation folder could not be read.",
+            "unsupported": "Safe folder checks are unavailable on this runtime; the selected folder was not read.",
         }.get(state, "The installation folder was not checked.")
         findings.append(_finding("installation.selected_root", "installation", "unknown", "info",
             "Installation folder not checked", description,
@@ -399,27 +457,33 @@ def _scan_installation(game, path, findings):
             (), "Use the exact game/platform entry and select its installed folder manually."))
 
 
-def _decode_config(path):
-    """Return syntax result without retaining or exposing any configuration values."""
+def _decode_config(scanned):
+    """Check the walk's original identity before reading any configuration bytes."""
+    path = scanned.path
     try:
-        before = path.lstat()
+        before = scanned.info
         if _linked(before) or not stat.S_ISREG(before.st_mode):
             return "unsafe"
         if before.st_size > MAX_CONFIG_BYTES:
             return "oversized"
-        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
-        descriptor = os.open(path, flags)
-        with os.fdopen(descriptor, "rb") as stream:
-            opened = os.fstat(stream.fileno())
-            if _linked(opened) or (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (
-                    opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns):
+        flags = (os.O_RDONLY | getattr(os, "O_BINARY", 0)
+                 | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
+        with _directory(scanned.bindings) as parent:
+            current = os.stat(path.name, dir_fd=parent, follow_symlinks=False)
+            if (_linked(current) or not stat.S_ISREG(current.st_mode)
+                    or _file_identity(current) != _file_identity(before)):
                 return "changed"
-            raw = stream.read(MAX_CONFIG_BYTES + 1)
-            after = os.fstat(stream.fileno())
+            descriptor = os.open(path.name, flags, dir_fd=parent)
+            with os.fdopen(descriptor, "rb") as stream:
+                opened = os.fstat(stream.fileno())
+                if (_linked(opened) or not stat.S_ISREG(opened.st_mode)
+                        or _file_identity(before) != _file_identity(opened)):
+                    return "changed"
+                raw = stream.read(MAX_CONFIG_BYTES + 1)
+                after = os.fstat(stream.fileno())
         if len(raw) > MAX_CONFIG_BYTES or after.st_size > MAX_CONFIG_BYTES:
             return "oversized"
-        if (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns) != (
-                after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns):
+        if _file_identity(opened) != _file_identity(after):
             return "changed"
         text = raw.decode("utf-8-sig", errors="strict")
         suffix = path.suffix.casefold()
@@ -452,7 +516,10 @@ def _scan_configuration(path, findings):
     root, state = _ordinary_root(path)
     if root is None:
         findings.append(_finding("configuration.selected_root", "configuration", "unknown", "info",
-            "Configuration folder could not be checked", "The selected configuration folder is missing, unsafe, unreadable, or not a directory.",
+            "Configuration folder could not be checked",
+            ("Safe folder checks are unavailable on this runtime; the selected folder was not read."
+             if state == "unsupported" else
+             "The selected configuration folder is missing, unsafe, unreadable, or not a directory."),
             (), "Confirm the folder in the game's documentation or settings and select it explicitly."))
         return
     files, visited, skipped_links, truncated = _walk(root)
@@ -531,7 +598,10 @@ def _scan_mods(game, installation_path, mods_path, findings):
     root, state = _ordinary_root(selected) if selected is not None else (None, "missing")
     if root is None:
         findings.append(_finding("mods.scan", "mods", "unknown", "info",
-            "Mod folder not checked", "Select a mod folder, or an installation folder, to compare ordinary filenames with any reviewed per-game conflict patterns.",
+            "Mod folder not checked",
+            ("Safe folder checks are unavailable on this runtime; the selected folder was not read."
+             if state == "unsupported" else
+             "Select a mod folder, or an installation folder, to compare ordinary filenames with any reviewed per-game conflict patterns."),
             (), "Select the folder used by your documented mod manager if you want a read-only pattern check."))
         _add_mod_conflict_unchecked(game, findings, "the selected mod folder was not available")
         return
@@ -546,7 +616,7 @@ def _scan_mods(game, installation_path, mods_path, findings):
         "Selected mod folder scanned", "Ordinary filenames were compared only with reviewed per-game conflict patterns. File contents and game/mod versions were not opened or checked.",
         (f"{len(files)} ordinary file(s) inspected in a bounded scan",),
         "If a problem began after a mod change, check compatibility notes from the mod publisher or manager."))
-    relative_files = {file_path.relative_to(root).as_posix().casefold()
+    relative_files = {file_path.path.relative_to(root.path).as_posix().casefold()
                       for file_path, _name, _size in files}
     matched_rules = []
     for rule in rules:

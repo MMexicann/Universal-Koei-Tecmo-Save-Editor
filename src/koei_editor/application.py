@@ -40,6 +40,7 @@ class Application(Appearance):
         self.converter = None
         self.comparison = None
         self.batch = None
+        self.game_hub = None
         self.save_library = None
         self.mod_manager = None
         self.game_configuration = None
@@ -48,13 +49,14 @@ class Application(Appearance):
         self.research_import = None
         self.asset_explorer = None
         self.workflow_builder = None
+        self.controller_profiles = None
         self.emulator_hub = None
         self.mod_workshop_window = None
         self.nexus_mods = None
         # A Mod Manager integration may attach its typed Nexus handoff here.
         self.mod_manager_download_handoff = None
         self.troubleshooting = None
-        root.title(f'Universal Koei Tecmo Save Editor — v{VERSION}')
+        root.title(f'Universal Koei Tecmo Game Toolkit — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
         self._owned_minimum = (780, 680)
@@ -64,6 +66,8 @@ class Application(Appearance):
         self._add_editing_tools_menu_command('editing_presets', self.show_editing_presets)
         self._add_editing_tools_menu_command('transfer', self.show_transfer)
         self._add_editing_tools_menu_command('game_configuration', self.show_game_configuration)
+        self.editing_tools_menu.add_separator()
+        self._add_editing_tools_menu_command('controller_profiles', self.show_controller_profiles)
         self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('mod_manager', self.show_mod_manager)
         self.editing_tools_menu.add_separator()
@@ -104,6 +108,7 @@ class Application(Appearance):
         self.navigation = ttk.Frame(top)
         self.navigation.grid(row=1, column=0, columnspan=2, sticky='ew', pady=(10, 0))
         self.home_button = self._translated(ttk.Button(self.navigation, command=self.show_library), 'library')
+        self.game_hub_button = self._translated(ttk.Button(self.navigation, command=self.show_game_hub), 'game_hub')
         self.converter_button = self._translated(ttk.Button(self.navigation, command=self.show_converter), 'converter')
         self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
         self.batch_button = self._translated(ttk.Button(self.navigation, command=self.show_batch), 'batch')
@@ -113,7 +118,7 @@ class Application(Appearance):
         self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
         self.help_menu = tk.Menu(self.help_button, tearoff=False)
         self.help_button.configure(menu=self.help_menu)
-        self._navigation_buttons = (self.home_button, self.converter_button, self.compare_button,
+        self._navigation_buttons = (self.home_button, self.game_hub_button, self.converter_button, self.compare_button,
                                     self.batch_button, self.save_library_button,
                                     self.troubleshooting_button, self.help_button)
         self.navigation.bind('<Configure>', self._schedule_navigation)
@@ -293,9 +298,9 @@ class Application(Appearance):
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
-                                            'troubleshooting', 'game_configuration', 'editing_presets',
-                                            'mod_manager', 'research_lab', 'research_import', 'nexus_mods',
-                                            'emulator_hub', 'asset_explorer', 'workflow_builder', 'game_hub')
+                                            'game_configuration', 'editing_presets', 'mod_manager', 'research_lab', 'research_import',
+                                            'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder',
+                                            'game_hub', 'troubleshooting', 'controller_profiles')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -311,6 +316,10 @@ class Application(Appearance):
                 set_language(self.language)
         if self.troubleshooting is not None:
             self.troubleshooting.set_language(self.language)
+        if self.controller_profiles is not None:
+            set_language = getattr(self.controller_profiles, 'set_language', None)
+            if callable(set_language):
+                set_language(self.language)
         self._layout_navigation()
         self._save_shell_settings()
 
@@ -328,12 +337,9 @@ class Application(Appearance):
         if last_index is None:
             return
         for index in range(last_index + 1):
-            try:
-                label = self.editing_tools_menu.entrycget(index, 'label')
-            except tk.TclError:
-                # Separators do not expose a label option on a real Tk menu.
+            if self.editing_tools_menu.type(index) != 'command':
                 continue
-            key = labels.get(label)
+            key = labels.get(self.editing_tools_menu.entrycget(index, 'label'))
             if key is not None:
                 self.editing_tools_menu.entryconfigure(index, label=self.tr(key))
 
@@ -506,11 +512,11 @@ class Application(Appearance):
                 self._shell_location.grid(row=3 if stacked else 2, column=0, columnspan=2)
         available = max(1, self.navigation.winfo_width())
         requested = sum(button.winfo_reqwidth() + 8 for button in self._navigation_buttons)
-        columns = 3 if available < requested else 6
+        columns = 3 if available < requested else len(self._navigation_buttons)
         for index, button in enumerate(self._navigation_buttons):
             row, column = divmod(index, columns)
             button.grid(row=row, column=column, sticky='ew', padx=(0, 8), pady=(0, 4))
-        for column in range(6):
+        for column in range(len(self._navigation_buttons)):
             self.navigation.columnconfigure(column, weight=1 if column < columns else 0)
         if hasattr(self, 'session_bar'):
             self.refresh_sessions()
@@ -535,24 +541,20 @@ class Application(Appearance):
             ('game_configuration', 'show_game_configuration'),
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
-            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'),
-            ('game_hub', 'show_game_hub'))
+            ('controller_profiles', 'show_controller_profiles'),
+            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
         entries = [CommandEntry('game:' + game.id, game.title + ' · ' + game.subtitle,
                                 'game', game.platform, game.id + ' ' + game.description)
                    for game in self.library_games]
-        for key in ('library', 'converter', 'comparison', 'batch', 'save_library',
-                    'troubleshooting', 'help', 'compatibility', 'versions', 'workflows', 'feedback',
-                    'validation', 'plugins'):
+        for key in ('library', 'game_hub', 'converter', 'comparison', 'batch', 'save_library',
+                    'troubleshooting', 'help', 'compatibility', 'versions', 'workflows',
+                    'feedback', 'validation', 'plugins'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
-        listed_tools = {entry.id.removeprefix('tool:') for entry in entries if entry.id.startswith('tool:')}
         for key in self._optional_tool_routes():
-            if key not in listed_tools:
-                catalog = CATALOGS.get(self.language, CATALOGS['en'])
-                label = self.tr(key) if key in catalog else key
-                entries.append(CommandEntry('tool:' + key, label, 'tool', keywords=key))
+            entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         for key in ('theme_light', 'theme_dark', 'search_fields', 'language_en', 'language_de',
                     'text_size_100', 'text_size_120', 'text_size_140'):
             entries.append(CommandEntry('command:' + key, self.tr(key), 'command', keywords=key))
@@ -599,6 +601,7 @@ class Application(Appearance):
         if category == 'tool':
             methods = {'library': self.show_library, 'converter': self.show_converter,
                        'comparison': self.show_comparison, 'batch': self.show_batch,
+                       'game_hub': self.show_game_hub,
                        'save_library': self.show_save_library,
                        'troubleshooting': self.show_troubleshooting}
             methods.update(self._optional_tool_routes())
@@ -861,6 +864,9 @@ class Application(Appearance):
         frame, editor = self.sessions[game_id]
         frame.pack(fill='both', expand=True)
         self._set_active_game(game_id)
+        if self.comparison is not None:
+            document = getattr(editor, 'document', None)
+            self.comparison.bind_target_editor(editor if document is not None and hasattr(editor, 'adapter') else None)
         self._remember_workspace('game:' + game_id)
         self.refresh_sessions()
         self.breadcrumb.set(game.title + ' · ' + game.subtitle)
@@ -893,8 +899,19 @@ class Application(Appearance):
 
     def show_comparison(self):
         from koei_editor.shared.comparison_gui import ComparisonWorkspace
+        target_editor = None
+        if self.active_game is not None:
+            candidate = self.sessions[self.active_game][1]
+            if getattr(candidate, 'document', None) is not None and hasattr(candidate, 'adapter'):
+                target_editor = candidate
+        elif self.comparison is not None:
+            # The editor remains open while another retained workspace is shown.
+            # Keep its exact session binding until select_game chooses another one.
+            target_editor = self.comparison.target_editor
         if self.comparison is None:
-            self.comparison = ComparisonWorkspace(self.root, self.workspace)
+            self.comparison = ComparisonWorkspace(self.root, self.workspace, target_editor=target_editor)
+        else:
+            self.comparison.bind_target_editor(target_editor)
         self.library.pack_forget()
         self._hide_tools()
         for frame, _editor in self.sessions.values():
@@ -906,11 +923,10 @@ class Application(Appearance):
         self.comparison.apply_theme(THEMES[self.theme_name.get()])
 
     def _tool_workspaces(self):
-        return tuple(tool for name in ('converter', 'comparison', 'batch', 'save_library',
-                                       'troubleshooting', 'game_configuration', 'mod_manager',
-                                       'editing_presets', 'research_lab', 'research_import', 'nexus_mods',
-                                       'asset_explorer', 'workflow_builder', 'emulator_hub',
-                                       'game_hub', 'help_center')
+        return tuple(tool for name in ('converter', 'comparison', 'batch', 'game_hub', 'save_library',
+                                       'game_configuration', 'mod_manager', 'editing_presets', 'research_lab', 'research_import',
+                                       'nexus_mods', 'asset_explorer',
+                                       'controller_profiles', 'workflow_builder', 'emulator_hub', 'troubleshooting', 'help_center')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -1002,6 +1018,16 @@ class Application(Appearance):
         self._remember_workspace('tool:asset_explorer')
         return self.asset_explorer
 
+    def show_controller_profiles(self):
+        from koei_editor.shared.controller_profiles_gui import ControllerProfileWorkspace
+        if self.controller_profiles is None:
+            self.controller_profiles = ControllerProfileWorkspace(
+                self.root, self.workspace, language=self.language)
+        self._show_editing_tool(self.controller_profiles, self.tr('controller_profiles'))
+        self._remember_workspace('tool:controller_profiles')
+        return self.controller_profiles
+
+
     def _show_editing_tool(self, tool, title):
         self.library.pack_forget()
         self._hide_tools()
@@ -1058,6 +1084,23 @@ class Application(Appearance):
         self._remember_workspace('tool:emulator_hub')
         return self.emulator_hub
 
+    def show_game_hub(self):
+        from koei_editor.shared.game_hub_gui import GameHubWorkspace
+        if self.game_hub is None:
+            self.game_hub = GameHubWorkspace(self.root, self.workspace,
+                                             preferences_path=self.preferences_path)
+        self.library.pack_forget()
+        self._hide_tools()
+        for frame, _editor in self.sessions.values():
+            frame.pack_forget()
+        self._set_active_game(None)
+        self.game_hub.frame.pack(fill='both', expand=True)
+        self.breadcrumb.set(self.tr('game_hub'))
+        self._remember_workspace('tool:game_hub')
+        self.game_hub.apply_theme(THEMES[self.theme_name.get()])
+        self.game_hub.on_show()
+        return self.game_hub
+
     def show_troubleshooting(self):
         from koei_editor.shared.game_troubleshooting_gui import TroubleshootingWorkspace
         if self.troubleshooting is None:
@@ -1091,11 +1134,11 @@ class Application(Appearance):
         self.workflow_builder.apply_theme(THEMES[self.theme_name.get()])
 
     def show_nexus_mods(self):
-        from koei_editor.mods.nexus_browser import NexusModsWorkspace
+        from koei_editor.mods.nexus_browser import NexusRegistrationNotice
         if self.nexus_mods is None:
-            self.nexus_mods = NexusModsWorkspace(
+            self.nexus_mods = NexusRegistrationNotice(
                 self.root, self.workspace,
-                application_name='Universal Koei Tecmo Save Editor',
+                application_name='Universal Koei Tecmo Game Toolkit',
                 application_version=VERSION,
                 language=self.language,
                 game_id=self.active_game,
@@ -1203,12 +1246,11 @@ class Application(Appearance):
             return focus() if focus is not None else None
         if self.help_center is not None and self.help_center.frame.winfo_manager():
             return self.help_center.focus_search()
-        game_hub = getattr(self, 'game_hub', None)
-        if game_hub is not None and game_hub.frame.winfo_manager():
-            focus_search = getattr(game_hub, 'focus_search', None)
+        if self.game_hub is not None and self.game_hub.frame.winfo_manager():
+            focus_search = getattr(self.game_hub, 'focus_search', None)
             return focus_search() if callable(focus_search) else 'break'
         for tool in (self.editing_presets, self.mod_manager, self.research_lab, self.research_import,
-                     self.nexus_mods, self.asset_explorer):
+                     self.controller_profiles, self.emulator_hub, self.nexus_mods, self.asset_explorer):
             if tool is not None and tool.frame.winfo_manager():
                 focus = getattr(tool, 'focus_search', None)
                 return focus() if callable(focus) else 'break'
@@ -1265,15 +1307,23 @@ class Application(Appearance):
         management = getattr(getattr(self, 'save_library', None), 'management', None)
         if management is not None:
             tools += (management,)
+            profile_window = getattr(management, 'profile_window', None)
+            if profile_window is not None and not getattr(profile_window, '_closed', False):
+                tools += (profile_window,)
+        troubleshooting = getattr(self, 'troubleshooting', None)
         if any(
                 getattr(tool, 'busy', False)
                 and not (
-                    tool is self.troubleshooting
+                    tool is troubleshooting
                     and getattr(tool, 'shutdown_safe_while_busy', False)
                 )
                 for tool in tools):
             from tkinter import messagebox
-            messagebox.showinfo('Operation running', 'Wait for the copied-save operation to finish before closing.', parent=self.root)
+            messagebox.showinfo(
+                'Operation running',
+                'Wait for the save or playthrough profile operation to finish before closing.',
+                parent=self.root,
+            )
             return
         if (all(editor.dirty_ok() for _frame, editor in self.sessions.values())
                 and all(tool.dirty_ok() for tool in tools if callable(getattr(tool, 'dirty_ok', None)))):
@@ -1332,7 +1382,7 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--automation':
         from koei_editor.automation_cli import main as automation_main
         raise SystemExit(automation_main(sys.argv[2:]))
-    parser = argparse.ArgumentParser(description='Universal Koei Tecmo Save Editor')
+    parser = argparse.ArgumentParser(description='Universal Koei Tecmo Game Toolkit')
     parser.epilog = 'Use --automation --help for reviewed batch editing and workflow commands.'
     parser.add_argument('--game', choices=[game.id for game in ALL_ADAPTERS], help='Open a registered editor or research tool.')
     parser.add_argument('--smoke-test', action='store_true', help='Initialize all registered interfaces and check switching.')
@@ -1506,6 +1556,8 @@ def main():
         app.show_mod_manager()
         app.show_research_lab()
         app.show_research_import()
+        app.show_controller_profiles()
+        app.show_emulator_hub()
         app.show_nexus_mods()
         app.show_library()
         app.nexus_mods.close()

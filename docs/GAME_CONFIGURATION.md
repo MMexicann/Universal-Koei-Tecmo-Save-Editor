@@ -34,6 +34,12 @@ extension alone. It preserves comments, line endings, ordering and all unmapped
 bytes. Duplicate occurrences of a mapped key are rejected as ambiguous.
 Unsupported files are left untouched.
 
+Stage a documented setting, then choose **Review Changes** to compare its
+opened and pending values. **Undo** reverses the latest staging action,
+including a staged profile. These actions leave the file unchanged; only
+**Save staged settings** writes the reviewed values. **Create backup** is
+available after opening a supported file and captures its exact source bytes.
+
 Profiles are private, path-free records bound to the selected game, exact format
 ID and format revision. Applying one requires every saved setting to be present
 and writable in the opened file; incompatible or partial targets are rejected
@@ -117,8 +123,8 @@ cataloged game and settings format; it is not a Game Version Tracker result.
 That tracker requires separate exact-build evidence before reporting a tool or
 format as verified for an installed build.
 
-No Game Hub or Playthrough Profiles integration code was present in the
-reviewed checkout when this implementation began. The current Playthrough
+Game Hub and Playthrough Profiles do not apply these configuration profiles.
+The Playthrough
 Profiles component contract uses game-registry `game_id` and exact `game_version`
 fields, while this configuration catalog has independent IDs and
 `format_id`/`format_version` fields. The current Arland DX PC profiles have no
@@ -130,16 +136,16 @@ identity and exact game version; until then, manager snapshots remain separate
 inert data. The route and service API provide a stable handoff point without
 making either feature a dependency.
 
-## Sol integration audit handoff
+## Integration checks
 
-For a future Sol integration audit, review the pinned evidence and catalog above
+Review the pinned evidence and catalog above
 against the shipped sources, then verify these points before extending or
 consuming the manager:
 
 - keep the configuration catalog separate from save-format adapters and game
   registration;
 - route discovery through `tool:game_configuration` and consume the public
-  service API rather than parsing INI text in Sol;
+  service API rather than parsing INI text in each workspace;
 - preserve explicit game and format selection, exact filenames and current
   read-only boundaries;
 - require source-backed field domains, reproducible fixtures and regression

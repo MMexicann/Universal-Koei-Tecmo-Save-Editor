@@ -16,10 +16,12 @@ from koei_editor.shared.adapter_contract import BoundScalarAdapter
 from koei_editor.shared.save_vault import SaveVault
 from tests import test_ps3_expansion as ps3_helpers
 from tests.test_ps3_new_families import fixture
+from tests.owned_directory_contract import install_owned_directory_contract
 
 
 class SaveManagementRegressions(unittest.TestCase):
     def setUp(self):
+        install_owned_directory_contract(self)
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)

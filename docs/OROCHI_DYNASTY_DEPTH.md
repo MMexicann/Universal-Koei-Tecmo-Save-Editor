@@ -107,9 +107,42 @@ backup, Save As and byte-exact restore.
 This is native-save qualification backed by a period-tool disk mapping; the
 original game's executable and an in-game load/re-save test remain unavailable.
 
+The same original-PC getter maps five stored officer u16 stat words at `+4`,
+`+6`, `+8`, `+10` and `+12` within each resolved record. These names and offsets
+are evidence for read-only inspection; they do not qualify stat writes. No
+controlled character-growth or level-transition pair currently ties the displayed
+stat changes to the stored words or establishes growth side effects, bounds, or
+game loading.
+
+The original Windows manual describes Character Growth as allocating Growth
+Points to a character to raise its level; it does not offer separate purchases
+of Life, Musou, Attack, Defense or Speed. The next useful evidence is a revision-2
+original-PC `save.dat` with exact region/build provenance, an unchanged control,
+and displayed values for one chosen officer. Starting independently from that
+baseline, capture an isolated allocation to that character and a separate
+level-gain transition. Record the exact allocation, all five displayed stats,
+Growth Points, level, EXP and proficiency before and after, plus the selected
+officer. Compare all five stored stat words together with EXP/level and any
+coupled fields; do not assume that they can be changed independently. The native
+copies must preserve unrelated records and pass the native checksum. Only after
+those mappings, dependencies and bounds are understood should a manually edited
+duplicate be loaded and re-saved in the original game.
+
+## Additional edition and platform leads
+
+The registered PC/PS3 list is only part of the series audit. These distinct
+leads do not inherit another platform's layout:
+
+| Candidate | Existing evidence | Exact blocker before gameplay editing |
+| --- | --- | --- |
+| WO3 Ultimate, Vita | Public Vita exports are reported, but no Vita writer or field map is qualified. See [Vita research status](SOL_EXPANSION.md). | Obtain the exact title ID/build and complete native save context; qualify its framing, integrity and field identities, then collect labelled progression, equipment/fusion and reward pairs. |
+| WO3 Ultimate, PS4 (`CUSA00588`) | A strictly one-way PS4-to-PC transfer profile covers documented resource balances and an optional narrow base-stat scope; it is not a PS4 gameplay editor. See [transfer evidence](WO3U_PS4_RESOURCE_TRANSFER.md). | Full gameplay coverage needs the complete PS4 saved-state schema, controlled transfer/action pairs, DLC/reward compatibility and native game-load evidence. |
+| WO3 Ultimate, Xbox One | The existing format note names “Xbox” generically; it does not establish a generation-specific Xbox One save profile. See [the separate PS3 profile scope](WO3U_PS3.md). | Provide an Xbox One-specific native export with exact title/build identity, framing and complete integrity proof, plus controlled field/action pairs. Xbox 360 leads and offsets do not qualify it. |
+| WO4 / WO4 Ultimate, Switch (`010016A00AEC0000`) | Separate `SVDT` and `SVDTU` exports are observed at 5,210,112 and 927,523 bytes; leading version/date words are `20180720` and `20200101`. See [Switch native research](SWITCH_WARRIORS_RESEARCH.md). | Establish full Switch integrity/serialization and field mappings, including partner-file dependencies; filenames and progress labels do not prove resource offsets or checksum coverage. |
+
 | Reviewed mechanic | Remaining dependency or evidence required |
 | --- | --- |
-| Stock Growth Points / EXP / levels / base stats | Existing stock control remains manual; level growth, EXP thresholds and rewards need matching native transition proof |
+| Stock Growth Points / EXP / levels / base stats | Existing stock control remains manual; five stored stat words remain read only. Growth limits, EXP thresholds, growth-to-stored-stat mappings and any coupled rewards need matching native transition proof |
 | Weapon fusion | Existing qualified capacity, attack bonus and attribute ranks remain; fusion acquisition and consumption are distinct |
 | Skills / proficiency / costumes | Prerequisites, rewards and threshold side effects remain unproved |
 | Story / character unlocks | Named route/clear flags and reward dependencies remain unproved |

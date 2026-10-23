@@ -31,6 +31,7 @@ class ConfigurationWorkspace:
         self._format_labels = {item.label: item.id for item in backend.SUPPORTED_FORMATS}
         self._format_id_to_label = {value: key for key, value in self._format_labels.items()}
         self._palette = None
+        self._selection_reverting = False
 
         self.viewport = ScrollablePanel(self.frame)
         self.viewport.frame.pack(fill='both', expand=True)
@@ -88,15 +89,17 @@ class ConfigurationWorkspace:
         self.stage_button = ttk.Button(edit_row, text='Stage value', command=self.stage_value,
                                        state='disabled')
         self.stage_button.pack(side='left')
-        self.undo_button = ttk.Button(edit_row, text='Undo', command=self.undo, state='disabled')
+        actions = self.edit_actions = ttk.Frame(body)
+        actions.pack(fill='x', pady=(0, 8))
+        self.undo_button = ttk.Button(actions, text='Undo', command=self.undo, state='disabled')
         self.undo_button.pack(side='left', padx=(8, 0))
-        self.review_button = ttk.Button(edit_row, text='Review Changes', command=self.review,
+        self.review_button = ttk.Button(actions, text='Review Changes', command=self.review,
                                         state='disabled')
         self.review_button.pack(side='left', padx=(8, 0))
-        self.save_button = ttk.Button(edit_row, text='Save staged settings', command=self.save,
+        self.save_button = ttk.Button(actions, text='Save staged settings', command=self.save,
                                       state='disabled')
         self.save_button.pack(side='right')
-        self.backup_button = ttk.Button(edit_row, text='Create backup', command=self.create_backup,
+        self.backup_button = ttk.Button(actions, text='Create backup', command=self.create_backup,
                                         state='disabled')
         self.backup_button.pack(side='right', padx=(0, 8))
 
@@ -199,7 +202,8 @@ class ConfigurationWorkspace:
                        for item in backend.SUPPORTED_FORMATS] + [('All files', '*')])
         if filename:
             self.path.set(filename)
-            self.open_file()
+            if self.path.get() == filename:
+                self.open_file()
 
     def browse_compare(self):
         filename = filedialog.askopenfilename(
@@ -213,7 +217,7 @@ class ConfigurationWorkspace:
         self.status.set(message)
 
     def _selection_changed(self, *_args):
-        if self.document is None:
+        if self._selection_reverting or self.document is None:
             return
         current_path = self.path.get().strip()
         selected_game = self.selected_game_id
@@ -222,6 +226,14 @@ class ConfigurationWorkspace:
         except (OSError, ValueError):
             same_path = False
         if same_path and selected_game == self.document.game_id:
+            return
+        if not self.dirty_ok():
+            self._selection_reverting = True
+            try:
+                self.path.set(str(self.document.path))
+                self.game.set(self._game_labels[self.document.game_id])
+            finally:
+                self._selection_reverting = False
             return
         self.document = None
         self.staged = MappingProxyType({})
@@ -242,7 +254,17 @@ class ConfigurationWorkspace:
         self.backup_button.configure(state='disabled')
         self.restore_button.configure(state='disabled')
 
+    def dirty_ok(self):
+        if not self.staged:
+            return True
+        return messagebox.askyesno(
+            "Discard staged settings?",
+            "Discard the pending configuration changes? Choose No to keep them and save first.",
+            parent=self.root)
+
     def open_file(self):
+        if not self.dirty_ok():
+            return
         self.document = None
         self.staged = MappingProxyType({})
         self.history = ()
@@ -307,28 +329,6 @@ class ConfigurationWorkspace:
             candidate[field.id] = number
         self._accept_staged(candidate)
 
-    def _accept_staged(self, candidate):
-        """Validate and atomically replace the immutable pending map."""
-        if self.document is None:
-            return False
-        fields = {field.id: field for field in self._fields.values()}
-        candidate = {field_id: value for field_id, value in dict(candidate).items()
-                     if field_id in fields and fields[field_id].writable
-                     and fields[field_id].value != value}
-        try:
-            # Serialize only for validation and read-back semantics. This does
-            # not access or modify the source file.
-            backend.serialize_config(self.document, candidate)
-        except backend.ConfigurationError as error:
-            self._set_status('Settings were not staged: ' + str(error))
-            return False
-        if candidate != dict(self.staged):
-            self.history = (*self.history, tuple(self.staged.items()))
-            self.staged = MappingProxyType(candidate)
-        self._render_staged()
-        self._set_status(f'{len(self.staged)} documented setting(s) staged. Review them before saving.')
-        return True
-
     def _render_staged(self):
         for field_id, field in self._fields.items():
             pending = self._field_labels[field_id].get(self.staged.get(field_id), '')
@@ -336,6 +336,27 @@ class ConfigurationWorkspace:
         self.save_button.configure(state='normal' if self.document and self.staged else 'disabled')
         self.undo_button.configure(state='normal' if self.document and self.history else 'disabled')
         self.review_button.configure(state='normal' if self.document and self.staged else 'disabled')
+
+    def _accept_staged(self, candidate):
+        """Validate and atomically replace the immutable pending map."""
+        if self.document is None:
+            return False
+        try:
+            candidate = dict(candidate)
+            # Pure serialization validates the complete request, including
+            # unknown/read-only fields and exact value types, before staging.
+            backend.serialize_config(self.document, candidate)
+        except (backend.ConfigurationError, TypeError, ValueError) as error:
+            self._set_status('Settings were not staged: ' + str(error))
+            return False
+        candidate = {field_id: value for field_id, value in candidate.items()
+                     if self._fields[field_id].value != value}
+        if candidate != dict(self.staged):
+            self.history = (*self.history, tuple(self.staged.items()))
+            self.staged = MappingProxyType(candidate)
+        self._render_staged()
+        self._set_status(f'{len(self.staged)} documented setting(s) staged. Review them before saving.')
+        return True
 
     def undo(self):
         if self.document is None or not self.history:
@@ -368,10 +389,16 @@ class ConfigurationWorkspace:
         dialog = tk.Toplevel(self.root)
         dialog.title('Review Configuration Changes')
         dialog.geometry('760x380')
+        dialog.configure(background=ttk.Style(dialog).lookup('TFrame', 'background')
+                         or self.root.cget('background'))
         ttk.Label(dialog, text=f'{document.game_title}\n{document.filename} · {len(pending)} staged setting(s)',
                   padding=14, wraplength=720).pack(anchor='w')
         ttk.Label(dialog, text='No file has been written. Save only after reviewing these values.',
                   padding=(14, 0, 14, 10), style='Muted.TLabel').pack(anchor='w')
+        # Reserve the footer before the expanding tree at native row heights.
+        ttk.Button(dialog, text='Close', command=dialog.destroy).pack(side='bottom', pady=12)
+        scroll = ttk.Scrollbar(dialog, orient='vertical')
+        scroll.pack(side='right', fill='y', padx=(0, 14))
         tree = ttk.Treeview(dialog, columns=('category', 'opened', 'pending'),
                             show='tree headings', height=9)
         tree.heading('#0', text='Setting')
@@ -382,7 +409,9 @@ class ConfigurationWorkspace:
         tree.column('category', width=120, minwidth=90)
         tree.column('opened', width=160, minwidth=100)
         tree.column('pending', width=160, minwidth=100)
-        tree.pack(fill='both', expand=True, padx=14)
+        tree.pack(fill='both', expand=True, padx=(14, 0))
+        tree.configure(yscrollcommand=scroll.set)
+        scroll.configure(command=tree.yview)
         for field_id, value in pending.items():
             field = self._fields[field_id]
             labels = self._field_labels[field_id]
@@ -390,7 +419,6 @@ class ConfigurationWorkspace:
                         values=(field.category.title(), labels.get(field.value, str(field.value)),
                                 labels.get(value, str(value)))
                         )
-        ttk.Button(dialog, text='Close', command=dialog.destroy).pack(pady=12)
         return dialog
 
     def save(self):

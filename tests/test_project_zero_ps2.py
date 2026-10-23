@@ -19,21 +19,23 @@ def header(name, size, mode):
     return bytes(raw)
 
 
-def body(points=50000, tiers=(3, 2, 1)):
+def body(points=50000, tiers=(3, 2, 1), films=None):
     raw = bytearray(b'\x6d' * parser.SIZE)
     raw[:48] = bytes(48)
     struct.pack_into('<II', raw, 16, 1, 1)
     raw[parser.CAMERA:parser.CAMERA + 3] = bytes(tiers)
     struct.pack_into('<Q', raw, parser.CAMERA + 16, points)
+    if films is not None:
+        raw[parser.ITEMS + 1:parser.ITEMS + 5] = bytes(films)
     struct.pack_into('<I', raw, 0, sum(raw[16:]))
     return bytes(raw)
 
 
-def fixture(order=(0, 1, 2), points=50000, tiers=(3, 2, 1)):
+def fixture(order=(0, 1, 2), points=50000, tiers=(3, 2, 1), films=None):
     raw = bytearray(header(parser.PRODUCT + '0', 6, 0x8427)
                     + header('.', 0, 0x8427) + header('..', 0, 0x8427))
     for name, data in [('icon.sys', b'unknown-icon-metadata!')] + [
-            (parser.PRODUCT + str(i), parser.EMPTY if i == 2 else body(points, tiers)) for i in order]:
+            (parser.PRODUCT + str(i), parser.EMPTY if i == 2 else body(points, tiers, films)) for i in order]:
         raw.extend(header(name, len(data), 0x8497))
         raw.extend(data)
         raw.extend(b'\xa7' * (-len(data) % 1024))
@@ -76,6 +78,13 @@ class ProjectZeroTests(unittest.TestCase):
         self.assertNotIn('slot_0_film_2', fields)
         self.assertNotIn('slot_0_film_4', fields)
         self.assertFalse(fields['slot_0_film_1'].maxable)
+        self.assertEqual(fields['slot_0_film_1'].label,
+                         'Type-14 film stock (reduce only; retain one)')
+        self.assertEqual(fields['slot_0_film_3'].label,
+                         'Type-74 film stock (reduce only; retain one)')
+        labeled = {row[1]: row[2] for row in parser.inventory_records(document) if row[1] in parser.FILM_LABELS}
+        self.assertEqual(labeled, {1: 'Type-14 film', 2: 'Type-37 film',
+                                   3: 'Type-74 film', 4: 'Type-90 film'})
         for bad in (0, -1, 31, True, 1.0):
             with self.assertRaises(SaveError):
                 parser.stage(document, {}, 'slot_0_film_1', bad)
@@ -84,7 +93,7 @@ class ProjectZeroTests(unittest.TestCase):
         self.assertEqual(parser.camera_records(document), parser.camera_records(reopened))
         self.assertEqual(parser.stage(document, changes, 'slot_0_film_1', 30), {'slot_1_film_3': 2})
         self.assertEqual(parser.limit_values(document, changes, changes), {})
-        self.assertEqual(parser.inventory_records(document)[1][2], 'Film stock 1')
+        self.assertEqual(parser.inventory_records(document)[1][2], 'Type-14 film')
 
     def test_variable_export_order_noop_and_each_field_surgery(self):
         for order in ((0, 1, 2), (2, 0, 1)):
@@ -214,7 +223,8 @@ class ProjectZeroTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary); source = folder / 'gui-copy.psu'
             setting = os.environ.get('PROJECT_ZERO_PS2_SAVE_COPIES')
-            source.write_bytes(Path(setting.split(os.pathsep)[0]).read_bytes() if setting else fixture())
+            source.write_bytes(Path(setting.split(os.pathsep)[0]).read_bytes()
+                               if setting else fixture(films=(30, 20, 10, 5)))
             editor = Editor(root, parent=root)
             with patch('koei_editor.shared.verified_gui.filedialog.askopenfilename', return_value=str(source)):
                 editor.open()
@@ -222,9 +232,14 @@ class ProjectZeroTests(unittest.TestCase):
             self.assertIsNotNone(editor.document)
             film = next((f for f in parser.fields_for(editor.document)
                          if '_film_' in f.id and f.maximum > 1), None)
+            if not setting:
+                self.assertIsNotNone(film, 'The procedural GUI case must exercise editable film stocks.')
             if film is not None:
                 editor.search.set('film stock'); root.update()
-                self.assertGreater(len(editor.fields.get_children()), 0)
+                self.assertEqual(set(editor.fields.get_children()),
+                                 {f.id for f in parser.fields_for(editor.document) if '_film_' in f.id})
+                editor.search.set(film.label.split(' film')[0]); root.update()
+                self.assertIn(film.id, editor.fields.get_children())
                 editor.stage_values({film.id: 1})
                 self.assertEqual(len(editor.adapter.review(editor.document, editor.changes)), 1)
                 editor.undo(); self.assertEqual(editor.changes, {})

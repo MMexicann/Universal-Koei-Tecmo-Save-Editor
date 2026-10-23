@@ -17,6 +17,13 @@ from .models import AssetReplacement
 
 RIGHTS_STATUSES = frozenset({"creator-owned", "permissive-license", "public-domain"})
 HASH_CHUNK_SIZE = 1024 * 1024
+WINDOWS_RESERVED_NAMES = frozenset({
+    "con", "prn", "aux", "nul",
+    *(f"com{number}" for number in range(1, 10)),
+    *(f"lpt{number}" for number in range(1, 10)),
+    *(f"com{number}" for number in "¹²³"),
+    *(f"lpt{number}" for number in "¹²³"),
+})
 
 
 class AssetSafetyError(ValueError):
@@ -40,6 +47,9 @@ def normalize_target_path(target_path: str) -> str:
         raise AssetSafetyError("The replacement target cannot contain empty, current, or parent path segments.")
     if any(any(character in part for character in ':<>"|?*') for part in parts):
         raise AssetSafetyError("The replacement target contains a reserved path character.")
+    if any(part.endswith((".", " ")) or part.split(".", 1)[0].casefold() in WINDOWS_RESERVED_NAMES
+           for part in parts):
+        raise AssetSafetyError("The replacement target contains a reserved or ambiguous Windows path component.")
     return "/".join(parts)
 
 

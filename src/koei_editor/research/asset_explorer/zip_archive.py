@@ -408,15 +408,16 @@ def _validate_infos(infos: list[zipfile.ZipInfo], expected_count: int) -> ZipArc
             )
         )
 
-    keys = set(normalized_paths)
-    for normalized, is_directory in normalized_paths.items():
+    # All names have already been indexed, so checking each entry's ancestors
+    # catches a file/child collision in either central-directory order. Do not
+    # scan every other entry for descendants: flat archives may contain up to
+    # MAX_MEMBERS names and that redundant scan makes indexing quadratic.
+    for normalized in normalized_paths:
         components = normalized.split("/")
         for length in range(1, len(components)):
             parent = "/".join(components[:length])
             if normalized_paths.get(parent) is False:
                 raise ZipArchiveError("ZIP contains a file/directory path conflict")
-        if not is_directory and any(key.startswith(normalized + "/") for key in keys):
-            raise ZipArchiveError("ZIP contains a file that conflicts with a child path")
 
     return ZipArchive(tuple(members))
 

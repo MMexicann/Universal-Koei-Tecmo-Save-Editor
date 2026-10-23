@@ -1,0 +1,34 @@
+{
+  "schema": "koei-tecmo-community-package",
+  "version": 1,
+  "kind": "character_build",
+  "id": "community.sample-character-build",
+  "title": "Fictional training build",
+  "author": "Community example",
+  "game_id": "sample_game",
+  "platform": "any",
+  "game_version": null,
+  "description": "Fictional identifiers and values for format demonstration only.",
+  "payload": {
+    "character_id": "character.example",
+    "level": 12,
+    "stats": [
+      {
+        "key": "stat.example-power",
+        "value": 10
+      }
+    ],
+    "skills": [
+      {
+        "id": "skill.example-rush",
+        "rank": 1
+      }
+    ],
+    "equipment": [
+      {
+        "slot": "equipment.primary",
+        "id": "equipment.example-item"
+      }
+    ]
+  }
+}

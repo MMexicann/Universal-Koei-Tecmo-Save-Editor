@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 from typing import Callable, Mapping, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urlsplit
@@ -173,9 +174,7 @@ def _urllib_download_transport(url, destination, timeout, max_bytes):
                     raise NexusProtocolError('The Nexus archive exceeds the download size limit.')
             except ValueError:
                 pass
-        created = False
         with target.open('xb') as stream:
-            created = True
             while True:
                 block = response.read(min(1024 * 1024, max_bytes - written + 1))
                 if not block:
@@ -186,20 +185,9 @@ def _urllib_download_transport(url, destination, timeout, max_bytes):
                 stream.write(block)
             stream.flush()
             os.fsync(stream.fileno())
-    except Exception:
-        if created:
-            try:
-                target.unlink()
-            except OSError:
-                pass
-        raise
     finally:
         response.close()
     if written == 0:
-        try:
-            target.unlink()
-        except OSError:
-            pass
         raise NexusProtocolError('Nexus returned an empty archive.')
 
 
@@ -652,18 +640,20 @@ class NexusApiClient:
         except (NexusApiError, ValueError):
             raise
         except Exception:
-            try:
-                target.unlink()
-            except OSError:
-                pass
+            # A transport can fail before creating the path, or another process
+            # can replace it. Keep incomplete/foreign output for the manager to
+            # handle; failure must never unlink an unqualified destination.
             raise NexusNetworkError('Could not download from Nexus Mods. Check the connection and try again.') from None
-        if not target.is_file() or target.stat().st_size == 0 or target.stat().st_size > MAX_DOWNLOAD_BYTES:
-            try:
-                target.unlink()
-            except OSError:
-                pass
+        try:
+            output = target.lstat()
+        except OSError:
+            raise NexusProtocolError('Nexus returned an invalid archive file.') from None
+        if (not stat.S_ISREG(output.st_mode) or output.st_nlink != 1
+                or getattr(output, 'st_file_attributes', 0)
+                & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400)
+                or not 0 < output.st_size <= MAX_DOWNLOAD_BYTES):
             raise NexusProtocolError('Nexus returned an invalid archive file.')
-        return target.stat().st_size
+        return output.st_size
 
     def _request(self, method, path, *, authenticated=True, body=None):
         if authenticated and self._api_key is None:

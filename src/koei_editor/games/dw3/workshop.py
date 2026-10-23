@@ -378,4 +378,3 @@ def _officer_index(value):
 def _require_document(document):
     if not isinstance(document, SaveDocument):
         raise SaveError('A parsed Dynasty Warriors 3 Remastered save is required.')
-

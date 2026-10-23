@@ -10,6 +10,7 @@ for enable/disable operations.
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import wraps
 import hashlib
@@ -24,6 +25,7 @@ import tempfile
 import threading
 import uuid
 import zipfile
+import zlib
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from pathlib import Path, PurePosixPath
@@ -51,9 +53,11 @@ _HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 _TRANSACTION_STAGE_RE = re.compile(r"^\.ktmm-transaction-[0-9a-f]{32}$")
 _REMOVAL_BACKUP_RE = re.compile(r"^\.ktmm-remove-[0-9a-f]{32}-([a-z0-9][a-z0-9._-]{1,47})$")
 _WINDOWS_RESERVED = {
-    "con", "prn", "aux", "nul",
+    "con", "prn", "aux", "nul", "conin$", "conout$",
     *(f"com{i}" for i in range(1, 10)),
     *(f"lpt{i}" for i in range(1, 10)),
+    *(f"com{i}" for i in "¹²³"),
+    *(f"lpt{i}" for i in "¹²³"),
 }
 
 
@@ -155,15 +159,6 @@ def _library_locked(method):
     return locked
 
 
-def _transaction_locked(method):
-    """Keep recovery checks and live installation transactions mutually exclusive."""
-    @wraps(method)
-    def locked(self, *args, **kwargs):
-        with self._transaction_lock:
-            return method(self, *args, **kwargs)
-    return locked
-
-
 def default_state_dir() -> Path:
     """Return a per-user application-data location for manager state."""
     local = os.environ.get("LOCALAPPDATA")
@@ -186,7 +181,8 @@ def _safe_relative_path(value: str) -> PurePosixPath:
     for part in parts:
         if ":" in part or any(ch in part for ch in '<>"|?*'):
             raise PackageError(f"Unsafe package path: {value!r}.")
-        if part.endswith((".", " ")) or part.split(".", 1)[0].casefold() in _WINDOWS_RESERVED:
+        if (part.endswith((".", " "))
+                or part.split(".", 1)[0].rstrip(" ").casefold() in _WINDOWS_RESERVED):
             raise PackageError(f"Windows cannot safely represent package path: {value!r}.")
     return PurePosixPath(*parts)
 
@@ -225,14 +221,14 @@ def _canonical_root(path: str | os.PathLike[str]) -> Path:
     return root
 
 
-def _atomic_json(path: Path, value: dict[str, Any]) -> None:
+def _atomic_json(path: Path, value: dict[str, Any]) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
+    payload = (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
     fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     temp = Path(temp_name)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
-            json.dump(value, stream, indent=2, sort_keys=True, ensure_ascii=False)
-            stream.write("\n")
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(payload)
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temp, path)
@@ -242,20 +238,63 @@ def _atomic_json(path: Path, value: dict[str, Any]) -> None:
         except OSError:
             pass
         raise
+    return _digest_bytes(payload)
 
 
-def _read_json(path: Path) -> dict[str, Any]:
-    try:
-        if path.stat().st_size > _MAX_STATE_BYTES:
+def _stat_identity(info: os.stat_result) -> tuple[int, int]:
+    return info.st_dev, info.st_ino
+
+
+def _read_regular_bytes(path: Path, limit: int = _MAX_STATE_BYTES) -> bytes:
+    """Read one bounded regular-file snapshot without following a replaced link."""
+    info = path.lstat()
+    if (not stat.S_ISREG(info.st_mode)
+            or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)):
+        raise SafetyError(f"Manager state must be a regular file: {path.name}.")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    with os.fdopen(os.open(path, flags), "rb") as stream:
+        opened = os.fstat(stream.fileno())
+        if _stat_identity(opened) != _stat_identity(info) or not stat.S_ISREG(opened.st_mode):
+            raise SafetyError(f"Manager state changed while opening: {path.name}.")
+        if opened.st_size > limit:
             raise SafetyError(f"Manager state is unexpectedly large: {path.name}.")
-        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_json_object)
+        raw = stream.read(limit + 1)
+        finished = os.fstat(stream.fileno())
+    current = path.lstat()
+    signature = lambda item: (_stat_identity(item), item.st_size, item.st_mtime_ns)
+    # On newer Windows Python, handle ctime is change time while path lstat
+    # retains creation time. Compare ctime only between the two handle reads.
+    if (len(raw) > limit or signature(opened) != signature(finished)
+            or opened.st_ctime_ns != finished.st_ctime_ns
+            or signature(finished) != signature(current)):
+        raise SafetyError(f"Manager state changed while reading: {path.name}.")
+    return raw
+
+
+def _read_json_snapshot(path: Path) -> tuple[dict[str, Any], str]:
+    try:
+        raw = _read_regular_bytes(path)
+        value = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_json_object)
     except FileNotFoundError:
         raise
     except (OSError, UnicodeError, ValueError) as exc:
         raise SafetyError(f"Cannot read manager state {path.name}: {exc}") from exc
     if not isinstance(value, dict):
         raise SafetyError(f"Manager state {path.name} has an invalid structure.")
-    return value
+    return value, _digest_bytes(raw)
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    return _read_json_snapshot(path)[0]
+
+
+def _serialized_mutation(method):
+    @wraps(method)
+    def guarded(self, *args, **kwargs):
+        with self._library_lock:
+            with self._mutation_guard():
+                return method(self, *args, **kwargs)
+    return guarded
 
 
 def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -381,9 +420,10 @@ class ModManager:
         self.packages_dir = self.state_dir / "packages"
         self.installations_dir = self.state_dir / "installations"
         self.index_path = self.state_dir / "library.json"
+        self._disk_revisions: dict[Path, str | None] = {}
+        self._writer_owner: tuple[int, int, tuple[int, int], bytes] | None = None
         self.index: dict[str, Any] = {"schema_version": 1, "mods": {}}
         self._library_lock = threading.RLock()
-        self._transaction_lock = threading.RLock()
         self._nexus_jobs: queue.Queue[_NexusDownloadJob] = queue.Queue(maxsize=_MAX_NEXUS_QUEUE_SIZE)
         self._nexus_results: queue.Queue[NexusDownloadResult] = queue.Queue()
         self._nexus_worker_lock = threading.Lock()
@@ -397,12 +437,116 @@ class ModManager:
         if game_root is not None:
             self.set_game_root(game_root)
 
+    def _writer_path(self) -> Path:
+        return self.state_dir / ".mod-manager-writer.lock"
+
+    def _writer_matches(self, descriptor: int, identity: tuple[int, int], token: bytes) -> bool:
+        try:
+            before = self._writer_path().lstat()
+            if (_stat_identity(os.fstat(descriptor)) != identity
+                    or _stat_identity(before) != identity or not stat.S_ISREG(before.st_mode)
+                    or _is_reparse_point(self._writer_path())):
+                return False
+            # Read through the owning descriptor: Windows byte locks also block
+            # reads through separately opened handles in this same process.
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            actual = os.read(descriptor, len(token) + 1)
+            after = self._writer_path().lstat()
+            return (actual == token and _stat_identity(after) == identity
+                    and before.st_size == after.st_size == len(token)
+                    and before.st_mtime_ns == after.st_mtime_ns)
+        except (OSError, SafetyError):
+            return False
+
+    def _assert_writer_owned(self) -> None:
+        owner = self._writer_owner
+        if (owner is None or owner[0] != threading.get_ident()
+                or not self._writer_matches(owner[1], owner[2], owner[3])):
+            raise SafetyError("Mod Manager writer ownership changed; no foreign lock was removed. Reopen the toolkit after inspection.")
+
+    def _assert_disk_revision(self, path: Path) -> None:
+        try:
+            revision = _digest_bytes(_read_regular_bytes(path))
+        except FileNotFoundError:
+            revision = None
+        if path not in self._disk_revisions or revision != self._disk_revisions[path]:
+            raise SafetyError("Mod Manager state changed in another window or process. Reopen the toolkit to reload it before making changes.")
+
+    @contextmanager
+    def _mutation_guard(self):
+        owner = self._writer_owner
+        if owner is not None and owner[0] == threading.get_ident():
+            self._assert_writer_owned()
+            yield
+            return
+        if self.state_dir.is_symlink() or _is_reparse_point(self.state_dir):
+            raise SafetyError("The Mod Manager state directory was replaced by a link or reparse point.")
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        flags = os.O_RDWR | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        created = False
+        try:
+            descriptor = os.open(self._writer_path(), flags | os.O_CREAT | os.O_EXCL, 0o600)
+            created = True
+        except FileExistsError:
+            info = self._writer_path().lstat()
+            if (not stat.S_ISREG(info.st_mode) or _is_reparse_point(self._writer_path())):
+                raise SafetyError("The Mod Manager writer lock is not a regular file; it was preserved for inspection.")
+            descriptor = os.open(self._writer_path(), flags)
+            if _stat_identity(os.fstat(descriptor)) != _stat_identity(info):
+                os.close(descriptor)
+                raise SafetyError("The Mod Manager writer lock changed while opening; it was preserved for inspection.")
+        try:
+            # OS ownership is nonblocking and automatically releases after a
+            # crash. The recognized lock file stays in place; never delete a
+            # purported stale lock to recover a pending transaction.
+            if os.name == "nt":
+                import msvcrt
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            os.close(descriptor)
+            raise SafetyError("Another Mod Manager writer is active. Close the other operation and retry; no lock was removed.") from exc
+        identity = _stat_identity(os.fstat(descriptor))
+        token = b""
+        try:
+            if created:
+                token = ("koei-mod-manager-writer/v1 " + uuid.uuid4().hex + "\n").encode("ascii")
+                if os.write(descriptor, token) != len(token):
+                    raise OSError("Could not write the complete Mod Manager ownership token.")
+                os.fsync(descriptor)
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            token = os.read(descriptor, 129)
+            # A first creator can lose OS ownership before initializing its
+            # token. An empty regular lock is also valid: the OS lock and
+            # pinned inode supply ownership, and later openers never alter it.
+            if token and not re.fullmatch(rb"koei-mod-manager-writer/v1 [0-9a-f]{32}\n", token):
+                raise SafetyError("The Mod Manager writer lock is unrecognized; it was preserved for inspection.")
+            self._writer_owner = (threading.get_ident(), descriptor, identity, token)
+            self._assert_writer_owned()
+            self._assert_disk_revision(self.index_path)
+            if self.install_state_dir is not None:
+                self._assert_disk_revision(self.install_state_dir / "state.json")
+            yield
+        finally:
+            owned = self._writer_matches(descriptor, identity, token)
+            if self._writer_owner is not None and self._writer_owner[1] == descriptor:
+                self._writer_owner = None
+            # Closing releases the OS lock, including after failed mutations.
+            # Retaining the file also avoids check-then-unlink replacement races.
+            os.close(descriptor)
+            if not owned:
+                raise SafetyError("Mod Manager writer ownership changed; the replacement lock was preserved for inspection.")
+
     def _load_index(self) -> None:
         if self.index_path.is_symlink() or _is_reparse_point(self.index_path):
             raise SafetyError("The mod library index must be a regular manager-owned file.")
         try:
-            value = _read_json(self.index_path)
+            value, revision = _read_json_snapshot(self.index_path)
         except FileNotFoundError:
+            self._disk_revisions[self.index_path] = None
             return
         if value.get("schema_version") != 1 or not isinstance(value.get("mods"), dict):
             raise SafetyError("The mod library index has an unsupported format.")
@@ -411,9 +555,12 @@ class ModManager:
                 raise SafetyError("The mod library index contains an invalid entry.")
             self._validate_record(record, mod_id)
         self.index = value
+        self._disk_revisions[self.index_path] = revision
 
     def _save_index(self) -> None:
-        _atomic_json(self.index_path, self.index)
+        self._assert_writer_owned()
+        self._assert_disk_revision(self.index_path)
+        self._disk_revisions[self.index_path] = _atomic_json(self.index_path, self.index)
 
     def _validate_record(self, record: dict[str, Any], mod_id: str) -> None:
         try:
@@ -446,7 +593,7 @@ class ModManager:
         except (KeyError, TypeError, ValueError, PackageError) as exc:
             raise SafetyError(f"The mod library record for {mod_id!r} is invalid.") from exc
 
-    @_transaction_locked
+    @_serialized_mutation
     def set_game_root(self, path: str | os.PathLike[str]) -> Path:
         root = _canonical_root(path)
         key_material = os.path.normcase(str(root)).casefold().encode("utf-8", "strict")
@@ -460,9 +607,10 @@ class ModManager:
                 or journal_path.is_symlink() or _is_reparse_point(journal_path)):
             raise SafetyError("The saved installation state contains a link or reparse point.")
         try:
-            state = _read_json(state_path)
+            state, revision = _read_json_snapshot(state_path)
         except FileNotFoundError:
             state = self._new_installation(root)
+            revision = None
         else:
             stored_root = state.get("game_root")
             if (state.get("schema_version") != 1 or state.get("game_id") != GAME_ID
@@ -478,6 +626,7 @@ class ModManager:
         self.journal_path = journal_path
         self.current_game_root = root
         self.installation = state
+        self._disk_revisions[state_path] = revision
         try:
             if journal_path.exists():
                 self._recover_transaction()
@@ -564,7 +713,10 @@ class ModManager:
     def _save_installation(self) -> None:
         if self.installation is None or self.install_state_dir is None:
             raise InstallationError("Choose a Nioh 2 installation first.")
-        _atomic_json(self.install_state_dir / "state.json", self.installation)
+        path = self.install_state_dir / "state.json"
+        self._assert_writer_owned()
+        self._assert_disk_revision(path)
+        self._disk_revisions[path] = _atomic_json(path, self.installation)
 
     def _require_installation(self) -> dict[str, Any]:
         if self.installation is None or self.current_game_root is None:
@@ -669,14 +821,17 @@ class ModManager:
                 try:
                     metadata = json.loads(archive.read(metadata_info).decode("utf-8"),
                                           object_pairs_hook=_unique_json_object)
-                except (UnicodeError, ValueError, OSError, RuntimeError) as exc:
+                except (UnicodeError, ValueError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error, EOFError) as exc:
                     raise PackageError(f"Cannot read koei-mod.json: {exc}") from exc
             fallback_name = source.stem.strip() or "Nioh 2 mod"
             fallback_id = _slug(fallback_name)
             mod_id, name, version, dependencies, conflicts = _metadata_value(
                 metadata, fallback_name, fallback_id
             )
-            return self._store_package(archive, payload, mod_id, name, version, dependencies, conflicts)
+            try:
+                return self._store_package(archive, payload, mod_id, name, version, dependencies, conflicts)
+            except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
+                raise PackageError(f"ZIP package failed integrity validation: {exc}") from exc
 
     def _store_package(self, archive: zipfile.ZipFile,
                        payload: list[tuple[PurePosixPath, zipfile.ZipInfo]],
@@ -722,33 +877,35 @@ class ModManager:
             mod_files.sort(key=lambda item: item.path.casefold())
             content_digest = self._content_digest(mod_files)
             with self._library_lock:
-                existing = self.index["mods"].get(mod_id)
-                if existing is not None:
-                    if existing.get("content_sha256") == content_digest:
-                        shutil.rmtree(temp_dir)
-                        return self._record(mod_id)
-                    raise PackageError(f"Mod id {mod_id!r} already exists with different package contents.")
-                final_dir = self.packages_dir / mod_id
-                if final_dir.exists():
-                    raise SafetyError(f"The package storage path for {mod_id!r} already exists without a library record.")
-                os.replace(temp_dir, final_dir)
-                record = {
-                    "id": mod_id,
-                    "name": name,
-                    "version": version,
-                    "dependencies": list(dependencies),
-                    "conflicts": list(conflicts),
-                    "files": [item.__dict__ for item in mod_files],
-                    "content_sha256": content_digest,
-                }
-                self.index["mods"][mod_id] = record
-                try:
-                    self._save_index()
-                except Exception:
-                    self.index["mods"].pop(mod_id, None)
-                    shutil.rmtree(final_dir, ignore_errors=True)
-                    raise
-                return self._record(mod_id)
+                with self._mutation_guard():
+                    self._ensure_no_pending_library_transactions()
+                    existing = self.index["mods"].get(mod_id)
+                    if existing is not None:
+                        if existing.get("content_sha256") == content_digest:
+                            shutil.rmtree(temp_dir)
+                            return self._record(mod_id)
+                        raise PackageError(f"Mod id {mod_id!r} already exists with different package contents.")
+                    final_dir = self.packages_dir / mod_id
+                    if final_dir.exists():
+                        raise SafetyError(f"The package storage path for {mod_id!r} already exists without a library record.")
+                    os.replace(temp_dir, final_dir)
+                    record = {
+                        "id": mod_id,
+                        "name": name,
+                        "version": version,
+                        "dependencies": list(dependencies),
+                        "conflicts": list(conflicts),
+                        "files": [item.__dict__ for item in mod_files],
+                        "content_sha256": content_digest,
+                    }
+                    self.index["mods"][mod_id] = record
+                    try:
+                        self._save_index()
+                    except Exception:
+                        self.index["mods"].pop(mod_id, None)
+                        shutil.rmtree(final_dir, ignore_errors=True)
+                        raise
+                    return self._record(mod_id)
         except Exception:
             if temp_dir.exists():
                 shutil.rmtree(temp_dir, ignore_errors=True)
@@ -924,7 +1081,9 @@ class ModManager:
             self.state_dir.mkdir(parents=True, exist_ok=True)
             if self.state_dir.is_symlink() or _is_reparse_point(self.state_dir):
                 raise SafetyError("The manager state directory is not a regular directory.")
-            with tempfile.TemporaryDirectory(prefix=".nexus-", dir=self.state_dir) as temporary:
+            temporary = Path(tempfile.mkdtemp(prefix=".nexus-", dir=self.state_dir))
+            temporary_identity = _stat_identity(temporary.lstat())
+            try:
                 destination = Path(temporary) / self._nexus_temp_archive_name(job.request)
                 try:
                     job.downloader.download_archive(job.request, destination)
@@ -965,6 +1124,21 @@ class ModManager:
                     "Added the validated package to the mod library. Review it before enabling or installing.",
                     mod.id,
                 )
+            finally:
+                # A downloader can fail after another process creates/replaces
+                # output, or leave additional files. Never recursively delete
+                # untrusted download staging (even after a successful import).
+                # rmdir only removes an empty staging directory; retained bytes
+                # remain local and are never imported after download failure.
+                try:
+                    current = temporary.lstat()
+                    if (stat.S_ISDIR(current.st_mode)
+                            and not _is_reparse_point(temporary)
+                            and _stat_identity(current) == temporary_identity):
+                        temporary.rmdir()
+                except OSError:
+                    pass
+
         except Exception:
             return NexusDownloadResult(
                 "manager_error",
@@ -1057,7 +1231,7 @@ class ModManager:
         path = self.journal_path
         return bool(path and (path.exists() or path.is_symlink() or _is_reparse_point(path)))
 
-    @_transaction_locked
+    @_serialized_mutation
     def recover_pending_transaction(self) -> None:
         """Recover the selected installation's journal before refreshing state."""
         if self.has_pending_transaction:
@@ -1067,7 +1241,6 @@ class ModManager:
         """Recover the selected install before any operation reads or changes its state."""
         self.recover_pending_transaction()
 
-    @_transaction_locked
     def _ensure_no_pending_library_transactions(self) -> None:
         """Protect global library changes from journals belonging to any install."""
         self._ensure_transaction_recovered()
@@ -1106,6 +1279,7 @@ class ModManager:
             raise ProfileError("Profile names must contain 1–80 printable characters.")
         return name
 
+    @_serialized_mutation
     def create_profile(self, name: str, copy_from: str | None = None) -> ProfileRecord:
         self._ensure_transaction_recovered()
         state = self._require_installation()
@@ -1124,6 +1298,7 @@ class ModManager:
             raise
         return ProfileRecord(profile_id, name, tuple(sorted(enabled)))
 
+    @_serialized_mutation
     def rename_profile(self, profile_id: str, name: str) -> None:
         self._ensure_transaction_recovered()
         state = self._require_installation()
@@ -1140,6 +1315,7 @@ class ModManager:
             profile["name"] = old_name
             raise
 
+    @_serialized_mutation
     def delete_profile(self, profile_id: str) -> None:
         self._ensure_transaction_recovered()
         state = self._require_installation()
@@ -1156,6 +1332,7 @@ class ModManager:
             state["profiles"] = old_profiles
             raise
 
+    @_serialized_mutation
     def set_profile_mod_enabled(self, profile_id: str, mod_id: str, enabled: bool) -> None:
         self._ensure_transaction_recovered()
         if mod_id not in self.index["mods"]:
@@ -1267,6 +1444,7 @@ class ModManager:
             raise SafetyError("The game's Mods path must be a real directory, not a link or file.")
         return mods
 
+    @_serialized_mutation
     def install_mod(self, mod_id: str, *, loader_confirmed: bool = False) -> None:
         self._ensure_transaction_recovered()
         state = self._require_installation()
@@ -1289,6 +1467,7 @@ class ModManager:
             create_mods=not mods.exists(),
         )
 
+    @_serialized_mutation
     def uninstall_mod(self, mod_id: str, *, loader_confirmed: bool = False) -> None:
         self._ensure_transaction_recovered()
         state = self._require_installation()
@@ -1318,6 +1497,7 @@ class ModManager:
                 pass
 
     @_library_locked
+    @_serialized_mutation
     def remove_mod(self, mod_id: str) -> None:
         self._ensure_no_pending_library_transactions()
         if mod_id not in self.index["mods"]:
@@ -1349,6 +1529,7 @@ class ModManager:
             raise
         shutil.rmtree(quarantine)
 
+    @_serialized_mutation
     def apply_profile(self, profile_id: str, *, loader_confirmed: bool = False) -> tuple[str, ...]:
         self._ensure_transaction_recovered()
         state = self._require_installation()
@@ -1417,7 +1598,6 @@ class ModManager:
             raise SafetyError(f"The Mods folder contains multiple case-insensitive matches for {name!r}.")
         return matches[0] if matches else None
 
-    @_transaction_locked
     def _run_transaction(self, old_state: dict[str, Any], new_state: dict[str, Any], *,
                          moves: list[dict[str, str]] | None = None,
                          installs: list[dict[str, str]] | None = None,
@@ -1678,7 +1858,6 @@ class ModManager:
         if errors:
             raise SafetyError("Transaction rollback needs attention: " + "; ".join(errors))
 
-    @_transaction_locked
     def _recover_transaction(self) -> None:
         if self.journal_path is None:
             return

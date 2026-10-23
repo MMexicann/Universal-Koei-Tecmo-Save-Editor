@@ -14,10 +14,12 @@ from unittest.mock import patch
 from koei_editor import application
 from koei_editor.shared.save_vault import SaveVault
 from tests.test_wo1_pc_format import procedural_raw
+from tests.owned_directory_contract import install_owned_directory_contract
 
 
 class SaveManagementCliTests(unittest.TestCase):
     def setUp(self):
+        install_owned_directory_contract(self)
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.folder = Path(temporary.name)

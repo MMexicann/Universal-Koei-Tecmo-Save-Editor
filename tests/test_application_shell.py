@@ -15,7 +15,7 @@ from koei_editor.shared import shell_preferences as settings
 
 
 class ShellPreferencesTests(unittest.TestCase):
-    def test_nexus_browser_receives_manager_handoff_in_either_open_order(self):
+    def test_nexus_notice_receives_inert_manager_handoff_in_either_open_order(self):
         from types import SimpleNamespace
 
         manager = object()
@@ -35,7 +35,7 @@ class ShellPreferencesTests(unittest.TestCase):
             )
 
         manager_first = make_shell(manager)
-        with patch('koei_editor.mods.nexus_browser.NexusModsWorkspace',
+        with patch('koei_editor.mods.nexus_browser.NexusRegistrationNotice',
                    return_value=created_browser) as create_browser:
             Application.show_nexus_mods(manager_first)
         self.assertIs(manager_first.nexus_mods, created_browser)
@@ -43,7 +43,7 @@ class ShellPreferencesTests(unittest.TestCase):
 
         browser_first = make_shell(None)
         existing_browser = Mock()
-        with patch('koei_editor.mods.nexus_browser.NexusModsWorkspace',
+        with patch('koei_editor.mods.nexus_browser.NexusRegistrationNotice',
                    return_value=existing_browser) as create_browser:
             Application.show_nexus_mods(browser_first)
         self.assertIsNone(create_browser.call_args.kwargs['download_handoff'])
@@ -73,6 +73,26 @@ class ShellPreferencesTests(unittest.TestCase):
         attach.assert_called_once_with(workspace)
         shell._show_editing_tool.assert_called_once_with(workspace, 'mod_manager')
         shell._remember_workspace.assert_called_once_with('tool:mod_manager')
+
+    def test_application_close_waits_for_nested_playthrough_profile_worker(self):
+        from types import SimpleNamespace
+
+        profile_window = SimpleNamespace(busy=True, _closed=False)
+        management = SimpleNamespace(busy=False, profile_window=profile_window)
+        root = Mock()
+        shell = SimpleNamespace(
+            _tool_workspaces=lambda: (),
+            save_library=SimpleNamespace(management=management),
+            root=root,
+            troubleshooting=None,
+            sessions={},
+        )
+
+        with patch('tkinter.messagebox.showinfo') as showinfo:
+            Application.close(shell)
+
+        showinfo.assert_called_once()
+        root.destroy.assert_not_called()
 
     def test_longest_valid_namespaced_plugin_command_can_be_favorited(self):
         command = 'plugin:' + 'a.' + 'a' * 78 + ':' + 'b' * 80
@@ -124,6 +144,31 @@ class ShellPreferencesTests(unittest.TestCase):
         self.assertFalse(search_commands(entries, 'missing'))
 
 
+class EditingMenuCommandLookupTests(unittest.TestCase):
+    def test_registered_command_is_found_after_menu_insertions(self):
+        class Menu:
+            entries = (
+                ('command', 'other-command'),
+                ('separator', ''),
+                ('command', 'profile-command'),
+            )
+
+            def index(self, name):
+                return len(self.entries) - 1 if name == 'end' else name
+
+            def type(self, index):
+                return self.entries[index][0]
+
+            def entrycget(self, index, option):
+                return self.entries[index][1] if option == 'command' else ''
+
+        app = object.__new__(Application)
+        app._editing_tools_menu_commands = {'controller_profiles': 'profile-command'}
+        app.editing_tools_menu = Menu()
+        self.assertEqual(app._editing_tools_menu_index('controller_profiles'), 2)
+        self.assertIsNone(app._editing_tools_menu_index('missing'))
+
+
 class MenuTranslationTests(unittest.TestCase):
     class Menu:
         def __init__(self, labels):
@@ -133,13 +178,11 @@ class MenuTranslationTests(unittest.TestCase):
             return len(self.labels) - 1 if self.labels else None
 
         def type(self, index):
-            return 'separator' if self.labels[index] == '' else 'command'
+            return 'command' if self.labels[index] else 'separator'
 
         def entrycget(self, index, option):
-            if option != 'label':
+            if option != 'label' or self.type(index) != 'command':
                 raise AssertionError(option)
-            if not self.labels[index]:
-                raise tk.TclError('separator has no label')
             return self.labels[index]
 
         def entryconfigure(self, index, **options):
@@ -170,6 +213,34 @@ class MenuTranslationTests(unittest.TestCase):
         self.assertEqual(menu.labels[7], translate('research_import', 'de'))
         self.assertEqual(menu.labels[9], translate('emulator_hub', 'de'))
         self.assertEqual(menu.labels[10], translate('asset_explorer', 'de'))
+
+
+class EditingMenuLabelTests(unittest.TestCase):
+    def test_language_refresh_ignores_separators_and_other_noncommand_entries(self):
+        class Menu:
+            entries = ('separator', 'command', 'checkbutton')
+            changed = []
+
+            def index(self, _name):
+                return len(self.entries) - 1
+
+            def type(self, index):
+                return self.entries[index]
+
+            def entrycget(self, index, option):
+                if self.entries[index] != 'command':
+                    raise AssertionError('Noncommand menu entries have no command label.')
+                return translate('emulator_hub', 'en')
+
+            def entryconfigure(self, index, **kwargs):
+                self.changed.append((index, kwargs))
+
+        app = object.__new__(Application)
+        app.language = 'de'
+        app.editing_tools_menu = Menu()
+        app._refresh_editing_menu_labels()
+        self.assertEqual(app.editing_tools_menu.changed,
+                         [(1, {'label': translate('emulator_hub', 'de')})])
 
 
 class ApplicationShellTests(unittest.TestCase):
@@ -288,8 +359,8 @@ class ApplicationShellTests(unittest.TestCase):
         calls = []
         routes = {'editing_presets': 'show_editing_presets', 'transfer': 'show_transfer',
                   'mod_manager': 'show_mod_manager', 'research_lab': 'show_research_lab',
-                  'nexus_mods': 'show_nexus_mods', 'game_hub': 'show_game_hub',
                   'asset_explorer': 'show_asset_explorer',
+                  'controller_profiles': 'show_controller_profiles', 'nexus_mods': 'show_nexus_mods',
                   'workflow_builder': 'show_workflow_builder', 'emulator_hub': 'show_emulator_hub'}
         for key, method in routes.items():
             setattr(self.app, method, lambda tool=key: calls.append(tool))
@@ -298,9 +369,7 @@ class ApplicationShellTests(unittest.TestCase):
             command_id = 'tool:' + key
             entries = self.app.command_entries()
             self.assertIn(command_id, {entry.id for entry in entries})
-            self.assertEqual(sum(entry.id == command_id for entry in entries), 1)
-            title = next(entry.title for entry in entries if entry.id == command_id)
-            self.app.command_palette.query.set(title)
+            self.app.command_palette.query.set(self.app.tr(key))
             self.assertIn(command_id, {entry.id for entry in self.app.command_palette.matches})
             self.app.execute_command(command_id)
             self.assertEqual(calls[-1], key)
@@ -308,14 +377,53 @@ class ApplicationShellTests(unittest.TestCase):
         self.app.command_palette.close()
         self.assertFalse(self.app.sessions)
 
-    def test_nexus_browser_is_a_localized_tool_and_uses_active_pc_game(self):
+    def test_controller_profiles_tool_is_discoverable_retained_and_never_opens_a_save(self):
+        command_id = 'tool:controller_profiles'
+        self.assertIn(command_id, {entry.id for entry in self.app.command_entries()})
+        workspace = self.app.execute_command(command_id)
+        self.root.update()
+        self.assertIs(workspace, self.app.controller_profiles)
+        self.assertTrue(workspace.frame.winfo_viewable())
+        self.assertIsNone(self.app.active_game)
+        self.assertFalse(self.app.sessions)
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
+        self.assertEqual(self.app.shell_settings.recent[0], command_id)
+
+        # A new tool registered in the menu must not shift any localization target.
+        self.app.editing_tools_menu.insert_command(0, label='Injected tool', command=lambda: None)
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        self.root.update()
+        self.assertEqual(self.app.breadcrumb.get(), self.app.tr('controller_profiles'))
+        menu_command = self.app._editing_tools_menu_commands['controller_profiles']
+        localized_index = next(index for index in range(self.app.editing_tools_menu.index('end') + 1)
+                               if self.app.editing_tools_menu.type(index) == 'command'
+                                and self.app.editing_tools_menu.entrycget(index, 'command') == menu_command)
+        self.assertEqual(self.app.editing_tools_menu.entrycget(localized_index, 'label'),
+                         self.app.tr('controller_profiles'))
+        self.app.show_library()
+        self.root.update()
+        self.assertIs(self.app.controller_profiles, workspace)
+        self.assertFalse(workspace.frame.winfo_ismapped())
+        self.assertFalse(self.app.sessions)
+
+    def test_controller_profiles_start_in_the_shell_language(self):
+        self.app.language_choice.set('Deutsch')
+        self.app.change_language()
+        workspace = self.app.show_controller_profiles()
+        self.root.update()
+        self.assertEqual(workspace.language, 'de')
+        self.assertEqual(workspace.title_label.cget('text'), 'Controller- und Eingabeprofile')
+
+    def test_nexus_public_notice_is_localized_and_uses_active_pc_game(self):
         self.app.select_game('pw4')
         browser = self.app.show_nexus_mods()
         self.root.update()
         self.assertIs(browser, self.app.nexus_mods)
         self.assertEqual(browser._selected_game().game_id, 'pw4')
-        self.assertFalse(browser._client.has_api_key)
-        self.assertEqual(str(browser.manager_button['state']), 'disabled')
+        self.assertFalse(hasattr(browser, '_client'))
+        self.assertFalse(hasattr(browser, 'api_key_entry'))
+        self.assertIn('unavailable', browser.status_label.cget('text'))
         nexus_menu_index = self.app._editing_tools_menu_index('nexus_mods')
         self.assertEqual(self.app.editing_tools_menu.entrycget(nexus_menu_index, 'label'), 'Nexus Mods')
         self.assertIn('tool:nexus_mods', {entry.id for entry in self.app.command_entries()})
@@ -326,9 +434,27 @@ class ApplicationShellTests(unittest.TestCase):
         nexus_menu_index = self.app._editing_tools_menu_index('nexus_mods')
         self.assertEqual(self.app.editing_tools_menu.entrycget(nexus_menu_index, 'label'), 'Nexus Mods')
 
+    def test_public_nexus_route_cannot_construct_a_client_or_make_a_request(self):
+        from koei_editor.mods import nexus_browser, nexus_api
+        with patch.object(nexus_browser, 'NexusApiClient', side_effect=AssertionError('API client reached')), \
+                patch.object(nexus_api, 'build_opener', side_effect=AssertionError('API request reached')), \
+                patch.object(nexus_browser.webbrowser, 'open') as open_site:
+            notice = self.app.show_nexus_mods()
+            self.app.set_mod_manager_download_handoff(object())
+            self.app.show_library()
+            self.assertIs(self.app.show_nexus_mods(), notice)
+            self.root.update()
+            self.assertFalse(hasattr(notice, 'api_key_entry'))
+            self.assertFalse(hasattr(notice, 'download_key_entry'))
+            self.assertFalse(hasattr(notice, '_executor'))
+            open_site.assert_not_called()
+            notice.game_var.set('NIOH 2')
+            notice.website_button.invoke()
+            open_site.assert_called_once_with('https://www.nexusmods.com/games/nioh2')
+
     def test_language_change_preserves_integrated_workspace_and_breadcrumb(self):
         for key in ('editing_presets', 'mod_manager', 'research_lab', 'asset_explorer',
-                    'workflow_builder', 'emulator_hub'):
+                    'controller_profiles', 'workflow_builder', 'emulator_hub'):
             with self.subTest(workspace=key):
                 self.app.show_library()
                 self.app.library.pack_forget()
@@ -425,14 +551,23 @@ class ApplicationShellTests(unittest.TestCase):
                     return Path(path)
                 with (patch.object(mod_manager_gui.filedialog, 'askdirectory', return_value=candidate),
                       patch.object(workspace.manager, 'set_game_root', side_effect=select_candidate),
-                  patch.object(workspace, '_error'),
-                  patch.object(workspace.manager, 'mods', return_value=(test_mod,))):
+                      patch.object(workspace, '_error')):
                     workspace.choose_game_root()
             self.assertFalse(workspace._recovery_blocked)
             self.assertEqual(str(workspace.create_profile_button.cget('state')), 'normal')
             self.assertEqual(str(workspace.import_button.cget('state')), 'normal')
+            # The typed service fixture remains present through recovery, so
+            # refresh preserves its selection and removal is available again.
+            self.assertEqual(workspace.mod_table.selection(), ('test-mod',))
             self.assertEqual(str(workspace.remove_button.cget('state')), 'normal')
+            # The real service library is empty. Refresh without the fixture
+            # explicitly checks the separate no-selection state.
+            workspace.refresh()
+            self.assertEqual(workspace.mod_table.selection(), ())
+            self.assertEqual(str(workspace.remove_button.cget('state')), 'disabled')
 
+        self.assertTrue(workspace.manager.state_dir.is_relative_to(
+            Path(self.directory.name).resolve(strict=True)))
         self.assertFalse((state_dir / 'library.json').exists())
 
     def test_palette_executes_exact_profile_and_keeps_editor_state(self):
@@ -516,6 +651,14 @@ class ApplicationShellTests(unittest.TestCase):
             self.assertGreaterEqual(widget.winfo_rootx(), self.root.winfo_rootx())
             self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), self.root.winfo_rootx() + self.root.winfo_width())
         self.assertEqual(self.app._library_columns[self.app.platform_choice.get()], 2)
+
+    def test_wide_navigation_uses_a_column_for_every_button(self):
+        with patch.object(self.app.navigation, 'winfo_width', return_value=10000):
+            self.app._layout_navigation()
+
+        positions = [button.grid_info() for button in self.app._navigation_buttons]
+        self.assertEqual([position['row'] for position in positions], [0] * len(positions))
+        self.assertEqual([position['column'] for position in positions], list(range(len(positions))))
 
     def test_compact_editor_header_retains_controls_pending_state_and_library_navigation(self):
         from tests.test_origins_parser import fixture
@@ -687,12 +830,19 @@ class ApplicationShellTests(unittest.TestCase):
         self.assertLessEqual(self.root.winfo_height(), 729)
         self.assertGreater(editor.fields.winfo_height(), 220)
         self.assertTrue(editor.details_toggle.winfo_viewable())
+        self.assertTrue(editor.previous_field_page.winfo_viewable())
+        self.assertTrue(editor.next_field_page.winfo_viewable())
+        self.assertEqual(tuple(map(int, editor.tools_bar.cget('padding'))), (18, 0))
+        self.assertEqual(tuple(map(int, editor.status_label.cget('padding'))), (18, 0))
         self.assertEqual(self.app.shell_settings.text_size, 100)
         editor.workspace_tabs.select(editor.dashboard_page)
         self.root.maxsize(1800, 1400)
         self.root.geometry('1180x930')
         self.root.update()
         self.assertEqual(tuple(map(int, editor.header.cget('padding'))), (18, 10))
+        # Origins supplies its own tighter action spacing; restore it exactly.
+        self.assertEqual(tuple(map(int, editor.tools_bar.cget('padding'))), (18, 0))
+        self.assertEqual(tuple(map(int, editor.status_label.cget('padding'))), (18, 8))
         self.assertEqual((editor.changes, editor.history), (pending, history))
         self.assertEqual(source.read_bytes(), fixture())
 

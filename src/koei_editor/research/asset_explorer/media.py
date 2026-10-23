@@ -1162,4 +1162,3 @@ def inspect_model(
         raise
     except Exception as exc:
         raise AssetInspectionError(f"malformed or unsupported {ext.upper()} model") from exc
-

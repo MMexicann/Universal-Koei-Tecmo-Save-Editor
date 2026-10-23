@@ -1,5 +1,10 @@
 # Building the Windows executable
 
+This development source prepares the **Universal Koei Tecmo Game Toolkit** name.
+The technical version and artifact filenames remain at **3.1** until the v1.0
+release gates pass. See the [branding and release handoff](REPOSITORY_METADATA.md)
+before changing versions, filenames, tags or publication settings.
+
 Build releases on 64-bit Windows with Python 3.14.7 and Tkinter. Build/package tools
 and the development test suite use Python 3.11 or newer; the source application
 itself supports Python 3.10. The Windows workflow uses Python 3.14.7, and
@@ -25,6 +30,41 @@ same 98 game/platform profiles, runtime metadata, asset preview modules and
 required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
+
+Both builds retain exact reviewed `METADATA` for the five asset-preview
+dependencies so runtime version queries work. After PyInstaller analysis, the
+build removes their build-only distribution records, installer markers and
+upstream `DELVEWHEEL` logs before assembling either format. These records are not
+needed by the previews; their licenses remain in the required runtime notices.
+The filter is bound to the complete hash-locked wheel list and rejects unknown
+distribution metadata. Package verification checks retained metadata hashes and
+continues rejecting personal paths, unreviewed resources and native modules.
+Optional CFFI compilation helpers (`setuptools`, `distutils`, `pkg_resources`)
+are excluded from the frozen application; previews use the precompiled decoders.
+Build tools remain installed in the build environment.
+The frozen application also excludes `pydoc_data`, the unused interactive
+language-topic reference text. Ordinary `pydoc` object documentation and
+introspection remain available. Privacy scanning applies unchanged to every
+module that is collected.
+A reviewed pre-import hook preserves these exclusions when PyInstaller resolves
+the removed standard-library `distutils` name. It refuses to build if any of
+the three required compiler exclusions is missing.
+
+Two NumPy hooks also edit exact reviewed code objects before PYZ collection:
+five upstream build-path values in `numpy.__config__.CONFIG` receive explicit
+upstream-build labels, and only the historical absolute-path examples in three
+`numpy.lib._datasource` docstrings receive neutral example paths. NumPy's
+configuration keys, versions, CPU diagnostics, `show_config`, numerical code
+and file operations remain intact; installed package files are not rewritten.
+The accepted Windows wheel is SHA256
+`2ca144f15135b6212a5c47b1e2aeca6e412f102f95a2d5d88d8aec77eb255de3`.
+The original `numpy/__config__.py` member is SHA256
+`7484592aa3f8dc04c44d13ab7520d27429ee47b03090a49b6a6c7a221cf52130`;
+`numpy/lib/_datasource.py` is SHA256
+`dbbf26c57ccd4d2dc435304f4418f967411261230fa2f9850e1788f57db7ea1f`.
+Changed source members or optimization modes that bypass the reviewed graph
+code cache stop the build. Full frozen-module privacy scanning remains required;
+these hooks add no personal-path exception.
 
 `tools/build_windows.py` requires Windows for compilation. Inspect the build inputs on
 any OS with:

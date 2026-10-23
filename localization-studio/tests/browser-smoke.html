@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>Localization Studio browser smoke test</title></head>
+  <body data-test-result="running">
+    <p id="result">Running browser smoke test…</p>
+    <iframe id="studio" title="Localization Studio under test" src="../index.html" style="width:100%;height:900px;border:0"></iframe>
+    <script>
+      const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+      const assert = (condition, message) => { if (!condition) throw new Error(message); };
+      const frame = document.getElementById('studio');
+      frame.addEventListener('load', async () => {
+        try {
+          const win = frame.contentWindow;
+          const doc = frame.contentDocument;
+          const input = doc.getElementById('file-input');
+          const catalog = {
+            segments: [
+              { id: 'MENU_OK', source: 'はい', target: '', context: 'Menu' },
+              { id: 'RESULT', source: '{player_name} found {count} keys.', target: '', context: 'Result' },
+            ],
+          };
+          const file = new win.File([JSON.stringify(catalog)], 'browser-smoke.json', { type: 'application/json' });
+          const transfer = new win.DataTransfer();
+          transfer.items.add(file);
+          input.files = transfer.files;
+          input.dispatchEvent(new win.Event('change', { bubbles: true }));
+          await sleep(100);
+          assert(doc.getElementById('metric-total').textContent === '2', 'File import did not create two rows.');
+          assert(doc.getElementById('project-title').textContent === 'browser-smoke.json', 'Imported filename was not displayed.');
+
+          const menuTarget = doc.querySelector('[data-segment-id="MENU_OK"] .segment-target');
+          menuTarget.value = 'Okay';
+          menuTarget.dispatchEvent(new win.Event('input', { bubbles: true }));
+          assert(doc.getElementById('metric-translated').textContent === '1', 'Translation edits did not update progress.');
+
+          let resultTarget = doc.querySelector('[data-segment-id="RESULT"] .segment-target');
+          resultTarget.value = '{player_name} found {wrong} keys.';
+          resultTarget.dispatchEvent(new win.Event('input', { bubbles: true }));
+          assert(doc.getElementById('metric-review').textContent === '1', 'Placeholder mismatch was not flagged.');
+          doc.getElementById('nav-attention').click();
+          assert(doc.querySelectorAll('.segment-row').length === 1, 'Needs review filter did not narrow the list.');
+          assert(doc.querySelector('.segment-row .segment-id').textContent === 'RESULT', 'Review filter selected the wrong row.');
+
+          resultTarget = doc.querySelector('[data-segment-id="RESULT"] .segment-target');
+          resultTarget.value = '<img src=x onerror=alert(1)>';
+          resultTarget.dispatchEvent(new win.Event('input', { bubbles: true }));
+          assert(doc.querySelector('img') === null, 'Untrusted translation text became an HTML image.');
+
+          let exportedBlob;
+          let exportedFilename;
+          const originalCreateObjectURL = win.URL.createObjectURL;
+          const originalAnchorClick = win.HTMLAnchorElement.prototype.click;
+          win.URL.createObjectURL = (blob) => {
+            exportedBlob = blob;
+            return originalCreateObjectURL.call(win.URL, blob);
+          };
+          win.HTMLAnchorElement.prototype.click = function () {
+            exportedFilename = this.download;
+            return originalAnchorClick.call(this);
+          };
+          const originalText = await file.text();
+          doc.getElementById('export-button').click();
+          assert(doc.getElementById('export-dialog').open, 'Export review did not open.');
+          assert(doc.getElementById('export-checks').textContent.includes('The imported source file will remain unchanged.'), 'Export review did not confirm that the source remains unchanged.');
+          doc.getElementById('confirm-export').click();
+          await sleep(100);
+          assert(exportedFilename === 'browser-smoke.localized.json', 'Export did not use the separate-copy filename.');
+          assert(exportedBlob instanceof win.Blob, 'Export did not create a localized file blob.');
+          const exported = JSON.parse(await exportedBlob.text());
+          assert(exported.segments[0].target === 'Okay', 'The exported file did not contain the edited target.');
+          assert(exported.segments[1].target === '<img src=x onerror=alert(1)>', 'The exported file changed the literal translation text.');
+          assert(doc.getElementById('notice').textContent.includes('Downloaded browser-smoke.localized.json'), 'Export did not report the separate-copy filename.');
+          assert(await file.text() === originalText, 'Export altered the in-memory original File.');
+          win.URL.createObjectURL = originalCreateObjectURL;
+          win.HTMLAnchorElement.prototype.click = originalAnchorClick;
+          document.body.dataset.testResult = 'pass';
+          document.getElementById('result').textContent = 'PASS: import, edit, token warning, filter, text safety, and separate-copy export.';
+        } catch (error) {
+          document.body.dataset.testResult = 'fail';
+          document.getElementById('result').textContent = `FAIL: ${error.message}`;
+        }
+      }, { once: true });
+    </script>
+  </body>
+</html>

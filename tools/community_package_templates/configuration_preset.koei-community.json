@@ -1,0 +1,24 @@
+{
+  "schema": "koei-tecmo-community-package",
+  "version": 1,
+  "kind": "configuration_preset",
+  "id": "community.sample-configuration",
+  "title": "Fictional display preferences",
+  "author": "Community example",
+  "game_id": "sample_game",
+  "platform": "any",
+  "game_version": null,
+  "description": "Advisory setting keys and values for format demonstration only.",
+  "payload": {
+    "settings": [
+      {
+        "key": "display.example-mode",
+        "value": "balanced"
+      },
+      {
+        "key": "display.example-vsync",
+        "value": true
+      }
+    ]
+  }
+}

@@ -7,7 +7,8 @@ packaging details. The editor source has its own MIT license in
 
 The read-only Game Asset Explorer retains notices for G1Tool (MIT), miniaudio
 (MIT), trimesh (MIT), NumPy and its component notices, cffi (MIT-0), and
-pycparser (BSD-3-Clause). The complete texts are the
+pycparser (BSD-3-Clause), and the separately licensed libffi sources statically
+compiled into the Windows x64 cffi backend (MIT). The complete texts are the
 `G1Tool-MIT.txt`, `miniaudio-MIT.txt`, `trimesh-MIT.txt`,
-`numpy-*.txt`, `cffi-MIT-0.txt`, and `pycparser-BSD-3-Clause.txt` files in this
+`numpy-*.txt`, `cffi-MIT-0.txt`, `cffi-libffi-MIT.txt`, and `pycparser-BSD-3-Clause.txt` files in this
 directory; runtime-required notices are embedded in both Windows build modes.

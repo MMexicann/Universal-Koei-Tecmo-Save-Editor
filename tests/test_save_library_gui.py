@@ -492,6 +492,7 @@ class SaveLibraryGuiTests(unittest.TestCase):
                            *(label for label in workspace._wrapped_labels if label.master is workspace.header.content))
         pinned_controls = (*workspace.select_matches_button.master.winfo_children(), workspace.previous,
                            workspace.next, workspace.page_label, workspace.detail_label, workspace.guidance_label)
+        native_maximum = self.root.maxsize()
         for language, text_size in (('English', '100%'), ('English', '120%'), ('English', '140%'),
                                     ('Deutsch', '140%'), ('English', '100%')):
             app.language_choice.set(language)
@@ -528,9 +529,11 @@ class SaveLibraryGuiTests(unittest.TestCase):
                         self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
                                              self.root.winfo_rooty() + self.root.winfo_height())
                     canvas = workspace.header.canvas
-                    if width == 780:
+                    # Native window managers can cap the requested geometry.
+                    # Scroll exactly when the actual header content overflows.
+                    if workspace.header.content.winfo_reqheight() > canvas.winfo_height():
                         self.assertLess(canvas.yview()[1] - canvas.yview()[0], 1)
-                    elif text_size == '100%':
+                    else:
                         self.assertEqual(canvas.yview(), (0.0, 1.0))
                     for widget in header_controls:
                         workspace.header.reveal(widget)
@@ -544,6 +547,15 @@ class SaveLibraryGuiTests(unittest.TestCase):
                                              canvas.winfo_rootx() + canvas.winfo_width())
                         self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
                                              canvas.winfo_rooty() + canvas.winfo_height())
+        # Separately qualify a real full-height client even on a small runner.
+        self.root.maxsize(1800, 1400)
+        self.root.geometry('1180x930')
+        self.root.update()
+        self.assertGreaterEqual(canvas.winfo_height(), workspace.header.content.winfo_reqheight())
+        self.assertEqual(canvas.yview(), (0.0, 1.0))
+        self.root.maxsize(*native_maximum)
+        self.root.geometry('780x680')
+        self.root.update()
         # Keyboard focus reveals a lower form control without a direct reveal.
         workspace.header.canvas.yview_moveto(0)
         self.root.focus_force()

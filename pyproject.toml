@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "universal-koei-tecmo-save-editor"
+name = "universal-koei-tecmo-game-toolkit"
 version = "3.1"
-description = "Mexican's Windows save editor for 98 Koei Tecmo game/platform profiles, with graphical progression dashboards, copied-save browsing, reviewed edit presets, comparison, 145 scoped conversion routes, backups and Undo."
+description = "Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management, selected PC settings and read-only asset tools, with backups and Undo."
 requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -16,7 +16,14 @@ dependencies = [
 ]
 
 [project.scripts]
+universal-koei-toolkit = "koei_editor.application:main"
 universal-koei-editor = "koei_editor.application:main"
+
+[project.urls]
+Homepage = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor"
+Downloads = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest"
+Documentation = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/tree/main/docs"
+Issues = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

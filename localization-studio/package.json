@@ -1,0 +1,9 @@
+{
+  "name": "koei-tecmo-localization-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:browser": "node tests/run-browser-smoke.mjs"
+  }
+}

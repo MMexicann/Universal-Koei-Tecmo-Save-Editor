@@ -7,7 +7,7 @@ All other bytes remain opaque and unchanged.
 from __future__ import annotations
 
 import base64
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -20,6 +20,7 @@ import uuid
 
 from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import safe_path
+from koei_editor.shared.copy_storage import atomic_new
 
 
 FORMAT_ID = 'atelier_arland_dx_settings_ini'
@@ -182,6 +183,7 @@ class ConfigDocument:
     raw: bytes = field(repr=False)
     fields: tuple[ConfigField, ...] = ()
     _locations: tuple[_ValueLocation, ...] = field(default=(), repr=False, compare=False)
+    _source_identity: tuple[int, int] | None = field(default=None, repr=False, compare=False)
 
     @property
     def filename(self):
@@ -289,7 +291,7 @@ def _is_reparse(info):
     return stat.S_ISLNK(info.st_mode) or bool(getattr(info, 'st_file_attributes', 0) & 0x400)
 
 
-def _check_components(path, *, allow_missing=False):
+def _check_components(path, *, allow_missing=False, with_leaf=False):
     """Reject links/reparse points in the supplied path before resolving it."""
     candidate = Path(path).absolute()
     current = Path(candidate.anchor)
@@ -297,6 +299,7 @@ def _check_components(path, *, allow_missing=False):
         current = Path.cwd().anchor and Path(Path.cwd().anchor) or Path.cwd()
     parts = candidate.parts[1:] if candidate.anchor else candidate.parts
     missing_seen = False
+    leaf = None
     for index, part in enumerate(parts):
         current = current / part
         try:
@@ -308,12 +311,15 @@ def _check_components(path, *, allow_missing=False):
             continue
         if missing_seen:
             raise ConfigurationError('A storage path appeared below a missing directory.')
+        if index == len(parts) - 1:
+            leaf = info
         if _is_reparse(info):
             raise ConfigurationError('Configuration files and storage reject symbolic links and reparse paths.')
         if index < len(parts) - 1 and not stat.S_ISDIR(info.st_mode):
             raise ConfigurationError('A configuration path parent is not an ordinary directory.')
     try:
-        return safe_path(candidate)
+        resolved = safe_path(candidate)
+        return (resolved, leaf) if with_leaf else resolved
     except (OSError, SaveError, RuntimeError, ValueError) as error:
         raise ConfigurationError(str(error)) from error
 
@@ -346,17 +352,22 @@ def _ensure_directory(path):
 
 
 def _check_file(path):
-    resolved = _check_components(path)
+    resolved, qualified = _check_components(path, with_leaf=True)
+    if (qualified is None or _is_reparse(qualified) or not stat.S_ISREG(qualified.st_mode)
+            or qualified.st_nlink != 1):
+        raise ConfigurationError('Configuration management requires an ordinary, unaliased file.')
     try:
         info = Path(path).lstat()
     except OSError as error:
         raise ConfigurationError(f'Cannot inspect configuration file: {error}') from error
     if (_is_reparse(info) or not stat.S_ISREG(info.st_mode) or info.st_nlink != 1):
         raise ConfigurationError('Configuration management requires an ordinary, unaliased file.')
+    if (info.st_dev, info.st_ino) != (qualified.st_dev, qualified.st_ino):
+        raise ConfigurationChangedError('The configuration path changed after qualification.')
     return resolved, info
 
 
-def _read_bounded_file(path, limit):
+def _read_bounded_file(path, limit, *, with_source=False):
     resolved, before = _check_file(path)
     if before.st_size < 0 or before.st_size > limit:
         raise UnsupportedConfigurationError('The selected file exceeds the configuration size limit.')
@@ -387,11 +398,16 @@ def _read_bounded_file(path, limit):
         current = Path(path).lstat()
     except OSError as error:
         raise ConfigurationChangedError('The selected configuration disappeared while being read.') from error
-    if ((after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) !=
+    if (not stat.S_ISREG(after.st_mode) or after.st_nlink != 1 or _is_reparse(after)
+            or not stat.S_ISREG(current.st_mode) or current.st_nlink != 1 or _is_reparse(current)
+            or (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) !=
             (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+            or opened.st_ctime_ns != after.st_ctime_ns
             or (current.st_dev, current.st_ino, current.st_size, current.st_mtime_ns) !=
             (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)):
         raise ConfigurationChangedError('The selected configuration changed while being read.')
+    if with_source:
+        return raw, resolved, (current.st_dev, current.st_ino)
     return raw
 
 
@@ -499,6 +515,10 @@ def _parse_bytes(raw, game_id, path, format_id=None):
             except UnicodeDecodeError:
                 section = ''
             continue
+        if trimmed.startswith(b'['):
+            # An unsupported header must not inherit the preceding known
+            # section and turn an opaque key into an editable setting.
+            raise UnsupportedConfigurationError('A section header uses unsupported or ambiguous syntax.')
         if not section or b'=' not in content:
             continue
         equals = content.find(b'=')
@@ -540,8 +560,8 @@ def inspect_config(path, game_id):
     """Read and validate one exact supported settings file without modifying it."""
     candidate = Path(path)
     _game, format_spec = _format_for(game_id, candidate)
-    raw = _read_bounded_file(candidate, MAX_CONFIG_BYTES)
-    return _parse_bytes(raw, game_id, candidate, format_spec.id)
+    raw, resolved, identity = _read_bounded_file(candidate, MAX_CONFIG_BYTES, with_source=True)
+    return replace(_parse_bytes(raw, game_id, resolved, format_spec.id), _source_identity=identity)
 
 
 def supported_settings(document):
@@ -556,7 +576,9 @@ def _require_document(document):
             or document.format_id not in _GAMES[document.game_id].format_ids
             or type(document.format_version) is not int
             or document.format_version != _FORMATS[document.format_id].version
-            or not isinstance(document.path, Path)
+            or not isinstance(document.path, Path) or not document.path.is_absolute()
+            or type(document._source_identity) is not tuple or len(document._source_identity) != 2
+            or any(type(value) is not int for value in document._source_identity)
             or document.filename.casefold() != _FORMATS[document.format_id].filename.casefold()
             or type(document.raw) is not bytes or document.sha256 != _digest(document.raw)):
         raise IncompatibleConfigurationError('This configuration document does not match a supported format.')
@@ -629,50 +651,72 @@ def serialize_config(document, changes):
 
 def _confirm_unchanged(document):
     _require_document(document)
-    current = _read_bounded_file(document.path, MAX_CONFIG_BYTES)
-    if _digest(current) != document.sha256:
+    current, resolved, identity = _read_bounded_file(document.path, MAX_CONFIG_BYTES, with_source=True)
+    if (resolved != document.path or identity != document._source_identity
+            or _digest(current) != document.sha256):
         raise ConfigurationChangedError('The configuration changed after it was opened. Reload it before writing.')
     return current
 
 
+def _owned_staging(path, identity):
+    info = path.lstat()
+    return (stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and not _is_reparse(info)
+            and (info.st_dev, info.st_ino) == identity)
+
+
 def _atomic_replace(document, updated):
     path = document.path
+    _confirm_unchanged(document)
     resolved, before = _check_file(path)
-    current = _read_bounded_file(path, MAX_CONFIG_BYTES)
-    if _digest(current) != document.sha256:
+    if (before.st_dev, before.st_ino) != document._source_identity:
         raise ConfigurationChangedError('The configuration changed before the write. Reload it before continuing.')
-    temporary = None
+    temporary, identity = None, None
     try:
-        with tempfile.NamedTemporaryFile(mode='wb', dir=resolved.parent,
+        with tempfile.NamedTemporaryFile(mode='w+b', dir=resolved.parent,
                                          prefix='.koei-config.', suffix='.tmp', delete=False) as stream:
             temporary = Path(stream.name)
-            stream.write(updated)
+            opened = os.fstat(stream.fileno())
+            identity = (opened.st_dev, opened.st_ino)
+            if stream.write(updated) != len(updated):
+                raise ConfigurationError('The temporary settings write was incomplete.')
             stream.flush()
             os.fsync(stream.fileno())
-        try:
-            os.chmod(temporary, stat.S_IMODE(before.st_mode))
-        except OSError:
-            pass
-        # Recheck both bytes and the file identity immediately before replace.
-        resolved_now, before_now = _check_file(path)
-        current_now = _read_bounded_file(path, MAX_CONFIG_BYTES)
-        if (resolved_now != resolved or (before_now.st_dev, before_now.st_ino) != (before.st_dev, before.st_ino)
-                or _digest(current_now) != document.sha256):
-            raise ConfigurationChangedError('The configuration changed before the write. Reload it before continuing.')
+            stream.seek(0)
+            if stream.read(len(updated) + 1) != updated:
+                raise ConfigurationError('The temporary settings failed exact-byte verification.')
+            # Preserve permissions through the owned descriptor where supported;
+            # never chmod a pathname that another process may have replaced.
+            if hasattr(os, 'fchmod'):
+                try:
+                    os.fchmod(stream.fileno(), stat.S_IMODE(before.st_mode))
+                except OSError:
+                    pass
+            if not _owned_staging(temporary, identity):
+                raise ConfigurationChangedError('The temporary settings changed before publication.')
+        # These checks also reject substitutions after the staging handle closes.
+        if not _owned_staging(temporary, identity):
+            raise ConfigurationChangedError('The temporary settings changed before publication.')
+        # Do not reopen the staging pathname for verification: its bounded
+        # content check belongs to the owned descriptor above.
+        _confirm_unchanged(document)
+        if not _owned_staging(temporary, identity):
+            raise ConfigurationChangedError('The temporary settings changed before publication.')
         os.replace(temporary, resolved)
         temporary = None
-        readback = _read_bounded_file(path, MAX_CONFIG_BYTES)
-        if readback != updated:
-            raise ConfigurationError('The saved settings did not match their exact read-back bytes.')
-        return _parse_bytes(readback, document.game_id, path, document.format_id)
+        readback, actual_path, actual_identity = _read_bounded_file(path, MAX_CONFIG_BYTES, with_source=True)
+        if readback != updated or actual_path != resolved or actual_identity != identity:
+            raise ConfigurationError('The saved settings did not match their exact read-back bytes and identity.')
+        return replace(_parse_bytes(readback, document.game_id, resolved, document.format_id),
+                       _source_identity=actual_identity)
     except ConfigurationError:
         raise
     except OSError as error:
         raise ConfigurationError(f'Cannot safely write the configuration: {error}') from error
     finally:
-        if temporary is not None:
+        if temporary is not None and identity is not None:
             try:
-                temporary.unlink(missing_ok=True)
+                if _owned_staging(temporary, identity):
+                    temporary.unlink()
             except OSError:
                 pass
 
@@ -792,31 +836,16 @@ def _write_new_record(path, raw, limit):
     _ensure_directory(path.parent)
     try:
         _check_components(path, allow_missing=True)
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0)
-        descriptor = os.open(path, flags, 0o600)
-    except FileExistsError as error:
-        raise ConfigurationError('A record with that ID already exists.') from error
+        # Callers validate the complete profile/backup manifest before this
+        # publication. The shared writer verifies those same serialized bytes
+        # on its owned bounded handle before creating a new destination.
+        result = atomic_new(raw, path, mode=0o600)
+        if _read_bounded_file(result, limit) != raw:
+            raise ConfigurationError('The configuration record failed exact-byte read-back.')
     except (OSError, SaveError, RuntimeError) as error:
-        raise ConfigurationError(f'Cannot create a configuration record: {error}') from error
-    try:
-        with os.fdopen(descriptor, 'wb', closefd=True) as stream:
-            stream.write(raw)
-            stream.flush()
-            os.fsync(stream.fileno())
-    except OSError as error:
-        try:
-            path.unlink(missing_ok=True)
-        except OSError:
-            pass
+        # A failed or replaced record is retained; it may belong to another
+        # process. Never unlink the user-selected record pathname on failure.
         raise ConfigurationError(f'Cannot save a configuration record: {error}') from error
-    try:
-        _check_file(path)
-    except ConfigurationError:
-        try:
-            path.unlink(missing_ok=True)
-        except OSError:
-            pass
-        raise
 
 
 def _parse_profile(raw, expected_id=None):
@@ -944,8 +973,15 @@ def apply_profile(document, profile):
 def delete_profile(profile_id, profile_dir=None):
     path = _profile_path(profile_id, profile_dir)
     try:
+        resolved, before = _check_file(path)
         raw = _read_bounded_file(path, MAX_PROFILE_BYTES)
         _parse_profile(raw, profile_id)
+        current = _read_bounded_file(path, MAX_PROFILE_BYTES)
+        checked, after = _check_file(path)
+        def identity(info):
+            return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        if current != raw or checked != resolved or identity(after) != identity(before):
+            raise ConfigurationChangedError('The selected profile changed during removal; its current file was retained.')
         path.unlink()
     except FileNotFoundError as error:
         raise ConfigurationError('The selected profile no longer exists.') from error
@@ -1013,7 +1049,7 @@ def create_backup(document, backup_dir=None):
     backup_id = uuid.uuid4().hex
     created = _utc_now()
     record = {'schema': 1, 'id': backup_id, 'game_id': document.game_id,
-              'filename': document.filename, 'format_id': document.format_id,
+              'filename': _FORMATS[document.format_id].filename, 'format_id': document.format_id,
               'format_version': document.format_version, 'created_utc': created,
               'sha256': _digest(current), 'size_bytes': len(current),
               'data_base64': base64.b64encode(current).decode('ascii')}
@@ -1077,5 +1113,3 @@ def restore_backup(document, backup_id, backup_dir=None):
 
 def _masked_field_value(location):
     return b'<mapped>'
-
-

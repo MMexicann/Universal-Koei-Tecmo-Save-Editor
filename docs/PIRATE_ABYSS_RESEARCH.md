@@ -1,5 +1,9 @@
 # Pirate Warriors 4 and Warriors: Abyss PC evidence
 
+See [Pirate Warriors edition and platform scope](PIRATE_WARRIORS_EDITION_SCOPE.md)
+for the confirmed platform ports and exact qualification inputs for editions
+outside the supported revision-15 PC profile.
+
 PW4 has a qualified native PC revision-15 editor for spendable Beli and quantities
 of already obtained coins. Abyss now has a native A4 Karma Embers editor, with
 its original copied Steam sidecar; the separate system category remains read-only research. No attached executable was executed. No player save, binary, unpacked

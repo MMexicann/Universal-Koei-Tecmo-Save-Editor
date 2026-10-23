@@ -68,6 +68,37 @@ class UniversalGuiTests(unittest.TestCase):
         except tk.TclError:
             pass
 
+    def assert_complete_paged_catalog(self, editor):
+        """Every mapped field is reachable through bounded, real page controls."""
+        opened = editor.document
+        pending = dict(editor.changes)
+        history = [dict(batch) for batch in editor.history]
+        expected = tuple(field.id for field in editor.adapter.fields_for(editor.document))
+        self.assertEqual(set(expected), set(editor.adapter.field_map(editor.document)))
+        self.assertEqual(editor._filtered_field_ids, expected)
+        self.assertEqual(editor.field_page_size, 250)
+        self.assertEqual(editor._field_page, 0)
+        self.assertTrue(editor.previous_field_page.instate(('disabled',)))
+        visited = []
+        while True:
+            visible = editor.fields.get_children()
+            self.assertLessEqual(len(visible), editor.field_page_size)
+            self.assertEqual(visible, expected[len(visited):len(visited) + editor.field_page_size])
+            visited.extend(visible)
+            self.assertLessEqual(len(visited), len(expected))
+            if editor.next_field_page.instate(('disabled',)):
+                break
+            editor.next_field_page.invoke()
+        self.assertEqual(tuple(visited), expected)
+        self.assertEqual(len(visited), len(set(visited)))
+        while not editor.previous_field_page.instate(('disabled',)):
+            editor.previous_field_page.invoke()
+        self.assertEqual(editor._field_page, 0)
+        self.assertEqual(editor.fields.get_children(), expected[:editor.field_page_size])
+        self.assertIs(editor.document, opened)
+        self.assertEqual((editor.changes, editor.history), (pending, history))
+        return expected
+
     def test_selector_initializes_both_games_with_isolated_sessions(self):
         self.assertIsNone(self.app.active_game)
         self.assertEqual(set(self.app.game_buttons), {game.id for game in GAMES})
@@ -79,8 +110,8 @@ class UniversalGuiTests(unittest.TestCase):
         self.assertIsNot(dw3.changes, origins.changes)
         self.assertIsNone(dw3.document)
         self.assertIsNone(origins.document)
-        self.assertEqual(set(dw3.tabs), {'Dashboard', 'Completion Companion', 'Officers', 'Items', 'Weapons',
-                                         'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves',
+        self.assertEqual(set(dw3.tabs), {'Dashboard', 'Completion Companion', 'Officers', 'Items',
+                                         'Weapons', 'Bodyguards', 'Unlocks', 'Collections', 'Musou Saves',
                                          'Character & Weapon Workshop'})
         self.assertFalse(origins.fields.get_children())
 
@@ -384,7 +415,9 @@ class UniversalGuiTests(unittest.TestCase):
                     error.assert_not_called()
                 self.assertEqual(editor.backup.read_bytes(), raw)
                 self.assertEqual(editor.status.get(), 'Opened save copy. Automatic backup: ' + editor.backup.name)
-                self.assertEqual(len(editor.fields.get_children()), len(editor.layout.fields))
+                catalog = self.assert_complete_paged_catalog(editor)
+                self.assertEqual(len(catalog), len(editor.layout.fields))
+                self.assertTrue(editor.navigate_dashboard_field(key))
                 editor.fields.selection_set(key)
                 editor.value.set('123')
                 editor.apply_selected()
@@ -465,7 +498,9 @@ class UniversalGuiTests(unittest.TestCase):
         editor.search.set('resources GOLD')
         self.assertEqual(editor.fields.get_children(), ('gold',))
         editor.search.set('')
-        self.assertEqual(len(editor.fields.get_children()), len(editor.adapter.fields_for(editor.document)))
+        self.assert_complete_paged_catalog(editor)
+        self.assertEqual(editor.changes, {'gold': 123})
+        self.assertEqual(len(editor.history), 1)
         self.assertEqual(editor.document.raw, raw)
 
     def test_dw4_candidate_uses_own_backend_copy_workflow_and_retains_session(self):
@@ -486,7 +521,7 @@ class UniversalGuiTests(unittest.TestCase):
                 error.assert_not_called()
             self.assertEqual(editor.backup.read_bytes(), raw)
             self.assertEqual(editor.status.get(), 'Opened save copy. Automatic backup: ' + editor.backup.name)
-            self.assertEqual(set(editor.fields.get_children()), set(editor.adapter.field_map(editor.document)))
+            self.assert_complete_paged_catalog(editor)
             self.assertIn('officer_0_harness', editor.fields.get_children())
             self.assertEqual(editor.fields.item('officer_0_attack')['values'][0], 'Zhao Yun')
             editor.fields.selection_set('officer_0_weapon_experience')
@@ -500,7 +535,13 @@ class UniversalGuiTests(unittest.TestCase):
             self.assertFalse(editor.changes)
             editor.group.set('Officers')
             editor.refresh()
+            fields = editor.adapter.field_map(editor.document)
+            visible_unlocks = {key for key in editor.fields.get_children()
+                               if key.endswith('_unlocked')
+                               and fields[key].value(editor.document.payload) < fields[key].maximum}
             editor.max_visible()
+            self.assertTrue(editor.changes)
+            self.assertEqual(set(editor.changes), visible_unlocks)
             self.assertTrue(all(key.endswith('_unlocked') for key in editor.changes))
             editor.undo()
             editor.stage_values({'officer_0_attack': 99, 'item_0': 20})
@@ -702,7 +743,7 @@ class UniversalGuiTests(unittest.TestCase):
                     patch.object(verified_gui.messagebox, 'showerror') as error:
                 editor.open()
                 error.assert_not_called()
-            self.assertEqual(set(editor.fields.get_children()), set(editor.adapter.field_map(editor.document)))
+            self.assert_complete_paged_catalog(editor)
             self.assertIn('officer_0_harness', editor.fields.get_children())
             self.assertEqual(editor.status.get(), 'Opened save copy. Automatic backup: ' + editor.backup.name)
             editor.stage_values({'officer_0_attack': 99, 'item_19': 1})
@@ -905,7 +946,9 @@ class UniversalGuiTests(unittest.TestCase):
                                   ('team_0_points', 'excluded from bulk Max'),
                                   ('difficulty', 'Difficulty is excluded from bulk Max')):
                 with self.subTest(game=game_id, field=key):
-                    editor.fields.selection_set(key)
+                    pending, history = dict(editor.changes), list(editor.history)
+                    self.assertTrue(editor.navigate_dashboard_field(key))
+                    self.assertEqual(editor.fields.selection(), (key,))
                     editor.selected()
                     self.root.update()
                     self.assertIn(expected, editor.selection_info.get())
@@ -916,6 +959,8 @@ class UniversalGuiTests(unittest.TestCase):
                                             editor.selection_label.winfo_reqheight())
                     self.assertLessEqual(editor.selection_label.winfo_rooty() + editor.selection_label.winfo_height(),
                                          self.root.winfo_rooty() + self.root.winfo_height())
+                    self.assertEqual((editor.changes, editor.history), (pending, history))
+                    self.assertEqual(editor.document.raw, raw)
 
     def test_dw3_cli_dispatch_normalizes_accepted_argument_order(self):
         from koei_editor.application import main

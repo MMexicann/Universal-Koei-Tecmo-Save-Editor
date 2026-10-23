@@ -51,6 +51,13 @@ python -m koei_editor --discover-saves --steam-root ./Steam
 
 ## Save Vault
 
+Save Vault operations require Windows, including opening or listing an existing
+vault: each operation acquires an owned native directory lock. New vaults,
+snapshot folders, nested context folders and restored copies retain their creator
+handles through validation. Lock cleanup uses the owned handle rather than a
+pathname. Other operating systems fail before creating these directories or
+writing payloads; they do not provide an equivalent Vault workflow.
+
 Create a vault in a separate local folder or load an existing vault. A snapshot
 records the exact copied gameplay file and original required companion files,
 its SHA-256 digests, profile, time, label, branch and parent. Native validation
@@ -87,6 +94,33 @@ Use `--snapshot-id` with `verify` to verify one snapshot. `label` requires
 `snapshot` optionally takes `--vault-branch` and `--parent-snapshot`.
 Commands run without a graphical display. Failures return exit 1, invalid/mixed
 options return exit 2, and bounded or cancelled discovery returns exit 3.
+
+## Smart Playthrough Profiles
+
+Open **Smart Playthrough Profiles…** from the Vault tab. A profile combines a
+verified Vault snapshot with an exact game-version label and up to three typed
+component snapshots: Mod Manager configuration, Configuration Manager game
+settings, and Character Workshop build data. Review the component schema and
+current adapter limits in [Smart Playthrough Profiles](SMART_PLAYTHROUGH_PROFILES.md).
+
+Preview compares the profile version with the version entered by the user. The
+application does not detect the installed game build. Preparing a profile makes
+a new isolated folder, restores the selected Vault snapshot there, and stages
+the manager components as inert JSON. It does not launch or switch a game,
+apply mods/settings/builds, or write a live save. An optional pre-switch backup
+accepts only a separate copied save and stores it in a new Vault history branch.
+Existing folders and Vault snapshots are never overwritten. An interrupted
+preparation can leave an incomplete new environment folder; its error identifies
+the folder for review and any backup snapshot that was completed before the
+interruption.
+
+Each preview and prepared environment can export an AI-readable JSON report.
+Reports label the game version as user-asserted and record
+`live_save_written: false`; prepared reports also record
+`components_applied: false`. Reports contain Vault/profile IDs and relative
+staging paths, not local save paths or save bytes. Compatibility means an exact
+version-string match plus a verified native Vault snapshot. It does not mean
+the game or staged manager data has been loaded.
 
 ## Multi-save organization
 

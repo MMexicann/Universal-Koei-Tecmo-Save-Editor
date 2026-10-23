@@ -6,6 +6,7 @@ from pathlib import Path
 import stat
 import struct
 import tempfile
+import time
 import unittest
 import warnings
 import zipfile
@@ -201,6 +202,44 @@ class ZipAssetExplorerTests(unittest.TestCase):
         raw = make_zip([("pipe", b"", fifo)])
         with self.assertRaisesRegex(ZipArchiveError, "special files"):
             parse_zip_archive(raw)
+
+    def test_rejects_file_ancestors_in_both_directory_orders(self) -> None:
+        for parent, child in (
+            ("node", "node/nested/leaf.bin"),
+            ("NODE", "node/nested/leaf.bin"),
+            ("caf\u00e9", "cafe\u0301/nested/leaf.bin"),
+        ):
+            entries = [(parent, b"parent", None), (child, b"child", None)]
+            for ordered in (entries, list(reversed(entries))):
+                with self.subTest(names=[entry[0] for entry in ordered]):
+                    with self.assertRaisesRegex(ZipArchiveError, "path conflict"):
+                        parse_zip_archive(make_zip(ordered))
+
+    def test_accepts_directory_ancestors_and_sibling_prefixes(self) -> None:
+        entries = [
+            ("folder/deep/leaf.bin", b"leaf", None),
+            ("folder", b"", zipfile.ZipInfo("folder/")),
+            ("folder-two", b"sibling", None),
+            ("folderish/item.bin", b"other", None),
+        ]
+        for ordered in (entries, list(reversed(entries))):
+            with self.subTest(names=[entry[0] for entry in ordered]):
+                archive = parse_zip_archive(make_zip(ordered))
+                self.assertEqual(len(archive.entries), 4)
+                self.assertEqual(sorted(entry.size for entry in archive.entries), [0, 4, 5, 7])
+
+    def test_large_flat_directory_has_bounded_indexing_cost(self) -> None:
+        # A flat, valid directory must not trigger an all-pairs descendant scan.
+        # The generous bound allows slower CI hosts; the former scan required
+        # 900 million prefix comparisons for this modest supported archive.
+        count = 30_000
+        raw = make_zip([(f"member-{index:05d}.bin", b"", None) for index in range(count)])
+        started = time.monotonic()
+        archive = parse_zip_archive(raw)
+        elapsed = time.monotonic() - started
+        self.assertEqual(len(archive.entries), count)
+        self.assertEqual(archive.entries[-1].name, "member-29999.bin")
+        self.assertLess(elapsed, 15.0, "ZIP indexing must remain bounded for many independent names")
 
     def test_rejects_size_and_ratio_bombs(self) -> None:
         raw = patch_central(

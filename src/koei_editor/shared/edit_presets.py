@@ -232,6 +232,27 @@ def _definition_value(value, depth=0):
     raise SaveError('This scalar profile does not expose stable preset field definitions.')
 
 
+def _field_definition(field, excluded_attributes=()):
+    attributes = {'offset', 'size', 'group', 'slot', 'label', 'kind', 'encoding',
+                  'minimum', 'maximum', 'maxable', 'experimental_maximum',
+                  'storage', 'byteorder', 'endian', 'shift', 'bit', 'bits',
+                  'display_bias', 'mirrors', 'choices', 'forbidden'}
+    if is_dataclass(field):
+        attributes.update(item.name for item in dataclass_fields(field))
+    attributes.difference_update(excluded_attributes)
+    return [type(field).__module__ + '.' + type(field).__qualname__,
+            [[attribute, _definition_value(getattr(field, attribute, None))]
+             for attribute in sorted(attributes)]]
+
+
+def field_definition_metadata(field, *, excluded_attributes=()):
+    """Return canonical native field metadata for read-only comparison."""
+    if (type(excluded_attributes) not in (tuple, list, set, frozenset)
+            or any(type(name) is not str for name in excluded_attributes)):
+        raise SaveError('Ignored field metadata names must be a collection of exact strings.')
+    return _field_definition(field, excluded_attributes)
+
+
 def field_definitions_sha256(adapter, document, field_ids=None):
     # Metadata is identity, never an instruction to patch offsets. Include all
     # declared frozen field data, not only common scalar attributes: bit shifts,
@@ -245,18 +266,8 @@ def field_definitions_sha256(adapter, document, field_ids=None):
             raise SaveError('Choose distinct mapped fields for their native definition identity.')
         fields = {key: fields[key] for key in field_ids}
     definitions = []
-    shared = {'offset', 'size', 'group', 'slot', 'label', 'kind', 'encoding',
-              'minimum', 'maximum', 'maxable', 'experimental_maximum',
-              'storage', 'byteorder', 'endian', 'shift', 'bit', 'bits',
-              'display_bias', 'mirrors', 'choices', 'forbidden'}
     for key, field in sorted(fields.items()):
-        attributes = set(shared)
-        if is_dataclass(field):
-            attributes.update(item.name for item in dataclass_fields(field))
-        definition = [key, type(field).__module__ + '.' + type(field).__qualname__]
-        definition.append([[attribute, _definition_value(getattr(field, attribute, None))]
-                           for attribute in sorted(attributes)])
-        definitions.append(definition)
+        definitions.append([key, *_field_definition(field)])
     raw = json.dumps(definitions, ensure_ascii=True, separators=(',', ':'), allow_nan=False).encode('ascii')
     return hashlib.sha256(raw).hexdigest()
 

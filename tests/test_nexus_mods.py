@@ -6,8 +6,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
 from koei_editor.game_registry import get_game
+from koei_editor.mods import nexus_api
 from koei_editor.mods.nexus_api import (
     API_ROOT,
     ApiResponse,
@@ -393,7 +395,7 @@ class NexusApiTests(unittest.TestCase):
             api.download_archive(build_download_request(other_game, version), '/tmp/not-created.zip')
         self.assertEqual(transport.requests, [])
 
-    def test_download_rejects_expired_links_and_cleans_failed_partial_stream(self):
+    def test_download_rejects_expired_links_and_retains_failed_partial_stream(self):
         summary = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
                              'ModAuthor', 'Gameplay', 1, 2, '', False, True)
         version = ModFileVersion('version-a', '300', 'file-a', 'KoeiMod.zip', 'Release 1',
@@ -426,7 +428,7 @@ class NexusApiTests(unittest.TestCase):
             with self.assertRaises(NexusNetworkError) as caught:
                 api.download_archive(request, destination)
             self.assertNotIn('private transport details', str(caught.exception))
-            self.assertFalse(destination.exists())
+            self.assertEqual(destination.read_bytes(), b'partial')
 
     def test_download_maps_nexus_eligibility_errors_without_exposing_response_body(self):
         summary = ModSummary('9001', '17', 'nioh2', 'Koei Mod', '', '1.2',
@@ -448,6 +450,100 @@ class NexusApiTests(unittest.TestCase):
                 self.assertIn(message, str(caught.exception))
                 self.assertNotIn('private Nexus response body', str(caught.exception))
                 self.assertNotIn('private-api-key', str(caught.exception))
+
+
+class NexusDownloadStorageTests(unittest.TestCase):
+    @staticmethod
+    def selected_request():
+        summary = ModSummary('9001', '17', 'nioh2', 'Selected', '', '1.0',
+                             'Author', 'Gameplay', 1, 2, '', False, True)
+        version = ModFileVersion('version-a', '300', 'file-a', 'Selected.zip',
+                                 'Release 1', '1.0', 'main', '', True)
+        return build_download_request(summary, version)
+
+    @staticmethod
+    def api(download_transport=None):
+        future = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+        transport = FakeTransport(json_response({'data': {
+            'links': [{'url': 'https://cdn.example.invalid/selected'}],
+            'expires_at': future,
+        }}))
+        return NexusApiClient(api_key='private-key', application_name='Test',
+                              application_version='3.1', transport=transport,
+                              download_transport=download_transport)
+
+    def test_response_size_is_rejected_before_creating_output(self):
+        response = Mock(headers={'Content-Length': '17'})
+        opener = Mock()
+        opener.open.return_value = response
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'selected.zip'
+            with patch.object(nexus_api, 'build_opener', return_value=opener):
+                with self.assertRaisesRegex(NexusProtocolError, 'size limit'):
+                    nexus_api._urllib_download_transport(
+                        'https://cdn.example.invalid/selected', destination, 15, 16)
+            self.assertFalse(destination.exists())
+        response.read.assert_not_called()
+        response.close.assert_called_once()
+
+    def test_create_collision_during_network_open_retains_the_foreign_file(self):
+        response = Mock(headers={})
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'selected.zip'
+
+            def network_open(*_args, **_kwargs):
+                destination.write_bytes(b'foreign-created-during-request')
+                return response
+
+            opener = Mock()
+            opener.open.side_effect = network_open
+            with patch.object(nexus_api, 'build_opener', return_value=opener):
+                with self.assertRaises(NexusNetworkError):
+                    self.api().download_archive(self.selected_request(), destination)
+            self.assertEqual(destination.read_bytes(), b'foreign-created-during-request')
+        response.close.assert_called_once()
+
+    def test_stream_error_retains_partial_output_for_manager_quarantine(self):
+        response = Mock(headers={})
+        response.read.side_effect = [b'partial', OSError('private transport details')]
+        opener = Mock()
+        opener.open.return_value = response
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'selected.zip'
+            with patch.object(nexus_api, 'build_opener', return_value=opener):
+                with self.assertRaises(OSError):
+                    nexus_api._urllib_download_transport(
+                        'https://cdn.example.invalid/selected', destination, 15, 1024)
+            self.assertEqual(destination.read_bytes(), b'partial')
+        response.close.assert_called_once()
+
+    def test_failed_transport_retains_a_foreign_replacement(self):
+        def replace_then_fail(_url, destination, _timeout, _max_bytes):
+            destination.write_bytes(b'partial')
+            replacement = destination.with_name('replacement.bin')
+            replacement.write_bytes(b'foreign-replacement')
+            replacement.replace(destination)
+            raise OSError('private transport details')
+
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'selected.zip'
+            with self.assertRaises(NexusNetworkError) as caught:
+                self.api(replace_then_fail).download_archive(self.selected_request(), destination)
+            self.assertNotIn('private transport details', str(caught.exception))
+            self.assertEqual(destination.read_bytes(), b'foreign-replacement')
+
+    def test_invalid_transport_output_is_rejected_and_retained(self):
+        for payload in (b'', b'x' * 17):
+            with self.subTest(size=len(payload)), tempfile.TemporaryDirectory() as directory:
+                destination = Path(directory) / 'selected.zip'
+
+                def write_invalid(_url, path, _timeout, _max_bytes):
+                    path.write_bytes(payload)
+
+                with patch.object(nexus_api, 'MAX_DOWNLOAD_BYTES', 16):
+                    with self.assertRaisesRegex(NexusProtocolError, 'invalid archive'):
+                        self.api(write_invalid).download_archive(self.selected_request(), destination)
+                self.assertEqual(destination.read_bytes(), payload)
 
 
 class NexusWorkspaceAndDescriptionTests(unittest.TestCase):

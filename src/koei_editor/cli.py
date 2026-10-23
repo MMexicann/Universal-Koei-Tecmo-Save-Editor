@@ -23,7 +23,7 @@ def _parser():
     parser = argparse.ArgumentParser(
         prog='universal-koei-toolkit',
         description='Inspect and compare supported save copies, review conversions, and run explicit workflows.',
-        epilog='Use separate save copies. Commands retain format checks, backups and new-destination protections. Guide: https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/main/docs/CLI.md.')
+        epilog='Use separate save copies. Commands retain format checks, backups and new-destination protections. Guide: https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/blob/main/docs/CLI.md.')
     parser.add_argument('--version', action=_Version, help='Show the application version and exit.')
     commands = parser.add_subparsers(dest='command', metavar='COMMAND')
     for name, help_text in (

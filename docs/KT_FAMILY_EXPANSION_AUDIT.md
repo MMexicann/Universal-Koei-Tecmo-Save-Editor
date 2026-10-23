@@ -2,7 +2,7 @@
 
 Date: 2026-10-22
 Repository baseline: `main` at `1d86de1` (game-data encyclopedia feed, PR #113).
-Purpose: record the verified editor scope, highest-value missing editions, and the evidence needed before adding writes. This is a research report; the only implementation in this workstream is the Project Zero film-label clarification in [PR #115](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/115). No new save-writing operation or game/platform profile was qualified by these audits.
+Purpose: record the verified editor scope, highest-value missing editions, and the evidence needed before adding writes. This is a research report; the only implementation in this workstream is the Project Zero film-label clarification in [PR #115](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/115). No new save-writing operation or game/platform profile was qualified by these audits.
 
 ## Family findings
 

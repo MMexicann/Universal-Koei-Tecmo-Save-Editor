@@ -93,7 +93,7 @@ Three Hopes character and weapon names and numeric IDs are copied from the named
 at commit `9b6e9946e5a33e182f80fbe3553e7c2afbebbdcb`. The source is MIT
 licensed. Exact game title, edition label, and platform come from the local
 profile registry at commit
-[`cede8a91a7ce5d150d0b2d88a71120ac02bd821a`](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/cede8a91a7ce5d150d0b2d88a71120ac02bd821a/src/koei_editor/game_registry.py).
+[`cede8a91a7ce5d150d0b2d88a71120ac02bd821a`](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/blob/cede8a91a7ce5d150d0b2d88a71120ac02bd821a/src/koei_editor/game_registry.py).
 The source IDs and their license declarations are also embedded in the JSON
 feed, and each mapped field refers to its source ID.
 

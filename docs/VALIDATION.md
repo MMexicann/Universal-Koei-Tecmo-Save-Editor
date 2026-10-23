@@ -533,7 +533,7 @@ check; two fixture-dependent GUI skips also require Windows. There were no
 display-only skips. A prior full run had 1,123 tests, two stale GUI expectation
 failures and 328 skips; those expectations were corrected before the final run.
 
-The [non-publishing Windows run](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/38094440495)
+The [non-publishing Windows run](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/runs/38094440495)
 was dispatched with `publish=false` at application/test commit `a969687`.
 It completed successfully: source checks, standalone EXE build and executable
 verification passed; both release jobs were skipped. This is native Windows
@@ -772,7 +772,7 @@ all passed**. Manifest/privacy verification passed for **414 reviewed public
 source files** (plus the manifest itself); the Windows build configuration was
 inspected without producing or executing a Windows EXE.
 
-The publication-disabled [Windows workflow](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/38096642271)
+The publication-disabled [Windows workflow](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/runs/38096642271)
 then tested implementation commit `bea25520e408b2676a551e9424b42014fb1e41f7`
 on Windows/Python 3.14: **1,163 tests in 404.467 seconds, 822 passed, 341 skipped,
 zero failures/errors**. The twelve new procedural cases ran; the three optional
@@ -959,7 +959,7 @@ For changes to parsing or editing, check:
 Review each output's `.changes.json` for the actual byte patches and encrypted blocks. Keep detailed validation reports private; summarize reproducible failures when contributing a fix.
 
 See [BUILDING.md](BUILDING.md) for executable build instructions and
-[SAVE_FORMAT.md](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/main/docs/SAVE_FORMAT.md)
+[SAVE_FORMAT.md](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/blob/main/docs/SAVE_FORMAT.md)
 for the supported structures and editing rules. Technical reference files are
 also included in the source download.
 

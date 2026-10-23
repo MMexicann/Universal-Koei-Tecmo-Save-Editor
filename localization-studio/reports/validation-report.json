@@ -159,7 +159,7 @@
     "native_format_support_enabled": false
   },
   "parallel_pr_inspection": {
-    "repository": "MMexicann/Universal-Koei-Tecmo-Save-Editor",
+    "repository": "MMexicann/Universal-Koei-Tecmo-Toolkit",
     "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
     "pull_requests_reviewed": [
       {
@@ -237,7 +237,7 @@
     }
   },
   "pull_request": {
-    "destination": "MMexicann/Universal-Koei-Tecmo-Save-Editor:main",
+    "destination": "MMexicann/Universal-Koei-Tecmo-Toolkit:main",
     "branch": "codex/localization-studio-game-toolkit",
     "merge_performed": false,
     "release_created": false,
@@ -246,10 +246,10 @@
     "status": "open",
     "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
     "number": 139,
-    "url": "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/139"
+    "url": "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/139"
   },
   "repository": {
-    "name": "MMexicann/Universal-Koei-Tecmo-Save-Editor",
+    "name": "MMexicann/Universal-Koei-Tecmo-Toolkit",
     "base_branch": "main",
     "base_commit": "048563c1f9f608c9b0572560176093fe6a72834d",
     "source_manifest": "tools/SOURCE_MANIFEST.json",

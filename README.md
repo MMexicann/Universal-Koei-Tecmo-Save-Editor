@@ -4,7 +4,7 @@ A free toolkit by **Mexican** for editing, comparing and converting
 supported Koei Tecmo saves, planning builds and organizing copied saves.
 Review changes before saving, with backups and Undo.
 
-**[Download for Windows and Linux](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest)**
+**[Download for Windows and Linux](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/latest)**
 · **[Supported games](docs/SUPPORTED_GAMES.md)**
 · **[Getting started](docs/EDITOR_WORKSPACE.md)**
 · **[What's new](docs/RELEASE_NOTES.md)**
@@ -84,18 +84,18 @@ For Linux, see [installation and platform limits](docs/LINUX.md).
 
 | Download | Installation |
 | --- | --- |
-| [Standalone GUI EXE · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1.exe) | Download and run. |
-| [Portable Windows ZIP · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Windows.zip) | Extract everything and run the EXE; keep bundled files together. |
-| [CLI EXE · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe) | Optional command-line edition; run with `--help` in a terminal. |
-| [Source ZIP · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Source.zip) | Source for the published release; Python is required. |
-| [Linux x86_64 · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Linux-x86_64.tar.gz) | Extract and run the GUI or the separate `cli/` executable. See [Linux prerequisites](docs/LINUX.md). |
+| [Standalone GUI EXE · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1.exe) | Download and run. |
+| [Portable Windows ZIP · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Windows.zip) | Extract everything and run the EXE; keep bundled files together. |
+| [CLI EXE · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe) | Optional command-line edition; run with `--help` in a terminal. |
+| [Source ZIP · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Source.zip) | Source for the published release; Python is required. |
+| [Linux x86_64 · v1.0.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Linux-x86_64.tar.gz) | Extract and run the GUI or the separate `cli/` executable. See [Linux prerequisites](docs/LINUX.md). |
 
-[Checksums](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/SHA256SUMS.txt)
-· [Linux checksums](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Linux-x86_64.SHA256SUMS)
-· [Linux verification](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/LinuxVerification-v1.0.1.json)
-· [Defender report](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/download/toolkit-v1.0.1/DefenderScan-v1.0.1.json)
-· [All releases](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases)
-· [Save Editor v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/tag/v3.1)
+[Checksums](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/SHA256SUMS.txt)
+· [Linux checksums](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/UniversalKoeiTecmoGameToolkit-v1.0.1-Linux-x86_64.SHA256SUMS)
+· [Linux verification](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/LinuxVerification-v1.0.1.json)
+· [Defender report](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/download/toolkit-v1.0.1/DefenderScan-v1.0.1.json)
+· [All releases](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases)
+· [Save Editor v3.1](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/tag/v3.1)
 
 1. Copy your save folder outside the live game/cloud location.
 2. Select its exact game, edition and platform, then **Open Save Copy**.
@@ -124,7 +124,7 @@ For Linux, see [installation and platform limits](docs/LINUX.md).
 
 ## Run from source and contribute
 
-Extract the Source ZIP above for version 1.0.1, or [clone/download main](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/archive/refs/heads/main.zip) for ongoing development. With Python 3.10 or newer and Tkinter, install from the repository root, then launch the GUI or view CLI help:
+Extract the Source ZIP above for version 1.0.1, or [clone/download main](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/archive/refs/heads/main.zip) for ongoing development. With Python 3.10 or newer and Tkinter, install from the repository root, then launch the GUI or view CLI help:
 
 ```text
 python -m pip install -e .

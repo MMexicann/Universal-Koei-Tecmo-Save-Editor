@@ -3,7 +3,7 @@
 **Universal Koei Tecmo Game Toolkit v1.0**, by **Mexican**, continues
 **Universal Koei Tecmo Save Editor v3.1**. The version reset marks the new product
 name; existing save compatibility, repository history and older releases remain.
-Keep the existing [repository](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor).
+Keep the existing [repository](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit).
 
 ## Public presentation
 
@@ -25,7 +25,7 @@ GitHub About description:
 
 > Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management, selected PC settings and read-only assets, with backups and Undo.
 
-Website: <https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest>
+Website: <https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/latest>
 
 Topics: `koei-tecmo`, `game-toolkit`, `save-editor`, `windows`, `python`, `tkinter`.
 

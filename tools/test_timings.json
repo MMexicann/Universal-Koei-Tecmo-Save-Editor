@@ -428,7 +428,7 @@
     "commit": "f8fdb5e5de82e5c4ec2cd2d14736915882e7431b",
     "measurement": "Complete 423-module successful native isolated-worker wall seconds from four job logs; scheduling hints only, not test qualification",
     "platform": "Windows / Python 3.14.7",
-    "run_url": "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/39888307923",
+    "run_url": "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/runs/39888307923",
     "job_ids": [
       120215743889,
       120215695808,

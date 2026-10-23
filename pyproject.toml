@@ -21,10 +21,10 @@ universal-koei-toolkit = "koei_editor.cli:main"
 universal-koei-editor = "koei_editor.application:main"
 
 [project.urls]
-Homepage = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor"
-Downloads = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest"
-Documentation = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/tree/main/docs"
-Issues = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/issues"
+Homepage = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit"
+Downloads = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/latest"
+Documentation = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/tree/main/docs"
+Issues = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

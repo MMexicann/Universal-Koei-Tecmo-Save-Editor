@@ -9,7 +9,7 @@ they do not deploy mods into a game.
 ## Start
 
 On Windows, download **UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe** from the
-[Toolkit 1.0.1 release](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/tag/toolkit-v1.0.1).
+[Toolkit 1.0.1 release](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/tag/toolkit-v1.0.1).
 It is a standalone console application and requires no Python installation.
 Run it from PowerShell or Command Prompt:
 

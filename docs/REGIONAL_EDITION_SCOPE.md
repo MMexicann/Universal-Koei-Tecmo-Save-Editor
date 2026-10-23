@@ -14,9 +14,9 @@ It does not supersede separate console, modern Windows, Gust, Team Ninja or
 Switch assignments. Regional branding does not create another supported-game
 entry, and a similar record offset does not establish compatibility.
 
-Coordination retained [the prepared DW5 adapter](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/5)
-and reviewed [the console lane](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/7)
-and [the additional Windows Musou lane](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/8).
+Coordination retained [the prepared DW5 adapter](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/5)
+and reviewed [the console lane](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/7)
+and [the additional Windows Musou lane](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/8).
 Those drafts remain separate; this branch does not copy or supersede their
 WO3 Ultimate, SW2 HD, SW4-II, Sanada or original DW9 work.
 

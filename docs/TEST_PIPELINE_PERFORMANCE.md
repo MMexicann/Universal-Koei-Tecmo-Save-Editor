@@ -17,7 +17,7 @@ serialized. The dispatcher fills other available slots with CPU modules instead
 of assigning a second desktop module that blocks while holding a worker.
 Shard balancing accounts for both total worker load and serial desktop load.
 Timing hints now cover every module using the complete 225-module
-[v1.8 Windows validation run](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/38159065310).
+[v1.8 Windows validation run](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/runs/38159065310).
 They replace the prior official v1.72 measurements and supplemental local
 estimates. Timing hints affect scheduling only; they do not authorize skipped
 or omitted checks.
@@ -33,8 +33,8 @@ without altering path spelling or excluding any reviewed source.
 
 ## Measured comparison
 
-The [official v1.72 run](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/38150230797)
-and a [nonpublishing optimization benchmark](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/runs/38152421929)
+The [official v1.72 run](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/runs/38150230797)
+and a [nonpublishing optimization benchmark](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/runs/38152421929)
 used the same 212-module game/test inventory; the benchmark additionally ran
 four scheduling/package regression checks. Its reports accounted for all 1,822
 tests, including 424 explicit skips, with no failures or errors.

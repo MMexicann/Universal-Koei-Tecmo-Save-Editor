@@ -37,12 +37,11 @@ class WriteSafetyTests(unittest.TestCase):
         uid='a'*32
         profile=self.root/'profiles'/f'{uid}.json'
         foreign=self.root/'foreign.json'; foreign.write_bytes(b'FOREIGN_RECORD_REPLACEMENT')
-        native_fsync=os.fsync
-        def replace_and_fail(fd):
-            native_fsync(fd); foreign.replace(profile)
+        def replace_and_fail(_raw, path, **_kwargs):
+            foreign.replace(path)
             raise OSError('synthetic write failure')
         with patch.object(config.uuid,'uuid4',return_value=SimpleNamespace(hex=uid)), \
-             patch.object(config.os,'fsync',side_effect=replace_and_fail):
+             patch.object(config,'atomic_new',side_effect=replace_and_fail):
             with self.assertRaises(config.ConfigurationError):
                 config.create_profile(self.document,'Windowed',profile.parent)
         self.assertTrue(profile.exists(),'Foreign replacement was deleted by record cleanup')

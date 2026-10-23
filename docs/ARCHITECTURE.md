@@ -151,6 +151,10 @@ aliases, detect changed sources, create automatic snapshot backups and write
 atomically to new destinations. Restore validates the same bounded bytes that
 will be written. No-edit serialization is byte-exact; edits change only declared
 fields and required integrity metadata, preserving unknown bytes and seeds.
+Linux new-file publication links from an unnamed verified inode. Windows
+publication renames from the still-open verified handle relative to a pinned
+directory. Other POSIX platforms fail closed where no reviewed handle-bound
+publication primitive is available.
 
 Console backends can require an identity companion. An optional
 `prepare_self_test_copy(document, destination)` hook prepares minimal identity

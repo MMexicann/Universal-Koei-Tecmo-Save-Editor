@@ -2,13 +2,14 @@
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import tkinter as tk
 from tkinter import ttk
 import unittest
 from unittest.mock import patch
 
-from koei_editor.shared import controller_profiles as profiles
+from koei_editor.shared import controller_profiles as profiles, copy_storage
 from koei_editor.shared.controller_profiles_gui import ControllerProfileWorkspace
 
 
@@ -179,7 +180,18 @@ class ControllerProfileStoreTests(unittest.TestCase):
 
     def test_failed_export_removes_partial_file(self):
         destination = self.root / 'portable' / 'controls.ktinput.json'
-        with patch.object(profiles.os, 'fsync', side_effect=OSError('disk full')):
+        if os.name == 'nt':
+            failure = patch.object(copy_storage, '_rename_verified_child_windows',
+                                   return_value=-1073741823)
+        elif sys.platform.startswith('linux'):
+            failure = patch.object(profiles.os, 'fsync', side_effect=OSError('disk full'))
+        else:
+            with self.assertRaises(profiles.ProfileError):
+                self.store.export_profile(self.profile, destination)
+            self.assertFalse(destination.exists())
+            self.assertFalse(destination.parent.exists())
+            return
+        with failure:
             with self.assertRaises(profiles.ProfileError):
                 self.store.export_profile(self.profile, destination)
         self.assertFalse(destination.exists())
@@ -195,12 +207,26 @@ class ControllerProfileStoreTests(unittest.TestCase):
             destination.write_bytes(foreign)
             raise OSError('Injected storage failure after concurrent replacement')
 
-        with patch.object(profiles.os, 'fsync', side_effect=replace_destination_and_fail):
+        if os.name == 'nt':
+            def collide_at_publication(*args):
+                destination.write_bytes(foreign)
+                return -1073741771  # STATUS_OBJECT_NAME_COLLISION
+            publication = patch.object(copy_storage, '_rename_verified_child_windows',
+                                       side_effect=collide_at_publication)
+        elif sys.platform.startswith('linux'):
+            publication = patch.object(profiles.os, 'fsync', side_effect=replace_destination_and_fail)
+        else:
+            with self.assertRaises(profiles.ProfileError):
+                self.store.export_profile(self.profile, destination)
+            self.assertFalse(destination.exists())
+            return
+        with publication:
             with self.assertRaises(profiles.ProfileError):
                 self.store.export_profile(self.profile, destination)
         self.assertEqual(destination.read_bytes(), foreign)
 
-    @unittest.skipIf(os.name == 'nt', 'POSIX permission bits do not describe Windows ACLs.')
+    @unittest.skipUnless(sys.platform.startswith('linux'),
+                         'Private mode bits are validated on Linux; other platforms fail closed.')
     def test_export_retains_private_file_permissions(self):
         destination = self.root / 'controls.ktinput.json'
         self.store.export_profile(self.profile, destination)

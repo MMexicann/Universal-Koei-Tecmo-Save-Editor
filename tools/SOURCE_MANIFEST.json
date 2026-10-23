@@ -78,8 +78,8 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 11478,
-      "sha256": "f4b9b80356046c7ad3e465f83893b256c0939764eaca78055e87acf306ac33a0"
+      "bytes": 11740,
+      "sha256": "a3ad20b6e24b840c7bfe5570dd9389172b6d2760504287a047d931e740f7fb0f"
     },
     {
       "path": "docs/ARLAND_DX_RESEARCH.md",
@@ -4203,8 +4203,8 @@
     },
     {
       "path": "src/koei_editor/shared/copy_storage.py",
-      "bytes": 39439,
-      "sha256": "9daa0408f16883d86caa03cf734b3192c2c36f907103eee6c277a9a5bb9fcb94"
+      "bytes": 41089,
+      "sha256": "fe8f5fbdee57a891f7e486be4180fe1a529c57095e88dd040c0d894758ffbb27"
     },
     {
       "path": "src/koei_editor/shared/edit_presets.py",
@@ -4668,8 +4668,8 @@
     },
     {
       "path": "tests/test_atomic_new_safety.py",
-      "bytes": 5310,
-      "sha256": "b2cde19d27adbb802f00dc41d5580fb07a0e8bc422c2bb895c0429af1b39cc9b"
+      "bytes": 6521,
+      "sha256": "8dc0a7a294eb4b3df2cf81b3c12e9c7696933245e00b52d8391bf3a77657a1ae"
     },
     {
       "path": "tests/test_automation.py",
@@ -4898,8 +4898,8 @@
     },
     {
       "path": "tests/test_configuration_storage_safety.py",
-      "bytes": 9070,
-      "sha256": "f82e1eaec10644eeed7d4c218c862ba184709e9c925d05ee9560d3187165b1df"
+      "bytes": 9040,
+      "sha256": "db9bf401492adb5c4617bffdc734ff1f872f6933e996b80eb64b03a3a01f3dcd"
     },
     {
       "path": "tests/test_console_context_regressions.py",
@@ -4918,8 +4918,8 @@
     },
     {
       "path": "tests/test_controller_profiles.py",
-      "bytes": 28296,
-      "sha256": "2b53c169d14e222e9896dc020fcbb088aada751bed816dc03bd988c3e276719a"
+      "bytes": 29555,
+      "sha256": "dcf5c1cc38fef970d6cc2434e8708d1a3ad05c97366bdce21bb23b6f06538443"
     },
     {
       "path": "tests/test_conversion.py",
@@ -5328,8 +5328,8 @@
     },
     {
       "path": "tests/test_field_pins_review_csv.py",
-      "bytes": 28359,
-      "sha256": "10a4507fe3f49693bf0fab6b6970406f0f0940225c553cb7f1ccfbc758befeaf"
+      "bytes": 29231,
+      "sha256": "349217491e0bb7803d2cd9af8dcdb42452f683457389a31892c3b234cae0ffc5"
     },
     {
       "path": "tests/test_fire_emblem_warriors.py",
@@ -5378,8 +5378,8 @@
     },
     {
       "path": "tests/test_game_troubleshooting_gui.py",
-      "bytes": 17857,
-      "sha256": "c6c400bda635db7f69a630b6ef69897081254abb1773e0d80ae8da5d677592ee"
+      "bytes": 18781,
+      "sha256": "10174b9a344add98b4b7b08d5b59fe416442ec172c36e5af4527b84c785b6a63"
     },
     {
       "path": "tests/test_gemfire_battery.py",
@@ -5753,8 +5753,8 @@
     },
     {
       "path": "tests/test_origins_tools.py",
-      "bytes": 9782,
-      "sha256": "b385e8653db0cf4c5767ea922ef69bf0faa53fc2e2ced4b2b8e129cd4abb314f"
+      "bytes": 11034,
+      "sha256": "6f7c3b7bae25ef4441723b98b266c80c672fc429ae1a4b5ed5ed6bea927fedcf"
     },
     {
       "path": "tests/test_origins_weapons.py",

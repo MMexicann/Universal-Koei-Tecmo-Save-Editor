@@ -12,44 +12,39 @@ from koei_editor.games.dw3.models import SaveError
 from koei_editor.shared.save_safety import reserved_windows_path, safe_path
 
 
+class ChildAlreadyExistsError(SaveError, FileExistsError):
+    """An exclusive native publication found an occupied child name."""
+
+
 def atomic_new(data, destination, *, mode=0o666):
     destination = safe_path(destination)
     if destination.exists():
         raise FileExistsError('Choose a new file; existing files are never replaced.')
+    if os.name != 'nt' and not sys.platform.startswith('linux'):
+        raise SaveError('This system has no safe handle-bound no-replace publication for new files.')
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_name('.' + destination.name + '.' + uuid.uuid4().hex + '.tmp')
-    identity = None
-    try:
-        # Keep verification on our owned handle. A replacement of the staging
-        # pathname must not redirect verification into somebody else's file.
-        with open(temporary, 'x+b', opener=lambda name, flags: os.open(
-                name, flags | getattr(os, 'O_NOFOLLOW', 0), mode)) as stream:
-            owned = os.fstat(stream.fileno())
-            identity = (owned.st_dev, owned.st_ino)
-            if stream.write(data) != len(data):
-                raise SaveError('Temporary copy write was incomplete.')
-            stream.flush()
-            os.fsync(stream.fileno())
-            stream.seek(0)
-            if stream.read(len(data) + 1) != data:
-                raise SaveError('Temporary copy verification failed.')
-            current = temporary.lstat()
-            if (not stat.S_ISREG(current.st_mode)
-                    or (current.st_dev, current.st_ino) != identity):
-                raise SaveError('Temporary copy changed before publication.')
-        if os.name == 'nt':
-            os.rename(temporary, destination)
-        else:
-            os.link(temporary, destination, follow_symlinks=False)
-    finally:
-        if identity is not None:
-            try:
-                current = temporary.lstat()
-                if stat.S_ISREG(current.st_mode) and (current.st_dev, current.st_ino) == identity:
-                    temporary.unlink()
-            except FileNotFoundError:
-                pass
-    return destination
+    destination = safe_path(destination)
+    if destination.exists():
+        raise FileExistsError('Choose a new file; existing files are never replaced.')
+    if os.name == 'nt':
+        parent_info = destination.parent.stat()
+        if not stat.S_ISDIR(parent_info.st_mode):
+            raise SaveError('The new file parent is not an ordinary directory.')
+        temporary_name = '.' + destination.name + '.' + uuid.uuid4().hex + '.tmp'
+        # Windows file creation uses the parent DACL; Python's os.open mode is
+        # likewise advisory on Windows. Publish from the retained handle.
+        return _new_child_windows(
+            data, destination.parent, temporary_name,
+            (parent_info.st_dev, parent_info.st_ino), _publish_name=destination.name,
+            _cleanup_pending_on_failure=True,
+        )
+    parent_info = destination.parent.stat()
+    if not stat.S_ISDIR(parent_info.st_mode):
+        raise SaveError('The new file parent is not an ordinary directory.')
+    return _publish_new_child_linux(
+        data, destination.parent, destination.name,
+        (parent_info.st_dev, parent_info.st_ino), mode=mode,
+    )
 
 
 def new_child_bound(data, directory, name, expected_identity):
@@ -315,7 +310,7 @@ def _validate_child_name(name):
     return name_length
 
 
-def _publish_new_child_linux(data, directory, name, expected_identity):
+def _publish_new_child_linux(data, directory, name, expected_identity, *, mode=0o600):
     """Publish from an unnamed inode so no path can replace the verified source."""
     import ctypes
     import errno
@@ -338,7 +333,7 @@ def _publish_new_child_linux(data, directory, name, expected_identity):
 
         try:
             output_fd = os.open('.', os.O_RDWR | os.O_TMPFILE | getattr(os, 'O_CLOEXEC', 0),
-                                0o600, dir_fd=directory_fd)
+                                mode, dir_fd=directory_fd)
         except OSError as error:
             raise SaveError('This filesystem cannot create a private unnamed staging file.') from error
         try:
@@ -370,7 +365,7 @@ def _publish_new_child_linux(data, directory, name, expected_identity):
                 publication_attempted = False  # A negative native result did not link.
                 error_number = ctypes.get_errno()
                 if error_number == errno.EEXIST:
-                    raise SaveError('The private output name already exists.')
+                    raise ChildAlreadyExistsError('The private output name already exists.')
                 raise SaveError('The verified private output could not be published without replacement.')
             published = True
 
@@ -457,6 +452,30 @@ def _rename_verified_child_windows(ntdll, child, parent, name):
     return status
 
 
+def _delete_open_child_windows(ntdll, child):
+    """Delete a failed Windows staging child through its still-owned handle."""
+    import ctypes
+    from ctypes import wintypes
+
+    class IO_STATUS_BLOCK_UNION(ctypes.Union):
+        _fields_ = [('Status', ctypes.c_long), ('Pointer', wintypes.LPVOID)]
+
+    class IO_STATUS_BLOCK(ctypes.Structure):
+        _anonymous_ = ('u',)
+        _fields_ = [('u', IO_STATUS_BLOCK_UNION), ('Information', ctypes.c_size_t)]
+
+    class FILE_DISPOSITION_INFORMATION(ctypes.Structure):
+        _fields_ = [('DeleteFile', wintypes.BOOLEAN)]
+
+    disposition = FILE_DISPOSITION_INFORMATION(True)
+    iosb = IO_STATUS_BLOCK()
+    ntdll.NtSetInformationFile.argtypes = [wintypes.HANDLE, ctypes.POINTER(IO_STATUS_BLOCK),
+                                           wintypes.LPVOID, wintypes.ULONG, wintypes.ULONG]
+    ntdll.NtSetInformationFile.restype = ctypes.c_long
+    return ntdll.NtSetInformationFile(child, ctypes.byref(iosb), ctypes.byref(disposition),
+                                      ctypes.sizeof(disposition), 13)
+
+
 def _new_child_posix(data, directory, name, expected_identity):
     flags = (os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0)
              | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_CLOEXEC', 0))
@@ -521,7 +540,8 @@ def _new_child_posix(data, directory, name, expected_identity):
         os.close(directory_fd)
 
 
-def _new_child_windows(data, directory, name, expected_identity, *, _publish_name=None):
+def _new_child_windows(data, directory, name, expected_identity, *, _publish_name=None,
+                       _cleanup_pending_on_failure=False):
     """Use NtCreateFile with RootDirectory so Windows writes cannot follow a raced parent."""
     import ctypes
     from ctypes import wintypes
@@ -692,6 +712,8 @@ def _new_child_windows(data, directory, name, expected_identity, *, _publish_nam
             status = _rename_verified_child_windows(ntdll, child, parent, _publish_name)
             if status < 0:
                 publication_attempted = False  # Native rejection leaves the pending file.
+                if status & 0xffffffff == 0xc0000035:  # STATUS_OBJECT_NAME_COLLISION
+                    raise ChildAlreadyExistsError('The private output name already exists.')
                 raise SaveError('The verified private output could not be published without replacement.')
             published = True
             if (not kernel32.GetFileInformationByHandle(child, ctypes.byref(child_info))
@@ -713,6 +735,14 @@ def _new_child_windows(data, directory, name, expected_identity, *, _publish_nam
         raise
     finally:
         child_close_error = None
+        if (child.value and _publish_name is not None and _cleanup_pending_on_failure
+                and not published and not publication_attempted):
+            try:
+                status = _delete_open_child_windows(ntdll, child)
+                if status < 0:
+                    child_close_error = SaveError('The private staging file could not be removed safely.')
+            except BaseException as error:
+                child_close_error = error
         try:
             if child.value:
                 closed = kernel32.CloseHandle(child)

@@ -121,11 +121,14 @@ are separate; see [VALIDATION.md](VALIDATION.md) for coverage and limitations.
 
 The Windows workflow runs the complete suite across four independent test jobs,
 each using two isolated Python processes. Runtime estimates balance modules;
-unknown/new modules are always included. The build checks combined shard
-reports against the current sources and complete test inventory before its
-source GUI smoke test, all three native builds, candidate scans, packaged startup checks and archive/privacy
-validation. Failed, missing or overlapping shards cannot authorize a build or
-publication. Reports and individual module logs are downloadable CI artifacts.
+unknown/new modules are always included. The independent native job runs its
+source GUI smoke test, all three builds, candidate scans, packaged startup checks
+and archive/privacy validation concurrently with the source suite. The final
+required `build` check waits for both jobs, verifies combined shard reports
+against the exact current sources and complete test inventory, and validates the
+final asset hashes and commit-bound Defender evidence. Failed, missing, stale or
+overlapping shards block merge preparation and publication. Publication rechecks
+the exact downloadable bytes. Reports and individual module logs are downloadable CI artifacts.
 Pip caching avoids repeatedly downloading unchanged build dependencies.
 
 Local parallel checks need no extra test dependency. Use fewer workers on small

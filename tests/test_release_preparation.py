@@ -49,16 +49,18 @@ class ReleasePreparationContracts(unittest.TestCase):
         self.assertIn('test "$GITHUB_REF_NAME" = "codex/release-v$version"', prepare)
         for forbidden in ('--admin', 'gh pr review', 'gh api --method PATCH', 'git push', '--force'):
             self.assertNotIn(forbidden, preparation_script())
-        self.assertNotIn('pull-requests: write', job_block('build'))
+        self.assertNotIn('pull-requests: write', job_block('native_build'))
 
     def test_publish_dispatch_is_opt_in_main_only_and_pinned_to_tested_commit(self):
         workflow = WORKFLOW.read_text()
         self.assertIn("default: false\n        type: boolean", workflow)
-        build = job_block('build')
+        build = job_block('native_build')
         self.assertIn("$env:RELEASE_REF_NAME -ne 'main'", build)
         self.assertIn('$env:RELEASE_EXPECTED_SHA -ne $env:RELEASE_COMMIT_SHA', build)
-        self.assertIn('needs: tests', build)
-        self.assertIn('python -m tools.run_tests --verify-reports test-results', build)
+        self.assertNotIn('    needs:', build)
+        qualification = job_block('build')
+        self.assertIn('needs: [tests, native_build]', qualification)
+        self.assertIn('python -m tools.run_tests --verify-reports test-results', qualification)
         self.assertIn('python -m tools.package_release\n', build)
         self.assertIn("throw 'Bundle validation or local packaging failed.'", build)
         release = job_block('release')
@@ -84,14 +86,72 @@ class ReleasePreparationContracts(unittest.TestCase):
         self.assertIn('if: always()', tests)
         self.assertIn('if-no-files-found: error', tests)
         self.assertNotIn('continue-on-error', tests)
-        build = job_block('build')
-        self.assertIn('pattern: test-results-*', build)
-        self.assertIn('merge-multiple: true', build)
-        self.assertIn('Full test coverage or shard integrity validation failed.', build)
-        self.assertNotIn('python -m unittest discover -s tests -v', build)
+        qualification = job_block('build')
+        self.assertIn('needs: [tests, native_build]', qualification)
+        self.assertIn('pattern: test-results-*', qualification)
+        self.assertIn('merge-multiple: true', qualification)
+        self.assertIn('python -m tools.run_tests --verify-reports test-results', qualification)
+        self.assertNotIn('python -m unittest discover -s tests -v', qualification)
+
+    def test_required_build_joins_both_successful_jobs_and_rechecks_exact_artifacts(self):
+        qualification = job_block('build')
+        self.assertIn('    needs: [tests, native_build]\n', qualification)
+        self.assertIn('    runs-on: ubuntu-latest\n', qualification)
+        self.assertIn('ref: ${{ github.sha }}', qualification)
+        self.assertIn('git config --global core.autocrlf false', qualification)
+        self.assertIn("python-version: '3.14.7'", qualification)
+        self.assertIn('contents: read', qualification)
+        self.assertIn('actions: read', qualification)
+        self.assertNotIn('contents: write', qualification)
+        self.assertIn('if: always() && (', qualification)
+        self.assertNotIn('continue-on-error', qualification)
+        self.assertNotIn('run-id:', qualification)
+        self.assertNotIn('repository:', qualification)
+        self.assertIn('set -euo pipefail', qualification)
+        manifest = qualification.index('python -m tools.package_release --verify-only')
+        reports = qualification.index('python -m tools.run_tests --verify-reports test-results')
+        payloads = qualification.index('name: universal-koei-tecmo-windows')
+        hashes = qualification.index('sha256sum --check SHA256SUMS.txt')
+        self.assertLess(manifest, reports)
+        self.assertLess(reports, payloads)
+        self.assertLess(payloads, hashes)
+        # Publication independently rechecks the same exact candidate evidence.
+        def evidence(job):
+            return job.split('      - name: Verify artifact hashes\n', 1)[1].split(
+                '      - name: Publish a new versioned release', 1)[0].rstrip()
+        self.assertEqual(evidence(qualification), evidence(job_block('release')))
+        for path in ('prepare_release', 'release'):
+            self.assertIn('    needs: build\n', job_block(path))
+            self.assertNotIn('always()', job_block(path))
+        for path in ('tests', 'native_build'):
+            self.assertNotIn('continue-on-error', job_block(path))
+        self.assertNotIn('python -m tools.run_tests --verify-reports', job_block('native_build'))
+
+    def test_required_check_fails_instead_of_skipping_for_unsuccessful_upstreams(self):
+        qualification = job_block('build')
+        tests = job_block('tests')
+        eligibility = tests.split('    if: ', 1)[1].split('\n', 1)[0]
+        self.assertIn('    if: always() && (' + eligibility + ')\n', qualification)
+        self.assertIn('SOURCE_TEST_RESULT: ${{ needs.tests.result }}', qualification)
+        self.assertIn('NATIVE_BUILD_RESULT: ${{ needs.native_build.result }}', qualification)
+        gate = qualification.split('      - name: Require both upstream jobs to succeed', 1)[1]
+        gate = gate.split('      - name: Preserve exact source bytes', 1)[0]
+        script = textwrap.dedent(gate.split('        run: |\n', 1)[1])
+        self.assertLess(qualification.index('Require both upstream jobs to succeed'),
+                        qualification.index('actions/checkout@v4'))
+        # Hosted Windows runners provide Git Bash; choose it explicitly rather
+        # than the optional WSL launcher when replaying this Ubuntu-only guard.
+        bash = str(Path(os.environ.get('ProgramFiles', 'C:/Program Files')) / 'Git/bin/bash.exe') if os.name == 'nt' else 'bash'
+        for source in ('success', 'failure', 'cancelled', 'skipped', ''):
+            for native in ('success', 'failure', 'cancelled', 'skipped', ''):
+                with self.subTest(source=source, native=native):
+                    result = subprocess.run([bash, '-c', script], env={
+                        **os.environ, 'SOURCE_TEST_RESULT': source, 'NATIVE_BUILD_RESULT': native},
+                        capture_output=True, text=True, timeout=10)
+                    self.assertEqual(result.returncode == 0, source == native == 'success')
 
     def test_defender_scans_precede_execution_and_bind_publication_to_exact_assets(self):
-        build = job_block('build')
+        build = job_block('native_build')
         scan = build.index('-Path $bundle -ReportPath defender-reports/runtime.json')
         standalone_scan = build.index('-Path $standalone -ReportPath defender-reports/standalone-runtime.json')
         execute = build.index('./tools/smoke_windows.ps1 -Path $launcher -Format portable')

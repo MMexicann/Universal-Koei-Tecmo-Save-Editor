@@ -108,7 +108,7 @@ class CliPackagingTests(unittest.TestCase):
 
     def test_official_cli_execution_follows_payload_and_defender_checks(self):
         workflow = (ROOT / '.github/workflows/windows-release.yml').read_text()
-        build_job = workflow.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
+        build_job = workflow.split('\n  native_build:\n', 1)[1].split('\n  build:\n', 1)[0].split('\n  prepare_release:\n', 1)[0]
         build_step = build_job.index('python -m tools.build_windows --cli')
         verify = build_job.index('python -m tools.package_release --verify-cli')
         scan = build_job.index('-Path $cli -ReportPath defender-reports/cli-runtime.json')

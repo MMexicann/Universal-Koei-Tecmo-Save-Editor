@@ -3,7 +3,12 @@
 The runner still discovers every test module and executes it in an isolated
 process. Four Windows shards each use two workers. Scheduling hints affect
 placement only: missing, overlapping, stale, failing or incomplete reports
-cannot authorize a build.
+cannot authorize merge preparation or publication. Source tests and native
+qualification run concurrently; the final required `build` check waits for both
+and verifies complete source coverage and exact artifact evidence. Native
+compilation, privacy checks, Defender scans and packaged startup keep their
+existing order. This overlap reduces serial waiting; actual wall time depends
+on hosted-runner availability and must be measured in subsequent complete runs.
 
 ## v1.8 changes
 

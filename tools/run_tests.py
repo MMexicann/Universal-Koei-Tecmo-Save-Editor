@@ -3,7 +3,8 @@
 Examples: ``python -m tools.run_tests --workers 4 --report test-results/local.json``
 or ``--shards 4 --shard-index 0 --timings tools/test_timings.json``. Every module
 has its own process and log, so Tk interpreters and module mocks are not shared.
-The final CI gate uses ``--verify-reports test-results`` before packaging.
+The final CI gate uses ``--verify-reports test-results`` before merge preparation
+or publication; source tests and native builds may run concurrently.
 """
 from __future__ import annotations
 

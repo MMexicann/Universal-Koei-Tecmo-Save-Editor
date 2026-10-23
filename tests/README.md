@@ -18,9 +18,11 @@ Modules using Tk or Tk test helpers are coordinated within each job because
 clipboard and focus belong to the desktop, even when Python processes differ.
 
 CI uses four Windows shards with two processes per shard. Each shard uploads
-its report and logs, including on failure. The build verifies all four reports
-cover the complete current module inventory exactly once before building the
-EXE. New modules join automatically; scheduling estimates in
+its report and logs, including on failure. Native builds run concurrently with
+the source suite. The final required `build` check waits for both, verifies all
+four reports cover the exact current source inventory once, and checks native
+artifact hashes and commit-bound Defender evidence before merge preparation or
+publication. New modules join automatically; scheduling estimates in
 `tools/test_timings.json` are not a list of allowed tests. No tests are omitted
 to meet a time target, and failures, missing reports and import errors fail CI.
 

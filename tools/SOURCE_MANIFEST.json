@@ -13,8 +13,8 @@
     },
     {
       "path": ".github/workflows/windows-release.yml",
-      "bytes": 27507,
-      "sha256": "cd5c3619a2531f082a428f7426760ab7163cd95709eb23bac33a273964f9bbdd"
+      "bytes": 33668,
+      "sha256": "a66c3b39358ef7bf1ae4d88bf0ab9d84c93729608df67870bbc03ab03002158c"
     },
     {
       "path": ".gitignore",
@@ -23,8 +23,8 @@
     },
     {
       "path": "AGENTS.md",
-      "bytes": 7994,
-      "sha256": "604d4e6abda6edc09ad158b5725e7d491114e0250a1eab7befebfaa171542031"
+      "bytes": 8152,
+      "sha256": "f28b554cc0ca3f49a6227eefda68c2dea7c3256623bd47fc27f8b95e2d7302c3"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -183,8 +183,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 14034,
-      "sha256": "7b66313c6f4e3a50166e5528dab56b6355cd4accb21b530e85bb07313c49307b"
+      "bytes": 14271,
+      "sha256": "caf23fc941233694f55802bebd21064b0101c0364c4b905b88f63db0d7cab0c4"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -1053,8 +1053,8 @@
     },
     {
       "path": "docs/TEST_PIPELINE_PERFORMANCE.md",
-      "bytes": 3760,
-      "sha256": "c4963ea4810d6e7552b5a3d9e44f4cfb63e298120b0731efac6c7e8846ce7283"
+      "bytes": 4197,
+      "sha256": "8eab67dc685617331b840724051afabc4e0735c3854089bd92042d24a56b4d3c"
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
@@ -4643,8 +4643,8 @@
     },
     {
       "path": "tests/README.md",
-      "bytes": 11803,
-      "sha256": "90568b7463709181f3735baf8112b4153ca837f40a9c70f4df39007caccffc46"
+      "bytes": 11971,
+      "sha256": "ce252787f6710a00f5fb359bc49d754bcdf1b2d2fc396b4a4aba4f6051386803"
     },
     {
       "path": "tests/gui_paging.py",
@@ -4853,8 +4853,8 @@
     },
     {
       "path": "tests/test_cli_release_pipeline.py",
-      "bytes": 15889,
-      "sha256": "283e12183a71d9c7f80fe91d8bbc755b754e9b0cac3f7b6160941ac8e1d2b942"
+      "bytes": 15924,
+      "sha256": "c94670095188ec96d992b90a2efa195c350174e821d89b4527b2fe66d6f248c3"
     },
     {
       "path": "tests/test_collections_v085.py",
@@ -5918,8 +5918,8 @@
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",
-      "bytes": 14166,
-      "sha256": "f9e3ac0e21195b7ad7a7ef8add18cb65ec66884d7fbaeff57a6f09566e7ebb1e"
+      "bytes": 14413,
+      "sha256": "8729dc2695e3979628d98da9e04d69b0046b70b8291fdce96946ae33f5d751e3"
     },
     {
       "path": "tests/test_parallel_runner.py",
@@ -6083,8 +6083,8 @@
     },
     {
       "path": "tests/test_release_preparation.py",
-      "bytes": 23621,
-      "sha256": "cb4a9840ebf84e6b474ba6d7b8bd7d22c69e2eca83af496a7b75d76d0d0cdada"
+      "bytes": 27748,
+      "sha256": "c092d77202636f0f656be327fff1039192df66bbb47be47b528f5365db1ccb37"
     },
     {
       "path": "tests/test_report_export.py",
@@ -6968,8 +6968,8 @@
     },
     {
       "path": "tools/run_tests.py",
-      "bytes": 25327,
-      "sha256": "07d19a3849e4a181148f9d2768680e542a077b48bf92def3d130dc814289cffc"
+      "bytes": 25403,
+      "sha256": "b1a664d2bc70c9f2c9fdf26b986605b5b5d7d527e27a6b3e4921cefcc9ee3d96"
     },
     {
       "path": "tools/scan_release.ps1",

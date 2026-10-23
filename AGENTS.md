@@ -116,7 +116,9 @@ genuine-file qualification and actual game-load/re-save validation separate.
 The parallel runner isolates each test module in a subprocess; do not use threads
 to share Tk roots or mutable test globals. New `tests/test*.py` modules are
 discovered automatically. CI distributes the entire suite over four Windows
-shards and verifies their combined coverage before building. Keep full coverage
+shards while the independent native build runs concurrently. The final required
+`build` check verifies complete source coverage, exact source hashes and native
+artifact evidence before merge preparation or publication. Keep full coverage
 and failure propagation intact; timing estimates affect scheduling only. The
 serial `python -m unittest discover -s tests -v` remains useful for debugging.
 Desktop-dependent Tk modules/test helpers are coordinated within each job to

@@ -313,6 +313,32 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), self.raw)
         self.assertEqual((self.source.parent / 'PARAM.SFO').read_bytes(), self.context)
 
+    @unittest.skipUnless(os.name == 'nt' or sys.platform.startswith('linux'),
+                         'Profile-store directory creation fails closed on other POSIX platforms')
+    def test_profile_store_creation_rejects_child_replacement_before_manifest_write(self):
+        profile_directory = self.vault.root / 'playthrough_profiles'
+        displaced_directory = self.root / 'displaced-profile-store'
+        original = playthrough_profiles_module.new_directory_child_bound
+        race_injected = False
+
+        def replace_store_after_creation(directory, name, expected_identity):
+            nonlocal race_injected
+            created_path, created_info = original(directory, name, expected_identity)
+            if Path(directory) == self.vault.root and name == 'playthrough_profiles':
+                created_path.rename(displaced_directory)
+                created_path.mkdir()
+                race_injected = True
+            return created_path, created_info
+
+        with patch.object(playthrough_profiles_module, 'new_directory_child_bound',
+                          side_effect=replace_store_after_creation):
+            with self.assertRaisesRegex(SaveError, 'changed identity'):
+                self.make_profile()
+
+        self.assertTrue(race_injected, 'the test must replace the profile-store child after creation')
+        self.assertTrue(displaced_directory.is_dir())
+        self.assertEqual(list(profile_directory.iterdir()), [])
+
     def test_profile_manifest_writer_stays_bound_to_checked_store_directory(self):
         profile_directory = self.vault.root / 'playthrough_profiles'
         displaced_directory = self.root / 'displaced-playthrough-profiles'
@@ -405,7 +431,9 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         def fail_directory_fsync(file_descriptor):
             nonlocal calls
             calls += 1
-            if calls == 2:
+            # The handle-bound profile-store directory creation fsyncs its
+            # parent before the manifest's file and directory fsyncs.
+            if calls == 3:
                 raise OSError('injected directory fsync failure')
             return original_fsync(file_descriptor)
 

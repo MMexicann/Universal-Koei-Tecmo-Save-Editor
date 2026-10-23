@@ -36,6 +36,11 @@ contract; the error identifies that directory for review and does not claim
 success. If the optional backup was completed first, the error also reports its
 Vault snapshot ID.
 
+Creating a new profile-store or environment directory uses a handle-bound
+operation on Windows and Linux. Other POSIX platforms fail closed when a new
+directory is required because this application does not have an equivalent
+safe create-and-bind primitive there.
+
 ## Manager component contract
 
 The component providers are fixed to these identities:

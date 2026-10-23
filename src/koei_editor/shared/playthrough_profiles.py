@@ -347,14 +347,15 @@ def _directory(path, *, create=False):
     path, info = _ordinary(path, directory=True, missing=True)
     if info is None and create:
         parent, parent_info = _ordinary(path.parent, directory=True)
-        try:
-            path.mkdir(mode=0o700)
-        except FileExistsError:
-            pass
-        path, info = _ordinary(path, directory=True)
+        parent_identity = (parent_info.st_dev, parent_info.st_ino)
+        created_path, created_info = new_directory_child_bound(
+            parent, path.name, parent_identity)
+        path, info = _ordinary(created_path, directory=True)
+        if (info.st_dev, info.st_ino) != (created_info.st_dev, created_info.st_ino):
+            raise SaveError('The new profile-store directory changed identity during creation.')
         current_parent, current_parent_info = _ordinary(path.parent, directory=True)
         if (current_parent, current_parent_info.st_dev, current_parent_info.st_ino) != (
-                parent, parent_info.st_dev, parent_info.st_ino):
+                parent, parent_identity[0], parent_identity[1]):
             raise SaveError('The profile-store parent directory changed identity.')
     return path, info
 

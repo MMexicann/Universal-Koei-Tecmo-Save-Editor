@@ -33,6 +33,9 @@ def build_args(root=ROOT, *, standalone=False):
     # previews use precompiled decoders and never compile extensions at runtime.
     for module in ('setuptools', 'distutils', 'pkg_resources'):
         args.extend(['--exclude-module', module])
+    # Interactive language-topic reference text is unused by the application.
+    # Keep pydoc itself available for ordinary object documentation/introspection.
+    args.extend(['--exclude-module', 'pydoc_data'])
     for name in RUNTIME_DEPENDENCY_METADATA:
         dependency = name.split('-')[0]
         args.extend(['--copy-metadata', dependency])

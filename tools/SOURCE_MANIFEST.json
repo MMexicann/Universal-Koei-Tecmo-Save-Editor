@@ -183,8 +183,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 12968,
-      "sha256": "0711179db648127bc55589e3e4a4772418085bf7791e1eae4adaee454e955b7b"
+      "bytes": 13217,
+      "sha256": "a2365902a8110b48168aa4b8def8e2a8b0a5ba4d07cb80822607d32c32b5a6d3"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -6012,9 +6012,14 @@
       "sha256": "d52a373ee36edae3d96efda7c259af2412ce428273fa95bdab990eaa39d37a7c"
     },
     {
+      "path": "tests/test_pydoc_reference_exclusion.py",
+      "bytes": 2126,
+      "sha256": "4681a0287c77b24fdbf48bd5178f4d5eeb9ecaf097d2e6f69bdf417987d4bc4e"
+    },
+    {
       "path": "tests/test_pyinstaller_compiler_exclusions.py",
-      "bytes": 3147,
-      "sha256": "69e6c62189ae68814fb2ff839ee6db5916fed7968bbefc5bc819e4544c421d35"
+      "bytes": 3212,
+      "sha256": "d3462d117c1061c7487cdeaf663d62873f69a881d953ea31bf20bfa770c1c65f"
     },
     {
       "path": "tests/test_reko3_dos.py",
@@ -6098,8 +6103,8 @@
     },
     {
       "path": "tests/test_runtime_dependency_metadata.py",
-      "bytes": 9063,
-      "sha256": "b10ea843c28e9b112bfab08e1c5e943dc096fc699eca6d57e6cdec620dcb773b"
+      "bytes": 9125,
+      "sha256": "ff6cdee8f75fddf92c4fed92ed1ca0505b315c17b07daded0c6801e5e5844742"
     },
     {
       "path": "tests/test_ryza2_switch.py",
@@ -6738,8 +6743,8 @@
     },
     {
       "path": "tools/build_windows.py",
-      "bytes": 6029,
-      "sha256": "1ca6edae6e878ca030f1d33debd85382fe04147c23ce777dd5c570dca733495a"
+      "bytes": 6242,
+      "sha256": "3f917d0d5711a3c972938df38298049b240ae19305223dbc7460cd3fcd24746d"
     },
     {
       "path": "tools/check_community_packages.py",

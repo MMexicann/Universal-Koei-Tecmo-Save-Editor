@@ -116,7 +116,8 @@ class RuntimeMetadataTests(unittest.TestCase):
             collected = {args[index + 1] for index, item in enumerate(args) if item == '--copy-metadata'}
             self.assertEqual(collected, expected)
             excluded = {args[index + 1] for index, item in enumerate(args) if item == '--exclude-module'}
-            self.assertEqual(excluded, {'setuptools', 'distutils', 'pkg_resources'})
+            self.assertEqual(excluded, {'setuptools', 'distutils', 'pkg_resources', 'pydoc_data'})
+            self.assertNotIn('pydoc', excluded)
             for module in ('cffi', '_cffi_backend', 'numpy', 'trimesh', 'miniaudio', '_miniaudio'):
                 self.assertIn(module, args)
             self.assertIn('--noupx', args)

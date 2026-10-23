@@ -63,7 +63,8 @@ class CompilerExclusionHookTests(unittest.TestCase):
             self.assertEqual(args[args.index('--additional-hooks-dir') + 1],
                              str(build.ROOT / 'tools/pyinstaller_hooks'))
             excluded = {args[index + 1] for index, value in enumerate(args) if value == '--exclude-module'}
-            self.assertEqual(excluded, set(ROOTS))
+            self.assertEqual(excluded, set(ROOTS) | {'pydoc_data'})
+            self.assertNotIn('pydoc', excluded)
 
 
 if __name__ == '__main__':

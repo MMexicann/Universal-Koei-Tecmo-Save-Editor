@@ -17,10 +17,10 @@ both the archive and the verification report.
 The release build targets Ubuntu 22.04 x86_64 and newer compatible glibc systems.
 ARM, 32-bit Linux and musl distributions such as Alpine are not release targets.
 A graphical session and ordinary X11/font libraries are required for the GUI.
-The verified interpreter and Tcl/Tk 9.0 libraries are bundled. On Ubuntu:
+The verified interpreter and Tcl/Tk 9.0 libraries are bundled. On Ubuntu 22.04:
 
 ```sh
-sudo apt install libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6 libstdc++6 libgcc-s1
+sudo apt install gsfonts-x11 libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6 libstdc++6 libgcc-s1
 sha256sum -c UniversalKoeiTecmoGameToolkit-vVERSION-Linux-x86_64.SHA256SUMS
 tar -xzf UniversalKoeiTecmoGameToolkit-vVERSION-Linux-x86_64.tar.gz
 cd UniversalKoeiTecmoGameToolkit-vVERSION-Linux-x86_64
@@ -32,6 +32,11 @@ Replace `VERSION` with the downloaded release number. Keep the `_internal/`
 folder beside each executable; the CLI has its own complete folder. No separate
 Python installation, Wine, root access or installer is needed to run the toolkit.
 CLI commands work without a display. See the [CLI guide](CLI.md) for examples.
+
+The GUI needs scalable X11 fonts, including the Helvetica aliases supplied by
+Ubuntu 22.04's `gsfonts-x11` package. Other distributions need equivalent X11
+font support. Without it, Tk can fall back to a small fixed-size font and ignore
+the text-size preference; installing font libraries alone does not supply fonts.
 
 ## Scope and safeguards
 
@@ -59,7 +64,7 @@ Use the CI artifact for the supported baseline instead of assuming a locally bui
 binary runs on older distributions.
 
 ```sh
-sudo apt install xvfb xauth libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
+sudo apt install xvfb xauth gsfonts-x11 libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
 python3 -m tools.install_linux_python
 work/linux-python/python/bin/python3.13 -m venv work/linux-venv
 . work/linux-venv/bin/activate

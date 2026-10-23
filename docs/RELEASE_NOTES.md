@@ -17,7 +17,7 @@ Linux support and connected toolkit workflows, with existing save compatibility 
 - **Desktop research tools:** search the edition-scoped encyclopedia and compare
   explicit patch snapshots with reviewed JSON/Markdown exports.
 - **Troubleshooting and usability:** native bounded Windows folder scans,
-  safer report exports and improved small-window layouts.
+  safer profile storage and report exports, and improved small-window layouts.
 - **Mod CLI:** inspect supported methods, validate/import local archives, and
   review/export Workshop packages without deploying mods.
 

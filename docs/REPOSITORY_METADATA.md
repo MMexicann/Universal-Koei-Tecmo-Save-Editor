@@ -29,11 +29,11 @@ Website: <https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/lat
 
 Topics: `koei-tecmo`, `game-toolkit`, `save-editor`, `windows`, `linux`, `python`, `tkinter`.
 
-About description, website and topics are separate repository settings. The
-connected integration previously returned HTTP 403 for them; the values above
-remain the handoff for an authorized administrator. Verify the settings after
-changing them. Keep the current canonical repository address and preserve old
-release tags, download filenames and historical redirects.
+About description, website and topics are separate repository settings requiring
+administration access. The connected integration previously returned HTTP 403;
+when using that integration, the values above are the administrator handoff.
+Verify the settings after changing them. Keep the current canonical repository
+address and preserve old release tags, download filenames and historical redirects.
 
 ## Release identity
 
@@ -76,15 +76,16 @@ and [Linux qualification](LINUX.md) describe the patch scope and remaining limit
    Require the complete native Linux suite, both frozen builds, extracted GUI
    and headless ECB/CBC inspection, source fingerprints and exact runtime/archive
    hashes. The Windows and Linux evidence must identify the same main source.
-4. Merge the reviewed release-preparation PR normally, then dispatch the official
-   Windows workflow on `main` with `publish=true` and its exact `expected_sha`.
+4. After all PR checks pass, merge with `[release]` in the merge commit title to
+   start the gated publication workflow on `main`. Alternatively, merge without
+   that marker, then dispatch the official Windows workflow on `main` with
+   `publish=true` and its exact `expected_sha`. Use one publication path.
    The Linux main workflow must complete successfully; publication verifies its
-   exact-run artifact before staging the three Linux downloads. Do not use
-   `[release]` in that manual preparation merge or start competing publication
-   runs. [Other supported workflow paths](BUILDING.md) retain their own guards.
+   exact-run artifact before staging the three Linux downloads.
+   [Supported workflow paths](BUILDING.md) retain their own guards.
 5. After publication, verify the tag/source commit, all nine assets, both checksum
    files, Windows Defender and Linux verification evidence, release title, latest pointer and README download
-   links. Repository About settings require the separate administrator handoff.
+   links. Verify repository About settings separately with administration access.
 
 Do not treat a successful documentation check, push or merge as release
 qualification. [Build workflow](BUILDING.md) · [Validation](VALIDATION.md).

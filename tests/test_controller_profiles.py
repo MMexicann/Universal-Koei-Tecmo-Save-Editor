@@ -298,6 +298,65 @@ class ControllerProfileStoreTests(unittest.TestCase):
         self.assertEqual(replaced[0].read_bytes(), foreign)
         self.assertFalse(self.store.path.exists())
 
+    def test_cleanup_retains_creator_identity_until_foreign_replacement_is_preserved(self):
+        foreign = b'SYNTHETIC_FOREIGN_TEMPORARY'
+        replaced, descriptors = [], []
+        cleanup = profiles._unlink_owned
+
+        def replace_and_fail(source, _destination):
+            source = Path(source)
+            source.unlink()
+            source.write_bytes(foreign)
+            replaced.append(source)
+            raise OSError('synthetic publication failure')
+
+        def inspect_ownership(path, identity, descriptor, snapshot):
+            if descriptor is None:
+                self.assertEqual(os.name, 'nt')
+                self.assertEqual(len(snapshot), 5)
+            else:
+                held = os.fstat(descriptor)
+                self.assertEqual((held.st_dev, held.st_ino), identity)
+                # The unlinked creator still owns its inode. The unrelated
+                # replacement cannot inherit it even on aggressive allocators.
+                self.assertNotEqual(profiles._owned_identity(path), identity)
+                descriptors.append(descriptor)
+            return cleanup(path, identity, descriptor, snapshot)
+
+        with patch.object(profiles.os, 'replace', side_effect=replace_and_fail), \
+                patch.object(profiles, '_unlink_owned', side_effect=inspect_ownership):
+            with self.assertRaises(profiles.ProfileError):
+                self.store.save_profile(self.profile)
+        self.assertEqual(replaced[0].read_bytes(), foreign)
+        for descriptor in descriptors:
+            with self.assertRaises(OSError):
+                os.fstat(descriptor)
+
+    def test_failed_store_cleanup_preserves_inplace_foreign_temporary_changes(self):
+        foreign = b'SYNTHETIC_FOREIGN_INPLACE_TEMPORARY'
+        replaced = []
+        original_open = Path.open
+
+        def replace_and_fail(source, _destination):
+            source = Path(source)
+            before = profiles._owned_identity(source)
+            source.write_bytes(foreign)
+            self.assertEqual(profiles._owned_identity(source), before)
+            replaced.append(source)
+            raise OSError('synthetic publication failure')
+
+        def reject_foreign_read(path, mode='r', *args, **kwargs):
+            if path in replaced and 'r' in mode:
+                raise AssertionError('Cleanup must not read foreign staging bytes.')
+            return original_open(path, mode, *args, **kwargs)
+
+        with patch.object(profiles.os, 'replace', side_effect=replace_and_fail), \
+                patch.object(Path, 'open', reject_foreign_read):
+            with self.assertRaises(profiles.ProfileError):
+                self.store.save_profile(self.profile)
+        self.assertEqual(replaced[0].read_bytes(), foreign)
+        self.assertFalse(self.store.path.exists())
+
     def test_changed_temporary_is_not_promoted_into_profile_store(self):
         real_fsync = os.fsync
         foreign = b'SYNTHETIC_FOREIGN_TEMPORARY'
@@ -336,6 +395,100 @@ class ControllerProfileStoreTests(unittest.TestCase):
             with self.assertRaises(profiles.ProfileError):
                 self.store.restore_backup()
         self.assertEqual(replaced[0].read_bytes(), foreign)
+
+    def test_failed_restore_cleanup_preserves_inplace_foreign_recovery_changes(self):
+        self.store.save_profile(self.profile)
+        self.store.backup_path.write_bytes(profiles._serialize_store((self.profile,)))
+        original = self.store.path.read_bytes()
+        foreign = b'SYNTHETIC_FOREIGN_INPLACE_RECOVERY'
+        replaced = []
+        original_open = Path.open
+
+        def replace_recovery_and_fail(_destination, _data, **_kwargs):
+            recovery = next(self.store.path.parent.glob('*.recovery.*'))
+            before = profiles._owned_identity(recovery)
+            recovery.write_bytes(foreign)
+            self.assertEqual(profiles._owned_identity(recovery), before)
+            replaced.append(recovery)
+            raise profiles.ProfileError('synthetic store failure')
+
+        def reject_foreign_read(path, mode='r', *args, **kwargs):
+            if path in replaced and 'r' in mode:
+                raise AssertionError('Cleanup must not read foreign recovery bytes.')
+            return original_open(path, mode, *args, **kwargs)
+
+        with patch.object(profiles, '_atomic_write', side_effect=replace_recovery_and_fail), \
+                patch.object(Path, 'open', reject_foreign_read):
+            with self.assertRaises(profiles.ProfileError):
+                self.store.restore_backup()
+        self.assertEqual(replaced[0].read_bytes(), foreign)
+        self.assertEqual(self.store.path.read_bytes(), original)
+
+    def test_failed_backup_and_rollback_keep_recovery_bytes_but_release_creator_descriptor(self):
+        self.store.save_profile(self.profile)
+        current = self.store.path.read_bytes()
+        backup = profiles._serialize_store((profiles.create_from_preset(
+            'dw8xl', 'controller_xbox', 'Backup controls'),))
+        self.store.backup_path.write_bytes(backup)
+        real_write, real_retain = profiles._atomic_write, profiles._retain_creator
+        restores, descriptors = [], []
+
+        def fail_backup_and_rollback(destination, data, **kwargs):
+            if Path(destination) == self.store.path and not restores:
+                restores.append(destination)
+                return real_write(destination, data, **kwargs)
+            raise profiles.ProfileError('synthetic backup or rollback failure')
+
+        def record_recovery_descriptor(stream):
+            descriptor = real_retain(stream)
+            if '.recovery.' in str(stream.name) and descriptor is not None:
+                descriptors.append(descriptor)
+            return descriptor
+
+        with patch.object(profiles, '_atomic_write', side_effect=fail_backup_and_rollback), \
+                patch.object(profiles, '_retain_creator', side_effect=record_recovery_descriptor):
+            with self.assertRaisesRegex(profiles.ProfileError, 'preserved at'):
+                self.store.restore_backup()
+        recovery, = self.store.path.parent.glob('*.recovery.*')
+        self.assertEqual(recovery.read_bytes(), current)
+        self.assertEqual(self.store.path.read_bytes(), backup)
+        self.assertEqual(self.store.backup_path.read_bytes(), backup)
+        for descriptor in descriptors:
+            with self.assertRaises(OSError):
+                os.fstat(descriptor)
+
+    def test_interrupted_restore_keeps_original_current_bytes_until_outcome_is_known(self):
+        for interruption in ('main_commit', 'backup_promotion', 'rollback'):
+            with self.subTest(interruption=interruption):
+                store = profiles.ProfileStore(self.root / interruption / 'controls.json')
+                store.save_profile(self.profile)
+                current = store.path.read_bytes()
+                backup = profiles._serialize_store((profiles.create_from_preset(
+                    'dw8xl', 'controller_xbox', 'Backup controls'),))
+                store.backup_path.write_bytes(backup)
+                real_write = profiles._atomic_write
+                main_calls = []
+
+                def interrupt(destination, data, **kwargs):
+                    if Path(destination) == store.path:
+                        main_calls.append(destination)
+                        if len(main_calls) == 1:
+                            result = real_write(destination, data, **kwargs)
+                            if interruption == 'main_commit':
+                                raise KeyboardInterrupt('Interrupted after store commit')
+                            return result
+                        raise KeyboardInterrupt('Interrupted during rollback')
+                    if interruption == 'backup_promotion':
+                        raise KeyboardInterrupt('Interrupted during backup promotion')
+                    raise profiles.ProfileError('synthetic backup failure')
+
+                with patch.object(profiles, '_atomic_write', side_effect=interrupt):
+                    with self.assertRaises(KeyboardInterrupt):
+                        store.restore_backup()
+                self.assertEqual(store.path.read_bytes(), backup)
+                self.assertEqual(store.backup_path.read_bytes(), backup)
+                recovery, = store.path.parent.glob('*.recovery.*')
+                self.assertEqual(recovery.read_bytes(), current)
 
     def test_restore_refuses_corrupt_backup_and_preserves_current_store(self):
         self.store.save_profile(self.profile)

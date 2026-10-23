@@ -227,6 +227,14 @@ class ModManagerGuiLifecycleTests(unittest.TestCase):
                 self.assertLessEqual(row.winfo_reqwidth(), self.workspace.actions.winfo_width())
         canvas = self.workspace.content_canvas
         self.assertLessEqual(self.workspace.content.winfo_width(), canvas.winfo_width())
+        # Font metrics can make the complete form fit at 780x680 (notably
+        # Tk 9). Test scrolling with an explicitly shorter real viewport,
+        # while preserving the minimum-window action bounds checked above.
+        chrome_height = self.root.winfo_height() - canvas.winfo_height()
+        form_height = self.workspace.content.winfo_reqheight()
+        self.root.geometry(f'780x{chrome_height + max(40, form_height // 2)}')
+        self.root.update()
+        self.assertLess(canvas.winfo_height(), self.workspace.content.winfo_reqheight())
         self.assertGreater(canvas.bbox('all')[3], canvas.winfo_height())
         canvas.yview_moveto(1)
         self.root.update()

@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/linux.yml",
-      "bytes": 2774,
-      "sha256": "54baf4a485e0050821e8316740cdfd89d368c178e30bfeb106086825e984481f"
+      "bytes": 2786,
+      "sha256": "88d366f65a5cfb91546c4b0f49ecf6892df4a2092ac5fe755ac7218f36e204c2"
     },
     {
       "path": ".github/workflows/mod-testing-sandbox.yml",
@@ -568,8 +568,8 @@
     },
     {
       "path": "docs/LINUX.md",
-      "bytes": 6129,
-      "sha256": "aa966f674a663134f5cdbb781c94fd1447576bc2db99d64ff357d5f76d949801"
+      "bytes": 6478,
+      "sha256": "a56aafb012c6ddce3e838c0c1d3c5d12a8691aee0333b33ea3d743530383f14e"
     },
     {
       "path": "docs/LULUA_NELKE_SWITCH_RESEARCH.md",
@@ -833,8 +833,8 @@
     },
     {
       "path": "docs/RELEASE_NOTES.md",
-      "bytes": 1898,
-      "sha256": "dc4e12a16ec0e7d7c8bc24fa0b1491d2997f80dc5eb2093395835d1d16adc141"
+      "bytes": 1919,
+      "sha256": "43ca2fd8a696a7f750d584f315e8c46fd62c2a138c97c76c43a49529b5f1929f"
     },
     {
       "path": "docs/RELEASE_QUALIFICATION.md",
@@ -848,8 +848,8 @@
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
-      "bytes": 5637,
-      "sha256": "82baa0249462cde5a859a85e4662ed8f88ddbd2a7a5a473315f3e747375f312c"
+      "bytes": 5716,
+      "sha256": "2e7ee983163b0b2ee116b24e74a01028250161add7b398985797c1662dbcdd63"
     },
     {
       "path": "docs/RESEARCH_IMPORT.md",
@@ -4278,8 +4278,8 @@
     },
     {
       "path": "src/koei_editor/shared/controller_profiles.py",
-      "bytes": 20951,
-      "sha256": "1498cb78b6ba21d6a2c79efc06570e3c3eb82d73b954a57747b52285a19d48e5"
+      "bytes": 24692,
+      "sha256": "3227911485c1ccae701aec8aa9b4a85602099bf99facee2c9fa03ee75d26f222"
     },
     {
       "path": "src/koei_editor/shared/controller_profiles_gui.py",
@@ -5053,8 +5053,8 @@
     },
     {
       "path": "tests/test_controller_profiles.py",
-      "bytes": 29555,
-      "sha256": "dcf5c1cc38fef970d6cc2434e8708d1a3ad05c97366bdce21bb23b6f06538443"
+      "bytes": 37542,
+      "sha256": "1a62fb777215a95b45d0740572cf03a01362143d6ee924c6c10c398264f5d6d6"
     },
     {
       "path": "tests/test_conversion.py",
@@ -5758,8 +5758,8 @@
     },
     {
       "path": "tests/test_mod_manager_gui_lifecycle.py",
-      "bytes": 12777,
-      "sha256": "fcf31ac724e9d8099aa8d2c74cf7ea81be48a908ae4eadeaffc63303a1022a18"
+      "bytes": 13331,
+      "sha256": "a0664a2db4f30dc4000c4f8b0f71624c2f71205441d792d119b2b8313fa92b61"
     },
     {
       "path": "tests/test_mod_manager_multigame.py",

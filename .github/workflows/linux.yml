@@ -30,7 +30,7 @@ jobs:
       - name: Install native runtime and locked build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb xauth libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
+          sudo apt-get install -y xvfb xauth gsfonts-x11 libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
           python3 -m tools.install_linux_python
           work/linux-python/python/bin/python3.13 -m venv work/linux-venv
           work/linux-venv/bin/python -m pip install --require-hashes -r tools/requirements/linux-build.txt

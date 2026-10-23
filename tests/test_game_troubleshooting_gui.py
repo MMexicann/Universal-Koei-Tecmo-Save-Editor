@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import threading
 import tkinter as tk
@@ -20,6 +21,7 @@ from koei_editor.shared.game_troubleshooting_gui import (
     TroubleshootingWorkspace,
     export_json_report,
 )
+from koei_editor.shared import copy_storage
 
 
 def sample_report():
@@ -96,23 +98,41 @@ class GameTroubleshootingExportTests(unittest.TestCase):
                 foreign.write_bytes(b"SYNTHETIC_PRIVATE_CONTENT")
                 original_fsync, original_read = os.fsync, Path.read_bytes
 
-                def replace_destination(descriptor):
-                    original_fsync(descriptor)
+                if linked:
+                    probe = folder / "symlink-probe"
+                    try:
+                        probe.symlink_to(foreign)
+                        probe.unlink()
+                    except OSError:
+                        self.skipTest("File symlinks unavailable")
+
+                def replace_destination(*args):
+                    if os.name != "nt":
+                        original_fsync(args[0])
                     destination.unlink(missing_ok=True)
                     if linked:
-                        try:
-                            destination.symlink_to(foreign)
-                        except OSError:
-                            self.skipTest("File symlinks unavailable")
+                        destination.symlink_to(foreign)
                     else:
                         destination.write_bytes(b"FOREIGN_REPLACEMENT")
+                    if os.name == "nt":
+                        return -1073741771  # STATUS_OBJECT_NAME_COLLISION
 
                 def forbid_foreign_read(path):
                     if path == destination or path.resolve() == foreign:
                         raise AssertionError("Concurrent destination content must not be read")
                     return original_read(path)
 
-                with patch("os.fsync", replace_destination), patch.object(Path, "read_bytes", forbid_foreign_read):
+                if os.name == "nt":
+                    publication = patch.object(copy_storage, "_rename_verified_child_windows",
+                                                side_effect=replace_destination)
+                elif sys.platform.startswith("linux"):
+                    publication = patch("os.fsync", replace_destination)
+                else:
+                    with self.assertRaises(copy_storage.SaveError):
+                        export_json_report(sample_report(), destination)
+                    self.assertFalse(destination.exists())
+                    continue
+                with publication, patch.object(Path, "read_bytes", forbid_foreign_read):
                     with self.assertRaises(FileExistsError):
                         export_json_report(sample_report(), destination)
                 self.assertEqual(foreign.read_bytes(), b"SYNTHETIC_PRIVATE_CONTENT")

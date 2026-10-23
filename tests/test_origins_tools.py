@@ -1,6 +1,8 @@
 """Synthetic opaque artifacts test copy safety; they are not Origins save fixtures."""
+import ctypes
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -117,15 +119,39 @@ class OriginsCopyTests(unittest.TestCase):
     def test_racing_destination_creation_is_never_overwritten(self):
         destination = self.folder / 'race.dat'
         if copy_storage.os.name == 'nt':
-            target, original = 'rename', copy_storage.os.rename
+            def race(*args):
+                destination.write_bytes(b'other editor data')
+                return -1073741771  # STATUS_OBJECT_NAME_COLLISION
+            publisher = patch.object(copy_storage, '_rename_verified_child_windows',
+                                     side_effect=race)
+        elif sys.platform.startswith('linux'):
+            native_library = ctypes.CDLL(None, use_errno=True)
+            native_linkat = native_library.linkat
+            native_linkat.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int,
+                                      ctypes.c_char_p, ctypes.c_int]
+            native_linkat.restype = ctypes.c_int
+
+            class RacingLinkat:
+                argtypes = None
+                restype = None
+
+                def __call__(self, old_directory, old_name, new_directory, new_name, flags):
+                    self_outer.assertEqual(os.fsdecode(new_name), destination.name)
+                    self_outer.assertEqual(flags, 0x400)  # AT_SYMLINK_FOLLOW
+                    destination.write_bytes(b'other editor data')
+                    return native_linkat(old_directory, old_name, new_directory, new_name, flags)
+
+            self_outer = self
+            publisher = patch.object(ctypes, 'CDLL',
+                                     return_value=type('NativeLinker', (), {
+                                         'linkat': RacingLinkat()})())
         else:
-            target, original = 'link', copy_storage.os.link
-        def race(source, dest, **options):
-            if target == 'link':
-                self.assertEqual(options, {'follow_symlinks': False})
-            Path(dest).write_bytes(b'other editor data')
-            return original(source, dest, **options)
-        with patch.object(copy_storage.os, target, side_effect=race):
+            with self.assertRaises(SaveError):
+                origins.duplicate_copy(self.document, destination)
+            self.assertFalse(destination.exists())
+            self.assertFalse(list(self.folder.glob('.*.tmp')))
+            return
+        with publisher:
             with self.assertRaises(FileExistsError):
                 origins.duplicate_copy(self.document, destination)
         self.assertEqual(destination.read_bytes(), b'other editor data')

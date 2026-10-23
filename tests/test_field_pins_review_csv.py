@@ -180,19 +180,28 @@ class ReviewExportVerificationTests(unittest.TestCase):
         self.assertEqual(self.destination.read_bytes(), self.data)
 
     def test_path_ctime_change_still_rejects_without_handle_stat_change(self):
-        original, close = Path.lstat, self.gui.os.close
+        original, open_file, close = Path.lstat, self.gui.os.open, self.gui.os.close
         watched = (self.destination, self.destination.resolve())
+        report_handles = set()
         closed, changed = [], []
+        def open_report(path, *args, **kwargs):
+            descriptor = open_file(path, *args, **kwargs)
+            if Path(path) == self.destination:
+                report_handles.add(descriptor)
+            return descriptor
         def after_close(descriptor):
             close(descriptor)
-            closed.append(True)
+            if descriptor in report_handles:
+                closed.append(True)
         def path_stat(path, *args, **kwargs):
             info = original(path, *args, **kwargs)
             if path in watched and closed:
                 changed.append(True)
                 return self.changed_stat(info, st_ctime_ns=info.st_ctime_ns + 1)
             return info
-        with patch.object(Path, 'lstat', path_stat), patch.object(self.gui.os, 'close', side_effect=after_close), \
+        with patch.object(self.gui.os, 'open', side_effect=open_report), \
+                patch.object(type(self.destination), 'lstat', path_stat), \
+                patch.object(self.gui.os, 'close', side_effect=after_close), \
                 self.assertRaisesRegex(ValueError, 'replaced during read-back'):
             self.gui._export_review(self.data, self.destination)
         self.assertEqual(len(closed), 1)
@@ -238,16 +247,24 @@ class ReviewExportVerificationTests(unittest.TestCase):
         self.assertEqual(retained.read_bytes(), self.data)
 
     def test_same_bytes_foreign_file_replacement_after_descriptor_close_is_retained(self):
-        close = self.gui.os.close
+        open_file, close = self.gui.os.open, self.gui.os.close
+        report_handles = set()
         replacements = []
+        def open_report(path, *args, **kwargs):
+            descriptor = open_file(path, *args, **kwargs)
+            if Path(path) == self.destination:
+                report_handles.add(descriptor)
+            return descriptor
         def replace_after_close(descriptor):
             close(descriptor)
-            if not replacements:
+            if descriptor in report_handles and not replacements:
                 replacement = self.folder / 'foreign.tmp'
                 replacement.write_bytes(self.data)
                 replacements.append(replacement.stat().st_ino)
                 self.gui.os.replace(replacement, self.destination)
-        with patch.object(self.gui.os, 'close', side_effect=replace_after_close), self.assertRaisesRegex(ValueError, 'replaced during read-back'):
+        with patch.object(self.gui.os, 'open', side_effect=open_report), \
+                patch.object(self.gui.os, 'close', side_effect=replace_after_close), \
+                self.assertRaisesRegex(ValueError, 'replaced during read-back'):
             self.gui._export_review(self.data, self.destination)
         self.assertEqual(len(replacements), 1)
         self.assertEqual(self.destination.stat().st_ino, replacements[0])

@@ -1,8 +1,8 @@
 # Contributor and agent guide
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md). This project is Mexican's
-Universal Koei Tecmo Game Toolkit (formerly Save Editor): a Windows app available as a portable folder
-or a self-contained standalone EXE, with an explicit
+Universal Koei Tecmo Game Toolkit (formerly Save Editor): a Windows and Linux app,
+with portable folders on both hosts and self-contained Windows EXEs, and an explicit
 game/platform library and a shared Tkinter interface. Preserve existing games,
 branding, themes, backups, Undo, Review Changes and safe saving.
 
@@ -106,7 +106,8 @@ python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
 ```
 
-Non-Windows development can install `tools/requirements/dev.txt`; Tk tests need
+Linux installs use the declared PyCryptodome AES provider. Other non-Windows
+development can install `tools/requirements/dev.txt`; Tk tests need
 a display. Run focused tests for changed formats and required integration,
 GUI/privacy/build checks. Cover corruption/foreign formats, boundaries and
 dependencies, surgical byte preservation, unchanged roundtrips, backups/restore
@@ -128,6 +129,10 @@ protect clipboard and focus; preserve that grouping when extending the runner.
 
 Build on 64-bit Windows; Linux checks do not produce or validate a Windows EXE.
 See [BUILDING.md](docs/BUILDING.md) and [VALIDATION.md](docs/VALIDATION.md).
+Build native Linux x86_64 artifacts separately using [LINUX.md](docs/LINUX.md).
+Linux builds require their own dependency/native-resource review and extracted
+GUI/headless CLI checks. Keep Windows-only Vault/Profile and mod deployment
+limits explicit; native Linux packaging does not qualify Proton.
 
 ```text
 python -m pip install -e .

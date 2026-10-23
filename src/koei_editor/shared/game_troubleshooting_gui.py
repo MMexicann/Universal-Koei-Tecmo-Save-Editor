@@ -8,14 +8,15 @@ from tkinter import filedialog, messagebox, ttk
 
 from koei_editor.game_registry import GAMES
 from koei_editor.shared.game_troubleshooting import CATEGORY_ORDER, SCHEMA_VERSION, diagnose_game
-from koei_editor.shared.copy_storage import atomic_new
+from koei_editor.shared.copy_storage import ChildPublishedUncertainError
+from koei_editor.shared.report_export import write_report_bytes
 from koei_editor.shared.scrollable_panel import ScrollablePanel
 
 
 _TEXT = {
     "en": {
         "title": "Game Troubleshooting Center",
-        "intro": "Run bounded, read-only checks for one Windows PC game. The center only reads folders you select; it never changes an installation, configuration, or mod folder.",
+        "intro": "Run bounded, read-only checks for a selected PC game on Windows or Linux. The center only reads folders you select; it never changes an installation, configuration, or mod folder.",
         "safety": "No repair is performed. Review each recommendation and decide whether to follow it yourself.",
         "game": "Game / platform / edition",
         "choose_game": "Choose a game",
@@ -41,6 +42,7 @@ _TEXT = {
         "status_saved": "JSON report exported locally. Nothing was transmitted.",
         "status_export_error": "The JSON report could not be exported. Choose a new filename and check its folder permissions.",
         "status_export_exists": "Choose a new filename. Existing report files are not overwritten.",
+        "status_export_uncertain": "The report may already exist. Inspect the selected folder before trying another export.",
         "no_game": "Choose a game before scanning.",
         "scan_error_title": "Game Troubleshooting Center",
         "export_error_title": "Report export",
@@ -70,7 +72,7 @@ _TEXT = {
     },
     "de": {
         "title": "Koei-Tecmo-Spielhilfe",
-        "intro": "Führe begrenzte, schreibgeschützte Prüfungen für ein Windows-PC-Spiel aus. Es werden nur ausgewählte Ordner gelesen; Installationen, Konfigurationen und Mods werden nicht verändert.",
+        "intro": "Prüfe ausgewählte PC-Spielordner unter Windows oder Linux begrenzt und schreibgeschützt. Es werden nur ausgewählte Ordner gelesen; Installationen, Konfigurationen und Mods werden nicht verändert.",
         "safety": "Es werden keine Reparaturen ausgeführt. Prüfe jede Empfehlung und entscheide selbst, ob du ihr folgst.",
         "game": "Spiel / Plattform / Edition",
         "choose_game": "Spiel auswählen",
@@ -96,6 +98,7 @@ _TEXT = {
         "status_saved": "JSON-Bericht lokal exportiert. Es wurde nichts übertragen.",
         "status_export_error": "JSON-Bericht konnte nicht exportiert werden. Neuen Dateinamen und Ordnerrechte prüfen.",
         "status_export_exists": "Neuen Dateinamen wählen. Vorhandene Berichte werden nicht überschrieben.",
+        "status_export_uncertain": "Der Bericht kann bereits vorhanden sein. Den gewählten Ordner vor einem weiteren Export prüfen.",
         "no_game": "Vor der Prüfung ein Spiel auswählen.",
         "scan_error_title": "Koei-Tecmo-Spielhilfe",
         "export_error_title": "Berichtsexport",
@@ -143,7 +146,7 @@ def export_json_report(report, destination):
     content = report.to_json().encode("utf-8")
     # Verify a private staging file before exclusive publication. Never reopen
     # the destination, which another application may replace after publication.
-    return atomic_new(content, destination)
+    return write_report_bytes(content, destination)
 
 
 class TroubleshootingWorkspace:
@@ -493,31 +496,52 @@ class TroubleshootingWorkspace:
             self.preview.insert("1.0", text)
         self.preview.configure(state="disabled")
 
+    def _alive(self):
+        if self._closed:
+            return False
+        try:
+            return bool(self.root.winfo_exists() and self.frame.winfo_exists())
+        except tk.TclError:
+            return False
+
     def export(self):
-        if self.busy or self.report is None:
+        if not self._alive() or self.busy or self.report is None:
             return
-        path = filedialog.asksaveasfilename(
-            parent=self.root,
-            title=self.text["export_dialog"],
-            defaultextension=".json",
-            initialfile=self.text["export_initial"],
-            filetypes=((self.text["json_file"], "*.json"),),
-        )
-        if not path:
+        reviewed = self.report  # Native dialogs may run a nested scan/refresh.
+        try:
+            path = filedialog.asksaveasfilename(
+                parent=self.root,
+                title=self.text["export_dialog"],
+                defaultextension=".json",
+                initialfile=self.text["export_initial"],
+                filetypes=((self.text["json_file"], "*.json"),),
+                confirmoverwrite=False,
+            )
+        except tk.TclError:
+            if self._alive():
+                self._status("status_export_error")
+            return
+        if not path or not self._alive():
             return
         try:
-            export_json_report(self.report, path)
+            export_json_report(reviewed, path)
+        except ChildPublishedUncertainError:
+            if self._alive():
+                self._status("status_export_uncertain")
+                messagebox.showerror(self.text["export_error_title"], self.text["status_export_uncertain"], parent=self.root)
+            return
         except FileExistsError:
-            self._status("status_export_exists")
-            messagebox.showerror(self.text["export_error_title"], self.text["status_export_exists"],
-                                 parent=self.root)
+            if self._alive():
+                self._status("status_export_exists")
+                messagebox.showerror(self.text["export_error_title"], self.text["status_export_exists"], parent=self.root)
             return
         except (OSError, ValueError):
-            self._status("status_export_error")
-            messagebox.showerror(self.text["export_error_title"], self.text["status_export_error"],
-                                 parent=self.root)
+            if self._alive():
+                self._status("status_export_error")
+                messagebox.showerror(self.text["export_error_title"], self.text["status_export_error"], parent=self.root)
             return
-        self._status("status_saved")
+        if self._alive():
+            self._status("status_saved")
 
     def apply_theme(self, palette):
         self._palette = palette

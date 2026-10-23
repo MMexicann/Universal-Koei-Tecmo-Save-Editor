@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import sys
 
 from koei_editor.game_registry import GAMES
 from koei_editor.games.dw3.models import SaveError
@@ -549,6 +550,32 @@ def _default_roots(home):
     paths = [home / '.local/share/Steam', home / '.steam/steam', home / '.steam/root']
     if os.name == 'nt':
         paths.extend(_windows_roots())
+    elif sys.platform.startswith('linux'):
+        # Flatpak keeps its application home separate from the host's default
+        # XDG directory. Check only these fixed candidates, never enumerate home.
+        flatpak = home / '.var/app/com.valvesoftware.Steam'
+        paths.extend((flatpak / '.local/share/Steam', flatpak / 'data/Steam'))
+        data_home = os.environ.get('XDG_DATA_HOME', '')
+        if data_home and len(data_home) <= 4096 and '\0' not in data_home:
+            candidate = Path(data_home)
+            # The XDG specification requires an absolute path. Relative values
+            # must not cause discovery to scan the current working directory.
+            if candidate.is_absolute():
+                paths.append(candidate / 'Steam')
+        canonical = []
+        for path in paths:
+            try:
+                # Steam normally creates ~/.steam/steam and ~/.steam/root as
+                # symbolic aliases. Resolve known default roots once, then use
+                # the scanner's ordinary-path and fresh-metadata checks on the
+                # canonical directory. Explicit caller roots, library VDF paths,
+                # manifest paths and install directories retain no-link policy.
+                path = path.resolve(strict=True)
+            except (OSError, RuntimeError, ValueError):
+                pass
+            if path not in canonical:
+                canonical.append(path)
+        return canonical
     return paths
 
 

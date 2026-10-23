@@ -40,7 +40,7 @@ constants are independently generated mathematical digits of pi. Complete
 source and qualification boundaries are in
 [NINJA_GAIDEN_BLACK_XBOX_FORMAT.md](NINJA_GAIDEN_BLACK_XBOX_FORMAT.md).
 
-Save cryptography uses Windows CNG from the operating system. The bundled
+On Windows, save cryptography uses CNG from the operating system. The bundled
 CPython standard-library runtime also includes OpenSSL 3.5.7
 (`libcrypto-3.dll` and `libssl-3.dll`); its official licence and notices are
 retained with the runtime licences. Original editor code is covered by the
@@ -53,9 +53,15 @@ references, not bundled dependencies. Their binaries, implementations,
 translations and extracted resources are not redistributed. Original PC format
 notes document provenance and validation separately from other editions.
 
-Non-Windows source development can optionally use the installed cryptography
-package as an AES test provider. It is not bundled by the Windows build, which
-continues to use native CNG. Origins reference metadata cites public resources;
+Linux uses PyCryptodome 3.23.0 for AES ECB/CBC. Its BSD/public-domain notice is
+retained in `licenses/pycryptodome-BSD-Public-Domain.txt`; only the reviewed AES
+native libraries are collected. Linux NumPy's complete wheel notices are also
+retained in `licenses/numpy-Linux-wheel.txt`. Linux system libraries remain
+distribution-provided; see [Linux prerequisites](LINUX.md).
+
+Other development hosts and optional independent tests can use the installed
+cryptography package as an AES reference. It is not bundled by the native builds;
+Windows continues to use CNG. Origins reference metadata cites public resources;
 no downloaded save or third-party research code is redistributed.
 
 PC format research references the DW8 XL converter by koko-tsuu, the public

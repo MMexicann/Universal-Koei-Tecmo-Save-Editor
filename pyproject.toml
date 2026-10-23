@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "universal-koei-tecmo-game-toolkit"
-version = "1.0"
-description = "Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management, selected PC settings and read-only asset tools, with backups and Undo."
+version = "1.0.1"
+description = "Windows and Linux toolkit by Mexican for supported Koei Tecmo saves, mod packages, build planning, selected PC settings and asset inspection, with backups and Undo."
 requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{name = "Mexican"}]
 dependencies = [
+    "pycryptodome==3.23.0; sys_platform == 'linux'",
     "miniaudio>=1.71,<2",
     "trimesh>=5.1.1,<6",
 ]
@@ -20,10 +21,10 @@ universal-koei-toolkit = "koei_editor.cli:main"
 universal-koei-editor = "koei_editor.application:main"
 
 [project.urls]
-Homepage = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor"
-Downloads = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/latest"
-Documentation = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/tree/main/docs"
-Issues = "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/issues"
+Homepage = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit"
+Downloads = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/releases/latest"
+Documentation = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/tree/main/docs"
+Issues = "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

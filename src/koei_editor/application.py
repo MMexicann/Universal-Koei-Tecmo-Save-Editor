@@ -13,7 +13,7 @@ from koei_editor.shared import shell_preferences
 from koei_editor.shared.localization import CATALOGS, LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
-VERSION = '1.0'
+VERSION = '1.0.1'
 
 
 class Application(Appearance):
@@ -56,6 +56,10 @@ class Application(Appearance):
         # A Mod Manager integration may attach its typed Nexus handoff here.
         self.mod_manager_download_handoff = None
         self.troubleshooting = None
+        self.tool_directory = None
+        self.encyclopedia = None
+        self.patch_analyzer = None
+        self.browser_companions = None
         root.title(f'Universal Koei Tecmo Game Toolkit — v{VERSION}')
         root.geometry('1180x930')
         root.minsize(780, 680)
@@ -63,6 +67,8 @@ class Application(Appearance):
         self.tools_menu_bar = tk.Menu(root)
         self.editing_tools_menu = tk.Menu(self.tools_menu_bar, tearoff=False)
         self._editing_tools_menu_commands = {}
+        self._add_editing_tools_menu_command('tool_directory', self.show_tool_directory)
+        self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('editing_presets', self.show_editing_presets)
         self._add_editing_tools_menu_command('transfer', self.show_transfer)
         self._add_editing_tools_menu_command('game_configuration', self.show_game_configuration)
@@ -70,12 +76,17 @@ class Application(Appearance):
         self._add_editing_tools_menu_command('controller_profiles', self.show_controller_profiles)
         self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('mod_manager', self.show_mod_manager)
+        self._add_editing_tools_menu_command('mod_workshop', self.show_mod_workshop)
+        self._add_editing_tools_menu_command('mod_sandbox', self.show_mod_sandbox)
         self.editing_tools_menu.add_separator()
         self._add_editing_tools_menu_command('research_lab', self.show_research_lab)
         self._add_editing_tools_menu_command('research_import', self.show_research_import)
         self._add_editing_tools_menu_command('nexus_mods', self.show_nexus_mods)
         self._add_editing_tools_menu_command('emulator_hub', self.show_emulator_hub)
         self._add_editing_tools_menu_command('asset_explorer', self.show_asset_explorer)
+        self._add_editing_tools_menu_command('encyclopedia', self.show_encyclopedia)
+        self._add_editing_tools_menu_command('patch_analyzer', self.show_patch_analyzer)
+        self._add_editing_tools_menu_command('localization_studio', self.show_localization_studio)
         self.tools_menu_bar.add_cascade(label=self.tr('editing_and_research'), menu=self.editing_tools_menu)
         root.configure(menu=self.tools_menu_bar)
         self.apply_theme(initial_theme)
@@ -108,6 +119,7 @@ class Application(Appearance):
         self.navigation = ttk.Frame(top)
         self.navigation.grid(row=1, column=0, columnspan=2, sticky='ew', pady=(10, 0))
         self.home_button = self._translated(ttk.Button(self.navigation, command=self.show_library), 'library')
+        self.tools_button = self._translated(ttk.Button(self.navigation, command=self.show_tool_directory), 'tool_directory')
         self.game_hub_button = self._translated(ttk.Button(self.navigation, command=self.show_game_hub), 'game_hub')
         self.converter_button = self._translated(ttk.Button(self.navigation, command=self.show_converter), 'converter')
         self.compare_button = self._translated(ttk.Button(self.navigation, command=self.show_comparison), 'comparison')
@@ -118,7 +130,7 @@ class Application(Appearance):
         self.help_button = self._translated(ttk.Menubutton(self.navigation), 'help')
         self.help_menu = tk.Menu(self.help_button, tearoff=False)
         self.help_button.configure(menu=self.help_menu)
-        self._navigation_buttons = (self.home_button, self.game_hub_button, self.converter_button, self.compare_button,
+        self._navigation_buttons = (self.home_button, self.tools_button, self.game_hub_button, self.converter_button, self.compare_button,
                                     self.batch_button, self.save_library_button,
                                     self.troubleshooting_button, self.help_button)
         self.navigation.bind('<Configure>', self._schedule_navigation)
@@ -155,7 +167,7 @@ class Application(Appearance):
         self.library = ttk.Frame(self.workspace, padding=(38, 20))
         self.library.pack(fill='both', expand=True)
         ttk.Label(self.library, text='KOEI TECMO', font=(self.font_family, 27, 'bold')).pack(anchor='w', pady=(8, 0))
-        ttk.Label(self.library, text='SAVE EDITOR', font=(self.font_family, 17), style='Muted.TLabel').pack(anchor='w')
+        ttk.Label(self.library, text='GAME TOOLKIT', font=(self.font_family, 17), style='Muted.TLabel').pack(anchor='w')
         self.library_games = tuple(GAMES)
         self._library_catalog = LibraryCatalog(self.library_games)
         platforms = tuple(dict.fromkeys(game.platform for game in self.library_games))
@@ -294,13 +306,20 @@ class Application(Appearance):
         self._refresh_editing_menu_labels()
         if self.nexus_mods is not None:
             self.nexus_mods.set_language(self.language)
+        for name in ('tool_directory', 'encyclopedia', 'patch_analyzer'):
+            tool = getattr(self, name, None)
+            if tool is not None:
+                if name == 'tool_directory':
+                    tool.entries = self._tool_directory_entries()
+                tool.set_language(self.language)
         self.refresh_sessions()
         self.show_platform()
         if self.active_game is None:
             visible = next((key for key in ('converter', 'comparison', 'batch', 'save_library',
                                             'game_configuration', 'editing_presets', 'mod_manager', 'research_lab', 'research_import',
                                             'nexus_mods', 'emulator_hub', 'asset_explorer', 'workflow_builder',
-                                            'game_hub', 'troubleshooting', 'controller_profiles')
+                                            'game_hub', 'troubleshooting', 'controller_profiles',
+                                            'tool_directory', 'encyclopedia', 'patch_analyzer')
                             if getattr(self, key, None) is not None
                             and getattr(self, key).frame.winfo_manager()), None)
             if visible is None and self.help_center is not None and self.help_center.frame.winfo_manager():
@@ -542,7 +561,10 @@ class Application(Appearance):
             ('research_lab', 'show_research_lab'), ('research_import', 'show_research_import'),
             ('nexus_mods', 'show_nexus_mods'), ('emulator_hub', 'show_emulator_hub'),
             ('controller_profiles', 'show_controller_profiles'),
-            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'))
+            ('asset_explorer', 'show_asset_explorer'), ('workflow_builder', 'show_workflow_builder'),
+            ('tool_directory', 'show_tool_directory'), ('mod_workshop', 'show_mod_workshop'),
+            ('mod_sandbox', 'show_mod_sandbox'), ('localization_studio', 'show_localization_studio'),
+            ('encyclopedia', 'show_encyclopedia'), ('patch_analyzer', 'show_patch_analyzer'))
                 if callable(method := getattr(self, name, None))}
 
     def command_entries(self):
@@ -926,7 +948,8 @@ class Application(Appearance):
         return tuple(tool for name in ('converter', 'comparison', 'batch', 'game_hub', 'save_library',
                                        'game_configuration', 'mod_manager', 'editing_presets', 'research_lab', 'research_import',
                                        'nexus_mods', 'asset_explorer',
-                                       'controller_profiles', 'workflow_builder', 'emulator_hub', 'troubleshooting', 'help_center')
+                                       'controller_profiles', 'workflow_builder', 'emulator_hub', 'troubleshooting', 'help_center',
+                                       'tool_directory', 'encyclopedia', 'patch_analyzer')
                      if (tool := getattr(self, name, None)) is not None)
 
     def _opened_scalar_editors(self):
@@ -955,6 +978,93 @@ class Application(Appearance):
         self._remember_workspace('tool:mod_manager')
         return self.mod_manager
 
+    def _tool_directory_entries(self):
+        from koei_editor.shared.tool_directory import ToolEntry
+        entries = (
+            ('library', 'Saves', '98 exact game/platform profiles', 'Open an editor for the exact save edition and platform. Progression, completion, scenario views and Character & Weapon Workshop appear inside applicable editors.'),
+            ('game_hub', 'Games', 'Mapped Steam PC installations', 'Find reviewed Steam installations, observe build IDs, export reports and launch selected games. Installation discovery does not prove mod or save compatibility.'),
+            ('mod_manager', 'Mods', self._mod_install_scope(), 'Review local ZIP packages, profiles, declared dependencies and conflicts. Installation uses a game-specific method and a separately installed loader.'),
+            ('nexus_mods', 'Mods', 'Website browsing; API registration pending', 'Open official Nexus game pages. Download through the website, then import a supported ZIP into Mod Manager. API browsing and integrated downloads remain unavailable until application registration is verified.'),
+            ('mod_workshop', 'Mods', 'Generic projects and supported manager ZIPs', 'Create projects from files you provide, verify replacements and export packages. A manager-compatible package needs its exact game-specific layout; generic packages are not universal installers.'),
+            ('mod_sandbox', 'Mods', 'Bundled browser workspace', 'Stage local mod project folders, inspect declared dependencies, hashes and target collisions, and export reviewed packages. This does not execute mods or certify game loading.'),
+            ('save_library', 'Saves', 'Copied saves; Vault/Profile storage is Windows-only', 'Browse and qualify copied saves. Save Doctor / Detection / Vault opens snapshots and Smart Playthrough Profiles. Profiles prepare isolated copies and retain component data without automatically activating mods or settings.'),
+            ('converter', 'Saves', '145 scoped transfer routes', 'Convert only each route\'s documented fields into a new destination; platform decryption, signing and complete progression migration are separate.'),
+            ('batch', 'Saves', 'Reviewed conversion queue', 'Plan and preflight multiple copy conversions. Inspect partial results and route-specific limits.'),
+            ('comparison', 'Saves', 'Qualified save copies', 'Compare supported decoded fields and export review reports while preserving original copies.'),
+            ('editing_presets', 'Saves', 'Compatible mapped fields', 'Preview and apply reusable editing presets to compatible opened copies, with existing Undo and review.'),
+            ('transfer', 'Saves', 'Requires an open destination save', 'Open the destination copy in its exact editor first, then select and review fields from a compatible source copy.'),
+            ('workflow_builder', 'Saves', 'Reviewed automation plans', 'Build reusable editing and batch workflows. Review planned changes before creating outputs.'),
+            ('game_configuration', 'Games', 'Rorona / Totori / Meruru DX PC', 'Inspect selected verified game and Arland DX Fix settings, compare profiles, and keep backups. Other games do not have configuration adapters.'),
+            ('controller_profiles', 'Games', 'App-owned binding profiles', 'Organize and export bindings. This does not change Steam Input, OS mappings or controller drivers.'),
+            ('emulator_hub', 'Games', 'Configured emulator profiles', 'Prepare documented emulator launch profiles and hand off exported save copies. Emulator installation and console signing are external.'),
+            ('asset_explorer', 'Research', 'Read-only ZIP, G1T and media subsets', 'Inspect supported archive and asset subsets; unsupported native formats remain unknown. No general game archive repacking.'),
+            ('encyclopedia', 'Research', 'Three Hopes Switch / Hyrule Warriors Wii U', 'Search the bundled edition-scoped character, weapon, material and skill references with provenance. This is not a complete all-game database.'),
+            ('patch_analyzer', 'Research', 'Explicit before/after JSON snapshots', 'Compare file, archive and format observations and optional compatibility requirements. Results describe evidence, not guaranteed game or mod compatibility.'),
+            ('localization_studio', 'Research', 'Bundled browser workspace; text/subtitle formats', 'Translate supported CSV/TSV, JSON, TXT, SRT and WebVTT copies locally. Proprietary game packages are not supported.'),
+            ('research_lab', 'Research', 'Copied-save inspection', 'Compare decoded observations and export bounded research hypotheses without registering unsupported editing fields.'),
+            ('research_import', 'Research', 'Inspection-only format candidates', 'Inspect documented research candidates; these are separate from registered editable game profiles.'),
+            ('troubleshooting', 'Support', 'Bounded read-only checks', 'Inspect supported selected folders and configuration syntax. Unknown checks stay unknown; no automatic repair or inferred game-load validation.'),
+            ('versions', 'Support', 'Mapped Steam build observations', 'Observe installed build IDs and local build history. An absent exact-build review is unknown, not automatically incompatible.'),
+            ('compatibility', 'Support', 'Per-profile evidence and limits', 'Read exact supported editions, implemented fields and remaining native/game-load evidence requirements.'),
+            ('plugins', 'Support', 'Local data-only community packages', 'Review community packages without executing downloaded plugins. There is no hosted marketplace.'),
+            ('diagnostics', 'Support', 'Local reports; explicit export', 'Generate toolkit diagnostics without automatically transmitting player saves, credentials or private paths.'),
+        )
+        return tuple(ToolEntry('tool:' + key, self.tr(key), group, scope, description)
+                     for key, group, scope, description in entries)
+
+    @staticmethod
+    def _mod_install_scope():
+        from koei_editor.shared import mod_manager
+        catalog = getattr(mod_manager, 'supported_mod_games', None)
+        if callable(catalog):
+            return ', '.join(game.title for game in catalog()) + '; separate loaders required'
+        providers = getattr(mod_manager, 'SUPPORTED_MOD_GAMES', ())
+        if providers:
+            values = providers.values() if isinstance(providers, dict) else providers
+            return ', '.join(getattr(game, 'title', getattr(game, 'name', str(game))) for game in values)
+        return 'Nioh 2 PC; game-specific loader required'
+
+    def show_tool_directory(self):
+        from koei_editor.shared.tool_directory import ToolDirectoryWorkspace
+        if self.tool_directory is None:
+            self.tool_directory = ToolDirectoryWorkspace(self.root, self.workspace,
+                self._tool_directory_entries(), self.execute_command, language=self.language)
+        self._show_editing_tool(self.tool_directory, self.tr('tool_directory'))
+        self._remember_workspace('tool:tool_directory')
+        return self.tool_directory
+
+    def show_encyclopedia(self):
+        from koei_editor.shared.toolkit_knowledge_gui import EncyclopediaWorkspace
+        if self.encyclopedia is None:
+            self.encyclopedia = EncyclopediaWorkspace(self.root, self.workspace, language=self.language)
+        self._show_editing_tool(self.encyclopedia, self.tr('encyclopedia'))
+        self._remember_workspace('tool:encyclopedia')
+        return self.encyclopedia
+
+    def show_patch_analyzer(self):
+        from koei_editor.shared.toolkit_knowledge_gui import PatchCompatibilityWorkspace
+        if self.patch_analyzer is None:
+            self.patch_analyzer = PatchCompatibilityWorkspace(self.root, self.workspace, language=self.language)
+        self._show_editing_tool(self.patch_analyzer, self.tr('patch_analyzer'))
+        self._remember_workspace('tool:patch_analyzer')
+        return self.patch_analyzer
+
+    def _open_browser_companion(self, tool_id):
+        from tkinter import messagebox
+        from koei_editor.shared.browser_companions import BrowserCompanionManager
+        if self.browser_companions is None:
+            self.browser_companions = BrowserCompanionManager()
+        try:
+            return self.browser_companions.open(tool_id)
+        except (OSError, RuntimeError, ValueError) as error:
+            messagebox.showerror('Browser workspace', str(error), parent=self.root)
+
+    def show_mod_sandbox(self):
+        return self._open_browser_companion('mod_testing_sandbox')
+
+    def show_localization_studio(self):
+        return self._open_browser_companion('localization_studio')
+
     def _add_editing_tools_menu_command(self, key, callback):
         self.editing_tools_menu.add_command(label=self.tr(key), command=callback)
         self._editing_tools_menu_commands[key] = self.editing_tools_menu.entrycget('end', 'command')
@@ -982,6 +1092,32 @@ class Application(Appearance):
     def show_transfer(self):
         from tkinter import messagebox
         if self.active_game is None:
+            candidates = [(key, editor) for key, (_frame, editor) in self.sessions.items()
+                          if getattr(editor, 'document', None) is not None and hasattr(editor, 'adapter')]
+            if len(candidates) == 1:
+                self.select_game(candidates[0][0])
+                return self.show_transfer()
+            if len(candidates) > 1:
+                window = tk.Toplevel(self.root)
+                window.title('Choose destination editor')
+                window.transient(self.root)
+                frame = ttk.Frame(window, padding=16)
+                frame.pack(fill='both', expand=True)
+                ttk.Label(frame, text='Choose the opened save that will receive the reviewed transfer.').pack(anchor='w')
+                choices = {get_game(key).title + ' · ' + get_game(key).subtitle: (key, editor)
+                           for key, editor in candidates}
+                choice = tk.StringVar(window, value=next(iter(choices)))
+                selector = ttk.Combobox(frame, textvariable=choice, values=tuple(choices), state='readonly', width=65)
+                selector.pack(fill='x', pady=12)
+                def choose():
+                    key, editor = choices[choice.get()]
+                    if key in self.sessions and self.sessions[key][1] is editor and editor.document is not None:
+                        window.destroy()
+                        self.select_game(key)
+                        self.show_transfer()
+                ttk.Button(frame, text='Use destination editor', command=choose).pack(side='left')
+                ttk.Button(frame, text='Cancel', command=window.destroy).pack(side='right')
+                return window
             messagebox.showinfo('Selective Save Transfer', 'Open the destination save in its exact editor first.',
                                 parent=self.root)
             return None
@@ -1143,6 +1279,7 @@ class Application(Appearance):
                 language=self.language,
                 game_id=self.active_game,
                 download_handoff=self.mod_manager_download_handoff,
+                on_local_import=getattr(self, '_import_nexus_zip', None),
             )
         else:
             self.nexus_mods.set_download_handoff(self.mod_manager_download_handoff)
@@ -1299,8 +1436,44 @@ class Application(Appearance):
             self.mod_workshop_window.window.lift()
             return self.mod_workshop_window
         from koei_editor.shared.mod_workshop.gui import ModWorkshopWindow
-        self.mod_workshop_window = ModWorkshopWindow(self.root)
+        self.mod_workshop_window = ModWorkshopWindow(self.root, on_manager_package=self._receive_workshop_package)
         return self.mod_workshop_window
+
+    def _receive_workshop_package(self, archive):
+        """Offer an exported package to the manager; deployment remains separate."""
+        manager = self.show_mod_manager()
+        receive = getattr(manager, 'import_archive_path', None)
+        if callable(receive):
+            return self._review_mod_import(receive, archive)
+        from tkinter import messagebox
+        messagebox.showinfo('Mod package ready',
+            'The package was exported. Choose Import ZIP in Mod Manager and select it for review.',
+            parent=self.root)
+
+    def _import_nexus_zip(self, game_id):
+        from tkinter import filedialog
+        archive = filedialog.askopenfilename(parent=self.root, title='Import downloaded mod ZIP',
+                                             filetypes=(('ZIP packages', '*.zip'),))
+        if not archive:
+            return None
+        manager = self.show_mod_manager()
+        receive = getattr(manager, 'import_archive_path', None)
+        if callable(receive):
+            return self._review_mod_import(receive, archive, game_id=game_id)
+
+    def _review_mod_import(self, receive, archive, **options):
+        from tkinter import messagebox
+        from koei_editor.shared.mod_manager import ModManagerError
+        from koei_editor.games.dw3.models import SaveError
+        try:
+            return receive(archive, **options)
+        except (ModManagerError, SaveError, OSError, ValueError, RuntimeError) as error:
+            try:
+                if self.root.winfo_exists():
+                    messagebox.showerror('Mod package not imported', str(error), parent=self.root)
+            except tk.TclError:
+                pass
+            return None
 
     def close(self):
         tools = self._tool_workspaces()
@@ -1331,6 +1504,9 @@ class Application(Appearance):
                 close = getattr(tool, 'close', None)
                 if callable(close):
                     close()
+            companions = getattr(self, 'browser_companions', None)
+            if companions is not None:
+                companions.close()
             self.root.destroy()
 
 
@@ -1560,6 +1736,9 @@ def main(argv=None):
         app.show_controller_profiles()
         app.show_emulator_hub()
         app.show_nexus_mods()
+        app.show_tool_directory()
+        app.show_encyclopedia()
+        app.show_patch_analyzer()
         app.show_help('diagnostics')
         app.show_library()
         app.nexus_mods.close()

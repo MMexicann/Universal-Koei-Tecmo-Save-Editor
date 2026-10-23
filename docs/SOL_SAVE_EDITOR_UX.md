@@ -7,7 +7,7 @@ base: main
 base_commit: 1955b73
 full_suite_base_commit: c851ee5
 pull_request: 138
-pull_request_url: https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/138
+pull_request_url: https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/138
 release_or_version_change: false
 registered_profiles: 98
 shared_scalar_profiles: 97

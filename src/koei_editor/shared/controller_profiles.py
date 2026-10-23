@@ -5,6 +5,7 @@ game. They are stored in the application's configuration directory and must
 not be confused with game configuration files or Steam Input layouts.
 """
 from dataclasses import dataclass, replace
+from contextlib import contextmanager
 import json
 import os
 import stat
@@ -278,21 +279,102 @@ def _serialize_store(profiles):
 def _owned_identity(path):
     try:
         info = path.lstat()
-        if stat.S_ISREG(info.st_mode):
+        if (stat.S_ISREG(info.st_mode) and info.st_nlink == 1
+                and not getattr(info, 'st_file_attributes', 0) & 0x400):
             return info.st_dev, info.st_ino
     except OSError:
         pass
     return None
 
 
-def _unlink_owned(path, identity):
+def _owned_snapshot(path):
+    try:
+        info = path.lstat()
+        if (stat.S_ISREG(info.st_mode) and info.st_nlink == 1
+                and not getattr(info, 'st_file_attributes', 0) & 0x400):
+            return (info.st_dev, info.st_ino, info.st_size,
+                    info.st_mtime_ns, info.st_ctime_ns)
+    except OSError:
+        pass
+    return None
+
+
+def _retain_creator(stream):
+    """Pin the created file so a removed inode cannot be reused during cleanup.
+
+    Windows retains its close-before-publication semantics: a duplicated writer
+    prevents rename, while even a share-DELETE metadata handle can leave an
+    unlinked name delete-pending and prevent an unrelated replacement. That
+    branch uses the complete post-write path snapshot as its cleanup guard.
+    """
+    return os.dup(stream.fileno()) if os.name != 'nt' else None
+
+
+def _unlink_owned(path, identity, descriptor, snapshot=None):
     # A failed operation must preserve a replacement another application has
-    # left at our former staging/recovery name.
-    if identity is not None and _owned_identity(path) == identity:
-        try:
+    # left at our former staging/recovery name. POSIX keeps its creator descriptor
+    # open; a remembered inode after close is not proof of ownership on filesystems
+    # that immediately recycle removed inodes. Windows requires a complete snapshot
+    # because retaining an open handle changes deletion/publication semantics.
+    try:
+        if descriptor is None:
+            if snapshot is None:
+                return
+            held_identity = identity
+        else:
+            held = os.fstat(descriptor)
+            held_identity = held.st_dev, held.st_ino
+        if (held_identity == identity
+                and _owned_identity(path) == identity
+                and (snapshot is None or _owned_snapshot(path) == snapshot)):
             path.unlink(missing_ok=True)
-        except OSError:
-            pass
+    except OSError:
+        pass
+
+
+@dataclass
+class _OwnedTemporary:
+    path: Path
+    descriptor: int | None
+    identity: tuple[int, int]
+    snapshot: tuple | None = None
+    retain: bool = False
+
+
+@contextmanager
+def _owned_temporary(directory, data, *, prefix, suffix):
+    """Create, verify and retain one private staging/recovery file's ownership."""
+    owned = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w+b', dir=directory,
+                                         prefix=prefix, suffix=suffix,
+                                         delete=False) as stream:
+            info = os.fstat(stream.fileno())
+            descriptor = _retain_creator(stream)
+            owned = _OwnedTemporary(Path(stream.name), descriptor, (info.st_dev, info.st_ino))
+            stream.write(data)
+            stream.flush()
+            owned.snapshot = _owned_snapshot(owned.path)
+            os.fsync(stream.fileno())
+            stream.seek(0)
+            if stream.read(len(data) + 1) != data:
+                raise OSError('Profile staging bytes changed before publication.')
+        if _owned_identity(owned.path) != owned.identity:
+            raise OSError('Profile staging file changed before publication.')
+        # Windows may finalize the writer's timestamps when it closes. Capture
+        # freshness from the same path-stat API used by cleanup, while the
+        # POSIX creator descriptor continues to pin its file identity. On
+        # Windows this full snapshot also detects replacement/in-place changes.
+        owned.snapshot = _owned_snapshot(owned.path)
+        yield owned
+    finally:
+        if owned is not None:
+            try:
+                if not owned.retain:
+                    _unlink_owned(owned.path, owned.identity, owned.descriptor, owned.snapshot)
+            finally:
+                if owned.descriptor is not None:
+                    os.close(owned.descriptor)
 
 
 def _atomic_write(destination, data, *, backup=None):
@@ -312,26 +394,12 @@ def _atomic_write(destination, data, *, backup=None):
             raise ProfileError('The existing profile store is larger than the supported limit.')
         _decode_store(previous)
         _atomic_write(backup, previous)
-    temporary = None
-    identity = None
     try:
-        with tempfile.NamedTemporaryFile(mode='wb', dir=destination.parent,
-                                         prefix=f'.{destination.name}.', suffix='.tmp',
-                                         delete=False) as stream:
-            temporary = Path(stream.name)
-            opened = os.fstat(stream.fileno())
-            identity = (opened.st_dev, opened.st_ino)
-            stream.write(data)
-            stream.flush()
-            os.fsync(stream.fileno())
-        if _owned_identity(temporary) != identity:
-            raise OSError("Profile staging file changed before publication.")
-        os.replace(temporary, destination)
+        with _owned_temporary(destination.parent, data,
+                              prefix=f'.{destination.name}.', suffix='.tmp') as owned:
+            os.replace(owned.path, destination)
     except OSError as error:
         raise ProfileError('Profile data could not be saved safely.') from error
-    finally:
-        if temporary is not None:
-            _unlink_owned(temporary, identity)
 
 
 def _write_new_file(destination, data, *, error_message):
@@ -420,30 +488,40 @@ class ProfileStore:
                 # This leaves the source backup intact if replacing the store
                 # fails, and lets us roll back if promoting the old store to
                 # `.bak` fails after the restore itself was written.
-                recovery = self.path.with_name(
-                    self.path.name + '.recovery.' + uuid.uuid4().hex)
-                _write_new_file(recovery, current,
-                                error_message='The current profile store could not be preserved safely.')
-                recovery_identity = _owned_identity(recovery)
                 try:
-                    _atomic_write(self.path, raw)
-                except ProfileError:
-                    _unlink_owned(recovery, recovery_identity)
-                    raise
-                try:
-                    _atomic_write(self.backup_path, current)
-                except ProfileError as error:
-                    try:
-                        _atomic_write(self.path, current)
-                    except ProfileError as rollback_error:
-                        raise ProfileError(
-                            f'Backup promotion failed; the previous profile store is preserved at {recovery}.') \
-                            from rollback_error
-                    _unlink_owned(recovery, recovery_identity)
-                    raise ProfileError(
-                        'Backup promotion failed; the current store and backup were restored to their prior state.') \
-                        from error
-                _unlink_owned(recovery, recovery_identity)
+                    with _owned_temporary(self.path.parent, current,
+                                          prefix=self.path.name + '.recovery.', suffix='') as recovery:
+                        # A commit can be interrupted after its rename but
+                        # before control returns here. Retain the original
+                        # bytes until the operation's outcome is established.
+                        recovery.retain = True
+                        try:
+                            _atomic_write(self.path, raw)
+                        except ProfileError:
+                            try:
+                                unchanged = self._read_store_bytes(self.path) == current
+                            except ProfileError:
+                                unchanged = False
+                            recovery.retain = not unchanged
+                            raise
+                        try:
+                            _atomic_write(self.backup_path, current)
+                        except ProfileError as error:
+                            try:
+                                _atomic_write(self.path, current)
+                                if self._read_store_bytes(self.path) != current:
+                                    raise ProfileError('The previous profile store could not be verified after rollback.')
+                            except ProfileError as rollback_error:
+                                raise ProfileError(
+                                    f'Backup promotion failed; the previous profile store is preserved at {recovery.path}.') \
+                                    from rollback_error
+                            recovery.retain = False
+                            raise ProfileError(
+                                'Backup promotion failed; the current store and backup were restored to their prior state.') \
+                                from error
+                        recovery.retain = False
+                except OSError as error:
+                    raise ProfileError('The current profile store could not be preserved safely.') from error
                 return _decode_store(raw)
         _atomic_write(self.path, raw)
         return _decode_store(raw)

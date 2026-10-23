@@ -449,6 +449,7 @@ jobs:
           test "$main_sha" = "$merged_sha"
           # GITHUB_TOKEN-created merges do not trigger ordinary push workflows.
           # Dispatch the protected main commit for a fresh native build instead.
+          gh workflow run linux.yml --repo "$GITHUB_REPOSITORY" --ref main
           gh workflow run windows-release.yml --repo "$GITHUB_REPOSITORY" --ref main \
             -f publish=true -f "expected_sha=$merged_sha"
 
@@ -458,10 +459,47 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13.13'
+          architecture: x64
+      - name: Install locked publication verifier dependencies
+        run: |
+          python -m pip install --require-hashes -r tools/requirements/linux-build.txt
+          python -m pip install --no-deps --no-build-isolation -e .
+      - name: Require native Linux qualification for the same main commit
+        id: linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/linux.yml/runs?head_sha=$GITHUB_SHA&per_page=100")
+            selected=$(printf '%s' "$runs" | jq -c --arg sha "$GITHUB_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .event != "pull_request")] | sort_by(.id) | reverse | .[0] // {}')
+            status=$(printf '%s' "$selected" | jq -r '.status // empty')
+            if [ "$status" = completed ]; then
+              test "$(printf '%s' "$selected" | jq -r '.conclusion')" = success
+              run_id=$(printf '%s' "$selected" | jq -r '.id')
+              test "$run_id" -gt 0
+              echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo 'Waiting for the exact main commit to pass native Linux qualification.'
+            sleep 15
+          done
+          echo 'Native Linux qualification did not complete successfully in time.' >&2
+          exit 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: Universal-Koei-Tecmo-Game-Toolkit-Linux-x86_64
+          path: linux-build
+          run-id: ${{ steps.linux.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/download-artifact@v4
         with:
           name: universal-koei-tecmo-windows
@@ -530,6 +568,8 @@ jobs:
               require(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, 'Checksum manifest does not match an exact published asset.')
           print('Active Defender evidence binds both EXEs, complete portable ZIP and source ZIP to this commit.')
           PY
+      - name: Verify Linux source and exact tested archive before publication
+        run: python -m tools.verify_linux_publication --artifact-dir linux-build --output-dir release
       - name: Publish a new versioned release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -557,6 +597,9 @@ jobs:
           base = 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/blob/' + os.environ['GITHUB_SHA'] + '/'
           targets = {
               'SUPPORTED_GAMES.md': 'docs/SUPPORTED_GAMES.md',
+              'TOOLKIT_FEATURES.md': 'docs/TOOLKIT_FEATURES.md',
+              'LINUX.md': 'docs/LINUX.md',
+              'releases/toolkit-v1.0.md': 'docs/releases/toolkit-v1.0.md',
               '../README.md#compatibility': 'README.md#compatibility',
               '../README.md#download-and-install': 'README.md#download-and-install',
               'releases/v3.1.md': 'docs/releases/v3.1.md',
@@ -565,4 +608,4 @@ jobs:
               notes = notes.replace('](' + relative + ')', '](' + base + resolved + ')')
           Path(sys.argv[1]).write_text(notes, encoding='utf-8')
           PY
-          gh release create "$release_tag" --verify-tag --latest --title "Universal Koei Tecmo Game Toolkit v$version" --notes-file "$notes_file" "release/UniversalKoeiTecmoGameToolkit-v$version.exe" "release/UniversalKoeiTecmoGameToolkit-v$version-CLI.exe" "release/UniversalKoeiTecmoGameToolkit-v$version-Windows.zip" "release/UniversalKoeiTecmoGameToolkit-v$version-Source.zip" release/SHA256SUMS.txt "release/DefenderScan-v$version.json"
+          gh release create "$release_tag" --verify-tag --latest --title "Universal Koei Tecmo Game Toolkit v$version" --notes-file "$notes_file" "release/UniversalKoeiTecmoGameToolkit-v$version.exe" "release/UniversalKoeiTecmoGameToolkit-v$version-CLI.exe" "release/UniversalKoeiTecmoGameToolkit-v$version-Windows.zip" "release/UniversalKoeiTecmoGameToolkit-v$version-Source.zip" release/SHA256SUMS.txt "release/DefenderScan-v$version.json" "release/UniversalKoeiTecmoGameToolkit-v$version-Linux-x86_64.tar.gz" "release/UniversalKoeiTecmoGameToolkit-v$version-Linux-x86_64.SHA256SUMS" "release/LinuxVerification-v$version.json"

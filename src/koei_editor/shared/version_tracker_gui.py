@@ -6,7 +6,7 @@ from tkinter import ttk
 
 from koei_editor.game_registry import GAMES
 from koei_editor.shared.help_content import help_articles
-from koei_editor.shared import version_tracker
+from koei_editor.shared import game_hub, version_tracker
 
 
 _TEXT = {
@@ -149,7 +149,10 @@ class VersionTrackerPanel:
         self._show_empty_build()
 
     def _t(self, key):
-        return _TEXT[self.language][key]
+        text = _TEXT[self.language][key]
+        if key == 'scope':
+            text = (text + ' ' + game_hub.installation_runtime_notice(self.language)).strip()
+        return text
 
     def _next_step_titles(self, step_ids):
         titles = {article.id: article.title for article in help_articles(self.language)}

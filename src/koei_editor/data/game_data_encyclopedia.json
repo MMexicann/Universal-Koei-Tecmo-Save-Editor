@@ -6,7 +6,7 @@
     {
       "id": "local-profile-registry",
       "title": "Universal Koei Tecmo Save Editor profile registry",
-      "uri": "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/cede8a91a7ce5d150d0b2d88a71120ac02bd821a/src/koei_editor/game_registry.py",
+      "uri": "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/blob/cede8a91a7ce5d150d0b2d88a71120ac02bd821a/src/koei_editor/game_registry.py",
       "license": "MIT",
       "license_uri": "https://opensource.org/license/mit",
       "revision": "cede8a91a7ce5d150d0b2d88a71120ac02bd821a",
@@ -32,7 +32,7 @@
     {
       "id": "hyrule-wiiu-profile-registry",
       "title": "Universal Koei Tecmo Save Editor profile registry",
-      "uri": "https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/1d86de1b78195d873a59bffb2c1de20befe6c473/src/koei_editor/game_registry.py",
+      "uri": "https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/blob/1d86de1b78195d873a59bffb2c1de20befe6c473/src/koei_editor/game_registry.py",
       "license": "MIT",
       "license_uri": "https://opensource.org/license/mit",
       "revision": "1d86de1b78195d873a59bffb2c1de20befe6c473",

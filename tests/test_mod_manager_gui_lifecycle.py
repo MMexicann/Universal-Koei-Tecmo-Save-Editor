@@ -2,6 +2,7 @@
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 import zipfile
 from unittest.mock import Mock, patch
@@ -79,7 +80,7 @@ class ModManagerGuiLifecycleTests(unittest.TestCase):
         self.assertEqual(self._pending_manager_polls(), ())
 
     def test_real_imported_mod_selection_survives_failed_then_successful_recovery_refresh(self):
-        folder = Path(self.temporary.name)
+        folder = Path(self.temporary.name).resolve()
         game = folder / 'game'
         game.mkdir()
         (game / GAME_EXE).write_bytes(b'synthetic executable; never run')
@@ -110,3 +111,131 @@ class ModManagerGuiLifecycleTests(unittest.TestCase):
         self.assertEqual(self.manager.mods(), (record,))
         self.assertEqual((game / GAME_EXE).read_bytes(), b'synthetic executable; never run')
         self.assertEqual((game / LOADER_FILE).read_bytes(), b'synthetic loader; never run')
+
+    def test_game_selector_isolates_libraries_and_restores_each_game_context(self):
+        from tests.test_mod_manager import install_root, make_archive
+        from tests.test_mod_manager_multigame import nioh3_root, package
+        folder = Path(self.temporary.name).resolve()
+        nioh2 = install_root(folder / 'nioh2')
+        self.manager.set_game_root(nioh2)
+        original = self.manager.import_archive(make_archive(folder / 'nioh2.zip', mod_id='same-id'))
+        self.workspace.refresh()
+        self.workspace.loader_confirmed.set(True)
+        self.assertTrue(self.workspace.select_game('nioh3_pc'))
+        self.assertFalse(self.workspace.loader_confirmed.get())
+        self.assertEqual(self.workspace.manager.mods(), ())
+        self.assertIsNone(self.workspace.manager.current_game_root)
+        nioh3 = nioh3_root(folder / 'nioh3')
+        self.workspace.manager.set_game_root(nioh3)
+        self.workspace.manager.import_archive(package(folder / 'nioh3.zip', mod_id='same-id'))
+        self.workspace.refresh()
+        self.assertIn('library copy is retained', self.workspace.capability_text.get())
+        self.assertTrue(self.workspace.select_game('nioh2_pc'))
+        self.assertIs(self.workspace.manager, self.manager)
+        self.assertEqual(self.workspace.manager.current_game_root, nioh2)
+        self.assertEqual(self.workspace.manager.mods(), (original,))
+        self.assertTrue(self.workspace.select_game('nioh3_pc'))
+        self.assertEqual(self.workspace.manager.current_game_root, nioh3)
+        self.assertNotEqual(self.workspace.manager.mods()[0].content_sha256, original.content_sha256)
+
+    def test_game_switch_is_blocked_by_unresolved_transaction_and_preserves_selection(self):
+        self.workspace._recovery_blocked = True
+        with self.assertRaises(ValueError):
+            self.workspace.select_game('nioh3_pc')
+        self.assertIs(self.workspace.manager, self.manager)
+        self.assertEqual(self.workspace.game_choice.get(), self.manager.adapter.title)
+
+    def test_archive_handoff_routes_manifest_to_game_and_imports_without_deployment(self):
+        from tests.test_mod_manager_multigame import package
+        folder = Path(self.temporary.name).resolve()
+        archive = package(folder / 'workshop-export.zip')
+        record = self.workspace.import_archive_path(archive)
+        self.assertEqual(self.workspace.manager.game_id, 'nioh3_pc')
+        self.assertEqual(self.workspace.mod_table.selection(), (record.id,))
+        self.assertFalse(record.installed)
+        self.assertIsNone(self.workspace.manager.current_game_root)
+        self.assertFalse(self.workspace.loader_confirmed.get())
+        self.assertFalse(self.manager.mods())
+        with self.assertRaises(Exception):
+            self.workspace.import_archive_path(archive, game_id='nioh2_pc')
+        self.assertEqual(self.workspace.manager.game_id, 'nioh3_pc')
+
+    def test_nonwindows_workspace_keeps_library_planning_and_blocks_deployment_callbacks(self):
+        from koei_editor.shared.mod_manager import mod_manager_host_capabilities
+        capability = mod_manager_host_capabilities()
+        capability['documented_game_deployment'] = False
+        capability['message'] = 'Procedural host: library only; deployment unavailable.'
+        with patch('koei_editor.shared.mod_manager_gui.mod_manager_host_capabilities', return_value=capability):
+            self.workspace.refresh()
+            self.assertEqual(str(self.workspace.import_button.cget('state')), 'normal')
+            self.assertEqual(str(self.workspace.apply_profile_button.cget('state')), 'disabled')
+            self.workspace.loader_confirmed.set(True)
+            with self.assertRaisesRegex(ValueError, 'deployment unavailable'):
+                self.workspace._require_loader_confirmation()
+
+    def test_wrapped_rows_do_not_share_column_widths_and_reuse_their_containers(self):
+        holder = ttk.Frame(self.root)
+        holder.pack(fill='x')
+        buttons = tuple(ttk.Button(holder, text=text) for text in ('A', 'B', 'C' * 30, 'D' * 30))
+        width = sum(button.winfo_reqwidth() + 10 for button in buttons[:3])
+        self.root.geometry(f'{width}x240')
+        self.root.deiconify()
+        self.workspace._flow_buttons(buttons, width)
+        self.root.update()
+        self.assertEqual(len({str(button.grid_info()['in']) for button in buttons}), 2)
+        for button in buttons:
+            self.assertLessEqual(button.winfo_rootx() + button.winfo_width(),
+                                 holder.winfo_rootx() + width)
+        containers = tuple(holder._mod_flow_rows)
+        self.workspace._flow_buttons(buttons, width * 2)
+        self.root.update()
+        self.assertEqual(len({str(button.grid_info()['in']) for button in buttons}), 1)
+        self.assertFalse(containers[1].winfo_ismapped())
+        self.workspace._flow_buttons(buttons, width)
+        self.root.update()
+        self.assertEqual(tuple(holder._mod_flow_rows), containers)
+
+    def test_small_viewport_keeps_wrapped_actions_visible_and_form_scrollable(self):
+        old_scaling = self.root.tk.call('tk', 'scaling')
+        self.addCleanup(lambda: self.root.winfo_exists() and self.root.tk.call('tk', 'scaling', old_scaling))
+        self.root.tk.call('tk', 'scaling', float(old_scaling) * 1.4)
+        style = __import__('tkinter.ttk', fromlist=['Style']).Style(self.root)
+        style.configure('TButton', font=('DejaVu Sans', 14))
+        style.configure('TLabel', font=('DejaVu Sans', 14))
+        self.root.geometry('780x680')
+        self.root.deiconify()
+        self.workspace.frame.pack(fill='both', expand=True)
+        self.workspace.select_game('nioh3_pc')
+        self.workspace.import_button.configure(text='Mod-ZIP hinzufügen…')
+        self.workspace.toggle_enabled_button.configure(text='Im Profil aktivieren')
+        self.workspace.remove_button.configure(text='Aus der Bibliothek entfernen')
+        self.root.update()
+        self.workspace._responsive_layout()
+        self.root.update()
+        client_left = self.root.winfo_rootx()
+        client_top = self.root.winfo_rooty()
+        for button in self.workspace._action_buttons:
+            with self.subTest(button=button.cget('text')):
+                self.assertGreaterEqual(button.winfo_rootx(), client_left)
+                self.assertGreaterEqual(button.winfo_rooty(), client_top)
+                self.assertLessEqual(button.winfo_rootx() + button.winfo_width(), client_left + 780)
+                self.assertLessEqual(button.winfo_rooty() + button.winfo_height(), client_top + 680)
+        rows = {str(button.grid_info()['in']) for button in self.workspace._action_buttons}
+        self.assertGreater(len(rows), 1)
+        for row in self.workspace.actions._mod_flow_rows:
+            if row.winfo_ismapped():
+                self.assertLessEqual(row.winfo_reqwidth(), self.workspace.actions.winfo_width())
+        canvas = self.workspace.content_canvas
+        self.assertLessEqual(self.workspace.content.winfo_width(), canvas.winfo_width())
+        # Font metrics can make the complete form fit at 780x680 (notably
+        # Tk 9). Test scrolling with an explicitly shorter real viewport,
+        # while preserving the minimum-window action bounds checked above.
+        chrome_height = self.root.winfo_height() - canvas.winfo_height()
+        form_height = self.workspace.content.winfo_reqheight()
+        self.root.geometry(f'780x{chrome_height + max(40, form_height // 2)}')
+        self.root.update()
+        self.assertLess(canvas.winfo_height(), self.workspace.content.winfo_reqheight())
+        self.assertGreater(canvas.bbox('all')[3], canvas.winfo_height())
+        canvas.yview_moveto(1)
+        self.root.update()
+        self.assertGreater(canvas.yview()[0], 0)

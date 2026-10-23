@@ -51,9 +51,8 @@ release checks.
   not identify or validate the version of a user's `d3d11.dll`.
 - No game launch, mod load, save, or gameplay behavior was exercised.
 - The Tk manager workspace tests were skipped in this headless environment.
-- The adapter supports Nioh 2 Windows PC only. Other Koei Tecmo games remain
-  unsupported pending independently verified installation and restoration
-  methods.
+- That original review covered Nioh 2 Windows PC only. The separate
+  multi-game follow-up below documents the new Nioh 3 method and its limits.
 - The Nexus browser handoff only imports an explicitly selected Nioh 2 ZIP into
   the library. Other listed Nexus games are browse-only; the manager never
   enables or installs a downloaded package automatically.
@@ -68,3 +67,52 @@ release checks.
 The exact support evidence and ownership rules are in
 [MOD_MANAGER.md](MOD_MANAGER.md). The PR's CI should run the GUI cases on its
 Windows display-capable test environment and verify the full source manifest.
+
+## Multi-game implementation follow-up (2026-10-23)
+
+The source now includes a separate `nioh3_pc` installation contract alongside
+`nioh2_pc`. Primary source evidence and deliberately limited content scope are
+listed in [MOD_MANAGER.md](MOD_MANAGER.md). The former Nioh 2-only audit limit
+above describes the original review, not this follow-up.
+
+- Existing manager, Nexus queue and transaction-concurrency checks: **42 cases,
+  41 passed, one existing Windows 8.3-alias check skipped on Linux**.
+- New `tests.test_mod_manager_multigame`: **12 passed, zero skips**. Generated
+  archives cover read-only review/import identity, strict game metadata,
+  wrappers and hash filename rules, case/prefix/extension hash aliases, profile
+  and unmanaged resource conflicts, loader/executable markers and bounded
+  ordinary loader files, per-game library isolation, owned-folder disable and
+  redeploy, modified-file refusal, and committed-removal recovery.
+- Retained `tests.test_mod_manager_gui_lifecycle` and
+  `tests.test_application_shell`: **52 passed, zero skips** on an isolated Tk
+  display. Four additional Manager GUI cases also passed, covering game
+  switching with independent roots/libraries, transaction-blocked switching,
+  declared-game ZIP handoff without installation, and non-Windows deployment
+  controls. The complete manager service/queue/transaction/new-adapter/GUI set
+  ran **63 cases: 62 passed, one existing native-only skip**.
+- Composed new-adapter/Manager GUI/Workshop bridge/Workshop GUI/mod CLI/Nexus
+  contract checks: **60 passed, zero skips** on an isolated Tk display.
+
+The loader and executable fixtures contain procedural marker bytes and are
+never executed. These checks verify the manager's filesystem behavior, not
+loader identity, a working asset format, gameplay, game re-save, or a specific
+Nioh 3 build. The adapter does not bundle external loaders, call a patcher or
+change original game archives. Nioh 3 DLL/plugin/game execution, Windows native
+qualification and Wine/Proton behavior remain unverified by this follow-up.
+The GUI permits local package review/import/profile planning on Linux and
+blocks its Windows game-deployment actions there.
+
+The new module is discovered automatically by the complete test runner.
+Integration must add its reviewed public path and refresh the manifest after
+all authors finish. No version, release links or global manifest were changed
+by this follow-up.
+
+Final follow-up checks after responsive layout and exception-rollback fixes:
+`tests.test_mod_manager_multigame` passed **13 tests** and
+`tests.test_mod_manager_gui_lifecycle` passed **10 actual Tk tests**, no skips.
+The viewport check uses a 780×680 window, enlarged fonts and long German action
+labels: actions remain within the client area, wrap when needed and the form
+scrolls. Independent actual-shell review at German 140% also confirmed that all
+Manager action buttons remain visible at 780×680. Independent probes covered
+conflicting duplicate package IDs, precommit rollback and forged cross-game
+journal rejection. Package/game/loader fixtures remain procedural throughout.

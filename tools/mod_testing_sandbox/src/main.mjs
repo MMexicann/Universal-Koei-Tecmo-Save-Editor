@@ -892,15 +892,17 @@ document.addEventListener("click", async (event) => {
 });
 
 $("#folder-input").addEventListener("change", async (event) => {
-  try { await importFolder(event.currentTarget.files); }
+  const input = event.currentTarget;
+  try { await importFolder(input.files); }
   catch { toast("This folder could not be read. Choose a standard folder with a JSON manifest.", { error: true, title: "Import failed" }); }
-  finally { event.currentTarget.value = ""; }
+  finally { input.value = ""; }
 });
 
 $("#manager-inventory-input").addEventListener("change", async (event) => {
-  try { await importManagerInventory(event.currentTarget.files?.[0]); }
+  const input = event.currentTarget;
+  try { await importManagerInventory(input.files?.[0]); }
   catch { toast("Inventory could not be read.", { error: true, title: "Import failed" }); }
-  finally { event.currentTarget.value = ""; }
+  finally { input.value = ""; }
 });
 
 $("#game-select").addEventListener("change", (event) => {

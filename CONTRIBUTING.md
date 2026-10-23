@@ -2,7 +2,7 @@
 
 Contributions can improve an existing editor, document a format, or establish a
 new game/platform mapping. Start with this workflow; AI coding agents should also
-read [AGENTS.md](AGENTS.md). The application stays a portable Windows app
+read [AGENTS.md](AGENTS.md). The application stays a portable Windows and Linux app
 with one launcher, its bundled runtime, dedicated game logic and a shared Tkinter interface.
 
 ## Run and understand the project
@@ -16,8 +16,9 @@ python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
 ```
 
-Windows uses native CNG for DW3 encryption and needs no third-party runtime
-package. Non-Windows development may install `tools/requirements/dev.txt`; GUI work
+Windows uses native CNG for DW3 encryption and needs no third-party crypto
+package. Linux uses the declared PyCryptodome AES dependency. Other non-Windows
+development may install `tools/requirements/dev.txt`; GUI work
 requires a display. Read the parser and tests for the format you change.
 The parallel runner uses isolated processes, so Tk roots and mutable fixtures
 are never shared between modules. Reduce `--workers` on machines with limited

@@ -2,12 +2,29 @@
 
 The Editing and Research menu and Ctrl+K command palette open the retained Mod
 Manager workspace. It imports validated ZIP packages, maintains separate
-profiles, checks declared dependencies and conflicts, and applies one verified
-game-specific installation method.
+profiles, checks declared dependencies and conflicts, and applies explicit documented
+game-specific installation methods. These are separate from save-editor support.
 
-## Supported installation method
+## Games and host capabilities
 
-The first supported adapter is **Nioh 2 for Windows PC**, using the
+Choose a game in the Manager before selecting its installation. Each game has
+its own package library, profiles, installation state and transaction journals.
+Existing Nioh 2 state stays at its original location; Nioh 3 state is separate.
+
+| Game | Managed content | Disable behavior |
+| --- | --- | --- |
+| Nioh 2 — Windows PC (`nioh2_pc`) | One INI plus FMT/VB/IB/DDS assets through Nioh 2 Mod Enabler | Documented ` DISABLED` folder suffix |
+| Nioh 3 — Windows PC Steam (`nioh3_pc`) | Hash-named G1M/G1T/G1TS assets through Loose File Loader | Remove the owned deployed folder; retain the verified library copy |
+
+Package review, library imports and profile planning work from source on Linux
+and Windows. The GUI enables game-deployment actions on Windows. Wine/Proton
+and actual game loading remain unverified; selecting a PC game is not a claim
+that its Windows loader works on Linux. The filesystem backend has procedural
+Linux checks and retains its platform-independent ownership/transaction tests; these do not qualify Wine/Proton deployment.
+
+## Nioh 2 installation method
+
+The original supported adapter is **Nioh 2 for Windows PC**, using the
 Nioh 2 Mod Enabler's Mods folder convention. The selected folder must directly
 contain nioh2.exe and an existing d3d11.dll. The manager does not download,
 install, replace, or remove the loader. Before file changes, the user confirms
@@ -25,15 +42,51 @@ documents the loader's per-mod DISABLED folder suffix. These sources define
 the adapter's scope; the manager independently implements its own validation
 and file operations.
 
-No other Koei Tecmo title is supported. In particular, different Wo Long and
-other game instructions include root-level files and loader variants that need
-their own exact installation and restoration procedures.
+## Nioh 3 installation method
 
-## Package format
+The [Loose File Loader author's instructions](https://www.nexusmods.com/nioh3/mods/90?tab=description)
+(version 1.3.0, September 2026) describe asset overrides in `mods/` or its
+first-level subfolders. Filenames use an eight-digit hexadecimal resource ID,
+with an optional `0x` prefix. The toolkit deliberately accepts only G1M, G1T
+and G1TS assets, at the ZIP root or in one common wrapper folder. Multiple
+variants, nested payload folders, scripts, loader DLLs, legacy Yumia/FData
+patches and repacking original archives are rejected.
+
+Select the folder containing `Nioh3.exe`. Install the loader separately:
+[DLL Plugin Loader](https://www.nexusmods.com/nioh3/mods/49?tab=description)
+provides `DINPUT8.dll` in that folder; Loose File Loader belongs at
+`plugins/LooseFileLoader.dll`. The
+[extension installation reference](https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/main/game-nioh3/EXTENSION_EXPLAINED.md)
+identifies the Steam `Nioh3.exe` marker. The manager
+requires ordinary nonempty bounded files without links/reparse points and user
+confirmation that the configured loader is appropriate and the game is closed.
+It cannot authenticate the loader or qualify its version against the game.
+
+Enable a mod in a profile, then **Apply Profile** to install it. Nioh 3 has no
+documented Nioh 2-style disabled-folder suffix: applying a profile without a
+previously deployed mod removes only that hash-verified owned folder, through
+the existing removal transaction. The library copy remains available, and
+reapplying an enabled profile deploys it again. The separate disabled-install
+button is unavailable for this method. No original game asset or loader is
+rewritten, and no external patcher is run.
+
+Nioh 3 resource IDs are collision keys, including aliases with different case,
+`0x` prefixes or extensions. Duplicate resource IDs within a package and across
+selected mods are rejected, even if bytes match. Matching overrides in unmanaged
+`mods/` root files or first-level folders block application. Unknown user mods
+remain untouched. The toolkit does not implement load-order overrides or choose
+an archive option on the user's behalf.
+
+Other Koei Tecmo titles remain unsupported by deployment. For example, REDELBE
+Layer2, Ryza 2 costume INIs, Ninja Gaiden DAT methods and Nioh 3 legacy patching
+have different contracts. Their existence does not authorize using another
+game's parser, folder layout or disable convention.
+
+## Package format and review
 
 - Direct import accepts ZIP only. 7z files must be extracted and repackaged as
   ZIP by the user.
-- A package must contain exactly one .ini file and at least one .fmt, .vb, .ib,
+- A Nioh 2 package must contain exactly one .ini file and at least one .fmt, .vb, .ib,
   or .dds file. Files outside the folder containing the .ini marker are
   rejected. The marker folder is installed under a manager-chosen subfolder in
   Mods.
@@ -56,6 +109,22 @@ their own exact installation and restoration procedures.
   Dependency and conflict IDs use the same safe lowercase ID format. Archives
   without metadata use an ID derived from the ZIP filename.
 
+`koei-mod.json` must declare the selected manager game ID (`nioh2_pc` or
+`nioh3_pc`) when present. The manager IDs describe installation contracts;
+`nioh3` in the save registry is a separate save-editor identifier. Metadata is
+not permission to transfer game assets or a claim of exact game-build support.
+
+The read-only `review_archive(path, game_id=...)` API uses the same bounded ZIP,
+layout and metadata parser as import, hashes every accepted file and returns a
+frozen `PackageReview`. It creates no files, profiles or game changes.
+`supported_mod_games()` supplies the explicit capability catalog. Unknown game
+IDs fail closed; there is no generic installation adapter.
+
+The [Workshop-to-Manager guide](MOD_WORKSHOP_MANAGER.md) covers explicit exports
+and CLI package review. The workspace's `import_archive_path` handoff reviews a
+local ZIP and routes its supported root game declaration to the appropriate
+library. It never installs or enables a package automatically.
+
 The library stores imported package bytes in application state and records a
 SHA-256 hash and size for every file. The service verifies the stored package
 again before installation, and verifies staged bytes before deployment.
@@ -63,17 +132,16 @@ again before installation, and verifies staged bytes before deployment.
 ## Nexus download handoff
 
 The source/testing Nexus browser implements **Send to Mod Manager** for a
-selected Nioh 2 file once a manager workspace is attached. Nexus file names are
+selected file matching the active manager game once a workspace is attached. Nexus file names are
 logical labels; the manager checks downloaded bytes as actual ZIP content.
 The public application's Nexus entry stays unavailable for API use until
 application registration is verified. Users can browse/download through the
 ordinary website and import a local ZIP for validation and review. Other Nexus
-games have no verified manager importer. No path automatically installs a mod.
+games require their own documented manager adapter. No path automatically installs a mod.
 
-The Nioh 2 workspace can accept the browser's frozen `NexusDownloadRequest`
+The selected workspace can accept the browser's frozen `NexusDownloadRequest`
 through `enqueue_nexus_download(request, downloader)`. The manager checks that
-the request identifies provider `nexus`, Nexus domain `nioh2`, game ID
-`nioh2_pc`, numeric scoped/mod/file-version IDs, safe file/version identifiers,
+the request identifies provider `nexus`, the selected adapter's Nexus domain (`nioh2` or `nioh3`) and manager game ID, numeric scoped/mod/file-version IDs, safe file/version identifiers,
 and a safe display filename. The filename is a logical label; the manager
 stages the download as `.zip` and validates the actual archive bytes. It
 accepts at most three waiting requests and returns immediately; `True` means a
@@ -105,10 +173,9 @@ status area. Results use `imported`, `download_failed`, `rate_limited`,
 exception text. For HTTP 429, the result carries a safely parsed `Retry-After`
 delay when available and never retries automatically. An `imported`
 result means the package passed validation and is ready for the user to review
-before taking a separate profile or install action. This adapter is
-intentionally Nioh 2-only even though Nexus discovery
-can list other Koei Tecmo games; each additional game needs its own validated
-manager installation contract.
+before taking a separate profile or install action. Nexus discovery can list additional games; each needs its own validated
+installation contract. Switching the selected game does not move a queued
+request into another game's library.
 
 ## Profiles, conflicts and file changes
 
@@ -119,17 +186,20 @@ block profile application. The manager does not infer load order; it stops when
 two selected mods declare a possible asset-path conflict that the loader cannot
 resolve safely.
 
-Apply uses the loader's documented enabled folder name and DISABLED suffix.
+Nioh 2 Apply uses its documented enabled name and DISABLED suffix; Nioh 3
+Apply uses its separate remove-and-redeploy policy.
 The service never overwrites an existing Mods entry. It only writes new
 manager-owned mod subfolders and renames folders whose entire contents still
-match the recorded hashes. Uninstall removes only a verified manager-owned
-disabled mod folder. Removing a library entry requires that the mod is
+match the recorded hashes. Nioh 2 Uninstall removes only a verified manager-owned
+disabled folder; Nioh 3 profile disable transactionally removes its enabled
+owned folder and retains the local library copy. Removing a library entry requires that the mod is
 uninstalled and absent from every registered profile.
 
-The separate Mod Creation Workshop emits a generic `mod.json` and
-`verification.json` package for declared replacement files. That package is
-not an installable input to this Nioh adapter: it must not be converted into a
-game folder layout without a dedicated, documented Nioh export contract.
+The Mod Creation Workshop's generic `mod.json` / `verification.json` package
+remains separate from installable manager ZIPs. Its explicit reviewed manager
+export preserves the supported game contract and passes the same package
+review; see the [bridge guide](MOD_WORKSHOP_MANAGER.md). A generic package is
+never silently treated as an installable mod.
 Likewise, the manager does not claim compatibility with exact installed game
 builds. The game compatibility analyzer and version tracker produce separate
 reports; they are not currently consulted during mod installation. Playthrough
@@ -154,8 +224,8 @@ after a process exits, so pending transactions can still recover after a crash.
 An unrecognized or replaced lock file is preserved for inspection rather than
 deleted as a purported stale lock.
 
-The manager never writes original game files beside nioh2.exe and never
-installs or replaces d3d11.dll. It does not keep a duplicate backup of an
+The manager never writes original game files beside the selected executable
+and never installs or replaces loader DLLs. It does not keep a duplicate backup of an
 original game file because supported operations do not alter one. Uninstalled
 mods remain in the local library and can be applied again. User-created content
 inside Mods remains untouched.
@@ -163,8 +233,10 @@ inside Mods remains untouched.
 ## Source and license review
 
 The Vortex extension is GPL-3.0; its source is not copied into this MIT project.
-The adapter is implemented independently from its public installation
-documentation. GokonSoftworks' published license prohibits redistribution and
+The adapters are implemented independently from public installation
+documentation. Nioh 3 loader/mod-manager source and binaries were not copied
+or redistributed; the loader author's current description establishes only
+the documented folder/filename contract. GokonSoftworks' published license prohibits redistribution and
 commercial use, and zmod does not publish a license, so neither codebase is
 reused. A separate MIT Nioh loader repository has conflicting Nioh 2/Nioh 3
 claims and is not treated as a verified Nioh 2 implementation.

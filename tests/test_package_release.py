@@ -12,6 +12,7 @@ from unittest.mock import patch
 import zipfile
 
 from tools import package_release as release
+from koei_editor.shared.browser_companions import BROWSER_RESOURCE_SOURCES
 
 PROJECT = Path(__file__).resolve().parents[1]
 
@@ -37,11 +38,15 @@ class PackagingTests(unittest.TestCase):
         metadata_hashes.start()
         self.addCleanup(metadata_hashes.stop)
         self.sources = {name: b'Public document\n' for name in release.WINDOWS_DOCS}
+        for name in release.RUNTIME_GUIDES:
+            self.sources.setdefault(name, b'Reviewed public user guide\n')
         self.sources.update({name: b'# Public build helper\n' for name in release.TOOL_FILES})
         self.sources.update({name: b'# Public community schema or guide\n'
                              for name in release.COMMUNITY_SCHEMA_FILES | release.SOURCE_ONLY_GUIDES})
         self.sources.update({f'src/koei_editor/data/{name}': b'{}' for name in release.RUNTIME_DATA})
         self.sources.update({name: b'Reviewed runtime license text\n' for name in release.RUNTIME_LICENSES})
+        self.sources.update({name: b'Public browser companion source\n'
+                             for name in release.LOCALIZATION_STUDIO_FILES | release.MOD_TESTING_SANDBOX_SOURCES})
         self.sources.update({
             'src/koei_editor/__init__.py': b'# Runtime package\n',
             'src/koei_editor/application.py': b"VERSION = '1.0'\n",
@@ -327,7 +332,7 @@ class PackagingTests(unittest.TestCase):
         with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1), self.assertRaises(ValueError):
             release.package(self.root)
 
-    def test_localization_studio_is_in_source_archive_only(self):
+    def test_localization_project_sources_and_exact_runtime_assets_are_packaged(self):
         additions = {name: b'Public localization studio source\n'
                      for name in release.LOCALIZATION_STUDIO_FILES}
         self.add_sources(additions)
@@ -336,6 +341,8 @@ class PackagingTests(unittest.TestCase):
         self.assertTrue(release.LOCALIZATION_STUDIO_FILES.issubset(verified))
         self.assertFalse(any(name.startswith('localization-studio/')
                              for name in release.embedded_metadata(verified)))
+        for runtime, source in BROWSER_RESOURCE_SOURCES.items():
+            self.assertEqual(release.embedded_metadata(verified)[runtime], self.sources[source])
         with patch.object(release, 'verify_executable', return_value=1), \
              patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
@@ -345,6 +352,50 @@ class PackagingTests(unittest.TestCase):
                 self.assertEqual(archive.read(prefix + name), data)
         with zipfile.ZipFile(assets[0]) as archive:
             self.assertFalse(any('/localization-studio/' in name for name in archive.namelist()))
+            prefix = 'UniversalKoeiTecmoGameToolkit-v1.0/_internal/'
+            for runtime, source in BROWSER_RESOURCE_SOURCES.items():
+                self.assertEqual(archive.read(prefix + runtime), self.sources[source])
+
+    def test_browser_runtime_assets_cannot_be_missing_changed_or_extended(self):
+        archive, blobs, _ = self.standalone_archive_fixture()
+        expected = release.embedded_metadata(self.sources)
+        for runtime, source in BROWSER_RESOURCE_SOURCES.items():
+            path = self.runtime / '_internal' / runtime
+            original = path.read_bytes()
+            self.assertEqual(original, self.sources[source])
+            with self.subTest(resource=runtime):
+                path.unlink()
+                with self.assertRaisesRegex(ValueError, 'missing'):
+                    release._runtime_snapshot(self.root, self.sources)
+                path.write_bytes(b'changed browser resource')
+                with self.assertRaisesRegex(ValueError, 'differs from manifest'):
+                    release._runtime_snapshot(self.root, self.sources)
+                path.write_bytes(original)
+                entry = archive.toc.pop(runtime)
+                with self.assertRaisesRegex(ValueError, 'missing'):
+                    release.verify_standalone(self.root, lambda _: archive)
+                archive.toc[runtime] = entry
+                blobs[runtime] = b'changed browser resource'
+                with self.assertRaisesRegex(ValueError, 'differs from manifest'):
+                    release.verify_standalone(self.root, lambda _: archive)
+                blobs[runtime] = original
+        for suffix in ('unreviewed.mjs', 'extra.html', 'private.json'):
+            with self.subTest(extra=suffix), self.assertRaisesRegex(ValueError, 'Unreviewed'):
+                release._validate_runtime_file('koei_editor/browser_tools/localization_studio/' + suffix,
+                                               b'unreviewed content', expected)
+        runtime = next(iter(BROWSER_RESOURCE_SOURCES))
+        private = ('C:' + '/Users/' + 'PrivateOwner/private.txt').encode()
+        with self.assertRaisesRegex(ValueError, 'Personal home path'):
+            release._validate_runtime_file(runtime, private, {runtime: private})
+
+    def test_missing_browser_source_cannot_authorize_public_runtime(self):
+        for source in BROWSER_RESOURCE_SOURCES.values():
+            original = self.sources.pop(source)
+            self.write_manifest()
+            with self.subTest(missing=source), self.assertRaisesRegex(ValueError, 'Required public sources'):
+                release.verified_sources(self.root)
+            self.sources[source] = original
+        self.write_manifest()
 
     def test_actual_windows_zip_contains_exact_reviewed_guides_collected_by_builder(self):
         from tools import build_windows
@@ -362,7 +413,10 @@ class PackagingTests(unittest.TestCase):
             for linked in re.findall(r'\]\(([^():]+\.md)\)', text):
                 target = 'UniversalKoeiTecmoGameToolkit-v1.0/_internal/guides/' + linked
                 self.assertIn(target, archive.namelist(), f'Missing linked user guide: {linked}')
-            self.assertFalse(any('/src/' in name or '/AGENTS.md' in name for name in archive.namelist()))
+            browser_assets = {'UniversalKoeiTecmoGameToolkit-v1.0/_internal/' + name
+                              for name in BROWSER_RESOURCE_SOURCES}
+            self.assertFalse(any(('/src/' in name and name not in browser_assets)
+                                 or '/AGENTS.md' in name for name in archive.namelist()))
 
     def test_missing_changed_and_unreviewed_guides_fail_runtime_validation(self):
         source = release.RUNTIME_GUIDES[0]

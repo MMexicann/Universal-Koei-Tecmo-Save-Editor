@@ -6,11 +6,15 @@ and mod folders that the user selects. It never launches a game, installer,
 mod, shell command or repair tool, and it never writes into selected game or
 configuration folders.
 
-Folder scans require anchored, no-follow directory access. They are currently
-unavailable on Windows Python runtimes, which leave folder findings **Unknown**
-without reading selected folders. Informational prerequisite and compatibility
-notes remain available. Windows folder scans need a separately qualified native
-implementation before they can be enabled.
+Folder scans run on Windows and Linux through anchored, no-follow directory
+access. Linux uses directory-relative file descriptors. Windows uses native
+local-drive handles, retains the selected ancestor chain, enumerates native
+128-bit file identities and opens configuration files relative to the held
+parent. Linked/reparse items and changed identities are rejected. Network shares,
+device paths or filesystems without the required native identity/enumeration
+support remain **Unknown**. Windows behavior requires actual native CI checks;
+Linux checks do not qualify Windows APIs. The selected game profile remains a
+Windows PC profile; scanning it on Linux does not certify Wine/Proton behavior.
 
 ## Reading a report
 
@@ -93,4 +97,8 @@ The bundled catalog is schema-validated at load time. Each game-specific
 prerequisite, mod conflict or compatibility rule carries a stable ID and
 primary source URL.
 Synthetic tests use temporary trees and assert that their contents remain
-unchanged after scanning.
+unchanged after scanning. Linux race tests replace queued directories and files;
+native Windows cases require handle-bound enumeration/reads without a pathname
+fallback, reject replaced identities and verify that held directory handles
+prevent rename. Configuration values and native file identities remain internal
+and never enter exported reports.

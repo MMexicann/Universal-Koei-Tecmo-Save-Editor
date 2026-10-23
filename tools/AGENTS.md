@@ -3,6 +3,8 @@
 Read the [root guide](../AGENTS.md) and [build instructions](../docs/BUILDING.md).
 Run tools as modules from the installed checkout, for example
 `python -m tools.build_windows` and `python -m tools.package_release`.
+Native Linux builds use `tools.build_linux`, `tools.package_linux` and
+`tools.smoke_linux`; follow the separate locked dependencies in `docs/LINUX.md`.
 
 Keep source-manifest paths relative to the repository root and collect qualified
 package dependencies/data. Do not weaken archive/privacy validation or include

@@ -30,11 +30,20 @@ COMMUNITY_TEMPLATE_FILES = frozenset(
     for kind in ('character_build', 'mod_list', 'configuration_preset',
                  'playthrough_manifest', 'compatibility_report'))
 TOOL_FILES.update({'tools/check_community_packages.py'} | COMMUNITY_TEMPLATE_FILES)
+TOOL_FILES.update({'tools/build_linux.py', 'tools/package_linux.py',
+                   'tools/smoke_linux.py',
+                   'tools/linux_build_review.py', 'tools/linux_dependency_review.json',
+                   'tools/requirements/linux-build.txt',
+                   'tools/linux_hooks/hook-numpy.__config__.py',
+                   'tools/linux_hooks/hook-numpy.lib._datasource.py'})
+TOOL_FILES.add('tools/linux_hooks/hook-Crypto.py')
+TOOL_FILES.add('tools/verify_linux_publication.py')
+TOOL_FILES.add('tools/install_linux_python.py')
 COMMUNITY_SCHEMA_FILES = frozenset(
     f'docs/schemas/koei-community-{kind}-v1.schema.json'
     for kind in ('character_build', 'mod_list', 'configuration_preset',
                  'playthrough_manifest', 'compatibility_report'))
-SOURCE_ONLY_GUIDES = frozenset({'docs/COMMUNITY_TOOLKIT.md'})
+SOURCE_ONLY_GUIDES = frozenset({'docs/COMMUNITY_TOOLKIT.md', 'docs/releases/toolkit-v1.0.md'})
 ADAPTER_TEMPLATE_FILES = {'tools/adapter_template/new_game_parser.py', 'tools/adapter_template/new_game_editor.py',
                           'tools/adapter_template/contract_test.py', 'tools/adapter_template/INSTRUCTIONS.md'}
 PUBLIC_TEST_HELPERS = {'tests/scalar_contract.py', 'tests/gui_paging.py', 'tests/__init__.py',
@@ -95,6 +104,11 @@ RUNTIME_GUIDES = ('docs/CLI.md', 'docs/DIAGNOSTICS.md', 'docs/GAME_DATA_ENCYCLOP
                   'docs/SAVE_LIBRARY.md', 'docs/EDIT_PRESETS.md', 'docs/REUSABLE_PRESETS.md',
                   'docs/FIELD_PINS_AND_REVIEWS.md', 'docs/SMART_PLAYTHROUGH_PROFILES.md',
                   'docs/GAME_CONFIGURATION.md')
+RUNTIME_GUIDES += ('docs/TOOLKIT_FEATURES.md', 'docs/MOD_MANAGER.md',
+                   'docs/MOD_CREATION_WORKSHOP.md', 'docs/MOD_WORKSHOP_MANAGER.md',
+                   'docs/NEXUS_MODS_BROWSER.md', 'docs/PATCH_COMPATIBILITY_ANALYZER.md',
+                   'docs/MOD_TESTING_SANDBOX.md', 'docs/BROWSER_COMPANIONS.md',
+                   'docs/FEATURE_STATUS.md')
 RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING.txt',
                    'licenses/Tk-license.terms', 'licenses/OpenSSL-LICENSE.txt',
                    'licenses/G1Tool-MIT.txt', 'licenses/miniaudio-MIT.txt',
@@ -211,7 +225,7 @@ def public_path(name):
     elif parts[0] == 'docs':
         allowed = (len(parts) == 2 and path.suffix == '.md') or (
             len(parts) == 3 and parts[1] == 'releases' and bool(re.fullmatch(r'v\d+\.\d+(?:\.\d+)?\.md', parts[2])))
-        allowed = allowed or name in COMMUNITY_SCHEMA_FILES
+        allowed = allowed or name in COMMUNITY_SCHEMA_FILES or name in SOURCE_ONLY_GUIDES
     elif parts[0] == 'tests':
         allowed = allowed or (len(parts) == 2 and parts[1].startswith('test_') and path.suffix == '.py')
     elif parts[0] == 'licenses':
@@ -295,6 +309,27 @@ def _required_runtime(root, sources):
     return required
 
 
+def _required_suite_sources(root):
+    """Require the runner's complete inputs without approving any new paths."""
+    from tools.run_tests import inventory
+
+    required = {'pyproject.toml'}
+    # Match run_tests.source_fingerprint: source, tooling and test Python/JSON
+    # all bind the suite, including helpers that are not themselves test modules.
+    # The manifest is included implicitly after its explicit entries are checked.
+    for label in ('src', 'tools', 'tests'):
+        directory = _repo_path(root, label)
+        for path in directory.rglob('*'):
+            if not path.is_file() or '__pycache__' in path.parts or path.suffix not in {'.py', '.json'}:
+                continue
+            name = label + '/' + path.relative_to(directory).as_posix()
+            _repo_path(root, name)
+            if name != MANIFEST:
+                required.add(name)
+    required.update('tests/' + name for name in inventory(root / 'tests'))
+    return required
+
+
 def verified_sources(root=ROOT):
     root = root.resolve()
     manifest_bytes = _repo_path(root, MANIFEST).read_bytes()
@@ -323,6 +358,7 @@ def verified_sources(root=ROOT):
     required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'src/koei_editor/cli.py', 'docs/RELEASE_NOTES.md',
                                                 '.github/workflows/windows-release.yml'}
     required.update(SOURCE_ONLY_GUIDES | COMMUNITY_SCHEMA_FILES)
+    required.update(_required_suite_sources(root))
     if (root / 'tools/mod_testing_sandbox').is_dir():
         required.update(MOD_TESTING_SANDBOX_SOURCES)
     required.update(_required_runtime(root, sources))
@@ -366,12 +402,18 @@ def scan_bundled_data(label, data):
 
 
 def embedded_metadata(sources):
+    from koei_editor.shared.browser_companions import BROWSER_RESOURCE_SOURCES
+    missing = set(BROWSER_RESOURCE_SOURCES.values()) - sources.keys()
+    if missing:
+        raise ValueError('Bundled browser resources are missing from the reviewed source inventory: '
+                         + ', '.join(sorted(missing)))
     expected = {name.removeprefix('src/'): data for name, data in sources.items()
                 if name.startswith(PACKAGE_ROOT + '/data/') and name.endswith('.json')}
     expected.update({'licenses/LICENSE': sources['LICENSE'],
                      'licenses/THIRD_PARTY_NOTICES.md': sources['docs/THIRD_PARTY_NOTICES.md']})
     expected.update({name: sources[name] for name in RUNTIME_LICENSES})
     expected.update({'guides/' + name.removeprefix('docs/'): sources[name] for name in RUNTIME_GUIDES})
+    expected.update({name: sources[source] for name, source in BROWSER_RESOURCE_SOURCES.items()})
     for codec, notice in CODEC_LICENSES.items():
         if codec in sources:
             expected[notice] = sources[notice]

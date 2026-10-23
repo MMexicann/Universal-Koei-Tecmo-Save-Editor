@@ -118,8 +118,14 @@ class ReleasePreparationContracts(unittest.TestCase):
         # Publication independently rechecks the same exact candidate evidence.
         def evidence(job):
             return job.split('      - name: Verify artifact hashes\n', 1)[1].split(
-                '      - name: Publish a new versioned release', 1)[0].rstrip()
+                '      - name: Publish a new versioned release', 1)[0].split(
+                '      - name: Verify Linux source and exact tested archive before publication', 1)[0].rstrip()
         self.assertEqual(evidence(qualification), evidence(job_block('release')))
+        publication = job_block('release')
+        windows = publication.index('Require clean Defender evidence for every exact published payload')
+        linux = publication.index('Verify Linux source and exact tested archive before publication')
+        self.assertLess(windows, linux)
+        self.assertLess(linux, publication.index('Publish a new versioned release'))
         for path in ('prepare_release', 'release'):
             self.assertIn('    needs: build\n', job_block(path))
             self.assertNotIn('always()', job_block(path))
@@ -335,7 +341,10 @@ class ReleasePreparationScriptTests(unittest.TestCase):
         merge = next(args for args in calls if args[:2] == ['pr', 'merge'])
         self.assertIn('--squash', merge)
         self.assertEqual(merge[merge.index('--match-head-commit') + 1], 'a' * 40)
-        dispatch = next(args for args in calls if args[:2] == ['workflow', 'run'])
+        dispatches = [args for args in calls if args[:2] == ['workflow', 'run']]
+        self.assertEqual([args[2] for args in dispatches], ['linux.yml', 'windows-release.yml'])
+        self.assertEqual(dispatches[0][dispatches[0].index('--ref') + 1], 'main')
+        dispatch = dispatches[1]
         self.assertEqual(dispatch[dispatch.index('--ref') + 1], 'main')
         self.assertIn('publish=true', dispatch)
         self.assertIn('expected_sha=' + 'b' * 40, dispatch)

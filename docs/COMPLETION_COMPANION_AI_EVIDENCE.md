@@ -32,7 +32,7 @@ two are skipped because a graphical display is required. Fifteen progression
 contract, generic projection and game-dashboard regression tests passed. The
 public source manifest and supported-game inventory checks cover the refreshed
 main base; provider-specific tests and evidence are recorded in merged PR
-[#111](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/111).
+[#111](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/pull/111).
 
 This evidence does not claim an in-game load test, a complete catalogue for all
 Koei Tecmo games, or a completion percentage.

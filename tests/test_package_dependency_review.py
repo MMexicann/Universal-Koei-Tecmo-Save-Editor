@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from tools import package_release as release
 from tools import refresh_manifest
+from tools import run_tests
 from tests import test_universal_packaging as packaging_fixture
 
 BASE = packaging_fixture.BASE
@@ -61,6 +62,79 @@ class RegisteredDependencyReviewTests(unittest.TestCase):
         (self.fixture.root / 'pyproject.toml').write_bytes(b'[project]\nversion="1.1"\n')
         with self.assertRaisesRegex(ValueError, 'versions do not match'):
             release.version(self.fixture.root)
+
+    def test_omitted_public_test_modules_prevent_release_until_explicitly_reviewed(self):
+        omitted = {
+            'tests/test_mod_workshop_assets.py': b'# Procedural assets tests\n',
+            'tests/test_mod_workshop_gui.py': b'# Procedural GUI tests\n',
+            'tests/test_mod_workshop_packaging.py': b'# Procedural packaging tests\n',
+            'tests/test_mod_workshop_projects.py': b'# Procedural projects tests\n',
+            'tests/test_mod_workshop_validation.py': b'# Procedural validation tests\n',
+            'tests/test_playthrough_profiles.py': b'# Procedural profile tests\n',
+        }
+        root = self.fixture.root
+        manifest_before = (root / release.MANIFEST).read_bytes()
+        for name, data in omitted.items():
+            (root / name).write_bytes(data)
+        with self.assertRaisesRegex(ValueError, 'Required public sources') as rejected:
+            release.package(root)
+        for name in omitted:
+            self.assertIn(name, str(rejected.exception))
+        self.assertFalse((root / 'release').exists())
+        self.assertEqual((root / release.MANIFEST).read_bytes(), manifest_before)
+
+        # Only an explicit audited manifest update permits these source bytes.
+        self.sources(omitted)
+        _, sources = release.verified_sources(root)
+        self.assertTrue(set(omitted) <= sources.keys())
+        with patch.object(run_tests, 'ROOT', root):
+            expected_fingerprint = run_tests.source_fingerprint(root / 'tests')
+        published = root / 'work/reconstructed-source'
+        for name, data in sources.items():
+            target = published / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+        with patch.object(run_tests, 'ROOT', published):
+            self.assertEqual(run_tests.source_fingerprint(published / 'tests'), expected_fingerprint)
+        self.assertEqual(run_tests.inventory(published / 'tests'), run_tests.inventory(root / 'tests'))
+
+    def test_suite_helpers_and_json_inputs_cannot_be_silently_excluded_or_auto_approved(self):
+        root = self.fixture.root
+        for name in ('src/koei_editor/review_helper.py', 'tools/unreviewed_helper.py',
+                     'tests/scalar_contract.py', 'tests/private_context.json'):
+            with self.subTest(name=name):
+                target = root / name
+                original = target.read_bytes() if target.exists() else None
+                target.write_bytes(b'{}\n' if name.endswith('.json') else b'# Procedural helper\n')
+                # Existing fixture helpers may already have explicit approval.
+                prior_entry = self.fixture.sources.pop(name, None)
+                self.fixture.write_manifest()
+                before = (root / release.MANIFEST).read_bytes()
+                try:
+                    with self.assertRaisesRegex(ValueError, 'Required public sources') as rejected:
+                        release.verified_sources(root)
+                    self.assertIn(name, str(rejected.exception))
+                    self.assertEqual((root / release.MANIFEST).read_bytes(), before)
+                    if name.startswith('tools/') or name.endswith('.json'):
+                        with self.assertRaisesRegex(ValueError, 'Not a public source file'):
+                            release.public_path(name)
+                finally:
+                    if original is None:
+                        target.unlink()
+                    else:
+                        target.write_bytes(original)
+                    if prior_entry is not None:
+                        self.fixture.sources[name] = prior_entry
+                    self.fixture.write_manifest()
+
+    def test_non_fingerprinted_work_and_cache_files_do_not_expand_public_sources(self):
+        root = self.fixture.root
+        for name in ('work/private.json', 'tests/__pycache__/ignored.py', 'tests/notes.txt'):
+            target = root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b'Private procedural placeholder\n')
+        _, sources = release.verified_sources(root)
+        self.assertFalse({'work/private.json', 'tests/__pycache__/ignored.py', 'tests/notes.txt'} & sources.keys())
 
     def test_unreviewed_json_and_private_python_modules_are_rejected_in_bundle(self):
         archive, blobs, module = self.fixture.archive_fixture()

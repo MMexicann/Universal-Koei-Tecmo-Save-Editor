@@ -165,7 +165,11 @@ class UniversalPackagingTests(fixture.PackagingTests):
         with zipfile.ZipFile(assets[0]) as archive:
             prefix = 'UniversalKoeiTecmoGameToolkit-v1.0/'
             self.assertTrue(all(name.startswith(prefix) for name in archive.namelist()))
-            self.assertFalse(any('/docs/' in name for name in archive.namelist()))
+            browser_assets = {prefix + '_internal/' + name
+                              for name in fixture.BROWSER_RESOURCE_SOURCES}
+            # Only exact reviewed browser help assets may use a docs/ directory.
+            self.assertFalse(any('/docs/' in name and name not in browser_assets
+                                 for name in archive.namelist()))
         with zipfile.ZipFile(assets[1]) as archive:
             for name in names:
                 self.assertEqual(archive.read('UniversalKoeiTecmoGameToolkit-v1.0-Source/' + name), self.sources[name])
@@ -227,6 +231,7 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
         modules = [args[index + 1] for index, value in enumerate(args) if value == '--hidden-import']
         asset_modules = {'koei_editor.shared.configuration_gui',
                          'koei_editor.shared.configuration_manager',
+                         'koei_editor.shared.browser_companions',
                          'koei_editor.research.asset_explorer.gui',
                          'koei_editor.research.asset_explorer.media',
                          'miniaudio', '_miniaudio', 'cffi', '_cffi_backend', 'pycparser',

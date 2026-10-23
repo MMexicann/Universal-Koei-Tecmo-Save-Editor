@@ -3,6 +3,9 @@
 LANGUAGES = {'en': 'English', 'de': 'Deutsch'}
 
 _EN = {
+    'tool_directory': 'Tools', 'encyclopedia': 'Game Data Encyclopedia',
+    'patch_analyzer': 'Patch Compatibility Analyzer', 'mod_sandbox': 'Mod Testing Sandbox',
+    'localization_studio': 'Localization Studio',
     'library': '‹ Game Library', 'game_hub': 'Game Hub', 'converter': 'Save Converter',
     'troubleshooting': 'Game Troubleshooting Center',
     'comparison': 'Compare Saves', 'batch': 'Batch Converter', 'save_library': 'Save Library',
@@ -84,6 +87,9 @@ _EN = {
     'nexus_sort_updated': 'Recently updated', 'nexus_sort_endorsements': 'Endorsements',
 }
 _DE = {
+    'tool_directory': 'Werkzeuge', 'encyclopedia': 'Spieldaten-Enzyklopädie',
+    'patch_analyzer': 'Patch-Kompatibilitätsanalyse', 'mod_sandbox': 'Mod-Testumgebung',
+    'localization_studio': 'Lokalisierungsstudio',
     'library': '‹ Spielebibliothek', 'game_hub': 'Spielzentrale', 'converter': 'Spielstand konvertieren',
     'troubleshooting': 'Koei-Tecmo-Spielhilfe',
     'comparison': 'Spielstände vergleichen', 'batch': 'Stapelkonvertierung', 'save_library': 'Spielstandbibliothek',

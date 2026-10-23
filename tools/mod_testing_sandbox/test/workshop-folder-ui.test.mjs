@@ -6,6 +6,57 @@ import vm from "node:vm";
 import { createHash, webcrypto } from "node:crypto";
 import { LIMITS, parseManifest, normalizeFolderPaths, validateMod, createWorkshopValidationRecord } from "../src/sandbox-core.mjs";
 
+async function inputChangeHandler(selector, backendName, backend) {
+  const source = await readFile(new URL("../src/main.mjs", import.meta.url), "utf8");
+  const begin = source.indexOf(`$("${selector}").addEventListener("change",`);
+  const end = source.indexOf("\n});", begin) + "\n});".length;
+  assert.ok(begin >= 0 && end > begin, "actual browser input listener must be present");
+  let listener;
+  const notices = [];
+  const context = {
+    $: (selected) => {
+      assert.equal(selected, selector);
+      return { addEventListener: (type, handler) => {
+        assert.equal(type, "change");
+        listener = handler;
+      } };
+    },
+    [backendName]: backend,
+    toast: (...args) => notices.push(args),
+  };
+  vm.runInNewContext(source.slice(begin, end), context);
+  return { listener, notices };
+}
+
+for (const [selector, backendName] of [["#folder-input", "importFolder"],
+                                     ["#manager-inventory-input", "importManagerInventory"]]) {
+  test(`${selector} cleanup survives native currentTarget expiration after await`, async () => {
+    for (const rejected of [false, true]) {
+      const files = [{ name: "owned-procedural-input" }];
+      const input = { files, value: "chosen input" };
+      let release, captured;
+      const gate = new Promise((resolve) => { release = resolve; });
+      const { listener, notices } = await inputChangeHandler(selector, backendName, async (value) => {
+        captured = value;
+        await gate;
+        if (rejected) throw new Error("procedural input rejection");
+      });
+      let currentTarget = input;
+      const event = { get currentTarget() { return currentTarget; } };
+      const pending = listener(event);
+      // Browser dispatch clears currentTarget before an awaited File/IndexedDB
+      // operation completes; the selected input element remains alive.
+      currentTarget = null;
+      release();
+      await assert.doesNotReject(pending);
+      assert.equal(input.value, "");
+      assert.equal(captured, selector === "#folder-input" ? files : files[0]);
+      assert.equal(notices.length, rejected ? 1 : 0);
+      assert.equal(files[0].name, "owned-procedural-input");
+    }
+  });
+}
+
 async function importHandler() {
   const source = await readFile(new URL("../src/main.mjs", import.meta.url), "utf8");
   const begin = source.indexOf("function normalizedUploadFiles(");

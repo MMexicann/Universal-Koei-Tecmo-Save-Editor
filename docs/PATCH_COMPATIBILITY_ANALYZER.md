@@ -1,6 +1,6 @@
 # Game Patch and Compatibility Analyzer
 
-The source-only analyzer compares two immutable install snapshots and an
+The analyzer compares two immutable install snapshots and an
 optional compatibility-requirements document. It reports version changes,
 added, removed or changed files, archive entry changes, and supported-format
 metadata changes. It can flag a mod, tool or save requirement that no longer
@@ -16,6 +16,25 @@ mod installation state. Compatibility requirements are a separate optional
 input contract, and the current Nioh 2 manager does not generate that document
 automatically. Reports describe evidence and possible impact; they do not
 certify a game load or save migration.
+
+## Desktop workspace (development source)
+
+Choose **Editing and Research → Game Patch & Compatibility Analyzer**, or find
+it with **Ctrl+K**. The Windows/Linux desktop workspace accepts the same explicit
+snapshot JSON and optional requirements JSON as the command-line tool below.
+Choose a baseline and candidate, then select **Compare snapshots**. Parsing and
+comparison run in a worker; inputs remain unchanged. The preview is the existing
+Markdown report, including unknown evidence and declared-requirement limits.
+
+After a successful comparison, export a new JSON or Markdown report. Existing
+files and aliases to input files cannot be overwritten. Changing any input
+clears the previous result and disables export until another comparison succeeds.
+Invalid inputs cannot leave an older report available for export.
+
+This workspace does not capture snapshots from an installation or automatically
+consult the Mod Manager or Game Version Tracker. The published Toolkit 1.0
+included the source command only; the GUI is a follow-up development feature
+until a new binary is published.
 
 ## Run a comparison
 

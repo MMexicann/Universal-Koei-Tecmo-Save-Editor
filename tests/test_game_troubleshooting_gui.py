@@ -1,6 +1,7 @@
 """Retained UI tests for deterministic, path-private game diagnostics."""
 
 import json
+from dataclasses import replace
 import os
 from pathlib import Path
 import sys
@@ -70,7 +71,7 @@ def sample_report():
 class GameTroubleshootingExportTests(unittest.TestCase):
     def test_export_bytes_are_deterministic_and_exclude_local_paths(self):
         with tempfile.TemporaryDirectory() as directory:
-            folder = Path(directory)
+            folder = Path(directory).resolve()
             output = export_json_report(sample_report(), folder / "report.json")
             expected = sample_report().to_json().encode("utf-8")
             self.assertEqual(output.read_bytes(), expected)
@@ -80,7 +81,7 @@ class GameTroubleshootingExportTests(unittest.TestCase):
 
     def test_export_requires_new_json_destination_and_preserves_existing_file(self):
         with tempfile.TemporaryDirectory() as directory:
-            folder = Path(directory)
+            folder = Path(directory).resolve()
             existing = folder / "report.json"
             existing.write_bytes(b"keep this file")
             with self.assertRaises(FileExistsError):
@@ -92,7 +93,7 @@ class GameTroubleshootingExportTests(unittest.TestCase):
     def test_export_never_reads_or_removes_a_concurrent_destination_replacement(self):
         for linked in (False, True):
             with self.subTest(symbolic_link=linked), tempfile.TemporaryDirectory() as directory:
-                folder = Path(directory)
+                folder = Path(directory).resolve()
                 destination = folder / "report.json"
                 foreign = folder / "private.txt"
                 foreign.write_bytes(b"SYNTHETIC_PRIVATE_CONTENT")
@@ -140,6 +141,19 @@ class GameTroubleshootingExportTests(unittest.TestCase):
                                  b"SYNTHETIC_PRIVATE_CONTENT" if linked else b"FOREIGN_REPLACEMENT")
                 self.assertEqual(destination.is_symlink(), linked)
 
+    def test_dangling_selected_report_alias_never_creates_its_target(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory).resolve()
+            target, alias = folder / 'must-not-exist.json', folder / 'chosen.json'
+            try:
+                alias.symlink_to(target)
+            except OSError as error:
+                self.skipTest('Symlink creation unavailable: ' + type(error).__name__)
+            with self.assertRaises((ValueError, FileExistsError)):
+                export_json_report(sample_report(), alias)
+            self.assertTrue(alias.is_symlink())
+            self.assertFalse(target.exists())
+
 
 
 class TroubleshootingWorkspaceLifecycleTests(unittest.TestCase):
@@ -168,7 +182,7 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.folder = Path(self.temporary.name)
+        self.folder = Path(self.temporary.name).resolve()
         try:
             self.root = tk.Tk()
         except tk.TclError as error:
@@ -262,8 +276,9 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
         with patch(
             "koei_editor.shared.game_troubleshooting_gui.filedialog.asksaveasfilename",
             return_value=str(destination),
-        ):
+        ), patch("koei_editor.shared.game_troubleshooting_gui.messagebox.showerror") as error:
             workspace.export()
+        error.assert_not_called()
         expected = report.to_json().encode("utf-8")
         self.assertEqual(destination.read_bytes(), expected)
         payload = json.loads(destination.read_bytes())
@@ -284,6 +299,66 @@ class GameTroubleshootingGuiTests(unittest.TestCase):
             workspace.export()
         error.assert_called_once()
         self.assertEqual(destination.read_bytes(), previous)
+
+    def test_export_retains_the_reviewed_report_across_modal_refresh(self):
+        workspace = self.center()
+        reviewed = self.scan_with(workspace)
+        destination = self.folder / 'reviewed.json'
+
+        def refresh(**_kwargs):
+            workspace.report = replace(reviewed, title='Different reviewed report')
+            return str(destination)
+
+        with patch('koei_editor.shared.game_troubleshooting_gui.filedialog.asksaveasfilename', side_effect=refresh), \
+                patch('koei_editor.shared.game_troubleshooting_gui.messagebox.showerror') as error:
+            workspace.export()
+        error.assert_not_called()
+        self.assertEqual(destination.read_bytes(), reviewed.to_json().encode('utf-8'))
+        self.assertNotEqual(workspace.report, reviewed)
+
+    def test_export_stops_if_modal_dialog_closes_the_panel(self):
+        workspace = self.center()
+        self.scan_with(workspace)
+        destination = self.folder / 'closed.json'
+
+        def close(**_kwargs):
+            workspace.frame.destroy()
+            return str(destination)
+
+        with patch('koei_editor.shared.game_troubleshooting_gui.filedialog.asksaveasfilename', side_effect=close), \
+                patch('koei_editor.shared.game_troubleshooting_gui.messagebox.showerror') as error:
+            workspace.export()
+        self.assertFalse(destination.exists())
+        error.assert_not_called()
+
+    def test_export_stops_when_native_dialog_destroys_root_and_raises(self):
+        workspace = self.center()
+        self.scan_with(workspace)
+        destination = self.folder / 'closed-root.json'
+
+        def close(**_kwargs):
+            self.root.destroy()
+            raise tk.TclError('Native dialog lost the application')
+
+        with patch('koei_editor.shared.game_troubleshooting_gui.filedialog.asksaveasfilename', side_effect=close), \
+                patch('koei_editor.shared.game_troubleshooting_gui.messagebox.showerror') as error:
+            workspace.export()
+        self.assertFalse(destination.exists())
+        error.assert_not_called()
+
+    def test_uncertain_report_publication_is_not_retried_or_reported_as_success(self):
+        workspace = self.center()
+        self.scan_with(workspace)
+        destination = self.folder / 'uncertain.json'
+        with patch('koei_editor.shared.game_troubleshooting_gui.filedialog.asksaveasfilename', return_value=str(destination)), \
+                patch('koei_editor.shared.game_troubleshooting_gui.export_json_report',
+                      side_effect=copy_storage.ChildPublishedUncertainError(destination)) as export, \
+                patch('koei_editor.shared.game_troubleshooting_gui.messagebox.showerror') as error:
+            workspace.export()
+        self.assertEqual(export.call_count, 1)
+        error.assert_called_once()
+        self.assertNotIn(str(destination), str(error.call_args))
+        self.assertFalse(destination.exists())
 
     def test_application_routes_retain_report_and_propagate_language_theme_and_text_size(self):
         workspace = self.center()

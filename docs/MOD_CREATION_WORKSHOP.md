@@ -46,3 +46,9 @@ different installation layout or additional format conversion. Package
 verification does not run a game, inspect executable files, test in-game
 behavior or independently verify rights declarations. Do not package original
 game files or extracted game archives.
+
+**Export for Mod Manager…** creates a separate, reviewed manager-compatible ZIP
+for the explicitly supported Nioh 2 and Nioh 3 PC layouts. It reuses the manager's
+actual package inspector and preserves the generic builder. See the
+[Workshop-to-Manager guide](MOD_WORKSHOP_MANAGER.md) for required targets,
+dependency limits, headless commands and review-token protection.

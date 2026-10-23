@@ -1,0 +1,75 @@
+name: Native Linux build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['toolkit-v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-linux-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/cache@v4
+        with:
+          path: work/linux-python-cache/cpython-3.13.13-linux-x86_64.tar.gz
+          key: linux-python-c249d2b96af6912c3910f234b96aa8d20d30e8b0c46d0584fa956d7a77036ea9
+      - name: Install native runtime and locked build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth gsfonts-x11 libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
+          python3 -m tools.install_linux_python
+          work/linux-python/python/bin/python3.13 -m venv work/linux-venv
+          work/linux-venv/bin/python -m pip install --require-hashes -r tools/requirements/linux-build.txt
+          work/linux-venv/bin/python -m pip install -e . --no-build-isolation --no-deps
+          echo "$GITHUB_WORKSPACE/work/linux-venv/bin" >> "$GITHUB_PATH"
+      - name: Verify reviewed public source and inventory
+        run: |
+          python -m tools.package_release --verify-only
+          python -m tools.update_supported_games --check
+      - name: Run the entire native Linux suite
+        run: xvfb-run -a python -m tools.run_tests --workers 4 --report test-results/linux.json
+      - name: Build native graphical and headless editions
+        run: |
+          python -m tools.build_linux
+          python -m tools.build_linux --cli
+          python -m tools.package_linux --verify-only
+          python -m tools.package_linux
+      - name: Verify and smoke test the extracted portable archive
+        run: |
+          cd release
+          sha256sum -c *-Linux-x86_64.SHA256SUMS
+          mkdir extracted
+          tar -xzf *-Linux-x86_64.tar.gz -C extracted
+          cd ..
+          python -m tools.smoke_linux release/extracted
+          python -m tools.package_release --verify-only
+          python -m tools.run_tests --verify-reports test-results/linux.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-test-results
+          path: test-results/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Universal-Koei-Tecmo-Game-Toolkit-Linux-x86_64
+          path: |
+            release/*-Linux-x86_64.tar.gz
+            release/*-Linux-x86_64.SHA256SUMS
+            test-results/linux.json
+            test-results/linux-smoke.json
+          if-no-files-found: error

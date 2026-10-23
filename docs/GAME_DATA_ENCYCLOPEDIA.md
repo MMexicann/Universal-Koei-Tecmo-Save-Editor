@@ -1,4 +1,23 @@
-# Game data encyclopedia feed
+# Game Data Encyclopedia
+
+## Desktop browser (development source)
+
+Open **Editing and Research → Game Data Encyclopedia**, or search for the tool
+with **Ctrl+K**. The desktop workspace runs on Windows and Linux. It searches
+the bundled reference records without opening a save or contacting a website.
+Filter by exact game/platform profile and record kind, then search a name,
+native ID, edition or summary. Multiple search words must all match.
+
+Select a row to read its edition, scope, attributes, source-backed relationships
+and field-level provenance. The details include source URLs, pinned revisions
+or access dates, attribution and licenses. Search and selection never turn a
+reference value into an editable save field. The reviewed source descriptions
+retain their original language when the application language changes.
+
+The published Toolkit 1.0 contained the reference feed only; this desktop
+browser is a follow-up development feature until a new binary is published.
+
+## Bundled reference feed
 
 The repository bundles an edition-scoped JSON reference feed at
 `src/koei_editor/data/game_data_encyclopedia.json` as a data contract for search
@@ -62,10 +81,9 @@ optional `native_id`, `summary`, `attributes`, and `relationships`. The
 source ID. Each optional relationship has `type`, `entity_id`, and `source_id`;
 the validator requires the target to exist in the same game edition.
 
-This checkout does not contain a Character Workshop component, and this feed
-does not add a user interface or claim that such integration is already
-available. It is packaged as read-only reference data and does not change save
-editing support.
+The Character & Weapon Workshop is a separate editor component. The encyclopedia
+browser does not supply new workshop providers or writable mappings. It remains
+read-only and does not change registered save-editing support.
 
 ## Provenance and license
 
@@ -75,7 +93,7 @@ Three Hopes character and weapon names and numeric IDs are copied from the named
 at commit `9b6e9946e5a33e182f80fbe3553e7c2afbebbdcb`. The source is MIT
 licensed. Exact game title, edition label, and platform come from the local
 profile registry at commit
-[`cede8a91a7ce5d150d0b2d88a71120ac02bd821a`](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/blob/cede8a91a7ce5d150d0b2d88a71120ac02bd821a/src/koei_editor/game_registry.py).
+[`cede8a91a7ce5d150d0b2d88a71120ac02bd821a`](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/blob/cede8a91a7ce5d150d0b2d88a71120ac02bd821a/src/koei_editor/game_registry.py).
 The source IDs and their license declarations are also embedded in the JSON
 feed, and each mapped field refers to its source ID.
 

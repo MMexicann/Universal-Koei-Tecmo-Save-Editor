@@ -46,9 +46,11 @@ class NexusRegistrationNotice:
     """
 
     def __init__(self, root, parent, *, application_name, application_version,
-                 language='en', game_id=None, download_handoff=None, transport=None):
+                 language='en', game_id=None, download_handoff=None, transport=None,
+                 on_local_import=None):
         self.root = root
         self.language = language
+        self.on_local_import = on_local_import
         self.frame = ttk.Frame(parent, padding=18)
         self.frame.columnconfigure(0, weight=1)
         self.title_label = ttk.Label(self.frame, style='Section.TLabel')
@@ -68,6 +70,13 @@ class NexusRegistrationNotice:
         self.game_selector.grid(row=4, column=0, sticky='w')
         self.website_button = ttk.Button(self.frame, command=self.open_website)
         self.website_button.grid(row=5, column=0, sticky='w', pady=(10, 0))
+        self.capability = tk.StringVar(root)
+        self.capability_label = ttk.Label(self.frame, textvariable=self.capability,
+                                         wraplength=960, justify='left')
+        self.capability_label.grid(row=6, column=0, sticky='ew', pady=(20, 8))
+        self.import_button = ttk.Button(self.frame, command=self.import_local)
+        self.import_button.grid(row=7, column=0, sticky='w')
+        self.game_selector.bind('<<ComboboxSelected>>', self.refresh_capability)
         self.set_language(language)
 
     def set_language(self, language):
@@ -80,6 +89,41 @@ class NexusRegistrationNotice:
             (self.website_button, 'nexus_open_website'),
         ):
             widget.configure(text=translate(key, language))
+        self.import_button.configure(text=('Heruntergeladene ZIP importieren…' if language == 'de'
+                                          else 'Import downloaded ZIP…'))
+        self.refresh_capability()
+
+    def _manager_game(self):
+        from koei_editor.shared import mod_manager
+        catalog = getattr(mod_manager, 'supported_mod_games', None)
+        game = self._selected_game()
+        if game is None:
+            return None
+        if callable(catalog):
+            return next((adapter for adapter in catalog()
+                         if getattr(adapter, 'nexus_domain', None) == game.domain
+                         or adapter.game_id.removesuffix('_pc') == game.domain), None)
+        return None
+
+    def refresh_capability(self, _event=None):
+        game, adapter = self._selected_game(), self._manager_game()
+        if adapter is not None:
+            text = (f'{adapter.title}: local Mod Manager installation is available for its documented '
+                    'package layout and separately installed loader. Download on the website, then '
+                    'import the ZIP here for validation. Import does not install or enable it.')
+        elif game is not None:
+            text = (f'{game.title}: official website access is available. This toolkit has no '
+                    'installation adapter for this game; its appearance in this list is not mod-install support.')
+        else:
+            text = 'Choose a game to see website and installation availability.'
+        self.capability.set(text)
+        self.import_button.configure(state='normal' if adapter is not None and callable(self.on_local_import)
+                                     else 'disabled')
+
+    def import_local(self):
+        adapter = self._manager_game()
+        if adapter is not None and callable(self.on_local_import):
+            return self.on_local_import(adapter.game_id)
 
     def _selected_game(self):
         return self._game_by_label.get(self.game_var.get())

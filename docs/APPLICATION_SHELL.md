@@ -55,10 +55,29 @@ libraries listed by `libraryfolders.vdf`; **Refresh installations** repeats the
 scan, and **Browse** can select a Steam root directly. Detection reads install
 manifests only. It does not inspect save folders or game files.
 
+On Linux, automatic detection checks `~/.local/share/Steam`, the usual
+`~/.steam/steam` and `~/.steam/root` aliases, an absolute `$XDG_DATA_HOME/Steam`,
+and the Steam Flatpak application home under
+`~/.var/app/com.valvesoftware.Steam/` (the `.local/share/Steam` and `data/Steam`
+layouts). Only these fixed candidates and bounded `libraryfolders.vdf` entries
+are considered; the home directory is not recursively searched. Known default
+Steam aliases are resolved to a canonical root and deduplicated before scanning.
+Caller-selected roots, library paths from VDF, manifests and installation
+folders retain the existing rejection of linked paths. Choose the ordinary
+canonical directory with **Browse** if a custom library uses a symbolic alias.
+
+The Hub and Game Version Tracker share this discovery service. On Linux, both
+identify the results as Steam/Proton installation metadata. A **Windows PC**
+label remains the registered save-profile platform; it does not claim a native
+Linux game port, verified Proton compatibility or a successful game launch.
+Build observation history and portable reports preserve that profile identity.
+
 Installed rows show the Steam build ID, manifest update time, install size,
 Steam library and installation folder. Steam's build ID is not necessarily the
 game's displayed patch version. Launch explicitly asks the operating system to
-open the known game's `steam://run/` link. **Open install folder** uses the local
+open the known game's `steam://rungameid/` link. No launch occurs during a scan.
+Steam must be installed with its URI handler registered; opening the link does
+not verify that the game started. **Open install folder** uses the local
 file manager. Notes are optional local text saved beside the app's preferences;
 they do not change Steam metadata or game files. A not-detected row describes
 the current scan, and a partial scan is labelled as such.

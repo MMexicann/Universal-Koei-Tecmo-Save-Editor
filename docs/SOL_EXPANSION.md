@@ -91,5 +91,5 @@ public source files. Native reference tests remain private and optional in CI.
 
 The complete test inventory runs in four isolated shards with independently
 coordinated displays. Native Windows tests, EXE building and package scans are
-visible in [the repository workflow](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/actions/workflows/windows-release.yml).
+visible in [the repository workflow](https://github.com/MMexicann/Universal-Koei-Tecmo-Toolkit/actions/workflows/windows-release.yml).
 Ordinary development pull requests run those checks without publishing a release.

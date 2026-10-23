@@ -14,8 +14,11 @@ verified installation adapter supports Nioh 2 PC only.
 
 ## Development and releases
 
-- [Game Toolkit v1.0 pending release notes](TOOLKIT_V1_RELEASE_NOTES.md)
-- [Published Save Editor v3.1 release notes](RELEASE_NOTES.md)
+- [Game Toolkit v1.0 release notes](RELEASE_NOTES.md)
+- [Command-line edition: inspection, comparison, conversion and automation](CLI.md)
+- [Toolkit diagnostics: local support reports and explicit exports](DIAGNOSTICS.md)
+- [Earlier Save Editor v3.1 release notes](releases/v3.1.md)
+- [Release qualification, accepted scope and evidence limits](RELEASE_QUALIFICATION.md)
 - [Offline Localization Studio: supported plain-text formats and separate exports](../localization-studio/README.md)
 - [Browser-local Mod Testing Sandbox: staging, contracts, reports and safety limits](MOD_TESTING_SANDBOX.md)
 

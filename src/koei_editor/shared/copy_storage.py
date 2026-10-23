@@ -280,7 +280,7 @@ class ChildPublishedUncertainError(SaveError):
         super().__init__(f'The new private output may already be published at {self.destination}.')
 
 
-def publish_new_child_bound(data, directory, name, expected_identity):
+def publish_new_child_bound(data, directory, name, expected_identity, *, cleanup_pending_on_failure=False):
     """Write, verify, then publish a new child without exposing partial bytes."""
     if type(data) is not bytes:
         raise SaveError('A published private child must contain bytes.')
@@ -290,7 +290,8 @@ def publish_new_child_bound(data, directory, name, expected_identity):
         temporary_name = '.pending-' + uuid.uuid4().hex + '.tmp'
         # Keep the created child owned through verification and exclusive rename.
         return _new_child_windows(data, directory, temporary_name, expected_identity,
-                                  _publish_name=name)
+                                  _publish_name=name,
+                                  _cleanup_pending_on_failure=cleanup_pending_on_failure)
     if sys.platform.startswith('linux'):
         return _publish_new_child_linux(data, directory, name, expected_identity)
     raise SaveError('This system has no safe handle-bound no-replace publication for private manifests.')

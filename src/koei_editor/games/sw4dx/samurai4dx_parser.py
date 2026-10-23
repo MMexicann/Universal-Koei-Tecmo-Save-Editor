@@ -218,6 +218,8 @@ def changed_payload(document, changes):
         if key not in mapped:
             raise SaveError('The requested field is not mapped for this existing save record.')
         field = mapped[key]
+        if type(value) is int and value == field.value(document.payload):
+            continue
         if key.endswith('_equipped_weapon'):
             field.validate(value)
             owner = field.slot - 1

@@ -13,7 +13,7 @@ from koei_editor.shared import shell_preferences
 from koei_editor.shared.localization import CATALOGS, LANGUAGES, translate
 from koei_editor.shared.command_palette import CommandEntry, CommandPalette
 
-VERSION = '3.1'
+VERSION = '1.0'
 
 
 class Application(Appearance):
@@ -530,7 +530,7 @@ class Application(Appearance):
 
     def _rebuild_help_menu(self):
         self.help_menu.delete(0, 'end')
-        for tab in ('help', 'compatibility', 'versions', 'workflows', 'feedback', 'validation', 'plugins'):
+        for tab in ('help', 'compatibility', 'versions', 'workflows', 'feedback', 'validation', 'plugins', 'diagnostics'):
             self.help_menu.add_command(label=self.tr(tab), command=lambda name=tab: self.show_help(name))
 
     def _optional_tool_routes(self):
@@ -551,7 +551,7 @@ class Application(Appearance):
                    for game in self.library_games]
         for key in ('library', 'game_hub', 'converter', 'comparison', 'batch', 'save_library',
                     'troubleshooting', 'help', 'compatibility', 'versions', 'workflows',
-                    'feedback', 'validation', 'plugins'):
+                    'feedback', 'validation', 'plugins', 'diagnostics'):
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
         for key in self._optional_tool_routes():
             entries.append(CommandEntry('tool:' + key, self.tr(key), 'tool', keywords=key))
@@ -1378,10 +1378,11 @@ def _smoke_progression_views(app):
     return len(views)
 
 
-def main():
-    if len(sys.argv) > 1 and sys.argv[1] == '--automation':
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == '--automation':
         from koei_editor.automation_cli import main as automation_main
-        raise SystemExit(automation_main(sys.argv[2:]))
+        raise SystemExit(automation_main(argv[1:]))
     parser = argparse.ArgumentParser(description='Universal Koei Tecmo Game Toolkit')
     parser.epilog = 'Use --automation --help for reviewed batch editing and workflow commands.'
     parser.add_argument('--game', choices=[game.id for game in ALL_ADAPTERS], help='Open a registered editor or research tool.')
@@ -1405,7 +1406,7 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Validate and review conversion without writing files or backups.')
     from koei_editor.shared import save_management_cli
     save_management_cli.add_arguments(parser, tests)
-    arguments = parser.parse_args()
+    arguments = parser.parse_args(argv)
     if save_management_cli.handle(parser, arguments):
         return
     if arguments.recursive and arguments.scan_saves is None:
@@ -1559,6 +1560,7 @@ def main():
         app.show_controller_profiles()
         app.show_emulator_hub()
         app.show_nexus_mods()
+        app.show_help('diagnostics')
         app.show_library()
         app.nexus_mods.close()
         app.select_game('dw3')

@@ -61,11 +61,11 @@ class UniversalPackagingTests(fixture.PackagingTests):
         self.add_sources({name: b'# Contributor scaffold\n' for name in names})
         self.write_manifest()
         with patch.object(release, 'verify_executable', return_value=1), \
-                patch.object(release, 'verify_standalone', return_value=1):
+                patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
         with zipfile.ZipFile(assets[1]) as archive:
             for name in names:
-                self.assertEqual(archive.read('UniversalKoeiTecmoSaveEditor-v1.0-Source/' + name), self.sources[name])
+                self.assertEqual(archive.read('UniversalKoeiTecmoGameToolkit-v1.0-Source/' + name), self.sources[name])
         for name in release.ADAPTER_TEMPLATE_FILES | {'tests/scalar_contract.py'}:
             original = self.sources.pop(name)
             self.write_manifest()
@@ -128,10 +128,12 @@ class UniversalPackagingTests(fixture.PackagingTests):
             self.assertFalse((root / 'release').exists())
             return 1
         with patch.object(release, 'verify_executable', side_effect=inspect) as verifier, \
-                patch.object(release, 'verify_standalone', side_effect=inspect) as standalone_verifier:
+                patch.object(release, 'verify_standalone', side_effect=inspect) as standalone_verifier, \
+                patch.object(release, 'verify_cli', side_effect=inspect) as cli_verifier:
             assets = release.package(self.root)
         verifier.assert_called_once_with(self.root.resolve())
         standalone_verifier.assert_called_once_with(self.root.resolve())
+        cli_verifier.assert_called_once_with(self.root.resolve())
         self.assertTrue(all(asset.exists() for asset in assets))
 
     def test_katana_dependency_requires_its_exact_embedded_license(self):
@@ -158,15 +160,15 @@ class UniversalPackagingTests(fixture.PackagingTests):
         self.add_sources({name: b'# Evidence\n' for name in names})
         self.write_manifest()
         with patch.object(release, 'verify_executable', return_value=1), \
-                patch.object(release, 'verify_standalone', return_value=1):
+                patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
         with zipfile.ZipFile(assets[0]) as archive:
-            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0/'
+            prefix = 'UniversalKoeiTecmoGameToolkit-v1.0/'
             self.assertTrue(all(name.startswith(prefix) for name in archive.namelist()))
             self.assertFalse(any('/docs/' in name for name in archive.namelist()))
         with zipfile.ZipFile(assets[1]) as archive:
             for name in names:
-                self.assertEqual(archive.read('UniversalKoeiTecmoSaveEditor-v1.0-Source/' + name), self.sources[name])
+                self.assertEqual(archive.read('UniversalKoeiTecmoGameToolkit-v1.0-Source/' + name), self.sources[name])
 
 
 class WindowsBuildConfigurationTests(unittest.TestCase):
@@ -178,7 +180,7 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
         self.assertNotIn('--onefile', args)
         self.assertEqual(args[args.index('--contents-directory') + 1], '_internal')
         self.assertIn('--windowed', args)
-        self.assertEqual(args[args.index('--name') + 1], 'UniversalKoeiTecmoSaveEditor-v' + build.VERSION)
+        self.assertEqual(args[args.index('--name') + 1], 'UniversalKoeiTecmoGameToolkit-v' + build.VERSION)
         self.assertEqual(Path(args[-1]), PROJECT / 'launch.pyw')
         self.assertEqual(Path(args[args.index('--paths') + 1]), PROJECT / 'src')
         for game in build.ALL_ADAPTERS:
@@ -212,7 +214,7 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
     def test_application_build_and_project_have_matching_versions(self):
         from koei_editor import application
         self.assertEqual(release.version(PROJECT), application.VERSION)
-        self.assertEqual(release.artifact_name(PROJECT), 'UniversalKoeiTecmoSaveEditor-v' + application.VERSION)
+        self.assertEqual(release.artifact_name(PROJECT), 'UniversalKoeiTecmoGameToolkit-v' + application.VERSION)
 
     def test_distinct_registered_scalar_backend_is_collected(self):
         from tools import build_windows as build
@@ -263,7 +265,7 @@ class WindowsBuildConfigurationTests(unittest.TestCase):
                          'Release tag must match the application version.', 'python -m tools.package_release\n',
                          'sha256sum --check SHA256SUMS.txt', 'gh release create', '--verify-tag',
                          'python -m pip install -e .', 'python -m tools.build_windows', 'python -m koei_editor --smoke-test',
-                         'tools/requirements/build.txt', '--notes-file docs/RELEASE_NOTES.md', "github.event_name == 'pull_request'"):
+                         'tools/requirements/build.txt', '--notes-file "$notes_file"', "github.event_name == 'pull_request'"):
             self.assertIn(required, workflow)
         for forbidden in ('gh release edit', 'gh release upload', 'git push'):
             self.assertNotIn(forbidden, workflow)

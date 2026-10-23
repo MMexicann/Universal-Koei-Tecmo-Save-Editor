@@ -15,7 +15,7 @@ MANIFEST = 'tools/SOURCE_MANIFEST.json'
 PACKAGE_ROOT = 'src/koei_editor'
 ROOT_FILES = {'.gitignore', '.gitattributes', 'LICENSE', 'README.md', 'AGENTS.md', 'pyproject.toml', 'launch.pyw', 'CONTRIBUTING.md'}
 TOOL_FILES = {'tools/__init__.py', 'tools/build_windows.py', 'tools/package_release.py',
-              'tools/scan_release.ps1', 'tools/smoke_windows.ps1', 'tools/benchmark_automation.py', 'tools/benchmark_application.py',
+              'tools/scan_release.ps1', 'tools/smoke_windows.ps1', 'tools/smoke_cli_windows.ps1', 'tools/benchmark_automation.py', 'tools/benchmark_application.py',
               'tools/check_community_plugins.py', 'tools/community_plugin_template/example.plugin.json',
               'tools/refresh_manifest.py', 'tools/update_supported_games.py', 'tools/AGENTS.md',
               'tools/run_tests.py', 'tools/test_timings.json', 'tools/inspect_candidate.py',
@@ -82,7 +82,7 @@ RUNTIME_DATA = ('officer_names.json', 'game_metadata.json', 'unique_weapons.json
                 'game_troubleshooting.json', 'version_compatibility.json')
 # Explicit user guides are reviewed runtime metadata in both Windows builds.
 # Repository/developer documentation remains confined to the Source ZIP.
-RUNTIME_GUIDES = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/ASSET_EXPLORER.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
+RUNTIME_GUIDES = ('docs/CLI.md', 'docs/DIAGNOSTICS.md', 'docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/ASSET_EXPLORER.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/HELP_AND_COMPATIBILITY.md',
                   'docs/CONTROLLER_INPUT_PROFILES.md',
                   'docs/GAME_TROUBLESHOOTING.md',
                   'docs/WARRIORS_PS4_TRANSFERS.md',
@@ -109,7 +109,7 @@ RUNTIME_LICENSES = ('licenses/Python-LICENSE.txt', 'licenses/PyInstaller-COPYING
                    'licenses/numpy-sfc64.txt', 'licenses/numpy-splitmix64.txt',
                    'licenses/cffi-MIT-0.txt', 'licenses/cffi-libffi-MIT.txt',
                    'licenses/pycparser-BSD-3-Clause.txt')
-WINDOWS_DOCS = ('docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
+WINDOWS_DOCS = ('docs/CLI.md', 'docs/DIAGNOSTICS.md', 'docs/GAME_DATA_ENCYCLOPEDIA.md', 'docs/RESEARCH_IMPORT.md', 'docs/AUTOMATION.md', 'docs/APPLICATION_SHELL.md', 'docs/ASSET_EXPLORER.md', 'docs/HELP_AND_COMPATIBILITY.md',
                 'docs/CONTROLLER_INPUT_PROFILES.md',
                 'docs/GAME_TROUBLESHOOTING.md',
                 'docs/WARRIORS_PS4_TRANSFERS.md',
@@ -170,7 +170,7 @@ def version(root=ROOT):
 
 
 def artifact_name(root=ROOT):
-    return f'UniversalKoeiTecmoSaveEditor-v{version(root)}'
+    return f'UniversalKoeiTecmoGameToolkit-v{version(root)}'
 
 
 def runtime_directory(root=ROOT):
@@ -185,6 +185,11 @@ def executable_path(root=ROOT):
 def standalone_executable_path(root=ROOT):
     """Self-contained onefile build; never substitute the portable launcher."""
     return Path(root) / 'dist-standalone' / (artifact_name(root) + '.exe')
+
+
+def cli_executable_path(root=ROOT):
+    """Separate self-contained console build; never substitute a GUI executable."""
+    return Path(root) / 'dist-cli' / (artifact_name(root) + '-CLI.exe')
 
 
 def public_path(name):
@@ -315,7 +320,7 @@ def verified_sources(root=ROOT):
         if '\0' in text or PERSONAL_PATH.search(text):
             raise ValueError(f'Binary content or personal home path in public source: {name}')
         sources[name] = data
-    required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'docs/RELEASE_NOTES.md',
+    required = set(WINDOWS_DOCS) | set(RUNTIME_GUIDES) | TOOL_FILES | {'pyproject.toml', 'launch.pyw', 'src/koei_editor/cli.py', 'docs/RELEASE_NOTES.md',
                                                 '.github/workflows/windows-release.yml'}
     required.update(SOURCE_ONLY_GUIDES | COMMUNITY_SCHEMA_FILES)
     if (root / 'tools/mod_testing_sandbox').is_dir():
@@ -732,6 +737,38 @@ def verify_standalone(root=ROOT, archive_reader=None):
     return count
 
 
+def _cli_snapshot(root):
+    root = root.resolve()
+    path = _repo_path(root, cli_executable_path(root).relative_to(root).as_posix())
+    if not path.is_file():
+        raise ValueError('The console CLI executable is missing; build with --cli.')
+    binary = path.read_bytes()
+    # Do not accept a renamed windowed GUI executable as the console download.
+    header = int.from_bytes(binary[0x3c:0x40], 'little') if len(binary) >= 0x40 else -1
+    if (not binary.startswith(b'MZ') or header < 0x40 or header > len(binary) - 94
+            or binary[header:header + 4] != b'PE\0\0'
+            or int.from_bytes(binary[header + 4:header + 6], 'little') != 0x8664):
+        raise ValueError('The CLI executable is not a 64-bit Windows PE executable.')
+    optional_size = int.from_bytes(binary[header + 20:header + 22], 'little')
+    optional = header + 24
+    if (optional_size < 70 or optional + optional_size > len(binary)
+            or int.from_bytes(binary[optional:optional + 2], 'little') != 0x20b
+            or int.from_bytes(binary[optional + 68:optional + 70], 'little') != 3):
+        raise ValueError('The CLI executable must use the Windows console subsystem.')
+    scan_bundled_data('CLI executable', binary)
+    return binary
+
+
+def verify_cli(root=ROOT, archive_reader=None):
+    root = root.resolve()
+    _, sources = verified_sources(root)
+    binary = _cli_snapshot(root)
+    count = _verify_archive(cli_executable_path(root), sources, archive_reader, require_complete_runtime=True)
+    if binary != _cli_snapshot(root):
+        raise ValueError('CLI executable changed during validation; rebuild before packaging.')
+    return count
+
+
 def package(root=ROOT, output=None):
     root = root.resolve()
     _, sources = verified_sources(root)
@@ -744,9 +781,13 @@ def package(root=ROOT, output=None):
     verify_standalone(root)
     if standalone != _standalone_snapshot(root):
         raise ValueError('Standalone executable changed during validation; rebuild before packaging.')
+    cli = _cli_snapshot(root)
+    verify_cli(root)
+    if cli != _cli_snapshot(root):
+        raise ValueError('CLI executable changed during validation; rebuild before packaging.')
     output = Path(output) if output is not None else root / 'release'
     assets = [output / f'{name}-Windows.zip', output / f'{name}-Source.zip',
-              output / f'{name}.exe', output / 'SHA256SUMS.txt']
+              output / f'{name}.exe', output / f'{name}-CLI.exe', output / 'SHA256SUMS.txt']
     if any(path.exists() for path in assets):
         raise ValueError('Release outputs already exist; choose a new output directory.')
     # The user ZIP is exactly the validated application folder, including the
@@ -760,8 +801,12 @@ def package(root=ROOT, output=None):
         stream.write(standalone)
     if assets[2].read_bytes() != standalone or _standalone_snapshot(root) != standalone:
         raise ValueError('Standalone executable changed during release copying; do not publish these outputs.')
-    with assets[3].open('x', encoding='ascii', newline='\n') as stream:
-        for path in assets[:3]:
+    with assets[3].open('xb') as stream:
+        stream.write(cli)
+    if assets[3].read_bytes() != cli or _cli_snapshot(root) != cli:
+        raise ValueError('CLI executable changed during release copying; do not publish these outputs.')
+    with assets[4].open('x', encoding='ascii', newline='\n') as stream:
+        for path in assets[:4]:
             stream.write(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n')
     return assets
 
@@ -772,6 +817,8 @@ def main():
     parser.add_argument('--executable-path', action='store_true', help='Print the portable Windows launcher path.')
     parser.add_argument('--bundle-path', action='store_true', help='Print the complete portable Windows runtime folder.')
     parser.add_argument('--standalone-path', action='store_true', help='Print the self-contained standalone EXE path.')
+    parser.add_argument('--cli-path', action='store_true', help='Print the self-contained console CLI EXE path.')
+    parser.add_argument('--verify-cli', action='store_true', help='Validate the complete embedded console CLI runtime.')
     parser.add_argument('--verify-standalone', action='store_true', help='Validate the complete embedded standalone runtime.')
     parser.add_argument('--verify-only', action='store_true', help='Validate public source hashes without creating archives.')
     parser.add_argument('--verify-executable', action='store_true', help='Inspect the built runtime archive (requires PyInstaller).')
@@ -785,6 +832,10 @@ def main():
         print(runtime_directory())
     elif arguments.standalone_path:
         print(standalone_executable_path())
+    elif arguments.cli_path:
+        print(cli_executable_path())
+    elif arguments.verify_cli:
+        print(f'Verified {verify_cli()} CLI archive entries and the complete embedded runtime.')
     elif arguments.verify_standalone:
         print(f'Verified {verify_standalone()} standalone archive entries and the complete embedded runtime.')
     elif arguments.verify_executable:

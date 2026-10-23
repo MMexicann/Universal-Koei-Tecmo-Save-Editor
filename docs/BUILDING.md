@@ -1,9 +1,8 @@
 # Building the Windows executable
 
-This development source prepares the **Universal Koei Tecmo Game Toolkit** name.
-The technical version and artifact filenames remain at **3.1** until the v1.0
-release gates pass. See the [branding and release handoff](REPOSITORY_METADATA.md)
-before changing versions, filenames, tags or publication settings.
+**Universal Koei Tecmo Game Toolkit v1.0** continues Save Editor v3.1 under
+the new product name. Its release tag is `toolkit-v1.0`; the historical
+Save Editor `v1.0` tag is preserved. See the [release identity and checklist](REPOSITORY_METADATA.md).
 
 Build releases on 64-bit Windows with Python 3.14.7 and Tkinter. Build/package tools
 and the development test suite use Python 3.11 or newer; the source application
@@ -19,22 +18,25 @@ python -m pip install -e . --no-build-isolation
 python -m tools.package_release --verify-only
 python -m tools.build_windows
 python -m tools.build_windows --standalone
+python -m tools.build_windows --cli
 ```
 
-The default build produces **`dist/UniversalKoeiTecmoSaveEditor-v3.1/`**, a
+The default build produces **`dist/UniversalKoeiTecmoGameToolkit-v1.0/`**, a
 portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
-**`dist-standalone/UniversalKoeiTecmoSaveEditor-v3.1.exe`**. That direct download
-needs no side files. Both modes use pinned Python 3.14.7 and `--noupx`, with the
+**`dist-standalone/UniversalKoeiTecmoGameToolkit-v1.0.exe`**. That direct download
+needs no side files. The optional console build, `--cli`, produces
+**`dist-cli/UniversalKoeiTecmoGameToolkit-v1.0-CLI.exe`** for the
+[headless commands](CLI.md). All three modes use pinned Python 3.14.7 and `--noupx`, with the
 same 98 game/platform profiles, runtime metadata, asset preview modules and
 required notices.
 Native Windows CNG handles DW3 encryption. Save samples, installed game files
 and private reports are excluded.
 
-Both builds retain exact reviewed `METADATA` for the five asset-preview
+All builds retain exact reviewed `METADATA` for the five asset-preview
 dependencies so runtime version queries work. After PyInstaller analysis, the
 build removes their build-only distribution records, installer markers and
-upstream `DELVEWHEEL` logs before assembling either format. These records are not
+upstream `DELVEWHEEL` logs before assembling each format. These records are not
 needed by the previews; their licenses remain in the required runtime notices.
 The filter is bound to the complete hash-locked wheel list and rejects unknown
 distribution metadata. Package verification checks retained metadata hashes and
@@ -72,6 +74,7 @@ any OS with:
 ```text
 python -m tools.build_windows --print-config
 python -m tools.build_windows --standalone --print-config
+python -m tools.build_windows --cli --print-config
 ```
 
 ## Build checks
@@ -81,19 +84,23 @@ python -m tools.run_tests --workers 4
 python -m koei_editor --smoke-test
 python -m tools.package_release --verify-executable
 python -m tools.package_release --verify-standalone
+python -m tools.package_release --verify-cli
 ```
 
-These verification commands inspect frozen archives without executing either
+These verification commands inspect frozen archives without executing any
 binary. Before any packaged startup or copied-save test, use the isolated,
-elevated Windows release runner to scan both complete candidates:
+elevated Windows release runner to scan every complete candidate:
 
 ```powershell
 $bundle = python -m tools.package_release --bundle-path
 $standalone = python -m tools.package_release --standalone-path
+$cli = python -m tools.package_release --cli-path
 & ./tools/scan_release.ps1 -Path $bundle -ReportPath defender-reports/runtime.json
 if ($LASTEXITCODE -ne 0) { throw 'Portable runtime scan failed.' }
 & ./tools/scan_release.ps1 -Path $standalone -ReportPath defender-reports/standalone.json
 if ($LASTEXITCODE -ne 0) { throw 'Standalone EXE scan failed.' }
+& ./tools/scan_release.ps1 -Path $cli -ReportPath defender-reports/cli.json
+if ($LASTEXITCODE -ne 0) { throw 'CLI EXE scan failed.' }
 $launcher = python -m tools.package_release --executable-path
 foreach ($candidate in @($launcher, $standalone)) {
     $smoke = Start-Process -FilePath $candidate -ArgumentList '--smoke-test' -WindowStyle Hidden -Wait -PassThru
@@ -106,7 +113,9 @@ verified cloud connectivity and unchanged input hashes. A missing engine,
 detection, scan error or changed bytes blocks both packaged execution and
 publication. Prefer the repository workflow for the complete release gate.
 
-The smoke test initializes the library and registered editors, switches games and
+The CLI has separate bounded startup checks for `--help`, `--version`,
+`games --json` and `routes --json`; these commands do not open the GUI or edit saves.
+The GUI smoke test initializes the library and registered editors, switches games and
 appearance, then exits. Require exit code 0. Save-format and game-load validation
 are separate; see [VALIDATION.md](VALIDATION.md) for coverage and limitations.
 
@@ -114,7 +123,7 @@ The Windows workflow runs the complete suite across four independent test jobs,
 each using two isolated Python processes. Runtime estimates balance modules;
 unknown/new modules are always included. The build checks combined shard
 reports against the current sources and complete test inventory before its
-source GUI smoke test, both native builds, candidate scans, packaged smoke tests and archive/privacy
+source GUI smoke test, all three native builds, candidate scans, packaged startup checks and archive/privacy
 validation. Failed, missing or overlapping shards cannot authorize a build or
 publication. Reports and individual module logs are downloadable CI artifacts.
 Pip caching avoids repeatedly downloading unchanged build dependencies.
@@ -146,7 +155,7 @@ Other editors use an explicit game ID:
 & $launcher --game atelier_sophie2 --self-test "D:\SaveCopies\data.dat" "D:\SaveCopies\Sophie2Test"
 ```
 
-The scanned standalone EXE accepts the same arguments. Use a separate input
+The scanned standalone GUI EXE accepts the same arguments. Use a separate input
 copy and a new/empty output folder. Require exit 0,
 `success: true` in `self-test-report.json` and preservation of the input hash.
 These workflows create edited copies, backups and restored copies. Source
@@ -163,17 +172,18 @@ hashes. Refresh it after reviewed edits with `python -m tools.refresh_manifest`;
 python -m tools.package_release --verify-only
 python -m tools.package_release --verify-executable
 python -m tools.package_release --verify-standalone
+python -m tools.package_release --verify-cli
 python -m tools.package_release --output work/local-universal-package
 ```
 
-The packager produces the direct standalone EXE, complete Windows ZIP, Source
-ZIP and `SHA256SUMS.txt`. The Windows ZIP root contains only the versioned
+The packager produces the standalone GUI and optional CLI EXEs, complete Windows
+ZIP, Source ZIP and `SHA256SUMS.txt`. The Windows ZIP root contains only the versioned
 application folder, with its launcher and `_internal` runtime. Required project,
 Python, Tcl/Tk, PyInstaller and adapted-code notices are retained under
-`_internal/licenses`; the standalone EXE embeds the same notices. Developer
+`_internal/licenses`; both standalone EXEs embed the same notices. Developer
 guides, `AGENTS.md`, `CONTRIBUTING.md` and the documentation tree belong in the
 Source ZIP. The release workflow adds the Defender report and its checksum only
-after scanning the exact final EXE and both final ZIPs successfully.
+after scanning both exact final EXEs and both final ZIPs successfully.
 Existing outputs are never replaced. It checks the embedded archive, metadata and
 source hashes, and rejects save/game-file entries and personal paths.
 
@@ -183,26 +193,28 @@ uses the same scripts. A completed build is a prerequisite for packaging.
 The build job uses `windows-2022` as a diagnostic comparison after hosted
 `windows-latest` runners stopped reporting during packaging; this does not
 establish the cause or guarantee a remedy. The four full-suite test shards
-continue to use `windows-latest`. Portable and standalone builds each have a
+continue to use `windows-latest`. The portable, standalone GUI and CLI builds each have a
 10-minute step limit, and their separate frozen-payload verification steps each
 have a 3-minute limit, within the unchanged 30-minute job limit. Runtime scans,
 packaged startup and packaging remain separate bounded steps.
-After both runtime scans pass, `tools/smoke_windows.ps1` gives each
-packaged startup 180 seconds and records its exit status and executable hashes.
+After runtime scans pass, `tools/smoke_windows.ps1` gives each
+GUI startup 180 seconds and records its exit status and executable hashes.
 On timeout it records bounded descendant metadata, reads window text only from
 the retained launched process, and terminates its process tree. Startup and
 Defender diagnostics are workflow artifacts,
 separate from the release downloads; a timeout still blocks publication.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
-commit. Pushing a tag matching the application version, such as `v3.1`, also
-publishes after the native build and checks succeed. Existing releases are not replaced.
+commit. Pushing the matching Toolkit tag, such as `toolkit-v1.0`, also
+publishes after the native build and checks succeed. Historical tags and releases
+are never moved or replaced. Publication marks the Toolkit release as latest
+despite the product version reset from Save Editor v3.1.
 
 The portable runtime loads from the adjacent `_internal` folder. Users extract
 the entire Windows ZIP and keep that folder beside its launcher. The direct EXE
 contains its runtime and extracts it temporarily at startup; users need no
-adjacent files. Neither download requires an installed Python or administrator
-privileges to run.
+adjacent files. The optional CLI EXE is also self-contained. None of these Windows
+binaries requires an installed Python or administrator privileges to run.
 
 Release-marked main commits (`[release]` in the commit message) run the same native
 build and checks, then create a new matching tag at that tested commit. Existing
@@ -221,17 +233,17 @@ See [Defender verification and the withdrawn 2.0 artifact](DEFENDER_RELEASE_GUAR
 Hosted Windows runners start with antivirus exclusions/protection disabled; do
 not treat their defaults as a clean scan. The workflow enables protection in the
 isolated runner, updates signatures, verifies cloud connectivity and scans the
-complete portable runtime and standalone EXE before either packaged startup.
-It then scans the exact final direct EXE and both final ZIPs and checks their
+complete portable runtime and both standalone EXEs before packaged startup.
+It then scans both exact final EXEs and both final ZIPs and checks their
 recorded hashes again at publication. Any unavailable protection, detection,
 scan error or changed input blocks the release. Reports are retained for review.
 
 ## Reviewed offline user guides
 
 `tools.package_release.RUNTIME_GUIDES` is the explicit user-document allowlist.
-The Windows builder collects these reviewed files into `guides` for both build forms.
+The Windows builder collects these reviewed files into `guides` for all build forms.
 The portable ZIP exposes them under `_internal/guides/`. Their exact bytes are
 bound to the reviewed source manifest and verified alongside other runtime
 metadata; missing, altered or unreviewed guide files fail packaging. Repository
 and developer documents remain confined to the Source ZIP. Only the explicitly
-allowlisted guides are embedded in both executable forms.
+allowlisted guides are embedded in all three executable forms.

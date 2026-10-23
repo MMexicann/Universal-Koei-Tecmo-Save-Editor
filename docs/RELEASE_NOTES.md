@@ -1,91 +1,35 @@
-# Universal Koei Tecmo Save Editor v3.1
+# Universal Koei Tecmo Game Toolkit v1.0
 
-DW8 XL PS4 editing, six scoped conversion routes and clearer conversion review.
-The library now has **98 game/platform profiles across 15 platforms**, with
-**145 scoped conversion routes**. Existing editors, themes, sessions, backups,
-Undo, comparison and automation remain available.
+Game Toolkit continues Save Editor v3.1 with preserved save compatibility and release history.
 
-## DW8 XL PS4 editor
+- **Save workflows:** Smart Playthrough Profiles prepare isolated copies;
+  improved search, paging, comparisons and reviews retain backups and Undo.
+- **Character & Weapon Workshop:** plan and compare mapped builds for DW3
+  Remastered, DW8 XL PC, WO3 Ultimate PC and SW4 DX PC.
+- **Mod tools:** create replacement packages and manage Nioh 2 PC Mods-folder
+  packages with separate profiles and dependency/conflict checks.
+- **Game tools:** sortable Steam Game Hub with shareable installation reports,
+  version observations, emulator profiles and selected Atelier Arland DX PC settings.
+- **Asset and progress views:** read-only ZIP, G1T and common-media previews,
+  Completion Companion, strategy record views, read-only Nioh 3 equipment
+  details and clearer Project Zero PS2 film labels.
+- **Command line and support:** search game/route catalogs, inspect and compare
+  copies, run reviewed conversions and automation, and export path-free support
+  reports. Diagnostics are also available from the GUI Help menu.
+- **Source tools:** browser-local Mod Testing Sandbox, offline Localization
+  Studio for supported plain-text tables and a snapshot-based patch analyzer.
+- **Integrations and reference data:** data-only community packages, local
+  controller-profile records and Three Hopes Switch/Hyrule Warriors Wii U
+  reference data. Nexus provides website links; API access remains gated.
 
-- Edit gold, gems, materials, 82 officers' stored stats, weapon-action aptitudes
-  and existing ranked weapon attributes in decrypted **CUSA00397** copies.
-- Requires the exact common revision `0x131002F0`, `0xD0F45` bytes, an entirely
-  zero extension and original `sce_sys/param.sfo`. Nonzero extensions and other
-  regions are rejected. The existing PS4 ↔ PC/PS3/Vita routes remain available.
-- Use staged edits, Review Changes, Undo and guarded Save As. Backups retain the
-  gameplay and original metadata; restore and saving require the same original
-  destination context. Automatic Max remains disabled for these manual controls.
-- Conversion to PC accepts either exact PC template header already supported by
-  the editor. It retains the template's cipher seed and transfers the common
-  source payload unchanged. Alternate-header PC sources remain unqualified.
+**98 game/platform profiles · 15 save platforms · 145 scoped conversion routes.**
+This release adds no new save-editing profiles or platforms. See the
+[exact game catalog](SUPPORTED_GAMES.md).
 
-## Six new scoped conversion routes
+The application runs on Windows. Save Vault and Playthrough Profiles also
+require Windows from source. Edited/converted in-game loading remains unverified;
+research edition leads do not imply editing support. Windows Troubleshooting
+folder scans remain unavailable. [Compatibility and limits](../README.md#compatibility).
 
-- **WO3 Ultimate US PS4 → Definitive Edition PC:** transfer 354 directly
-  documented balances: rare crystals, 58 attribute orbs and 295 material stocks
-  (355 mapped bytes). Requires the exact CUSA00588 serialized-marker profile and
-  original metadata. Keep destination gems, growth points, officers, weapons,
-  progression, settings and platform-specific records. Reverse transfer is unavailable.
-- **Optional WO3U PS4 officer base stats:** a second one-way scope adds five
-  directly documented base stats for 145 playable officers: 1,079 values across
-  1,805 bytes including the material balances. Preserve levels, EXP, promotions,
-  equipment references, five internal records and the entire saved-state block.
-  New assignments must fit PC bounds; exact unusual opened target values are no-ops.
-- **WO3 Ultimate US PS3 ↔ Definitive Edition PC:** transfer unallocated growth
-  points and gems only. Destination officers, equipment, rare crystals,
-  progression and platform-specific serialized markers remain intact. Higher PC
-  gem assignments beyond the PS3 999,999 bound are rejected without clamping;
-  exact higher opened destination values remain no-ops.
-- **SW4 US PS3 ↔ SW4 DX PC:** transfer gold only. Each
-  platform's existing native writer handles endian order and integrity. Retain
-  destination progression, equipment, Chronicle, edition-specific content and
-  the PC template's header and cipher seed.
-- Reviews show each incoming balance against the original destination value.
-  These routes replace their listed mapped values, including lower ones; they are not full-save
-  migration, progression transfer or best-value merges. Experimental numeric
-  editing cannot widen their conversion limits.
-
-## Conversion workspace improvements
-
-- WO3U PC Save As now rejects source changes during backup or writing, verifies
-  backup bytes and manifests, and reopens the actual saved destination.
-- Filter by exact source and destination formats together with text search. Matching
-  reviewed selections remain available; hidden/incompatible selections clear safely.
-
-- See exact source/template filenames and required original companions before
-  browsing. This distinguishes SW4 `DATA.BIN` from WO3U/DW8 `APP.BIN`.
-- Use **Reverse route and copies** to choose an available reverse with the same
-  transfer scope, swap the inputs and invalidate the old review. One-way routes
-  cannot be reversed; exporting always requires a fresh review.
-- New formats/routes are included in the registry, offline guides, CLI, batch
-  conversion, build inputs and reviewed source manifest. Regression checks cover
-  retained bytes, record identity, numeric bounds, checksums and context races.
-
-## Read-only imports for additional games
-
-- Open **Editing and Research → Research Import**, or find it with Ctrl+K.
-  Choose Gundam 2 PS3, Totori/Rorona/Ayesha Plus Vita or original Uncharted
-  Waters IV PK. Inspect existing candidate records and exact framing observations.
-- Files and original companions use bounded reads and freshness checks. Filtering,
-  retained views, themes and keyboard search share the app workspace. No game
-  file is written, repaired or converted, and no alternate parser is tried.
-- These five candidates remain separate from the 98 supported editing profiles.
-  Native integrity/gameplay gaps are explicit; DK4 inspection is framing-only.
-  [Scope and preparation](RESEARCH_IMPORT.md).
-
-## Scope and downloads
-
-**Full WO3U and SW4 PS4 → PC conversion remains unavailable.** The new WO3U PS4 route transfers only the listed balances. The PS3 routes also
-remain resource-only. Complete migration still needs original PS4 contexts,
-qualified full schemas/integrity and edition-compatibility evidence. [Request scope and evidence](WARRIORS_PS4_TRANSFERS.md).
-
-Edited/converted in-game loading and re-saving remain unverified. The PS4 DW8
-profile claims no native gameplay checksum; structure/title/context and copied
-output checks do not verify console signing or game loading. The public reference
-lacks original console metadata. Extraction, decryption, reimport and resigning
-remain external. Other existing profile limitations remain unchanged.
-
-Choose the standalone EXE or the complete portable Windows ZIP. The Source ZIP,
-`SHA256SUMS.txt` and `DefenderScan-v3.1.json` accompany them. Publication requires
-complete source-bound Windows tests, both native builds, packaged startup,
-updated active Defender scans and exact final-artifact hash verification.
+[Downloads and installation](../README.md#download-and-install) ·
+[Earlier Save Editor v3.1 notes](releases/v3.1.md)

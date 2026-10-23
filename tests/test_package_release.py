@@ -46,6 +46,7 @@ class PackagingTests(unittest.TestCase):
             'src/koei_editor/__init__.py': b'# Runtime package\n',
             'src/koei_editor/application.py': b"VERSION = '1.0'\n",
             'src/koei_editor/game_registry.py': b'# Registered game modules\n',
+            'src/koei_editor/cli.py': b'# Synthetic CLI entry\n',
             'src/koei_editor/__main__.py': b'from .application import main\n',
             'tools/build_windows.py': b"VERSION = '1.0'\n",
             'pyproject.toml': b'[project]\nname = "synthetic-public-editor"\nversion = "1.0"\n',
@@ -73,6 +74,21 @@ class PackagingTests(unittest.TestCase):
         standalone = release.standalone_executable_path(self.root)
         standalone.parent.mkdir(parents=True)
         standalone.write_bytes(b'MZ synthetic self-contained executable, distinct from portable launcher')
+        cli = release.cli_executable_path(self.root)
+        cli.parent.mkdir(parents=True)
+        cli.write_bytes(self.console_pe())
+
+    @staticmethod
+    def console_pe(subsystem=3):
+        raw = bytearray(512)
+        raw[:2] = b'MZ'
+        raw[0x3c:0x40] = (0x80).to_bytes(4, 'little')
+        raw[0x80:0x84] = b'PE\0\0'
+        raw[0x84:0x86] = (0x8664).to_bytes(2, 'little')
+        raw[0x94:0x96] = (240).to_bytes(2, 'little')
+        raw[0x98:0x9a] = (0x20b).to_bytes(2, 'little')
+        raw[0xdc:0xde] = subsystem.to_bytes(2, 'little')
+        return bytes(raw) + b' procedural console bytes, never executed'
 
     def tearDown(self):
         assert self.root.resolve().is_relative_to(self.area)
@@ -270,7 +286,7 @@ class PackagingTests(unittest.TestCase):
             writer(path, entries)
             standalone.write_bytes(b'MZ changed while ZIPs were written')
         with patch.object(release, 'verify_executable', return_value=1), \
-             patch.object(release, 'verify_standalone', return_value=1), \
+             patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1), \
              patch.object(release, 'write_zip', side_effect=changed_after_validation):
             with self.assertRaisesRegex(ValueError, 'changed during release copying'):
                 release.package(self.root)
@@ -282,31 +298,33 @@ class PackagingTests(unittest.TestCase):
         (self.root / 'work').mkdir()
         (self.root / 'work/private.sav').write_bytes(b'private fixture')
         with patch.object(release, 'verify_executable', return_value=1) as verified, \
-             patch.object(release, 'verify_standalone', return_value=1) as standalone_verified:
+             patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1) as standalone_verified:
             assets = release.package(self.root)
         verified.assert_called_once_with(self.root)
         standalone_verified.assert_called_once_with(self.root)
         with zipfile.ZipFile(assets[0]) as archive:
-            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0/'
+            prefix = 'UniversalKoeiTecmoGameToolkit-v1.0/'
             runtime = release._runtime_snapshot(self.root, self.sources)
             self.assertEqual(set(archive.namelist()), {prefix + name for name in runtime})
             self.assertEqual({name.split('/')[0] for name in archive.namelist()}, {prefix.rstrip('/')})
             for name, data in runtime.items():
                 self.assertEqual(archive.read(prefix + name), data)
         with zipfile.ZipFile(assets[1]) as archive:
-            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0-Source/'
+            prefix = 'UniversalKoeiTecmoGameToolkit-v1.0-Source/'
             self.assertEqual(set(archive.namelist()), {prefix + name for name in self.sources} | {prefix + release.MANIFEST})
             for name, data in self.sources.items():
                 self.assertEqual(archive.read(prefix + name), data)
-        self.assertEqual(len(assets), 4)
+        self.assertEqual(len(assets), 5)
         self.assertEqual(assets[2].read_bytes(), release.standalone_executable_path(self.root).read_bytes())
         self.assertNotEqual(assets[2].read_bytes(), release.executable_path(self.root).read_bytes())
-        self.assertEqual(assets[3].read_text().splitlines(),
-                         [f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}' for path in assets[:3]])
-        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
+        self.assertEqual(assets[3].read_bytes(), release.cli_executable_path(self.root).read_bytes())
+        self.assertNotEqual(assets[3].read_bytes(), assets[2].read_bytes())
+        self.assertEqual(assets[4].read_text().splitlines(),
+                         [f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}' for path in assets[:4]])
+        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             second = release.package(self.root, self.root / 'second-output')
         self.assertEqual(assets[1].read_bytes(), second[1].read_bytes())
-        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1), self.assertRaises(ValueError):
+        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1), self.assertRaises(ValueError):
             release.package(self.root)
 
     def test_localization_studio_is_in_source_archive_only(self):
@@ -319,10 +337,10 @@ class PackagingTests(unittest.TestCase):
         self.assertFalse(any(name.startswith('localization-studio/')
                              for name in release.embedded_metadata(verified)))
         with patch.object(release, 'verify_executable', return_value=1), \
-             patch.object(release, 'verify_standalone', return_value=1):
+             patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
         with zipfile.ZipFile(assets[1]) as archive:
-            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0-Source/'
+            prefix = 'UniversalKoeiTecmoGameToolkit-v1.0-Source/'
             for name, data in additions.items():
                 self.assertEqual(archive.read(prefix + name), data)
         with zipfile.ZipFile(assets[0]) as archive:
@@ -332,17 +350,17 @@ class PackagingTests(unittest.TestCase):
         from tools import build_windows
         for source in release.RUNTIME_GUIDES:
             self.assertIn((source, 'guides'), build_windows.DATA)
-        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
+        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
         with zipfile.ZipFile(assets[0]) as archive:
             for source in release.RUNTIME_GUIDES:
-                target = 'UniversalKoeiTecmoSaveEditor-v1.0/_internal/guides/' + source.removeprefix('docs/')
+                target = 'UniversalKoeiTecmoGameToolkit-v1.0/_internal/guides/' + source.removeprefix('docs/')
                 self.assertEqual(archive.read(target), self.sources[source])
             # Follow the shipped guide's local links so a new workflow guide
             # cannot be documented yet omitted from the actual archive.
             text = (PROJECT / 'docs/EDIT_PRESETS.md').read_text(encoding='utf-8')
             for linked in re.findall(r'\]\(([^():]+\.md)\)', text):
-                target = 'UniversalKoeiTecmoSaveEditor-v1.0/_internal/guides/' + linked
+                target = 'UniversalKoeiTecmoGameToolkit-v1.0/_internal/guides/' + linked
                 self.assertIn(target, archive.namelist(), f'Missing linked user guide: {linked}')
             self.assertFalse(any('/src/' in name or '/AGENTS.md' in name for name in archive.namelist()))
 
@@ -383,7 +401,7 @@ class PackagingTests(unittest.TestCase):
         self.add_sources(additions)
         self.write_manifest()
         (self.root / 'docs/private-investigation.md').write_bytes(b'Unreviewed research')
-        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
+        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
         with zipfile.ZipFile(assets[0]) as archive:
             for name in additions:
@@ -393,9 +411,9 @@ class PackagingTests(unittest.TestCase):
             self.assertNotIn('docs/private-investigation.md', archive.namelist())
             self.assertNotIn('src/koei_editor/application.py', archive.namelist())
             for name in release.RUNTIME_LICENSES:
-                self.assertEqual(archive.read('UniversalKoeiTecmoSaveEditor-v1.0/_internal/' + name), self.sources[name])
+                self.assertEqual(archive.read('UniversalKoeiTecmoGameToolkit-v1.0/_internal/' + name), self.sources[name])
         with zipfile.ZipFile(assets[1]) as archive:
-            prefix = 'UniversalKoeiTecmoSaveEditor-v1.0-Source/'
+            prefix = 'UniversalKoeiTecmoGameToolkit-v1.0-Source/'
             for name, data in additions.items():
                 self.assertEqual(archive.read(prefix + name), data)
 
@@ -454,10 +472,10 @@ class PackagingTests(unittest.TestCase):
             release.verified_sources(self.root)
         self.add_sources({'.gitattributes': policy})
         self.write_manifest()
-        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
+        with patch.object(release, 'verify_executable', return_value=1), patch.object(release, 'verify_cli', return_value=1), patch.object(release, 'verify_standalone', return_value=1):
             assets = release.package(self.root)
         with zipfile.ZipFile(assets[1]) as archive:
-            self.assertEqual(archive.read('UniversalKoeiTecmoSaveEditor-v1.0-Source/.gitattributes'), policy)
+            self.assertEqual(archive.read('UniversalKoeiTecmoGameToolkit-v1.0-Source/.gitattributes'), policy)
 
     def test_personal_path_duplicate_and_mismatched_versions_are_rejected(self):
         self.add_sources({'README.md': ('Local path ' + 'C:' + '/Users/' + 'PrivateOwner/' + 'Documents').encode()})

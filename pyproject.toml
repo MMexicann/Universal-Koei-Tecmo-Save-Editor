@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "universal-koei-tecmo-game-toolkit"
-version = "3.1"
+version = "1.0"
 description = "Windows toolkit by Mexican for supported Koei Tecmo saves, build planning, mod management, selected PC settings and read-only asset tools, with backups and Undo."
 requires-python = ">=3.10"
 readme = "README.md"
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-universal-koei-toolkit = "koei_editor.application:main"
+universal-koei-toolkit = "koei_editor.cli:main"
 universal-koei-editor = "koei_editor.application:main"
 
 [project.urls]

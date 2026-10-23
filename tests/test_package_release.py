@@ -1,5 +1,6 @@
 """Release archive integrity and publication boundaries; synthetic files only."""
 import hashlib
+import importlib.util
 from importlib.metadata import version
 import io
 import json
@@ -181,6 +182,24 @@ class PackagingTests(unittest.TestCase):
                                                resource + b'changed', {})
         with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
             release._validate_runtime_file('setuptools/_vendor/jaraco/text/other.txt', resource, {})
+
+    def test_only_the_pinned_trimesh_typed_marker_is_allowed(self):
+        self.assertEqual(release._validate_runtime_file(release.TRIMESH_TYPED_MARKER, b'', {}),
+                         release.TRIMESH_TYPED_MARKER)
+        with self.assertRaisesRegex(ValueError, 'Unreviewed trimesh package marker'):
+            release._validate_runtime_file(release.TRIMESH_TYPED_MARKER, b'changed', {})
+        with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
+            release._validate_runtime_file('trimesh/unreviewed.txt', b'', {})
+
+    @unittest.skipUnless(importlib.util.find_spec('trimesh') is not None,
+                         'The optional trimesh package is installed by the Windows build lock.')
+    def test_pinned_trimesh_marker_digest_matches_the_installed_distribution(self):
+        if version('trimesh') != '5.1.1':
+            self.skipTest('The Windows build lock pins trimesh 5.1.1.')
+        import trimesh
+        marker = Path(trimesh.__file__).resolve().parent / 'py.typed'
+        self.assertEqual(hashlib.sha256(marker.read_bytes()).hexdigest(),
+                         release.TRIMESH_TYPED_MARKER_SHA256)
 
     def test_pinned_setuptools_lorem_digest_matches_the_installed_distribution(self):
         if version('setuptools') != '84.0.0':

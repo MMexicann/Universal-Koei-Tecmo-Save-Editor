@@ -5588,8 +5588,8 @@
     },
     {
       "path": "tests/test_package_release.py",
-      "bytes": 35097,
-      "sha256": "c26e231f3a27f21e2e865e20084964827d1826b150cb0d98e96cc659a9ccea6e"
+      "bytes": 35633,
+      "sha256": "442791e9e1d7657b3dc634a053984dce7825f8b116aa68a8fd453c0250f7eec9"
     },
     {
       "path": "tests/test_packaged_smoke_gate.py",

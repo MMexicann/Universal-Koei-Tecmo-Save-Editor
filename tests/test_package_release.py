@@ -1,5 +1,6 @@
 """Release archive integrity and publication boundaries; synthetic files only."""
 import hashlib
+from importlib.metadata import version
 import io
 import json
 from pathlib import Path
@@ -180,6 +181,15 @@ class PackagingTests(unittest.TestCase):
                                                resource + b'changed', {})
         with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
             release._validate_runtime_file('setuptools/_vendor/jaraco/text/other.txt', resource, {})
+
+    def test_pinned_setuptools_lorem_digest_matches_the_installed_distribution(self):
+        if version('setuptools') != '84.0.0':
+            self.skipTest('The build lock pins setuptools 84.0.0.')
+        import setuptools
+        resource = (Path(setuptools.__file__).resolve().parent
+                    / '_vendor' / 'jaraco' / 'text' / 'Lorem ipsum.txt')
+        self.assertEqual(hashlib.sha256(resource.read_bytes()).hexdigest(),
+                         release.SETUPTOOLS_LOREM_SHA256)
 
     def test_standalone_checks_embedded_metadata_native_files_modules_and_privacy(self):
         archive, blobs, module = self.standalone_archive_fixture()

@@ -84,8 +84,15 @@ class ReportExportTests(unittest.TestCase):
         self.assertFalse((cloud.parent / 'new.json').exists())
         ordinary = self.root / 'ordinary'
         ordinary.mkdir()
-        reports.write_report_bytes(b'{"n":1.5}', ordinary / '..' / 'new.json')
-        self.assertEqual((self.root / 'new.json').read_bytes(), b'{"n":1.5}')
+        if os.name == 'nt':
+            # The shared Windows policy rejects trailing-dot path components,
+            # including '..', before any normalization or publication.
+            with self.assertRaises(SaveError):
+                reports.write_report_bytes(b'{"n":1.5}', ordinary / '..' / 'new.json')
+            self.assertFalse((self.root / 'new.json').exists())
+        else:
+            reports.write_report_bytes(b'{"n":1.5}', ordinary / '..' / 'new.json')
+            self.assertEqual((self.root / 'new.json').read_bytes(), b'{"n":1.5}')
 
     def test_late_child_collision_preserves_foreign_bytes_and_uses_no_retry(self):
         original_publish = reports.publish_new_child_bound

@@ -6088,8 +6088,8 @@
     },
     {
       "path": "tests/test_report_export.py",
-      "bytes": 9151,
-      "sha256": "1571fb1976b6d8aa1ea7ae1326f00c0f63fc6277fddc2c20ccad15628161804b"
+      "bytes": 9548,
+      "sha256": "2addff4781c3ebc955d1e8f0a832547f8d1416081553347a157236ae2d59aa32"
     },
     {
       "path": "tests/test_research_import.py",

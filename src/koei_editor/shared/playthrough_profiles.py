@@ -232,6 +232,13 @@ def _component_digest(fields):
     return hashlib.sha256(_canonical_json(fields)).hexdigest()
 
 
+def _staged_component_bytes(component):
+    """Validate the exact digest-bound JSON that environment preparation writes."""
+    fields = _component_fields(component)
+    document = dict(fields, sha256=_component_digest(fields))
+    return _pretty_json(document, MAX_COMPONENT_BYTES)
+
+
 def _component_from_fields(value, *, require_digest=False):
     if type(value) is not dict or not _COMPONENT_FIELDS <= set(value):
         raise SaveError('Manager component snapshot has an invalid structure.')
@@ -249,6 +256,8 @@ def _component_from_fields(value, *, require_digest=False):
     if 'sha256' in value and (type(value['sha256']) is not str
                               or value['sha256'] != _component_digest(fields)):
         raise SaveError('Manager component snapshot hash does not match its JSON payload.')
+    item = ProfileComponentSnapshot(**fields)
+    _staged_component_bytes(item)
     return item
 
 
@@ -267,6 +276,7 @@ def load_component_snapshot(path):
 def dump_component_snapshot(component):
     """Return the validated manager-export schema as pretty JSON text."""
     fields = _component_fields(component)
+    _staged_component_bytes(ProfileComponentSnapshot(**fields))
     return _pretty_json(fields, MAX_COMPONENT_BYTES).decode('ascii')
 
 
@@ -449,12 +459,14 @@ class PlaythroughProfileStore:
         validated, seen = [], set()
         for component in components:
             fields = _component_fields(component)
+            normalized = ProfileComponentSnapshot(**fields)
+            _staged_component_bytes(normalized)
             if fields['game_id'] != game.id or fields['game_version'] != game_version:
                 raise SaveError('Each manager component must match the profile game and exact game version.')
             if fields['component'] in seen:
                 raise SaveError('Choose at most one export for each manager component.')
             seen.add(fields['component'])
-            validated.append(ProfileComponentSnapshot(**fields))
+            validated.append(normalized)
         self._snapshot(game.id, save_snapshot_id)
         profile = PlaythroughProfile(uuid.uuid4().hex, name,
                                      datetime.now(timezone.utc).isoformat(), game.id,
@@ -606,8 +618,7 @@ class PlaythroughProfileStore:
                     for component in profile.components:
                         fields = _component_fields(component)
                         digest = _component_digest(fields)
-                        document = dict(fields, sha256=digest)
-                        raw = _pretty_json(document, MAX_COMPONENT_BYTES)
+                        raw = _staged_component_bytes(component)
                         component_path = component_directory / (component.component + '.json')
                         new_child_bound(raw, component_directory, component_path.name,
                                         component_identity)

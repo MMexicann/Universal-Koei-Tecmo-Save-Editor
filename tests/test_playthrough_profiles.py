@@ -1,5 +1,6 @@
 """Integration coverage for safe, vault-backed playthrough environments."""
 from contextlib import ExitStack
+from dataclasses import replace
 import hashlib
 import json
 import os
@@ -502,6 +503,75 @@ class PlaythroughProfileIntegrationTests(unittest.TestCase):
         self.assertTrue(race_injected or denied, 'The test must attempt the actual environment rename.')
         self.assertEqual(displaced_destination.exists(), not bool(denied))
         self.assertEqual(list(outside.iterdir()), [])
+
+    def component_at_staged_size(self, size):
+        empty = ProfileComponentSnapshot(
+            'mod_configuration', 'mod_manager', 1, parser.GAME_ID, '1.02', {'x': ''})
+        fields = playthrough_profiles_module._component_fields(empty)
+        overhead = len(playthrough_profiles_module._pretty_json(
+            dict(fields, sha256=playthrough_profiles_module._component_digest(fields)),
+            playthrough_profiles_module.MAX_COMPONENT_BYTES))
+        return replace(empty, payload={'x': 'a' * (size - overhead)})
+
+    def test_staged_component_overflow_is_rejected_before_profile_or_restore_io(self):
+        module = playthrough_profiles_module
+        component = self.component_at_staged_size(module.MAX_COMPONENT_BYTES + 1)
+        fields = module._component_fields(component)
+        compact = module._canonical_json(fields)
+        self.assertLessEqual(len(compact), module.MAX_COMPONENT_BYTES)
+        imported = self.root / 'compact-overflow-component.json'
+        imported.write_bytes(compact)
+        with self.assertRaisesRegex(SaveError, 'size bound'):
+            module.load_component_snapshot(imported)
+        with self.assertRaisesRegex(SaveError, 'size bound'):
+            module.dump_component_snapshot(component)
+        with patch.object(self.store, '_snapshot',
+                          side_effect=AssertionError('Invalid component reached Vault access')) as snapshot:
+            with self.assertRaisesRegex(SaveError, 'size bound'):
+                self.make_profile(components=(component,))
+        snapshot.assert_not_called()
+        self.assertFalse(self.store.directory.exists())
+        self.assertEqual(imported.read_bytes(), compact)
+        self.assertEqual(self.source.read_bytes(), self.raw)
+
+    def test_legacy_oversized_staged_component_is_rejected_before_environment_restore(self):
+        module = playthrough_profiles_module
+        profile = self.make_profile(components=())
+        component = self.component_at_staged_size(module.MAX_COMPONENT_BYTES + 1)
+        # Model a valid checksummed manifest admitted by the previous version.
+        manifest = self.store.directory / (profile.id + '.json')
+        previous_manifest = module._profile_bytes(replace(profile, components=(component,)))
+        manifest.write_bytes(previous_manifest)
+        destination = self.root / 'must-not-be-materialized'
+        with patch.object(self.vault, 'restore',
+                          side_effect=AssertionError('Invalid component reached restore')) as restore, \
+                patch.object(self.vault, '_materialize',
+                             side_effect=AssertionError('Invalid component materialized payload')) as materialize:
+            with self.assertRaisesRegex(SaveError, 'size bound'):
+                self.store.prepare_environment(profile.id, destination, '1.02')
+        restore.assert_not_called()
+        materialize.assert_not_called()
+        self.assertFalse(destination.exists())
+        self.assertEqual(manifest.read_bytes(), previous_manifest)
+        self.assertEqual({p.name for p in self.store.directory.iterdir()}, {manifest.name})
+        self.assertEqual(self.source.read_bytes(), self.raw)
+        self.assertEqual((self.source.parent / 'PARAM.SFO').read_bytes(), self.context)
+
+    def test_component_at_exact_staged_bound_exports_imports_and_prepares(self):
+        module = playthrough_profiles_module
+        component = self.component_at_staged_size(module.MAX_COMPONENT_BYTES)
+        staged = module._staged_component_bytes(component)
+        self.assertEqual(len(staged), module.MAX_COMPONENT_BYTES)
+        exported = self.root / 'exact-bound-component.json'
+        exported.write_text(module.dump_component_snapshot(component), encoding='ascii')
+        self.assertEqual(module.load_component_snapshot(exported), component)
+        profile = self.make_profile(components=(component,))
+        destination = self.root / 'exact-bound-environment'
+        result = self.store.prepare_environment(profile.id, destination, '1.02')
+        artifact = destination / 'components' / 'mod_configuration.json'
+        self.assertEqual(artifact.read_bytes(), staged)
+        self.assertEqual(result.save_path.read_bytes(), self.raw)
+        self.assertEqual(self.source.read_bytes(), self.raw)
 
 
 if __name__ == '__main__':

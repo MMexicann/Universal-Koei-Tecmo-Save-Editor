@@ -63,6 +63,29 @@ file manager. Notes are optional local text saved beside the app's preferences;
 they do not change Steam metadata or game files. A not-detected row describes
 the current scan, and a partial scan is labelled as such.
 
+Click a column heading to sort, or use the keyboard-accessible **Sort by** and
+direction controls. Build IDs, timestamps and sizes sort by their numeric values;
+unknown values stay at the end in either direction. Equal values keep a stable
+game/row order. Sorting retains the selected installation and never changes the
+scanner's underlying snapshot. Result and scan summaries show visible rows,
+detected installations and complete, partial or unscanned coverage. A failed
+refresh keeps the previous rows and labels their older scan state.
+Action buttons wrap instead of being clipped in compact windows or large text.
+The table keeps space for a readable row; installation details can be opened
+with **Details…** when the inline panel is collapsed.
+
+**Export visible inventory…** writes a new JSON report containing the current
+filtered rows in display order and the scan coverage state. It uses canonical
+profile labels and bounded build/time/size markers. It omits installation paths,
+Steam roots, local notes, search text, account context and raw warning messages.
+Unscanned, partially scanned and failed-refresh snapshots remain distinguishable.
+The exporter refuses existing entries, path aliases and missing parent folders;
+it does not change Steam manifests, game
+files or save copies. Filtering to zero rows produces an explicitly empty report,
+not a claim that no games are installed.
+The visible snapshot is frozen before the destination dialog opens. Closing the
+workspace or application while that dialog is open cancels the export.
+
 The hub lists only game profiles with reviewed Steam install mappings. It does
 not claim that profiles without a mapping are uninstalled. The separate Save
 Library continues to handle copied save discovery and validation.

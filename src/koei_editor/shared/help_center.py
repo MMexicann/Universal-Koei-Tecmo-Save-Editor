@@ -32,7 +32,8 @@ class HelpCenter:
                   ('help', 'Hilfe' if de else 'Help'),
                   ('workflows', 'Anleitungen' if de else 'Guides'),
                   ('validation', 'Validierung' if de else 'Validation'),
-                  ('feedback', 'Feedback'), ('plugins', 'Plugins'))
+                  ('feedback', 'Feedback'), ('plugins', 'Plugins'),
+                  ('diagnostics', 'Toolkit-Diagnose' if de else 'Toolkit diagnostics'))
         for key, label in labels:
             self.tabs[key] = ttk.Frame(self.notebook, padding=10)
             self.notebook.add(self.tabs[key], text=label)
@@ -233,13 +234,16 @@ class HelpCenter:
         return 'break'
 
     def _ensure_panel(self, name):
-        if name in self._panels or name not in ('validation', 'feedback', 'plugins', 'versions'):
+        if name in self._panels or name not in ('validation', 'feedback', 'plugins', 'versions', 'diagnostics'):
             return
         from koei_editor.shared.scrollable_panel import ScrollablePanel
         mount = ScrollablePanel(self.tabs[name])
         mount.frame.pack(fill='both', expand=True)
         self._panel_mounts[name] = mount
-        if name == 'versions':
+        if name == 'diagnostics':
+            from koei_editor.shared.diagnostics_gui import DiagnosticsPanel
+            panel = DiagnosticsPanel(self.root, mount.content, language=self.language)
+        elif name == 'versions':
             from koei_editor.shared.version_tracker_gui import VersionTrackerPanel
             panel = VersionTrackerPanel(self.root, mount.content, language=self.language,
                                         preferences_path=self.preferences_path)
@@ -325,8 +329,8 @@ class HelpCenter:
         self.help_label.configure(text='Dokumentation durchsuchen' if de else 'Search documentation')
         self.guide_label.configure(text='Plattformspezifische Vorbereitung und Import/Export' if de else
                                    'Platform-specific preparation and import/export')
-        titles = ('Kompatibilität', 'Versionen', 'Hilfe', 'Anleitungen', 'Validierung', 'Feedback', 'Plugins') if de else (
-                  'Compatibility', 'Game Versions', 'Help', 'Guides', 'Validation', 'Feedback', 'Plugins')
+        titles = ('Kompatibilität', 'Versionen', 'Hilfe', 'Anleitungen', 'Validierung', 'Feedback', 'Plugins', 'Toolkit-Diagnose') if de else (
+                  'Compatibility', 'Game Versions', 'Help', 'Guides', 'Validation', 'Feedback', 'Plugins', 'Toolkit diagnostics')
         for tab, title in zip(self.tabs.values(), titles):
             self.notebook.tab(tab, text=title)
         headings = ('Spiel', 'Plattform', 'Edition / Revision', 'Dateinachweis') if de else (

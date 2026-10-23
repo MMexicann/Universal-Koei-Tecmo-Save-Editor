@@ -7,7 +7,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 import webbrowser
 
 from koei_editor.game_registry import get_game
-from koei_editor.shared import game_hub
+from koei_editor.shared import game_hub, game_hub_reports
 from koei_editor.shared.appearance import ui_font
 from koei_editor.shared.save_discovery import STEAM_MAPPINGS
 
@@ -22,6 +22,12 @@ class GameHubWorkspace:
         self._installed = {}
         self._local_notes = self.notes.load()
         self._result = None
+        self._refresh_failed = False
+        self._sort_column = '#0'
+        self._sort_descending = False
+        self._updating_sort = False
+        self._exporting = False
+        self._actions_columns = None
         self._row_installations = {}
         self._closed = False
         self._shown = False
@@ -31,11 +37,13 @@ class GameHubWorkspace:
         self._poll_id = None
         self._palette = None
 
-        self.frame = ttk.Frame(parent, padding=(28, 16))
-        ttk.Label(self.frame, text='GAME HUB', font=(ui_font(root), 23, 'bold')).pack(anchor='w')
-        ttk.Label(self.frame,
+        self.frame = ttk.Frame(parent, padding=(20, 12))
+        self.title_label = ttk.Label(self.frame, text='GAME HUB', font=(ui_font(root), 23, 'bold'))
+        self.title_label.pack(anchor='w')
+        self.intro_label = ttk.Label(self.frame,
                   text='Find your tracked Koei Tecmo Steam installs, review build information, add local notes, and launch games.',
-                  style='Muted.TLabel', wraplength=1050).pack(anchor='w', pady=(2, 10))
+                  style='Muted.TLabel', wraplength=1050)
+        self.intro_label.pack(anchor='w', pady=(2, 6))
 
         scan_row = ttk.Frame(self.frame)
         scan_row.pack(fill='x', pady=(0, 8))
@@ -65,18 +73,38 @@ class GameHubWorkspace:
                                             state='readonly', width=19)
         self.status_selector.pack(side='left')
 
-        table_frame = ttk.Frame(self.frame)
+        order_row = ttk.Frame(self.frame)
+        order_row.pack(fill='x', pady=(0, 6))
+        ttk.Label(order_row, text='Sort by').pack(side='left', padx=(0, 8))
+        self._sort_labels = {'#0': 'Game', 'status': 'Installation', 'build': 'Steam build ID',
+                             'updated': 'Last updated', 'size': 'Install size', 'notes': 'Local note'}
+        self.sort_choice = tk.StringVar(root, value='Game')
+        self.sort_selector = ttk.Combobox(order_row, textvariable=self.sort_choice,
+                                          values=tuple(self._sort_labels.values()),
+                                          state='readonly', width=17)
+        self.sort_selector.pack(side='left')
+        self.sort_direction = tk.StringVar(root, value='Ascending ↑')
+        self.sort_button = ttk.Button(order_row, textvariable=self.sort_direction,
+                                       command=lambda: self.sort_by(self._sort_column))
+        self.sort_button.pack(side='left', padx=(8, 12))
+        self.details_button = ttk.Button(order_row, text='Details…', command=self.show_details)
+        self.details_button.pack(side='left', padx=(0, 8))
+        self.result_summary = tk.StringVar(root)
+        ttk.Label(order_row, textvariable=self.result_summary, style='Muted.TLabel',
+                  wraplength=650).pack(side='left', fill='x', expand=True)
+
+        table_frame = self.table_frame = ttk.Frame(self.frame)
         table_frame.pack(fill='both', expand=True)
         self.table = ttk.Treeview(table_frame,
                                   columns=('status', 'build', 'updated', 'size', 'notes'),
                                   show='tree headings', selectmode='browse', height=10)
-        self.table.heading('#0', text='Game')
+        self.table.heading('#0', text='Game', command=lambda: self.sort_by('#0'))
         self.table.column('#0', width=300, minwidth=170, stretch=True)
         for name, title, width, minimum in (
                 ('status', 'Installation', 125, 90), ('build', 'Steam build ID', 120, 90),
                 ('updated', 'Last updated (UTC)', 155, 120), ('size', 'Install size', 110, 80),
                 ('notes', 'Local note', 220, 100)):
-            self.table.heading(name, text=title)
+            self.table.heading(name, text=title, command=lambda key=name: self.sort_by(key))
             self.table.column(name, width=width, minwidth=minimum, stretch=name in ('notes', 'build'))
         vertical = ttk.Scrollbar(table_frame, orient='vertical', command=self.table.yview)
         horizontal = ttk.Scrollbar(table_frame, orient='horizontal', command=self.table.xview)
@@ -87,13 +115,17 @@ class GameHubWorkspace:
         vertical.grid(row=0, column=1, sticky='ns')
         horizontal.grid(row=1, column=0, sticky='ew')
         self.table.bind('<<TreeviewSelect>>', self.selection_changed)
+        self.table.bind('<Configure>', lambda _event: self.root.after_idle(self._fit_details), add='+')
 
-        detail_frame = ttk.LabelFrame(self.frame, text='Installation information', padding=10)
+        detail_frame = self.detail_frame = ttk.LabelFrame(self.frame, text='Installation information', padding=10)
         detail_frame.pack(fill='x', pady=(10, 6))
-        self.details = tk.Text(detail_frame, height=6, wrap='word', state='disabled',
+        self.details = tk.Text(detail_frame, height=4, wrap='word', state='disabled',
                                font=(ui_font(root), 9), borderwidth=0, highlightthickness=0)
-        self.details.pack(fill='x', expand=True)
-        actions = ttk.Frame(self.frame)
+        detail_scroll = ttk.Scrollbar(detail_frame, orient='vertical', command=self.details.yview)
+        self.details.configure(yscrollcommand=detail_scroll.set)
+        detail_scroll.pack(side='right', fill='y')
+        self.details.pack(side='left', fill='both', expand=True)
+        actions = self.actions_frame = ttk.Frame(self.frame)
         actions.pack(fill='x')
         self.launch_button = ttk.Button(actions, text='Launch through Steam', command=self.launch_selected,
                                          state='disabled')
@@ -104,14 +136,29 @@ class GameHubWorkspace:
         self.note_button = ttk.Button(actions, text='Edit local note…', command=self.edit_note,
                                       state='disabled')
         self.note_button.pack(side='left', padx=(0, 8))
-        self.controls.extend((self.status_selector, self.search_entry))
+        self.export_button = ttk.Button(actions, text='Export visible inventory…', command=self.export_visible)
+        self.export_button.pack(side='left', padx=(0, 8))
+        self.action_buttons = (self.launch_button, self.folder_button, self.note_button, self.export_button)
+        self.controls.extend((self.status_selector, self.search_entry, self.sort_selector,
+                              self.sort_button, self.details_button, self.export_button))
         self.status = tk.StringVar(root, value=f'{len(self.mappings)} Steam-mapped game profiles. Open this page to scan installed titles.')
-        ttk.Label(self.frame, textvariable=self.status, wraplength=1050,
-                  style='Muted.TLabel').pack(anchor='w', pady=(8, 0))
+        self.status_label = ttk.Label(self.frame, textvariable=self.status, wraplength=1050,
+                                      style='Muted.TLabel')
+        # Reserve the fixed actions and details before giving the table the
+        # remaining cavity. Otherwise small windows clip the buttons entirely.
+        table_frame.pack_forget()
+        detail_frame.pack_forget()
+        actions.pack_forget()
+        self.status_label.pack(side='bottom', anchor='w', fill='x', pady=(8, 0))
+        actions.pack(side='bottom', fill='x')
+        detail_frame.pack(side='bottom', fill='x', pady=(10, 6))
+        table_frame.pack(fill='both', expand=True)
 
         self.query.trace_add('write', lambda *_args: self.render())
         self.status_filter.trace_add('write', lambda *_args: self.render())
+        self.sort_choice.trace_add('write', self._choose_sort)
         self.frame.bind('<Destroy>', self._on_destroy, add='+')
+        self.frame.bind('<Configure>', self._fit_frame, add='+')
         self.render()
 
     def on_show(self):
@@ -170,6 +217,7 @@ class GameHubWorkspace:
         self._cancel = threading.Event()
         self._set_busy(True)
         self.status.set('Scanning Steam library metadata…')
+        self._render_summary()
 
         def worker():
             try:
@@ -194,6 +242,7 @@ class GameHubWorkspace:
             except tk.TclError:
                 pass
         self.status_selector.configure(state='disabled' if busy else 'readonly')
+        self.sort_selector.configure(state='disabled' if busy else 'readonly')
         self.refresh_button.configure(state='disabled' if busy else 'normal')
         self.cancel_button.configure(state='normal' if busy else 'disabled')
         if busy:
@@ -215,6 +264,8 @@ class GameHubWorkspace:
         self.busy = False
         self._set_busy(False)
         if not success:
+            self._refresh_failed = True
+            self._render_summary()
             if self._result is None:
                 self.status.set('Steam detection failed. Check the selected root and metadata access.')
             else:
@@ -222,6 +273,7 @@ class GameHubWorkspace:
             messagebox.showerror('Game Hub', self.status.get(), parent=self.root)
             return
         self._result = value
+        self._refresh_failed = False
         self._installed = {}
         for item in value.installed_games:
             self._installed.setdefault(item.app_id, []).append(item)
@@ -254,6 +306,7 @@ class GameHubWorkspace:
         previous = self.table.selection()
         self.table.delete(*self.table.get_children())
         self._row_installations = {}
+        rows = []
         mode = self.status_filter.get()
         for mapping in self.mappings:
             game = self._games[mapping.app_id]
@@ -264,25 +317,194 @@ class GameHubWorkspace:
                     if not self._matching(mapping, game, 'Installed') or (mode == 'Not detected'):
                         continue
                     row_id = f'{mapping.app_id}:{ordinal}'
-                    self.table.insert('', 'end', iid=row_id, text=game.title,
-                                      values=('Installed', installed.build_id or 'Unknown',
-                                              self._updated(installed.last_updated),
-                                              self._size(getattr(installed, 'size_on_disk', None)), note[:70]))
-                    self._row_installations[row_id] = installed
+                    rows.append((row_id, game.title, 'Installed', installed, note))
             else:
                 status = self._not_detected_status()
                 if mode == 'Installed' or not self._matching(mapping, game, status):
                     continue
                 note = self._installed_note(mapping.app_id)
                 row_id = f'{mapping.app_id}:missing'
-                self.table.insert('', 'end', iid=row_id, text=game.title,
-                                  values=(status, '—', '—', '—', note[:70]))
-                self._row_installations[row_id] = None
+                rows.append((row_id, game.title, status, None, note))
+        for row_id, title, status, installed, note in game_hub_reports.sort_rows(
+                rows, self._sort_column, self._sort_descending):
+            values = ((status, installed.build_id or 'Unknown', self._updated(installed.last_updated),
+                       self._size(installed.size_on_disk), note[:70]) if installed is not None
+                      else (status, '—', '—', '—', note[:70]))
+            self.table.insert('', 'end', iid=row_id, text=title, values=values)
+            self._row_installations[row_id] = installed
         if previous and self.table.exists(previous[0]):
             self.table.selection_set(previous[0])
         elif self.table.get_children():
             self.table.selection_set(self.table.get_children()[0])
         self.selection_changed()
+        self._render_summary()
+
+    def _choose_sort(self, *_args):
+        if self._updating_sort or self.busy:
+            return
+        column = next((key for key, label in self._sort_labels.items()
+                       if label == self.sort_choice.get()), '#0')
+        self._sort_column = column
+        self._sort_descending = False
+        self._update_sort_headings()
+        self.render()
+
+    def sort_by(self, column):
+        if self.busy or self._closed or column not in self._sort_labels:
+            return
+        self._sort_descending = not self._sort_descending if column == self._sort_column else False
+        self._sort_column = column
+        self._updating_sort = True
+        try:
+            self.sort_choice.set(self._sort_labels[column])
+        finally:
+            self._updating_sort = False
+        self._update_sort_headings()
+        self.render()
+
+    def _update_sort_headings(self):
+        self.sort_direction.set('Descending ↓' if self._sort_descending else 'Ascending ↑')
+        for key, label in self._sort_labels.items():
+            if key == 'updated':
+                label = 'Last updated (UTC)'
+            arrow = (' ▼' if self._sort_descending else ' ▲') if key == self._sort_column else ''
+            self.table.heading(key, text=label + arrow)
+
+    def _render_summary(self):
+        if not hasattr(self, 'result_summary'):
+            return
+        total = sum(max(1, len(self._installed.get(mapping.app_id, ()))) for mapping in self.mappings)
+        coverage = ('Not scanned' if self._result is None else
+                    'Scan complete' if self._result.stop_reason == 'complete' else 'Partial scan')
+        if self._refresh_failed:
+            coverage = 'Refresh failed'
+        if self.busy:
+            coverage = 'Refreshing'
+        self.result_summary.set(f'{len(self.table.get_children())}/{total} rows · {coverage}')
+
+    def _fit_frame(self, event):
+        if event.widget is not self.frame or not self._alive():
+            return
+        width = max(200, event.width - 40)
+        self.intro_label.configure(wraplength=width)
+        self.status_label.configure(wraplength=width)
+        compact = event.height < 620
+        if compact:
+            self.intro_label.pack_forget()
+        elif not self.intro_label.winfo_manager():
+            self.intro_label.pack(after=self.title_label, anchor='w', pady=(2, 6))
+        self.detail_frame.configure(text='' if compact else 'Installation information')
+        height = 2 if compact else 4
+        if int(self.details.cget('height')) != height:
+            self.details.configure(height=height)
+        self._fit_actions(width)
+        self.root.after_idle(self._fit_details)
+
+    def _fit_details(self):
+        if not self._alive() or not self.table.winfo_ismapped():
+            return
+        row_height = int(ttk.Style(self.root).lookup('Treeview', 'rowheight') or 29)
+        heading_height = self.table.winfo_reqheight() - int(self.table.cget('height')) * row_height
+        minimum_table = heading_height + row_height + 2
+        shown = bool(self.detail_frame.winfo_manager())
+        capacity = self.table.winfo_height() + (self.detail_frame.winfo_height() + 16 if shown else 0)
+        needs = self.detail_frame.winfo_reqheight() + 16 + minimum_table
+        if capacity < needs and shown:
+            self.detail_frame.pack_forget()
+        elif capacity >= needs and not shown:
+            self.detail_frame.pack(side='bottom', fill='x', pady=(10, 6), before=self.table_frame)
+
+    def _fit_actions(self, width=None):
+        if not self._alive():
+            return
+        width = self.frame.winfo_width() - 40 if width is None else width
+        if width <= 1:
+            return
+        requested = [button.winfo_reqwidth() + 8 for button in self.action_buttons]
+        columns = 4 if sum(requested) <= width else 2
+        if max(requested) * 2 > width:
+            columns = 1
+        if columns == self._actions_columns:
+            return
+        self._actions_columns = columns
+        for button in self.action_buttons:
+            button.pack_forget()
+            button.grid_forget()
+        for index in range(4):
+            self.actions_frame.columnconfigure(index, weight=1 if index < columns else 0)
+        for index, button in enumerate(self.action_buttons):
+            button.grid(row=index // columns, column=index % columns, sticky='w',
+                        padx=(0, 8), pady=(0, 4 if index // columns < (len(self.action_buttons) - 1) // columns else 0))
+
+    def set_text_size(self, size, family):
+        self.details.configure(font=(family, max(9, size - 1)))
+        self._actions_columns = None
+        self._fit_actions()
+        self.root.after_idle(self._fit_actions)
+        self.root.after_idle(self._fit_details)
+
+    def show_details(self):
+        if self.busy or not self._alive():
+            return
+        popup = tk.Toplevel(self.root)
+        popup.title('Game Hub installation information')
+        popup.transient(self.root)
+        popup.geometry('720x360')
+        popup.minsize(420, 220)
+        holder = ttk.Frame(popup, padding=12)
+        holder.pack(fill='both', expand=True)
+        text = tk.Text(holder, wrap='word', font=self.details.cget('font'), padx=8, pady=8)
+        scroll = ttk.Scrollbar(holder, orient='vertical', command=text.yview)
+        text.configure(yscrollcommand=scroll.set)
+        scroll.pack(side='right', fill='y')
+        text.pack(fill='both', expand=True)
+        text.insert('1.0', self.details.get('1.0', 'end-1c'))
+        text.configure(state='disabled')
+        if self._palette is not None:
+            text.configure(background=self._palette.get('background', '#ffffff'),
+                           foreground=self._palette.get('text', '#222222'))
+        ttk.Button(popup, text='Close', command=popup.destroy).pack(pady=(0, 12))
+        popup.bind('<Escape>', lambda _event: popup.destroy())
+        return popup
+
+    def _alive(self):
+        if self._closed:
+            return False
+        try:
+            return bool(self.root.winfo_exists() and self.frame.winfo_exists())
+        except tk.TclError:
+            return False
+
+    def export_visible(self):
+        if self.busy or self._exporting or not self._alive():
+            return
+        try:
+            raw = game_hub_reports.inventory_bytes(
+                self._result, tuple(self.table.get_children()), refresh_failed=self._refresh_failed)
+        except (OSError, ValueError) as error:
+            messagebox.showerror('Game Hub', str(error), parent=self.root)
+            return
+        self._exporting = True
+        self.export_button.configure(state='disabled')
+        try:
+            destination = filedialog.asksaveasfilename(
+                parent=self.root, title='Export visible Game Hub inventory to a new file',
+                defaultextension='.json', filetypes=(('JSON report', '*.json'),),
+                initialfile='game-hub-inventory.json', confirmoverwrite=False)
+            if not destination or not self._alive():
+                return
+            game_hub_reports.write_report_bytes(raw, destination)
+        except (OSError, ValueError, RuntimeError, tk.TclError) as error:
+            if self._alive():
+                messagebox.showerror('Game Hub', str(error), parent=self.root)
+        else:
+            if self._alive():
+                messagebox.showinfo('Game Hub', 'Visible inventory exported. Installation paths and local notes are omitted.',
+                                    parent=self.root)
+        finally:
+            self._exporting = False
+            if self._alive():
+                self.export_button.configure(state='disabled' if self.busy else 'normal')
 
     def _not_detected_status(self):
         if self._result is None:

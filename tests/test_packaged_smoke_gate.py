@@ -64,24 +64,27 @@ class PackagedSmokeContracts(unittest.TestCase):
             self.assertIn("throw 'Standalone executable path validation failed.'", blocks[name])
         self.assertIn('$launcher = python -m tools.package_release --executable-path',
                       blocks['Verify bounded portable packaged startup'])
-        build_job = source.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
+        build_job = source.split('\n  native_build:\n', 1)[1].split('\n  build:\n', 1)[0]
         self.assertIn('    timeout-minutes: 30\n', build_job)
 
     def test_diagnostic_image_fallback_changes_only_build_runner_and_keeps_full_test_gate(self):
         source = (ROOT / '.github/workflows/windows-release.yml').read_text()
-        tests = source.split('\n  tests:\n', 1)[1].split('\n  build:\n', 1)[0]
-        build = source.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
+        tests = source.split('\n  tests:\n', 1)[1].split('\n  native_build:\n', 1)[0]
+        build = source.split('\n  native_build:\n', 1)[1].split('\n  build:\n', 1)[0]
         self.assertIn('    runs-on: windows-latest\n', tests)
         self.assertIn('        shard: [0, 1, 2, 3]\n', tests)
         self.assertIn('python -m tools.run_tests --workers 2 --shards 4 --shard-index', tests)
         self.assertIn('    runs-on: windows-2022\n', build)
         self.assertNotIn('    runs-on: windows-latest\n', build)
-        self.assertIn('    needs: tests\n', build)
+        self.assertNotIn('    needs:', build)
         self.assertIn('    timeout-minutes: 30\n', build)
-        verify = build.index('python -m tools.run_tests --verify-reports test-results')
-        first_build = build.index('- name: Build portable Windows runtime')
-        self.assertLess(verify, first_build)
-        self.assertIn("throw 'Full test coverage or shard integrity validation failed.'", build)
+        qualification = source.split('\n  build:\n', 1)[1].split('\n  prepare_release:\n', 1)[0]
+        self.assertIn('    needs: [tests, native_build]\n', qualification)
+        self.assertIn('    runs-on: ubuntu-latest\n', qualification)
+        self.assertIn('python -m tools.run_tests --verify-reports test-results', qualification)
+        self.assertIn('python -m tools.package_release --verify-only', qualification)
+        self.assertIn('sha256sum --check SHA256SUMS.txt', qualification)
+        self.assertNotIn('continue-on-error', qualification)
 
     def test_both_smokes_follow_unchanged_defender_gates_and_precede_packaging(self):
         source = (ROOT / '.github/workflows/windows-release.yml').read_text()

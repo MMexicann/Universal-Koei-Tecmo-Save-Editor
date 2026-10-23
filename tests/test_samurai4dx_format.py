@@ -88,6 +88,64 @@ class Samurai4DXTests(unittest.TestCase):
         self.assertEqual(edited.payload[parser.OFFICER_BASE + 0x3F], 0xA5)
         self.assertEqual(edited.payload[parser.WEAPON_BASE + 0x1A], 0xA2)
 
+    def test_direct_serializer_preserves_exact_unusual_opened_values(self):
+        payload = bytearray(self.document.payload)
+        struct.pack_into('<I', payload, parser.GOLD_OFFSET, 1000001)
+        payload[parser.GEM_BASE] = 150
+        raw = seal(payload, seed=codec.decode_envelope(self.raw)[1],
+                   header=self.raw[:codec.PAYLOAD_OFFSET - 4])
+        document = parser.decode(raw)
+        opened_payload = document.payload
+        changes = {'gold': 1000001, 'gem_0': 150, 'officer_0_unlocked': 0}
+        self.assertEqual(parser.changed_payload(document, changes), opened_payload)
+        self.assertEqual(parser.serialize(document, changes), raw)
+        self.assertEqual(document.raw, raw)
+        self.assertEqual(document.payload, opened_payload)
+        self.assertEqual(document.payload[parser.OFFICER_BASE + 0x3F], 0xA0)
+
+    def test_direct_serializer_keeps_an_opened_locked_officer_locked(self):
+        field = parser.field_map(self.document)['officer_0_unlocked']
+        self.assertEqual(field.value(self.document.payload), 0)
+        self.assertEqual(self.document.payload[field.offset], 0xA0)
+        self.assertEqual(parser.changed_payload(self.document, {field.id: 0}),
+                         self.document.payload)
+        self.assertEqual(parser.serialize(self.document, {field.id: 0}), self.raw)
+
+    def test_direct_serializer_allows_edits_alongside_unusual_opened_noops(self):
+        payload = bytearray(self.document.payload)
+        struct.pack_into('<I', payload, parser.GOLD_OFFSET, 1000001)
+        payload[parser.GEM_BASE] = 150
+        raw = seal(payload)
+        document = parser.decode(raw)
+        edited = parser.decode(parser.serialize(document, {
+            'gold': 1000001, 'gem_0': 150, 'gem_1': 5,
+            'officer_0_unlocked': 0}))
+        self.assertEqual(parser.field_map(edited)['gem_1'].value(edited.payload), 5)
+        self.assertEqual(parser.field_map(edited)['gold'].value(edited.payload), 1000001)
+        self.assertEqual(parser.field_map(edited)['gem_0'].value(edited.payload), 150)
+        allowed = {parser.GEM_BASE + 1}
+        for offset in codec.CHECKSUM_OFFSETS:
+            allowed.update(range(offset, offset + 4))
+        touched = {i for i, (before, after) in enumerate(zip(document.payload, edited.payload))
+                   if before != after}
+        self.assertEqual(touched - allowed, set())
+        self.assertEqual(document.raw, raw)
+        self.assertEqual(edited.seed, document.seed)
+        self.assertEqual(edited.raw[:codec.PAYLOAD_OFFSET - 4], raw[:codec.PAYLOAD_OFFSET - 4])
+
+    def test_direct_opened_noop_does_not_admit_new_invalid_values_or_types(self):
+        payload = bytearray(self.document.payload)
+        struct.pack_into('<I', payload, parser.GOLD_OFFSET, 1000001)
+        payload[parser.GEM_BASE] = 150
+        document = parser.decode(seal(payload))
+        for changes in ({'gold': 1000002}, {'gem_0': 151},
+                        {'gold': True}, {'gold': 1000001.0},
+                        {'gem_0': 150.0}, {'officer_0_unlocked': False},
+                        {'unmapped': 0}):
+            with self.subTest(changes=changes), self.assertRaises(SaveError):
+                parser.serialize(document, changes)
+        self.assertEqual(document.payload[parser.GEM_BASE], 150)
+
     def test_unknown_bytes_empty_records_and_higher_values(self):
         payload = bytearray(self.document.payload)
         struct.pack_into('<I', payload, parser.GOLD_OFFSET, 1000001)

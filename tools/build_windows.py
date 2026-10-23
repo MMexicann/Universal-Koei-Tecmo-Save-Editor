@@ -12,7 +12,7 @@ from tools.package_release import (RUNTIME_DATA, RUNTIME_LICENSES, RUNTIME_GUIDE
                                    RUNTIME_DEPENDENCY_METADATA)
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '3.1'
+VERSION = '1.0'
 DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME_DATA] + [
     ('LICENSE', 'licenses'), ('docs/THIRD_PARTY_NOTICES.md', 'licenses'),
     ('licenses/atelier-sophie2-save-editor-MIT.txt', 'licenses'),
@@ -21,13 +21,18 @@ DATA += [(source, 'licenses') for source in RUNTIME_LICENSES]
 DATA += [(source, 'guides') for source in RUNTIME_GUIDES]
 
 
-def build_args(root=ROOT, *, standalone=False):
-    mode = ['--onefile'] if standalone else ['--onedir', '--contents-directory', '_internal']
-    suffix = '-standalone' if standalone else ''
-    args = ['--noconfirm', *mode, '--noupx', '--windowed', '--name',
-            f'UniversalKoeiTecmoSaveEditor-v{VERSION}', '--paths', str(root / 'src'),
+def build_args(root=ROOT, *, standalone=False, cli=False):
+    if standalone and cli:
+        raise ValueError("Choose either the standalone GUI or console CLI build.")
+    mode = ['--onefile'] if standalone or cli else ['--onedir', '--contents-directory', '_internal']
+    suffix = '-cli' if cli else '-standalone' if standalone else ''
+    name = f'UniversalKoeiTecmoGameToolkit-v{VERSION}' + ('-CLI' if cli else '')
+    args = ['--noconfirm', *mode, '--noupx', '--console' if cli else '--windowed', '--name',
+            name, '--paths', str(root / 'src'),
             '--distpath', str(root / ('dist' + suffix)), '--workpath', str(root / ('build' + suffix)),
             '--specpath', str(root / ('build' + suffix))]
+    if cli:
+        args.extend(['--hidden-import', 'koei_editor.cli'])
     args.extend(['--additional-hooks-dir', str(root / 'tools' / 'pyinstaller_hooks')])
     # CFFI's optional compiler helpers reference packaging/build tools. Frozen
     # previews use precompiled decoders and never compile extensions at runtime.
@@ -67,7 +72,7 @@ def build_args(root=ROOT, *, standalone=False):
                  '--hidden-import', 'koei_editor.shared.configuration_gui'])
     # The thin launcher uses an absolute package import. __main__.py remains
     # the module entry point, whose relative imports need python -m context.
-    args.append(str(root / 'launch.pyw'))
+    args.append(str(root / ('src/koei_editor/cli.py' if cli else 'launch.pyw')))
     return args
 
 
@@ -93,11 +98,13 @@ def filter_build_spec(spec_path, root=ROOT):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--print-config', action='store_true', help='Inspect build inputs without compiling.')
-    parser.add_argument('--standalone', action='store_true',
-                        help='Build the self-contained EXE separately from the portable folder.')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--standalone', action='store_true',
+                        help='Build the self-contained GUI EXE separately from the portable folder.')
+    mode.add_argument('--cli', action='store_true', help='Build the separate self-contained console CLI EXE.')
     arguments = parser.parse_args()
     if arguments.print_config:
-        print(json.dumps(build_args(standalone=arguments.standalone), indent=2))
+        print(json.dumps(build_args(standalone=arguments.standalone, cli=arguments.cli), indent=2))
         return
     if os.name != 'nt':
         raise SystemExit('Build the Windows EXE on 64-bit Windows for the native CNG/Tk runtime.')
@@ -105,7 +112,7 @@ def main():
     verified_sources(ROOT)
     verify_dependency_metadata_lock(ROOT)
     from PyInstaller.__main__ import generate_parser, run_makespec, run
-    options = vars(generate_parser().parse_args(build_args(standalone=arguments.standalone)))
+    options = vars(generate_parser().parse_args(build_args(standalone=arguments.standalone, cli=arguments.cli)))
     spec_path = run_makespec(options.pop('filenames'), **options)
     filter_build_spec(spec_path)
     run(['--noconfirm', '--distpath', options['distpath'], '--workpath', options['workpath'], spec_path])

@@ -74,7 +74,8 @@ def new_directory_child_bound(directory, name, expected_identity):
     Linux uses ``openat2`` with ``RESOLVE_NO_XDEV`` when reopening the new
     child, so a mountpoint cannot redirect nested restore data. Windows creates
     the child with ``NtCreateFile`` rooted at a pinned parent handle. Other
-    POSIX systems fail closed if the new child crosses filesystems.
+    POSIX systems fail closed because they cannot bind the reopened child to
+    the inode created by ``mkdirat``.
     """
     _validate_child_name(name)
     directory = Path(directory)
@@ -82,39 +83,7 @@ def new_directory_child_bound(directory, name, expected_identity):
         return _new_directory_child_windows(directory, name, expected_identity)
     if sys.platform.startswith('linux'):
         return _new_directory_child_linux(directory, name, expected_identity)
-    if os.name == 'posix':
-        return _new_directory_child_posix(directory, name, expected_identity)
     raise SaveError('This system has no safe handle-bound directory creation primitive.')
-
-
-def _new_directory_child_posix(directory, name, expected_identity):
-    flags = (os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0)
-             | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_CLOEXEC', 0))
-    try:
-        parent_fd = os.open(directory, flags)
-    except OSError as error:
-        raise SaveError('The private output directory changed or became linked.') from error
-    try:
-        parent_info = os.fstat(parent_fd)
-        if (not stat.S_ISDIR(parent_info.st_mode)
-                or (parent_info.st_dev, parent_info.st_ino) != expected_identity):
-            raise SaveError('The private output directory changed identity.')
-        try:
-            os.mkdir(name, mode=0o700, dir_fd=parent_fd)
-            child_fd = os.open(name, flags, dir_fd=parent_fd)
-        except OSError as error:
-            raise SaveError('The private output subdirectory already exists or cannot be created safely.') from error
-        try:
-            child_info = os.fstat(child_fd)
-            if (not stat.S_ISDIR(child_info.st_mode)
-                    or child_info.st_dev != parent_info.st_dev):
-                raise SaveError('The private output subdirectory crossed a filesystem boundary.')
-            os.fsync(parent_fd)
-        finally:
-            os.close(child_fd)
-        return directory / name, child_info
-    finally:
-        os.close(parent_fd)
 
 
 def _new_directory_child_linux(directory, name, expected_identity):

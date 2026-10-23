@@ -272,6 +272,22 @@ class SaveVaultTests(unittest.TestCase):
         self.assertEqual(tuple(displaced.iterdir()), ())
         self.assertEqual(self.source.read_bytes(), self.raw)
 
+    def test_directory_child_creation_fails_closed_on_unsupported_posix(self):
+        parent = self.folder / 'unsupported-posix-parent'
+        parent.mkdir()
+        info = parent.stat()
+        destination = parent / 'new-child'
+
+        with (patch.object(copy_storage_module.os, 'name', 'posix'),
+              patch.object(copy_storage_module.sys, 'platform', 'darwin'),
+              patch.object(copy_storage_module.os, 'mkdir') as mkdir):
+            with self.assertRaisesRegex(SaveError, 'no safe handle-bound'):
+                copy_storage_module.new_directory_child_bound(
+                    parent, destination.name, (info.st_dev, info.st_ino))
+
+        mkdir.assert_not_called()
+        self.assertFalse(destination.exists())
+
     def test_snapshot_and_original_companion_tamper_blocks_verify_restore_and_compare(self):
         for filename in ('DATA.BIN', 'PARAM.SFO'):
             with self.subTest(filename=filename):

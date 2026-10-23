@@ -50,7 +50,7 @@ class GameHubGuiTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.folder = Path(temporary.name)
+        self.folder = Path(temporary.name).resolve()
         try:
             self.root = tk.Tk()
         except tk.TclError as error:
@@ -222,9 +222,11 @@ class GameHubGuiTests(unittest.TestCase):
         self.assertEqual(hub.table.get_children(), ('527270:0',))
         destination = self.folder / 'inventory.json'
         with patch('koei_editor.shared.game_hub_gui.filedialog.asksaveasfilename', return_value=str(destination)), \
-                patch('koei_editor.shared.game_hub_gui.messagebox.showinfo'):
+                patch('koei_editor.shared.game_hub_gui.messagebox.showinfo'), \
+                patch('koei_editor.shared.game_hub_gui.messagebox.showerror') as error:
             hub.export_button.invoke()
-        raw = destination.read_text()
+            error.assert_not_called()
+        raw = destination.read_text(encoding='utf-8')
         self.assertNotIn('SYNTHETIC_PRIVATE', raw)
         self.assertNotIn(str(self.folder), raw)
         report = json.loads(raw)
@@ -236,7 +238,7 @@ class GameHubGuiTests(unittest.TestCase):
                 patch('koei_editor.shared.game_hub_gui.messagebox.showerror') as error:
             hub.export_button.invoke()
         error.assert_called_once()
-        self.assertEqual(destination.read_text(), raw)
+        self.assertEqual(destination.read_text(encoding='utf-8'), raw)
 
     def test_unscanned_and_failed_refresh_export_states_are_explicit(self):
         hub = GameHubWorkspace(self.root, self.app.workspace,

@@ -24,7 +24,7 @@ class ToolkitCliTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.folder = Path(temporary.name)
+        self.folder = Path(temporary.name).resolve()
 
     def invoke(self, *arguments):
         output, errors = io.StringIO(), io.StringIO()
@@ -170,7 +170,7 @@ class ToolkitCliTests(unittest.TestCase):
         report = self.folder / 'review.json'
         code, output, errors = self.invoke('compare', '--game', 'dw4hyper', source, other, '--report', report)
         self.assertEqual((code, errors), (0, ''))
-        self.assertEqual(json.loads(report.read_text()), json.loads(output))
+        self.assertEqual(json.loads(report.read_text(encoding='utf-8')), json.loads(output))
         report_before = report.read_bytes()
         self.assertEqual(self.invoke('compare', '--game', 'dw4hyper', source, other, '--report', report)[0], 1)
         self.assertEqual(report.read_bytes(), report_before)
@@ -340,7 +340,7 @@ class ToolkitCliTests(unittest.TestCase):
         output = self.folder / 'new-inventory.json'
         code, text, errors = self.invoke('games', '--query', 'nioh 3', '--json', '--output', output)
         self.assertEqual((code, errors), (0, ''))
-        self.assertEqual(output.read_text(), text)
+        self.assertEqual(output.read_text(encoding='utf-8'), text)
         self.assertNotIn(str(output), text)
         if os.name != 'nt':
             self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o600)
@@ -457,7 +457,7 @@ class ToolkitCliTests(unittest.TestCase):
         output = self.folder / 'support.json'
         code, text, errors = self.invoke('diagnostics', '--json', '--output', output)
         self.assertEqual((code, errors), (0, ''))
-        self.assertEqual(output.read_text(), text)
+        self.assertEqual(output.read_text(encoding='utf-8'), text)
         original = output.read_bytes()
         code, text, errors = self.invoke('diagnostics', '--json', '--output', output)
         self.assertEqual((code, text), (1, ''))

@@ -15,7 +15,7 @@ class ReportExportTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
         self.destination = self.root / 'new.json'
         self.raw = b'{"read_only":true,"summary":"public facts"}\n'
 

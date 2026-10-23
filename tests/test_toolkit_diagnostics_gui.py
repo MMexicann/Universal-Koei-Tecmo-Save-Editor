@@ -71,9 +71,11 @@ class DiagnosticsGuiTests(unittest.TestCase):
             panel.export_button.invoke()
         export.assert_not_called()
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'support.json'
-            with patch('koei_editor.shared.diagnostics_gui.filedialog.asksaveasfilename', return_value=str(destination)):
+            destination = Path(folder).resolve() / 'support.json'
+            with patch('koei_editor.shared.diagnostics_gui.filedialog.asksaveasfilename', return_value=str(destination)), \
+                    patch('koei_editor.shared.diagnostics_gui.messagebox.showerror') as first_error:
                 panel.export_button.invoke()
+                first_error.assert_not_called()
                 original = destination.read_bytes()
                 with patch('koei_editor.shared.diagnostics_gui.messagebox.showerror') as error:
                     panel.export_button.invoke()
@@ -85,7 +87,7 @@ class DiagnosticsGuiTests(unittest.TestCase):
         self.center.show_tab('diagnostics')
         panel = self.center._panels['diagnostics']
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'must-not-write.json'
+            destination = Path(folder).resolve() / 'must-not-write.json'
             def close_panel(**_kwargs):
                 panel.frame.destroy()
                 return str(destination)
@@ -101,7 +103,7 @@ class DiagnosticsGuiTests(unittest.TestCase):
         self.center.show_tab('diagnostics')
         panel = self.center._panels['diagnostics']
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'must-not-write.json'
+            destination = Path(folder).resolve() / 'must-not-write.json'
             def close_root(**_kwargs):
                 self.root.destroy()
                 return str(destination)
@@ -144,14 +146,16 @@ class DiagnosticsGuiTests(unittest.TestCase):
         updated = copy.deepcopy(reviewed)
         updated['application']['version'] = '9.0'
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'reviewed.json'
+            destination = Path(folder).resolve() / 'reviewed.json'
             def refresh_from_dialog(**_kwargs):
                 with patch('koei_editor.shared.diagnostics_gui.collect_diagnostics', return_value=updated):
                     panel.refresh()
                 return str(destination)
-            with patch('koei_editor.shared.diagnostics_gui.filedialog.asksaveasfilename', side_effect=refresh_from_dialog):
+            with patch('koei_editor.shared.diagnostics_gui.filedialog.asksaveasfilename', side_effect=refresh_from_dialog), \
+                    patch('koei_editor.shared.diagnostics_gui.messagebox.showerror') as error:
                 panel.export()
-            self.assertEqual(json.loads(destination.read_text()), reviewed)
+                error.assert_not_called()
+            self.assertEqual(json.loads(destination.read_text(encoding='utf-8')), reviewed)
             self.assertEqual(panel.report, updated)
             self.assertEqual(json.loads(panel.preview.get('1.0', 'end')), updated)
 
@@ -172,12 +176,12 @@ class DiagnosticsGuiTests(unittest.TestCase):
         from koei_editor.application import Application
         from tests.test_origins_parser import fixture
         with tempfile.TemporaryDirectory() as folder:
-            source = Path(folder) / 'copy.dat'
+            source = Path(folder).resolve() / 'copy.dat'
             raw = fixture()
             source.write_bytes(raw)
             window = tk.Toplevel(self.root)
             try:
-                app = Application(window, preferences_path=Path(folder) / 'theme.json', persist_preferences=False)
+                app = Application(window, preferences_path=Path(folder).resolve() / 'theme.json', persist_preferences=False)
                 editor = app.select_game('origins')
                 self.assertTrue(editor.open_path(source))
                 editor.stage_values({'gold': 4321})

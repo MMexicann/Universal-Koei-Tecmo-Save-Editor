@@ -140,13 +140,15 @@ Help, version and human inventories/diagnostics are text. `games --json`, `route
 `diagnostics --json`,
 inspection, comparison, scan, diagnosis, discovery, conversion and workflow
 results are JSON on stdout. Human errors use stderr; rejected automation
-commands retain their structured JSON error on stdout. Do not treat a parsed
-JSON document alone as success: check both the exit code and result status.
+commands retain their structured JSON error on stdout. Check the exit code and
+the documented result fields. Catalogs and diagnostics
+expose schema/count fields; automation and field operations also expose
+`success` and `status`. Parsed JSON alone does not establish success.
 
 | Code | Meaning |
 | --- | --- |
 | `0` | Command completed; inspect diagnostic status and warnings. |
-| `1` | Legacy save operation failed, or a scan found rejected/unqualified copies. |
+| `1` | A save or report operation failed, or a scan found rejected/unqualified copies. |
 | `2` | Invalid command arguments, or a rejected automation/field operation. |
 | `3` | A scan stopped at a limit, or automation stopped with incomplete/ambiguous work. |
 

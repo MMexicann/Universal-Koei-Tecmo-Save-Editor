@@ -82,7 +82,7 @@ class DiagnosticsTests(unittest.TestCase):
     def test_new_report_is_exact_private_and_existing_files_are_preserved(self):
         report = diagnostics.collect_diagnostics('1.0')
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'support.json'
+            destination = Path(folder).resolve() / 'support.json'
             diagnostics.export_report(report, destination)
             self.assertEqual(destination.read_bytes(), diagnostics.report_json(report).encode('ascii'))
             if os.name != 'nt':
@@ -91,13 +91,13 @@ class DiagnosticsTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 diagnostics.export_report(report, destination)
             self.assertEqual(destination.read_bytes(), original)
-            self.assertEqual({x.name for x in Path(folder).iterdir()}, {'support.json'})
+            self.assertEqual({x.name for x in Path(folder).resolve().iterdir()}, {'support.json'})
 
     def test_dangling_selected_link_never_creates_its_target(self):
         report = diagnostics.collect_diagnostics('1.0')
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'selected.json'
-            target = Path(folder) / 'must-not-exist.json'
+            destination = Path(folder).resolve() / 'selected.json'
+            target = Path(folder).resolve() / 'must-not-exist.json'
             try:
                 destination.symlink_to(target)
             except OSError as error:
@@ -110,8 +110,8 @@ class DiagnosticsTests(unittest.TestCase):
     def test_new_report_refuses_a_late_child_alias_without_following_it(self):
         report = diagnostics.collect_diagnostics('1.0')
         with tempfile.TemporaryDirectory() as folder:
-            destination = Path(folder) / 'selected.json'
-            target = Path(folder) / 'untouched.json'
+            destination = Path(folder).resolve() / 'selected.json'
+            target = Path(folder).resolve() / 'untouched.json'
             target.write_bytes(b'FOREIGN_RECORD')
             original_publish = report_export.publish_new_child_bound
             def substitute(raw, parent, name, identity):

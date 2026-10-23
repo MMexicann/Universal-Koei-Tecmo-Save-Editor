@@ -213,8 +213,8 @@
     },
     {
       "path": "docs/CLI.md",
-      "bytes": 7830,
-      "sha256": "bf34b5e8b8feec3d5fc189a4ae3a7f5e1dd0402d1e364bc9821f3aeffc3c07fe"
+      "bytes": 7958,
+      "sha256": "80b6d7e415280739d9fd55f48c67c2a73121b49945a01fe926d560a3cf17a858"
     },
     {
       "path": "docs/COMMUNITY_PLUGINS.md",
@@ -5284,7 +5284,7 @@
     {
       "path": "tests/test_editing_tools_application.py",
       "bytes": 18720,
-      "sha256": "9c3869f35ef7d3b9bea099dd9ae138ce2f95c56faac6f8ab5881455838deb2db"
+      "sha256": "b8d45b5f7e2aa3cab05a7348ea0dbdb3c440f2fabed701e3d9ca887a7e54f0dd"
     },
     {
       "path": "tests/test_editor.py",
@@ -5418,13 +5418,13 @@
     },
     {
       "path": "tests/test_game_hub_gui.py",
-      "bytes": 18398,
-      "sha256": "392c1ff3ab0771023a6af167fbaa84243cfea5beb4f4e5bd225cb59166e83d74"
+      "bytes": 18568,
+      "sha256": "83d1caf147993795f75e5929b3ff48289a2c130ab1aafcdff63ac7be3f11e314"
     },
     {
       "path": "tests/test_game_hub_reports.py",
-      "bytes": 8974,
-      "sha256": "5c9d611e79e3e9ecb398348423d11421fbc480742867dc3212498ed40e70c15f"
+      "bytes": 8984,
+      "sha256": "fd76521809a37486d8b2d7336e8b74ea201b31338c321a48fde615e52a595021"
     },
     {
       "path": "tests/test_game_troubleshooting.py",
@@ -6088,8 +6088,8 @@
     },
     {
       "path": "tests/test_report_export.py",
-      "bytes": 9141,
-      "sha256": "0e0b1ae10a0d078e77ebe51aca6579b5ecf5c9f177f919a417573fefe21c27ba"
+      "bytes": 9151,
+      "sha256": "1571fb1976b6d8aa1ea7ae1326f00c0f63fc6277fddc2c20ccad15628161804b"
     },
     {
       "path": "tests/test_research_import.py",
@@ -6543,18 +6543,18 @@
     },
     {
       "path": "tests/test_toolkit_cli.py",
-      "bytes": 26315,
-      "sha256": "83b52f6d399a6e6ba26f7f04a97cd5ccc0407fa5a16d099aa980e32dbbc7bdb9"
+      "bytes": 26373,
+      "sha256": "ab1092ec8633703a7edd79e6cc3a8015cbea82d0799c2b9c1fa4ce510e477255"
     },
     {
       "path": "tests/test_toolkit_diagnostics.py",
-      "bytes": 7971,
-      "sha256": "7871b91d8b2e4b85005f8e713de6348cf42a036b3f353a996ac03d5696b6e2ca"
+      "bytes": 8031,
+      "sha256": "0dd71082872f2fba78bf35cc2cc136f48c28002f673501c42761c3997f4adf2b"
     },
     {
       "path": "tests/test_toolkit_diagnostics_gui.py",
-      "bytes": 10037,
-      "sha256": "65d991a836deca1630dc37eb6cbfdea3a220fc5405e2610edeebe595f917e8a3"
+      "bytes": 10403,
+      "sha256": "73b9b565ee281419e012d37b89e5c5415d54573e9bf39803653fdc9ee4b0c2d6"
     },
     {
       "path": "tests/test_totori_dx_ps4_candidate.py",
@@ -6988,8 +6988,8 @@
     },
     {
       "path": "tools/test_timings.json",
-      "bytes": 9743,
-      "sha256": "b962a7841d129e90537f34d4e0ca8035857ff5735dd7e391733356b7783aecb9"
+      "bytes": 17228,
+      "sha256": "4888cba0ac670346c07772a40c8e2987af91a5efb8a2ce4d8efde421720a4e08"
     },
     {
       "path": "tools/update_supported_games.py",

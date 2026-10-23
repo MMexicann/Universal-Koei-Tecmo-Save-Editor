@@ -16,7 +16,7 @@ class HubInventoryTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.folder = Path(self.temporary.name)
+        self.folder = Path(self.temporary.name).resolve()
         self.installed = InstalledGame(
             'atelier_sophie', '527270', self.folder / 'SYNTHETIC_PRIVATE_INSTALL',
             library_path=self.folder / 'SYNTHETIC_PRIVATE_LIBRARY', build_id='10',

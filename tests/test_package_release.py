@@ -168,6 +168,19 @@ class PackagingTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
                 release._validate_runtime_file(name, b'reviewed package notice', {})
 
+    def test_only_the_pinned_setuptools_lorem_resource_is_allowed(self):
+        resource = b'Public build-time placeholder text.'
+        digest = hashlib.sha256(resource).hexdigest()
+        with patch.object(release, 'SETUPTOOLS_LOREM_SHA256', digest):
+            self.assertEqual(
+                release._validate_runtime_file(release.SETUPTOOLS_LOREM_RESOURCE, resource, {}),
+                release.SETUPTOOLS_LOREM_RESOURCE)
+            with self.assertRaisesRegex(ValueError, 'Unreviewed setuptools text resource'):
+                release._validate_runtime_file(release.SETUPTOOLS_LOREM_RESOURCE,
+                                               resource + b'changed', {})
+        with self.assertRaisesRegex(ValueError, 'Unreviewed runtime file'):
+            release._validate_runtime_file('setuptools/_vendor/jaraco/text/other.txt', resource, {})
+
     def test_standalone_checks_embedded_metadata_native_files_modules_and_privacy(self):
         archive, blobs, module = self.standalone_archive_fixture()
         for name, data in (('koei_editor/data/game_metadata.json', b'{"tampered": true}'),

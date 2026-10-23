@@ -340,6 +340,8 @@ NUMPY_DLLS = frozenset({
 })
 NUMPY_METADATA = 'numpy-2.5.4.dist-info/METADATA'
 NUMPY_METADATA_SHA256 = 'e2b909d6a37d76c2bc130f528d7fed0c517322bce16dc7846b6a6df30e200403'
+SETUPTOOLS_LOREM_RESOURCE = 'setuptools/_vendor/jaraco/text/Lorem ipsum.txt'
+SETUPTOOLS_LOREM_SHA256 = '37fedcffbf73c4eb9f058f47677cb33203a436ff9390e4d38a8e01c9dad28e0b'
 STDLIB_EXTENSIONS = frozenset({
     '_asyncio', '_bz2', '_ctypes', '_decimal', '_elementtree', '_hashlib', '_lzma',
     '_multiprocessing', '_overlapped', '_queue', '_socket', '_sqlite3', '_ssl',
@@ -416,6 +418,9 @@ def _validate_runtime_file(name, data, expected):
     elif normalized == NUMPY_METADATA:
         if hashlib.sha256(data).hexdigest() != NUMPY_METADATA_SHA256:
             raise ValueError(f'Unreviewed NumPy distribution metadata: {name}')
+    elif normalized == SETUPTOOLS_LOREM_RESOURCE:
+        if hashlib.sha256(data).hexdigest() != SETUPTOOLS_LOREM_SHA256:
+            raise ValueError(f'Unreviewed setuptools text resource: {name}')
     elif normalized == 'base_library.zip':
         _verify_library_zip(name, data, require_stdlib=True)
     elif relative.suffix.casefold() in {'.dll', '.pyd'}:

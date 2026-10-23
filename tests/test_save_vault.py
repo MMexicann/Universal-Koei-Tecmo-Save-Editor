@@ -288,6 +288,53 @@ class SaveVaultTests(unittest.TestCase):
         mkdir.assert_not_called()
         self.assertFalse(destination.exists())
 
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux handle-bound directory writer')
+    def test_linux_directory_child_rejects_unprotected_parent(self):
+        parent = self.folder / 'group-writable-parent'
+        parent.mkdir()
+        parent.chmod(0o777)
+        info = parent.stat()
+        destination = parent / 'new-child'
+
+        with self.assertRaisesRegex(SaveError, 'writable by another user'):
+            copy_storage_module.new_directory_child_bound(
+                parent, destination.name, (info.st_dev, info.st_ino))
+
+        self.assertFalse(destination.exists())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux handle-bound directory writer')
+    def test_linux_directory_child_rejects_replacement_after_identity_capture(self):
+        parent = self.folder
+        info = parent.stat()
+        destination = parent / 'created-directory-race'
+        replacement = parent / 'replacement-directory-race'
+        replacement.mkdir()
+        marker = replacement / 'marker.txt'
+        marker.write_bytes(b'untouched')
+        original_stat = os.stat
+        replaced = False
+
+        def capture_then_replace(path, *args, **kwargs):
+            nonlocal replaced
+            captured = original_stat(path, *args, **kwargs)
+            if (not replaced and path == destination.name
+                    and kwargs.get('dir_fd') is not None
+                    and kwargs.get('follow_symlinks') is False):
+                destination.rmdir()
+                replacement.rename(destination)
+                replaced = True
+            return captured
+
+        with patch.object(copy_storage_module.os, 'stat', side_effect=capture_then_replace):
+            with self.assertRaisesRegex(SaveError, 'changed identity during creation'):
+                copy_storage_module.new_directory_child_bound(
+                    parent, destination.name, (info.st_dev, info.st_ino))
+
+        self.assertTrue(replaced, 'the test must replace the child after identity capture')
+        self.assertEqual((destination / marker.name).read_bytes(), b'untouched')
+        destination.rename(replacement)
+        self.assertFalse(destination.exists())
+
     def test_snapshot_and_original_companion_tamper_blocks_verify_restore_and_compare(self):
         for filename in ('DATA.BIN', 'PARAM.SFO'):
             with self.subTest(filename=filename):

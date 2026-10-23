@@ -72,10 +72,11 @@ def new_directory_child_bound(directory, name, expected_identity):
     """Create a new directory relative to a checked parent handle.
 
     Linux uses ``openat2`` with ``RESOLVE_NO_XDEV`` when reopening the new
-    child, so a mountpoint cannot redirect nested restore data. Windows creates
-    the child with ``NtCreateFile`` rooted at a pinned parent handle. Other
-    POSIX systems fail closed because they cannot bind the reopened child to
-    the inode created by ``mkdirat``.
+    child, checks the parent is protected from other users, and compares the
+    reopened child to its immediately captured no-follow identity. Windows
+    creates the child with ``NtCreateFile`` rooted at a pinned parent handle.
+    Other POSIX systems fail closed because they cannot bind the reopened child
+    to the inode created by ``mkdirat``.
     """
     _validate_child_name(name)
     directory = Path(directory)
@@ -101,10 +102,18 @@ def _new_directory_child_linux(directory, name, expected_identity):
         if (not stat.S_ISDIR(parent_info.st_mode)
                 or (parent_info.st_dev, parent_info.st_ino) != expected_identity):
             raise SaveError('The private output directory changed identity.')
+        _require_linux_private_parent(parent_info)
         try:
             os.mkdir(name, mode=0o700, dir_fd=parent_fd)
         except OSError as error:
             raise SaveError('The private output subdirectory already exists or cannot be created safely.') from error
+        try:
+            created_info = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+        except OSError as error:
+            raise SaveError('The new private output subdirectory changed before it could be checked.') from error
+        if (not stat.S_ISDIR(created_info.st_mode)
+                or created_info.st_dev != parent_info.st_dev):
+            raise SaveError('The private output subdirectory crossed a filesystem boundary.')
 
         class OpenHow(ctypes.Structure):
             _fields_ = [('flags', ctypes.c_uint64), ('mode', ctypes.c_uint64),
@@ -130,14 +139,30 @@ def _new_directory_child_linux(directory, name, expected_identity):
         try:
             child_info = os.fstat(child_fd)
             if (not stat.S_ISDIR(child_info.st_mode)
-                    or child_info.st_dev != parent_info.st_dev):
-                raise SaveError('The private output subdirectory crossed a filesystem boundary.')
+                    or (child_info.st_dev, child_info.st_ino)
+                    != (created_info.st_dev, created_info.st_ino)):
+                raise SaveError('The private output subdirectory changed identity during creation.')
             os.fsync(parent_fd)
         finally:
             os.close(child_fd)
         return directory / name, child_info
     finally:
         os.close(parent_fd)
+
+
+def _require_linux_private_parent(parent_info):
+    """Exclude cross-user replacement races in writable POSIX parents.
+
+    A user-owned parent must not grant write access to its group or others.
+    A sticky shared directory such as ``/tmp`` also protects entries created
+    by this user from rename or removal by other users.
+    """
+    mode = stat.S_IMODE(parent_info.st_mode)
+    owner = parent_info.st_uid == os.geteuid()
+    others_can_write = bool(mode & 0o022)
+    sticky = bool(mode & stat.S_ISVTX)
+    if not ((owner and not others_can_write) or (sticky and others_can_write)):
+        raise SaveError('The private output parent is writable by another user.')
 
 
 def _new_directory_child_windows(directory, name, expected_identity):

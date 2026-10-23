@@ -2,6 +2,12 @@
 
 The browser-local sandbox stages mod folders in separate game, exact-build, and mod-ID namespaces. It previews planned destination paths, detects duplicate targets and file/directory collisions, and validates a JSON mod manifest before preparing a ZIP download.
 
+Open **Editing and Research → Mod Testing Sandbox** in the packaged Toolkit.
+The managed local server opens the bundled tool in your default browser without
+a separate Python or Node installation. Keep the Toolkit running and retain your
+original mod folders; export needed results before closing. The
+[browser companion guide](BROWSER_COMPANIONS.md) explains session storage and scope.
+
 ## Run and test
 
 From `tools/mod_testing_sandbox/`, run `npm test` and `npm run build`. The app is buildless JavaScript with no runtime dependencies. `npm run build` copies the static site to `dist/`.
@@ -12,7 +18,10 @@ The initial save-profile list uses Windows PC IDs registered in `src/koei_editor
 
 ## Companion-tool contracts
 
-The browser sandbox has no runtime bridge to the desktop companion tools. It directly reads the Workshop's native project `mod.json` format, then uses explicit JSON handoffs that a receiving tool must review and validate.
+The Toolkit provides the managed launcher, while browser-to-desktop data handoffs
+remain explicit files requiring review in the receiving tool. The sandbox directly
+reads the Workshop's native project `mod.json` format; it does not apply browser
+messages or packages to the native application automatically.
 
 - **Mod Manager inventory:** read-only path inventory with contract `koei.mod-manager.inventory/v1`, `gameId`, `gameVersion`, and `files`. It can mark staged paths as additions or replacements without reading an installed game directory.
 - **Mod Manager / Playthrough Profiles:** registered save profiles get the bounded `ProfileComponentSnapshot` envelope from [PR #112](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/112): `component: "mod_configuration"`, `provider: "mod_manager"`, `schema_version: 1`, `game_id`, `game_version`, and an inert `payload` limited to 256 KiB. It contains no mod file bytes and never auto-applies. For Nioh 2, the sandbox creates one package ZIP matching the import contract in [PR #129](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/pull/129): one `.ini`, at least one `.fmt`, `.vb`, `.ib`, or `.dds` asset, all files under the `.ini` marker folder, and optional root `koei-mod.json` metadata. The manager validates the ZIP again. The sandbox does not connect to the desktop manager or install files.

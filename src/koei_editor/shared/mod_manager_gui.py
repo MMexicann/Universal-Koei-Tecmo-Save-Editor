@@ -1,4 +1,4 @@
-"""Tk workspace for the verified Nioh 2 PC mod workflow."""
+"""Tk workspace for explicit game-specific PC mod installation methods."""
 from collections.abc import Mapping
 from pathlib import Path
 import tkinter as tk
@@ -6,23 +6,27 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from koei_editor.shared.preferences import preference_path
 from koei_editor.shared.appearance import ui_font
+from koei_editor.shared.mod_manager import (ModManager, archive_game_id, get_mod_adapter,
+                                              mod_manager_host_capabilities, review_archive, supported_mod_games)
 
 
 class ModManagerWorkspace:
     """Retained UI for game selection, profiles, and managed mod operations.
 
     The service owns validation and filesystem safety. This view only accepts a
-    user-selected Nioh 2 PC root and passes archive paths to the service for
+    user-selected, explicitly scoped PC root and passes archive paths to the service for
     validation; it never implements file installation itself.
     """
 
     def __init__(self, root, parent, manager=None, state_dir=None):
         self.root = root
         if manager is None:
-            from koei_editor.shared.mod_manager import ModManager
             state_dir = Path(state_dir) if state_dir is not None else preference_path().parent / 'mod_manager'
             manager = ModManager(state_dir, game_root=None)
         self.manager = manager
+        self._managers = {manager.game_id: manager}
+        self._state_base_dir = manager.state_base_dir
+        self._adapter_labels = {adapter.title: adapter.game_id for adapter in supported_mod_games()}
         self._closed = False
         self._nexus_poll_id = None
         self._profiles = {}
@@ -33,32 +37,52 @@ class ModManagerWorkspace:
         self._recovery_blocked = False
         self._recovery_blocked_root = None
 
-        self.frame = ttk.Frame(parent, padding=(24, 16))
+        self.frame = ttk.Frame(parent, padding=(12, 8))
         self.frame.bind('<Destroy>', self._on_frame_destroy, add='+')
         self.frame.columnconfigure(0, weight=1)
-        self.frame.rowconfigure(3, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.content_canvas = tk.Canvas(self.frame, highlightthickness=0, borderwidth=0)
+        self.content_canvas.grid(row=0, column=0, sticky='nsew')
+        self.content_scrollbar = ttk.Scrollbar(self.frame, orient='vertical', command=self.content_canvas.yview)
+        self.content_scrollbar.grid(row=0, column=1, sticky='ns')
+        self.content_canvas.configure(yscrollcommand=self.content_scrollbar.set)
+        self.content = ttk.Frame(self.content_canvas, padding=(12, 8))
+        self.content.columnconfigure(0, weight=1)
+        self.content.rowconfigure(3, weight=1)
+        self._content_window = self.content_canvas.create_window(0, 0, anchor='nw', window=self.content)
+        self.content_canvas.bind('<Configure>', self._responsive_layout)
+        self.content.bind('<Configure>', self._content_resized)
 
-        heading = ttk.Frame(self.frame)
+        heading = ttk.Frame(self.content)
         heading.grid(row=0, column=0, sticky='ew', pady=(0, 12))
-        ttk.Label(heading, text='NIOH 2 MOD MANAGER', font=(ui_font(root), 22, 'bold')).pack(anchor='w')
-        ttk.Label(heading, text='Manage mods through the verified Nioh 2 PC loader method.',
+        ttk.Label(heading, text='MOD MANAGER', font=(ui_font(root), 22, 'bold')).pack(anchor='w')
+        ttk.Label(heading, text='Select a documented installation method. Each game keeps its own library and profiles.',
                   style='Muted.TLabel').pack(anchor='w', pady=(3, 0))
 
-        target = ttk.LabelFrame(self.frame, text='Nioh 2 PC installation', padding=(10, 7))
+        target = ttk.LabelFrame(self.content, text='Game and installation', padding=(10, 7))
         target.grid(row=1, column=0, sticky='ew', pady=(0, 10))
         target.columnconfigure(1, weight=1)
+        ttk.Label(target, text='Game').grid(row=0, column=0, sticky='w', padx=(0, 10))
+        self.game_choice = tk.StringVar(root, value=self.manager.adapter.title)
+        self.game_selector = ttk.Combobox(target, textvariable=self.game_choice,
+                                         values=tuple(self._adapter_labels), state='readonly')
+        self.game_selector.grid(row=0, column=1, sticky='ew', pady=(0, 6))
+        self.game_selector.bind('<<ComboboxSelected>>', self._game_changed)
+        self.capability_text = tk.StringVar(root)
         ttk.Button(target, text='Choose Game Folder…', command=self.choose_game_root).grid(
-            row=0, column=0, sticky='w', padx=(0, 10))
-        self.game_root_text = tk.StringVar(root, value='No Nioh 2 game folder selected')
+            row=1, column=0, sticky='w', padx=(0, 10))
+        self.game_root_text = tk.StringVar(root, value='No game folder selected')
         ttk.Label(target, textvariable=self.game_root_text, style='Muted.TLabel',
-                  wraplength=760).grid(row=0, column=1, sticky='ew')
+                  wraplength=760).grid(row=1, column=1, sticky='ew')
         self.loader_confirmed = tk.BooleanVar(root, value=False)
         ttk.Checkbutton(target,
-                        text='I have installed and configured the required mod loader, and the game is closed.',
-                        variable=self.loader_confirmed).grid(row=1, column=0, columnspan=2,
+                        text='I have configured the required loader and closed the game.',
+                        variable=self.loader_confirmed).grid(row=2, column=0, columnspan=2,
                                                              sticky='w', pady=(7, 0))
+        ttk.Label(target, textvariable=self.capability_text, style='Muted.TLabel',
+                  wraplength=1050).grid(row=3, column=0, columnspan=2, sticky='ew', pady=(6, 0))
 
-        profile_bar = ttk.LabelFrame(self.frame, text='Separate mod profiles', padding=(10, 7))
+        profile_bar = ttk.LabelFrame(self.content, text='Separate mod profiles', padding=(10, 7))
         profile_bar.grid(row=2, column=0, sticky='ew', pady=(0, 10))
         profile_bar.columnconfigure(1, weight=1)
         ttk.Label(profile_bar, text='Profile').grid(row=0, column=0, sticky='w', padx=(0, 8))
@@ -70,17 +94,19 @@ class ModManagerWorkspace:
         self.active_profile_text = tk.StringVar(root, value='No active profile')
         ttk.Label(profile_bar, textvariable=self.active_profile_text, style='Muted.TLabel').grid(
             row=0, column=2, sticky='e', padx=(10, 14))
-        self.create_profile_button = ttk.Button(profile_bar, text='Create', command=self.create_profile)
+        self.profile_actions = ttk.Frame(profile_bar)
+        self.profile_actions.grid(row=1, column=0, columnspan=3, sticky='ew', pady=(6, 0))
+        self.create_profile_button = ttk.Button(self.profile_actions, text='Create', command=self.create_profile)
         self.create_profile_button.grid(row=0, column=3, padx=2)
-        self.rename_profile_button = ttk.Button(profile_bar, text='Rename', command=self.rename_profile)
+        self.rename_profile_button = ttk.Button(self.profile_actions, text='Rename', command=self.rename_profile)
         self.rename_profile_button.grid(row=0, column=4, padx=2)
-        self.delete_profile_button = ttk.Button(profile_bar, text='Delete', command=self.delete_profile)
+        self.delete_profile_button = ttk.Button(self.profile_actions, text='Delete', command=self.delete_profile)
         self.delete_profile_button.grid(row=0, column=5, padx=2)
-        self.apply_profile_button = ttk.Button(profile_bar, text='Apply Profile', style='Primary.TButton',
+        self.apply_profile_button = ttk.Button(self.profile_actions, text='Apply Profile', style='Primary.TButton',
                                                command=self.apply_profile)
         self.apply_profile_button.grid(row=0, column=6, padx=(8, 0))
 
-        body = ttk.Panedwindow(self.frame, orient='horizontal')
+        body = ttk.Panedwindow(self.content, orient='horizontal')
         body.grid(row=3, column=0, sticky='nsew')
         mods_panel = ttk.Frame(body)
         mods_panel.columnconfigure(0, weight=1)
@@ -89,7 +115,7 @@ class ModManagerWorkspace:
             row=0, column=0, sticky='w', pady=(0, 6))
         self.mod_table = ttk.Treeview(mods_panel,
                                       columns=('version', 'installed', 'enabled'),
-                                      show='tree headings', selectmode='browse', height=12)
+                                      show='tree headings', selectmode='browse', height=6)
         self.mod_table.heading('#0', text='Mod')
         self.mod_table.heading('version', text='Version')
         self.mod_table.heading('installed', text='Installed')
@@ -111,7 +137,7 @@ class ModManagerWorkspace:
         self.profile_summary = tk.StringVar(root, value='Create a profile or select one to inspect its mod set.')
         ttk.Label(details, textvariable=self.profile_summary, style='Muted.TLabel',
                   wraplength=360).grid(row=0, column=0, sticky='ew', pady=(0, 8))
-        self.issues = tk.Text(details, height=10, width=34, wrap='word', relief='flat',
+        self.issues = tk.Text(details, height=5, width=24, wrap='word', relief='flat',
                               borderwidth=0, padx=8, pady=7, state='disabled')
         self.issues.grid(row=1, column=0, sticky='nsew')
         details_scroll = ttk.Scrollbar(details, orient='vertical', command=self.issues.yview)
@@ -121,7 +147,7 @@ class ModManagerWorkspace:
 
         actions = ttk.Frame(self.frame)
         self.actions = actions
-        actions.grid(row=4, column=0, sticky='ew', pady=(10, 0))
+        actions.grid(row=1, column=0, columnspan=2, sticky='ew', pady=(8, 0))
         self.import_button = ttk.Button(actions, text='Add Mod ZIP…', command=self.import_archive)
         self.import_button.grid(row=0, column=0, padx=(0, 6))
         self.install_button = ttk.Button(actions, text='Install', command=self.install_mod)
@@ -134,16 +160,84 @@ class ModManagerWorkspace:
         self.remove_button.grid(row=0, column=4, padx=3)
         ttk.Button(actions, text='Refresh', command=self.refresh).grid(row=0, column=5, padx=(9, 0))
         self.status = tk.StringVar(root,
-            value='Choose the Nioh 2 PC game folder. Mods are managed only through the selected loader method.')
-        ttk.Label(self.frame, textvariable=self.status, wraplength=1100).grid(
+            value='Choose a game and its folder. Import a ZIP, review its profile checks, then apply explicitly.')
+        ttk.Label(self.content, textvariable=self.status, wraplength=1100).grid(
             row=5, column=0, sticky='ew', pady=(9, 0))
-        ttk.Label(self.frame,
+        ttk.Label(self.content,
                   text='Profiles store independent enable lists. Apply writes only the service-verified managed mod area; '
                        'original game files remain outside manager ownership.',
                   style='Muted.TLabel', wraplength=1100).grid(row=6, column=0, sticky='ew', pady=(4, 0))
 
+        self._wrap_labels = []
+        def remember_labels(widget):
+            for child in widget.winfo_children():
+                if isinstance(child, ttk.Label):
+                    self._wrap_labels.append(child)
+                    child.bind('<Configure>', self._label_resized, add='+')
+                if not isinstance(child, (tk.Text, ttk.Treeview, ttk.Combobox, ttk.Scrollbar)):
+                    child.bind('<MouseWheel>', self._scroll_form, add='+')
+                    child.bind('<Button-4>', self._scroll_form, add='+')
+                    child.bind('<Button-5>', self._scroll_form, add='+')
+                remember_labels(child)
+        remember_labels(self.content)
+        self._action_buttons = tuple(self.actions.winfo_children())
+        self._profile_action_buttons = tuple(self.profile_actions.winfo_children())
+        self._responsive_layout()
         self.refresh()
         self._schedule_nexus_download_poll()
+
+    @staticmethod
+    def _flow_buttons(buttons, width):
+        row = column = occupied = 0
+        for button in buttons:
+            requested = button.winfo_reqwidth() + 10
+            if column and occupied + requested > width:
+                row += 1
+                column = occupied = 0
+            button.grid_configure(row=row, column=column, padx=(0, 8), pady=(0, 4), sticky='w')
+            column += 1
+            occupied += requested
+
+    def _responsive_layout(self, event=None):
+        if self._closed:
+            return
+        width = max(120, event.width if event is not None else
+                    (self.frame.winfo_width() if self.frame.winfo_width() > 1 else 1100))
+        if event is not None:
+            self.content_canvas.itemconfigure(self._content_window, width=width)
+        available = max(100, width - 48)
+        for label in getattr(self, '_wrap_labels', ()):
+            # Label parents may be narrower panes; constrain them separately.
+            parent_width = label.master.winfo_width()
+            wrap = min(available, max(100, parent_width - 32)) if parent_width > 1 else available
+            if self.root.winfo_pixels(label.cget('wraplength') or '0') != wrap:
+                label.configure(wraplength=wrap)
+        self._flow_buttons(getattr(self, '_action_buttons', ()), available)
+        self._flow_buttons(getattr(self, '_profile_action_buttons', ()), available)
+        self._content_resized()
+
+    def _scroll_form(self, event):
+        if self._closed:
+            return
+        direction = -1 if getattr(event, 'num', None) == 4 or getattr(event, 'delta', 0) > 0 else 1
+        self.content_canvas.yview_scroll(direction * 3, 'units')
+        return 'break'
+
+    def _label_resized(self, event):
+        if self._closed or event.width < 2:
+            return
+        wrap = max(40, event.width - 4)
+        if self.root.winfo_pixels(event.widget.cget('wraplength') or '0') != wrap:
+            event.widget.configure(wraplength=wrap)
+
+    def _content_resized(self, _event=None):
+        if self._closed:
+            return
+        # A small viewport scrolls the form; the action bar always stays outside.
+        height = max(self.content.winfo_reqheight(), self.content_canvas.winfo_height())
+        if int(float(self.content_canvas.itemcget(self._content_window, 'height'))) != height:
+            self.content_canvas.itemconfigure(self._content_window, height=height)
+        self.content_canvas.configure(scrollregion=self.content_canvas.bbox('all'))
 
     def _on_frame_destroy(self, event):
         if event.widget is self.frame:
@@ -166,6 +260,8 @@ class ModManagerWorkspace:
         """Record the current theme; all widgets follow the shell's ttk styles."""
         from koei_editor.shared.appearance import THEMES
         self._theme = next((name for name, value in THEMES.items() if value == palette), self._theme)
+        self.content_canvas.configure(background=palette['background'])
+        self._responsive_layout()
 
     def _error(self, title, error):
         self.status.set(f'{title}: {error}')
@@ -265,8 +361,13 @@ class ModManagerWorkspace:
                     self._mark_recovery_blocked(self.manager.current_game_root)
                     raise
                 self._clear_recovery_block_if_resolved(self.manager.current_game_root)
+            adapter = self.manager.adapter
+            inactive = ('Disabled mods use the documented folder suffix.' if adapter.disable_policy == 'folder_suffix'
+                        else 'Enable in Profile, then Apply Profile to install. Disable through Apply Profile removes the deployed copy; the library copy is retained.')
+            self.capability_text.set(adapter.scope + ' ' + inactive +
+                                     ' ' + str(mod_manager_host_capabilities()['message']))
             game_root = self.manager.current_game_root
-            self.game_root_text.set(str(game_root) if game_root else 'No Nioh 2 game folder selected')
+            self.game_root_text.set(str(game_root) if game_root else f'No {self.manager.adapter.title} folder selected')
 
             profiles = tuple(self.manager.profiles())
             self._profiles = {str(self._value(profile, 'id')): profile for profile in profiles}
@@ -323,18 +424,51 @@ class ModManagerWorkspace:
         installed = bool(self._value(selected, 'installed', False)) if selected is not None else False
         recovery_blocked = self._recovery_blocked or bool(self.manager.has_pending_transaction)
         mutation_state = 'disabled' if recovery_blocked else 'normal'
+        deployment_state = mutation_state if mod_manager_host_capabilities()['documented_game_deployment'] else 'disabled'
         self.create_profile_button.configure(state=mutation_state)
         self.rename_profile_button.configure(state=mutation_state if profile_exists else 'disabled')
         self.delete_profile_button.configure(state=mutation_state if profile_exists else 'disabled')
-        self.apply_profile_button.configure(state=mutation_state if profile_exists else 'disabled')
+        self.apply_profile_button.configure(state=deployment_state if profile_exists else 'disabled')
         current_root = self.manager.current_game_root
         self.toggle_enabled_button.configure(state=mutation_state if selected is not None and profile_exists else 'disabled')
         self.import_button.configure(state=mutation_state)
-        self.install_button.configure(state=mutation_state if selected is not None and current_root is not None
-                                       and not installed else 'disabled')
-        self.uninstall_button.configure(state=mutation_state if selected is not None and current_root is not None
-                                         and installed else 'disabled')
+        self.install_button.configure(state=deployment_state if selected is not None and current_root is not None
+                                       and not installed and self.manager.adapter.disable_policy == 'folder_suffix' else 'disabled')
+        self.uninstall_button.configure(state=deployment_state if selected is not None and current_root is not None
+                                         and installed and self.manager.adapter.disable_policy == 'folder_suffix' else 'disabled')
         self.remove_button.configure(state=mutation_state if selected is not None and not installed else 'disabled')
+
+    def select_game(self, game_id):
+        """Select one explicit adapter without mixing its state or queued imports."""
+        adapter = get_mod_adapter(game_id)
+        if adapter.game_id == self.manager.game_id:
+            self.game_choice.set(adapter.title)
+            return True
+        if self._recovery_blocked or self.manager.has_pending_transaction:
+            self.game_choice.set(self.manager.adapter.title)
+            raise ValueError('Resolve the current game transaction before switching games.')
+        manager = self._managers.get(adapter.game_id)
+        if manager is None:
+            manager = ModManager(self._state_base_dir, game_id=adapter.game_id)
+            self._managers[adapter.game_id] = manager
+        self.manager = manager
+        self.game_choice.set(adapter.title)
+        self.loader_confirmed.set(False)
+        self._selected_profile_id = None
+        self._profiles = {}
+        self._mods = {}
+        self.mod_table.delete(*self.mod_table.get_children())
+        self.status.set(f'Selected {adapter.title}. Choose its game folder and review loader requirements.')
+        return self.refresh()
+
+    def _game_changed(self, _event=None):
+        def perform():
+            try:
+                return self.select_game(self._adapter_labels[self.game_choice.get()])
+            except Exception:
+                self.game_choice.set(self.manager.adapter.title)
+                raise
+        return self._run('Cannot Select Mod Game', perform)
 
     def _profile_changed(self, _event=None):
         def perform():
@@ -348,7 +482,7 @@ class ModManagerWorkspace:
     def choose_game_root(self):
         def perform():
             initial = self.manager.current_game_root
-            selected = filedialog.askdirectory(parent=self.root, title='Choose Nioh 2 PC Game Folder',
+            selected = filedialog.askdirectory(parent=self.root, title=f'Choose {self.manager.adapter.title} Game Folder',
                                                initialdir=str(initial) if initial else None, mustexist=True)
             if not selected:
                 return False
@@ -366,7 +500,7 @@ class ModManagerWorkspace:
                 raise
             self._clear_recovery_block_if_resolved(self.manager.current_game_root or selected)
             self.loader_confirmed.set(False)
-            self.status.set('Nioh 2 game folder selected. Confirm the required loader before installation changes.')
+            self.status.set(f'{self.manager.adapter.title} folder selected. Confirm the documented loader before changes.')
             self.refresh()
             return True
         return self._run('Cannot Select Game Folder', perform)
@@ -424,7 +558,7 @@ class ModManagerWorkspace:
                 raise ValueError('Select a profile to apply.')
             name = str(self._value(profile, 'name', self._selected_profile_id))
             if not messagebox.askyesno('Apply Mod Profile',
-                                       f'Apply “{name}” to the selected Nioh 2 mod-loader area?', parent=self.root):
+                                       f'Apply “{name}” to the selected {self.manager.adapter.title} mod-loader area?', parent=self.root):
                 return False
             self.manager.apply_profile(self._selected_profile_id,
                                        loader_confirmed=bool(self.loader_confirmed.get()))
@@ -433,13 +567,28 @@ class ModManagerWorkspace:
             return True
         return self._run('Cannot Apply Profile', perform)
 
+    def import_archive_path(self, archive, game_id=None):
+        """Validate and route one user-selected ZIP to its isolated library only."""
+        if self._closed:
+            raise ValueError('The Mod Manager workspace is closed.')
+        selected = game_id if game_id is not None else archive_game_id(archive, default=self.manager.game_id)
+        review_archive(archive, game_id=selected)
+        if not self.select_game(selected):
+            raise ValueError('The selected game workspace could not be refreshed.')
+        mod = self.manager.import_archive(archive)
+        self.status.set(f'Added {mod.name} to {self.manager.adapter.title}. Review its profile before applying.')
+        self.refresh()
+        self.mod_table.selection_set(mod.id)
+        self._update_controls()
+        return mod
+
     def import_archive(self):
         def perform():
-            archive = filedialog.askopenfilename(parent=self.root, title='Add Nioh 2 Mod ZIP',
+            archive = filedialog.askopenfilename(parent=self.root, title=f'Add {self.manager.adapter.title} Mod ZIP',
                                                  filetypes=(('ZIP archives', '*.zip'), ('All files', '*.*')))
             if not archive:
                 return False
-            mod = self.manager.import_archive(archive)
+            mod = self.import_archive_path(archive)
             name = self._value(mod, 'name', self._value(mod, 'id', Path(archive).name))
             self.status.set(f'Added mod archive: {name}')
             self.refresh()
@@ -453,7 +602,7 @@ class ModManagerWorkspace:
         enqueue = getattr(self.manager, 'enqueue_nexus_download', None)
         accepted = bool(callable(enqueue) and enqueue(request, downloader))
         self.status.set(
-            'Nexus download queued. The selected file will be checked as a Nioh 2 ZIP and added if valid.'
+            f'Nexus download queued for {self.manager.adapter.title}. The ZIP will be validated before library import.'
             if accepted else
             'The Mod Manager could not queue this Nexus download.'
         )
@@ -495,7 +644,7 @@ class ModManagerWorkspace:
                 raise ValueError('Select a mod to install.')
             name = str(self._value(mod, 'name', mod_id))
             if not messagebox.askyesno('Install Mod',
-                                       f'Install “{name}” in the verified Nioh 2 mod area?', parent=self.root):
+                                       f'Install “{name}” in the documented {self.manager.adapter.title} mod area?', parent=self.root):
                 return False
             self.manager.install_mod(mod_id, loader_confirmed=bool(self.loader_confirmed.get()))
             self.status.set(f'Installed mod: {name}')
@@ -558,8 +707,10 @@ class ModManagerWorkspace:
 
     def _require_game_root(self):
         if not self.manager.current_game_root:
-            raise ValueError('Choose the Nioh 2 PC game folder first.')
+            raise ValueError(f'Choose the {self.manager.adapter.title} game folder first.')
 
     def _require_loader_confirmation(self):
+        if not mod_manager_host_capabilities()['documented_game_deployment']:
+            raise ValueError(str(mod_manager_host_capabilities()['message']))
         if not self.loader_confirmed.get():
-            raise ValueError('Confirm that the required mod loader is installed and configured, and that Nioh 2 is closed.')
+            raise ValueError(f'Confirm the required loader is configured and {self.manager.adapter.title} is closed.')

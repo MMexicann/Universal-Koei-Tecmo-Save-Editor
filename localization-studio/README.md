@@ -1,6 +1,11 @@
 # Koei Tecmo Localization Studio
 
-An offline-first browser workspace in the Universal Koei Tecmo toolkit repository for inspecting and translating narrow, verified text interchange profiles. The current version supports CSV/TSV catalogs, the Studio JSON catalog, basic SubRip subtitles, WebVTT text cues, and a line-oriented TXT catalog. It remains a separate static tool and does not register formats in the Windows save editor.
+An offline-first browser workspace in the Universal Koei Tecmo toolkit repository for inspecting and translating narrow, verified text interchange profiles. The current version supports CSV/TSV catalogs, the Studio JSON catalog, basic SubRip subtitles, WebVTT text cues, and a line-oriented TXT catalog. It runs in the browser and does not register save-editing profiles.
+
+The packaged Toolkit opens it from **Editing and Research → Localization Studio**
+using its managed local server; no separate Python or Node installation is needed.
+Keep the Toolkit open and export your edits before closing the browser tab.
+[Bundled companion guide](../docs/BROWSER_COMPANIONS.md).
 
 **This is not a native Koei Tecmo game-package editor.** No game package, executable, save, or proprietary string table is supported. Community-reported extensions do not establish support for a particular game, platform, or revision; see [the research notes](docs/RESEARCH.md) and [supported profiles](docs/SUPPORTED_FORMATS.md).
 

@@ -41,7 +41,8 @@ class GameHubWorkspace:
         self.title_label = ttk.Label(self.frame, text='GAME HUB', font=(ui_font(root), 23, 'bold'))
         self.title_label.pack(anchor='w')
         self.intro_label = ttk.Label(self.frame,
-                  text='Find your tracked Koei Tecmo Steam installs, review build information, add local notes, and launch games.',
+                  text=('Find your tracked Koei Tecmo Steam installs, review build information, add local notes, and launch games. '
+                        + game_hub.installation_runtime_notice()).strip(),
                   style='Muted.TLabel', wraplength=1050)
         self.intro_label.pack(anchor='w', pady=(2, 6))
 
@@ -546,6 +547,9 @@ class GameHubWorkspace:
                       f'Install folder: {installed.install_path}\n'
                       f'Steam build ID: {installed.build_id or "Unknown"} (Steam metadata, not an in-game patch number)\n'
                       f'Last updated: {self._updated(installed.last_updated)} UTC · Install size: {self._size(getattr(installed, "size_on_disk", None))}')
+        runtime_notice = game_hub.installation_runtime_notice()
+        if runtime_notice:
+            detail += '\n' + runtime_notice
         detail += f'\nLocal note: {note or "None"}'
         self._set_details(detail)
         enabled = installed is not None and not self.busy

@@ -21,10 +21,10 @@ class GameHubServiceTests(unittest.TestCase):
         self.assertEqual(GameHubWorkspace._updated('not-a-timestamp'), 'Unknown')
 
     def test_steam_launch_only_accepts_reviewed_app_ids(self):
-        self.assertEqual(game_hub.steam_launch_uri('527270'), 'steam://run/527270')
+        self.assertEqual(game_hub.steam_launch_uri('527270'), 'steam://rungameid/527270')
         with patch('koei_editor.shared.game_hub.webbrowser.open', return_value=True) as opener:
             self.assertTrue(game_hub.launch_via_steam('527270'))
-        opener.assert_called_once_with('steam://run/527270', new=0, autoraise=True)
+        opener.assert_called_once_with('steam://rungameid/527270', new=0, autoraise=True)
         for value in ('527271', '0527270', '1;open', 527270, ''):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 game_hub.steam_launch_uri(value)

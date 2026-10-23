@@ -289,11 +289,17 @@ _DIRECTORY_FDS = (os.open in os.supports_dir_fd and os.scandir in os.supports_fd
                   and os.stat in os.supports_dir_fd
                   and os.stat in os.supports_follow_symlinks
                   and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW"))
+_WINDOWS_HANDLES = os.name == "nt"
 
 
 @contextmanager
 def _directory(bindings):
     """Reopen a qualified directory chain without following replacement links."""
+    if _WINDOWS_HANDLES:
+        from koei_editor.shared.anchored_read_windows import directory_chain
+        with directory_chain(bindings) as directory:
+            yield directory
+        return
     if not _DIRECTORY_FDS:
         raise OSError("Safe folder access is unavailable on this runtime.")
     descriptor = None
@@ -315,9 +321,13 @@ def _directory(bindings):
             os.close(descriptor)
 
 
+def _scandir(directory):
+    return directory.entries() if _WINDOWS_HANDLES else os.scandir(directory)
+
+
 def _ordinary_root(value):
     """Qualify all selected path components and retain their original identity."""
-    if not _DIRECTORY_FDS:
+    if not (_DIRECTORY_FDS or _WINDOWS_HANDLES):
         return None, "unsupported"
     try:
         if isinstance(value, bool) or not isinstance(value, (str, os.PathLike)):
@@ -326,8 +336,12 @@ def _ordinary_root(value):
         if type(path_text) is not str or not path_text.strip() or len(path_text) > 4096:
             return None, "missing"
         selected = Path(path_text).expanduser()
+        if _WINDOWS_HANDLES and selected.drive.startswith("\\"):
+            return None, "unsafe"
         if not selected.is_absolute():
             selected = Path.cwd() / selected
+        if not selected.is_absolute():
+            return None, "unsafe"
         if ".." in selected.parts:
             return None, "unsafe"
         cursor = Path(selected.anchor)
@@ -341,7 +355,7 @@ def _ordinary_root(value):
                 return None, "not_directory"
             bindings.append((cursor, info))
         with _directory(tuple(bindings)) as descriptor:
-            with os.scandir(descriptor) as iterator:
+            with _scandir(descriptor) as iterator:
                 next(iterator, None)
         return _SelectedRoot(selected, tuple(bindings)), "ready"
     except FileNotFoundError:
@@ -365,7 +379,7 @@ def _walk(root):
             continue
         try:
             with _directory(bindings) as descriptor:
-                with os.scandir(descriptor) as iterator:
+                with _scandir(descriptor) as iterator:
                     entries = []
                     for entry in iterator:
                         if visited + len(entries) >= MAX_ENTRIES:
@@ -469,11 +483,14 @@ def _decode_config(scanned):
         flags = (os.O_RDONLY | getattr(os, "O_BINARY", 0)
                  | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
         with _directory(scanned.bindings) as parent:
-            current = os.stat(path.name, dir_fd=parent, follow_symlinks=False)
-            if (_linked(current) or not stat.S_ISREG(current.st_mode)
-                    or _file_identity(current) != _file_identity(before)):
-                return "changed"
-            descriptor = os.open(path.name, flags, dir_fd=parent)
+            if _WINDOWS_HANDLES:
+                descriptor = parent.open_child(path.name)
+            else:
+                current = os.stat(path.name, dir_fd=parent, follow_symlinks=False)
+                if (_linked(current) or not stat.S_ISREG(current.st_mode)
+                        or _file_identity(current) != _file_identity(before)):
+                    return "changed"
+                descriptor = os.open(path.name, flags, dir_fd=parent)
             with os.fdopen(descriptor, "rb") as stream:
                 opened = os.fstat(stream.fileno())
                 if (_linked(opened) or not stat.S_ISREG(opened.st_mode)

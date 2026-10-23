@@ -2,6 +2,13 @@
 
 A browser-local static app for staging compatible mod folders, reviewing destination changes, detecting conflicts, and checking a JSON installation manifest before exporting a ZIP.
 
+The packaged Toolkit opens it from **Editing and Research → Mod Testing Sandbox**
+using its managed local server; no separate Python or Node installation is needed.
+Keep the Toolkit open while working, retain your original mod folders and export
+the results you need before closing. Browser storage is tied to the current local
+origin; a later Toolkit session may use a different address.
+[Bundled companion guide](../../docs/BROWSER_COMPANIONS.md).
+
 ## Run locally
 
 Use a static HTTP server from this directory and open `index.html`. Folder import, IndexedDB persistence, Web Crypto, and downloads work best from `localhost` or HTTPS.

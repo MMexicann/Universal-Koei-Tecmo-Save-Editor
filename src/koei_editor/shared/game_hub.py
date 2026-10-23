@@ -126,7 +126,20 @@ def steam_launch_uri(app_id):
     if (type(app_id) is not str or _APP_ID.fullmatch(app_id) is None
             or app_id not in _APP_IDS):
         raise ValueError("Choose a tracked Steam game.")
-    return f"steam://run/{app_id}"
+    return f"steam://rungameid/{app_id}"
+
+
+def installation_runtime_notice(language='en'):
+    """Explain host discovery without promoting Windows profiles to Linux ports."""
+    if not sys.platform.startswith('linux'):
+        return ''
+    if str(language).lower().startswith('de'):
+        return ('Linux-Steam-/Proton-Installationsmetadaten. „Windows PC“ bezeichnet das '
+                'registrierte Spielstandprofil. Native Linux-Versionen, Proton-Kompatibilität '
+                'und ein erfolgreicher Spielstart sind nicht verifiziert.')
+    return ('Linux Steam/Proton installation metadata. Windows PC labels describe the '
+            'registered save profile. Native Linux ports, Proton compatibility and successful '
+            'game launches have not been verified.')
 
 
 def launch_via_steam(app_id):

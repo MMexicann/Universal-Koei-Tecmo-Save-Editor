@@ -2,19 +2,21 @@
 
 The Toolkit CLI inspects and compares save copies, reviews conversions and runs
 explicit scalar editing workflows. Commands do not open the graphical editor.
-The GUI-only planning, mod and configuration workspaces are not CLI commands.
+The GUI planning and configuration workspaces remain separate. Toolkit
+version 1.0.1 also provides reviewed mod package and library commands below;
+they do not deploy mods into a game.
 
 ## Start
 
-On Windows, download **UniversalKoeiTecmoGameToolkit-v1.0-CLI.exe** from the
-[Toolkit 1.0 release](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/tag/toolkit-v1.0).
+On Windows, download **UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe** from the
+[Toolkit 1.0.1 release](https://github.com/MMexicann/Universal-Koei-Tecmo-Save-Editor/releases/tag/toolkit-v1.0.1).
 It is a standalone console application and requires no Python installation.
 Run it from PowerShell or Command Prompt:
 
 ```powershell
-.\UniversalKoeiTecmoGameToolkit-v1.0-CLI.exe --help
-.\UniversalKoeiTecmoGameToolkit-v1.0-CLI.exe --version
-.\UniversalKoeiTecmoGameToolkit-v1.0-CLI.exe games --json
+.\UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe --help
+.\UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe --version
+.\UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe games --json
 ```
 
 From an installed source checkout, use `universal-koei-toolkit` or
@@ -133,6 +135,22 @@ folder. A changed source or workflow invalidates the review. Existing
 destinations are refused. Batches stop on failure; already completed copies
 remain available for inspection and recovery. Experimental editing and the
 separate DW3 workflow are excluded from scalar automation.
+
+## Mod packages and libraries
+
+`mods games` lists exact supported loader methods and evidence limits.
+`mods validate --game ID PACKAGE.zip` reviews a package without writing files.
+`mods import --game ID PACKAGE.zip --library FOLDER --dry-run` performs the same
+read-only review; remove `--dry-run` to add it to the explicit application-owned
+library. `mods list --game ID --library FOLDER` lists that library. These commands
+print JSON and never deploy mods or install loaders.
+
+`mods workshop-review PROJECT --context CONTEXT.json` and
+`mods workshop-export PROJECT --context CONTEXT.json --output NEW.zip --review-token TOKEN`
+connect Workshop projects to the manager's real import formats. See the
+[Workshop-to-Manager guide](MOD_WORKSHOP_MANAGER.md) for examples, context schema,
+game-specific layout and dependency restrictions. A fresh review token is required
+for export; existing destinations are refused.
 
 ## Output and exit codes
 

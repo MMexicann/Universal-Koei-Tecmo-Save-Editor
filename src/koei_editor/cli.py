@@ -41,6 +41,27 @@ def _parser():
     command = commands.add_parser('diagnostics', help='Show a path-free local support report; no game folders are scanned.')
     command.add_argument('--json', action='store_true', help='Print machine-readable JSON.')
     command.add_argument('--output', metavar='NEW.json', help='Also export JSON to a new report file.')
+    command = commands.add_parser('mods', help='Review mod ZIPs or import into an application-owned library; never deploy.')
+    mod_commands = command.add_subparsers(dest='mod_command', required=True)
+    mod_commands.add_parser('games', help='List exact supported mod loader methods and their evidence limits.')
+    for name in ('validate', 'import', 'list'):
+        mod = mod_commands.add_parser(name, help={'validate': 'Review a ZIP without writing files.',
+                                                 'import': 'Add a ZIP to a mod library; no game files are changed.',
+                                                 'list': 'List a mod library without modifying it.'}[name])
+        mod.add_argument('--game', required=True, metavar='ID')
+        if name != 'list':
+            mod.add_argument('archive', metavar='PACKAGE.zip')
+        if name != 'validate':
+            mod.add_argument('--library', required=True, metavar='FOLDER', help='Explicit application-owned library folder, never a game folder.')
+        if name == 'import':
+            mod.add_argument('--dry-run', action='store_true', help='Review only; do not create or change the library.')
+    for name in ('workshop-review', 'workshop-export'):
+        mod = mod_commands.add_parser(name, help='Review or export a Workshop project using the selected manager rules.')
+        mod.add_argument('project', metavar='PROJECT_FOLDER')
+        mod.add_argument('--context', required=True, metavar='CONTEXT.json')
+        if name == 'workshop-export':
+            mod.add_argument('--output', required=True, metavar='NEW.zip')
+            mod.add_argument('--review-token', required=True, metavar='SHA256')
     command = commands.add_parser('fields', help='Inspect a scalar save copy and its verified editable fields.')
     command.add_argument('--game', required=True, metavar='ID')
     command.add_argument('source', metavar='COPY')
@@ -210,6 +231,73 @@ def _legacy_arguments(arguments):
     return result
 
 
+def _mods(arguments, parser):
+    from koei_editor.shared import mod_manager
+    from koei_editor.shared.copy_storage import ChildPublishedUncertainError
+    command = arguments.mod_command
+    if hasattr(arguments, 'game'):
+        try:
+            mod_manager.get_mod_adapter(arguments.game)
+        except mod_manager.ModManagerError:
+            parser.error('Unknown mod game ID; use mods games for supported loader methods.')
+    try:
+        report = {'schema': 'koei-toolkit-mods', 'schema_version': 1,
+                  'success': True, 'read_only': True, 'in_game_verified': False}
+        if command == 'games':
+            report.update(status='listed', games=[{
+                key: getattr(item, key) for key in ('game_id', 'title', 'platform', 'method_id',
+                                                   'scope', 'evidence', 'in_game_verified')
+            } for item in mod_manager.supported_mod_games()])
+        elif command.startswith('workshop-'):
+            from koei_editor.shared.mod_workshop.manager_export import review_manager_package, export_manager_package
+            from koei_editor.shared.mod_workshop.validation import CompatibilityContext, InstalledMod
+            from koei_editor.shared.save_safety import safe_path
+            # Explicit, bounded context only. No installed games or user paths
+            # are scanned to infer compatibility or dependencies.
+            with safe_path(arguments.context).open('rb') as stream:
+                raw = stream.read(64 * 1024 + 1)
+            if len(raw) > 64 * 1024:
+                raise ValueError('Context exceeds its size limit.')
+            context_value = json.loads(raw.decode('utf-8'))
+            if not isinstance(context_value, dict) or set(context_value) - {'game_id', 'game_version', 'platform', 'installed_mods'}:
+                raise ValueError('Invalid context fields.')
+            installed = context_value.get('installed_mods', [])
+            if not isinstance(installed, list) or any(not isinstance(item, dict) or set(item) != {'mod_id', 'version'} for item in installed):
+                raise ValueError('Invalid installed mod list.')
+            context = CompatibilityContext(context_value['game_id'], context_value['game_version'],
+                                           context_value['platform'], tuple(InstalledMod(**item) for item in installed))
+            if any(not isinstance(value, str) or not value for value in
+                   (context.game_id, context.game_version, context.platform)) or any(
+                       not isinstance(value, str) or not value for item in context.installed_mods
+                       for value in (item.mod_id, item.version)):
+                raise ValueError('Context strings must be nonempty.')
+            if command == 'workshop-review':
+                report = review_manager_package(arguments.project, context)
+            else:
+                report = export_manager_package(arguments.project, arguments.output, context,
+                                                review_token=arguments.review_token)
+        elif command == 'validate' or command == 'import' and arguments.dry_run:
+            review = mod_manager.review_archive(arguments.archive, game_id=arguments.game)
+            report.update(status='validated', game_id=arguments.game, package_review=asdict(review))
+        else:
+            if command == 'import':
+                # Reject malformed packages before the manager's mutation lock
+                # can create a previously absent application library directory.
+                mod_manager.review_archive(arguments.archive, game_id=arguments.game)
+            manager = mod_manager.ModManager(arguments.library, game_id=arguments.game)
+            if command == 'list':
+                report.update(status='listed', game_id=arguments.game, mods=[asdict(item) for item in manager.mods()])
+            else:
+                record = manager.import_archive(arguments.archive)
+                report.update(status='imported', game_id=arguments.game, read_only=False, mod=asdict(record))
+    except ChildPublishedUncertainError:
+        parser.exit(1, 'The package may already be exported. Inspect the selected folder before trying another export.\n')
+    except (mod_manager.ModManagerError, OSError, ValueError, TypeError, KeyError) as error:
+        parser.exit(1, 'Mod operation failed (' + type(error).__name__ + '). Check the package, explicit game/context, and library or new output destination.\n')
+    print(json.dumps(report, ensure_ascii=True, indent=2, allow_nan=False))
+    return 0
+
+
 def main(argv=None):
     """Run a headless command; no arguments show help rather than opening the GUI."""
     argv = list(sys.argv[1:] if argv is None else argv)
@@ -229,6 +317,8 @@ def main(argv=None):
         return _inventory(arguments, parser)
     if arguments.command == 'diagnostics':
         return _diagnostics(arguments, parser)
+    if arguments.command == 'mods':
+        return _mods(arguments, parser)
     if arguments.command == 'fields':
         from koei_editor.automation_cli import main as automation_main
         return automation_main(['fields', '--game=' + arguments.game, '--', arguments.source])

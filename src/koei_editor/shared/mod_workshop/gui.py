@@ -25,8 +25,9 @@ from .validation import CompatibilityContext, InstalledMod, validate_manifest, v
 class ModWorkshopWindow:
     """A focused project workspace; game files are never browsed or extracted."""
 
-    def __init__(self, parent: tk.Misc):
+    def __init__(self, parent: tk.Misc, *, on_manager_package=None):
         self.parent = parent
+        self.on_manager_package = on_manager_package
         self.window = tk.Toplevel(parent)
         self.window.title("Koei Tecmo Mod Creation Workshop")
         self.window.geometry("1120x800")
@@ -284,6 +285,7 @@ class ModWorkshopWindow:
         buttons = ttk.Frame(frame)
         buttons.grid(row=1, column=0, sticky="ew", pady=(0, 8))
         ttk.Button(buttons, text="Build verified ZIP…", command=self.build_package).pack(side="left")
+        ttk.Button(buttons, text="Export for Mod Manager…", command=self.export_for_manager).pack(side="left", padx=(8, 0))
         ttk.Button(buttons, text="Verify ZIP…", command=self.verify_package).pack(side="left", padx=(8, 0))
         ttk.Button(buttons, text="Export AI-readable report…", command=self.export_report).pack(side="left", padx=(8, 0))
         self.package_output = ScrolledText(frame, wrap="word", state="disabled")
@@ -587,6 +589,57 @@ class ModWorkshopWindow:
         self.last_context = context
         self._set_text(self.package_output, json.dumps(report, indent=2, ensure_ascii=False))
         self.status.set(f"Verified package created: {destination}")
+
+    def export_for_manager(self) -> None:
+        """Review and export a manager-compatible ZIP; deployment is separate."""
+        if not self._require_project() or not self.save_project(sync_context=False):
+            return
+        from .manager_export import review_manager_package, export_manager_package
+        from koei_editor.shared.copy_storage import ChildPublishedUncertainError
+        try:
+            context = self._read_context()
+            report = review_manager_package(self.project_dir, context)
+        except Exception as error:
+            messagebox.showerror("Manager export unavailable", str(error), parent=self.window)
+            return
+        self._set_text(self.package_output, json.dumps(report, indent=2, ensure_ascii=False))
+        reviewed = report['package_review']
+        if not messagebox.askyesno(
+                "Review Mod Manager export",
+                f"{reviewed['name']} {reviewed['version']}\n"
+                f"Game: {reviewed['game_id']}\nMethod: {reviewed['method_id']}\n"
+                f"Replacement files: {len(reviewed['files'])}\n\n"
+                "Export this reviewed ZIP? No loader is installed and no game files are changed. "
+                "In-game loading is not verified.", parent=self.window) or not self._manager_export_alive():
+            return
+        destination = filedialog.asksaveasfilename(
+            parent=self.window, title="Export for Mod Manager", defaultextension='.zip',
+            initialdir=str(self.project_dir.parent), initialfile=f'{self.manifest.mod_id}-manager.zip',
+            filetypes=(("Mod package", "*.zip"),))
+        if not destination or not self._manager_export_alive():
+            return
+        try:
+            report = export_manager_package(self.project_dir, destination, context,
+                                            review_token=report['review_token'])
+        except ChildPublishedUncertainError:
+            messagebox.showerror('Manager export status uncertain',
+                                 'The package may already exist. Inspect the selected folder before trying another export.',
+                                 parent=self.window)
+            return
+        except Exception as error:
+            messagebox.showerror("Manager package was not created", str(error), parent=self.window)
+            return
+        self.last_package_report = report
+        self._set_text(self.package_output, json.dumps(report, indent=2, ensure_ascii=False))
+        self.status.set('Manager-compatible ZIP exported. Import it into the Mod Manager to continue.')
+        if self.on_manager_package is not None:
+            self.on_manager_package(destination)
+
+    def _manager_export_alive(self):
+        try:
+            return bool(self.window.winfo_exists() and self.parent.winfo_exists())
+        except tk.TclError:
+            return False
 
     def verify_package(self) -> None:
         package = filedialog.askopenfilename(

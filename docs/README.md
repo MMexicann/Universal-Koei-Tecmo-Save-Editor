@@ -10,11 +10,18 @@ app-owned and do not modify game configuration files or Steam Input. For
 selective transfer, open the destination save in its editor first, then choose
 **Transfer from Save Copy...** from that menu.
 The menu also opens the [Koei Tecmo Mod Manager](MOD_MANAGER.md), whose current
-verified installation adapter supports Nioh 2 PC only.
+installation adapters support Nioh 2 PC and Nioh 3 PC through distinct documented methods.
+The **Tools** navigation page lists available workspaces and their compatibility limits.
 
 ## Development and releases
 
-- [Game Toolkit v1.0 release notes](RELEASE_NOTES.md)
+- [Find every tool: navigation, supported scope and connected workflows](TOOLKIT_FEATURES.md)
+- [Feature status and remaining implementation blockers](FEATURE_STATUS.md)
+- [Bundled browser tools: launch, local serving and workspace exports](BROWSER_COMPANIONS.md)
+- [Native Linux GUI and CLI: installation, builds and platform limits](LINUX.md)
+- [Workshop exports that import directly into Mod Manager](MOD_WORKSHOP_MANAGER.md)
+- [Game Toolkit v1.0.1 release notes](RELEASE_NOTES.md)
+- [Published Toolkit v1.0 release notes](releases/toolkit-v1.0.md)
 - [Command-line edition: inspection, comparison, conversion and automation](CLI.md)
 - [Toolkit diagnostics: local support reports and explicit exports](DIAGNOSTICS.md)
 - [Earlier Save Editor v3.1 release notes](releases/v3.1.md)

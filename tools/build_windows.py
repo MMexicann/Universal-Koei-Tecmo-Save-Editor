@@ -8,17 +8,20 @@ from pathlib import Path
 from koei_editor.game_registry import ALL_ADAPTERS
 from koei_editor.conversion import ENDPOINTS
 from koei_editor.research.imports import PROFILES as RESEARCH_PROFILES
+from koei_editor.shared.browser_companions import BROWSER_RESOURCE_SOURCES
 from tools.package_release import (RUNTIME_DATA, RUNTIME_LICENSES, RUNTIME_GUIDES,
                                    RUNTIME_DEPENDENCY_METADATA)
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '1.0'
+VERSION = '1.0.1'
 DATA = [(f'src/koei_editor/data/{name}', 'koei_editor/data') for name in RUNTIME_DATA] + [
     ('LICENSE', 'licenses'), ('docs/THIRD_PARTY_NOTICES.md', 'licenses'),
     ('licenses/atelier-sophie2-save-editor-MIT.txt', 'licenses'),
     ('licenses/katana-save-data-resigner-MIT.txt', 'licenses')]
 DATA += [(source, 'licenses') for source in RUNTIME_LICENSES]
 DATA += [(source, 'guides') for source in RUNTIME_GUIDES]
+DATA += [(source, Path(runtime).parent.as_posix())
+         for runtime, source in BROWSER_RESOURCE_SOURCES.items()]
 
 
 def build_args(root=ROOT, *, standalone=False, cli=False):
@@ -69,7 +72,8 @@ def build_args(root=ROOT, *, standalone=False, cli=False):
         args.extend(['--hidden-import', module])
     # These tools are loaded only from Application's optional retained-tool route.
     args.extend(['--hidden-import', 'koei_editor.shared.configuration_manager',
-                 '--hidden-import', 'koei_editor.shared.configuration_gui'])
+                 '--hidden-import', 'koei_editor.shared.configuration_gui',
+                 '--hidden-import', 'koei_editor.shared.browser_companions'])
     # The thin launcher uses an absolute package import. __main__.py remains
     # the module entry point, whose relative imports need python -m context.
     args.append(str(root / ('src/koei_editor/cli.py' if cli else 'launch.pyw')))

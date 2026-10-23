@@ -1,10 +1,9 @@
-"""Safe, profile-based deployment for the verified Nioh 2 PC mod folder method.
+"""Profile-based deployment through explicit, documented PC mod methods.
 
-This module deliberately supports one game installation method: Nioh 2 PC's
-``Mods`` directory used by Nioh 2 Mod Enabler. It never installs a loader or
-writes files beside the game executable. Managed packages are isolated in
-subfolders, and the loader's documented `` DISABLED`` folder suffix is used
-for enable/disable operations.
+Nioh 2 uses its existing disabled-folder convention. Nioh 3 uses the current
+Loose File Loader's first-level hash-named assets and removes inactive owned
+folders transactionally, retaining their verified library copies. Loaders and
+original game files remain outside manager ownership.
 """
 
 from __future__ import annotations
@@ -30,6 +29,7 @@ from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Protocol
+from types import MappingProxyType
 from urllib.parse import urlsplit
 
 
@@ -66,7 +66,7 @@ class ModManagerError(Exception):
 
 
 class PackageError(ModManagerError):
-    """A package does not match the verified Nioh 2 mod layout."""
+    """A package does not match its selected documented installation method."""
 
 
 class InstallationError(ModManagerError):
@@ -82,10 +82,72 @@ class ProfileError(ModManagerError):
 
 
 @dataclass(frozen=True)
+class ModGameAdapter:
+    game_id: str
+    title: str
+    platform: str
+    method_id: str
+    scope: str
+    evidence: tuple[str, ...]
+    executable: str
+    loader_files: tuple[str, ...]
+    mods_dir: str
+    asset_extensions: frozenset[str]
+    disable_policy: str
+    nexus_domain: str
+    in_game_verified: bool = False
+
+
+_MOD_ADAPTERS = MappingProxyType({
+    "nioh2_pc": ModGameAdapter(
+        "nioh2_pc", "Nioh 2 — Windows PC", "PC", "nioh2-mod-enabler",
+        "One INI plus loose mesh/texture assets; DISABLED folders; loader installed separately.",
+        ("https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/main/game-nioh2/NOTES_FOR_MOD_AUTHORS.md",
+         "https://www.nexusmods.com/nioh2/mods/18?tab=description"),
+        "nioh2.exe", ("d3d11.dll",), "Mods", SUPPORTED_ASSET_EXTENSIONS,
+        "folder_suffix", "nioh2"),
+    "nioh3_pc": ModGameAdapter(
+        "nioh3_pc", "Nioh 3 — Windows PC (Steam)", "PC", "nioh3-loose-file-loader",
+        "Hash-named G1M/G1T/G1TS assets in first-level mod folders; inactive mods stay in the library.",
+        ("https://www.nexusmods.com/nioh3/mods/90?tab=description",
+         "https://www.nexusmods.com/nioh3/mods/49?tab=description",
+         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/main/game-nioh3/EXTENSION_EXPLAINED.md"),
+        "Nioh3.exe", ("DINPUT8.dll", "plugins/LooseFileLoader.dll"), "mods",
+        frozenset({".g1m", ".g1t", ".g1ts"}), "remove", "nioh3"),
+})
+_RESOURCE_NAME_RE = re.compile(r"(?:0x)?([0-9a-f]{8})\.(?:g1m|g1t|g1ts)", re.IGNORECASE)
+
+
+def supported_mod_games() -> tuple[ModGameAdapter, ...]:
+    """Installation contracts, independent of the save-editor game registry."""
+    return tuple(_MOD_ADAPTERS.values())
+
+
+def get_mod_adapter(game_id: str) -> ModGameAdapter:
+    try:
+        return _MOD_ADAPTERS[game_id]
+    except (KeyError, TypeError) as exc:
+        raise InstallationError("This game has no reviewed Mod Manager installation method.") from exc
+
+
+@dataclass(frozen=True)
 class ModFile:
     path: str
     sha256: str
     size: int
+
+
+@dataclass(frozen=True)
+class PackageReview:
+    game_id: str
+    method_id: str
+    id: str
+    name: str
+    version: str
+    dependencies: tuple[str, ...]
+    conflicts: tuple[str, ...]
+    files: tuple[ModFile, ...]
+    content_sha256: str
 
 
 @dataclass(frozen=True)
@@ -207,17 +269,18 @@ def _file_digest(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _canonical_root(path: str | os.PathLike[str]) -> Path:
+def _canonical_root(path: str | os.PathLike[str], adapter: ModGameAdapter | None = None) -> Path:
+    adapter = adapter or get_mod_adapter(GAME_ID)
     candidate = Path(path).expanduser()
     try:
         root = candidate.resolve(strict=True)
     except (OSError, RuntimeError) as exc:
         raise InstallationError(f"The selected game folder cannot be resolved: {exc}") from exc
     if not root.is_dir():
-        raise InstallationError("Select the folder that directly contains nioh2.exe.")
-    executable = root / GAME_EXE
-    if executable.is_symlink() or not executable.is_file():
-        raise InstallationError("The selected folder must directly contain nioh2.exe.")
+        raise InstallationError(f"Select the folder that directly contains {adapter.executable}.")
+    executable = root / adapter.executable
+    if executable.is_symlink() or _is_reparse_point(executable) or not executable.is_file():
+        raise InstallationError(f"The selected folder must directly contain {adapter.executable}.")
     return root
 
 
@@ -384,13 +447,13 @@ def _normal_id(value: Any, *, label: str = "mod id") -> str:
     return normalized
 
 
-def _metadata_value(value: Any, fallback_name: str, fallback_id: str) -> tuple[str, str, str, tuple[str, ...], tuple[str, ...]]:
+def _metadata_value(value: Any, fallback_name: str, fallback_id: str, game_id: str = GAME_ID) -> tuple[str, str, str, tuple[str, ...], tuple[str, ...]]:
     if value is None:
         return _normal_id(fallback_id), fallback_name, "unknown", (), ()
     if not isinstance(value, dict) or value.get("schema_version") != 1:
         raise PackageError("koei-mod.json must be an object with schema_version 1.")
-    if value.get("game_id") != GAME_ID:
-        raise PackageError(f"koei-mod.json must declare game_id {GAME_ID!r}.")
+    if value.get("game_id") != game_id:
+        raise PackageError(f"koei-mod.json must declare game_id {game_id!r}.")
     mod_id = _normal_id(value.get("id"))
     name = value.get("name")
     version = value.get("version", "unknown")
@@ -411,12 +474,217 @@ def _metadata_value(value: Any, fallback_name: str, fallback_id: str) -> tuple[s
     return mod_id, name.strip(), version.strip(), dependencies, conflicts
 
 
+def _package_extensions(adapter: ModGameAdapter) -> frozenset[str]:
+    return adapter.asset_extensions | ({".ini"} if adapter.disable_policy == "folder_suffix" else set())
+
+
+def _resource_id(filename: str) -> str:
+    match = _RESOURCE_NAME_RE.fullmatch(filename)
+    if match is None:
+        raise PackageError("Nioh 3 asset names require exactly eight hexadecimal digits, optional 0x prefix, and G1M/G1T/G1TS extension.")
+    return match.group(1).casefold()
+
+
+def _open_archive(source: Path) -> zipfile.ZipFile:
+    if source.suffix.casefold() != ".zip":
+        raise PackageError("Only ZIP packages are imported directly. Repackage other archive formats as ZIP first.")
+    if source.is_symlink() or _is_reparse_point(source) or not source.is_file():
+        raise PackageError("Select a regular ZIP file.")
+    try:
+        return zipfile.ZipFile(source, "r")
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise PackageError(f"Cannot open ZIP package: {exc}") from exc
+
+
+def archive_game_id(archive_path: str | os.PathLike[str], *, default: str = GAME_ID) -> str:
+    """Read only the bounded root game declaration, then require a known adapter.
+
+    This is routing metadata, not package validation. Call review_archive before
+    publishing or importing bytes; that function validates the whole archive.
+    """
+    with _open_archive(Path(archive_path).expanduser()) as archive:
+        if len(archive.infolist()) > _MAX_ARCHIVE_FILES:
+            raise PackageError("The ZIP package contains too many entries.")
+        markers = [item for item in archive.infolist() if item.filename.casefold() == 'koei-mod.json']
+        if len(markers) > 1:
+            raise PackageError("The ZIP contains duplicate root metadata.")
+        if not markers:
+            return get_mod_adapter(default).game_id
+        item = markers[0]
+        if not 0 < item.file_size <= _MAX_METADATA_BYTES:
+            raise PackageError("The package game declaration exceeds the metadata size limit.")
+        try:
+            value = json.loads(archive.read(item).decode('utf-8'), object_pairs_hook=_unique_json_object)
+        except (UnicodeError, ValueError, RuntimeError, zipfile.BadZipFile, zlib.error, EOFError) as exc:
+            raise PackageError("The package game declaration is invalid.") from exc
+        if not isinstance(value, dict) or not isinstance(value.get('game_id'), str):
+            raise PackageError("The package must declare an explicit supported game_id.")
+        return get_mod_adapter(value['game_id']).game_id
+
+
+def mod_manager_host_capabilities() -> dict[str, bool | str]:
+    """Separate portable library work from Windows game deployment scope."""
+    windows = os.name == 'nt'
+    return {'package_review': True, 'library_import': True, 'profile_planning': True,
+            'documented_game_deployment': windows, 'proton_verified': False,
+            'message': ('Windows game installation methods; loader versions and in-game behavior still require user verification.'
+                        if windows else 'Package review, library imports and profile planning work here. Game deployment is documented for Windows; Wine/Proton is unverified.')}
+
+
+def _archive_payload(archive: zipfile.ZipFile, source: Path, adapter: ModGameAdapter):
+    if len(archive.infolist()) > _MAX_ARCHIVE_FILES:
+        raise PackageError("The ZIP package contains too many entries.")
+    entries: dict[str, zipfile.ZipInfo] = {}
+    total_size = 0
+    metadata_info = None
+    fomod = False
+    for info in archive.infolist():
+        if info.is_dir():
+            raw_dir = info.filename[:-1] if info.filename.endswith("/") else info.filename
+            if raw_dir:
+                _safe_relative_path(raw_dir)
+            continue
+        rel = _safe_relative_path(info.filename)
+        mode = info.external_attr >> 16
+        file_type = stat.S_IFMT(mode)
+        if stat.S_ISLNK(mode) or file_type not in (0, stat.S_IFREG):
+            raise PackageError(f"Links and special files are unsupported: {info.filename!r}.")
+        key = rel.as_posix().casefold()
+        if key in entries:
+            raise PackageError(f"The ZIP contains duplicate paths that differ only by case: {info.filename!r}.")
+        if info.file_size < 0 or info.file_size > _MAX_ARCHIVE_FILE_BYTES:
+            raise PackageError(f"The ZIP entry is too large: {info.filename!r}.")
+        total_size += info.file_size
+        if total_size > _MAX_ARCHIVE_BYTES:
+            raise PackageError("The ZIP package exceeds the 1 GiB extracted-size limit.")
+        entries[key] = info
+        if rel.name.casefold() == "moduleconfig.xml" and any(part.casefold() == "fomod" for part in rel.parts[:-1]):
+            fomod = True
+        if rel.as_posix().casefold() == "koei-mod.json":
+            if metadata_info is not None:
+                raise PackageError("The ZIP contains more than one koei-mod.json manifest.")
+            metadata_info = info
+    if fomod:
+        raise PackageError("FOMOD installer packages require an interactive installer and are not supported.")
+    data_entries = []
+    ignored_docs = {"readme.md", "readme.txt", "changelog.md", "license", "license.txt", "license.md"}
+    for info in entries.values():
+        rel = PurePosixPath(info.filename)
+        if rel.as_posix().casefold() == "koei-mod.json":
+            continue
+        if rel.name.casefold() in ignored_docs or rel.name.casefold().startswith("license."):
+            continue
+        if rel.name.casefold() in {Path(name).name.casefold() for name in adapter.loader_files}:
+            raise PackageError("Loader DLL packages are not supported; the manager does not write to the game root.")
+        extension = Path(rel.name).suffix.casefold()
+        if extension not in _package_extensions(adapter):
+            raise PackageError(
+                f"Unsupported file {rel.as_posix()!r} for {adapter.title}: {sorted(_package_extensions(adapter))}."
+            )
+        data_entries.append((rel, info, extension))
+    if adapter.disable_policy == "folder_suffix":
+        ini_entries = [item for item in data_entries if item[2] == ".ini"]
+        assets = [item for item in data_entries if item[2] in adapter.asset_extensions]
+        if len(ini_entries) != 1 or not assets:
+            raise PackageError("A Nioh 2 mod must contain exactly one .ini file and at least one .fmt, .vb, .ib or .dds asset.")
+        mod_root = ini_entries[0][0].parent
+    else:
+        if not data_entries:
+            raise PackageError("A Nioh 3 package needs at least one hash-named G1M/G1T/G1TS asset.")
+        parents = {item[0].parent for item in data_entries}
+        if len(parents) != 1 or len(next(iter(parents)).parts) > 1:
+            raise PackageError("Nioh 3 assets must be flat or in one common wrapper; select one mod variant first.")
+        mod_root = next(iter(parents))
+        resource_ids = [_resource_id(item[0].name) for item in data_entries]
+        if len(set(resource_ids)) != len(resource_ids):
+            raise PackageError("The Nioh 3 package contains duplicate resource hashes, including aliases/extensions.")
+    payload: list[tuple[PurePosixPath, zipfile.ZipInfo]] = []
+    for rel, info, _extension in data_entries:
+        try:
+            installed_rel = rel.relative_to(mod_root) if mod_root != PurePosixPath(".") else rel
+        except ValueError as exc:
+            raise PackageError("All mod files must be inside the selected game-specific payload folder.") from exc
+        if not installed_rel.parts:
+            raise PackageError("The .ini marker cannot be installed as an empty path.")
+        payload.append((installed_rel, info))
+    metadata = None
+    if metadata_info is not None:
+        if metadata_info.file_size > _MAX_METADATA_BYTES:
+            raise PackageError("koei-mod.json is too large.")
+        try:
+            metadata = json.loads(archive.read(metadata_info).decode("utf-8"),
+                                  object_pairs_hook=_unique_json_object)
+        except (UnicodeError, ValueError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error, EOFError) as exc:
+            raise PackageError(f"Cannot read koei-mod.json: {exc}") from exc
+    fallback_name = source.stem.strip() or adapter.title + " mod"
+    fallback_id = _slug(fallback_name)
+    mod_id, name, version, dependencies, conflicts = _metadata_value(
+        metadata, fallback_name, fallback_id, adapter.game_id
+    )
+    return payload, (mod_id, name, version, dependencies, conflicts)
+
+
+def _content_digest(files: Iterable[ModFile]) -> str:
+    digest = hashlib.sha256()
+    for item in sorted(files, key=lambda entry: entry.path.casefold()):
+        digest.update(item.path.casefold().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(item.sha256.encode("ascii"))
+        digest.update(b"\0")
+        digest.update(str(item.size).encode("ascii"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def review_archive(archive_path: str | os.PathLike[str], *, game_id: str = GAME_ID) -> PackageReview:
+    """Read bounded ZIP contents using the importer's exact rules, without writes.
+
+    This validates package layout/integrity and records replacement bytes. It
+    does not establish loader compatibility, asset rights or in-game behavior.
+    """
+    adapter = get_mod_adapter(game_id)
+    source = Path(archive_path).expanduser()
+    try:
+        with _open_archive(source) as archive:
+            payload, metadata = _archive_payload(archive, source, adapter)
+            files = []
+            total = 0
+            for relative, info in payload:
+                digest = hashlib.sha256()
+                size = 0
+                with archive.open(info, "r") as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        size += len(block)
+                        total += len(block)
+                        if size > _MAX_ARCHIVE_FILE_BYTES or total > _MAX_ARCHIVE_BYTES:
+                            raise PackageError("The expanded mod exceeds the safe review size limit.")
+                        digest.update(block)
+                if size != info.file_size:
+                    raise PackageError("ZIP entry size differs from its reviewed contents.")
+                files.append(ModFile(relative.as_posix(), digest.hexdigest(), size))
+            files.sort(key=lambda item: item.path.casefold())
+            return PackageReview(adapter.game_id, adapter.method_id, *metadata, tuple(files), _content_digest(files))
+    except (zipfile.BadZipFile, zlib.error, EOFError, RuntimeError) as exc:
+        raise PackageError("ZIP package failed integrity validation.") from exc
+
+
 class ModManager:
-    """Manage validated Nioh 2 PC loose-file mods and per-install profiles."""
+    """Manage one explicit game contract and its isolated library/profiles."""
 
     def __init__(self, state_dir: str | os.PathLike[str] | None = None,
-                 game_root: str | os.PathLike[str] | None = None) -> None:
-        self.state_dir = Path(state_dir or default_state_dir()).expanduser().resolve()
+                 game_root: str | os.PathLike[str] | None = None, *,
+                 game_id: str = GAME_ID) -> None:
+        self.adapter = get_mod_adapter(game_id)
+        self.game_id = self.adapter.game_id
+        self.state_base_dir = Path(state_dir or default_state_dir()).expanduser().resolve()
+        # Preserve all existing Nioh2 state paths. Other games cannot share its
+        # package IDs, installation journals, profiles or writer lock.
+        self.state_dir = (self.state_base_dir if self.game_id == GAME_ID else
+                          self.state_base_dir / "games" / self.game_id)
+        if self.game_id != GAME_ID:
+            for scoped in (self.state_base_dir / "games", self.state_dir):
+                if scoped.is_symlink() or _is_reparse_point(scoped):
+                    raise SafetyError("The per-game state directory must not be a link or reparse point.")
         self.packages_dir = self.state_dir / "packages"
         self.installations_dir = self.state_dir / "installations"
         self.index_path = self.state_dir / "library.json"
@@ -479,7 +747,10 @@ class ModManager:
             self._assert_writer_owned()
             yield
             return
-        if self.state_dir.is_symlink() or _is_reparse_point(self.state_dir):
+        if (self.state_dir.is_symlink() or _is_reparse_point(self.state_dir)
+                or (self.game_id != GAME_ID and
+                    ((self.state_base_dir / "games").is_symlink() or
+                     _is_reparse_point(self.state_base_dir / "games")))):
             raise SafetyError("The Mod Manager state directory was replaced by a link or reparse point.")
         self.state_dir.mkdir(parents=True, exist_ok=True)
         flags = os.O_RDWR | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
@@ -576,26 +847,30 @@ class ModManager:
                     raise ValueError("file map")
                 if not isinstance(item["size"], int) or item["size"] < 0:
                     raise ValueError("file size")
-                if Path(rel).suffix.casefold() not in SUPPORTED_MOD_EXTENSIONS:
+                if Path(rel).suffix.casefold() not in _package_extensions(self.adapter):
                     raise ValueError("file extension")
                 seen.add(rel.casefold())
+            if self.adapter.disable_policy == "remove":
+                ids = [_resource_id(item["path"]) for item in files]
+                if any(len(PurePosixPath(item["path"]).parts) != 1 for item in files) or len(set(ids)) != len(ids):
+                    raise ValueError("resource hash aliases or nested stored paths")
             if not _HASH_RE.fullmatch(record.get("content_sha256", "")):
                 raise ValueError("content hash")
             _metadata_value({
                 "schema_version": 1,
-                "game_id": GAME_ID,
+                "game_id": self.game_id,
                 "id": mod_id,
                 "name": record.get("name"),
                 "version": record.get("version", "unknown"),
                 "dependencies": record.get("dependencies", []),
                 "conflicts": record.get("conflicts", []),
-            }, record.get("name", ""), mod_id)
+            }, record.get("name", ""), mod_id, self.game_id)
         except (KeyError, TypeError, ValueError, PackageError) as exc:
             raise SafetyError(f"The mod library record for {mod_id!r} is invalid.") from exc
 
     @_serialized_mutation
     def set_game_root(self, path: str | os.PathLike[str]) -> Path:
-        root = _canonical_root(path)
+        root = _canonical_root(path, self.adapter)
         key_material = os.path.normcase(str(root)).casefold().encode("utf-8", "strict")
         key = hashlib.sha256(key_material).hexdigest()
         directory = self.installations_dir / key
@@ -613,11 +888,11 @@ class ModManager:
             revision = None
         else:
             stored_root = state.get("game_root")
-            if (state.get("schema_version") != 1 or state.get("game_id") != GAME_ID
+            if (state.get("schema_version") != 1 or state.get("game_id") != self.game_id
                     or not isinstance(stored_root, str) or Path(stored_root).resolve() != root
                     or not isinstance(state.get("installed"), dict)
                     or not isinstance(state.get("profiles"), list)):
-                raise SafetyError("The saved installation profile does not match this Nioh 2 folder.")
+                raise SafetyError("The saved installation profile does not match this selected game folder.")
             self._validate_installation_state(state)
         previous = (self.install_key, self.install_state_dir, self.journal_path,
                     self.current_game_root, self.installation)
@@ -641,7 +916,7 @@ class ModManager:
     def has_pending_transaction_for(self, path: str | os.PathLike[str]) -> bool:
         """Return whether a root has a journal or unsafe saved-state path."""
         try:
-            root = _canonical_root(path)
+            root = _canonical_root(path, self.adapter)
         except InstallationError:
             return False
         key_material = os.path.normcase(str(root)).casefold().encode("utf-8", "strict")
@@ -656,12 +931,11 @@ class ModManager:
             return True
         return journal.exists()
 
-    @staticmethod
-    def _new_installation(root: Path) -> dict[str, Any]:
+    def _new_installation(self, root: Path) -> dict[str, Any]:
         profile_id = "default"
         return {
             "schema_version": 1,
-            "game_id": GAME_ID,
+            "game_id": self.game_id,
             "game_root": str(root),
             "mods_dir_created": False,
             "active_profile_id": profile_id,
@@ -670,11 +944,11 @@ class ModManager:
         }
 
     def _validate_installation_state(self, state: dict[str, Any]) -> None:
-        if (state.get("schema_version") != 1 or state.get("game_id") != GAME_ID
+        if (state.get("schema_version") != 1 or state.get("game_id") != self.game_id
                 or not isinstance(state.get("mods_dir_created"), bool)
                 or not isinstance(state.get("installed"), dict)
                 or not isinstance(state.get("profiles"), list)):
-            raise SafetyError("The saved Nioh 2 installation state is invalid.")
+            raise SafetyError("The saved game installation state is invalid.")
         profiles = state["profiles"]
         if not profiles:
             raise SafetyError("At least one mod profile must exist.")
@@ -703,7 +977,8 @@ class ModManager:
             raise SafetyError("The active mod profile is missing.")
         for mod_id, enabled in state["installed"].items():
             if (not isinstance(mod_id, str) or mod_id not in self.index["mods"]
-                    or not isinstance(enabled, bool)):
+                    or not isinstance(enabled, bool)
+                    or (self.adapter.disable_policy == "remove" and enabled is not True)):
                 raise SafetyError("The installed mod list is invalid.")
         for profile in profiles:
             for mod_id in profile["enabled_mods"]:
@@ -712,7 +987,7 @@ class ModManager:
 
     def _save_installation(self) -> None:
         if self.installation is None or self.install_state_dir is None:
-            raise InstallationError("Choose a Nioh 2 installation first.")
+            raise InstallationError(f"Choose the {self.adapter.title} installation first.")
         path = self.install_state_dir / "state.json"
         self._assert_writer_owned()
         self._assert_disk_revision(path)
@@ -720,116 +995,40 @@ class ModManager:
 
     def _require_installation(self) -> dict[str, Any]:
         if self.installation is None or self.current_game_root is None:
-            raise InstallationError("Choose a Nioh 2 PC game folder first.")
+            raise InstallationError(f"Choose the {self.adapter.title} game folder first.")
         return self.installation
 
     def _require_loader(self, confirmed: bool) -> tuple[Path, Path]:
         state = self._require_installation()
-        root = _canonical_root(state["game_root"])
-        loader = root / LOADER_FILE
-        if loader.is_symlink() or _is_reparse_point(loader) or not loader.is_file():
-            raise InstallationError(
-                "This manager requires an existing compatible Nioh 2 Mod Enabler d3d11.dll beside nioh2.exe. "
-                "It will not install or replace loader files."
-            )
+        root = _canonical_root(state["game_root"], self.adapter)
+        for relative in self.adapter.loader_files:
+            loader = root
+            try:
+                for part in PurePosixPath(relative).parts:
+                    loader = loader / part
+                    if loader.is_symlink() or _is_reparse_point(loader):
+                        raise InstallationError("A loader path contains a link or reparse point.")
+                info = loader.stat()
+                if not stat.S_ISREG(info.st_mode) or not 0 < info.st_size <= 128 * 1024 * 1024:
+                    raise InstallationError("A required loader file is missing, empty or oversized.")
+            except OSError as exc:
+                raise InstallationError(
+                    f"{self.adapter.title} requires existing {', '.join(self.adapter.loader_files)}. "
+                    "Install/configure the documented loader separately; the manager never installs it."
+                ) from exc
         if not confirmed:
             raise InstallationError(
-                "Confirm that the existing d3d11.dll is the Nioh 2 Mod Enabler before changing the Mods folder."
+                f"Confirm the documented {self.adapter.title} loader is configured and the game is closed."
             )
         return root, self._mods_path(root)
 
     def import_archive(self, archive_path: str | os.PathLike[str]) -> ModRecord:
         self._ensure_no_pending_library_transactions()
         source = Path(archive_path).expanduser()
-        if source.suffix.casefold() != ".zip":
-            raise PackageError("Only ZIP packages are imported directly. Extract 7z packages with a trusted archive tool, then use a ZIP wrapper.")
-        if source.is_symlink() or not source.is_file():
-            raise PackageError("Select a regular ZIP file.")
-        try:
-            archive = zipfile.ZipFile(source, "r")
-        except (OSError, zipfile.BadZipFile) as exc:
-            raise PackageError(f"Cannot open ZIP package: {exc}") from exc
-        with archive:
-            if len(archive.infolist()) > _MAX_ARCHIVE_FILES:
-                raise PackageError("The ZIP package contains too many entries.")
-            entries: dict[str, zipfile.ZipInfo] = {}
-            total_size = 0
-            metadata_info = None
-            fomod = False
-            for info in archive.infolist():
-                if info.is_dir():
-                    raw_dir = info.filename[:-1] if info.filename.endswith("/") else info.filename
-                    if raw_dir:
-                        _safe_relative_path(raw_dir)
-                    continue
-                rel = _safe_relative_path(info.filename)
-                mode = info.external_attr >> 16
-                file_type = stat.S_IFMT(mode)
-                if stat.S_ISLNK(mode) or file_type not in (0, stat.S_IFREG):
-                    raise PackageError(f"Links and special files are unsupported: {info.filename!r}.")
-                key = rel.as_posix().casefold()
-                if key in entries:
-                    raise PackageError(f"The ZIP contains duplicate paths that differ only by case: {info.filename!r}.")
-                if info.file_size < 0 or info.file_size > _MAX_ARCHIVE_FILE_BYTES:
-                    raise PackageError(f"The ZIP entry is too large: {info.filename!r}.")
-                total_size += info.file_size
-                if total_size > _MAX_ARCHIVE_BYTES:
-                    raise PackageError("The ZIP package exceeds the 1 GiB extracted-size limit.")
-                entries[key] = info
-                if rel.name.casefold() == "moduleconfig.xml" and any(part.casefold() == "fomod" for part in rel.parts[:-1]):
-                    fomod = True
-                if rel.as_posix().casefold() == "koei-mod.json":
-                    if metadata_info is not None:
-                        raise PackageError("The ZIP contains more than one koei-mod.json manifest.")
-                    metadata_info = info
-            if fomod:
-                raise PackageError("FOMOD installer packages require an interactive installer and are not supported.")
-            data_entries = []
-            ignored_docs = {"readme.md", "readme.txt", "changelog.md", "license", "license.txt", "license.md"}
-            for info in entries.values():
-                rel = PurePosixPath(info.filename)
-                if rel.as_posix().casefold() == "koei-mod.json":
-                    continue
-                if rel.name.casefold() in ignored_docs or rel.name.casefold().startswith("license."):
-                    continue
-                if rel.name.casefold() == LOADER_FILE:
-                    raise PackageError("Loader DLL packages are not supported; the manager does not write to the game root.")
-                extension = Path(rel.name).suffix.casefold()
-                if extension not in SUPPORTED_MOD_EXTENSIONS:
-                    raise PackageError(
-                        f"Unsupported package file {rel.as_posix()!r}. Nioh 2 support is limited to .ini, .fmt, .vb, .ib and .dds files."
-                    )
-                data_entries.append((rel, info, extension))
-            ini_entries = [item for item in data_entries if item[2] == ".ini"]
-            assets = [item for item in data_entries if item[2] in SUPPORTED_ASSET_EXTENSIONS]
-            if len(ini_entries) != 1 or not assets:
-                raise PackageError("A Nioh 2 mod must contain exactly one .ini file and at least one .fmt, .vb, .ib or .dds asset.")
-            mod_root = ini_entries[0][0].parent
-            payload: list[tuple[PurePosixPath, zipfile.ZipInfo]] = []
-            for rel, info, _extension in data_entries:
-                try:
-                    installed_rel = rel.relative_to(mod_root) if mod_root != PurePosixPath(".") else rel
-                except ValueError as exc:
-                    raise PackageError("All Nioh 2 mod files must be inside the folder containing the .ini marker.") from exc
-                if not installed_rel.parts:
-                    raise PackageError("The .ini marker cannot be installed as an empty path.")
-                payload.append((installed_rel, info))
-            metadata = None
-            if metadata_info is not None:
-                if metadata_info.file_size > _MAX_METADATA_BYTES:
-                    raise PackageError("koei-mod.json is too large.")
-                try:
-                    metadata = json.loads(archive.read(metadata_info).decode("utf-8"),
-                                          object_pairs_hook=_unique_json_object)
-                except (UnicodeError, ValueError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error, EOFError) as exc:
-                    raise PackageError(f"Cannot read koei-mod.json: {exc}") from exc
-            fallback_name = source.stem.strip() or "Nioh 2 mod"
-            fallback_id = _slug(fallback_name)
-            mod_id, name, version, dependencies, conflicts = _metadata_value(
-                metadata, fallback_name, fallback_id
-            )
+        with _open_archive(source) as archive:
             try:
-                return self._store_package(archive, payload, mod_id, name, version, dependencies, conflicts)
+                payload, metadata = _archive_payload(archive, source, self.adapter)
+                return self._store_package(archive, payload, *metadata)
             except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
                 raise PackageError(f"ZIP package failed integrity validation: {exc}") from exc
 
@@ -913,15 +1112,7 @@ class ModManager:
 
     @staticmethod
     def _content_digest(files: Iterable[ModFile]) -> str:
-        digest = hashlib.sha256()
-        for item in sorted(files, key=lambda entry: entry.path.casefold()):
-            digest.update(item.path.casefold().encode("utf-8"))
-            digest.update(b"\0")
-            digest.update(item.sha256.encode("ascii"))
-            digest.update(b"\0")
-            digest.update(str(item.size).encode("ascii"))
-            digest.update(b"\n")
-        return digest.hexdigest()
+        return _content_digest(files)
 
     @_library_locked
     def _record(self, mod_id: str) -> ModRecord:
@@ -953,7 +1144,7 @@ class ModManager:
         request: NexusDownloadRequestLike,
         downloader: NexusArchiveDownloader,
     ) -> bool:
-        """Accept a selected Nioh 2 Nexus ZIP for asynchronous library import.
+        """Accept a selected game-scoped Nexus ZIP for asynchronous library import.
 
         ``downloader`` is a same-process capability supplied by the Nexus
         browser. It resolves authorization and streams bytes to a manager-owned
@@ -994,8 +1185,7 @@ class ModManager:
                 return False
         return True
 
-    @staticmethod
-    def _is_supported_nexus_request(request) -> bool:
+    def _is_supported_nexus_request(self, request) -> bool:
         """Fail closed on the cross-component request's public metadata."""
         fields = (
             "provider", "game_id", "game_domain", "game_scoped_mod_id", "mod_id",
@@ -1020,8 +1210,8 @@ class ModManager:
             return False
         return (
             values["provider"] == "nexus"
-            and values["game_id"] == GAME_ID
-            and values["game_domain"] == "nioh2"
+            and values["game_id"] == self.game_id
+            and values["game_domain"] == self.adapter.nexus_domain
             and bool(_NEXUS_NUMERIC_ID_RE.fullmatch(values["game_scoped_mod_id"]))
             and bool(_NEXUS_NUMERIC_ID_RE.fullmatch(values["mod_id"]))
             and bool(_NEXUS_NUMERIC_ID_RE.fullmatch(values["game_scoped_file_version_id"]))
@@ -1035,7 +1225,7 @@ class ModManager:
             and page.password is None
             and not page.query
             and not page.fragment
-            and page.path == f"/nioh2/mods/{values['game_scoped_mod_id']}"
+            and page.path == f"/{self.adapter.nexus_domain}/mods/{values['game_scoped_mod_id']}"
             and len(filename) <= 256
             and filename not in (".", "..")
             and "/" not in filename
@@ -1112,7 +1302,7 @@ class ModManager:
                 except PackageError:
                     return NexusDownloadResult(
                         "package_rejected",
-                        "The downloaded file is not a valid Nioh 2 ZIP package.",
+                        "The downloaded file does not match the selected game installation method.",
                     )
                 except Exception:
                     return NexusDownloadResult(
@@ -1346,11 +1536,10 @@ class ModManager:
             selected.discard(mod_id)
         previous = profile["enabled_mods"]
         profile["enabled_mods"] = sorted(selected)
-        issues = self.profile_issues(profile_id)
-        if issues:
-            profile["enabled_mods"] = previous
-            raise ProfileError("Cannot enable this mod: " + "; ".join(issues))
         try:
+            issues = self.profile_issues(profile_id)
+            if issues:
+                raise ProfileError("Cannot enable this mod: " + "; ".join(issues))
             self._save_installation()
         except Exception:
             profile["enabled_mods"] = previous
@@ -1378,11 +1567,12 @@ class ModManager:
             if record is None:
                 continue
             for item in record["files"]:
-                if Path(item["path"]).suffix.casefold() not in SUPPORTED_ASSET_EXTENSIONS:
+                if Path(item["path"]).suffix.casefold() not in self.adapter.asset_extensions:
                     continue
-                asset_key = item["path"].casefold()
+                asset_key = (_resource_id(item["path"]) if self.adapter.disable_policy == "remove"
+                             else item["path"].casefold())
                 previous = seen_assets.get(asset_key)
-                if previous and previous[1] != item["sha256"]:
+                if previous and (self.adapter.disable_policy == "remove" or previous[1] != item["sha256"]):
                     other_id, _other_hash = previous
                     issues.append(
                         f"Possible asset path conflict: {Path(item['path']).as_posix()} is changed by "
@@ -1390,7 +1580,43 @@ class ModManager:
                     )
                 elif previous is None:
                     seen_assets[asset_key] = (mod_id, item["sha256"])
+        if self.adapter.disable_policy == "remove" and self.current_game_root is not None:
+            issues.extend(self._external_resource_issues(selected))
         return tuple(dict.fromkeys(issues))
+
+    def _external_resource_issues(self, selected: set[str]) -> list[str]:
+        """Respect existing loose overrides without reading or changing them."""
+        wanted = {_resource_id(item["path"]) for mod_id in selected
+                  for item in self.index["mods"].get(mod_id, {}).get("files", ())}
+        if not wanted:
+            return []
+        root = self._mods_path(self.current_game_root)
+        if not root.exists():
+            return []
+        installed = {mod_id.casefold() for mod_id in self.installation["installed"]}
+        count = 0
+        issues = []
+        for parent in [root]:
+            # Only the root and first-level folders are indexed by this loader.
+            queue = [parent]
+            while queue:
+                directory = queue.pop()
+                with os.scandir(directory) as entries:
+                    for entry in entries:
+                        count += 1
+                        if count > _MAX_ARCHIVE_FILES:
+                            raise SafetyError("The loose mod area exceeds the bounded conflict-check limit.")
+                        path = Path(entry.path)
+                        if path.is_symlink() or _is_reparse_point(path):
+                            raise SafetyError("A link or reparse point prevents safe loose-mod conflict checking.")
+                        if entry.is_dir(follow_symlinks=False):
+                            if directory == root and entry.name.casefold() not in installed:
+                                queue.append(path)
+                            continue
+                        stem = path.stem.casefold().removeprefix("0x")
+                        if len(stem) == 8 and all(ch in "0123456789abcdef" for ch in stem) and stem in wanted:
+                            issues.append(f"Resource hash {stem} already exists in an unmanaged loose mod; remove that conflict separately.")
+        return issues
 
     def _package_path(self, mod_id: str) -> Path:
         if mod_id not in self.index["mods"]:
@@ -1416,13 +1642,15 @@ class ModManager:
             raise SafetyError(f"The stored package for {record['name']} changed after import; refusing to install it.")
 
     def _target_name(self, mod_id: str, enabled: bool) -> str:
+        if not enabled and self.adapter.disable_policy != "folder_suffix":
+            raise SafetyError("This loader does not support inactive deployed folders.")
         return mod_id if enabled else mod_id + DISABLED_SUFFIX
 
     def _game_relative(self, value: str) -> Path:
         relative = _safe_relative_path(value).as_posix()
         root = self.current_game_root
         if root is None:
-            raise InstallationError("Choose a Nioh 2 PC game folder first.")
+            raise InstallationError(f"Choose the {self.adapter.title} game folder first.")
         target = root.joinpath(*PurePosixPath(relative).parts)
         resolved = target.resolve(strict=False)
         try:
@@ -1437,7 +1665,7 @@ class ModManager:
         return target
 
     def _mods_path(self, root: Path) -> Path:
-        mods = root / MODS_DIR
+        mods = root / self.adapter.mods_dir
         if mods.is_symlink() or _is_reparse_point(mods):
             raise SafetyError("The game's Mods path must be a real directory, not a link or file.")
         if mods.exists() and not mods.is_dir():
@@ -1455,6 +1683,8 @@ class ModManager:
             raise InstallationError("This mod is already installed in the selected game folder.")
         if mod_id in self._profile(state["active_profile_id"])["enabled_mods"]:
             raise ProfileError("This mod is enabled in the active profile. Apply that profile to install and enable it.")
+        if self.adapter.disable_policy == "remove":
+            raise ProfileError("This loader has no disabled-folder convention. Enable the mod in a profile and Apply Profile to install it.")
         self._verify_package(mod_id)
         destination = self._target_name(mod_id, enabled=False)
         if mods.exists() and self._casefold_child(mods, destination) is not None:
@@ -1463,7 +1693,7 @@ class ModManager:
         new_state["installed"][mod_id] = False
         self._run_transaction(
             state, new_state,
-            installs=[{"mod_id": mod_id, "destination": f"{MODS_DIR}/{destination}"}],
+            installs=[{"mod_id": mod_id, "destination": f"{self.adapter.mods_dir}/{destination}"}],
             create_mods=not mods.exists(),
         )
 
@@ -1478,7 +1708,7 @@ class ModManager:
                 or mod_id in self._profile(state["active_profile_id"])["enabled_mods"]):
             raise ProfileError("Disable this mod in the active profile and apply that profile before uninstalling it.")
         self._verify_managed_directory(mod_id, enabled=False)
-        source = f"{MODS_DIR}/{self._target_name(mod_id, enabled=False)}"
+        source = f"{self.adapter.mods_dir}/{self._target_name(mod_id, enabled=False)}"
         backup = f".ktmm-remove-{uuid.uuid4().hex}-{mod_id}"
         new_state = copy.deepcopy(state)
         new_state["installed"].pop(mod_id)
@@ -1505,7 +1735,7 @@ class ModManager:
         for path in self.installations_dir.glob("*/state.json"):
             data = _read_json(path)
             if path.is_symlink() or not isinstance(data.get("installed"), dict):
-                raise SafetyError(f"Cannot safely inspect another Nioh 2 installation state: {path.name}.")
+                raise SafetyError(f"Cannot safely inspect another game installation state: {path.name}.")
             if mod_id in data.get("installed", {}):
                 raise InstallationError("Uninstall this mod from every registered game folder before removing it from the library.")
             profiles = data.get("profiles")
@@ -1544,16 +1774,25 @@ class ModManager:
         installs: list[dict[str, str]] = []
         moves: list[dict[str, str]] = []
         statuses: list[str] = []
+        cleanup: list[str] = []
         for mod_id, was_enabled in sorted(old_installed.items()):
             self._verify_managed_directory(mod_id, enabled=was_enabled)
             should_enable = mod_id in desired_enabled
+            if self.adapter.disable_policy == "remove" and not should_enable:
+                backup = f".ktmm-remove-{uuid.uuid4().hex}-{mod_id}"
+                moves.append({"source": f"{self.adapter.mods_dir}/{self._target_name(mod_id, True)}",
+                              "destination": backup, "mod_id": mod_id})
+                cleanup.append(backup)
+                new_state["installed"].pop(mod_id)
+                statuses.append(f"Disabled {self.index['mods'][mod_id]['name']}; verified library copy retained.")
+                continue
             old_name = self._target_name(mod_id, enabled=was_enabled)
             new_name = self._target_name(mod_id, enabled=should_enable)
             if old_name != new_name:
                 if self._casefold_child(mods_path, new_name) is not None:
                     raise SafetyError(f"The destination folder {new_name!r} already exists; no folders were renamed.")
-                moves.append({"source": f"{MODS_DIR}/{old_name}",
-                              "destination": f"{MODS_DIR}/{new_name}", "mod_id": mod_id})
+                moves.append({"source": f"{self.adapter.mods_dir}/{old_name}",
+                              "destination": f"{self.adapter.mods_dir}/{new_name}", "mod_id": mod_id})
                 statuses.append(f"{'Enabled' if should_enable else 'Disabled'} {self.index['mods'][mod_id]['name']}.")
             new_state["installed"][mod_id] = should_enable
         for mod_id in sorted(desired_enabled - set(old_installed)):
@@ -1561,14 +1800,14 @@ class ModManager:
             destination = self._target_name(mod_id, enabled=True)
             if self._casefold_child(mods_path, destination) is not None:
                 raise SafetyError(f"The target Mods folder already contains {destination!r}; no files were changed.")
-            installs.append({"mod_id": mod_id, "destination": f"{MODS_DIR}/{destination}"})
+            installs.append({"mod_id": mod_id, "destination": f"{self.adapter.mods_dir}/{destination}"})
             new_state["installed"][mod_id] = True
             statuses.append(f"Installed and enabled {self.index['mods'][mod_id]['name']}.")
         for mod_id in sorted(set(old_installed) - desired_enabled):
             if old_installed[mod_id]:
                 statuses.append(f"Disabled {self.index['mods'][mod_id]['name']}.")
         new_state["active_profile_id"] = profile_id
-        self._run_transaction(state, new_state, moves=moves, installs=installs,
+        self._run_transaction(state, new_state, moves=moves, installs=installs, cleanup=cleanup,
                               create_mods=bool(installs) and not mods_path.exists())
         return tuple(statuses or [f"Applied profile {profile['name']} with no file changes."])
 
@@ -1578,7 +1817,7 @@ class ModManager:
             raise SafetyError(f"The installed mod {mod_id!r} is not in the library.")
         root = self.current_game_root
         if root is None:
-            raise InstallationError("Choose a Nioh 2 PC game folder first.")
+            raise InstallationError(f"Choose the {self.adapter.title} game folder first.")
         mods = self._mods_path(root)
         folder = mods / self._target_name(mod_id, enabled)
         try:
@@ -1701,7 +1940,7 @@ class ModManager:
             raise SafetyError("An incomplete transaction has an unsupported journal format.")
         root = self.current_game_root
         if root is None:
-            raise InstallationError("Choose a Nioh 2 PC game folder first.")
+            raise InstallationError(f"Choose the {self.adapter.title} game folder first.")
         for value in (journal["old_state"], journal["new_state"]):
             game_root = value.get("game_root")
             if (not isinstance(game_root, str) or Path(game_root).resolve() != root):
@@ -1723,11 +1962,11 @@ class ModManager:
             new_enabled = new_state["installed"].get(mod_id)
             if old_enabled is None:
                 raise SafetyError("A transaction journal renames a mod that was not installed.")
-            expected_source = f"{MODS_DIR}/{self._target_name(mod_id, old_enabled)}"
+            expected_source = f"{self.adapter.mods_dir}/{self._target_name(mod_id, old_enabled)}"
             if source != expected_source:
                 raise SafetyError("A transaction journal rename source is outside the expected mod folder.")
             if new_enabled is not None:
-                expected_destination = f"{MODS_DIR}/{self._target_name(mod_id, new_enabled)}"
+                expected_destination = f"{self.adapter.mods_dir}/{self._target_name(mod_id, new_enabled)}"
                 if destination != expected_destination or old_enabled == new_enabled:
                     raise SafetyError("A transaction journal rename does not match its profile state.")
             else:
@@ -1746,7 +1985,7 @@ class ModManager:
             destination = _safe_relative_path(item["destination"]).as_posix()
             enabled = new_state["installed"].get(mod_id)
             if (mod_id in old_state["installed"] or enabled is None
-                    or destination != f"{MODS_DIR}/{self._target_name(mod_id, enabled)}"):
+                    or destination != f"{self.adapter.mods_dir}/{self._target_name(mod_id, enabled)}"):
                 raise SafetyError("A transaction journal install does not match its profile state.")
 
         if (any(not isinstance(item, str) for item in journal["cleanup"])
@@ -1766,7 +2005,7 @@ class ModManager:
             raise SafetyError("Cannot finish cleanup for an uncommitted transaction.")
         root = self.current_game_root
         if root is None:
-            raise InstallationError("Choose a Nioh 2 PC game folder first.")
+            raise InstallationError(f"Choose the {self.adapter.title} game folder first.")
         for relative in journal.get("cleanup", []):
             path = self._game_relative(relative)
             if path.exists():
@@ -1813,7 +2052,7 @@ class ModManager:
             raise SafetyError("A committed transaction must be recovered by rolling forward.")
         root = self.current_game_root
         if root is None:
-            raise InstallationError("Choose a Nioh 2 PC game folder first.")
+            raise InstallationError(f"Choose the {self.adapter.title} game folder first.")
         errors: list[str] = []
         try:
             for item in reversed(journal.get("moves", [])):
@@ -1845,7 +2084,7 @@ class ModManager:
             if stage.exists():
                 self._clean_transaction_stage(stage, journal, committed=False)
             old_state = journal["old_state"]
-            mods = root / MODS_DIR
+            mods = root / self.adapter.mods_dir
             if (journal["mods_created"]
                     and mods.exists() and not any(mods.iterdir())):
                 mods.rmdir()

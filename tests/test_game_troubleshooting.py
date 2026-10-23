@@ -609,6 +609,7 @@ class UnsupportedFolderRuntimeTests(unittest.TestCase):
     def test_unsupported_runtime_reads_no_selected_metadata_or_content(self):
         selected = Path("synthetic-selected-folder")
         with patch.object(troubleshooting, "_DIRECTORY_FDS", False), \
+                patch.object(troubleshooting, "_WINDOWS_HANDLES", False), \
                 patch.object(Path, "lstat", side_effect=AssertionError("No selected metadata read")), \
                 patch.object(troubleshooting.os, "scandir", side_effect=AssertionError("No directory enumeration")), \
                 patch.object(troubleshooting.os, "open", side_effect=AssertionError("No selected file open")):

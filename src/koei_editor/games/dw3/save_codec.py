@@ -1,9 +1,10 @@
-"""DW3 AES-256-ECB envelope. Native Windows crypto; optional development provider."""
+"""DW3 AES envelope: Windows CNG, Linux PyCryptodome, optional other-host provider."""
 import ctypes as c
 import struct
 import sys
 
 SAVE_KEY=bytes.fromhex('757347635a517044474b474b676d53766b3553637a637973314e6b774d503267')
+MAX_LINUX_AES_BYTES = 64 * 1024 * 1024
 
 def validate_parameters(data: bytes, key: bytes, mode: str, iv: bytes | None,
                         direction: str) -> None:
@@ -29,14 +30,21 @@ class CNG_AES:
         if mode not in ('ECB', 'CBC'):
             raise ValueError('Unsupported AES mode.')
         self._portable = sys.platform != 'win32'
+        self._linux = sys.platform.startswith('linux')
         self.mode = mode
         if self._portable:
-            # Optional development provider only; Windows always uses native CNG.
             from importlib import import_module
-            try:
-                self._ciphers = import_module('cryptography.hazmat.primitives.ciphers')
-            except ImportError as error:
-                raise RuntimeError('Non-Windows development needs the optional cryptography package.') from error
+            if self._linux:
+                try:
+                    self._aes = import_module('Crypto.Cipher.AES')
+                except ImportError as error:
+                    raise RuntimeError('Linux AES needs the pycryptodome package.') from error
+            else:
+                # Other development hosts retain their optional provider.
+                try:
+                    self._ciphers = import_module('cryptography.hazmat.primitives.ciphers')
+                except ImportError as error:
+                    raise RuntimeError('This development host needs the optional cryptography package.') from error
             self._open = True
             return
         self.mode = mode
@@ -75,6 +83,17 @@ class CNG_AES:
         if self._portable:
             if not self._open:
                 raise RuntimeError('AES provider is closed.')
+            if self._linux:
+                if len(data) > MAX_LINUX_AES_BYTES:
+                    raise ValueError('Linux AES payload exceeds the 64 MiB safety bound.')
+                # A fresh cipher per call prevents CBC state from leaking between
+                # operations. ECB/CBC encrypt/decrypt never adds or strips padding.
+                cipher = (self._aes.new(key, self._aes.MODE_ECB) if self.mode == 'ECB'
+                          else self._aes.new(key, self._aes.MODE_CBC, iv=iv))
+                result = cipher.decrypt(data) if direction == 'decrypt' else cipher.encrypt(data)
+                if type(result) is not bytes or len(result) != len(data):
+                    raise RuntimeError('Unexpected unpadded AES output size.')
+                return result
             provider = self._ciphers
             mode = provider.modes.ECB() if self.mode == 'ECB' else provider.modes.CBC(iv)
             cipher = provider.Cipher(provider.algorithms.AES(key), mode)

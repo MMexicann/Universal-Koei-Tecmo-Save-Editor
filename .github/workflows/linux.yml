@@ -1,0 +1,74 @@
+name: Native Linux build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['toolkit-v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-linux-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13.13'
+          architecture: x64
+          cache: pip
+          cache-dependency-path: tools/requirements/linux-build.txt
+      - name: Install native runtime and locked build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk xvfb xauth libtk8.6
+          python -m pip install --require-hashes -r tools/requirements/linux-build.txt
+          python -m pip install -e . --no-build-isolation --no-deps
+      - name: Verify reviewed public source and inventory
+        run: |
+          python -m tools.package_release --verify-only
+          python -m tools.update_supported_games --check
+      - name: Run the entire native Linux suite
+        run: xvfb-run -a python -m tools.run_tests --workers 4 --report test-results/linux.json
+      - name: Build native graphical and headless editions
+        run: |
+          python -m tools.build_linux
+          python -m tools.build_linux --cli
+          python -m tools.package_linux --verify-only
+          python -m tools.package_linux
+      - name: Verify and smoke test the extracted portable archive
+        run: |
+          cd release
+          sha256sum -c *-Linux-x86_64.SHA256SUMS
+          mkdir extracted
+          tar -xzf *-Linux-x86_64.tar.gz -C extracted
+          cd ..
+          python -m tools.smoke_linux release/extracted
+          python -m tools.package_release --verify-only
+          python -m tools.run_tests --verify-reports test-results/linux.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-test-results
+          path: test-results/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Universal-Koei-Tecmo-Game-Toolkit-Linux-x86_64
+          path: |
+            release/*-Linux-x86_64.tar.gz
+            release/*-Linux-x86_64.SHA256SUMS
+            test-results/linux.json
+            test-results/linux-smoke.json
+          if-no-files-found: error

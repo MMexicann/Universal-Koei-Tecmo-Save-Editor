@@ -2,11 +2,16 @@
 
 ## Public release availability
 
-The public application's **Nexus Mods** entry currently shows a registration
-notice and ordinary website links. It has no API-key or download-key input,
-constructs no API client and makes no API requests. Download archives through
-the official website and use the Mod Manager's ordinary local ZIP import and
-review workflow. This does not enable automatic installation.
+In version 1.0.1, **Nexus Mods** shows official website links and
+the selected game's actual manager capability. **Import downloaded ZIP…**
+opens a user-selected local archive in the matching Nioh 2 or Nioh 3 manager
+library; games without an installation adapter keep that action disabled.
+The website list does not claim installation support for all listed games.
+
+The public page has no API-key or download-key input, constructs no API client
+and makes no API requests. Download archives through the official website.
+Local import validates the package and never installs or enables it. The
+published 1.0 page provides only the notice and website links.
 
 The API implementation and testing workspace described below remain source
 components for development testing. They are not routed by the public GUI.

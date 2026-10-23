@@ -2,6 +2,7 @@
 import argparse
 import ast
 import json
+import os
 import platform
 from pathlib import Path
 import sys
@@ -10,7 +11,8 @@ from tools import build_windows
 from tools import package_release as release
 
 ROOT = Path(__file__).resolve().parents[1]
-LINUX_LICENSES = ('licenses/numpy-Linux-wheel.txt', 'licenses/pycryptodome-BSD-Public-Domain.txt')
+LINUX_LICENSES = ('licenses/numpy-Linux-wheel.txt', 'licenses/pycryptodome-BSD-Public-Domain.txt',
+                  'licenses/python-standalone-3.13.txt')
 
 
 def artifact_name(root=ROOT, *, cli=False):
@@ -34,7 +36,7 @@ def build_args(root=ROOT, *, cli=False):
         args.extend(['--copy-metadata', dependency])
     for module in ('koei_editor.cli', 'Crypto.Cipher.AES'):
         args.extend(['--hidden-import', module])
-    for module in ('cryptography', 'Crypto.SelfTest', 'Crypto.Hash', 'Crypto.Math',
+    for module in ('cryptography', '_dbm', '_gdbm', 'dbm', 'Crypto.SelfTest', 'Crypto.Hash', 'Crypto.Math',
                    'Crypto.Protocol', 'Crypto.PublicKey', 'Crypto.Signature', 'Crypto.IO',
                    *('Crypto.Cipher._mode_' + mode for mode in (
                        'cfb', 'ofb', 'ctr', 'openpgp', 'eax', 'ccm', 'siv', 'gcm', 'ocb', 'kw', 'kwp'))):
@@ -61,8 +63,8 @@ def filter_build_spec(spec_path, root=ROOT):
     lines[analyses[0].end_lineno:analyses[0].end_lineno] = [
         '\nfrom tools.linux_build_review import filter_linux_metadata\n',
         f'a.datas = filter_linux_metadata(a.datas, root={str(Path(root))!r})\n',
-        # System libraries remain supplied and patched by the Linux distribution.
-        # Wheel-native libraries, lib-dynload and CPython remain self-contained.
+        # System libraries remain supplied by the distribution. The pinned
+        # provider's static dependencies and private Tcl/Tk stay bundled.
         "a.exclude_system_libraries(list_of_exceptions=['libpython*'])\n",
     ]
     spec_path.write_text(''.join(lines), encoding='utf-8')
@@ -80,9 +82,15 @@ def main(argv=None):
         raise SystemExit('Build on native 64-bit x86 Linux; cross-compilation is unsupported.')
     if sys.version_info[:2] != (3, 13):
         raise SystemExit('The reviewed Linux wheel lock requires CPython 3.13.')
-    from tools.linux_build_review import verify_linux_lock
+    from tools.linux_build_review import verify_linux_lock, verify_linux_python
     release.verified_sources(ROOT)
     verify_linux_lock(ROOT)
+    verify_linux_python(ROOT)
+    # bindepend inspects extension libraries independently of the Python ELF's
+    # inherited RPATH. Resolve the reviewed provider's private Tcl/Tk libraries.
+    libraries = str(Path(sys.base_prefix).resolve() / 'lib')
+    os.environ['LD_LIBRARY_PATH'] = libraries + (
+        os.pathsep + os.environ['LD_LIBRARY_PATH'] if os.environ.get('LD_LIBRARY_PATH') else '')
     from PyInstaller.__main__ import generate_parser, run_makespec, run
     options = vars(generate_parser().parse_args(build_args(cli=arguments.cli)))
     spec_path = run_makespec(options.pop('filenames'), **options)

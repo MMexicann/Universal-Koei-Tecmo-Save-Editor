@@ -2,6 +2,7 @@
 from pathlib import Path
 import tempfile
 import tkinter as tk
+from tkinter import ttk
 import unittest
 import zipfile
 from unittest.mock import Mock, patch
@@ -172,6 +173,28 @@ class ModManagerGuiLifecycleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'deployment unavailable'):
                 self.workspace._require_loader_confirmation()
 
+    def test_wrapped_rows_do_not_share_column_widths_and_reuse_their_containers(self):
+        holder = ttk.Frame(self.root)
+        holder.pack(fill='x')
+        buttons = tuple(ttk.Button(holder, text=text) for text in ('A', 'B', 'C' * 30, 'D' * 30))
+        width = sum(button.winfo_reqwidth() + 10 for button in buttons[:3])
+        self.root.geometry(f'{width}x240')
+        self.root.deiconify()
+        self.workspace._flow_buttons(buttons, width)
+        self.root.update()
+        self.assertEqual(len({str(button.grid_info()['in']) for button in buttons}), 2)
+        for button in buttons:
+            self.assertLessEqual(button.winfo_rootx() + button.winfo_width(),
+                                 holder.winfo_rootx() + width)
+        containers = tuple(holder._mod_flow_rows)
+        self.workspace._flow_buttons(buttons, width * 2)
+        self.root.update()
+        self.assertEqual(len({str(button.grid_info()['in']) for button in buttons}), 1)
+        self.assertFalse(containers[1].winfo_ismapped())
+        self.workspace._flow_buttons(buttons, width)
+        self.root.update()
+        self.assertEqual(tuple(holder._mod_flow_rows), containers)
+
     def test_small_viewport_keeps_wrapped_actions_visible_and_form_scrollable(self):
         old_scaling = self.root.tk.call('tk', 'scaling')
         self.addCleanup(lambda: self.root.winfo_exists() and self.root.tk.call('tk', 'scaling', old_scaling))
@@ -197,8 +220,13 @@ class ModManagerGuiLifecycleTests(unittest.TestCase):
                 self.assertGreaterEqual(button.winfo_rooty(), client_top)
                 self.assertLessEqual(button.winfo_rootx() + button.winfo_width(), client_left + 780)
                 self.assertLessEqual(button.winfo_rooty() + button.winfo_height(), client_top + 680)
-        self.assertGreater(len({button.grid_info()['row'] for button in self.workspace._action_buttons}), 1)
+        rows = {str(button.grid_info()['in']) for button in self.workspace._action_buttons}
+        self.assertGreater(len(rows), 1)
+        for row in self.workspace.actions._mod_flow_rows:
+            if row.winfo_ismapped():
+                self.assertLessEqual(row.winfo_reqwidth(), self.workspace.actions.winfo_width())
         canvas = self.workspace.content_canvas
+        self.assertLessEqual(self.workspace.content.winfo_width(), canvas.winfo_width())
         self.assertGreater(canvas.bbox('all')[3], canvas.winfo_height())
         canvas.yview_moveto(1)
         self.root.update()

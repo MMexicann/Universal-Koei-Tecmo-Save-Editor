@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import threading
 import time
 import tkinter as tk
 import unittest
@@ -228,11 +229,46 @@ class KnowledgeWorkspaceTests(unittest.TestCase):
     def test_closed_workspace_cancels_polling_without_destroying_inputs(self):
         workspace = self.workspace(PatchCompatibilityWorkspace)
         self.inputs(workspace)
-        workspace.compare()
-        workspace.close()
-        self.assertIsNone(workspace._poll_id)
-        self.root.update()
-        self.assertEqual(json.loads((self.folder / 'baseline.json').read_text())['version']['value'], '1')
+        entered, release = threading.Event(), threading.Event()
+        workers = []
+        thread_type = threading.Thread
+        compare_inputs = analyze_snapshot_files
+
+        def capture_thread(*args, **kwargs):
+            worker = thread_type(*args, **kwargs)
+            workers.append(worker)
+            return worker
+
+        def held_input(*args):
+            # Keep an actual input handle open while close runs. Windows must
+            # not race TemporaryDirectory cleanup against this deliberate read.
+            with (self.folder / 'candidate.json').open('rb'):
+                entered.set()
+                if not release.wait(10):
+                    raise AssertionError('The test did not release its comparison worker.')
+            return compare_inputs(*args)
+
+        def release_and_join():
+            release.set()
+            for worker in workers:
+                worker.join(timeout=10)
+                self.assertFalse(worker.is_alive(), 'Comparison worker did not release input handles.')
+
+        self.addCleanup(release_and_join)
+        with patch('koei_editor.shared.toolkit_knowledge_gui.threading.Thread', side_effect=capture_thread), \
+                patch('koei_editor.shared.toolkit_knowledge_gui.analyze_snapshot_files', side_effect=held_input):
+            workspace.compare()
+            self.assertTrue(entered.wait(10), 'Comparison worker did not open the input.')
+            workspace.close()
+            self.assertTrue(workers[0].is_alive(), 'Closing must not join a blocked read on the UI thread.')
+            self.assertIsNone(workspace._poll_id)
+            self.root.update()
+            self.assertEqual(json.loads((self.folder / 'baseline.json').read_text())['version']['value'], '1')
+            release_and_join()
+            _revision, report, _markdown, error = workspace._results.get_nowait()
+            self.assertIsNone(error)
+            self.assertTrue(report['has_changes'])
+            self.assertEqual(json.loads((self.folder / 'candidate.json').read_text())['version']['value'], '2')
 
 
 if __name__ == '__main__':

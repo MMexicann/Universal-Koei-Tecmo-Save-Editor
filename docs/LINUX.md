@@ -16,11 +16,11 @@ both the archive and the verification report.
 
 The release build targets Ubuntu 22.04 x86_64 and newer compatible glibc systems.
 ARM, 32-bit Linux and musl distributions such as Alpine are not release targets.
-A graphical session and the distribution's Tcl/Tk 8.6 libraries are required for
-the GUI. On Ubuntu or Debian:
+A graphical session and ordinary X11/font libraries are required for the GUI.
+The verified interpreter and Tcl/Tk 9.0 libraries are bundled. On Ubuntu:
 
 ```sh
-sudo apt install libtk8.6 libtcl8.6 libffi8 libssl3 libbz2-1.0 liblzma5 zlib1g libreadline8 libexpat1 libuuid1 libstdc++6 libgcc-s1
+sudo apt install libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6 libstdc++6 libgcc-s1
 sha256sum -c UniversalKoeiTecmoGameToolkit-vVERSION-Linux-x86_64.SHA256SUMS
 tar -xzf UniversalKoeiTecmoGameToolkit-vVERSION-Linux-x86_64.tar.gz
 cd UniversalKoeiTecmoGameToolkit-vVERSION-Linux-x86_64
@@ -53,15 +53,16 @@ CLI commands work without a display. See the [CLI guide](CLI.md) for examples.
 
 ## Build from source
 
-Use native x86_64 Linux with CPython 3.13 and Tcl/Tk. Ubuntu 22.04 is the CI build
-baseline; building on a newer distribution may produce a newer glibc requirement.
+Use native x86_64 Linux and the exact reviewed CPython 3.13.13 build interpreter.
+Ubuntu 22.04 is the CI build baseline; building on a newer distribution may produce a newer glibc requirement.
 Use the CI artifact for the supported baseline instead of assuming a locally built
 binary runs on older distributions.
 
 ```sh
-sudo apt install python3-tk xvfb xauth libtk8.6
-python3.13 -m venv .venv
-. .venv/bin/activate
+sudo apt install xvfb xauth libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
+python3 -m tools.install_linux_python
+work/linux-python/python/bin/python3.13 -m venv work/linux-venv
+. work/linux-venv/bin/activate
 python -m pip install -r tools/requirements/linux-build.txt
 python -m pip install -e . --no-build-isolation --no-deps
 xvfb-run -a python -m tools.run_tests --workers 4 --report test-results/linux.json
@@ -80,14 +81,27 @@ contain ordinary files with fixed permissions, no owner names or timestamps;
 existing release outputs are refused. CI extracts the produced archive and runs
 the GUI smoke test plus headless CLI checks from that extracted copy.
 
+The bootstrap downloads only the pinned python-build-standalone 20260602
+CPython 3.13.13 x86_64 GNU archive, verifies its exact SHA-256 on every download
+and cache hit, and extracts it into a new `work/` folder. It does not replace a
+system interpreter or create global launchers. Archive paths, links and sizes
+are checked before extraction; filesystem writes use retained directory handles.
+CI caches only the verified archive and recreates the interpreter and virtual
+environment for each run. The standard library, native provider and all frozen
+resources remain subject to the same privacy checks as application data.
+
 ## Linux dependency notices
 
 Linux additionally bundles the reviewed PyCryptodome AES provider under its
 BSD/public-domain notices and the NumPy Linux wheel's complete combined license, including
 OpenBLAS, LAPACK, GCC runtime and runtime exceptions. These texts are embedded in
 `_internal/licenses/` alongside the existing [third-party notices](THIRD_PARTY_NOTICES.md).
-Distribution system libraries are excluded from the portable build and remain
-provided and updated by the operating system. Windows CNG is never emulated.
+The interpreter additionally contains reviewed static dependencies, including
+OpenSSL, libffi, zlib, bzip2, Expat, SQLite, libedit/ncurses and selected X11 code.
+Their complete upstream notices are retained in `python-standalone-3.13.txt`.
+The actual Tcl/Tk 9.0 libraries are bundled; optional Berkeley DB, Itcl, Thread
+and Tix native plugins are excluded. Other distribution libraries remain supplied
+and updated by the operating system. Windows CNG is never emulated.
 
 CI smoke and procedural tests qualify the toolkit runtime and safety behavior;
 they do not claim every edited file has been loaded and re-saved in a real game.

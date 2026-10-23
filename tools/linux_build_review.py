@@ -10,6 +10,8 @@ from tools import numpy_build_provenance as provenance
 from tools import package_release as release
 
 ROOT = Path(__file__).resolve().parents[1]
+REQUIRED_PROVIDER_NATIVE = ('libpython3.13.so.1.0', 'libtcl9.0.so', 'libtcl9tk9.0.so',
+                            'python3.13/lib-dynload/_tkinter.cpython-313-x86_64-linux-gnu.so')
 AES_NATIVE_FILES = frozenset({'Crypto/Cipher/_raw_aes.abi3.so',
                               'Crypto/Cipher/_raw_aesni.abi3.so',
                               'Crypto/Cipher/_raw_cbc.abi3.so',
@@ -41,7 +43,30 @@ def verify_linux_lock(root=ROOT):
         raise ValueError('Linux wheel metadata review differs from its hash lock.')
     if not AES_NATIVE_FILES <= review.get('native_wheel_files', {}).keys():
         raise ValueError('The reviewed Linux AES native provider is incomplete.')
+    from tools import install_linux_python as provider
+    runtime = review.get('python_runtime', {})
+    if (runtime.get('version') != provider.PYTHON_VERSION
+            or runtime.get('archive_sha256') != provider.ARCHIVE_SHA256
+            or runtime.get('archive_bytes') != provider.ARCHIVE_BYTES
+            or runtime.get('archive_url') != provider.ARCHIVE_URL
+            or hashlib.sha256((root / 'licenses/python-standalone-3.13.txt').read_bytes()).hexdigest()
+               != runtime.get('bundled_notices_sha256')):
+        raise ValueError('The Linux Python provider differs from its reviewed provenance.')
+    if not set(REQUIRED_PROVIDER_NATIVE) <= runtime.get('native_files', {}).keys():
+        raise ValueError('The reviewed Linux Python native provider is incomplete.')
     return review
+
+
+def verify_linux_python(root=ROOT):
+    review = verify_linux_lock(root)['python_runtime']
+    if tuple(sys.version_info[:3]) != tuple(map(int, review['version'].split('.'))):
+        raise ValueError('Build with the exact reviewed Linux Python interpreter.')
+    prefix = Path(sys.base_prefix).resolve()
+    for name in REQUIRED_PROVIDER_NATIVE:
+        path = prefix / 'lib' / name
+        if (path.is_symlink() or not path.is_file()
+                or hashlib.sha256(path.read_bytes()).hexdigest() != review['native_files'].get(name)):
+            raise ValueError('The Linux Python native provider differs from its reviewed archive.')
 
 
 def filter_linux_metadata(datas, root=ROOT):

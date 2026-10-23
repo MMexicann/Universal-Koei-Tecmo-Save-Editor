@@ -36,6 +36,46 @@
     "numpy/lib/_datasource.py": "9ead7eb599f6ed893aae85ddf9a8316502b4efd0595cea2b9ddf7af1ab097460"
   },
   "python": "3.13",
+  "python_runtime": {
+    "archive_bytes": 34904739,
+    "archive_sha256": "c249d2b96af6912c3910f234b96aa8d20d30e8b0c46d0584fa956d7a77036ea9",
+    "archive_url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260602/cpython-3.13.13%2B20260602-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+    "bundled_notices_sha256": "e853d2fab1cf944d2e5bffafe2961121630dd205575a602e6c67e99d799e5e01",
+    "license_archive_sha256": "b6ada310fd6266f0becc9d090697f5e728075c5f8fcc25455937508fe5b4f796",
+    "license_files": {
+      "licenses/LICENSE.bdb.txt": "3bdff06e69991c94664f2ef5c5f8096f60b7dbec071756ea6cc26b445e06ec5b",
+      "licenses/LICENSE.bzip2.txt": "1f38bbc7caacafd65169276d759c0d88c991b753b643ce35d0e45ea1971dd441",
+      "licenses/LICENSE.cpython.txt": "86e61415828a8b5b06ec8d024e6f086ce155a8b85fd0c419c0ba4dc004e74fdd",
+      "licenses/LICENSE.expat.txt": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534",
+      "licenses/LICENSE.libX11.txt": "2daec087a88e7c9b8082557cdeebad5bbb8155a4137472f0b22e269cd99d0c1e",
+      "licenses/LICENSE.libXau.txt": "56abe29bb1d9806a9e04fa9f80fed2c0f18027594df3f098148d814aef6bddfa",
+      "licenses/LICENSE.libedit.txt": "29cea33c32bbc9785142386377915612a2fa786482c46843383384aded2e09b1",
+      "licenses/LICENSE.libffi.txt": "deaf3a42effb551a5b140fa9afefed183a27f1341c6d1bf430d106a5e6931fc0",
+      "licenses/LICENSE.liblzma.txt": "9a4062de0a2c388a98cf35a35d348b62fa97c838a71c3c28ee1a2d7d0a565b02",
+      "licenses/LICENSE.libuuid.txt": "122ee1f7e258f2c3c0e538a75c037684f420454bf3850ddc74ce750bbf5fe86b",
+      "licenses/LICENSE.libxcb.txt": "c5ffbfeaa501071ceeb97b7de2c0d703fdaa35de01c0fb6cbac1c28453a3e9fd",
+      "licenses/LICENSE.mpdecimal.txt": "669512af7219f58be03a398766d7c9da11a3b3df9d3f05cb74c5ceca25c8da3b",
+      "licenses/LICENSE.ncurses.txt": "87a4c4442337b8968ef956031c406b74f9cb7149b7ba87311bdaba534816201c",
+      "licenses/LICENSE.openssl-1.1.txt": "9c04cce50c4989d5601dd8b07f6ab922c40388b66ac736c9007cb1ed9d9dd560",
+      "licenses/LICENSE.openssl-3.txt": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+      "licenses/LICENSE.sqlite.txt": "38bef3d28b24f145ea293bd3b6eb4b20396982abc8303128fb493986ea5bc719",
+      "licenses/LICENSE.tcl.txt": "c0a69a2bfd757361ec7e6143973b103c90409316b49e9c88db26ad6388e79f16",
+      "licenses/LICENSE.tix.txt": "3ac5cdd0bef6c43ce34c6a7ced452081d9e5a0bf94082b9f9147d23ec9e214f5",
+      "licenses/LICENSE.zlib.txt": "818922b2620f12801a12bf78e399644a30990e66824abd8ca8ec24d451d6f92c"
+    },
+    "native_files": {
+      "itcl4.3.5/libtcl9itcl4.3.5.so": "0d2ee26d04d4b34cf430af9ed6ce41cf0c6090838f876c1d906d0a84e556048b",
+      "libpython3.13.so.1.0": "6c94ff1460a481cf18d609113833ca8e0eb9f94e83a160aca92fe6223f817a7b",
+      "libpython3.so": "665155b2cc037b07721f3d856f4ae330047289ad62bae8b2ccf34f285cf7581a",
+      "libtcl9.0.so": "cdbf818b9dc5c19cc965968593de43641a75e580990672a68459e33f733ea8c8",
+      "libtcl9tk9.0.so": "59a2958123b86d7622bed460d099f06ce36b6f6eaec936f9681567189cd8c415",
+      "python3.13/lib-dynload/_dbm.cpython-313-x86_64-linux-gnu.so": "4bef43ddfc45294a1e4a117c1bf1999910757e00644b8e30b1ac4da143451b5c",
+      "python3.13/lib-dynload/_tkinter.cpython-313-x86_64-linux-gnu.so": "cb29dadb061ee90e039e20cc16e6cc4024cde4a6daa62c9b9a945ec3beb4a2f4",
+      "thread3.0.4/libtcl9thread3.0.4.so": "984b3fa0fc86435554b7fd1fb3870db5707fd68f41fed569035bf813552f53e1"
+    },
+    "release": "20260602",
+    "version": "3.13.13"
+  },
   "runtime_metadata": {
     "cffi-2.1.1.dist-info/METADATA": "558bafb9093a8e790175d9ecff9688382981d744877dad86fd6770db0f4dc918",
     "miniaudio-1.71.dist-info/METADATA": "ba288dad68e1cc8690e91045df6ecfe46c232742086ff364ddb7788256c6071e",

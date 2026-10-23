@@ -23,18 +23,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/cache@v4
         with:
-          python-version: '3.13.13'
-          architecture: x64
-          cache: pip
-          cache-dependency-path: tools/requirements/linux-build.txt
+          path: work/linux-python-cache/cpython-3.13.13-linux-x86_64.tar.gz
+          key: linux-python-c249d2b96af6912c3910f234b96aa8d20d30e8b0c46d0584fa956d7a77036ea9
       - name: Install native runtime and locked build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-tk xvfb xauth libtk8.6
-          python -m pip install --require-hashes -r tools/requirements/linux-build.txt
-          python -m pip install -e . --no-build-isolation --no-deps
+          sudo apt-get install -y xvfb xauth libx11-6 libxext6 libxrender1 libxft2 libfontconfig1 libfreetype6
+          python3 -m tools.install_linux_python
+          work/linux-python/python/bin/python3.13 -m venv work/linux-venv
+          work/linux-venv/bin/python -m pip install --require-hashes -r tools/requirements/linux-build.txt
+          work/linux-venv/bin/python -m pip install -e . --no-build-isolation --no-deps
+          echo "$GITHUB_WORKSPACE/work/linux-venv/bin" >> "$GITHUB_PATH"
       - name: Verify reviewed public source and inventory
         run: |
           python -m tools.package_release --verify-only

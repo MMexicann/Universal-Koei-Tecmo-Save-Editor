@@ -66,7 +66,7 @@ class LinuxPublicationTests(unittest.TestCase):
         self.archive.unlink(missing_ok=True)
         package_linux.write_tar(self.archive, self.files, self.stem, {self.stem, 'cli/' + self.stem + '-CLI'})
         raw = self.archive.read_bytes()
-        self.checksum.write_text(hashlib.sha256(raw).hexdigest() + '  ' + self.archive.name + '\n', encoding='ascii')
+        self.checksum.write_bytes((hashlib.sha256(raw).hexdigest() + '  ' + self.archive.name + '\n').encode('ascii'))
 
     def archive_record(self):
         raw = self.archive.read_bytes()
@@ -140,7 +140,7 @@ class LinuxPublicationTests(unittest.TestCase):
         self.archive.write_bytes(original)
         checksum = self.checksum.read_bytes()
         self.archive.write_bytes(b'not a gzip archive')
-        self.checksum.write_text(self.archive_record()['sha256'] + '  ' + self.archive.name + '\n', encoding='ascii')
+        self.checksum.write_bytes((self.archive_record()['sha256'] + '  ' + self.archive.name + '\n').encode('ascii'))
         self.smoke['archive'] = self.archive_record()
         self.write_evidence()
         self.assert_rejected()

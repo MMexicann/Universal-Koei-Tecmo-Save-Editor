@@ -31,6 +31,7 @@ _TEXT = {
         'results': '{count} matching records · {total} bundled records',
         'analyzer': 'Game Patch & Compatibility Analyzer',
         'analyzer_intro': 'Compare explicit before/after snapshot JSON files and optional declared requirements. This does not scan installations or certify that a game, mod or save will load.',
+        'analyzer_intro_compact': 'Compare explicit snapshots; results do not verify that games, mods or saves load.',
         'baseline': 'Baseline snapshot', 'candidate': 'Candidate snapshot',
         'requirements': 'Requirements (optional)', 'browse': 'Browse…', 'clear': 'Clear',
         'compare': 'Compare snapshots', 'export_json': 'Export JSON…',
@@ -51,6 +52,7 @@ _TEXT = {
         'results': '{count} passende Datensätze · {total} enthaltene Datensätze',
         'analyzer': 'Spielpatch- und Kompatibilitätsanalyse',
         'analyzer_intro': 'Vergleiche explizite Vorher-/Nachher-Snapshot-JSON-Dateien und optionale Anforderungen. Installationen werden nicht geprüft; die Ladefähigkeit von Spielen, Mods oder Spielständen wird nicht bestätigt.',
+        'analyzer_intro_compact': 'Vergleiche explizite Snapshots; keine Prüfung der Ladefähigkeit im Spiel.',
         'baseline': 'Ausgangs-Snapshot', 'candidate': 'Neuer Snapshot',
         'requirements': 'Anforderungen (optional)', 'browse': 'Durchsuchen…', 'clear': 'Leeren',
         'compare': 'Snapshots vergleichen', 'export_json': 'JSON exportieren…',
@@ -155,11 +157,13 @@ class _KnowledgeWorkspace:
         self.language = 'de' if str(language).lower().startswith('de') else 'en'
         self.frame = ttk.Frame(parent, padding=16)
         self._labels = []
+        self._wrapped_labels = []
         self._text_widgets = []
         self._closed = False
         self._poll_id = None
         self.busy = False
         self.frame.bind('<Destroy>', self._destroyed, add='+')
+        self.frame.bind('<Configure>', self._resize_labels, add='+')
 
     def tr(self, key, **values):
         return _TEXT[self.language][key].format(**values)
@@ -167,6 +171,8 @@ class _KnowledgeWorkspace:
     def _label(self, parent, key, **options):
         widget = ttk.Label(parent, text=self.tr(key), **options)
         self._labels.append((widget, key))
+        if 'wraplength' in options:
+            self._wrapped_labels.append((widget, key))
         return widget
 
     def _button(self, parent, key, command, **options):
@@ -207,6 +213,17 @@ class _KnowledgeWorkspace:
         self.language = 'de' if str(language).lower().startswith('de') else 'en'
         for widget, key in self._labels:
             widget.configure(text=self.tr(key))
+        self._resize_labels()
+
+    def _resize_labels(self, event=None):
+        if self._closed or (event is not None and event.widget is not self.frame):
+            return
+        width = max(200, self.frame.winfo_width() - 32)
+        compact = self.frame.winfo_height() < 500
+        for widget, key in self._wrapped_labels:
+            widget.configure(wraplength=width)
+            if key == 'analyzer_intro':
+                widget.configure(text=self.tr('analyzer_intro_compact' if compact else key))
 
     def _destroyed(self, event):
         if event.widget is self.frame:
@@ -338,9 +355,10 @@ class PatchCompatibilityWorkspace(_KnowledgeWorkspace):
         self._controls = []
         self._status_key = 'ready'
         self._label(self.frame, 'analyzer', style='Title.TLabel').pack(anchor='w')
-        self._label(self.frame, 'analyzer_intro', wraplength=1000).pack(anchor='w', fill='x', pady=(6, 12))
+        self._intro_label = self._label(self.frame, 'analyzer_intro', wraplength=1000)
+        self._intro_label.pack(anchor='w', fill='x', pady=(6, 12))
         self.paths = {}
-        form = ttk.Frame(self.frame)
+        self._form = form = ttk.Frame(self.frame)
         form.pack(fill='x')
         form.columnconfigure(1, weight=1)
         for index, key in enumerate(('baseline', 'candidate', 'requirements')):
@@ -355,7 +373,7 @@ class PatchCompatibilityWorkspace(_KnowledgeWorkspace):
             clear.grid(row=index, column=3, padx=(8, 0), pady=4)
             self._controls.extend((entry, button, clear))
             variable.trace_add('write', self._inputs_changed)
-        actions = ttk.Frame(self.frame)
+        self._action_row = actions = ttk.Frame(self.frame)
         actions.pack(fill='x', pady=10)
         self.compare_button = self._button(actions, 'compare', self.compare, style='Primary.TButton')
         self.compare_button.pack(side='left')
@@ -365,10 +383,23 @@ class PatchCompatibilityWorkspace(_KnowledgeWorkspace):
         self.markdown_button = self._button(actions, 'export_md', lambda: self.export('.md'), state='disabled')
         self.markdown_button.pack(side='left')
         self.status = tk.StringVar(root, value=self.tr('ready'))
-        ttk.Label(self.frame, textvariable=self.status).pack(anchor='w', pady=(0, 8))
+        self._status_label = ttk.Label(self.frame, textvariable=self.status)
+        self._status_label.pack(anchor='w', pady=(0, 8))
         panel, self.preview = self._text_panel(self.frame)
         panel.pack(fill='both', expand=True)
         self._set_text(self.preview, self.tr('ready'))
+
+    def _resize_labels(self, event=None):
+        super()._resize_labels(event)
+        if self._closed or not hasattr(self, '_status_label'):
+            return
+        compact = self.frame.winfo_height() < 500
+        self.frame.configure(padding=8 if compact else 16)
+        self._intro_label.pack_configure(pady=(2, 2) if compact else (6, 12))
+        for widget in self._form.grid_slaves():
+            widget.grid_configure(pady=0 if compact else 4)
+        self._action_row.pack_configure(pady=1 if compact else 10)
+        self._status_label.pack_configure(pady=(0, 2) if compact else (0, 8))
 
     def _status(self, key):
         self._status_key = key

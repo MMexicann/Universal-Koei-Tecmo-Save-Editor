@@ -8,8 +8,8 @@
     },
     {
       "path": ".github/workflows/linux.yml",
-      "bytes": 2484,
-      "sha256": "ca2b491fb3ed9e393cfe8db1aa665a999bcefe2be06a9eeda890cfe6758e347a"
+      "bytes": 2774,
+      "sha256": "54baf4a485e0050821e8316740cdfd89d368c178e30bfeb106086825e984481f"
     },
     {
       "path": ".github/workflows/mod-testing-sandbox.yml",
@@ -43,8 +43,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 9755,
-      "sha256": "e0353d33ada51771676ee2533cded1551c5e1f05edc912c6cdab9a7aea2d0069"
+      "bytes": 9260,
+      "sha256": "144bf0544fdd551a5c5ef398292ea7db820fb24abe011ac31968e3052bd48a24"
     },
     {
       "path": "docs/ABYSS_PC_FORMAT.md",
@@ -193,8 +193,8 @@
     },
     {
       "path": "docs/BUILDING.md",
-      "bytes": 14271,
-      "sha256": "caf23fc941233694f55802bebd21064b0101c0364c4b905b88f63db0d7cab0c4"
+      "bytes": 14364,
+      "sha256": "e3fe37cb0a09a76d68de377b3a1f928880e5924c8cb775162103fe3e091ed2c2"
     },
     {
       "path": "docs/CHANGELOG.md",
@@ -568,8 +568,8 @@
     },
     {
       "path": "docs/LINUX.md",
-      "bytes": 5016,
-      "sha256": "4796a37bff69577c38541e91c1b26897f61d31a03d858d975d8323a60f9b9e35"
+      "bytes": 6129,
+      "sha256": "aa966f674a663134f5cdbb781c94fd1447576bc2db99d64ff357d5f76d949801"
     },
     {
       "path": "docs/LULUA_NELKE_SWITCH_RESEARCH.md",
@@ -813,8 +813,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 19172,
-      "sha256": "2686d127806ee93bbe33870cf4e43d1fadbf975804e1af52da0aab61cce5f505"
+      "bytes": 19187,
+      "sha256": "f58fd696763ab00bd48452e90cd6f2ebe4ca99fb81b10fd5004fa6b62d011da0"
     },
     {
       "path": "docs/REAL_GAME_VALIDATION.md",
@@ -848,8 +848,8 @@
     },
     {
       "path": "docs/REPOSITORY_METADATA.md",
-      "bytes": 4695,
-      "sha256": "9cf4dce146aaadc5448906ce32b8bf3e03f76ef13325ab082478474c751b93a2"
+      "bytes": 5637,
+      "sha256": "82baa0249462cde5a859a85e4662ed8f88ddbd2a7a5a473315f3e747375f312c"
     },
     {
       "path": "docs/RESEARCH_IMPORT.md",
@@ -1088,8 +1088,8 @@
     },
     {
       "path": "docs/THIRD_PARTY_NOTICES.md",
-      "bytes": 15717,
-      "sha256": "e03155351a5609afb2f9607bee02f73026f9ae50067c601505c3b2b9c69a30bb"
+      "bytes": 16101,
+      "sha256": "3595d1c7abdd3d8960dad9acdc395356e913ff0436c14524098f155e677d6f37"
     },
     {
       "path": "docs/THREE_HOPES_FORMAT.md",
@@ -1113,8 +1113,8 @@
     },
     {
       "path": "docs/TOOLKIT_V1_RELEASE_NOTES.md",
-      "bytes": 209,
-      "sha256": "0023985adc7dfa1a8fe32a2c1a9f442b63f949cb2b8c3786f05fc0ac8417da5a"
+      "bytes": 221,
+      "sha256": "e48c2ac30c88576db3178526b5cc65d396720a75c34bbb2403d2ace4924eeb21"
     },
     {
       "path": "docs/TOTORI_DX_PS4_FORMAT.md",
@@ -1505,6 +1505,11 @@
       "path": "licenses/pycryptodome-BSD-Public-Domain.txt",
       "bytes": 2926,
       "sha256": "4e04660d77c1c64e89d79537919fb8240fa21484a7e3db29f358b2c7f84ea073"
+    },
+    {
+      "path": "licenses/python-standalone-3.13.txt",
+      "bytes": 128543,
+      "sha256": "e853d2fab1cf944d2e5bffafe2961121630dd205575a602e6c67e99d799e5e01"
     },
     {
       "path": "licenses/trimesh-MIT.txt",
@@ -4413,8 +4418,8 @@
     },
     {
       "path": "src/koei_editor/shared/mod_manager_gui.py",
-      "bytes": 37935,
-      "sha256": "ea9f8d596c3b1edd1b546bba9650d4d9b9fd3392cd6bc78379384a8110a74134"
+      "bytes": 38577,
+      "sha256": "eb06522c35062d9f8a0613981781a9c317b6f437b7b44cc03b84578c65619624"
     },
     {
       "path": "src/koei_editor/shared/mod_workshop/__init__.py",
@@ -4668,8 +4673,8 @@
     },
     {
       "path": "src/koei_editor/shared/toolkit_knowledge_gui.py",
-      "bytes": 22744,
-      "sha256": "7f8abade08d6769a41358aedd8312944ebdff5be9fb04deb7f6be4fc3bb150b4"
+      "bytes": 24409,
+      "sha256": "3a79bcd6b4e36c2f91a71647f9d7aa29e30221a190bf2017232961d33e322613"
     },
     {
       "path": "src/koei_editor/shared/transfer_gui.py",
@@ -4883,8 +4888,8 @@
     },
     {
       "path": "tests/test_browser_companions.py",
-      "bytes": 15897,
-      "sha256": "22624c06f23b8b96bfdc0c37fa2832fcab9d4e093a42749b6f6f60dfe2f5b58d"
+      "bytes": 15905,
+      "sha256": "c807043055a5031e227c7ca90f9549b3f8f6de47b1ed6fbbf7b747153e0b4dd2"
     },
     {
       "path": "tests/test_brsl_pc.py",
@@ -5702,9 +5707,14 @@
       "sha256": "fb243c41cc25d71274b2012c4de0fadd007ce652bf14138f4c4705f68998b1b4"
     },
     {
+      "path": "tests/test_linux_python_installer.py",
+      "bytes": 11283,
+      "sha256": "80a37a9de29c335224d2bf6df694478046dbd0725ca3593cd23435c767d6f482"
+    },
+    {
       "path": "tests/test_linux_release.py",
-      "bytes": 16077,
-      "sha256": "0f1fe0b96a3dcd662e5b976aa437d6945df4d6e4ac520b5a28af23fabb077d5b"
+      "bytes": 17384,
+      "sha256": "05daafb3f4a57cb85ff11965eb955c40eaf64cb6767c2686d342bab68babc915"
     },
     {
       "path": "tests/test_linux_release_evidence.py",
@@ -5748,8 +5758,8 @@
     },
     {
       "path": "tests/test_mod_manager_gui_lifecycle.py",
-      "bytes": 11279,
-      "sha256": "1ce15376aa68f2727e9fbe5f3190d3e159a6384d9e7bd91f396a0289f6384f33"
+      "bytes": 12777,
+      "sha256": "fcf31ac724e9d8099aa8d2c74cf7ea81be48a908ae4eadeaffc63303a1022a18"
     },
     {
       "path": "tests/test_mod_manager_multigame.py",
@@ -5767,6 +5777,16 @@
       "sha256": "1d3faad0e2570c7f63b1ed64332391ab6d2fa9298c5556a834f0ca74d149bd2b"
     },
     {
+      "path": "tests/test_mod_workshop_assets.py",
+      "bytes": 8786,
+      "sha256": "b7b0fb3fcb0af921275b3d3ffe189fe1b6f28144d1511b60f28da19904ae5a4e"
+    },
+    {
+      "path": "tests/test_mod_workshop_gui.py",
+      "bytes": 2615,
+      "sha256": "0d05570c1ec4179d85246f2513df6ee3ccdfe86729dd15ca628ee242f9dafa28"
+    },
+    {
       "path": "tests/test_mod_workshop_manager.py",
       "bytes": 8173,
       "sha256": "57051c8e0e56558a8f4afb16ac1e9b77925ccdec64f41cc38cb1694cb9945624"
@@ -5775,6 +5795,21 @@
       "path": "tests/test_mod_workshop_manager_gui.py",
       "bytes": 4088,
       "sha256": "5dca07dfdaec08d038d02521dc581864d77cbe1e10b5a6e76358a520457ce74b"
+    },
+    {
+      "path": "tests/test_mod_workshop_packaging.py",
+      "bytes": 10660,
+      "sha256": "cec02c298be73849707c4a6cead89355f870136beb80de2c084c82f30ae3487a"
+    },
+    {
+      "path": "tests/test_mod_workshop_projects.py",
+      "bytes": 7319,
+      "sha256": "e90c33898028396d9610d165b71e05bff18635cbf71087e9a1b5fbf2de981c34"
+    },
+    {
+      "path": "tests/test_mod_workshop_validation.py",
+      "bytes": 6316,
+      "sha256": "a18a24f29130a1bb19b28fa47a9cef061dbcdb6105743caadaaa7162ef5d135e"
     },
     {
       "path": "tests/test_monster_rancher_ds.py",
@@ -6033,8 +6068,8 @@
     },
     {
       "path": "tests/test_package_dependency_review.py",
-      "bytes": 6913,
-      "sha256": "765b0a3261b36c1c8d16dff487a61435c5ff466593a872b010aff4dc246a0b27"
+      "bytes": 11188,
+      "sha256": "c9372543022ed9d5c14c67a3917b35ecb74b959d8dab75a7643d3e14a8c58e9d"
     },
     {
       "path": "tests/test_package_release.py",
@@ -6075,6 +6110,11 @@
       "path": "tests/test_playthrough_lifecycle_gui.py",
       "bytes": 6040,
       "sha256": "c857ada9295a602e752019e87a010986c3aba5edfccc2a3abf4bfe04d4268888"
+    },
+    {
+      "path": "tests/test_playthrough_profiles.py",
+      "bytes": 29944,
+      "sha256": "c32a9ae3f114a7ad104e0d43b32e9cdf19b97db3ef0c9fb22931ce2ad7338610"
     },
     {
       "path": "tests/test_playthrough_profiles_gui.py",
@@ -6688,8 +6728,8 @@
     },
     {
       "path": "tests/test_toolkit_knowledge_gui.py",
-      "bytes": 11138,
-      "sha256": "d021a8f4277ee2e2fd35ca0c7db5fa18386b4976a777208e5aaf777a169235f7"
+      "bytes": 12979,
+      "sha256": "9688e4a8f5f6a9af240e970c408eacd9055d9e3f057dfca2f8675afa6343ba63"
     },
     {
       "path": "tests/test_toolkit_workflows_integration.py",
@@ -6778,8 +6818,8 @@
     },
     {
       "path": "tests/test_verify_linux_publication.py",
-      "bytes": 14259,
-      "sha256": "7e76d9d511aad4288d11847ecd2954d523ac870c3963f5be621fe5cbac9f530e"
+      "bytes": 14261,
+      "sha256": "a7f812a1b2d224cde5d4ae777d89fcd27fe043343b1965606fc9fb79aca02f34"
     },
     {
       "path": "tests/test_version_tracker.py",
@@ -6968,8 +7008,8 @@
     },
     {
       "path": "tools/build_linux.py",
-      "bytes": 4718,
-      "sha256": "05b9564c4800c04ee0adee4838740ed24b2362b0a28cc9c7472a038842703f34"
+      "bytes": 5214,
+      "sha256": "02c8ca6b8e5e75037316d24b7ab1d7c3a9f6748ac960200a945c83eb53757474"
     },
     {
       "path": "tools/build_windows.py",
@@ -7022,14 +7062,19 @@
       "sha256": "97a8a0fee9783ef29565febc8a03af40ca592f1ff960a299186c47939f711cc4"
     },
     {
+      "path": "tools/install_linux_python.py",
+      "bytes": 10917,
+      "sha256": "36166b69a3452563d9791e65b74a77ba197924ad4d9631c0bbfa53f665b25fea"
+    },
+    {
       "path": "tools/linux_build_review.py",
-      "bytes": 6426,
-      "sha256": "a2ddee4f9b57286004507cecbbde19ca37e2ff62bae32b28dddecaf63fee8f13"
+      "bytes": 8039,
+      "sha256": "0e710ef7d7bee3d351d9f71a38a7532f16464984ef3235640b7963dbc7b2a841"
     },
     {
       "path": "tools/linux_dependency_review.json",
-      "bytes": 5748,
-      "sha256": "e27c1e842f2185ab276d35a37a4540dd38f9107a645a0138a6704b460050eabb"
+      "bytes": 9250,
+      "sha256": "77c89eeb20836a1db530049a7fd51c2a948635cc1d59a36f9828e5facc2ba03c"
     },
     {
       "path": "tools/linux_hooks/hook-Crypto.py",
@@ -7108,13 +7153,13 @@
     },
     {
       "path": "tools/package_linux.py",
-      "bytes": 12076,
-      "sha256": "b35dd838bf1db8579fbc1a32fcc5b059f1e76e0fce487219bc6caaae10095408"
+      "bytes": 11387,
+      "sha256": "ab37486c2f674a80bdf9fff3749d80f69669ed8938519db6d039636d4bd39025"
     },
     {
       "path": "tools/package_release.py",
-      "bytes": 49291,
-      "sha256": "fe1b49fa504339b969d5a40d64053d7b8297f8d637440a0af873c0be2a847a92"
+      "bytes": 50357,
+      "sha256": "be0c73775b882483cd338532e1c9ac11ed8938b43502a9af31925911933d0c76"
     },
     {
       "path": "tools/pyinstaller_hooks/hook-numpy.__config__.py",

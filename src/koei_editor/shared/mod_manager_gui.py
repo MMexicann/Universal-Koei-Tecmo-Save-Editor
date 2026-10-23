@@ -188,15 +188,30 @@ class ModManagerWorkspace:
 
     @staticmethod
     def _flow_buttons(buttons, width):
+        if not buttons:
+            return
+        parent = buttons[0].master
+        rows = getattr(parent, '_mod_flow_rows', [])
+        parent._mod_flow_rows = rows
+        # Each row needs its own grid. A shared grid uses the widest button
+        # in each column across every row, which can overflow after wrapping.
+        for button in buttons:
+            button.grid_forget()
         row = column = occupied = 0
         for button in buttons:
             requested = button.winfo_reqwidth() + 10
             if column and occupied + requested > width:
                 row += 1
                 column = occupied = 0
-            button.grid_configure(row=row, column=column, padx=(0, 8), pady=(0, 4), sticky='w')
+            if row == len(rows):
+                rows.append(ttk.Frame(parent))
+            rows[row].grid(row=row, column=0, sticky='w')
+            button.grid_configure(in_=rows[row], row=0, column=column,
+                                  padx=(0, 8), pady=(0, 4), sticky='w')
             column += 1
             occupied += requested
+        for unused in rows[row + 1:]:
+            unused.grid_remove()
 
     def _responsive_layout(self, event=None):
         if self._closed:

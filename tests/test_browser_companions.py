@@ -158,13 +158,13 @@ class BrowserCompanionTests(unittest.TestCase):
 
     def test_source_resources_do_not_depend_on_the_working_directory(self):
         previous = Path.cwd()
-        try:
-            with tempfile.TemporaryDirectory() as folder:
+        with tempfile.TemporaryDirectory() as folder:
+            try:
                 os.chdir(folder)
                 url = self.manager.url_for('localization_studio')
                 self.assertEqual(request(url)[2], (ROOT / 'localization-studio/index.html').read_bytes())
-        finally:
-            os.chdir(previous)
+            finally:
+                os.chdir(previous)
 
     def test_slow_input_cannot_extend_the_absolute_request_deadline(self):
         with patch.object(browser, 'CLIENT_TIMEOUT', 0.3):

@@ -11,21 +11,11 @@ import tarfile
 import zlib
 
 from tools.build_linux import ROOT, LINUX_LICENSES, artifact_name
-from tools.linux_build_review import AES_NATIVE_FILES, verify_linux_lock
+from tools.linux_build_review import AES_NATIVE_FILES, REQUIRED_PROVIDER_NATIVE, verify_linux_lock
 from tools import package_release as release
 from koei_editor.shared.copy_storage import publish_new_child_bound
 from koei_editor.shared.save_safety import safe_path
 
-# Distribution system libraries are deliberately excluded during Analysis.
-# CPython's lib-dynload extensions and pinned wheel libraries are retained.
-STDLIB_EXTENSIONS = release.STDLIB_EXTENSIONS | frozenset({
-    '_posixsubprocess', '_posixshmem', '_resource', 'resource', 'fcntl', 'grp',
-    'pwd', 'syslog', 'termios', '_curses', '_curses_panel', '_crypt', '_uuid',
-    '_codecs_cn', '_codecs_hk', '_codecs_iso2022', '_codecs_jp', '_codecs_kr',
-    '_codecs_tw', '_contextvars', '_multibytecodec', 'mmap', 'readline',
-})
-NATIVE_RUNTIME = re.compile(r'lib(?:python3\.13(?:\.so(?:\.1\.0)?)?|tcl(?:8\.6|9\.0|9tk9\.0)?\.so(?:\.[\d.]+)?|tk(?:8\.6|9\.0)?\.so(?:\.[\d.]+)?)\Z')
-EXTENSION = re.compile(r'([A-Za-z_]\w*)\.(?:cpython-313-[\w-]+|abi3)\.so\Z')
 TCL_COMPRESSED = frozenset({'_tcl_data/cookiejar0.2/public_suffix_list.dat.gz'})
 TCL_MODULE = re.compile(r'tcl(?:8/8\.[456]|9/9\.0)/[A-Za-z0-9_./-]+\.tm\Z')
 TK_IMAGES = frozenset('_tk_data/images/' + name for name in (
@@ -45,18 +35,18 @@ def _elf(data):
 def _native_allowed(name, data, review):
     if not _elf(data):
         return False
+    if Path(name).name.startswith(('_dbm.', '_gdbm.', 'libtcl9itcl', 'libtcl9thread', 'libTix')):
+        return False
     if name in review['native_wheel_files']:
         return hashlib.sha256(data).hexdigest() == review['native_wheel_files'][name]
+    provider = review.get('python_runtime', {}).get('native_files', {})
+    if name in provider:
+        return hashlib.sha256(data).hexdigest() == provider[name]
     aliases = [digest for member, digest in review['native_wheel_files'].items()
                if '/' not in name and Path(member).name == name]
     if aliases:
         return len(aliases) == 1 and hashlib.sha256(data).hexdigest() == aliases[0]
-    path = Path(name)
-    if len(path.parts) == 1 and NATIVE_RUNTIME.fullmatch(name):
-        return True
-    match = EXTENSION.fullmatch(path.name)
-    return bool(match and match[1] in STDLIB_EXTENSIONS and (
-        len(path.parts) == 1 or path.parts[:-1] == ('python3.13', 'lib-dynload')))
+    return False
 
 
 def _tcl_resource(name, data):
@@ -160,7 +150,7 @@ def runtime_snapshot(root, sources, *, cli=False):
         release.scan_bundled_data(name, data)
         entries[name] = data
     required = (set(expected) | set(review['runtime_metadata']) | set(release.TRIMESH_RESOURCES)
-                | AES_NATIVE_FILES | {'base_library.zip'})
+                | AES_NATIVE_FILES | set(REQUIRED_PROVIDER_NATIVE) | {'base_library.zip'})
     if (launcher not in entries or required - internal.keys()
             or not any(Path(n).name.startswith('_tkinter.') for n in internal)
             or not any(Path(n).name.startswith('libpython3.13') for n in internal)):

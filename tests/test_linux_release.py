@@ -47,6 +47,8 @@ class LinuxBuildReviewTests(unittest.TestCase):
             folder = Path(temporary).resolve()
             (folder / 'tools/requirements').mkdir(parents=True)
             (folder / 'tools/linux_dependency_review.json').write_bytes((ROOT / 'tools/linux_dependency_review.json').read_bytes())
+            (folder / 'licenses').mkdir()
+            (folder / 'licenses/python-standalone-3.13.txt').write_bytes((ROOT / 'licenses/python-standalone-3.13.txt').read_bytes())
             lock = (ROOT / 'tools/requirements/linux-build.txt').read_text(encoding='utf-8')
             (folder / 'tools/requirements/linux-build.txt').write_text(lock.replace('--only-binary=:all:', ''), encoding='utf-8')
             with self.assertRaises(ValueError):
@@ -149,6 +151,11 @@ class LinuxArchiveTests(unittest.TestCase):
         self.assertTrue(package._native_allowed('libreviewed.so', raw, checked))
         self.assertFalse(package._native_allowed('numpy.libs/libreviewed.so', raw + b'changed', checked))
         self.assertFalse(package._native_allowed('libunknown.so', raw, checked))
+        for forbidden in ('python3.13/lib-dynload/_dbm.cpython-313-x86_64-linux-gnu.so',
+                          'thread3.0.4/libtcl9thread3.0.4.so', 'itcl4.3.5/libtcl9itcl4.3.5.so'):
+            supplied = {'native_wheel_files': {}, 'python_runtime': {
+                'native_files': {forbidden: hashlib.sha256(raw).hexdigest()}}}
+            self.assertFalse(package._native_allowed(forbidden, raw, supplied))
         elf[18:20] = (183).to_bytes(2, 'little')
         self.assertFalse(package._native_allowed('libpython3.13.so.1.0', bytes(elf), checked))
 
@@ -219,6 +226,9 @@ class LinuxRuntimeReviewTests(unittest.TestCase):
         self.elf[18:20] = (62).to_bytes(2, 'little')
         self.checked['native_wheel_files'] = {
             name: hashlib.sha256(self.elf).hexdigest() for name in review.AES_NATIVE_FILES}
+        self.checked['python_runtime'] = {'native_files': {
+            name: hashlib.sha256(self.elf).hexdigest() for name in (
+                *review.REQUIRED_PROVIDER_NATIVE, 'libpython3.13.so')}}
         self.launcher = self.folder / build.artifact_name(self.root)
         self.launcher.write_bytes(self.elf)
         self.launcher.chmod(0o755)
@@ -226,6 +236,7 @@ class LinuxRuntimeReviewTests(unittest.TestCase):
         files.update({metadata: b'Public metadata', 'libpython3.13.so.1.0': bytes(self.elf),
                       'python3.13/lib-dynload/_tkinter.cpython-313-x86_64-linux-gnu.so': bytes(self.elf)})
         files.update({name: bytes(self.elf) for name in review.AES_NATIVE_FILES})
+        files.update({name: bytes(self.elf) for name in review.REQUIRED_PROVIDER_NATIVE})
         for name, data in files.items():
             path = self.folder / '_internal' / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -262,6 +273,14 @@ class LinuxRuntimeReviewTests(unittest.TestCase):
         (self.folder / '_internal/Crypto/Cipher/_raw_cbc.abi3.so').unlink()
         with self.assertRaisesRegex(ValueError, 'incomplete'):
             package.runtime_snapshot(self.root, self.sources)
+
+    def test_each_missing_bundled_tk_library_is_refused_before_packaging(self):
+        for name in ('libtcl9.0.so', 'libtcl9tk9.0.so'):
+            library = self.folder / '_internal' / name
+            library.unlink()
+            with self.subTest(library=name), self.assertRaisesRegex(ValueError, 'incomplete'):
+                package.runtime_snapshot(self.root, self.sources)
+            library.write_bytes(self.elf)
 
     def test_only_internal_native_aliases_may_be_expanded(self):
         alias = self.folder / '_internal/libpython3.13.so'

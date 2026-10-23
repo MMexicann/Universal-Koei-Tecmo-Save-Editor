@@ -1,7 +1,7 @@
 # Building the Windows executable
 
-**Universal Koei Tecmo Game Toolkit v1.0** continues Save Editor v3.1 under
-the new product name. Its release tag is `toolkit-v1.0`; the historical
+**Universal Koei Tecmo Game Toolkit v1.0.1** continues Save Editor v3.1 under
+the new product name. Its release tag is `toolkit-v1.0.1`; the historical
 Save Editor `v1.0` tag is preserved. See the [release identity and checklist](REPOSITORY_METADATA.md).
 
 Build releases on 64-bit Windows with Python 3.14.7 and Tkinter. Build/package tools
@@ -21,12 +21,12 @@ python -m tools.build_windows --standalone
 python -m tools.build_windows --cli
 ```
 
-The default build produces **`dist/UniversalKoeiTecmoGameToolkit-v1.0/`**, a
+The default build produces **`dist/UniversalKoeiTecmoGameToolkit-v1.0.1/`**, a
 portable folder containing its launcher EXE and complete `_internal` runtime.
 The `--standalone` build produces the self-contained
-**`dist-standalone/UniversalKoeiTecmoGameToolkit-v1.0.exe`**. That direct download
+**`dist-standalone/UniversalKoeiTecmoGameToolkit-v1.0.1.exe`**. That direct download
 needs no side files. The optional console build, `--cli`, produces
-**`dist-cli/UniversalKoeiTecmoGameToolkit-v1.0-CLI.exe`** for the
+**`dist-cli/UniversalKoeiTecmoGameToolkit-v1.0.1-CLI.exe`** for the
 [headless commands](CLI.md). All three modes use pinned Python 3.14.7 and `--noupx`, with the
 same 98 game/platform profiles, runtime metadata, asset preview modules and
 required notices.
@@ -76,6 +76,8 @@ python -m tools.build_windows --print-config
 python -m tools.build_windows --standalone --print-config
 python -m tools.build_windows --cli --print-config
 ```
+
+The native Linux edition has its own [build and qualification guide](LINUX.md).
 
 ## Build checks
 
@@ -208,7 +210,7 @@ Defender diagnostics are workflow artifacts,
 separate from the release downloads; a timeout still blocks publication.
 Manual workflow runs build artifacts by default. To publish a prepared main
 commit, dispatch with `publish=true` and `expected_sha` matching that exact
-commit. Pushing the matching Toolkit tag, such as `toolkit-v1.0`, also
+commit. Pushing the matching Toolkit tag, such as `toolkit-v1.0.1`, also
 publishes after the native build and checks succeed. Historical tags and releases
 are never moved or replaced. Publication marks the Toolkit release as latest
 despite the product version reset from Save Editor v3.1.

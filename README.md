@@ -21,8 +21,7 @@ tools. Earlier releases and existing save compatibility are preserved.
 
 ## Features
 
-- **Find every tool:** open **Tools** in the top navigation to search features,
-  see their supported games and open each workspace. [Feature guide](docs/TOOLKIT_FEATURES.md).
+- **Find every tool:** open **Tools** to search workspaces and see supported games. [Feature guide](docs/TOOLKIT_FEATURES.md).
 - **Edit and review saves:** searchable character, equipment, inventory and
   progression controls, side-by-side comparisons, presets and JSON/CSV reviews.
   [Editor guide](docs/EDITOR_WORKSPACE.md).
@@ -47,13 +46,11 @@ tools. Earlier releases and existing save compatibility are preserved.
   [Configuration Manager](docs/GAME_CONFIGURATION.md).
 - **Use the command line and share reviewed work:** searchable catalogs, save
   inspection, comparisons, conversions, automation and path-free support diagnostics.
-  [CLI](docs/CLI.md) · [Diagnostics](docs/DIAGNOSTICS.md) · [Automation](docs/AUTOMATION.md) · [Presets](docs/REUSABLE_PRESETS.md) · [Community formats](docs/COMMUNITY_TOOLKIT.md).
+  [CLI](docs/CLI.md) · [Diagnostics](docs/DIAGNOSTICS.md) · [Automation](docs/AUTOMATION.md).
 
-Open the bundled [Mod Testing Sandbox](docs/MOD_TESTING_SANDBOX.md) and
-[Localization Studio](localization-studio/README.md) from **Tools** without Node
-or a separate server. The desktop also includes a searchable
-[edition-scoped encyclopedia](docs/GAME_DATA_ENCYCLOPEDIA.md) and
-[snapshot-based patch analyzer](docs/PATCH_COMPATIBILITY_ANALYZER.md).
+**Tools** also opens the bundled [Mod Testing Sandbox](docs/MOD_TESTING_SANDBOX.md),
+[Localization Studio](localization-studio/README.md), searchable [encyclopedia](docs/GAME_DATA_ENCYCLOPEDIA.md)
+and [patch analyzer](docs/PATCH_COMPATIBILITY_ANALYZER.md). No separate Node server is needed.
 
 ## Supported games
 
@@ -73,8 +70,7 @@ individual game/platform combinations, not distinct games or complete series.
 Save profiles span PC, PlayStation, Xbox, Nintendo and classic platforms.
 **The application runs on Windows and compatible x86_64 Linux systems.**
 Save Vault and Playthrough Profiles still require Windows. Use the [full platform catalog](docs/SUPPORTED_GAMES.md)
-for exact editions, regions, required files and available controls. Research on additional ports or editions
-adds no new editing support; the inventory remains 98 profiles and 15 platforms.
+for exact editions, regions, required files and controls. Research candidates add no editing support.
 
 ## Download and install
 
@@ -111,15 +107,11 @@ For Linux, see [installation and platform limits](docs/LINUX.md).
   files and original companions. Decryption, reimport and resigning use external tools.
 - **Conversions transfer listed fields only.** WO3U and SW4 routes do not provide
   complete migration. Experimental editing is opt-in; Research Import is read-only.
-- **Mod support is separate from save support.** The toolkit supports the
-  documented Nioh 2 Mod Enabler and Nioh 3 Loose File Loader methods. Game deployment
-  is qualified for Windows filesystem operations; Linux supports library and package work.
-  The toolkit does not install
-  loaders. Nexus currently provides website links; its API workspace is gated
-  pending application registration. [Nexus availability](docs/NEXUS_MODS_BROWSER.md).
-- **Other tools retain their limits.** Controller profiles store bindings without
-  applying them to games. Troubleshooting performs bounded read-only checks;
-  unavailable evidence remains unknown and no automatic repair is attempted.
+- **Mod support is separate from save support.** Nioh 2 and Nioh 3 require their
+  documented loaders, installed separately. Deployment is Windows-only; Linux supports libraries and packages.
+  Nexus API access awaits application registration. [Nexus availability](docs/NEXUS_MODS_BROWSER.md).
+- **Other tools retain their limits.** Controller profiles do not apply game bindings.
+  Troubleshooting is read-only; unavailable evidence stays unknown and repairs are manual.
   [Controller scope](docs/CONTROLLER_INPUT_PROFILES.md) · [Troubleshooting](docs/GAME_TROUBLESHOOTING.md).
 
 ## Run from source and contribute
@@ -132,7 +124,6 @@ python -m koei_editor
 universal-koei-toolkit --help
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [build instructions](docs/BUILDING.md),
-[documentation](docs/README.md) and [LICENSE](LICENSE).
+See [CONTRIBUTING.md](CONTRIBUTING.md), [build instructions](docs/BUILDING.md), [documentation](docs/README.md) and [LICENSE](LICENSE).
 
 Discord: `mexicannn` · [Mexican's Steam profile](https://steamcommunity.com/id/theonlyjuandeagingmexican/)

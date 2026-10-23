@@ -4898,8 +4898,8 @@
     },
     {
       "path": "tests/test_configuration_storage_safety.py",
-      "bytes": 9070,
-      "sha256": "f82e1eaec10644eeed7d4c218c862ba184709e9c925d05ee9560d3187165b1df"
+      "bytes": 9040,
+      "sha256": "db9bf401492adb5c4617bffdc734ff1f872f6933e996b80eb64b03a3a01f3dcd"
     },
     {
       "path": "tests/test_console_context_regressions.py",
